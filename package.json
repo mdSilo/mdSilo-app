@@ -1,11 +1,13 @@
 {
-  "name": "md-app",
+  "name": "mdsilo-app",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
+    "@tiptap/react": "^2.0.0-beta.108",
+    "@tiptap/starter-kit": "^2.0.0-beta.183",
     "@types/jest": "^26.0.24",
     "@types/node": "^12.20.46",
     "@types/react": "^16.14.23",
@@ -32,7 +34,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "tauri": "tauri"
   },
   "eslintConfig": {
     "extends": [
@@ -51,5 +54,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.0.0-rc.4"
   }
 }
