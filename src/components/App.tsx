@@ -1,5 +1,9 @@
 import React from 'react';
 import '../App.css';
+import 'styles/styles.css';
+import 'styles/nprogress.css';
+import 'react-toastify/dist/ReactToastify.css';
+import 'tippy.js/dist/tippy.css';
 //import Editor from './Editor'
 import { ProvideCurrent } from 'editor/hooks/useCurrent';
 import Editor from 'components/editor/Editor';
