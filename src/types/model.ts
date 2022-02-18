@@ -42,7 +42,7 @@ export const defaultAttr: Attr = {
   UID: '',
   Link: '',
 };
-export const defaultUserId =  '00000000-0000-0000-0000-000000000000';
+export const defaultUserId = '00000000-0000-0000-0000-000000000000';
 export const defaultNote =  {
   title: 'untitled',
   content: getDefaultEditorValue(),

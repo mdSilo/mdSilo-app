@@ -11,3 +11,18 @@ export const getIndexDemoEditorValue = (): Descendant[] => [
   { id: "f0a0eff2-ee22-4d75-aef6-2b763799a8e8", type: ElementType.Paragraph, children: [{text:"Free and Open Source. No registration or installation is required."}] },
   { id: "e363b22d-bcce-4852-8430-ab81d526499e", type: ElementType.Paragraph, children: [{text:"Try Live Demo to see more and start writing..."}] },
 ];
+
+export const defaultDemoNote =  {
+  id: 'ea3c58dm-ba42-4c24-9d59-409eacd1demo',
+  title: 'demo note',
+  content: getIndexDemoEditorValue(),
+  user_id: '00000000-0000-0000-0000-000000000000',
+  md_content: '',
+  cover: '',
+  attr: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  is_pub: false,
+  is_wiki: false,
+  is_daily: false,
+};

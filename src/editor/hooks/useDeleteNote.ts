@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
+import { useNavigate } from "react-router-dom";
 import deleteBacklinks from 'editor/backlinks/deleteBacklinks';
 import { store, useStore } from 'lib/store';
 
 export default function useDeleteNote(noteId: string) {
-  // const router = useRouter();
+  const navigate = useNavigate();
   const openNoteIds = useStore((state) => state.openNoteIds);
 
   const onDeleteClick = useCallback(async () => {
@@ -14,23 +15,22 @@ export default function useDeleteNote(noteId: string) {
     if (deletedNoteIndex !== -1) {
       const noteIds = Object.keys(store.getState().notes);
       // Redirect to first not-del note or to /app if no note already
-      // TODO, handle redirect
       if (noteIds.length > 1) {
         for (const id of noteIds) {
           if (noteId !== id) {
-            //router.push(`/app/md/${id}`, undefined, { shallow: true });
+            navigate(`/app/md/${id}`);
             break;
           }
         }
       } else {
-        // router.push('/app');
+        navigate('/app');
       }
     }
     
     // delete locally and update backlinks
     store.getState().deleteNote(noteId);
     await deleteBacklinks(noteId);
-  }, [noteId, openNoteIds]);
+  }, [navigate, noteId, openNoteIds]);
 
   return onDeleteClick;
 }
