@@ -10,17 +10,15 @@ import wikiLinkPlugin from 'editor/serialization/wikilink/index';
 import pubLinkPlugin from 'editor/serialization/publink/index';
 import { store, useStore, Notes, NoteTreeItem, WikiTreeItem, NotesData } from 'lib/store';
 import type { NoteUpsert } from 'lib/api/curdNote';
-import apiClient from 'lib/apiClient';
 import { getDefaultEditorValue } from 'editor/constants';
 import { ciStringEqual, regDateStr } from 'utils/helper';
 import { ElementType, NoteLink } from 'editor/slate';
-import { Note, defaultNote, User } from 'types/model';
+import { Note, defaultNote } from 'types/model';
 
 export function useImportJson() {
   const upsertNote = useStore((state) => state.upsertNote);
   const updateNoteTree = useStore((state) => state.updateNoteTree);
   const updateWikiTree = useStore((state) => state.updateWikiTree);
-  const offlineMode = useStore((state) => state.offlineMode);
 
   const onImportJson = useCallback(() => {
     const input = document.createElement('input');
@@ -83,24 +81,10 @@ export function useImportJson() {
       toast.info(
         `Imported and Processed: ${jsonNotesData?.filter((note) => !!note).length ?? 0}`
       );
-      
-      // Create new notes import from json
-      // if online mode and issue: id conflict or user_id/title
-      if (!offlineMode) {
-        await apiClient
-          .from<Note>('notes')
-          .upsert(jsonNotesData, { onConflict: 'user_id, title' });
-        await apiClient
-          .from<User>('users')
-          .update({ note_tree: store.getState().noteTree });
-        await apiClient
-          .from<User>('users')
-          .update({ wiki_tree: store.getState().wikiTree });
-      }
     };
 
     input.click();
-  }, [offlineMode, upsertNote, updateNoteTree, updateWikiTree]);
+  }, [upsertNote, updateNoteTree, updateWikiTree]);
 
   return onImportJson;
 }
@@ -223,22 +207,6 @@ export const processImport = async (fileList: FileList | File[], ifHandle = true
     newNotesData.push(newProcessedNote);
   }
 
-  // upsert new notes to db 
-  // Alert: could be a heavy task
-  const offlineMode = store.getState().offlineMode;
-  const upsertData: NoteUpsert[] = [];
-  if (!offlineMode) {
-    upsertData.push(...newNotesData);
-    // fix with actual user id
-    const userId = apiClient.auth.user()?.id; 
-    if (userId) {
-      upsertData.forEach(n => n.user_id = userId);
-      await apiClient
-        .from<Note>('notes')
-        .upsert(upsertData, { onConflict: 'user_id, title' });
-    }
-  }
-
   return newNotesData;
 };
 
@@ -304,21 +272,6 @@ export const refreshImport = async (file: File, title: string) => {
   // can make sure that: the note existing in store will not be re-created.
   newLinkedNotes.forEach(simpleNote => upsertNote(simpleNote));
   upsertNote(reProcessedNote); // upsert processed note with content
-
-  // upsert new notes to db 
-  const offlineMode = store.getState().offlineMode;
-  const upsertData: NoteUpsert[] = [];
-  if (!offlineMode) {
-    upsertData.push(reProcessedNote);
-    // fix with actual user id
-    const userId = apiClient.auth.user()?.id; 
-    if (userId) {
-      upsertData.forEach(n => n.user_id = userId);
-      await apiClient
-        .from<Note>('notes')
-        .upsert(upsertData, { onConflict: 'user_id, title' });
-    }
-  }
 
   return reProcessedNote;
 };

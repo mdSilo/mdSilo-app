@@ -318,7 +318,6 @@ export const store = createVanilla<
         darkMode: state.darkMode,
         isPageStackingOn: state.isPageStackingOn,
         isCheckSpellOn: state.isCheckSpellOn,
-        offlineMode: state.offlineMode,
         noteSort: state.noteSort,
         exportOnClose: state.exportOnClose,
         // note related storage

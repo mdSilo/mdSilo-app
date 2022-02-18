@@ -1,7 +1,6 @@
 import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { IconChevronsUp, IconSearch, TablerIcon } from '@tabler/icons';
-import { useAuthContext } from 'utils/useAuth';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store, useStore } from 'lib/store';
 import { ciStringCompare } from 'utils/helper';
@@ -30,7 +29,6 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
     onOptionClick: onOptionClickCallback,
     className = '',
   } = props;
-  const { user } = useAuthContext();
 
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
@@ -78,13 +76,8 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
     return result;
   }, [searchResults, noteId, inputTxt, noteTree]);
 
-  const offlineMode = useStore((state) => state.offlineMode);
-
   const onOptionClick = useCallback(
     async (option: Option) => {
-      if (!offlineMode && !user) {
-        return;
-      }
 
       onOptionClickCallback?.();
 
@@ -97,7 +90,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         throw new Error(`Option type ${option.type} is not supported`);
       }
     },
-    [user, offlineMode, onOptionClickCallback, noteId, moveNoteTreeItem]
+    [onOptionClickCallback, noteId, moveNoteTreeItem]
   );
 
   const onKeyDown = useCallback(

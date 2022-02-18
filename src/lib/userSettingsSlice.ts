@@ -36,8 +36,6 @@ export type UserSettings = {
   setReadMode: Setter<boolean>;
   wikiReadMode: boolean;
   setWikiReadMode: Setter<boolean>;
-  offlineMode: boolean;
-  setOfflineMode: Setter<boolean>;
   exportOnClose: boolean;
   setExportOnClose: Setter<boolean>;
 };
@@ -61,8 +59,6 @@ const userSettingsSlice = (
   setReadMode: setter(set, 'readMode'),
   wikiReadMode: true,
   setWikiReadMode: setter(set, 'wikiReadMode'),
-  offlineMode: true,
-  setOfflineMode: setter(set, 'offlineMode'),
   exportOnClose: false,
   setExportOnClose: setter(set, 'exportOnClose'),
 });

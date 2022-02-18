@@ -125,11 +125,10 @@ function Note(props: Props) {
   // TODO: update wiki note to db
   // TODO: Prompt the usr with a dialog box about unsaved changes if they navigate away
 
-  const offlineMode = useStore((state) => state.offlineMode);
   const noteContainerClassName =
     'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-gray-900 dark:text-gray-200';
-  const errorContainerClassName = `${noteContainerClassName} items-center justify-center h-full p-4`;
-  const noteClassName = `${noteContainerClassName} ${offlineMode ? 'border-t-4 border-red-600' : ''}`;
+  const errorContainerClassName = 
+    `${noteContainerClassName} items-center justify-center h-full p-4`;
 
   const currentNoteValue = useMemo(() => ({ ty: 'note', id: noteId }), [noteId]);
   const isNoteExists = useMemo(() => !!store.getState().notes[noteId], [noteId]);
@@ -151,7 +150,7 @@ function Note(props: Props) {
       }
     >
       <ProvideCurrent value={currentNoteValue}>
-        <div id={noteId} className={`${noteClassName} ${className}`}>
+        <div id={noteId} className={`${noteContainerClassName} ${className}`}>
           <NoteHeader isWiki={isWiki} isPub={isPub} />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col flex-1 w-full mx-auto md:w-128 lg:w-160 xl:w-192">
