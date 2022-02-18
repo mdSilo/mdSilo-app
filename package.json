@@ -46,8 +46,6 @@
     "zustand": "^3.7.0",
     "react-scripts": "5.0.0",
     
-    "@tiptap/react": "^2.0.0-beta.108",
-    "@tiptap/starter-kit": "^2.0.0-beta.183",
     "web-vitals": "^0.2.4",
     "workbox-background-sync": "^5.1.4",
     "workbox-broadcast-update": "^5.1.4",
