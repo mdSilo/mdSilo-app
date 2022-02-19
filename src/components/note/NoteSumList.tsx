@@ -1,5 +1,6 @@
 // import { Descendant } from 'slate';
 import { IconPencil } from '@tabler/icons';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import { Note } from 'types/model';
 import Tree from 'components/misc/Tree';
 import Tooltip from 'components/misc/Tooltip';
@@ -46,16 +47,22 @@ export default function NoteSumList(props: Props) {
 const noteToTreeData = () => (note: Note) => {
   const summary = useSummary(note.content);
   const value = summary.slice(0, 2);
+
+  const currentView = useCurrentViewContext();
+  const dispatch = currentView.dispatch;
   
   return {
     id: note.id,
     labelNode: (
       <div className="flex flex-col w-full mx-auto overlfow-y-auto">
-        {/* <Link to={`/app/md/${note.id}`} className="title link flex items-center text-lg py-2">
+        <button 
+          className="title link flex items-center text-lg py-2" 
+          onClick={() => dispatch({view: 'md', params: {noteId: note.id}})}
+        >
           <span className="text-lg overflow-x-hidden overflow-ellipsis whitespace-nowrap">
             {note.title}
           </span>
-        </Link> */}
+        </button>
         <ReadOnlyEditor value={value} />
       </div>
     ),

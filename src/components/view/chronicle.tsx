@@ -1,5 +1,5 @@
 //import { useMemo } from 'react';
-//import { useNavigate } from 'react-router-dom'
+import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore, store } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import OpenSidebarButton from 'components/sidebar/OpenSidebarButton';
@@ -23,16 +23,18 @@ export default function Chronicle() {
   // get notes on a date
   const getDayNotes = (date: string) => myNotes.filter(n => getStrDate(n.created_at) === date);
   
-  // const navigate = useNavigate();
+  const currentView = useCurrentViewContext();
+  const dispatch = currentView.dispatch;
+
   const onRecapDay = (date: string) => {
     const noteId = getOrCreateNoteId(date);
     // redirect to journals when the note not be prepared
     if (noteId) {
       const note = store.getState().notes[noteId];
       if (note) {
-        console.log(`/app/md/${note.id}`);
+        dispatch({view: 'md', params: {noteId: note.id}});
       } else {
-        console.log(`/app/journals`);
+        dispatch({view: 'journal'});
       }
     }
   };
@@ -49,7 +51,9 @@ export default function Chronicle() {
           />
         </div>
         <div className="my-1 p-1 rounded text-center">
-          {/* <Link to="/app/journals">Journals</Link> */}
+          <button onClick={() => dispatch({view: 'journal'})}>
+            Journals
+          </button>
           <button className="link w-full mt-2" onClick={() => onRecapDay(today)}>
             Today : {today}
           </button>

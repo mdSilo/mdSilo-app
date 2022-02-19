@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
 } from 'react';
-//import { useNavigate } from "react-router-dom";
 import colors from 'tailwindcss/colors';
 import {
   forceCenter,
@@ -22,6 +21,7 @@ import {
 import { D3DragEvent, drag } from 'd3-drag';
 import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
 
 export type NodeDatum = {
@@ -51,7 +51,8 @@ export default function ForceGraph(props: Props) {
 
   const darkMode = useStore((state) => state.darkMode);
 
-  //const navigate = useNavigate();
+  const currentView = useCurrentViewContext();
+  const dispatch = currentView.dispatch;
 
   const neighbors = useMemo(() => {
     const neighbors: Record<string, boolean> = {};
@@ -282,10 +283,10 @@ export default function ForceGraph(props: Props) {
 
         // Redirect to note when a node is clicked
         if (clickedNode && clickedNode.ty === 'link') {
-          console.log(`/app/md/${clickedNode.id}`)
+          dispatch({view: 'md', params: {noteId: clickedNode.id}});
         }
       });
-  }, [data, renderCanvas]);
+  }, [data, dispatch, renderCanvas]);
 
   /**
    * Set canvas width and height when its container changes size

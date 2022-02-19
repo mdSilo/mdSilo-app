@@ -78,6 +78,10 @@ function Sidebar(props: Props) {
 
   const currentView = useCurrentViewContext();
   const viewTy = currentView.state.view;
+  const dispatch = currentView.dispatch;
+  const dispatchChron = () => dispatch({view: 'chronicle'});
+  const dispatchTask = () => dispatch({view: 'task'});
+  const dispatchGraph = () => dispatch({view: 'graph'});
 
   return transition(
     (styles, item) =>
@@ -109,9 +113,21 @@ function Sidebar(props: Props) {
               className={`flex flex-col flex-none h-full border-r bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 ${className}`}
             >
               <SidebarHeader setIsSettingsOpen={setIsSettingsOpen} />
-              <ChronButton viewTy={viewTy} onClick={hideSidebarOnMobile} />
-              <GraphButton viewTy={viewTy} onClick={hideSidebarOnMobile} />
-              <TaskButton viewTy={viewTy} onClick={hideSidebarOnMobile} />
+              <ChronButton 
+                viewTy={viewTy} 
+                onClick={hideSidebarOnMobile} 
+                onDispatch={dispatchChron} 
+              />
+              <GraphButton 
+                viewTy={viewTy} 
+                onClick={hideSidebarOnMobile} 
+                onDispatch={dispatchGraph} 
+              />
+              <TaskButton 
+                viewTy={viewTy} 
+                onClick={hideSidebarOnMobile} 
+                onDispatch={dispatchTask} 
+              />
               <SidebarContent
                 className="flex-1 mt-3 overflow-x-hidden overflow-y-auto"
                 setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
@@ -128,10 +144,11 @@ const btnIconClass = 'flex-shrink-0 mr-1 text-gray-800 dark:text-gray-300';
 type ButtonProps = {
   viewTy: string;
   onClick: () => void;
+  onDispatch: () => void;
 };
 
 const GraphButton = (props: ButtonProps) => {
-  const { viewTy, onClick } = props;
+  const { viewTy, onClick, onDispatch } = props;
 
   return (
     <SidebarItem
@@ -143,23 +160,24 @@ const GraphButton = (props: ButtonProps) => {
         placement="right"
         touch={false}
       >
-        <span>Graph View
-          {/* <Link to="/app/graph" className="flex items-center px-6 py-1">
-            <>
-              <IconDna size={20} className={btnIconClass} />
-              <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
-                Graph View
-              </span>
-            </>
-          </Link> */}
-        </span>
+        <button 
+          className="title link flex items-center text-lg px-6 py-1" 
+          onClick={onDispatch}
+        >
+          <>
+            <IconDna size={20} className={btnIconClass} />
+            <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
+              Graph View
+            </span>
+          </>
+        </button>
       </Tooltip>
     </SidebarItem>
   );
 };
 
 const ChronButton = (props: ButtonProps) => {
-  const { viewTy, onClick } = props;
+  const { viewTy, onClick, onDispatch } = props;
 
   return (
     <SidebarItem
@@ -171,23 +189,24 @@ const ChronButton = (props: ButtonProps) => {
         placement="right"
         touch={false}
       >
-        <span>Chronicle
-          {/* <Link to="/app/chronicle" className="flex items-center px-6 py-1">
-            <>
-              <IconBookmarks size={20} className={btnIconClass} />
-              <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
-                Chronicle
-              </span>
-            </>
-          </Link> */}
-        </span>
+        <button 
+          className="title link flex items-center text-lg px-6 py-1" 
+          onClick={onDispatch}
+        >
+          <>
+            <IconBookmarks size={20} className={btnIconClass} />
+            <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
+              Chronicle
+            </span>
+          </>
+        </button>
       </Tooltip>
     </SidebarItem>
   );
 };
 
 const TaskButton = (props: ButtonProps) => {
-  const { viewTy, onClick } = props;
+  const { viewTy, onClick, onDispatch } = props;
 
   return (
     <SidebarItem
@@ -199,16 +218,17 @@ const TaskButton = (props: ButtonProps) => {
         placement="right"
         touch={false}
       >
-        <span>Tasks View
-          {/* <Link to="/app/tasks" className="flex items-center px-6 py-1">
-            <>
-              <IconCheckbox size={20} className={btnIconClass} />
-              <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
-                Tasks View
-              </span>
-            </>
-          </Link> */}
-        </span>
+        <button 
+          className="title link flex items-center text-lg px-6 py-1" 
+          onClick={onDispatch}
+        >
+          <>
+            <IconCheckbox size={20} className={btnIconClass} />
+            <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
+              Tasks View
+            </span>
+          </>
+        </button>
       </Tooltip>
     </SidebarItem>
   );

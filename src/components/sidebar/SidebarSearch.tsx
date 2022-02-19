@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
-//import { useNavigate } from "react-router-dom";
 import Highlighter from 'react-highlight-words';
 import Fuse from 'fuse.js';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import useNoteSearch, { NoteBlock } from 'editor/hooks/useNoteSearch';
 import useDebounce from 'editor/hooks/useDebounce';
 import { useStore } from 'lib/store';
@@ -105,7 +105,10 @@ type SearchLeafProps = {
 
 export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
   const { noteId, text, searchQuery, block, className = '' } = props;
-  //let navigate = useNavigate();
+
+  const currentView = useCurrentViewContext();
+  const dispatch = currentView.dispatch;
+
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
 
   return (
@@ -117,7 +120,7 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
         if (isMobile(767)) {
           setIsSidebarOpen(false);
         }
-        console.log(`/app/md/${noteId}${hash}`);
+        dispatch({view: 'md', params: {noteId, hash}});
       }}
     >
       <Highlighter

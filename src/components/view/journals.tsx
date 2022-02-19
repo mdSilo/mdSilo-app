@@ -1,4 +1,5 @@
 import { Descendant } from 'slate';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
 import { Note } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -48,13 +49,19 @@ function NoteItem(props: NoteItemProps) {
   const value: Descendant[] = bleachLinks(note.content);
   const noteId = note.id;
 
+  const currentView = useCurrentViewContext();
+  const dispatch = currentView.dispatch;
+
   return (
     <div className="flex flex-col w-full mx-auto overlfow-y-auto">
-      {/* <Link to={`/app/md/${noteId}`} className="flex items-center link text-lg py-2 pl-4">
+      <button 
+        onClick={() => dispatch({view: 'md', params: {noteId}})} 
+        className="flex items-center link text-lg py-2 pl-4"
+      >
         <span className="title text-2xl text-yellow-500 font-semibold mt-4">
           {note.title}
         </span>
-      </Link> */}
+      </button>
       <ReadOnlyEditor value={value} className="pl-4" />
     </div>
   );

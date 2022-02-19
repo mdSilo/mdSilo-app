@@ -1,11 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
-//import { useNavigate } from "react-router-dom";
 import { Menu } from '@headlessui/react';
 import { IconDots, IconX, IconTrash, IconCornerDownRight } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { store, useStore } from 'lib/store';
-import { queryParamToArray } from 'utils/helper';
+//import { queryParamToArray } from 'utils/helper';
 import OpenSidebarButton from 'components/sidebar/OpenSidebarButton';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
@@ -24,8 +23,8 @@ type Props = {
 export default function NoteHeader(props: Props) {
   const { isWiki, isPub } = props;
   const currentNote = useCurrentMdContext();
-
-  //const navigate = useNavigate();
+  const viewState = currentNote.state;
+  const dispatch = currentNote.dispatch;
 
   const isSidebarButtonVisible = useStore(
     (state) => !state.isSidebarOpen && state.openNoteIds?.[0] === currentNote.id
@@ -45,14 +44,17 @@ export default function NoteHeader(props: Props) {
     }
 
     // Remove from stacked notes and shallowly route
-    // const stackedNoteIds = queryParamToArray(stackQuery);
-    // stackedNoteIds.splice(
-    //   currentNoteIndex - 1, // Stacked notes don't include the main note
-    //   1
-    // );
+    const stackedNoteIds = viewState.params?.stackIds || [];
+    stackedNoteIds.splice(
+      currentNoteIndex - 1, // Stacked notes don't include the main note
+      1
+    );
 
-    console.log('todo'); // TODO: build to-url
-  }, [currentNote.id]);
+    dispatch({
+      view: 'md', 
+      params: {noteId: currentNote.id, stackIds: stackedNoteIds}
+    });
+  }, [currentNote.id, dispatch, viewState.params?.stackIds]);
 
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(

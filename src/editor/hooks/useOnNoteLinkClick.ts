@@ -1,23 +1,78 @@
 import { MouseEvent, useCallback } from 'react';
-//import { useNavigate } from "react-router-dom";
 import { Path } from 'slate';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
 //import { queryParamToArray } from 'utils/helper';
 
 export default function useOnNoteLinkClick(currentNoteId: string) {
   //const navigate = useNavigate();
+  const currentView = useCurrentViewContext();
+  const viewState = currentView.state;
+  const dispatch = currentView.dispatch;
   // const { query: { stack: stackQuery },} = router;
-  // const openNoteIds = useStore((state) => state.openNoteIds);
+  const openNoteIds = useStore((state) => state.openNoteIds);
   const isPageStackingOn = useStore((state) => state.isPageStackingOn);
 
   const onClick = useCallback(
     (noteId: string, stackNote: boolean, highlightedPath?: Path) => {
-      // Currently stackNote is false, open the note in its own page
-      const hash = highlightedPath ? `0-${highlightedPath}` : '';
-      console.log(`/app/md/${noteId}#${hash}`);
-      return;
+      // If stackNote is false, open the note in its own page
+      if (!stackNote) {
+        const hash = highlightedPath ? `0-${highlightedPath}` : undefined;
+        dispatch({view: 'md', params: {noteId, hash}});
+        return;
+      }
+
+      // If the note is already open, scroll it into view
+      const index = openNoteIds.findIndex(
+        (openNoteId) => openNoteId === noteId
+      );
+      if (index > -1) {
+        const noteElement = document.getElementById(openNoteIds[index]);
+        if (noteElement) {
+          const notesContainer = noteElement.parentElement;
+          const noteWidth = noteElement.offsetWidth;
+          notesContainer?.scrollTo({
+            left: noteWidth * index, // We assume all the notes are the same width
+            behavior: 'smooth',
+          });
+        }
+
+        if (highlightedPath) {
+          // Update highlighted path; scrolling is handled in editor
+          const stackedNoteIds = viewState.params?.stackIds || [];
+          const hash = `${index}-${highlightedPath}`;
+          dispatch({view: 'md', params: {noteId, stackIds: stackedNoteIds, hash}});
+        }
+
+        return;
+      }
+
+      // If the note is not open, add it to the open notes after currentNoteId
+      const currentNoteIndex = openNoteIds.findIndex(
+        (openNoteId) => openNoteId === currentNoteId
+      );
+      if (currentNoteIndex < 0) {
+        console.log(`Error: current ${currentNoteId} is not in open notes`);
+        return;
+      }
+
+      const newNoteIndex = currentNoteIndex + 1;
+
+      // Replace the notes after the current note with the new note
+      const stackedNoteIds = viewState.params?.stackIds || [];
+      stackedNoteIds.splice(
+        newNoteIndex - 1, // Stacked notes don't include the main note
+        stackedNoteIds.length - (newNoteIndex - 1),
+        noteId
+      );
+
+      // Open the note as a stacked note
+      const hash = highlightedPath
+        ? `${newNoteIndex}-${highlightedPath}`
+        : undefined;
+      dispatch({view: 'md', params: {noteId, stackIds: stackedNoteIds, hash}});
     },
-    []
+    [openNoteIds, viewState.params?.stackIds, dispatch, currentNoteId]
   );
 
   const defaultStackingBehavior = useCallback(

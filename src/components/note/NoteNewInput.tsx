@@ -1,9 +1,9 @@
 import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
-//import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from 'uuid';
 import type { TablerIcon } from '@tabler/icons';
 import { IconFilePlus, IconSearch } from '@tabler/icons';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { ciStringEqual, regDateStr } from 'utils/helper';
 import { store } from 'lib/store';
@@ -28,7 +28,9 @@ type Props = {
 
 function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const { onOptionClick: onOptionClickCallback, className = '' } = props;
-  //const navigate = useNavigate();
+  
+  const currentView = useCurrentViewContext();
+  const dispatch = currentView.dispatch;
 
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
@@ -78,14 +80,14 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         };
         store.getState().upsertNote(note);
         // navigate to md view
-        console.log(`/app/md/${note.id}`);
+        dispatch({view: 'md', params: {noteId: note.id}});
       } else if (option.type === OptionType.NOTE) {
-        console.log(`/app/md/${option.id}`);
+        dispatch({view: 'md', params: {noteId: option.id}});
       } else {
         throw new Error(`Type ${option.type} is not supported`);
       }
     },
-    [inputTxt, onOptionClickCallback]
+    [dispatch, inputTxt, onOptionClickCallback]
   );
 
   const onKeyDown = useCallback(

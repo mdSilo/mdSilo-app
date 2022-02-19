@@ -10,6 +10,7 @@ import type { Note as NoteType } from 'types/model';
 import { Attr, defaultAttr, buildAttr } from 'types/model';
 //import serialize from 'editor/serialization/serialize';
 import { getDefaultEditorValue, defaultDemoNote } from 'editor/constants';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual } from 'utils/helper';
@@ -129,16 +130,23 @@ function Note(props: Props) {
   const errorContainerClassName = 
     `${noteContainerClassName} items-center justify-center h-full p-4`;
 
-  const currentNoteValue = useMemo(() => ({ ty: 'note', id: noteId }), [noteId]);
+  // for context 
+  const currentView = useCurrentViewContext();
+  const state = currentView.state;
+  const dispatch = currentView.dispatch;
+  const currentNoteValue = useMemo(() => (
+    { ty: 'note', id: noteId, state, dispatch }
+  ), [dispatch, noteId, state]);
+
   const isNoteExists = useMemo(() => !!store.getState().notes[noteId], [noteId]);
 
-  // if (!isNoteExists) {
-  //   return (
-  //     <div className={errorContainerClassName}>
-  //       <p>it does not look like this note exists! {noteId}</p>
-  //     </div>
-  //   );
-  // }
+  if (!isNoteExists) {
+    return (
+      <div className={errorContainerClassName}>
+        <p>it does not look like this note exists! {noteId}</p>
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary

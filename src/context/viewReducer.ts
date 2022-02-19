@@ -1,6 +1,6 @@
 export const initialState = {view: 'task'};
 
-type ViewParams = { noteId: string; stackIds?: string[] };
+type ViewParams = { noteId: string; stackIds?: string[], hash?: string };
 
 export interface ViewState {
   view: string;
