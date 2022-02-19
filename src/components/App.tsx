@@ -1,18 +1,37 @@
-import React from 'react';
+import { useState } from 'react';
 import 'styles/styles.css';
 import 'styles/nprogress.css';
 import 'react-toastify/dist/ReactToastify.css';
 import 'tippy.js/dist/tippy.css';
-import { ProvideCurrent } from 'context/useCurrent';
-import Editor from 'components/editor/Editor';
-import NotePage from 'components/md';
-import { getIndexDemoEditorValue } from 'editor/constants';
+import { ProvideCurrentView } from 'context/useCurrentView';
+import Sidebar from './sidebar/Sidebar';
+import MainView from './MainView';
+import FindOrCreateModal from './note/NoteNewModal';
+//import SettingsModal from './settings/SettingsModal';
 
 const App = () => {
+  const [isFindOrCreateModalOpen, setIsFindOrCreateModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const appContainerClassName = 'h-screen';
+
   return (
-    <div className="flex flex-1 w-full mx-auto">
-      <NotePage noteId={'ea3c58dm-ba42-4c24-9d59-409eacd1demo'} />
-    </div>
+    <ProvideCurrentView>
+      <div id="app-container" className={appContainerClassName}>
+        <div className="flex w-full h-full dark:bg-gray-900">
+          <Sidebar
+            setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
+            setIsSettingsOpen={setIsSettingsOpen}
+          />
+          <div className="relative flex flex-col flex-1 overflow-y-auto">
+            <MainView />
+          </div>
+          {isFindOrCreateModalOpen ? (
+            <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />
+          ) : null}
+        </div>
+      </div>
+    </ProvideCurrentView>
   )
 }
 

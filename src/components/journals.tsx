@@ -1,5 +1,4 @@
 import { Descendant } from 'slate';
-import { Link } from 'react-router-dom'
 import { useStore } from 'lib/store';
 import { Note } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -51,11 +50,11 @@ function NoteItem(props: NoteItemProps) {
 
   return (
     <div className="flex flex-col w-full mx-auto overlfow-y-auto">
-      <Link to={`/app/md/${noteId}`} className="flex items-center link text-lg py-2 pl-4">
+      {/* <Link to={`/app/md/${noteId}`} className="flex items-center link text-lg py-2 pl-4">
         <span className="title text-2xl text-yellow-500 font-semibold mt-4">
           {note.title}
         </span>
-      </Link>
+      </Link> */}
       <ReadOnlyEditor value={value} className="pl-4" />
     </div>
   );

@@ -1,5 +1,4 @@
 // import { Descendant } from 'slate';
-import { Link } from 'react-router-dom'
 import { IconPencil } from '@tabler/icons';
 import { Note } from 'types/model';
 import Tree from 'components/misc/Tree';
@@ -52,11 +51,11 @@ const noteToTreeData = () => (note: Note) => {
     id: note.id,
     labelNode: (
       <div className="flex flex-col w-full mx-auto overlfow-y-auto">
-        <Link to={`/app/md/${note.id}`} className="title link flex items-center text-lg py-2">
+        {/* <Link to={`/app/md/${note.id}`} className="title link flex items-center text-lg py-2">
           <span className="text-lg overflow-x-hidden overflow-ellipsis whitespace-nowrap">
             {note.title}
           </span>
-        </Link>
+        </Link> */}
         <ReadOnlyEditor value={value} />
       </div>
     ),

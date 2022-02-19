@@ -1,24 +1,24 @@
 import type { ReactNode } from 'react';
 import { useContext, createContext } from 'react';
 
-type Current = {
+type CurrentMd = {
   ty: string;
   id: string;
 };
 
-const CurrContext = createContext<Current | undefined>(undefined);
+const CurrContext = createContext<CurrentMd | undefined>(undefined);
 
-export function ProvideCurrent({
+export function ProvideCurrentMd({
   children,
   value,
 }: {
   children: ReactNode;
-  value: Current;
+  value: CurrentMd;
 }) {
   return <CurrContext.Provider value={value}>{children}</CurrContext.Provider>;
 }
 
-export const useCurrentContext = () => {
+export const useCurrentMdContext = () => {
   const context = useContext(CurrContext);
   if (context === undefined) {
     throw new Error('useCurrentContext must be used within a provider');

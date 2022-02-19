@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useCurrentContext } from 'context/useCurrent';
+import { useCurrentMdContext } from 'context/useCurrentMd';
 import type { Backlink, BacklinkMatch } from 'editor/backlinks/useBacklinks';
 import useBacklinks from 'editor/backlinks/useBacklinks';
 import Tree from 'components/misc/Tree';
@@ -16,7 +16,7 @@ type Props = {
 
 export default function Backlinks(props: Props) {
   const { className, isCollapse = false } = props;
-  const currentNote = useCurrentContext();
+  const currentNote = useCurrentMdContext();
   const { linkedBacklinks, unlinkedBacklinks } = useBacklinks(currentNote.id);
 
   const backlinkData = useMemo(

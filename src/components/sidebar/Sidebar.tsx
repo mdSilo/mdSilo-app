@@ -1,13 +1,12 @@
 import { memo, useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { Link } from 'react-router-dom'
-import { useLocation } from "react-router-dom";
 import { IconDna, IconBookmarks, IconCheckbox } from '@tabler/icons';
 import { useTransition, animated } from '@react-spring/web';
 import Tooltip from 'components/misc/Tooltip';
 import { isMobile } from 'utils/helper';
 import { useStore } from 'lib/store';
 import { SPRING_CONFIG } from 'constants/spring';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarItem from './SidebarItem';
 import SidebarContent from './SidebarContent';
 import SidebarHeader from './SidebarHeader';
@@ -70,6 +69,9 @@ function Sidebar(props: Props) {
     expires: (item) => !item,
   });
 
+  const currentView = useCurrentViewContext();
+  const viewTy = currentView.state.view;
+
   return transition(
     (styles, item) =>
       item && (
@@ -100,9 +102,9 @@ function Sidebar(props: Props) {
               className={`flex flex-col flex-none h-full border-r bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 ${className}`}
             >
               <SidebarHeader setIsSettingsOpen={setIsSettingsOpen} />
-              <ChronButton onClick={hideSidebarOnMobile} />
-              <GraphButton onClick={hideSidebarOnMobile} />
-              <TaskButton onClick={hideSidebarOnMobile} />
+              <ChronButton viewTy={viewTy} onClick={hideSidebarOnMobile} />
+              <GraphButton viewTy={viewTy} onClick={hideSidebarOnMobile} />
+              <TaskButton viewTy={viewTy} onClick={hideSidebarOnMobile} />
               <SidebarContent
                 className="flex-1 mt-3 overflow-x-hidden overflow-y-auto"
                 setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
@@ -117,16 +119,16 @@ function Sidebar(props: Props) {
 const btnIconClass = 'flex-shrink-0 mr-1 text-gray-800 dark:text-gray-300';
 
 type ButtonProps = {
+  viewTy: string;
   onClick: () => void;
 };
 
 const GraphButton = (props: ButtonProps) => {
-  const { onClick } = props;
-  const location = useLocation();
+  const { viewTy, onClick } = props;
 
   return (
     <SidebarItem
-      isHighlighted={location.pathname.includes('/app/graph')}
+      isHighlighted={viewTy === 'graph'}
       onClick={onClick}
     >
       <Tooltip
@@ -134,15 +136,15 @@ const GraphButton = (props: ButtonProps) => {
         placement="right"
         touch={false}
       >
-        <span>
-          <Link to="/app/graph" className="flex items-center px-6 py-1">
+        <span>Graph View
+          {/* <Link to="/app/graph" className="flex items-center px-6 py-1">
             <>
               <IconDna size={20} className={btnIconClass} />
               <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
                 Graph View
               </span>
             </>
-          </Link>
+          </Link> */}
         </span>
       </Tooltip>
     </SidebarItem>
@@ -150,12 +152,11 @@ const GraphButton = (props: ButtonProps) => {
 };
 
 const ChronButton = (props: ButtonProps) => {
-  const { onClick } = props;
-  const location = useLocation();
+  const { viewTy, onClick } = props;
 
   return (
     <SidebarItem
-      isHighlighted={location.pathname.includes('/app/chronicle')}
+      isHighlighted={viewTy === '/app/chronicle'}
       onClick={onClick}
     >
       <Tooltip
@@ -163,15 +164,15 @@ const ChronButton = (props: ButtonProps) => {
         placement="right"
         touch={false}
       >
-        <span>
-          <Link to="/app/chronicle" className="flex items-center px-6 py-1">
+        <span>Chronicle
+          {/* <Link to="/app/chronicle" className="flex items-center px-6 py-1">
             <>
               <IconBookmarks size={20} className={btnIconClass} />
               <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
                 Chronicle
               </span>
             </>
-          </Link>
+          </Link> */}
         </span>
       </Tooltip>
     </SidebarItem>
@@ -179,12 +180,11 @@ const ChronButton = (props: ButtonProps) => {
 };
 
 const TaskButton = (props: ButtonProps) => {
-  const { onClick } = props;
-  const location = useLocation();
+  const { viewTy, onClick } = props;
 
   return (
     <SidebarItem
-      isHighlighted={location.pathname.includes('/app/tasks')}
+      isHighlighted={viewTy === 'task'}
       onClick={onClick}
     >
       <Tooltip
@@ -192,15 +192,15 @@ const TaskButton = (props: ButtonProps) => {
         placement="right"
         touch={false}
       >
-        <span>
-          <Link to="/app/tasks" className="flex items-center px-6 py-1">
+        <span>Tasks View
+          {/* <Link to="/app/tasks" className="flex items-center px-6 py-1">
             <>
               <IconCheckbox size={20} className={btnIconClass} />
               <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
                 Tasks View
               </span>
             </>
-          </Link>
+          </Link> */}
         </span>
       </Tooltip>
     </SidebarItem>

@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { NoteLink } from 'editor/slate';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
-import { useCurrentContext } from 'context/useCurrent';
+import { useCurrentMdContext } from 'context/useCurrentMd';
 import { store } from 'lib/store';
 import { extractTexts } from 'editor/hooks/useSummary';
 import { refreshFile } from 'editor/hooks/useRefresh';
@@ -19,7 +19,7 @@ type NoteLinkElementProps = {
 export default function NoteLinkElement(props: NoteLinkElementProps) {
   const { className, element, children, attributes } = props;
 
-  const currentNote = useCurrentContext();
+  const currentNote = useCurrentMdContext();
   const { onClick: onNoteLinkClick, defaultStackingBehavior } =
     useOnNoteLinkClick(currentNote.id);
 

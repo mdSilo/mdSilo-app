@@ -1,21 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom'
 import { Path } from 'slate';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import Note from 'components/note/Note';
 import { useStore } from 'lib/store';
 import usePrevious from 'editor/hooks/usePrevious';
 //import { queryParamToArray } from 'utils/helper';
 import useBlockBacklinks from 'editor/backlinks/useBlockBacklinks';
 
-type Props = {
-  noteId: string;
-  highlightedPath?: Path;
-  className?: string;
-};
 
-export default function NotePage(props: Props) {
+export default function NotePage() {
   // const location = useLocation();
-  const { noteId } = props;
+  const currentView = useCurrentViewContext();
+  const viewTy = currentView.state.view;
+  const params = currentView.state.params;
+  const noteId = params?.noteId || '';
 
   const openNoteIds = useStore((state) => state.openNoteIds);
   const setOpenNoteIds = useStore((state) => state.setOpenNoteIds);
@@ -30,7 +28,7 @@ export default function NotePage(props: Props) {
 
   // Initialize open notes and highlighted path
   useEffect(() => {
-    if (!noteId || typeof noteId !== 'string') {
+    if (!noteId || typeof noteId !== 'string' || viewTy !== 'md') {
       return;
     }
 
@@ -40,7 +38,7 @@ export default function NotePage(props: Props) {
     // We use router.asPath specifically so we handle any route change (even if asPath is the same)
     // const newHighlightedPath = getHighlightedPath(location.hash);
     // setHighlightedPath(newHighlightedPath);
-  }, [setOpenNoteIds, noteId]);
+  }, [setOpenNoteIds, noteId, viewTy]);
 
   useEffect(() => {
     // Scroll the last open note into view if:

@@ -1,6 +1,6 @@
 import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from 'uuid';
 import type { TablerIcon } from '@tabler/icons';
 import { IconFilePlus, IconSearch } from '@tabler/icons';
@@ -28,7 +28,7 @@ type Props = {
 
 function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const { onOptionClick: onOptionClickCallback, className = '' } = props;
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
@@ -78,14 +78,14 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         };
         store.getState().upsertNote(note);
         // navigate to md view
-        navigate(`/app/md/${note.id}`);
+        console.log(`/app/md/${note.id}`);
       } else if (option.type === OptionType.NOTE) {
-        navigate(`/app/md/${option.id}`);
+        console.log(`/app/md/${option.id}`);
       } else {
         throw new Error(`Type ${option.type} is not supported`);
       }
     },
-    [inputTxt, navigate, onOptionClickCallback]
+    [inputTxt, onOptionClickCallback]
   );
 
   const onKeyDown = useCallback(

@@ -1,5 +1,4 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-//import { useLocation } from 'react-router-dom';
 import type { Path, Descendant } from 'slate';
 import { toast } from 'react-toastify';
 import Editor from 'components/editor/Editor';
@@ -11,7 +10,7 @@ import type { Note as NoteType } from 'types/model';
 import { Attr, defaultAttr, buildAttr } from 'types/model';
 //import serialize from 'editor/serialization/serialize';
 import { getDefaultEditorValue, defaultDemoNote } from 'editor/constants';
-import { ProvideCurrent } from 'context/useCurrent';
+import { ProvideCurrentMd } from 'context/useCurrentMd';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual } from 'utils/helper';
 import ErrorBoundary from '../misc/ErrorBoundary';
@@ -149,7 +148,7 @@ function Note(props: Props) {
         </div>
       }
     >
-      <ProvideCurrent value={currentNoteValue}>
+      <ProvideCurrentMd value={currentNoteValue}>
         <div id={noteId} className={`${noteContainerClassName} ${className}`}>
           <NoteHeader isWiki={isWiki} isPub={isPub} />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
@@ -191,7 +190,7 @@ function Note(props: Props) {
             </div>
           </div>
         </div>
-      </ProvideCurrent>
+      </ProvideCurrentMd>
     </ErrorBoundary>
   );
 }

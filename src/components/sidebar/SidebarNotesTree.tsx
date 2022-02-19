@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, memo } from 'react';
-import { useLocation } from "react-router-dom";
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import {
@@ -19,6 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import { toast } from 'react-toastify';
 import { NoteTreeItem, useStore } from 'lib/store';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import Portal from 'components/misc/Portal';
 import SidebarNoteLink from './SidebarNoteLink';
 import DraggableSidebarNoteLink from './DraggableSidebarNoteLink';
@@ -37,11 +37,14 @@ type Props = {
 function SidebarNotesTree(props: Props) {
   const { data, className } = props;
 
-  const location = useLocation();
+  const currentView = useCurrentViewContext();
+  const params = currentView.state.params;
+  const noteId = params?.noteId || '';
+  
   const currentNoteId = useMemo(() => {
-    const id = location.pathname.split('/md/')[-1];
+    const id = noteId;
     return id && typeof id === 'string' ? id : undefined;
-  }, [location]);
+  }, [noteId]);
 
   const moveNoteTreeItem = useStore((state) => state.moveNoteTreeItem);
 

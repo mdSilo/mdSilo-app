@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 import { BacklinkMatch } from 'editor/backlinks/useBacklinks';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { useCurrentContext } from 'context/useCurrent';
+import { useCurrentMdContext } from 'context/useCurrentMd';
 import ReadOnlyEditor from '../ReadOnlyEditor';
 
 type BacklinkMatchLeafProps = {
@@ -12,7 +12,7 @@ type BacklinkMatchLeafProps = {
 
 const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
   const { noteId, match, className } = props;
-  const currentNote = useCurrentContext();
+  const currentNote = useCurrentMdContext();
   const { onClick: onNoteLinkClick, defaultStackingBehavior } =
     useOnNoteLinkClick(currentNote.id);
 

@@ -5,7 +5,7 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 import colors from 'tailwindcss/colors';
 import {
   forceCenter,
@@ -51,7 +51,7 @@ export default function ForceGraph(props: Props) {
 
   const darkMode = useStore((state) => state.darkMode);
 
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   const neighbors = useMemo(() => {
     const neighbors: Record<string, boolean> = {};
@@ -282,10 +282,10 @@ export default function ForceGraph(props: Props) {
 
         // Redirect to note when a node is clicked
         if (clickedNode && clickedNode.ty === 'link') {
-          navigate(`/app/md/${clickedNode.id}`)
+          console.log(`/app/md/${clickedNode.id}`)
         }
       });
-  }, [data, navigate, renderCanvas]);
+  }, [data, renderCanvas]);
 
   /**
    * Set canvas width and height when its container changes size

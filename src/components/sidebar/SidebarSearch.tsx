@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 import Highlighter from 'react-highlight-words';
 import Fuse from 'fuse.js';
 import useNoteSearch, { NoteBlock } from 'editor/hooks/useNoteSearch';
@@ -105,7 +105,7 @@ type SearchLeafProps = {
 
 export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
   const { noteId, text, searchQuery, block, className = '' } = props;
-  let navigate = useNavigate();
+  //let navigate = useNavigate();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
 
   return (
@@ -117,7 +117,7 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
         if (isMobile(767)) {
           setIsSidebarOpen(false);
         }
-        navigate(`/app/md/${noteId}${hash}`);
+        console.log(`/app/md/${noteId}${hash}`);
       }}
     >
       <Highlighter

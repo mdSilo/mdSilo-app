@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Backlink } from 'editor/backlinks/useBacklinks';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { useCurrentContext } from 'context/useCurrent';
+import { useCurrentMdContext } from 'context/useCurrentMd';
 
 type BacklinkNoteBranchProps = {
   backlink: Backlink;
@@ -9,7 +9,7 @@ type BacklinkNoteBranchProps = {
 
 const BacklinkNoteBranch = (props: BacklinkNoteBranchProps) => {
   const { backlink } = props;
-  const currentNote = useCurrentContext();
+  const currentNote = useCurrentMdContext();
   const { onClick: onNoteLinkClick, defaultStackingBehavior } =
     useOnNoteLinkClick(currentNote.id);
 

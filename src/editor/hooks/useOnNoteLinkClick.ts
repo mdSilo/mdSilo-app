@@ -1,11 +1,11 @@
 import { MouseEvent, useCallback } from 'react';
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 import { Path } from 'slate';
 import { useStore } from 'lib/store';
 //import { queryParamToArray } from 'utils/helper';
 
 export default function useOnNoteLinkClick(currentNoteId: string) {
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   // const { query: { stack: stackQuery },} = router;
   // const openNoteIds = useStore((state) => state.openNoteIds);
   const isPageStackingOn = useStore((state) => state.isPageStackingOn);
@@ -14,10 +14,10 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
     (noteId: string, stackNote: boolean, highlightedPath?: Path) => {
       // Currently stackNote is false, open the note in its own page
       const hash = highlightedPath ? `0-${highlightedPath}` : '';
-      navigate(`/app/md/${noteId}#${hash}`);
+      console.log(`/app/md/${noteId}#${hash}`);
       return;
     },
-    [navigate]
+    []
   );
 
   const defaultStackingBehavior = useCallback(

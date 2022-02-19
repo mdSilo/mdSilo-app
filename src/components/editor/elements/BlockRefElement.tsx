@@ -7,7 +7,7 @@ import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import useBlockReference from 'editor/backlinks/useBlockReference';
-import { useCurrentContext } from 'context/useCurrent';
+import { useCurrentMdContext } from 'context/useCurrentMd';
 import ReadOnlyEditor from '../ReadOnlyEditor';
 import ParagraphElement from './ParagraphElement';
 import EditorElement, { EditorElementProps } from './EditorElement';
@@ -25,7 +25,7 @@ export default function BlockRefElement(props: BlockRefElementProps) {
   const focused = useFocused();
 
   const blockReference = useBlockReference(element.blockId);
-  const currentNote = useCurrentContext();
+  const currentNote = useCurrentMdContext();
   const { onClick: onBlockRefClick, defaultStackingBehavior } =
     useOnNoteLinkClick(currentNote.id);
 

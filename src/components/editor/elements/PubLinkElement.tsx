@@ -3,7 +3,7 @@ import { RenderElementProps } from 'slate-react';
 import classNames from 'classnames';
 import { store } from 'lib/store';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { useCurrentContext } from 'context/useCurrent';
+import { useCurrentMdContext } from 'context/useCurrentMd';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { PubLink } from 'editor/slate';
 import Tooltip from 'components/misc/Tooltip';
@@ -25,7 +25,7 @@ export default function PubLinkElement(props: PubLinkElementProps) {
     "link shadow-md p-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800", 
     className
   );
-  const currentNote = useCurrentContext();
+  const currentNote = useCurrentMdContext();
   const { onClick: onNoteLinkClick, defaultStackingBehavior } =
     useOnNoteLinkClick(currentNote.id);
   
