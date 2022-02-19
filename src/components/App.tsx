@@ -5,9 +5,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'tippy.js/dist/tippy.css';
 import { ProvideCurrentView } from 'context/useCurrentView';
 import Sidebar from './sidebar/Sidebar';
-import MainView from './MainView';
+import MainView from './view/MainView';
 import FindOrCreateModal from './note/NoteNewModal';
-//import SettingsModal from './settings/SettingsModal';
+import SettingsModal from './settings/SettingsModal';
 
 const App = () => {
   const [isFindOrCreateModalOpen, setIsFindOrCreateModalOpen] = useState(false);
@@ -28,6 +28,9 @@ const App = () => {
           </div>
           {isFindOrCreateModalOpen ? (
             <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />
+          ) : null}
+          {isSettingsOpen ? (
+            <SettingsModal setIsOpen={setIsSettingsOpen} />
           ) : null}
         </div>
       </div>

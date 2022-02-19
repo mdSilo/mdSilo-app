@@ -5,11 +5,18 @@ import { useTransition, animated } from '@react-spring/web';
 import Tooltip from 'components/misc/Tooltip';
 import { isMobile } from 'utils/helper';
 import { useStore } from 'lib/store';
-import { SPRING_CONFIG } from 'constants/spring';
+import { SpringConfig } from '@react-spring/web';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarItem from './SidebarItem';
 import SidebarContent from './SidebarContent';
 import SidebarHeader from './SidebarHeader';
+
+const SPRING_CONFIG: SpringConfig = {
+  mass: 1,
+  tension: 170,
+  friction: 10,
+  clamp: true,
+} as const;
 
 type Props = {
   setIsFindOrCreateModalOpen: Dispatch<SetStateAction<boolean>>;

@@ -1,4 +1,4 @@
-export const initialState = {view: 'chronicle'};
+export const initialState = {view: 'task'};
 
 type ViewParams = { noteId: string; stackIds?: string[] };
 

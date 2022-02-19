@@ -1,9 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { Menu } from '@headlessui/react';
-import { 
-  IconChevronsDown, IconX, 
-  IconSettings, IconWriting, IconPizza 
-} from '@tabler/icons';
+import { IconChevronsDown, IconX, IconSettings, IconPizza } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import { DropdownItem } from 'components/misc/Dropdown';
@@ -16,7 +13,6 @@ type Props = {
 export default function SidebarHeader(props: Props) {
   const { setIsSettingsOpen } = props;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const linkItemClass = "border-t dark:border-gray-700 hover:bg-gray-100 hover:dark:bg-gray-700";
 
   return (
     <div className="relative">
@@ -49,10 +45,6 @@ export default function SidebarHeader(props: Props) {
           >
             <IconSettings size={18} className="mr-1" />
             <span>Settings</span>
-          </DropdownItem>
-          <DropdownItem className={linkItemClass} as='link' href='/app'>
-            <IconWriting size={18} className="mr-1" />
-            <span>New Workspace</span>
           </DropdownItem>
           <DropdownItem
             className="border-t dark:border-gray-700 hover:bg-green-400"
