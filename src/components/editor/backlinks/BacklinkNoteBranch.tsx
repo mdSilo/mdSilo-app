@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Backlink } from 'editor/backlinks/useBacklinks';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { useCurrentContext } from 'editor/hooks/useCurrent';
+import { useCurrentContext } from 'context/useCurrent';
 
 type BacklinkNoteBranchProps = {
   backlink: Backlink;

@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { NoteLink } from 'editor/slate';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
-import { useCurrentContext } from 'editor/hooks/useCurrent';
+import { useCurrentContext } from 'context/useCurrent';
 import { store } from 'lib/store';
 import { extractTexts } from 'editor/hooks/useSummary';
 import { refreshFile } from 'editor/hooks/useRefresh';

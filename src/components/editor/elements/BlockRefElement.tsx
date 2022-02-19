@@ -7,7 +7,7 @@ import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import useBlockReference from 'editor/backlinks/useBlockReference';
-import { useCurrentContext } from 'editor/hooks/useCurrent';
+import { useCurrentContext } from 'context/useCurrent';
 import ReadOnlyEditor from '../ReadOnlyEditor';
 import ParagraphElement from './ParagraphElement';
 import EditorElement, { EditorElementProps } from './EditorElement';

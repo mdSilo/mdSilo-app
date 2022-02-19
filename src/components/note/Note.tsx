@@ -11,7 +11,7 @@ import type { Note as NoteType } from 'types/model';
 import { Attr, defaultAttr, buildAttr } from 'types/model';
 //import serialize from 'editor/serialization/serialize';
 import { getDefaultEditorValue, defaultDemoNote } from 'editor/constants';
-import { ProvideCurrent } from 'editor/hooks/useCurrent';
+import { ProvideCurrent } from 'context/useCurrent';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual } from 'utils/helper';
 import ErrorBoundary from '../misc/ErrorBoundary';
@@ -53,7 +53,7 @@ function Note(props: Props) {
   }, [noteId, isWiki, isLoaded]);
 
   // get title and content value
-  const title = store.getState().notes[noteId]?.title ?? '';
+  const title = store.getState().notes[noteId]?.title ?? 'demo note';
   const value = useStore(
     (state) => state.notes[noteId]?.content ?? getDefaultEditorValue()
   );
@@ -133,13 +133,13 @@ function Note(props: Props) {
   const currentNoteValue = useMemo(() => ({ ty: 'note', id: noteId }), [noteId]);
   const isNoteExists = useMemo(() => !!store.getState().notes[noteId], [noteId]);
 
-  if (!isNoteExists) {
-    return (
-      <div className={errorContainerClassName}>
-        <p>it does not look like this note exists! {noteId}</p>
-      </div>
-    );
-  }
+  // if (!isNoteExists) {
+  //   return (
+  //     <div className={errorContainerClassName}>
+  //       <p>it does not look like this note exists! {noteId}</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <ErrorBoundary

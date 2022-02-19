@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useCurrentContext } from 'editor/hooks/useCurrent';
+import { useCurrentContext } from 'context/useCurrent';
 import type { Backlink, BacklinkMatch } from 'editor/backlinks/useBacklinks';
 import useBacklinks from 'editor/backlinks/useBacklinks';
 import Tree from 'components/misc/Tree';

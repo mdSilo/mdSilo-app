@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Menu } from '@headlessui/react';
 import { IconDots, IconX, IconTrash, IconCornerDownRight } from '@tabler/icons';
 import { usePopper } from 'react-popper';
-import { useCurrentContext } from 'editor/hooks/useCurrent';
+import { useCurrentContext } from 'context/useCurrent';
 import { store, useStore } from 'lib/store';
 import { queryParamToArray } from 'utils/helper';
 import OpenSidebarButton from 'components/sidebar/OpenSidebarButton';

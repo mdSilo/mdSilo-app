@@ -3,7 +3,7 @@ import { RenderElementProps } from 'slate-react';
 import classNames from 'classnames';
 import { store } from 'lib/store';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { useCurrentContext } from 'editor/hooks/useCurrent';
+import { useCurrentContext } from 'context/useCurrent';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { PubLink } from 'editor/slate';
 import Tooltip from 'components/misc/Tooltip';

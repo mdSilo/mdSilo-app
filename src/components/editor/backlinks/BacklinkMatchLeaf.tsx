@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 import { BacklinkMatch } from 'editor/backlinks/useBacklinks';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { useCurrentContext } from 'editor/hooks/useCurrent';
+import { useCurrentContext } from 'context/useCurrent';
 import ReadOnlyEditor from '../ReadOnlyEditor';
 
 type BacklinkMatchLeafProps = {
