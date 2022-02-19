@@ -50,7 +50,7 @@ function Trait(props: Props) {
       </div>
       <input
         ref={traitRef}
-        className="trait-val text-sm p-1 border-none outline-none focus:ring-transparent cursor-text appearance-none dark:bg-gray-900"
+        className="trait-val text-sm p-1 border-none outline-none focus:ring-transparent cursor-text appearance-none dark:bg-slate-800"
         type={traitKey === 'Publish' ? 'date' : 'text'}
         list={traitKey === 'Type' ? "trait-types" : ''}
         placeholder="..."

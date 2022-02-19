@@ -5,7 +5,7 @@ const { gray } = require('tailwindcss/colors');
 
 module.exports = {
   mode: 'jit',
-  content: ['./src/**/*.{html,js,ts,jsx,tsx}', './public/**/*.{html,js,ts,jsx,tsx}', './src/components/**/*.{js,ts,jsx,tsx}'],
+  purge: ['./src/**/*.{html,js,ts,jsx,tsx}', './public/**/*.{html,js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     container: {
