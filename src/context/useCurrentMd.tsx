@@ -11,13 +11,12 @@ type CurrentMd = {
 
 const CurrContext = createContext<CurrentMd | undefined>(undefined);
 
-export function ProvideCurrentMd({
-  children,
-  value,
-}: {
+type Props = {
   children: ReactNode;
   value: CurrentMd;
-}) {
+};
+
+export function ProvideCurrentMd({ children, value }: Props) {
   return <CurrContext.Provider value={value}>{children}</CurrContext.Provider>;
 }
 

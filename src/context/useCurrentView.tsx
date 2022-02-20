@@ -14,11 +14,7 @@ type CurrentView = {
 
 const CurrentViewContext = createContext<CurrentView | undefined>(undefined);
 
-export function ProvideCurrentView({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function ProvideCurrentView({ children }: {children: ReactNode;}) {
   const [state, dispatch] = useReducer(viewReducer, initialState);
   return (
     <CurrentViewContext.Provider value={{ state, dispatch }}>

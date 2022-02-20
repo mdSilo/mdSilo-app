@@ -33,4 +33,3 @@ export function viewReducer(state: ViewState, action: ViewAction) {
       throw new Error();
   }
 }
-

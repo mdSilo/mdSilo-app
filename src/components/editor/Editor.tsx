@@ -39,7 +39,7 @@ import withBlockReferences from 'editor/plugins/withBlockReferences';
 import withTags from 'editor/plugins/withTags';
 import withHtml from 'editor/plugins/withHtml';
 import withTable from 'editor/plugins/withTable';
-//import { useStore } from 'lib/store';
+import { useStore } from 'lib/store';
 import { ElementType, Mark } from 'editor/slate';
 import useIsMounted from 'editor/hooks/useIsMounted';
 import HoveringToolbar from './HoveringToolbar';
@@ -81,7 +81,6 @@ function Editor(props: Props) {
     className = '', 
     highlightedPath, 
     isWiki = false,
-    //forceReadMode = false,
   } = props;
   const isMounted = useIsMounted();
 
@@ -278,10 +277,12 @@ function Editor(props: Props) {
     [editor.selection, onChange, value, setValue]
   );
 
-  const readMode = false;
+  const readMode = useStore(
+    (state) => isWiki ? state.wikiReadMode : state.readMode
+  );
 
   // If highlightedPath is defined, highlight the path
-  const darkMode = true;
+  const darkMode = useStore((state) => state.darkMode);
   useEffect(() => {
     if (!highlightedPath) {
       return;

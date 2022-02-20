@@ -59,7 +59,7 @@ type SettingsModalSidebarProps = {
 const SettingsModalSidebar = (props: SettingsModalSidebarProps) => {
   const { currentTab, setCurrentTab } = props;
   return (
-    <div className="flex flex-col flex-none w-full py-4 border-b sm:border-b-0 sm:border-r sm:w-48 sm:h-full bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+    <div className="flex flex-col flex-none w-24 py-4 h-full bg-gray-50 dark:bg-gray-800">
       <div className="px-4 pb-2 text-sm text-gray-600 dark:text-gray-400">
         Settings
       </div>
