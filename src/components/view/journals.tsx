@@ -23,7 +23,7 @@ export default function Journals() {
         {!isSidebarOpen ? (
           <OpenSidebarButton className="absolute top-0 left-0 z-10 mx-4 my-1" />
         ) : null}
-        <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-slate-800 dark:text-gray-200 overlfow-y-auto">
+        <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-gray-800 dark:text-gray-200 overlfow-y-auto">
           <div className="flex justify-center my-6">
             <FindOrCreateInput
               className="w-full bg-white rounded shadow-popover dark:bg-gray-800"

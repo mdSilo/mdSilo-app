@@ -9,15 +9,17 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
   const currentView = useCurrentViewContext();
   const viewState = currentView.state;
   const dispatch = currentView.dispatch;
-  // const { query: { stack: stackQuery },} = router;
+
   const openNoteIds = useStore((state) => state.openNoteIds);
   const isPageStackingOn = useStore((state) => state.isPageStackingOn);
 
   const onClick = useCallback(
     (noteId: string, stackNote: boolean, highlightedPath?: Path) => {
+      console.log("hl hash", highlightedPath)
       // If stackNote is false, open the note in its own page
       if (!stackNote) {
         const hash = highlightedPath ? `0-${highlightedPath}` : undefined;
+        console.log("here-1", highlightedPath)
         dispatch({view: 'md', params: {noteId, hash}});
         return;
       }
@@ -26,6 +28,7 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
       const index = openNoteIds.findIndex(
         (openNoteId) => openNoteId === noteId
       );
+      console.log("here-2: index", openNoteIds, noteId, index)
       if (index > -1) {
         const noteElement = document.getElementById(openNoteIds[index]);
         if (noteElement) {
@@ -43,6 +46,8 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
           const hash = `${index}-${highlightedPath}`;
           dispatch({view: 'md', params: {noteId, stackIds: stackedNoteIds, hash}});
         }
+
+        console.log("here-2", highlightedPath)
 
         return;
       }
@@ -71,6 +76,7 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
         ? `${newNoteIndex}-${highlightedPath}`
         : undefined;
       dispatch({view: 'md', params: {noteId, stackIds: stackedNoteIds, hash}});
+      console.log("here-3", highlightedPath)
     },
     [openNoteIds, viewState.params?.stackIds, dispatch, currentNoteId]
   );

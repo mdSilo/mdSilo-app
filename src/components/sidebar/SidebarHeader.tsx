@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconChevronsDown, IconX, IconSettings, IconPizza } from '@tabler/icons';
+import { IconChevronsDown, IconChevronLeft, IconSettings, IconPizza } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import { DropdownItem } from 'components/misc/Dropdown';
@@ -30,7 +30,7 @@ export default function SidebarHeader(props: Props) {
                 setIsSidebarOpen(false);
               }}
             >
-              <IconX className="text-gray-500 dark:text-gray-400" />
+              <IconChevronLeft className="text-gray-500 dark:text-gray-400" />
             </span>
           </Tooltip>
         </Menu.Button>

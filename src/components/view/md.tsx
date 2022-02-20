@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Path } from 'slate';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Note from 'components/note/Note';
@@ -9,11 +9,19 @@ import useBlockBacklinks from 'editor/backlinks/useBlockBacklinks';
 
 
 export default function NotePage() {
-  // const location = useLocation();
   const currentView = useCurrentViewContext();
   const viewTy = currentView.state.view;
   const params = currentView.state.params;
   const noteId = params?.noteId || '';
+  const hlHash = params?.hash || '';
+
+  const {stackIds} = useMemo(() => {
+    return {
+      //noteId: params?.noteId || '',
+      stackIds: params?.stackIds || [],
+      //hlHash: params?.hash || '',
+    };
+  }, [params]);
 
   const openNoteIds = useStore((state) => state.openNoteIds);
   const setOpenNoteIds = useStore((state) => state.setOpenNoteIds);
@@ -26,19 +34,18 @@ export default function NotePage() {
     path: Path;
   } | null>(null);
 
-  // Initialize open notes and highlighted path
+  // Initialize open stacked notes and highlighted path
   useEffect(() => {
     if (!noteId || typeof noteId !== 'string' || viewTy !== 'md') {
       return;
     }
-
-    const newOpenNoteIds = [noteId]; // , ...queryParamToArray(stackQuery)
+    // stacks
+    const newOpenNoteIds = [noteId, ...stackIds]; // , ...queryParamToArray(stackQuery)
     setOpenNoteIds(newOpenNoteIds);
-
-    // We use router.asPath specifically so we handle any route change (even if asPath is the same)
-    // const newHighlightedPath = getHighlightedPath(location.hash);
-    // setHighlightedPath(newHighlightedPath);
-  }, [setOpenNoteIds, noteId, viewTy]);
+    // highlight
+    const newHighlightedPath = getHighlightedPath(hlHash);
+    setHighlightedPath(newHighlightedPath);
+  }, [setOpenNoteIds, noteId, viewTy, hlHash, stackIds]);
 
   useEffect(() => {
     // Scroll the last open note into view if:
@@ -80,7 +87,7 @@ export default function NotePage() {
         {openNoteIds.length > 0
           ? openNoteIds.map((noteId, index) => (
               <Note
-                key={noteId}
+                key={`${noteId}-${index}`}
                 noteId={noteId}
                 className="sticky left-0"
                 highlightedPath={
@@ -101,15 +108,11 @@ export default function NotePage() {
  * and 2,3 signifies the path to be highlighted). Parses the url and
  * returns the open note index and the path to be highlighted as an object.
  */
-const getHighlightedPath = (
-  url: string
-): { index: number; path: Path } | null => {
-  const urlArr = url.split('#');
-  if (urlArr.length <= 1) {
+const getHighlightedPath = (hash: string): { index: number; path: Path } | null => {
+  if (!hash) {
     return null;
   }
 
-  const hash = urlArr[urlArr.length - 1];
   const [strIndex, ...strPath] = hash.split(/[-,]+/);
 
   const index = Number.parseInt(strIndex);

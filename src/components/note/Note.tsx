@@ -126,7 +126,7 @@ function Note(props: Props) {
   // TODO: Prompt the usr with a dialog box about unsaved changes if they navigate away
 
   const noteContainerClassName =
-    'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-slate-800 dark:text-gray-200';
+    'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-gray-800 dark:text-gray-200';
   const errorContainerClassName = 
     `${noteContainerClassName} items-center justify-center h-full p-4`;
 

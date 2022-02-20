@@ -24,7 +24,7 @@ const App = () => {
   return (
     <ProvideCurrentView>
       <div id="app-container" className={appContainerClassName}>
-        <div className="flex w-full h-full dark:bg-slate-900">
+        <div className="flex w-full h-full dark:bg-gray-900">
           <Sidebar
             setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
             setIsSettingsOpen={setIsSettingsOpen}

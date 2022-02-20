@@ -139,7 +139,9 @@ function Sidebar(props: Props) {
   );
 }
 
+const btnClass = 'title flex items-center text-lg px-6 py-1';
 const btnIconClass = 'flex-shrink-0 mr-1 text-gray-800 dark:text-gray-300';
+const btnSpanClass = 'overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap';
 
 type ButtonProps = {
   viewTy: string;
@@ -151,24 +153,16 @@ const GraphButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem
-      isHighlighted={viewTy === 'graph'}
-      onClick={onClick}
-    >
+    <SidebarItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
       <Tooltip
         content="Visualization of networked notes (Ctrl+Shift+G)"
         placement="right"
-        touch={false}
+        touch={true}
       >
-        <button 
-          className="title link flex items-center text-lg px-6 py-1" 
-          onClick={onDispatch}
-        >
+        <button className={btnClass} onClick={onDispatch}>
           <>
             <IconDna size={20} className={btnIconClass} />
-            <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
-              Graph View
-            </span>
+            <span className={btnSpanClass}>Graph View</span>
           </>
         </button>
       </Tooltip>
@@ -180,24 +174,16 @@ const ChronButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem
-      isHighlighted={viewTy === '/app/chronicle'}
-      onClick={onClick}
-    >
+    <SidebarItem isHighlighted={viewTy === '/app/chronicle'} onClick={onClick}>
       <Tooltip
         content="Chronicle my life (Ctrl+Shift+C)"
         placement="right"
-        touch={false}
+        touch={true}
       >
-        <button 
-          className="title link flex items-center text-lg px-6 py-1" 
-          onClick={onDispatch}
-        >
+        <button className={btnClass} onClick={onDispatch}>
           <>
             <IconBookmarks size={20} className={btnIconClass} />
-            <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
-              Chronicle
-            </span>
+            <span className={btnSpanClass}>Chronicle</span>
           </>
         </button>
       </Tooltip>
@@ -209,24 +195,16 @@ const TaskButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem
-      isHighlighted={viewTy === 'task'}
-      onClick={onClick}
-    >
+    <SidebarItem isHighlighted={viewTy === 'task'} onClick={onClick}>
       <Tooltip
         content="Track Personal Tasks (Ctrl+Shift+T)"
         placement="right"
-        touch={false}
+        touch={true}
       >
-        <button 
-          className="title link flex items-center text-lg px-6 py-1" 
-          onClick={onDispatch}
-        >
+        <button className={btnClass} onClick={onDispatch}>
           <>
             <IconCheckbox size={20} className={btnIconClass} />
-            <span className="overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap">
-              Tasks View
-            </span>
+            <span className={btnSpanClass}>Tasks View</span>
           </>
         </button>
       </Tooltip>
