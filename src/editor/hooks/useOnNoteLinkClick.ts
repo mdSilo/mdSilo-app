@@ -15,14 +15,17 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
 
   const onClick = useCallback(
     (noteId: string, stackNote: boolean, highlightedPath?: Path) => {
-      console.log("hl hash", highlightedPath)
+      //console.log("hl hash", highlightedPath)
       // If stackNote is false, open the note in its own page
+      stackNote = false;
       if (!stackNote) {
         const hash = highlightedPath ? `0-${highlightedPath}` : undefined;
-        console.log("here-1", highlightedPath)
+        //console.log("here-1", highlightedPath)
         dispatch({view: 'md', params: {noteId, hash}});
         return;
       }
+
+      // FIXME: stack note view
 
       // If the note is already open, scroll it into view
       const index = openNoteIds.findIndex(

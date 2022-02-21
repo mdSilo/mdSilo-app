@@ -174,7 +174,7 @@ const ChronButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem isHighlighted={viewTy === '/app/chronicle'} onClick={onClick}>
+    <SidebarItem isHighlighted={viewTy === 'chronicle'} onClick={onClick}>
       <Tooltip
         content="Chronicle my life (Ctrl+Shift+C)"
         placement="right"
