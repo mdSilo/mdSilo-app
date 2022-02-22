@@ -45,7 +45,7 @@
     "localforage": "^1.10.0",
     "zustand": "^3.7.0",
     "react-scripts": "5.0.0",
-    
+    "@tauri-apps/api": "^1.0.0-rc.1",
     "web-vitals": "^0.2.4",
     "workbox-background-sync": "^5.1.4",
     "workbox-broadcast-update": "^5.1.4",
