@@ -8,7 +8,7 @@ import { defaultUserId } from 'types/model';
 // 
 export type NoteUpsert = PickPartial<
   Note,  // title, user_id required
-  'id' | 'content' | 'md_content' | 'cover' | 'attr' | 'created_at' | 'updated_at' | 'is_pub' | 'is_wiki' | 'is_daily'
+  'id' | 'content' | 'md_content' | 'cover' | 'created_at' | 'updated_at' | 'is_pub' | 'is_wiki' | 'is_daily'
 >;
 
 export async function upsertDbNote(note: NoteUpsert, userId: string) {
@@ -40,7 +40,7 @@ export async function upsertDbNote(note: NoteUpsert, userId: string) {
 // 
 export type NoteUpdate = PickPartial<
   Note, // id required
-  'title' | 'content' | 'user_id' | 'md_content' | 'cover' | 'attr' | 'created_at' | 'updated_at' | 'is_pub' | 'is_wiki' | 'is_daily'
+  'title' | 'content' | 'user_id' | 'md_content' | 'cover' | 'created_at' | 'updated_at' | 'is_pub' | 'is_wiki' | 'is_daily'
 >;
 
 export async function updateDbNote(note: NoteUpdate, userId: string) {
@@ -63,7 +63,7 @@ export async function updateDbNote(note: NoteUpdate, userId: string) {
 
 // get
 //
-const selectColumns = 'id, title, content, user_id, md_content, cover, attr, created_at, updated_at, is_pub, is_wiki, is_daily';
+const selectColumns = 'id, title, content, user_id, md_content, cover, created_at, updated_at, is_pub, is_wiki, is_daily';
 
 export async function loadDbNote(noteId: string) {
   const response = await apiClient

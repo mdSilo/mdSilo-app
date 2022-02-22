@@ -3,11 +3,9 @@ import type { Path, Descendant } from 'slate';
 import { toast } from 'react-toastify';
 import Editor from 'components/editor/Editor';
 import Title from 'components/editor/Title';
-import Trait, { TraitKeys } from 'components/editor/Trait';
 import Backlinks from 'components/editor/backlinks/Backlinks';
 import { store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
-import { Attr, defaultAttr, buildAttr } from 'types/model';
 //import serialize from 'editor/serialization/serialize';
 import { getDefaultEditorValue, defaultDemoNote } from 'editor/constants';
 import { useCurrentViewContext } from 'context/useCurrentView';
@@ -66,26 +64,14 @@ function Note(props: Props) {
     [noteId, updateNote]
   );
 
-  const initNoteAttr: Attr = useStore(
-    (state) => state.notes[noteId]?.attr ?? defaultAttr
-  );
-  // update locally
-  const setAttrOnChange = useCallback(
-    (k: string, v: string) => {
-      const newAttr = Object.assign({}, initNoteAttr, buildAttr(k,v)); //Object.assign(tar,...src)
-      store.getState().updateNote({ id: noteId, attr: newAttr })
-    }, [noteId, initNoteAttr]
-  );
-
   // use state and useEffect to trigger and handle update to db
   const [syncState, setSyncState] = useState({
     isTitleSynced: true,
     isContentSynced: true,
-    isAttrSynced: true,
   });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isSynced = useMemo(
-    () => syncState.isTitleSynced && syncState.isContentSynced && syncState.isAttrSynced,
+    () => syncState.isTitleSynced && syncState.isContentSynced,
     [syncState]
   );
 
@@ -113,10 +99,6 @@ function Note(props: Props) {
     },
     [noteId, updateNote, isWiki]
   );
-
-  const onAttrChange = useCallback(() => {
-    setSyncState((syncState) => ({ ...syncState, isAttrSynced: false }));
-  }, []);
 
   const onValueChange = useCallback(() => {
     setSyncState((syncState) => ({ ...syncState, isContentSynced: false }));
@@ -168,19 +150,6 @@ function Note(props: Props) {
                 isDaily={isDaily}
                 isPub={isPub}
               />
-              {isWiki ? (
-                <div className="mt-2 border-b">
-                  {TraitKeys.map((k) => (
-                    <Trait
-                      key={k}
-                      traitKey={k}
-                      initialVal={initNoteAttr[k] || ''}
-                      setAttr={setAttrOnChange}
-                      onChange={onAttrChange}
-                    />
-                  ))}
-                </div>
-              ) : null}
               <Editor
                 className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12"
                 noteId={noteId}

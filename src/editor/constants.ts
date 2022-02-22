@@ -19,7 +19,6 @@ export const defaultDemoNote =  {
   user_id: '00000000-0000-0000-0000-000000000000',
   md_content: '',
   cover: '',
-  attr: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   is_pub: false,

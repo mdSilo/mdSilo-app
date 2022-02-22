@@ -39,9 +39,11 @@ class DirectoryAPI {
 	
   constructor(dirName: string, parentDir?: string) {
     if (parentDir) {
-	  this.parentDir = normalizeSlash(parentDir);
-	  this.dirName = normalizeSlash(joinPath(parentDir, dirName));
-    } else this.dirName = normalizeSlash(dirName);
+	    this.parentDir = normalizeSlash(parentDir);
+	    this.dirName = normalizeSlash(joinPath(parentDir, dirName));
+    } else {
+      this.dirName = normalizeSlash(dirName);
+    }
   }
 
   /**
@@ -49,16 +51,16 @@ class DirectoryAPI {
    * @returns {Promise<DirectoryData>}
   */
   getFiles(): Promise<DirectoryData> {
-	return new Promise((resolve) => {
-	  if (isTauri) {
-      invoke<DirectoryData>(
-        'read_directory', { dir: this.dirName }
-      ).then((files: DirectoryData) => {
-        this.files = files.files;
-        resolve(files);
-      });
-	  }
-	});
+    return new Promise((resolve) => {
+      if (isTauri) {
+        invoke<DirectoryData>(
+          'read_directory', { dir: this.dirName }
+        ).then((files: DirectoryData) => {
+          this.files = files.files;
+          resolve(files);
+        });
+      }
+    });
   }
 
   /**
@@ -66,15 +68,15 @@ class DirectoryAPI {
    * @returns {Promise<boolean>}
   */
   async isDir(): Promise<boolean> {
-	return new Promise((resolve) => {
-	  if (isTauri) {
-      invoke<boolean>(
-        'is_dir', { path: this.dirName }
-      ).then(
-        (result: boolean) => resolve(result)
-      );
-	  }
-	});
+    return new Promise((resolve) => {
+      if (isTauri) {
+        invoke<boolean>(
+          'is_dir', { path: this.dirName }
+        ).then(
+          (result: boolean) => resolve(result)
+        );
+      }
+    });
   }
 
   /**
