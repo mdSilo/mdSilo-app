@@ -3,26 +3,26 @@ use std::path::Path;
 use std::time::SystemTime;
 extern crate notify;
 extern crate trash;
-use glob::{glob_with, MatchOptions};
 use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct FileMetaData {
   file_path: String,
-  basename: String,
+  file_name: String,
   //file_type: String,
-  is_dir: bool,
-  is_file: bool,
+  file_text: String,
   size: u64,
   readonly: bool,
+  is_dir: bool,
+  is_file: bool,
   last_modified: SystemTime,
   last_accessed: SystemTime,
   created: SystemTime,
 }
 
 #[derive(serde::Serialize)]
-pub struct FolderInformation {
+pub struct FolderData {
   number_of_files: u16,
   files: Vec<FileMetaData>,
 }
@@ -33,45 +33,52 @@ pub struct Event {
   pub event: String,
 }
 
-/// Get basename of the path given
-pub fn get_basename(file_path: String) -> String {
-  let basename = Path::new(&file_path).file_name();
-  match basename {
-    Some(basename) => basename.to_str().unwrap().to_string(),
-    None => file_path,
+/// Get file_name of the path given
+pub fn get_basename(file_path: &str) -> String {
+  let name = Path::new(file_path).file_name();
+  match name {
+    Some(name) => name.to_str().unwrap_or(file_path).to_string(),
+    None => file_path.to_string(),
   }
 }
 
 /// Get properties of a file
 #[tauri::command]
-pub async fn get_file_properties(file_path: String) -> Result<FileMetaData, String> {
-  let metadata = fs::metadata(file_path.clone());
-  let metadata = match metadata {
-    Ok(result) => result,
+pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
+  let metadata = match fs::metadata(file_path) {
+    Ok(data) => data,
     Err(e) => return Err(e.to_string()),
   };
+
+  let file_name = get_basename(file_path);
+  //let file_type = metadata.file_type();
   let is_dir = metadata.is_dir();
   let is_file = metadata.is_file();
   let size = metadata.len();
   let readonly = metadata.permissions().readonly();
-  let last_modified = metadata.modified();
-  let last_modified = match last_modified {
-    Ok(result) => result,
-    Err(e) => return Err(e.to_string()),
-  };
-  let last_accessed = metadata.accessed();
-  let last_accessed = match last_accessed {
-    Ok(result) => result,
-    Err(e) => return Err(e.to_string()),
-  };
-  let created = metadata.created();
-  let created = match created {
-    Ok(result) => result,
-    Err(e) => return Err(e.to_string()),
-  };
-  let basename = get_basename(file_path.clone());
 
+  let file_text = fs::read_to_string(file_path)
+    .unwrap_or(format!("{}: Something went wrong", file_path));
+
+  let last_modified = match metadata.modified() {
+    Ok(result) => result,
+    Err(_e) => SystemTime::now(), // TODO: to log the err
+  };
+
+  let last_accessed = match metadata.accessed() {
+    Ok(result) => result,
+    Err(_e) => SystemTime::now(), // TODO: to log the err
+  };
+
+  let created = match metadata.created() {
+    Ok(result) => result,
+    Err(_e) => SystemTime::now(), // TODO: to log the err
+  };
+  
   Ok(FileMetaData {
+    file_path: file_path.to_string(),
+    file_name,
+    file_text,
     is_dir,
     is_file,
     size,
@@ -79,45 +86,7 @@ pub async fn get_file_properties(file_path: String) -> Result<FileMetaData, Stri
     last_modified,
     last_accessed,
     created,
-    file_path,
-    basename,
   })
-}
-
-/// Get size of a directory
-///
-/// Get size of a directory by iterating and summing up the size of all files
-#[tauri::command]
-pub async fn get_dir_size(dir: String) -> u64 {
-  let mut total_size: u64 = 0;
-  let mut stack = vec![dir];
-  while let Some(path) = stack.pop() {
-    let entry = fs::read_dir(path);
-    let entry = match entry {
-      Ok(result) => result,
-      Err(_) => continue,
-    };
-    for file in entry {
-      let file = file.unwrap();
-      let metadata = file.metadata().unwrap();
-      if metadata.is_dir() {
-        stack.push(file.path().to_str().unwrap().to_string());
-      } else {
-        total_size += metadata.len();
-      }
-    }
-  }
-  total_size
-}
-
-#[tauri::command]
-pub async fn get_file_meta_data(file_path: String) -> Result<FileMetaData, String> {
-  let properties = get_file_properties(file_path).await;
-  if properties.is_err() {
-    Err("Error reading meta data".into())
-  } else {
-    Ok(properties.unwrap())
-  }
 }
 
 /// Check if a given path is a directory
@@ -128,31 +97,37 @@ pub fn is_dir(path: &Path) -> Result<bool, String> {
   if !Path::new(path).exists() {
     Ok(false)
   } else {
-    let md = fs::metadata(path).unwrap();
-    Ok(md.is_dir())
+    match fs::metadata(path) {
+      Ok(meta) => Ok(meta.is_dir()),
+      Err(_e) => Ok(false),
+    }
   }
 }
 
 /// Read files and its information of a directory
 #[tauri::command]
-pub async fn read_directory(dir: &Path) -> Result<FolderInformation, String> {
+pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
   let paths = fs::read_dir(dir).map_err(|err| err.to_string())?;
+
   let mut number_of_files: u16 = 0;
   let mut files = Vec::new();
-  let mut skipped_files = Vec::new();
+
   for path in paths {
-    number_of_files += 1;
-    let file_path = path.unwrap().path().display().to_string();
-    let file_info = get_file_properties(file_path.clone()).await;
-    if file_info.is_err() {
-      skipped_files.push(file_path);
-      continue;
-    } else {
-      let file_info = file_info.unwrap();
-      files.push(file_info);
+    let file_path = match path {
+      Ok(p) => p.path().display().to_string(),
+      Err(_e) => continue,
     };
+
+    let file_info = get_file_meta(&file_path).await;
+    if let Ok(file) = file_info {
+      files.push(file);
+      number_of_files += 1;
+    } else {
+      continue;
+    }
   }
-  Ok(FolderInformation {
+
+  Ok(FolderData {
     number_of_files,
     files,
   })
@@ -160,18 +135,23 @@ pub async fn read_directory(dir: &Path) -> Result<FolderInformation, String> {
 
 /// Get array of files of a directory
 #[tauri::command]
-pub async fn get_files_in_directory(dir: &Path) -> Result<Vec<String>, String> {
+pub async fn list_directory(dir: &str) -> Result<Vec<String>, String> {
   let paths = fs::read_dir(dir).map_err(|err| err.to_string())?;
-  let mut files = Vec::new();
+  let mut filepaths = Vec::new();
   for path in paths {
-    files.push(path.unwrap().path().display().to_string());
+    let file_path = match path {
+      Ok(p) => p.path().display().to_string(),
+      Err(_e) => continue,
+    };
+
+    filepaths.push(file_path);
   }
-  Ok(files)
+  Ok(filepaths)
 }
 
 /// Check if path given exists
 #[tauri::command]
-pub fn file_exist(file_path: String) -> bool {
+pub fn file_exist(file_path: &str) -> bool {
   fs::metadata(file_path).is_ok()
 }
 
@@ -190,28 +170,41 @@ pub async fn create_dir_recursive(dir_path: String) -> bool {
 /// Create a file
 #[tauri::command]
 pub async fn create_file(file_path: String) -> bool {
-  let parent_dir = Path::new(&file_path)
-    .parent()
-    .unwrap()
-    .to_str()
-    .unwrap()
-    .to_string();
-  create_dir_recursive(parent_dir).await;
+  if let Some(p) = Path::new(&file_path).parent() {
+    create_dir_recursive(p.display().to_string()).await;
+  }
+
   fs::write(file_path, "").is_ok()
 }
 
+/// write to a file
+#[tauri::command]
+pub async fn write_file(file_path: String, text: String) -> bool {
+  if let Some(p) = Path::new(&file_path).parent() {
+    create_dir_recursive(p.display().to_string()).await;
+  }
+
+  fs::write(file_path, text).is_ok()
+}
+
+
 /// Delete a file 
 #[tauri::command]
-pub async fn delete_file(paths: Vec<String>) -> bool {
+pub async fn delete_files(paths: Vec<String>) -> bool {
   trash::delete_all(paths).is_ok()
 }
 
-/// Listen to change events of a directory
+/// Listen to change events in a directory
 #[tauri::command]
-pub async fn listen_dir(dir: String, window: tauri::Window) -> Result<String, String> {
+pub async fn listen_dir(
+  dir: String, 
+  window: tauri::Window
+) -> Result<String, String> {
   let (tx, rx) = channel();
 
-  let watcher = std::sync::Arc::new(std::sync::Mutex::new(raw_watcher(tx).unwrap()));
+  let watcher = std::sync::Arc::new(
+    std::sync::Mutex::new(raw_watcher(tx).unwrap())
+  );
 
   watcher
     .lock()
@@ -222,6 +215,7 @@ pub async fn listen_dir(dir: String, window: tauri::Window) -> Result<String, St
   window.once("unlisten_dir", move |_| {
     watcher.lock().unwrap().unwatch(dir.clone()).unwrap();
   });
+
   loop {
     match rx.recv() {
       Ok(RawEvent {
@@ -255,76 +249,9 @@ pub async fn listen_dir(dir: String, window: tauri::Window) -> Result<String, St
             )
             .unwrap();
         }
-      }
+      },
       Ok(event) => println!("broken event: {:?}", event),
       Err(e) => break Err(e.to_string()),
     }
   }
-}
-
-/// Calculate total size of given array of files
-#[tauri::command]
-pub async fn calculate_files_total_size(files: Vec<String>) -> u64 {
-  let mut total_size: u64 = 0;
-  for file in files {
-    let metadata = fs::metadata(file.clone()).unwrap();
-    if metadata.is_dir() {
-      total_size += get_dir_size(file).await;
-    }
-    total_size += metadata.len();
-  }
-  total_size
-}
-
-/// Search for glob matches inside a given directory path
-#[tauri::command]
-pub async fn search_in_dir(
-  dir_path: String,
-  pattern: String,
-  window: tauri::Window,
-) -> Vec<FileMetaData> {
-  let glob_pattern = match dir_path.as_ref() {
-    "xplorer://Home" => match cfg!(target_os = "windows") {
-      true => "C://**/".to_string() + &pattern,
-      false => "~/**/".to_string() + &pattern,
-    },
-    _ => format!("{}/**/{}", dir_path, pattern),
-  };
-  let glob_option = MatchOptions {
-    case_sensitive: false,
-    require_literal_separator: false,
-    require_literal_leading_dot: false,
-    ..Default::default()
-  };
-  let continue_search = std::sync::Arc::new(std::sync::Mutex::new(true));
-  let id = window.listen("unsearch", {
-    let continue_search = continue_search.clone();
-    move |_| {
-      *continue_search.lock().unwrap() = false;
-    }
-  });
-  let mut files = Vec::new();
-  let glob_result = glob_with(&glob_pattern, glob_option).unwrap();
-  for entry in glob_result {
-    if continue_search.lock().unwrap().clone() {
-      match entry {
-        Ok(path) => {
-          files.push(
-            get_file_properties(path.to_str().unwrap().to_string())
-              .await
-              .unwrap(),
-          );
-          if files.len() % 100 == 0 {
-            window.emit("search_partial_result", files.clone()).unwrap();
-            files.clear();
-          }
-        }
-        Err(e) => println!("{:?}", e),
-      }
-    } else {
-      break;
-    }
-  }
-  window.unlisten(id);
-  files
 }

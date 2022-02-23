@@ -29,15 +29,15 @@ class FileAPI {
   readFile(): Promise<string> {
 		return new Promise((resolve, reject) => {
 			if (typeof this.fileName === 'string') {
-			if (isTauri) {
-				fs.readTextFile(this.fileName).then(
-				(fileContent: string) => resolve(fileContent)
-				);
+				if (isTauri) {
+					fs.readTextFile(this.fileName).then(
+					  (fileContent: string) => resolve(fileContent)
+					);
+				} else {
+					reject('Read file is currently not supported on web version');
+				}
 			} else {
-				reject('Read file is currently not supported on web version');
-			}
-			} else {
-			reject('File name is not a string');
+			  reject('File name is not a string');
 			}
 		});
   }
@@ -46,13 +46,13 @@ class FileAPI {
 		const Buffer = require('buffer/').Buffer;
 		return new Promise((resolve, reject) => {
 			if (typeof this.fileName === 'string') {
-			if (isTauri) {
-				resolve(Buffer.from(fs.readBinaryFile(this.fileName).then(
-				(fileContent) => fileContent))
-				);
-			} else {
-				reject('Read file is currently not supported on web version');
-			}
+				if (isTauri) {
+					resolve(Buffer.from(fs.readBinaryFile(this.fileName).then(
+					  (fileContent) => fileContent))
+					);
+				} else {
+					reject('Read file is currently not supported on web version');
+				}
 			}
 		});
   }
@@ -94,13 +94,30 @@ class FileAPI {
 		}
   }
 
+	/**
+   * write to file
+   * @returns {Promise<void>}
+   */
+	 async writeFile(text: string): Promise<void> {
+		if (typeof this.fileName === 'string') {
+			if (isTauri) {
+				await invoke('create_dir_recursive', {
+					dirPath: getDirname(this.fileName),
+				});
+				return await invoke('write_file', { filePath: this.fileName, text });
+			} else {
+				return;
+			}
+		}
+  }
+
   /**
    * Read properties of a file
    * @returns {Promise<FileMetaData>}
    */
-  async properties(): Promise<FileMetaData> {
+  async metadata(): Promise<FileMetaData> {
 		return await invoke(
-			'get_file_properties', 
+			'get_file_meta', 
 			{ filePath: this.fileName }
 		);
   }
@@ -112,20 +129,9 @@ class FileAPI {
   async isDir(): Promise<boolean> {
 		return new Promise((resolve) => {
 			invoke<boolean>('is_dir', { path: this.fileName }).then(
-			(result: boolean) => resolve(result)
+			  (result: boolean) => resolve(result)
 			);
 		});
-  }
-
-  /**
-   * Calculate total size of given file paths
-   * @returns {number} - Size in bytes
-  */
-  async calculateFilesSize(): Promise<number> {
-		return await invoke(
-			'calculate_files_total_size', 
-			{ files: this.fileName }
-		);
   }
 }
 

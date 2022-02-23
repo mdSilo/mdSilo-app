@@ -3,6 +3,7 @@ import { Notes, NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { ciStringCompare, dateCompare, isMobile } from 'utils/helper';
 import { useImportJson, useImportMds } from 'editor/hooks/useImport';
+import { openDirDilog } from 'file/open';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree from './SidebarNotesTree';
@@ -34,8 +35,13 @@ function SidebarNotes(props: SidebarNotesProps) {
     }
     setIsFindOrCreateModalOpen((isOpen) => !isOpen);
   }, [setIsSidebarOpen, setIsFindOrCreateModalOpen]);
+
   const onImportJson = useImportJson();
-  const onImportFile = useImportMds();
+  const onOpenFile = useImportMds();
+  const onOpenDir = async () => {
+    const dirPath = await openDirDilog();
+    console.log("dir path", dirPath);
+  };
 
   const btnClass = "p-1 my-1 mx-4 rounded bg-blue-500 hover:text-yellow-500";
 
@@ -57,7 +63,8 @@ function SidebarNotes(props: SidebarNotesProps) {
             <p className="flex-1 px-6 my-2 text-center text-gray-500">
               No md yet
             </p>
-            <button className={btnClass} onClick={onImportFile}>Import File(.txt,.md)</button>
+            <button className={btnClass} onClick={onOpenDir}>Open Folder</button>
+            <button className={btnClass} onClick={onOpenFile}>Open File</button>
             <button className={btnClass} onClick={onCreateNote}>New File</button>
             <button className={btnClass} onClick={onImportJson}>Import JSON</button>
           </>

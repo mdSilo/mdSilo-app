@@ -10,13 +10,13 @@ interface SystemTime {
 
 interface FileMetaData {
   file_path: string;
-  basename: string;
+  file_name: string;
   //file_type: string;
-  original_parent?: string;
-  time_deleted?: number;
-  is_dir?: boolean;
+  file_text: string;
   size?: number;
   readonly?: boolean;
+  is_dir?: boolean;
+  is_file?: boolean;
   last_modified?: SystemTime;
   last_accessed?: SystemTime;
   created?: SystemTime;
@@ -100,16 +100,16 @@ class DirectoryAPI {
 
   /**
    * Listen to changes in a directory
-   * @param {() => void} cb - callback
+   * @param {() => void} callbackFn - callback
    * @returns {any}
    */
-  async listen(cb: () => void): Promise<void> {
+  async listen(callbackFn: () => void): Promise<void> {
     if (isTauri) {
       invoke('listen_dir', { dir: this.dirName });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       listener = await getCurrent().listen('changes', (e: any) => {
         console.log(e);
-        cb();
+        callbackFn();
       });
     }
   }
@@ -121,14 +121,6 @@ class DirectoryAPI {
   async unlisten(): Promise<void> {
     listener?.();
     return getCurrent().emit('unlisten_dir');
-  }
-
-  /**
-   * Get size of a directory
-   * @returns {Promise<number>}
-  */
-  async getSize(): Promise<number> {
-	  return await invoke('get_dir_size', { dir: this.dirName });
   }
 }
 
