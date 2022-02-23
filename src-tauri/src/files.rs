@@ -12,13 +12,13 @@ pub struct FileMetaData {
   file_name: String,
   //file_type: String,
   file_text: String,
+  created: SystemTime,
+  last_modified: SystemTime,
+  last_accessed: SystemTime,
   size: u64,
   readonly: bool,
   is_dir: bool,
   is_file: bool,
-  last_modified: SystemTime,
-  last_accessed: SystemTime,
-  created: SystemTime,
 }
 
 #[derive(serde::Serialize)]
@@ -67,7 +67,7 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
 
   let last_accessed = match metadata.accessed() {
     Ok(result) => result,
-    Err(_e) => SystemTime::now(), // TODO: to log the err
+    Err(_e) => SystemTime::now(), // TODO: to log the err, unit
   };
 
   let created = match metadata.created() {
@@ -79,13 +79,13 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     file_path: file_path.to_string(),
     file_name,
     file_text,
+    created,
+    last_modified,
+    last_accessed,
     is_dir,
     is_file,
     size,
     readonly,
-    last_modified,
-    last_accessed,
-    created,
   })
 }
 
@@ -152,7 +152,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<String>, String> {
 /// Check if path given exists
 #[tauri::command]
 pub fn file_exist(file_path: &str) -> bool {
-  fs::metadata(file_path).is_ok()
+  dbg!(fs::metadata(file_path)).is_ok()
 }
 
 /// Create directory recursively
@@ -175,6 +175,12 @@ pub async fn create_file(file_path: String) -> bool {
   }
 
   fs::write(file_path, "").is_ok()
+}
+
+/// reaf file to string
+#[tauri::command]
+pub async fn read_file(file_path: String) -> String {
+  fs::read_to_string(file_path).unwrap_or(String::from("Nothing"))  // TODO: handle err
 }
 
 /// write to a file

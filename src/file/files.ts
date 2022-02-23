@@ -1,5 +1,4 @@
 import { invoke } from '@tauri-apps/api/tauri'
-import { fs } from '@tauri-apps/api'
 import FileMetaData from './directory';
 import { isTauri, joinPath, getDirname } from './util';
 
@@ -30,7 +29,9 @@ class FileAPI {
 		return new Promise((resolve, reject) => {
 			if (typeof this.fileName === 'string') {
 				if (isTauri) {
-					fs.readTextFile(this.fileName).then(
+					invoke<string>(
+						'read_file', { filePath: this.fileName}
+					).then(
 					  (fileContent: string) => resolve(fileContent)
 					);
 				} else {
@@ -38,21 +39,6 @@ class FileAPI {
 				}
 			} else {
 			  reject('File name is not a string');
-			}
-		});
-  }
-
-  async readBuffer(): Promise<Buffer> {
-		const Buffer = require('buffer/').Buffer;
-		return new Promise((resolve, reject) => {
-			if (typeof this.fileName === 'string') {
-				if (isTauri) {
-					resolve(Buffer.from(fs.readBinaryFile(this.fileName).then(
-					  (fileContent) => fileContent))
-					);
-				} else {
-					reject('Read file is currently not supported on web version');
-				}
 			}
 		});
   }

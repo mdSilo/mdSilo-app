@@ -8,18 +8,18 @@ interface SystemTime {
   secs_since_epoch: number;
 }
 
-interface FileMetaData {
+export interface FileMetaData {
   file_path: string;
   file_name: string;
   //file_type: string;
   file_text: string;
+  created: SystemTime;
+  last_modified: SystemTime;
+  last_accessed?: SystemTime;
   size?: number;
   readonly?: boolean;
   is_dir?: boolean;
   is_file?: boolean;
-  last_modified?: SystemTime;
-  last_accessed?: SystemTime;
-  created?: SystemTime;
 }
 
 interface DirectoryData {

@@ -14,6 +14,7 @@ fn main() {
     files::file_exist,
     files::create_dir_recursive,
     files::create_file,
+    files::read_file,
     files::write_file,
     files::delete_files,
     files::list_directory,

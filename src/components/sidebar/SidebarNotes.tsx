@@ -3,7 +3,7 @@ import { Notes, NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { ciStringCompare, dateCompare, isMobile } from 'utils/helper';
 import { useImportJson, useImportMds } from 'editor/hooks/useImport';
-import { openDirDilog } from 'file/open';
+import { openDirDilog, openDir } from 'file/open';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree from './SidebarNotesTree';
@@ -41,6 +41,9 @@ function SidebarNotes(props: SidebarNotesProps) {
   const onOpenDir = async () => {
     const dirPath = await openDirDilog();
     console.log("dir path", dirPath);
+    if (dirPath && typeof dirPath === 'string') {
+      await openDir(dirPath);
+    }
   };
 
   const btnClass = "p-1 my-1 mx-4 rounded bg-blue-500 hover:text-yellow-500";
