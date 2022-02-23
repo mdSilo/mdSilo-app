@@ -98,7 +98,7 @@ export default function deserialize(
       };
     // this case for noteLink name from: editor/serialize/wikilin/fromMarkdown
     case 'wikiLink':
-      // Note ids are added later: useImport-processNoteLinks
+      // Note ids are added later: file/process -processNoteLinks
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       return {

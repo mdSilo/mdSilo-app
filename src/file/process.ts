@@ -77,9 +77,9 @@ export function processMds(fileList: FileMetaData[]) {
     // new note from file
     // Issue Alert: same title but diff ext, only one file can be imported
     const newNoteTitle = rmFileNameExt(fileName);
-    // TODO: tackle the time unit issue
-    const lastModDate = new Date(file.last_modified.secs_since_epoch).toISOString();
-    const createdDate = new Date(file.created.secs_since_epoch).toISOString();
+    
+    const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
+    const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
     const newNoteObj = {
       id: noteTitleToIdCache[newNoteTitle.toLowerCase()] ?? uuidv4(),
       title: newNoteTitle,
@@ -161,9 +161,8 @@ export const refreshImport = async (file: FileMetaData, title: string) => {
     return;
   }
   
-  // TODO: tackle the time unit issue
-  const lastModDate = new Date(file.last_modified.secs_since_epoch).toISOString();
-  const createdDate = new Date(file.created.secs_since_epoch).toISOString();
+  const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
+  const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
   const newNoteObj = {
     id: noteId,
     title,

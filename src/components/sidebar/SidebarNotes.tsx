@@ -2,8 +2,7 @@ import { Dispatch, memo, SetStateAction, useCallback, useMemo } from 'react';
 import { Notes, NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { ciStringCompare, dateCompare, isMobile } from 'utils/helper';
-import { useImportJson, useImportMds } from 'editor/hooks/useImport';
-import { openDirDilog, openDir } from 'file/open';
+import { openDirDilog, openDir, openFile, openFileDilog } from 'file/open';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree from './SidebarNotesTree';
@@ -36,8 +35,17 @@ function SidebarNotes(props: SidebarNotesProps) {
     setIsFindOrCreateModalOpen((isOpen) => !isOpen);
   }, [setIsSidebarOpen, setIsFindOrCreateModalOpen]);
 
-  const onImportJson = useImportJson();
-  const onOpenFile = useImportMds();
+  const openFiles = async (ty: string, multi = true) => {
+    const filePaths = await openFileDilog(ty, multi);
+    console.log("file path", filePaths);
+    const openPaths = typeof filePaths === 'string' ? [filePaths] : filePaths;
+    if (openPaths) {
+      await openFile(openPaths, ty);
+    }
+  };
+  const onImportJson = async () => await openFiles('json', false);
+  const onOpenFile = async () => await openFiles('md');
+
   const onOpenDir = async () => {
     const dirPath = await openDirDilog();
     console.log("dir path", dirPath);

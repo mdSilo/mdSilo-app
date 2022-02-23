@@ -37,12 +37,13 @@ pub struct Event {
 pub fn get_basename(file_path: &str) -> String {
   let name = Path::new(file_path).file_name();
   match name {
+    // TODO: handle err
     Some(name) => name.to_str().unwrap_or(file_path).to_string(),
     None => file_path.to_string(),
   }
 }
 
-/// Get properties of a file
+/// Get meatdata of a file
 #[tauri::command]
 pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   let metadata = match fs::metadata(file_path) {
@@ -50,6 +51,7 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     Err(e) => return Err(e.to_string()),
   };
 
+  // name.ext
   let file_name = get_basename(file_path);
   //let file_type = metadata.file_type();
   let is_dir = metadata.is_dir();

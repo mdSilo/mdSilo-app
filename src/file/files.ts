@@ -1,10 +1,10 @@
 import { invoke } from '@tauri-apps/api/tauri'
-import FileMetaData from './directory';
+import { FileMetaData } from './directory';
 import { isTauri, joinPath, getDirname } from './util';
 
 /** Invoke Rust command to handle files */
 class FileAPI {
-  readonly fileName: string | string[];
+  readonly fileName: string;
   readonly parentDir: string | undefined;
 
   /**
@@ -12,7 +12,7 @@ class FileAPI {
    * @param {string} fileName - Your file path
    * @param {string} parentDir - Parent directory of the file
    */
-  constructor(fileName: string | string[], parentDir?: string) {
+  constructor(fileName: string, parentDir?: string) {
 		if (parentDir && typeof fileName === 'string') {
 			this.parentDir = parentDir;
 			this.fileName = joinPath(parentDir, fileName);
@@ -98,11 +98,11 @@ class FileAPI {
   }
 
   /**
-   * Read properties of a file
+   * Read metadata of a file
    * @returns {Promise<FileMetaData>}
    */
-  async metadata(): Promise<FileMetaData> {
-		return await invoke(
+  async getMetadata(): Promise<FileMetaData> {
+		return await invoke<FileMetaData>(
 			'get_file_meta', 
 			{ filePath: this.fileName }
 		);
