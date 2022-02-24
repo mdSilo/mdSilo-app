@@ -95,16 +95,8 @@ export type Store = {
   setSidebarTab: Setter<SidebarTab>;
   sidebarSearchQuery: string;
   setSidebarSearchQuery: Setter<string>;
-  // FileSystemFileHandle
-  handles: FileHandles;
-  setHandles: Setter<FileHandles>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  upsertHandle: (key: string, handle: any) => void;
-  deleteHandle: (key: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dirHandle: any;  // FileSystemDirectoryHandle
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setDirHandle: (handle: any) => void;
+  currentDir: string | undefined;  // dir path
+  setCurrentDir: Setter<string | undefined>;
 } & UserSettings;
 
 type FunctionPropertyNames<T> = {
@@ -282,29 +274,9 @@ export const store = createVanilla<
       setSidebarTab: setter(set, 'sidebarTab'),
       sidebarSearchQuery: '',
       setSidebarSearchQuery: setter(set, 'sidebarSearchQuery'),
-      // FileSystemFileHandles
-      // map name(title) to FileHandle
-      handles: {},
-      setHandles: setter(set, 'handles'),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      upsertHandle: (key: string, handle: any) => {
-        set((state) => {
-          state.handles[key] = handle;
-        });
-      },
-      deleteHandle: (key: string) => {
-        set((state) => {
-          delete state.handles[key];
-        });
-      },
-      // FileSystemDirectoryHandle
-      dirHandle: undefined,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setDirHandle: (handle: any) => {
-        set((state) => {
-          state.dirHandle = handle;
-        });
-      },
+      
+      currentDir: undefined,
+      setCurrentDir: setter(set, 'currentDir'),
       ...userSettingsSlice(set),
     })),
     {

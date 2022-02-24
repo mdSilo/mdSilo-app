@@ -47,7 +47,7 @@ export const openDir = async (dir: string, writeHistory = true): Promise<void> =
   if (openFiles.length) {
     // attach listener to monitor changes in dir
     dirInfo.listen(() => {/*TODO*/ console.log("listen dir change")}); // TODO
-    console.timeEnd(dir);
+    // console.timeEnd(dir);
     // process files
     processMds(openFiles);
     return;

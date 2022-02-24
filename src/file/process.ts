@@ -38,7 +38,7 @@ export function processJson(content: string) {
  * on Process Mds: 
  * 0- procee txt to Descendant[],
  * 1- process Linking in content, create needed note; 
- * 2- FSA: save txt to File System;
+ * 2- save txt to File System;
  * 3- Store: set Descendant[] to store system of App 
  * 4- Upsert to db in some cases
  */

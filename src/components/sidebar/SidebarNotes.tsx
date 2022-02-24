@@ -1,8 +1,9 @@
 import { Dispatch, memo, SetStateAction, useCallback, useMemo } from 'react';
-import { Notes, NoteTreeItem, useStore } from 'lib/store';
+import { Notes, NoteTreeItem, store, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { ciStringCompare, dateCompare, isMobile } from 'utils/helper';
 import { openDirDilog, openDir, openFile, openFileDilog } from 'file/open';
+import { getDirname } from 'file/util';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree from './SidebarNotesTree';
@@ -39,7 +40,14 @@ function SidebarNotes(props: SidebarNotesProps) {
     const filePaths = await openFileDilog(ty, multi);
     console.log("file path", filePaths);
     const openPaths = typeof filePaths === 'string' ? [filePaths] : filePaths;
-    if (openPaths) {
+    if (openPaths.length > 0) {
+      // set currentDir
+      const onePath = openPaths[0];
+      // const parentDirParts = onePath.split('/');
+      // parentDirParts.pop();
+      // const parentDir = parentDirParts.join('/');
+      const parentDir = getDirname(onePath);
+      store.getState().setCurrentDir(parentDir);
       await openFile(openPaths, ty);
     }
   };
@@ -50,6 +58,7 @@ function SidebarNotes(props: SidebarNotesProps) {
     const dirPath = await openDirDilog();
     console.log("dir path", dirPath);
     if (dirPath && typeof dirPath === 'string') {
+      store.getState().setCurrentDir(dirPath);
       await openDir(dirPath);
     }
   };

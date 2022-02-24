@@ -63,8 +63,8 @@ export type AddLinkPopoverState = {
 type Props = {
   noteId?: string;
   value: Descendant[];
-  setValue: (value: Descendant[]) => void; // sync to client store
   onChange: (value: Descendant[]) => void; // sync to serve db
+  setValue?: (value: Descendant[]) => void; // sync to client store
   className?: string;
   highlightedPath?: Path;
   isWiki?: boolean;
@@ -270,8 +270,8 @@ function Editor(props: Props) {
       // We need this check because this function is called every time
       // the selection changes
       if (newValue !== value) {
-        setValue(newValue);
         onChange(newValue);
+        if (setValue) { setValue(newValue); }
       }
     },
     [editor.selection, onChange, value, setValue]

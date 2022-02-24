@@ -63,6 +63,29 @@ class FileAPI {
 		);
   }
 
+	/**
+   * Read metadata of a file
+   * @returns {Promise<FileMetaData>}
+   */
+	 async getMetadata(): Promise<FileMetaData> {
+		return await invoke<FileMetaData>(
+			'get_file_meta', 
+			{ filePath: this.fileName }
+		);
+  }
+
+  /**
+   * Check if given path is directory
+   * @returns {Promise<boolean>}
+   */
+  async isDir(): Promise<boolean> {
+		return new Promise((resolve) => {
+			invoke<boolean>('is_dir', { path: this.fileName }).then(
+			  (result: boolean) => resolve(result)
+			);
+		});
+  }
+
   /**
    * Create file if it doesn't exist
    * @returns {Promise<void>}
@@ -98,26 +121,14 @@ class FileAPI {
   }
 
   /**
-   * Read metadata of a file
-   * @returns {Promise<FileMetaData>}
-   */
-  async getMetadata(): Promise<FileMetaData> {
-		return await invoke<FileMetaData>(
-			'get_file_meta', 
-			{ filePath: this.fileName }
+	 * delete file
+	 * @returns boolean, if deleted
+	 */
+  async deleteFiles(): Promise<boolean> {
+		return await invoke<boolean>(
+			'delete_files', 
+			{ paths: [this.fileName] }
 		);
-  }
-
-  /**
-   * Check if given path is directory
-   * @returns {Promise<boolean>}
-   */
-  async isDir(): Promise<boolean> {
-		return new Promise((resolve) => {
-			invoke<boolean>('is_dir', { path: this.fileName }).then(
-			  (result: boolean) => resolve(result)
-			);
-		});
   }
 }
 

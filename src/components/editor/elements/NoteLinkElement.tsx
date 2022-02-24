@@ -7,7 +7,6 @@ import Tooltip from 'components/misc/Tooltip';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { store } from 'lib/store';
 import { extractTexts } from 'editor/hooks/useSummary';
-import { refreshFile } from 'editor/hooks/useRefresh';
 
 type NoteLinkElementProps = {
   element: NoteLink;
@@ -36,8 +35,6 @@ export default function NoteLinkElement(props: NoteLinkElementProps) {
   const content = toNote 
     ? extractTexts(toNote.content, 2) || element.noteTitle 
     : element.noteTitle || 'To Linked Note';
-  // FSA: refresh file to sync any modification by external editor
-  const refreshOnClick = async () => await refreshFile(toNote.title);
 
   return (
     <Tooltip content={content} placement="bottom-start">
@@ -46,7 +43,6 @@ export default function NoteLinkElement(props: NoteLinkElementProps) {
         className={noteLinkClassName}
         onClick={async (e) => {
           e.stopPropagation();
-          await refreshOnClick();
           onNoteLinkClick(noteId, defaultStackingBehavior(e));
         }}
         contentEditable={false}

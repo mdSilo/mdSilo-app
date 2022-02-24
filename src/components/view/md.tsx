@@ -74,7 +74,7 @@ export default function NotePage() {
       <>
         <div className="flex flex-col items-center justify-center flex-1 h-screen p-4">
           <p className="text-2xl text-center">
-            Whoops&mdash;it doesn&apos;t look like this note exists!
+            This note does not exists!
           </p>
         </div>
       </>

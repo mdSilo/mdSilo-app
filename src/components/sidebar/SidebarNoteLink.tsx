@@ -10,7 +10,6 @@ import { IconCaretRight } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { refreshFile } from 'editor/hooks/useRefresh';
 import SidebarItem from './SidebarItem';
 import SidebarNoteLinkDropdown from './SidebarNoteLinkDropdown';
 import { FlattenedNoteTreeItem } from './SidebarNotesTree';
@@ -32,8 +31,6 @@ const SidebarNoteLink = (
     (state) => state.openNoteIds[state.openNoteIds.length - 1]
   );
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick(lastOpenNoteId);
-  // FSA: refresh file to sync any modification by external editor
-  const refreshOnClick = async () => await refreshFile(note.title);
 
   const toggleNoteTreeItemCollapsed = useStore(
     (state) => state.toggleNoteTreeItemCollapsed
@@ -60,7 +57,6 @@ const SidebarNoteLink = (
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={async (e) => {
           e.preventDefault();
-          await refreshOnClick();
           onNoteLinkClick(note.id, e.shiftKey);
           if (isMobile()) {
             setIsSidebarOpen(false);

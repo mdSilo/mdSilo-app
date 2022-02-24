@@ -6,12 +6,14 @@ import Title from 'components/editor/Title';
 import Backlinks from 'components/editor/backlinks/Backlinks';
 import { store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
-//import serialize from 'editor/serialization/serialize';
+import serialize from 'editor/serialization/serialize';
 import { getDefaultEditorValue, defaultDemoNote } from 'editor/constants';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual } from 'utils/helper';
+import { writeFile, writeJsonFile, deleteFile } from 'file/write';
+import { joinPath } from 'file/util';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import NoteHeader from './NoteHeader';
 
@@ -24,15 +26,18 @@ type Props = {
 function Note(props: Props) {
   const { noteId, highlightedPath, className } = props;
   const updateNote = useStore((state) => state.updateNote);
-
+  const parentDir = store.getState().currentDir;
+  console.log("current dir", parentDir);
   // get some property of note
   const isPub = store.getState().notes[noteId]?.is_pub ?? false;
   const isDaily = store.getState().notes[noteId]?.is_daily ?? false;
   const initIsWiki = store.getState().notes[noteId]?.is_wiki ?? false;
   const [isWiki, setIsWiki] = useState(initIsWiki);
   const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect
+
   
   // load note if it isWiki
+  // TODO, network request
   const loadNote = async (noteId: string) => {
     const note: NoteType = defaultDemoNote;
     if (note) {
@@ -52,27 +57,25 @@ function Note(props: Props) {
 
   // get title and content value
   const title = store.getState().notes[noteId]?.title ?? 'demo note';
+  const [initTitle, ] = useState(title); // an initial title copy
   const value = useStore(
     (state) => state.notes[noteId]?.content ?? getDefaultEditorValue()
   );
 
   // update locally
-  const setValueOnChange = useCallback(
+  const onValueChange = useCallback(
     async (value: Descendant[]) => {
       updateNote({ id: noteId, content: value });
+      // write to local file
+      //const parentDir = store.getState().currentDir;
+      if (parentDir) {
+        const notePath = joinPath(parentDir, `${title}.md`);
+        const content = value.map((n) => serialize(n)).join('');
+        await writeFile(notePath, content);
+        await writeJsonFile(parentDir);
+      }
     },
-    [noteId, updateNote]
-  );
-
-  // use state and useEffect to trigger and handle update to db
-  const [syncState, setSyncState] = useState({
-    isTitleSynced: true,
-    isContentSynced: true,
-  });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const isSynced = useMemo(
-    () => syncState.isTitleSynced && syncState.isContentSynced,
-    [syncState]
+    [noteId, parentDir, title, updateNote]
   );
 
   // update locally, set the syncState
@@ -89,20 +92,28 @@ function Note(props: Props) {
       };
       if (isWiki || isTitleUnique()) {
         updateNote({ id: noteId, title: newTitle });
-        setSyncState((syncState) => ({ ...syncState, isTitleSynced: false }));
         await updateBacklinks(newTitle, noteId); 
+        // write to local file
+        if (!isWiki && parentDir) {
+          // on rename file: 
+          // const parentDir = store.getState().currentDir;
+          // 1- new FilePath
+          const newPath = joinPath(parentDir, `${newTitle}.md`);
+          // 2- swap value
+          const content = value.map((n) => serialize(n)).join('');
+          await writeFile(newPath, content);
+          await writeJsonFile(parentDir);
+          // 3- delete the old redundant File
+          await deleteFile(joinPath(parentDir, `${initTitle}.md`));
+        }
       } else {
         toast.error(
           `There's already a note called ${newTitle}. Please use a different title.`
         );
       }
     },
-    [noteId, updateNote, isWiki]
+    [noteId, isWiki, updateNote, parentDir, value, initTitle]
   );
-
-  const onValueChange = useCallback(() => {
-    setSyncState((syncState) => ({ ...syncState, isContentSynced: false }));
-  }, []);
 
   // TODO: update wiki note to db
   // TODO: Prompt the usr with a dialog box about unsaved changes if they navigate away
@@ -154,7 +165,6 @@ function Note(props: Props) {
                 className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12"
                 noteId={noteId}
                 value={value}
-                setValue={setValueOnChange}
                 onChange={onValueChange}
                 highlightedPath={highlightedPath}
                 isWiki={isWiki}
