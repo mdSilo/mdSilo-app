@@ -154,7 +154,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<String>, String> {
 /// Check if path given exists
 #[tauri::command]
 pub fn file_exist(file_path: &str) -> bool {
-  dbg!(fs::metadata(file_path)).is_ok()
+  fs::metadata(file_path).is_ok()
 }
 
 /// Create directory recursively
