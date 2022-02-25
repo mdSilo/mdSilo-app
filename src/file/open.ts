@@ -3,8 +3,20 @@ import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds } from './process';
 
+/* 
+Open files: 
+  process and import to store, 
+  when edit any file, a json storing all data will be created and saved
+OPen json: 
+  import to store, when edit any file, a .md will be created and saved 
+
+TODO: 
+a better way and eliminate the 'store' which is introduced from web app, but:
+each file or evne some blocks are not standalone but networked
+*/
+
 /**
- * Diago to get dir path to open
+ * Dialog to get dir path to open
  * @returns 
  */
 export const openDirDilog = async () => {
@@ -55,7 +67,7 @@ export const openDir = async (dir: string, writeHistory = true): Promise<void> =
 }
 
 /**
- * diago to get file paths to open
+ * dialog to get file paths to open
  * @param ty file type: md or json
  * @param multi multi-select or not
  * @returns 

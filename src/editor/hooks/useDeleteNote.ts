@@ -2,8 +2,10 @@ import { useCallback } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import deleteBacklinks from 'editor/backlinks/deleteBacklinks';
 import { store, useStore } from 'lib/store';
+import { deleteFile } from 'file/write';
+import { joinPath } from 'file/util';
 
-export default function useDeleteNote(noteId: string) {
+export default function useDeleteNote(noteId: string, noteTitle: string) {
   const openNoteIds = useStore((state) => state.openNoteIds);
 
   const currentView = useCurrentViewContext();
@@ -29,10 +31,15 @@ export default function useDeleteNote(noteId: string) {
       }
     }
     
-    // delete locally and update backlinks
+    // delete in store locally and update backlinks, or (blockreference? TODO)
     store.getState().deleteNote(noteId);
     await deleteBacklinks(noteId);
-  }, [dispatch, noteId, openNoteIds]);
+    // delete in disk
+    const parentDir = store.getState().currentDir;
+    if (parentDir) {
+      await deleteFile(joinPath(parentDir, `${noteTitle}.md`));
+    }
+  }, [dispatch, noteId, noteTitle, openNoteIds]);
 
   return onDeleteClick;
 }

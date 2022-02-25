@@ -1,5 +1,5 @@
 import { Note } from 'types/model';
-import { getSerializedNote } from './NoteExport';
+import { getSerializedNote } from 'file/util';
 
 type Props = {
   note: Note;

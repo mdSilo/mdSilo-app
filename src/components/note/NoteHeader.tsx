@@ -4,7 +4,6 @@ import { IconDots, IconX, IconTrash, IconCornerDownRight } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { store, useStore } from 'lib/store';
-//import { queryParamToArray } from 'utils/helper';
 import OpenSidebarButton from 'components/sidebar/OpenSidebarButton';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
@@ -13,7 +12,6 @@ import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';
 import MoveToModal from 'components/note/NoteMoveModal';
 import NoteDelModal from 'components/note/NoteDelModal';
-import { NoteExport, NoteExportAll } from 'components/note/NoteExport';
 
 type Props = {
   isWiki: boolean;
@@ -125,8 +123,6 @@ export default function NoteHeader(props: Props) {
                       style={styles.popper}
                       {...attributes.popper}
                     >
-                      <NoteExport note={note} />
-                      <NoteExportAll />
                       <DropdownItem
                         onClick={onDelClick}
                         className="border-t dark:border-gray-700"
@@ -158,6 +154,7 @@ export default function NoteHeader(props: Props) {
         <Portal>
           <NoteDelModal
             noteId={currentNote.id}
+            noteTitle={note?.title}
             setIsOpen={setIsNoteDelModalOpen}
           />
         </Portal>

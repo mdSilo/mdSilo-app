@@ -7,7 +7,6 @@ import { DropdownItem } from 'components/misc/Dropdown';
 import Portal from 'components/misc/Portal';
 import MoveToModal from 'components/note/NoteMoveModal';
 import NoteMetadata from 'components/note/NoteMetadata';
-import { NoteExport } from 'components/note/NoteExport';
 
 type Props = {
   note: Note;
@@ -56,7 +55,6 @@ const SidebarNoteLinkDropdown = (props: Props) => {
                     <IconCornerDownRight size={18} className="mr-1" />
                     <span>Move to</span>
                   </DropdownItem>
-                  <NoteExport note={note} />
                   <NoteMetadata note={note} />
                 </Menu.Items>
               </Portal>

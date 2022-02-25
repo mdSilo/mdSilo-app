@@ -1,4 +1,4 @@
-import { buildNotesJson } from 'components/note/NoteExport';
+import { buildNotesJson } from './util';
 import FileAPI from './files';
 
 export async function writeFile(filePath: string, content: string) {

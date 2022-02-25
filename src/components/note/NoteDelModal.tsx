@@ -4,11 +4,12 @@ import useDeleteNote from 'editor/hooks/useDeleteNote';
 
 type Props = {
   noteId: string;
+  noteTitle: string;
   setIsOpen: (isOpen: boolean) => void;
 };
 
 export default function NoteDelModal(props: Props) {
-  const { noteId, setIsOpen } = props;
+  const { noteId, noteTitle, setIsOpen } = props;
 
   const hotkeys = useMemo(
     () => [
@@ -21,7 +22,7 @@ export default function NoteDelModal(props: Props) {
   );
   useHotkeys(hotkeys);
 
-  const onDeleteClick = useDeleteNote(noteId);
+  const onDeleteClick = useDeleteNote(noteId, noteTitle);
 
   return (
     <div className="fixed inset-0 z-20 overflow-y-auto">
