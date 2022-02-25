@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'tippy.js/dist/tippy.css';
 import { ProvideCurrentView } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
+import SideMenu from './sidebar/SideMenu';
 import Sidebar from './sidebar/Sidebar';
 import MainView from './view/MainView';
 import FindOrCreateModal from './note/NoteNewModal';
@@ -24,6 +25,7 @@ const App = () => {
     <ProvideCurrentView>
       <div id="app-container" className={appContainerClassName}>
         <div className="flex w-full h-full dark:bg-gray-900">
+          <SideMenu />
           <Sidebar
             setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
             setIsSettingsOpen={setIsSettingsOpen}

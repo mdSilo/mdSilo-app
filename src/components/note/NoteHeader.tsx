@@ -4,7 +4,6 @@ import { IconDots, IconX, IconTrash, IconCornerDownRight } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { store, useStore } from 'lib/store';
-import OpenSidebarButton from 'components/sidebar/OpenSidebarButton';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import Toggle from 'components/misc/Toggle';
@@ -24,9 +23,6 @@ export default function NoteHeader(props: Props) {
   const viewState = currentNote.state;
   const dispatch = currentNote.dispatch;
 
-  const isSidebarButtonVisible = useStore(
-    (state) => !state.isSidebarOpen && state.openNoteIds?.[0] === currentNote.id
-  );
   const isCloseButtonVisible = useStore(
     (state) => state.openNoteIds?.[0] !== currentNote.id
   );
@@ -82,7 +78,6 @@ export default function NoteHeader(props: Props) {
 
   return (
     <div className={`flex items-center justify-between w-full px-4 text-right ${isWiki ? 'border-b-2 border-blue-400 py-2 mb-2' : 'py-1'}`}>
-      <div>{isSidebarButtonVisible ? <OpenSidebarButton /> : null}</div>
       <div className="flex items-center">
         <span className="text-sm text-gray-300 dark:text-gray-500">Read/Write</span>
         <Toggle

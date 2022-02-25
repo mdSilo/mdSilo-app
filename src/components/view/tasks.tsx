@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useStore } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import OpenSidebarButton from 'components/sidebar/OpenSidebarButton';
 import FindOrCreateInput from 'components/note/NoteNewInput';
 import { matchSort, SearchLeaf } from 'components/sidebar/SidebarSearch';
 import Tree from 'components/misc/Tree';
@@ -10,7 +9,6 @@ import { dateCompare, getStrDate } from 'utils/helper';
 
 export default function Tasks() {
   const notes = useStore((state) => state.notes);
-  const isSidebarOpen = useStore((state) => state.isSidebarOpen);
   const notesArr = Object.values(notes);
   const myNotes = notesArr.filter(n => !n.is_wiki);
   myNotes.sort((n1, n2) => dateCompare(n2.updated_at, n1.updated_at));
@@ -89,9 +87,6 @@ export default function Tasks() {
   return (
     <>
       <ErrorBoundary>
-        {!isSidebarOpen ? (
-          <OpenSidebarButton className="absolute top-0 left-0 z-10 mx-4 my-1" />
-        ) : null}
         <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-gray-800 dark:text-gray-200 overlfow-y-auto">
           <div className="flex justify-center my-6">
             <FindOrCreateInput

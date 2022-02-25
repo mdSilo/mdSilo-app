@@ -73,23 +73,35 @@ function NoteBarDrop(props: DropProps) {
               </span>
             </Menu.Button>
             <Menu.Items className="absolute z-20 w-auto overflow-hidden bg-white rounded top-full shadow-popover dark:bg-gray-800 focus:outline-none">
-              <DropdownItem onClick={onOpenDir}>
-                <IconFolderPlus size={18} className="mr-1" />
-                <Tooltip content="Open Folder"><span>Folder</span></Tooltip>
-              </DropdownItem>
-              <DropdownItem onClick={onOpenFile}>
-                <IconFileText size={18} className="mr-1" />
-                <Tooltip content="Open .md"><span>Text</span></Tooltip>
-              </DropdownItem>
-              <DropdownItem onClick={onImportJson}>
-                <IconFileUpload size={18} className="mr-1" />
-                <Tooltip content="Import JSON"><span>JSON</span></Tooltip>
-              </DropdownItem>
+              <FileDrop />
             </Menu.Items>
           </Menu>
         </div>
       </div>
     </Tooltip>
+  );
+}
+
+type FileDropProps = {
+  className?: string;
+};
+
+export function FileDrop(props: FileDropProps) {
+  return (
+    <>
+      <DropdownItem onClick={onOpenDir}>
+        <IconFolderPlus size={18} className="mr-1" />
+        <Tooltip content="Open Folder"><span>Folder</span></Tooltip>
+      </DropdownItem>
+      <DropdownItem onClick={onOpenFile}>
+        <IconFileText size={18} className="mr-1" />
+        <Tooltip content="Open .md"><span>Text</span></Tooltip>
+      </DropdownItem>
+      <DropdownItem onClick={onImportJson}>
+        <IconFileUpload size={18} className="mr-1" />
+        <Tooltip content="Import JSON"><span>JSON</span></Tooltip>
+      </DropdownItem>
+    </>  
   );
 }
 

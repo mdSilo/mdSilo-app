@@ -2,15 +2,12 @@
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore, store } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import OpenSidebarButton from 'components/sidebar/OpenSidebarButton';
 import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
 import { dateCompare, getStrDate } from 'utils/helper';
 import { getOrCreateNoteId } from 'editor/handleNoteId';
 
 export default function Chronicle() {
-  const isSidebarOpen = useStore((state) => state.isSidebarOpen);
-
   const notes = useStore((state) => state.notes);
   const notesArr = Object.values(notes);
   const myNotes = notesArr.filter(n => !n.is_wiki && !n.is_daily);
@@ -41,9 +38,6 @@ export default function Chronicle() {
 
   return (
     <ErrorBoundary>
-      {!isSidebarOpen ? (
-        <OpenSidebarButton className="absolute top-0 left-0 z-10 mx-4 my-1" />
-      ) : null}
       <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-gray-800 dark:text-gray-200 overlfow-y-auto">
         <div className="flex justify-center my-6">
           <FindOrCreateInput

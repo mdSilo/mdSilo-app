@@ -6,14 +6,12 @@ import type { GraphData } from 'components/editor/ForceGraph';
 import ForceGraph from 'components/editor/ForceGraph';
 import { NoteTreeItem, useStore } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import OpenSidebarButton from 'components/sidebar/OpenSidebarButton';
 import { purgeUnLinkedWikiNotes } from 'editor/backlinks/useBacklinks';
 
 export default function Graph() {
   purgeUnLinkedWikiNotes();
   const notes = useStore((state) => state.notes);
   const noteTree = useStore((state) => state.noteTree);
-  const isSidebarOpen = useStore((state) => state.isSidebarOpen);
 
   // Compute graph data
   const graphData: GraphData = useMemo(() => {
@@ -130,9 +128,6 @@ export default function Graph() {
 
   return (
     <ErrorBoundary>
-      {!isSidebarOpen ? (
-        <OpenSidebarButton className="absolute top-0 left-0 z-10 mx-4 my-1" />
-      ) : null}
       <ForceGraph data={graphData} className="flex-1" />
     </ErrorBoundary>
   );

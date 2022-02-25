@@ -1,13 +1,9 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { IconDna, IconBookmarks, IconCheckbox } from '@tabler/icons';
 import { useTransition, animated } from '@react-spring/web';
-import Tooltip from 'components/misc/Tooltip';
 import { isMobile } from 'utils/helper';
 import { useStore } from 'lib/store';
 import { SpringConfig } from '@react-spring/web';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import SidebarItem from './SidebarItem';
 import SidebarContent from './SidebarContent';
 import SidebarHeader from './SidebarHeader';
 
@@ -33,11 +29,6 @@ function Sidebar(props: Props) {
 
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const hideSidebarOnMobile = useCallback(() => {
-    if (isMobile()) {
-      setIsSidebarOpen(false);
-    }
-  }, [setIsSidebarOpen]);
 
   const transition = useTransition<
     boolean,
@@ -76,13 +67,6 @@ function Sidebar(props: Props) {
     expires: (item) => !item,
   });
 
-  const currentView = useCurrentViewContext();
-  const viewTy = currentView.state.view;
-  const dispatch = currentView.dispatch;
-  const dispatchChron = () => dispatch({view: 'chronicle'});
-  const dispatchTask = () => dispatch({view: 'task'});
-  const dispatchGraph = () => dispatch({view: 'graph'});
-
   return transition(
     (styles, item) =>
       item && (
@@ -113,23 +97,6 @@ function Sidebar(props: Props) {
               className={`flex flex-col flex-none h-full border-r bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 ${className}`}
             >
               <SidebarHeader setIsSettingsOpen={setIsSettingsOpen} />
-              <div className="flex flex-row p-2">
-                <ChronButton 
-                  viewTy={viewTy} 
-                  onClick={hideSidebarOnMobile} 
-                  onDispatch={dispatchChron} 
-                />
-                <GraphButton 
-                  viewTy={viewTy} 
-                  onClick={hideSidebarOnMobile} 
-                  onDispatch={dispatchGraph} 
-                />
-                <TaskButton 
-                  viewTy={viewTy} 
-                  onClick={hideSidebarOnMobile} 
-                  onDispatch={dispatchTask} 
-                />
-              </div>
               <SidebarContent
                 className="flex-1 mt-1 overflow-x-hidden overflow-y-auto"
                 setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
@@ -140,68 +107,5 @@ function Sidebar(props: Props) {
       )
   );
 }
-
-const btnClass = 'title flex items-center text-lg px-6 py-1';
-const btnIconClass = 'flex-shrink-0 mx-1 text-gray-600 dark:text-gray-400';
-
-type ButtonProps = {
-  viewTy: string;
-  onClick: () => void;
-  onDispatch: () => void;
-};
-
-const GraphButton = (props: ButtonProps) => {
-  const { viewTy, onClick, onDispatch } = props;
-
-  return (
-    <SidebarItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
-      <Tooltip
-        content="Visualization of networked writing (Ctrl+Shift+G)"
-        placement="right"
-        touch={true}
-      >
-        <button className={btnClass} onClick={onDispatch}>
-          <IconDna size={24} className={btnIconClass} />
-        </button>
-      </Tooltip>
-    </SidebarItem>
-  );
-};
-
-const ChronButton = (props: ButtonProps) => {
-  const { viewTy, onClick, onDispatch } = props;
-
-  return (
-    <SidebarItem isHighlighted={viewTy === 'chronicle'} onClick={onClick}>
-      <Tooltip
-        content="Chronicle View (Ctrl+Shift+C)"
-        placement="right"
-        touch={true}
-      >
-        <button className={btnClass} onClick={onDispatch}>
-          <IconBookmarks size={24} className={btnIconClass} />
-        </button>
-      </Tooltip>
-    </SidebarItem>
-  );
-};
-
-const TaskButton = (props: ButtonProps) => {
-  const { viewTy, onClick, onDispatch } = props;
-
-  return (
-    <SidebarItem isHighlighted={viewTy === 'task'} onClick={onClick}>
-      <Tooltip
-        content="Track Personal Tasks (Ctrl+Shift+T)"
-        placement="right"
-        touch={true}
-      >
-        <button className={btnClass} onClick={onDispatch}>
-          <IconCheckbox size={24} className={btnIconClass} />
-        </button>
-      </Tooltip>
-    </SidebarItem>
-  );
-};
 
 export default memo(Sidebar);
