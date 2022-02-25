@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, ReactNode, memo } from 'react';
-import TreeNode from './TreeNode';
+import TreeNodeElement from './TreeNode';
 
 export type TreeNode = {
   id: string;
@@ -88,7 +88,11 @@ function Tree(props: Props) {
   return (
     <div className={className}>
       {flattenedData.map((node, index) => (
-        <TreeNode key={`${node.id}-${node.depth}-${index}`} node={node} onClick={onNodeClick} />
+        <TreeNodeElement 
+          key={`${node.id}-${node.depth}-${index}`} 
+          node={node} 
+          onClick={onNodeClick} 
+        />
       ))}
     </div>
   );

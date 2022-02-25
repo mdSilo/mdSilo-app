@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import classNames from 'classnames';
 import 'styles/styles.css';
-import 'styles/nprogress.css';
 import 'react-toastify/dist/ReactToastify.css';
 import 'tippy.js/dist/tippy.css';
 import { ProvideCurrentView } from 'context/useCurrentView';
