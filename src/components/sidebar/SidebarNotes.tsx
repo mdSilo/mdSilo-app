@@ -1,9 +1,8 @@
 import { Dispatch, memo, SetStateAction, useCallback, useMemo } from 'react';
-import { Notes, NoteTreeItem, store, useStore } from 'lib/store';
+import { Notes, NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { ciStringCompare, dateCompare, isMobile } from 'utils/helper';
-import { openDirDilog, openDir, openFile, openFileDilog } from 'file/open';
-import { getDirname } from 'file/util';
+import { onImportJson, onOpenFile, onOpenDir } from 'editor/hooks/useOpen';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree from './SidebarNotesTree';
@@ -35,34 +34,6 @@ function SidebarNotes(props: SidebarNotesProps) {
     }
     setIsFindOrCreateModalOpen((isOpen) => !isOpen);
   }, [setIsSidebarOpen, setIsFindOrCreateModalOpen]);
-
-  const openFiles = async (ty: string, multi = true) => {
-    const filePaths = await openFileDilog(ty, multi);
-    console.log("file path", filePaths);
-    const openPaths = typeof filePaths === 'string' ? [filePaths] : filePaths;
-    if (openPaths.length > 0) {
-      // set currentDir
-      const onePath = openPaths[0];
-      // const parentDirParts = onePath.split('/');
-      // parentDirParts.pop();
-      // const parentDir = parentDirParts.join('/');
-      const parentDir = getDirname(onePath);
-      console.log("dir path", parentDir);
-      store.getState().setCurrentDir(parentDir);
-      await openFile(openPaths, ty);
-    }
-  };
-  const onImportJson = async () => await openFiles('json', false);
-  const onOpenFile = async () => await openFiles('md');
-
-  const onOpenDir = async () => {
-    const dirPath = await openDirDilog();
-    console.log("dir path", dirPath);
-    if (dirPath && typeof dirPath === 'string') {
-      store.getState().setCurrentDir(dirPath);
-      await openDir(dirPath);
-    }
-  };
 
   const btnClass = "p-1 my-1 mx-4 rounded bg-blue-500 hover:text-yellow-500";
 

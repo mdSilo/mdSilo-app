@@ -113,23 +113,25 @@ function Sidebar(props: Props) {
               className={`flex flex-col flex-none h-full border-r bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 ${className}`}
             >
               <SidebarHeader setIsSettingsOpen={setIsSettingsOpen} />
-              <ChronButton 
-                viewTy={viewTy} 
-                onClick={hideSidebarOnMobile} 
-                onDispatch={dispatchChron} 
-              />
-              <GraphButton 
-                viewTy={viewTy} 
-                onClick={hideSidebarOnMobile} 
-                onDispatch={dispatchGraph} 
-              />
-              <TaskButton 
-                viewTy={viewTy} 
-                onClick={hideSidebarOnMobile} 
-                onDispatch={dispatchTask} 
-              />
+              <div className="flex flex-row p-2">
+                <ChronButton 
+                  viewTy={viewTy} 
+                  onClick={hideSidebarOnMobile} 
+                  onDispatch={dispatchChron} 
+                />
+                <GraphButton 
+                  viewTy={viewTy} 
+                  onClick={hideSidebarOnMobile} 
+                  onDispatch={dispatchGraph} 
+                />
+                <TaskButton 
+                  viewTy={viewTy} 
+                  onClick={hideSidebarOnMobile} 
+                  onDispatch={dispatchTask} 
+                />
+              </div>
               <SidebarContent
-                className="flex-1 mt-3 overflow-x-hidden overflow-y-auto"
+                className="flex-1 mt-1 overflow-x-hidden overflow-y-auto"
                 setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
               />
             </div>
@@ -140,8 +142,7 @@ function Sidebar(props: Props) {
 }
 
 const btnClass = 'title flex items-center text-lg px-6 py-1';
-const btnIconClass = 'flex-shrink-0 mr-1 text-gray-800 dark:text-gray-300';
-const btnSpanClass = 'overflow-x-hidden select-none overflow-ellipsis whitespace-nowrap';
+const btnIconClass = 'flex-shrink-0 mx-1 text-gray-600 dark:text-gray-400';
 
 type ButtonProps = {
   viewTy: string;
@@ -155,15 +156,12 @@ const GraphButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
       <Tooltip
-        content="Visualization of networked notes (Ctrl+Shift+G)"
+        content="Visualization of networked writing (Ctrl+Shift+G)"
         placement="right"
         touch={true}
       >
         <button className={btnClass} onClick={onDispatch}>
-          <>
-            <IconDna size={20} className={btnIconClass} />
-            <span className={btnSpanClass}>Graph View</span>
-          </>
+          <IconDna size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -176,15 +174,12 @@ const ChronButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'chronicle'} onClick={onClick}>
       <Tooltip
-        content="Chronicle my life (Ctrl+Shift+C)"
+        content="Chronicle View (Ctrl+Shift+C)"
         placement="right"
         touch={true}
       >
         <button className={btnClass} onClick={onDispatch}>
-          <>
-            <IconBookmarks size={20} className={btnIconClass} />
-            <span className={btnSpanClass}>Chronicle</span>
-          </>
+          <IconBookmarks size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -202,10 +197,7 @@ const TaskButton = (props: ButtonProps) => {
         touch={true}
       >
         <button className={btnClass} onClick={onDispatch}>
-          <>
-            <IconCheckbox size={20} className={btnIconClass} />
-            <span className={btnSpanClass}>Tasks View</span>
-          </>
+          <IconCheckbox size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>

@@ -101,7 +101,7 @@ export const getDirname = (path: string): string => {
 };
 
 
-function trimSlash(txt: string, mode = 'start') {
+export function trimSlash(txt: string, mode = 'start') {
   if (mode === 'start') {
     while (txt.startsWith('/')) {
       txt = txt.substring(0);

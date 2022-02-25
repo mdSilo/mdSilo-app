@@ -17,7 +17,7 @@ export default function SidebarHeader(props: Props) {
   return (
     <div className="relative">
       <Menu>
-        <Menu.Button className="flex items-center justify-between w-full py-2 pl-6 overflow-x-hidden text-left text-gray-800 hover:bg-gray-200 active:bg-gray-300 dark:text-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600 overflow-ellipsis whitespace-nowrap focus:outline-none">
+        <Menu.Button className="flex items-center justify-between w-full py-2 pl-2 overflow-x-hidden text-left text-gray-800 hover:bg-gray-200 active:bg-gray-300 dark:text-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600 overflow-ellipsis whitespace-nowrap focus:outline-none border-b-2 border-gray-200 dark:border-gray-600">
           <div className="flex items-center flex-1">
             <span className="mr-1 px-1 font-semibold select-none">mdSilo</span>
             <IconChevronsDown size={18} className="text-gray-500 dark:text-gray-400" />

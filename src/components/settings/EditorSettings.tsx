@@ -8,7 +8,7 @@ export default function EditorSettings() {
   const setIsCheckSpellOn = useStore((state) => state.setIsCheckSpellOn);
 
   return (
-    <div className="flex-1 p-6 dark:bg-gray-800 dark:text-gray-100">
+    <div className="flex-1 p-6 bg-gray-50 dark:bg-gray-800 dark:text-gray-100">
       <div className="mb-4">
         <h1 className="text-lg font-medium">Page Stacking</h1>
         <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">

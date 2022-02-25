@@ -1,10 +1,13 @@
 import { Dispatch, SetStateAction, useCallback, memo } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconFeather } from '@tabler/icons';
+import { IconFeather, IconFolderPlus, IconFileText, IconFileUpload } from '@tabler/icons';
 import { store, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
+import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import { isMobile } from 'utils/helper';
+import { onImportJson, onOpenFile, onOpenDir } from 'editor/hooks/useOpen';
+import { trimSlash } from 'file/util';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
 
 type Props = {
@@ -54,7 +57,9 @@ function NoteBarDrop(props: DropProps) {
   const { numOfNotes } = props;
   
   const currentDir = store.getState().currentDir;
-  const currentFolder = currentDir ? currentDir.split('/').pop() : 'md';
+  const currentFolder = currentDir 
+    ? trimSlash(currentDir, 'end').split('/').pop() 
+    : 'md';
   const barClass = `px-2 text-sm bg-blue-500 text-gray-200 rounded overflow-hidden overflow-ellipsis whitespace-nowrap`; 
 
   return (
@@ -68,7 +73,18 @@ function NoteBarDrop(props: DropProps) {
               </span>
             </Menu.Button>
             <Menu.Items className="absolute z-20 w-auto overflow-hidden bg-white rounded top-full shadow-popover dark:bg-gray-800 focus:outline-none">
-              
+              <DropdownItem onClick={onOpenDir}>
+                <IconFolderPlus size={18} className="mr-1" />
+                <Tooltip content="Open Folder"><span>Folder</span></Tooltip>
+              </DropdownItem>
+              <DropdownItem onClick={onOpenFile}>
+                <IconFileText size={18} className="mr-1" />
+                <Tooltip content="Open .md"><span>Text</span></Tooltip>
+              </DropdownItem>
+              <DropdownItem onClick={onImportJson}>
+                <IconFileUpload size={18} className="mr-1" />
+                <Tooltip content="Import JSON"><span>JSON</span></Tooltip>
+              </DropdownItem>
             </Menu.Items>
           </Menu>
         </div>

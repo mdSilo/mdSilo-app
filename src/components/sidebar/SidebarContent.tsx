@@ -46,7 +46,6 @@ const Tabs = (props: TabsProps) => {
           isActive={activeTab === SidebarTabType.Silo}
           setActive={() => setActiveTab(SidebarTabType.Silo)}
           Icon={IconFolder}
-          className={activeTab === SidebarTabType.Silo ? 'border-r' : ''}
         />
       </Tooltip>
       <Tooltip content="Search (Ctrl+Shift+F)">
@@ -54,7 +53,6 @@ const Tabs = (props: TabsProps) => {
           isActive={activeTab === SidebarTabType.Search}
           setActive={() => setActiveTab(SidebarTabType.Search)}
           Icon={IconSearch}
-          className={activeTab === SidebarTabType.Search ? 'border-l' : ''}
         />
       </Tooltip>
     </div>

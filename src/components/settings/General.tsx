@@ -6,7 +6,7 @@ export default function General() {
   const setDarkMode = useStore((state) => state.setDarkMode);
 
   return (
-    <div className="flex-1 p-6 dark:bg-gray-800 dark:text-gray-100">
+    <div className="flex-1 p-6 bg-gray-50 dark:bg-gray-800 dark:text-gray-100">
       <h1 className="mb-4 text-lg font-medium">Theme</h1>
       <div className="flex items-center">
         <span className="text-sm text-gray-600 dark:text-gray-300">Light</span>
