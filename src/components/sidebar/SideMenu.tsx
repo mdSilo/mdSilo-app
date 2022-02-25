@@ -8,6 +8,7 @@ import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import SidebarItem from './SidebarItem';
 import { FileDrop } from './SidebarNotesBar';
+import Logo from '../Logo';
 
 export default function SideMenu() {
   const currentView = useCurrentViewContext();
@@ -19,6 +20,7 @@ export default function SideMenu() {
 
   return (    
     <div className="flex flex-col h-full">
+      <Logo />
       <OpenButton />
       <ChronButton 
         viewTy={viewTy} 
