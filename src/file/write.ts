@@ -3,6 +3,7 @@ import FileAPI from './files';
 
 export async function writeFile(filePath: string, content: string) {
   const file = new FileAPI(filePath);
+  console.log("md file", file)
   await file.writeFile(content);
 }
 

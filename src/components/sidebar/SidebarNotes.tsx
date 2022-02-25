@@ -47,6 +47,7 @@ function SidebarNotes(props: SidebarNotesProps) {
       // parentDirParts.pop();
       // const parentDir = parentDirParts.join('/');
       const parentDir = getDirname(onePath);
+      console.log("dir path", parentDir);
       store.getState().setCurrentDir(parentDir);
       await openFile(openPaths, ty);
     }

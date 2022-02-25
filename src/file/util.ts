@@ -12,11 +12,16 @@ export const isTauri = Boolean(
  * @returns {string}
  */
 export const normalizeSlash = (path: string): string => {
-  if (path === '\\' || path === '/') return '/';
+  if (path === '\\' || path === '/') {
+    return '/';
+  }
 
   path = path.replace(/\\/g, '/');
 
-  if (path.length === 2 && /.:/.test(path)) return path + '/';
+  if (path.length === 2 && /.:/.test(path)) {
+    return path + '/';
+  }
+
   if (path.endsWith('/') && !(path.length === 3 && /.:\//.test(path))) { 
     return path.slice(0, path.length - 1);
   }
@@ -25,40 +30,45 @@ export const normalizeSlash = (path: string): string => {
 };
 
 /**
- * Join multiple path into a string.
+ * Join multiple path parts into a string.
  * @param {string[]} ...args paths
  * @returns {string}
  */
 export const joinPath = (...args: string[]): string => {
-  if (args.length === 0) return '.';
-  let joined;
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
+  if (args.length === 0) {
+    return '.';
+  }
+
+  let joined: string = '';
+
+  for (const arg of args) {
     if (arg.length > 0) {
-      if (joined === undefined) {
-        joined = arg;
+      if (!joined) {
+        joined = trimSlash(arg, 'end');
       } else {
-        if (!(joined?.endsWith('/') || joined?.endsWith('\\'))) {
+        if (!(joined.endsWith('/') || joined.endsWith('\\'))) {
           joined += '/';
-          joined += arg;
+          joined += trimSlashAll(arg);
         } 
       }
     }
   }
-  if (joined === undefined) return '.';
-  return joined;
+
+  return joined || '.';
 };
 
 /**
- * Get dirname of the path
+ * Get dirname of the path( / end)
  * @param {string} path path to be evaluated
  * @returns {any} result of the evaluated path
  */
 export const getDirname = (path: string): string => {
-	if (path.length === 0) return '.';
+	if (path.length === 0) {
+    return '.';
+  }
 
 	let code = path.charCodeAt(0);
-	const hasRoot = code === 47 || code === 92; /*/*/
+	const hasRoot = code === 47 || code === 92; // 47 - / slash, 92- \ backslash
 	let end = -1;
 	let matchedSlash = true;
 	for (let i = path.length - 1; i >= 1; --i) {
@@ -82,3 +92,24 @@ export const getDirname = (path: string): string => {
     return result;
   }
 };
+
+
+function trimSlash(txt: string, mode = 'start') {
+  if (mode === 'start') {
+    while (txt.startsWith('/')) {
+      txt = txt.substring(0);
+    }
+    return txt;
+  } else {
+    while (txt.endsWith('/')) {
+      txt = txt.substring(0, txt.length - 1);
+    }
+    return txt;
+  }
+}
+
+function trimSlashAll(txt: string) {
+  const txt0 = trimSlash(txt);
+  const txt1 = trimSlash(txt0, 'end');
+  return txt1;
+}
