@@ -3,6 +3,7 @@ import { RenderElementProps } from 'slate-react';
 import classNames from 'classnames';
 import { ExternalLink } from 'editor/slate';
 import Tooltip from 'components/misc/Tooltip';
+import { openUrl } from 'file/open'
 
 type ExternalLinkElementProps = {
   element: ExternalLink;
@@ -22,10 +23,10 @@ export default function ExternalLinkElement(props: ExternalLinkElementProps) {
       <a
         className={linkClassName}
         href={element.url}
-        onClick={(e) => {
+        onClick={async (e) => {
           e.preventDefault();
           e.stopPropagation();
-          window.open(element.url, '_blank', 'noopener noreferrer');
+          await openUrl(element.url);
         }}
         {...attributes}
       >

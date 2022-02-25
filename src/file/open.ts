@@ -1,4 +1,5 @@
 import * as dialog from '@tauri-apps/api/dialog'
+import { invoke } from '@tauri-apps/api/tauri'
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds } from './process';
@@ -124,4 +125,14 @@ export async function openFile(
     processMds(openFiles);
     return;
   }
+}
+
+/**
+ * open an url
+ * @returns boolean, if opened
+ */
+export async function openUrl(url: string): Promise<boolean> {
+  return await invoke<boolean>(
+    'open_url', { url }
+  );
 }

@@ -3,6 +3,7 @@ use std::path::Path;
 use std::time::SystemTime;
 extern crate notify;
 extern crate trash;
+extern crate open;
 use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
@@ -262,4 +263,10 @@ pub async fn listen_dir(
       Err(e) => break Err(e.to_string()),
     }
   }
+}
+
+/// opn url with default web browser
+#[tauri::command]
+pub fn open_url(url: String) -> bool {
+  open::that(url).is_ok()
 }
