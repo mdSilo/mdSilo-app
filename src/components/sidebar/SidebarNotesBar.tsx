@@ -1,16 +1,13 @@
 import { Dispatch, SetStateAction, useCallback, memo } from 'react';
 import { Menu } from '@headlessui/react';
-import { 
-  IconFeather, IconFolderPlus, IconFileText, IconFileUpload, IconDeviceFloppy 
-} from '@tabler/icons';
+import { IconFeather } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
-import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import { isMobile } from 'utils/helper';
-import { onImportJson, onOpenFile, onOpenDir, onSave } from 'editor/hooks/useOpen';
 import { trimSlash } from 'file/util';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
+import { FileDrop } from './SideMenu';
 
 type Props = {
   noteSort: Sort;
@@ -84,34 +81,6 @@ function NoteBarDrop(props: DropProps) {
   );
 }
 
-type FileDropProps = {
-  className?: string;
-};
 
-export function FileDrop(props: FileDropProps) {
-  return (
-    <>
-      <DropdownItem 
-        onClick={onSave} 
-        className="border-b-2 border-gray-200 dark:border-gray-600"
-      >
-        <IconDeviceFloppy size={18} className="mr-1" />
-        <Tooltip content="Save All Data"><span>Save</span></Tooltip>
-      </DropdownItem>
-      <DropdownItem onClick={onOpenDir}>
-        <IconFolderPlus size={18} className="mr-1" />
-        <Tooltip content="Open Folder"><span>Folder</span></Tooltip>
-      </DropdownItem>
-      <DropdownItem onClick={onOpenFile}>
-        <IconFileText size={18} className="mr-1" />
-        <Tooltip content="Open .md"><span>Text</span></Tooltip>
-      </DropdownItem>
-      <DropdownItem onClick={onImportJson}>
-        <IconFileUpload size={18} className="mr-1" />
-        <Tooltip content="Import JSON"><span>JSON</span></Tooltip>
-      </DropdownItem>
-    </>  
-  );
-}
 
 export default memo(SidebarNotesBar);

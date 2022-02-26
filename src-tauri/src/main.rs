@@ -4,6 +4,7 @@
 )]
 
 mod files;
+mod storage;
 
 fn main() {
   tauri::Builder::default()
@@ -20,6 +21,9 @@ fn main() {
     files::list_directory,
     files::listen_dir,
     files::open_url,
+    storage::set_data,
+    storage::get_data,
+    storage::delete_data,
   ])
   .run(tauri::generate_context!())
   .expect("error while running tauri application");

@@ -4,6 +4,7 @@ import {
 } from 'file/open';
 import { getDirname } from 'file/util';
 import { writeAllFile } from 'file/write';
+import { set } from 'file/storage';
 
 export const openFiles = async (ty: string, multi = true) => {
   cleanStore();
@@ -19,6 +20,7 @@ export const openFiles = async (ty: string, multi = true) => {
     const parentDir = getDirname(onePath);
     console.log("dir path", parentDir);
     store.getState().setCurrentDir(parentDir);
+    await set('history', parentDir);
     await openFile(openPaths, ty);
   }
 };
@@ -33,6 +35,7 @@ export const onOpenDir = async () => {
   console.log("dir path", dirPath);
   if (dirPath && typeof dirPath === 'string') {
     store.getState().setCurrentDir(dirPath);
+    await set('dir-history', [dirPath]);
     await openDir(dirPath);
   }
 };

@@ -1,14 +1,19 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
-import { IconMenu2, IconDna, IconBookmarks, IconCheckbox, IconFile } from '@tabler/icons';
+import { 
+  IconMenu2, IconDna, IconBookmarks, IconCheckbox, IconFile,
+  IconFolderPlus, IconFileText, IconFileUpload, IconDeviceFloppy 
+} from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
+import { onImportJson, onOpenFile, onOpenDir, onSave } from 'editor/hooks/useOpen';
 import { useStore } from 'lib/store';
+import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import SidebarItem from './SidebarItem';
-import { FileDrop } from './SidebarNotesBar';
+
 import Logo from '../Logo';
 
 export default function SideMenu() {
@@ -147,6 +152,35 @@ const TaskButton = (props: ButtonProps) => {
   );
 };
 
+type FileDropProps = {
+  className?: string;
+};
+
+export function FileDrop(props: FileDropProps) {
+  return (
+    <>
+      <DropdownItem 
+        onClick={onSave} 
+        className="border-b-2 border-gray-200 dark:border-gray-600"
+      >
+        <IconDeviceFloppy size={18} className="mr-1" />
+        <Tooltip content="Save All Data"><span>Save</span></Tooltip>
+      </DropdownItem>
+      <DropdownItem onClick={onOpenDir}>
+        <IconFolderPlus size={18} className="mr-1" />
+        <Tooltip content="Open Folder"><span>Folder</span></Tooltip>
+      </DropdownItem>
+      <DropdownItem onClick={onOpenFile}>
+        <IconFileText size={18} className="mr-1" />
+        <Tooltip content="Open .md"><span>Text</span></Tooltip>
+      </DropdownItem>
+      <DropdownItem onClick={onImportJson}>
+        <IconFileUpload size={18} className="mr-1" />
+        <Tooltip content="Import JSON"><span>JSON</span></Tooltip>
+      </DropdownItem>
+    </>  
+  );
+}
 
 const FileButton = () => {
   const btnRef = useRef<HTMLButtonElement | null>(null);
