@@ -22,7 +22,7 @@ export default function SidebarHeader(props: Props) {
             <span className="mr-1 px-1 font-semibold select-none">mdSilo</span>
             <IconChevronsDown size={18} className="text-gray-500 dark:text-gray-400" />
           </div>
-          <Tooltip content="Collapse sidebar (Alt+X)" placement="right">
+          <Tooltip content="Collapse Sidebar (Alt+X)" placement="right">
             <span
               className="p-1 mr-2 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
               onClick={(e) => {

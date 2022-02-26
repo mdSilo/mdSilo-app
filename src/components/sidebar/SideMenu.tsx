@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useMemo, useCallback, useRef, useState } from 'react';
 import { IconMenu2, IconDna, IconBookmarks, IconCheckbox, IconFile } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
+import useHotkeys from 'editor/hooks/useHotkeys';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
@@ -14,9 +15,34 @@ export default function SideMenu() {
   const currentView = useCurrentViewContext();
   const viewTy = currentView.state.view;
   const dispatch = currentView.dispatch;
-  const dispatchChron = () => dispatch({view: 'chronicle'});
-  const dispatchTask = () => dispatch({view: 'task'});
-  const dispatchGraph = () => dispatch({view: 'graph'});
+  const dispatchChron = useCallback(
+    () => dispatch({view: 'chronicle'}), [dispatch]
+  );
+  const dispatchTask = useCallback(
+    () => dispatch({view: 'task'}), [dispatch]
+  );
+  const dispatchGraph = useCallback(
+    () => dispatch({view: 'graph'}), [dispatch]
+  );
+
+  const hotkeys = useMemo(
+    () => [
+      {
+        hotkey: 'mod+shift+g',
+        callback: dispatchGraph,
+      },
+      {
+        hotkey: 'mod+shift+c',
+        callback: dispatchChron,
+      },
+      {
+        hotkey: 'mod+shift+t',
+        callback: dispatchTask,
+      },
+    ],
+    [dispatchGraph, dispatchChron, dispatchTask]
+  );
+  useHotkeys(hotkeys);
 
   return (    
     <div className="flex flex-col h-full">
