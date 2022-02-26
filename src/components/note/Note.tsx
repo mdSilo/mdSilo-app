@@ -30,14 +30,14 @@ function Note(props: Props) {
   console.log("current dir", parentDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
-  const note = storeNotes[noteId];
+  const note: NoteType | undefined = storeNotes[noteId];
   const isPub = note?.is_pub ?? false;
   const isDaily = note?.is_daily ?? false;
   const initIsWiki = note?.is_wiki ?? false;
   // get title and content value
   const title = note?.title ?? 'demo note';
   const [initTitle, ] = useState(title); // an initial title copy
-  const value = note.content ?? getDefaultEditorValue();
+  const value = note?.content ?? getDefaultEditorValue();
 
   const [isWiki, setIsWiki] = useState(initIsWiki);
   const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect

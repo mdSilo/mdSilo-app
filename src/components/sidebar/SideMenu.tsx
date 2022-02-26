@@ -1,4 +1,4 @@
-import { memo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { IconMenu2, IconDna, IconBookmarks, IconCheckbox, IconFile } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
@@ -47,10 +47,10 @@ const OpenButton = () => {
   const isSidebarOpen: boolean = useStore((state) => state.isSidebarOpen);
 
   return (
-    <SidebarItem>
-      <Tooltip content="Open sidebar (Alt+X)" placement="right">
+    <SidebarItem isHighlighted={isSidebarOpen}>
+      <Tooltip content="Toggle Sidebar (Alt+X)" placement="right">
         <button
-          aria-label="Open sidebar"
+          aria-label="Toggle Sidebar"
           className={btnClass}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
@@ -122,9 +122,8 @@ const TaskButton = (props: ButtonProps) => {
 };
 
 
-const SideMenuFIleDropdown = () => {
+const FileButton = () => {
   const btnRef = useRef<HTMLButtonElement | null>(null);
-  
   const [popperElement, setPopperElement] = 
     useState<HTMLDivElement | null>(null);
   const { styles, attributes } = usePopper(
@@ -135,8 +134,12 @@ const SideMenuFIleDropdown = () => {
     <Menu>
       {({ open }) => (
         <>
-          <Menu.Button ref={btnRef} className={btnClass}>
-            <IconFile size={24} className={btnIconClass} />
+          <Menu.Button ref={btnRef} className="hover:bg-gray-200 dark:hover:bg-gray-700">
+            <Tooltip content="File Menu" placement="right" touch={true}>
+              <span className={btnClass}>
+                <IconFile size={24} className={btnIconClass} />
+              </span>
+            </Tooltip>
           </Menu.Button>
           {open && (
             <Portal>
@@ -154,17 +157,5 @@ const SideMenuFIleDropdown = () => {
         </>
       )}
     </Menu>
-  );
-};
-
-const FileButtonDrops = memo(SideMenuFIleDropdown);
-
-const FileButton = () => {
-  return (
-    <SidebarItem>
-      <Tooltip content="File Menu" placement="right">
-        <FileButtonDrops />
-      </Tooltip>
-    </SidebarItem>
   );
 };

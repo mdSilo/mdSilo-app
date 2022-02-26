@@ -98,7 +98,7 @@ function Sidebar(props: Props) {
             >
               <SidebarHeader setIsSettingsOpen={setIsSettingsOpen} />
               <SidebarContent
-                className="flex-1 mt-1 overflow-x-hidden overflow-y-auto"
+                className="flex-1 overflow-x-hidden overflow-y-auto"
                 setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
               />
             </div>

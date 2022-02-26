@@ -32,6 +32,7 @@ import withBlockBreakout from 'editor/plugins/withBlockBreakout';
 import withLinks from 'editor/plugins/withLinks';
 import withNormalization from 'editor/plugins/withNormalization';
 import withCustomDeleteBackward from 'editor/plugins/withCustomDeleteBackward';
+import withImages from 'editor/plugins/withImages';
 import withVoidElements from 'editor/plugins/withVoidElements';
 import withNodeId from 'editor/plugins/withNodeId';
 import withBlockReferences from 'editor/plugins/withBlockReferences';
@@ -94,12 +95,14 @@ function Editor(props: Props) {
             withBlockBreakout(
               withVoidElements(
                 withBlockReferences(
-                  withTags(
-                    withLinks(
-                      withNodeId(
-                        withTable(
-                          withHistory(
-                            withReact(createEditor())
+                  withImages(
+                    withTags(
+                      withLinks(
+                        withNodeId(
+                          withTable(
+                            withHistory(
+                              withReact(createEditor())
+                            )
                           )
                         )
                       )

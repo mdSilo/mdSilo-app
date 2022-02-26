@@ -47,9 +47,9 @@ export default function SidebarHeader(props: Props) {
             <span>Settings</span>
           </DropdownItem>
           <DropdownItem
-            className="border-t dark:border-gray-700 hover:bg-green-400"
+            className="border-t dark:border-gray-700"
             as='link'
-            href='/sponsors'
+            href='https://mdsilo.com/sponsors/'
           >
             <IconPizza size={18} className="mr-1" />
             <span>Sponsor</span>
