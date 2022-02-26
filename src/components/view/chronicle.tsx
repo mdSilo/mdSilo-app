@@ -1,6 +1,6 @@
 //import { useMemo } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { useStore } from 'lib/store';
+import { useStore, store } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
@@ -27,7 +27,7 @@ export default function Chronicle() {
     const noteId = getOrCreateNoteId(date);
     // redirect to journals when the note not be prepared
     if (noteId) {
-      const note = notes[noteId];
+      const note = store.getState().notes[noteId];
       if (note) {
         dispatch({view: 'md', params: {noteId: note.id}});
       } else {
@@ -45,7 +45,7 @@ export default function Chronicle() {
           />
         </div>
         <div className="my-1 p-1 rounded text-center">
-          <button onClick={() => dispatch({view: 'journal'})}>
+          <button onClick={() => dispatch({view: 'journal'})} className="link text-2xl">
             Journals
           </button>
           <button className="link w-full mt-2" onClick={() => onRecapDay(today)}>

@@ -1,35 +1,41 @@
 import { useMemo } from 'react';
 import useHotkeys from 'editor/hooks/useHotkeys';
 import useDeleteNote from 'editor/hooks/useDeleteNote';
+import { BaseModal } from 'components/settings/BaseModal';
 
 type Props = {
   noteId: string;
   noteTitle: string;
-  setIsOpen: (isOpen: boolean) => void;
+  isOpen: boolean;
+  handleClose: () => void;
 };
 
 export default function NoteDelModal(props: Props) {
-  const { noteId, noteTitle, setIsOpen } = props;
+  const { noteId, noteTitle, isOpen, handleClose } = props;
 
   const hotkeys = useMemo(
     () => [
       {
         hotkey: 'esc',
-        callback: () => setIsOpen(false),
+        callback: handleClose,
       },
     ],
-    [setIsOpen]
+    [handleClose]
   );
   useHotkeys(hotkeys);
 
   const onDeleteClick = useDeleteNote(noteId, noteTitle);
 
   return (
-    <div className="fixed inset-0 z-20 overflow-y-auto">
-      <div className="flex justify-center px-6 max-h-screen-80 my-screen-10">
-        <button className="mt-2 text-red-600 pop-btn" onClick={onDeleteClick}>Confirm Delete</button>
-        <button className="mt-2 pop-btn" onClick={() => setIsOpen(false)}>Cancel Delete</button>
+    <BaseModal title="Delete This Work?" isOpen={isOpen} handleClose={handleClose}>
+      <div className="flex flex-col justify-center px-6">
+        <button className="mt-2 font-bold text-red-600 pop-btn" onClick={onDeleteClick}>
+          Confirm Delete
+        </button>
+        <button className="mt-4 font-bold pop-btn" onClick={handleClose}>
+          Cancel Delete
+        </button>
       </div>
-    </div>
+    </BaseModal>
   );
 }

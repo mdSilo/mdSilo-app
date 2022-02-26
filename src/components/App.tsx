@@ -37,7 +37,10 @@ const App = () => {
             <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />
           ) : null}
           {isSettingsOpen ? (
-            <SettingsModal setIsOpen={setIsSettingsOpen} />
+            <SettingsModal 
+              isOpen={isSettingsOpen}
+              handleClose={() => setIsSettingsOpen(false)} 
+            />
           ) : null}
         </div>
       </div>

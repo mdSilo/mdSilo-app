@@ -150,7 +150,8 @@ export default function NoteHeader(props: Props) {
           <NoteDelModal
             noteId={currentNote.id}
             noteTitle={note?.title}
-            setIsOpen={setIsNoteDelModalOpen}
+            isOpen={isNoteDelModalOpen}
+            handleClose={() => setIsNoteDelModalOpen(false)}
           />
         </Portal>
       ) : null}

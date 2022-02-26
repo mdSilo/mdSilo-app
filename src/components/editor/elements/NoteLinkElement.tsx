@@ -5,7 +5,7 @@ import { NoteLink } from 'editor/slate';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
 import { useCurrentMdContext } from 'context/useCurrentMd';
-import { store } from 'lib/store';
+import { useStore } from 'lib/store';
 import { extractTexts } from 'editor/hooks/useSummary';
 
 type NoteLinkElementProps = {
@@ -31,7 +31,7 @@ export default function NoteLinkElement(props: NoteLinkElementProps) {
   );
 
   const noteId = element.noteId;
-  const toNote = store.getState().notes[noteId];
+  const toNote = useStore(state => state.notes)[noteId];
   const content = toNote 
     ? extractTexts(toNote.content, 2) || element.noteTitle 
     : element.noteTitle || 'To Linked Note';
