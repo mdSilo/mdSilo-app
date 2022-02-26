@@ -23,6 +23,8 @@ function SidebarNotes(props: SidebarNotesProps) {
     [noteTree, notes, noteSort]
   );
 
+  // why pass numOfNotes to SidebarNotesBar from here?
+  // we get notes here
   const noteList = Object.values(notes);
   const myNotes = noteList.filter(n => !n.is_wiki && !n.is_daily);
   const numOfNotes = useMemo(() => myNotes.length, [myNotes]);

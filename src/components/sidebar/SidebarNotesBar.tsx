@@ -1,12 +1,14 @@
 import { Dispatch, SetStateAction, useCallback, memo } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconFeather, IconFolderPlus, IconFileText, IconFileUpload } from '@tabler/icons';
-import { store, useStore } from 'lib/store';
+import { 
+  IconFeather, IconFolderPlus, IconFileText, IconFileUpload, IconDeviceFloppy 
+} from '@tabler/icons';
+import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import { isMobile } from 'utils/helper';
-import { onImportJson, onOpenFile, onOpenDir } from 'editor/hooks/useOpen';
+import { onImportJson, onOpenFile, onOpenDir, onSave } from 'editor/hooks/useOpen';
 import { trimSlash } from 'file/util';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
 
@@ -56,7 +58,7 @@ type DropProps = {
 function NoteBarDrop(props: DropProps) {
   const { numOfNotes } = props;
   
-  const currentDir = store.getState().currentDir;
+  const currentDir = useStore((state) => state.currentDir);
   const currentFolder = currentDir 
     ? trimSlash(currentDir, 'end').split('/').pop() 
     : 'md';
@@ -89,6 +91,13 @@ type FileDropProps = {
 export function FileDrop(props: FileDropProps) {
   return (
     <>
+      <DropdownItem 
+        onClick={onSave} 
+        className="border-b-2 border-gray-200 dark:border-gray-600"
+      >
+        <IconDeviceFloppy size={18} className="mr-1" />
+        <Tooltip content="Save All Data"><span>Save</span></Tooltip>
+      </DropdownItem>
       <DropdownItem onClick={onOpenDir}>
         <IconFolderPlus size={18} className="mr-1" />
         <Tooltip content="Open Folder"><span>Folder</span></Tooltip>

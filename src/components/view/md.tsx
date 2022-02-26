@@ -4,7 +4,6 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import Note from 'components/note/Note';
 import { useStore } from 'lib/store';
 import usePrevious from 'editor/hooks/usePrevious';
-//import { queryParamToArray } from 'utils/helper';
 import useBlockBacklinks from 'editor/backlinks/useBlockBacklinks';
 
 

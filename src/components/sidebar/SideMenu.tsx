@@ -3,7 +3,7 @@ import { IconMenu2, IconDna, IconBookmarks, IconCheckbox, IconFile } from '@tabl
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { store } from 'lib/store';
+import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import SidebarItem from './SidebarItem';
@@ -43,8 +43,8 @@ const btnClass = 'title flex items-center text-lg p-2';
 const btnIconClass = 'flex-shrink-0 mx-1 text-gray-600 dark:text-gray-400';
 
 const OpenButton = () => {
-  const setIsSidebarOpen = store.getState().setIsSidebarOpen;
-  //const isSidebarOpen: boolean = store.getState().isSidebarOpen;
+  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const isSidebarOpen: boolean = useStore((state) => state.isSidebarOpen);
 
   return (
     <SidebarItem>
@@ -52,7 +52,7 @@ const OpenButton = () => {
         <button
           aria-label="Open sidebar"
           className={btnClass}
-          onClick={() => setIsSidebarOpen(true)}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
           <IconMenu2 size={24} className={btnIconClass} />
         </button>

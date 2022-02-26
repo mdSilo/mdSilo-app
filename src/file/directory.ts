@@ -33,16 +33,16 @@ let listener: UnlistenFn;
  * Invoke Rust command to read information of a directory
  */
 class DirectoryAPI {
-  readonly dirName: string;
+  readonly dirPath: string;  // path
   readonly parentDir: string | undefined;
   files: FileMetaData[] | undefined;
 	
   constructor(dirName: string, parentDir?: string) {
     if (parentDir) {
 	    this.parentDir = normalizeSlash(parentDir);
-	    this.dirName = normalizeSlash(joinPath(parentDir, dirName));
+	    this.dirPath = normalizeSlash(joinPath(parentDir, dirName));
     } else {
-      this.dirName = normalizeSlash(dirName);
+      this.dirPath = normalizeSlash(dirName);
     }
   }
 
@@ -54,7 +54,7 @@ class DirectoryAPI {
     return new Promise((resolve) => {
       if (isTauri) {
         invoke<DirectoryData>(
-          'read_directory', { dir: this.dirName }
+          'read_directory', { dir: this.dirPath }
         ).then((files: DirectoryData) => {
           this.files = files.files;
           resolve(files);
@@ -71,7 +71,7 @@ class DirectoryAPI {
     return new Promise((resolve) => {
       if (isTauri) {
         invoke<boolean>(
-          'is_dir', { path: this.dirName }
+          'is_dir', { path: this.dirPath }
         ).then(
           (result: boolean) => resolve(result)
         );
@@ -84,7 +84,7 @@ class DirectoryAPI {
    * @returns {boolean}
   */
   async exists(): Promise<boolean> {
-   return await invoke('file_exist', { filePath: this.dirName });
+   return await invoke('file_exist', { filePath: this.dirPath});
   }
 
   /**
@@ -94,7 +94,7 @@ class DirectoryAPI {
   async mkdir(): Promise<boolean> {
     return await invoke(
       'create_dir_recursive', 
-      { dirPath: this.dirName, }
+      { dirPath: this.dirPath }
     );
   }
 
@@ -105,7 +105,7 @@ class DirectoryAPI {
    */
   async listen(callbackFn: () => void): Promise<void> {
     if (isTauri) {
-      invoke('listen_dir', { dir: this.dirName });
+      invoke('listen_dir', { dir: this.dirPath });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       listener = await getCurrent().listen('changes', (e: any) => {
         console.log(e);

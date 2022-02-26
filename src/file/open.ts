@@ -22,6 +22,7 @@ each file or evne some blocks are not standalone but networked
  */
 export const openDirDilog = async () => {
   const dirPath  = await dialog.open({
+    title: `Open Folder`,
     directory: true,
     multiple: false,
     filters: [
@@ -75,6 +76,7 @@ export const openDir = async (dir: string, writeHistory = true): Promise<void> =
  */
 export const openFileDilog = async (ty: string, multi = true) => {
   const filePaths = await dialog.open({
+    title: `Open ${ty} File`,
     directory: false,
     multiple: multi,
     filters: [
@@ -136,3 +138,23 @@ export async function openUrl(url: string): Promise<boolean> {
     'open_url', { url }
   );
 }
+
+/**
+ * dialog to get file paths to open
+ * @returns 
+ */
+ export const saveDilog = async () => {
+  const dirPath = await dialog.save({
+    title: 'Select Folder to Save Files'
+  });
+  console.log('to folder', dirPath);
+  return dirPath;
+  // const dirAPI = new DirectoryAPI(dirPath);
+  // const isDir = await dirAPI.isDir();
+  // if (isDir) {
+  //   return dirAPI;
+  // } else {
+  //   console.log('not folder', dirPath);
+  //   return;
+  // }
+};

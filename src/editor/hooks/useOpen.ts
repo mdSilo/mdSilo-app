@@ -1,6 +1,9 @@
 import { store } from 'lib/store';
-import { openDirDilog, openDir, openFile, openFileDilog } from 'file/open';
+import { 
+  openDirDilog, openDir, openFile, openFileDilog, saveDilog 
+} from 'file/open';
 import { getDirname } from 'file/util';
+import { writeAllFile } from 'file/write';
 
 export const openFiles = async (ty: string, multi = true) => {
   cleanStore();
@@ -32,6 +35,14 @@ export const onOpenDir = async () => {
     store.getState().setCurrentDir(dirPath);
     await openDir(dirPath);
   }
+};
+
+export const onSave = async () => {
+  const dir = await saveDilog();
+  console.log("save dir path", dir);
+  const notesObj = store.getState().notes;
+  await writeAllFile(dir, notesObj);
+  store.getState().setCurrentDir(dir);
 };
 
 function cleanStore() {

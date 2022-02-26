@@ -1,6 +1,6 @@
 //import { useMemo } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { useStore, store } from 'lib/store';
+import { useStore } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
@@ -27,7 +27,7 @@ export default function Chronicle() {
     const noteId = getOrCreateNoteId(date);
     // redirect to journals when the note not be prepared
     if (noteId) {
-      const note = store.getState().notes[noteId];
+      const note = notes[noteId];
       if (note) {
         dispatch({view: 'md', params: {noteId: note.id}});
       } else {

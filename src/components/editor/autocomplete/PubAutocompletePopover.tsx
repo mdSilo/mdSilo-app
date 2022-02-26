@@ -5,7 +5,6 @@ import type { TablerIcon } from '@tabler/icons';
 import { store } from 'lib/store';
 import type { Note } from 'types/model';
 import { defaultNote } from 'types/model';
-//import updateDbUser from '.lib/api/updateUser';
 import { insertPubLink } from 'editor/formatting';
 import { deleteText } from 'editor/transforms';
 //import { loadDbWikiNotes } from 'lib/api/curdNote';
@@ -51,7 +50,7 @@ export default function PubAutocompletePopover() {
   // 3- useNoteSearch locally
   const [tempNotes, setTempNotes] = useState<Note[]>([]);
   const getSearch = useCallback(async (linkText: string) => {
-    //const notesRes = await loadDbWikiNotes(linkText);
+    //const notesRes = await loadDbWikiNotes(linkText); // FIXME TODO
     const notes = null; //notesRes?.data;
     if (notes) {
       setTempNotes(notes);
