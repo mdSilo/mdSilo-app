@@ -6,7 +6,11 @@ interface StorageData {
 	data: JSON;
 }
 
-const data: { [key: string]: any; } = {};
+export interface LocalData {
+	[key: string]: any;
+}
+
+const DATA: LocalData = {};
 
 /**
  * Set data to local storage
@@ -16,11 +20,11 @@ const data: { [key: string]: any; } = {};
  */
 export const set = async (key: string, value: any): Promise<void> => {
 	if (isTauri) {
-		data[key] = value;
+		DATA[key] = value;
 		console.log("go here??")
 		return await invoke('set_data', { key, value });
 	} else {
-		data[key] = value;
+		DATA[key] = value;
 		localStorage.setItem(key, JSON.stringify(value));
 	}
 };
@@ -32,18 +36,20 @@ export const set = async (key: string, value: any): Promise<void> => {
  * @returns {Promise<any>} 
  */
 export const get = async (key: string, force?: boolean): Promise<any> => {
-	if (Object.keys(data).includes(key) && !force) {
-		return data[key];
+	if (Object.keys(DATA).includes(key) && !force) {
+		return DATA[key];
 	} else {
 		if (isTauri) {
 			const storeData: StorageData = await invoke('get_data', { key });
-			data[key] = storeData.data;
-			return storeData.status ? storeData.data : {};
+			const sData = storeData.data;
+			DATA[key] = sData;
+			return storeData.status ? sData : {};
 		} else {
 			const storeData = localStorage.getItem(key);
 			if (storeData) {
-				data[key] = JSON.parse(storeData);
-				return data[key];
+				const sData = JSON.parse(storeData);
+				DATA[key] = sData;
+				return sData;
 			} else {
 				return {};
 			}
@@ -63,3 +69,6 @@ export const remove = async (key: string): Promise<void> => {
 		localStorage.removeItem(key);
 	}
 };
+
+// eslint-disable-next-line import/no-anonymous-default-export
+export default { set, get, remove };

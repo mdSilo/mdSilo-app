@@ -47,7 +47,7 @@ export const openDir = async (dir: string, writeHistory = true): Promise<void> =
     return;
   }
 
-  const jsonInfo = new FileAPI('mdSilo_all.json', dir);
+  const jsonInfo = new FileAPI('mdsilo_all.json', dir);
   console.log("json", jsonInfo)
   if (await jsonInfo.exists()) {
     // process json

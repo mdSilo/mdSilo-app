@@ -19,7 +19,7 @@ export async function writeFile(filePath: string, content: string) {
  * @param json optional
  */
 export async function writeJsonFile(parentDir: string, json = '') {
-  const jsonFile = new FileAPI('mdSilo_all.json', parentDir);
+  const jsonFile = new FileAPI('mdsilo_all.json', parentDir);
   console.log("json file", jsonFile)
   const notesJson = json || buildNotesJson(true);
   await jsonFile.writeFile(notesJson);

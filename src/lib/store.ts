@@ -19,9 +19,9 @@ const immer =
     config((fn) => set(produce<T>(fn)), get, api);
 
 localforage.config({
-  name: 'mdSilo',
+  name: 'mdsilo',
   version: 1.0,
-  storeName: 'user_data',
+  storeName: 'mdsilo_data',
 });
 
 const storage: StateStorage = {
@@ -280,7 +280,7 @@ export const store = createVanilla<
       ...userSettingsSlice(set),
     })),
     {
-      name: 'mdSilo-storage',
+      name: 'mdsilo-storage',
       version: 1,
       getStorage: () => storage,
       partialize: (state) => ({
