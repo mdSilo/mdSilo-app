@@ -59,7 +59,7 @@ export default function Tasks() {
       id: 'doing',
       labelNode: (
         <div className={taskDivClass}>
-          <b className="py-1 text-xl text-red-500">Doing</b>
+          <b className="py-1 text-xl">Doing</b>
         </div>
       ),
       children: getTaskNotes('#doing'),
@@ -68,7 +68,7 @@ export default function Tasks() {
       id: 'todo',
       labelNode: (
         <div className={taskDivClass}>
-          <b className="py-1 text-xl text-blue-500">To Do</b>
+          <b className="py-1 text-xl">To Do</b>
         </div>
       ),
       children: getTaskNotes('#todo'),
@@ -77,7 +77,7 @@ export default function Tasks() {
       id: 'done',
       labelNode: (
         <div className={taskDivClass}>
-          <b className="py-1 text-xl text-green-500">Done</b>
+          <b className="py-1 text-xl">Done</b>
         </div>
       ),
       children: getTaskNotes('#done'),

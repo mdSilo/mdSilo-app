@@ -19,7 +19,7 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
       // If stackNote is false, open the note in its own page
       stackNote = false;
       if (!stackNote) {
-        const hash = highlightedPath ? `0-${highlightedPath}` : undefined;
+        const hash = highlightedPath ? `0-${highlightedPath}` : '';
         //console.log("here-1", highlightedPath)
         dispatch({view: 'md', params: {noteId, hash}});
         return;

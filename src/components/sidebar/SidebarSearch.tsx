@@ -115,11 +115,12 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
     <button
       className="w-full text-left rounded hover:bg-gray-200 active:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600"
       onClick={() => {
-        const hash = block ? `#0-${block.path}` : '';
+        const hash = block ? `0-${block.path}` : '';
         // should close Sidebar before go to note page
         if (isMobile(767)) {
           setIsSidebarOpen(false);
         }
+        //console.log("block hash", hash, text)
         dispatch({view: 'md', params: {noteId, hash}});
       }}
     >
