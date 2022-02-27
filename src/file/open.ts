@@ -1,5 +1,6 @@
 import * as dialog from '@tauri-apps/api/dialog'
 import { invoke } from '@tauri-apps/api/tauri'
+import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds } from './process';
@@ -16,15 +17,27 @@ a better way and eliminate the 'store' which is introduced from web app, but:
 each file or evne some blocks are not standalone but networked
 */
 
+function getRecentDirPath() {
+  const recentDir = store.getState().recentDir;
+  if (recentDir && Array.isArray(recentDir) && recentDir.length > 0) {
+    return recentDir[recentDir.length - 1] || '.';
+  } else {
+    return '.';
+  }
+}
+
 /**
  * Dialog to get dir path to open
  * @returns 
  */
 export const openDirDilog = async () => {
+  const recentDirPath = getRecentDirPath();
+  console.log("default dir path: ", recentDirPath);
   const dirPath  = await dialog.open({
     title: `Open Folder`,
     directory: true,
     multiple: false,
+    defaultPath: recentDirPath,
     filters: [
       {name: 'dir', extensions: ['md', 'json']}
     ],
@@ -75,10 +88,12 @@ export const openDir = async (dir: string, writeHistory = true): Promise<void> =
  * @returns 
  */
 export const openFileDilog = async (ty: string, multi = true) => {
+  const recentDirPath = getRecentDirPath();
   const filePaths = await dialog.open({
     title: `Open ${ty} File`,
     directory: false,
     multiple: multi,
+    defaultPath: recentDirPath,
     filters: [
       {
         name: 'file', 
@@ -144,17 +159,11 @@ export async function openUrl(url: string): Promise<boolean> {
  * @returns 
  */
  export const saveDilog = async () => {
+  const recentDirPath = getRecentDirPath();
   const dirPath = await dialog.save({
-    title: 'Select Folder to Save Files'
+    title: 'Select Folder to Save Data',
+    defaultPath: recentDirPath,
   });
   console.log('to folder', dirPath);
   return dirPath;
-  // const dirAPI = new DirectoryAPI(dirPath);
-  // const isDir = await dirAPI.isDir();
-  // if (isDir) {
-  //   return dirAPI;
-  // } else {
-  //   console.log('not folder', dirPath);
-  //   return;
-  // }
 };

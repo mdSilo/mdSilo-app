@@ -1,11 +1,11 @@
-import create, { State, StateCreator, SetState, GetState } from 'zustand';
+import create, { State, StateCreator } from 'zustand';
 import createVanilla from 'zustand/vanilla';
-import { persist, StateStorage, StoreApiWithPersist } from 'zustand/middleware';
+import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
-import localforage from 'localforage';
 import type { Note } from 'types/model';
 import { ciStringEqual } from 'utils/helper';
 import { Backlink } from 'editor/backlinks/useBacklinks';
+import Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
 import type { NoteUpdate } from './api/curdNote';
 
@@ -18,27 +18,20 @@ const immer =
   (set, get, api) =>
     config((fn) => set(produce<T>(fn)), get, api);
 
-localforage.config({
-  name: 'mdsilo',
-  version: 1.0,
-  storeName: 'mdsilo_data',
-});
-
+// storage in LOCAL_DATA_DIR
 const storage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
-    return await localforage.getItem(name);
+    return await Storage.get(name);
   },
   setItem: async (name: string, value: string): Promise<void> => {
-    await localforage.setItem(name, value);
+    await Storage.set(name, value);
   },
   removeItem: async (name: string): Promise<void> => {
-    await localforage.removeItem(name);
+    await Storage.remove(name);
   },
 };
 
 export type Notes = Record<Note['id'], Note>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type FileHandles = Record<string, any>; // FileSystemFileHandle
 
 export type NoteTreeItem = {
   id: Note['id'];  
@@ -69,8 +62,6 @@ export enum SidebarTab {
 }
 
 export type Store = {
-  // TODO: temporary until https://github.com/pmndrs/zustand/issues/562 gets fixed
-  _hasHydrated: boolean; 
   // note
   notes: Notes;
   setNotes: Setter<Notes>;
@@ -124,15 +115,9 @@ export const setter =
     }
   };
 
-export const store = createVanilla<
-  Store,
-  SetState<Store>,
-  GetState<Store>,
-  StoreApiWithPersist<Store>
->(
+export const store = createVanilla<Store>(
   persist(
     immer((set) => ({
-      _hasHydrated: false,
       //  Map of note id to notes
       notes: {},  // all private notes and related wiki notes
       // Sets the notes
@@ -284,33 +269,20 @@ export const store = createVanilla<
       version: 1,
       getStorage: () => storage,
       partialize: (state) => ({
-        // user setting related storage
+        // user setting related
         userId: state.userId,
         isSidebarOpen: state.isSidebarOpen,
         darkMode: state.darkMode,
         isPageStackingOn: state.isPageStackingOn,
         isCheckSpellOn: state.isCheckSpellOn,
         noteSort: state.noteSort,
-        exportOnClose: state.exportOnClose,
-        // note related storage
-        // openNoteIds: state.openNoteIds,
-        // notes: state.notes,
-        // noteTree: state.noteTree,
-        // wikiTree: state.wikiTree,
+        recentDir: state.recentDir,
       }),
-      onRehydrateStorage: () => () => {
-        useStore.setState({ _hasHydrated: true });
-      },
     }
   )
 );
 
-export const useStore = create<
-  Store,
-  SetState<Store>,
-  GetState<Store>,
-  StoreApiWithPersist<Store>
->(store);
+export const useStore = create<Store>(store);
 
 /**
  * Deletes the tree item with the given id and returns it.

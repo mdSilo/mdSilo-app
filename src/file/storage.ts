@@ -21,7 +21,7 @@ const DATA: LocalData = {};
 export const set = async (key: string, value: any): Promise<void> => {
 	if (isTauri) {
 		DATA[key] = value;
-		console.log("go here??")
+		console.log("set data, go here??")
 		return await invoke('set_data', { key, value });
 	} else {
 		DATA[key] = value;
@@ -35,7 +35,7 @@ export const set = async (key: string, value: any): Promise<void> => {
  * @param {boolean} force 
  * @returns {Promise<any>} 
  */
-export const get = async (key: string, force?: boolean): Promise<any> => {
+export const get = async (key: string, force?: boolean): Promise<JSON | any> => {
 	if (Object.keys(DATA).includes(key) && !force) {
 		return DATA[key];
 	} else {

@@ -36,8 +36,8 @@ export type UserSettings = {
   setReadMode: Setter<boolean>;
   wikiReadMode: boolean;
   setWikiReadMode: Setter<boolean>;
-  exportOnClose: boolean;
-  setExportOnClose: Setter<boolean>;
+  recentDir: string[];
+  setRecentDir: Setter<string[]>;
 };
 
 const userSettingsSlice = (
@@ -59,8 +59,8 @@ const userSettingsSlice = (
   setReadMode: setter(set, 'readMode'),
   wikiReadMode: true,
   setWikiReadMode: setter(set, 'wikiReadMode'),
-  exportOnClose: false,
-  setExportOnClose: setter(set, 'exportOnClose'),
+  recentDir: [],
+  setRecentDir: setter(set, 'recentDir'),
 });
 
 export default userSettingsSlice;

@@ -4,10 +4,8 @@ import {
 } from 'file/open';
 import { getDirname } from 'file/util';
 import { writeAllFile } from 'file/write';
-import { set } from 'file/storage';
 
 export const openFiles = async (ty: string, multi = true) => {
-  cleanStore();
   const filePaths = await openFileDilog(ty, multi);
   console.log("file path", filePaths);
   const openPaths = typeof filePaths === 'string' ? [filePaths] : filePaths;
@@ -19,8 +17,9 @@ export const openFiles = async (ty: string, multi = true) => {
     // const parentDir = parentDirParts.join('/');
     const parentDir = getDirname(onePath);
     console.log("dir path", parentDir);
+    cleanStore();
     store.getState().setCurrentDir(parentDir);
-    await set('history', parentDir);
+    store.getState().setRecentDir([parentDir]);
     await openFile(openPaths, ty);
   }
 };
@@ -30,12 +29,13 @@ export const onImportJson = async () => await openFiles('json', false);
 export const onOpenFile = async () => await openFiles('md');
 
 export const onOpenDir = async () => {
-  cleanStore();
   const dirPath = await openDirDilog();
   console.log("dir path", dirPath);
   if (dirPath && typeof dirPath === 'string') {
+    cleanStore();
     store.getState().setCurrentDir(dirPath);
-    await set('dir-history', [dirPath]);
+    store.getState().setRecentDir([dirPath]);
+    console.log("rencent dir path", store.getState().recentDir);
     await openDir(dirPath);
   }
 };
