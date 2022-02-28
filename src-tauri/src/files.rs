@@ -8,6 +8,19 @@ use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
 #[derive(serde::Serialize, Clone, Debug)]
+pub struct SimpleFileMeta {
+  file_name: String,
+  file_path: String,
+  created: SystemTime,
+  last_modified: SystemTime,
+  last_accessed: SystemTime,
+  size: u64,
+  readonly: bool,
+  is_dir: bool,
+  is_file: bool,
+}
+
+#[derive(serde::Serialize, Clone, Debug)]
 pub struct FileMetaData {
   file_path: String,
   file_name: String,
@@ -44,9 +57,7 @@ pub fn get_basename(file_path: &str) -> String {
   }
 }
 
-/// Get meatdata of a file
-#[tauri::command]
-pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
+pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   let metadata = match fs::metadata(file_path) {
     Ok(data) => data,
     Err(e) => return Err(e.to_string()),
@@ -59,9 +70,6 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   let is_file = metadata.is_file();
   let size = metadata.len();
   let readonly = metadata.permissions().readonly();
-
-  let file_text = fs::read_to_string(file_path)
-    .unwrap_or(format!("{}: Something went wrong", file_path));
 
   let last_modified = match metadata.modified() {
     Ok(result) => result,
@@ -78,10 +86,9 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     Err(_e) => SystemTime::now(), // TODO: to log the err
   };
   
-  Ok(FileMetaData {
+  Ok(SimpleFileMeta {
     file_path: file_path.to_string(),
     file_name,
-    file_text,
     created,
     last_modified,
     last_accessed,
@@ -89,6 +96,31 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     is_file,
     size,
     readonly,
+  })
+}
+
+/// Get meatdata of a file
+#[tauri::command]
+pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
+  let meta_data = match get_simple_meta(file_path) {
+    Ok(data) => data,
+    Err(e) => return Err(e.to_string()),
+  };
+
+  let file_text = fs::read_to_string(file_path)
+    .unwrap_or(format!("{}: Something went wrong", file_path));
+  
+  Ok(FileMetaData {
+    file_path: file_path.to_string(),
+    file_name: meta_data.file_name,
+    file_text,
+    created: meta_data.created,
+    last_modified: meta_data.last_modified,
+    last_accessed: meta_data.last_accessed,
+    is_dir: meta_data.is_dir,
+    is_file: meta_data.is_file,
+    size: meta_data.size,
+    readonly: meta_data.readonly,
   })
 }
 
@@ -138,18 +170,23 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
 
 /// Get array of files of a directory
 #[tauri::command]
-pub async fn list_directory(dir: &str) -> Result<Vec<String>, String> {
+pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
   let paths = fs::read_dir(dir).map_err(|err| err.to_string())?;
-  let mut filepaths = Vec::new();
+  let mut filemetas = Vec::new();
   for path in paths {
     let file_path = match path {
       Ok(p) => p.path().display().to_string(),
       Err(_e) => continue,
     };
 
-    filepaths.push(file_path);
+    let simple_meta = match get_simple_meta(&file_path) {
+      Ok(data) => data,
+      Err(_) => continue,
+    };
+
+    filemetas.push(simple_meta);
   }
-  Ok(filepaths)
+  Ok(filemetas)
 }
 
 /// Check if path given exists

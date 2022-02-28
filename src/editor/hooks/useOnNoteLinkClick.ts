@@ -2,10 +2,8 @@ import { MouseEvent, useCallback } from 'react';
 import { Path } from 'slate';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
-//import { queryParamToArray } from 'utils/helper';
 
 export default function useOnNoteLinkClick(currentNoteId: string) {
-  //const navigate = useNavigate();
   const currentView = useCurrentViewContext();
   const viewState = currentView.state;
   const dispatch = currentView.dispatch;

@@ -21,6 +21,8 @@ export type Note = {
   is_pub: boolean;
   is_wiki: boolean;
   is_daily: boolean;
+  not_process?: boolean;
+  file_path?: string;
 };
 
 export const defaultUserId = '00000000-0000-0000-0000-000000000000';

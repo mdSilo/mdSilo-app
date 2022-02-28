@@ -22,6 +22,18 @@ export interface FileMetaData {
   is_file?: boolean;
 }
 
+export interface SimpleFileMeta {
+  file_name: string;
+  file_path: string;
+  created: SystemTime;
+  last_modified: SystemTime;
+  last_accessed?: SystemTime;
+  size?: number;
+  readonly?: boolean;
+  is_dir?: boolean;
+  is_file?: boolean;
+}
+
 interface DirectoryData {
   files: FileMetaData[];
   number_of_files: number;
@@ -35,7 +47,7 @@ let listener: UnlistenFn;
 class DirectoryAPI {
   readonly dirPath: string;  // path
   readonly parentDir: string | undefined;
-  files: FileMetaData[] | undefined;
+  files: FileMetaData[] | SimpleFileMeta[] | undefined;
 	
   constructor(dirName: string, parentDir?: string) {
     if (parentDir) {
@@ -44,6 +56,23 @@ class DirectoryAPI {
     } else {
       this.dirPath = normalizeSlash(dirName);
     }
+  }
+
+  /**
+   * Get files inside a directory
+   * @returns {Promise<DirectoryData>}
+  */
+   listFiles(): Promise<SimpleFileMeta[]> {
+    return new Promise((resolve) => {
+      if (isTauri) {
+        invoke<SimpleFileMeta[]>(
+          'list_directory', { dir: this.dirPath }
+        ).then((files: SimpleFileMeta[]) => {
+          this.files = files;
+          resolve(files);
+        });
+      }
+    });
   }
 
   /**

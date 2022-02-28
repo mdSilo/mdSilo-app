@@ -11,7 +11,7 @@ import { getDefaultEditorValue } from 'editor/constants';
 import { ciStringEqual, regDateStr } from 'utils/helper';
 import { ElementType, NoteLink } from 'editor/slate';
 import { Note, defaultNote } from 'types/model';
-import { FileMetaData } from 'file/directory';
+import { FileMetaData, SimpleFileMeta } from 'file/directory';
 
 export function processJson(content: string) {
   const jsonNotesData = []; 
@@ -35,6 +35,44 @@ export function processJson(content: string) {
   }
 }
 
+export function preProcessMds(fileList: SimpleFileMeta[]) {
+  const upsertNote = store.getState().upsertNote;
+
+  const newPreNotesData: Note[] = [];
+
+  for (const file of fileList) {
+    const fileName = file.file_name;
+    const checkMd = checkFileIsMd(fileName);
+    if (!fileName || !checkMd) {
+      continue;
+    }
+
+    // new note from file
+    // Issue Alert: same title but diff ext, only one file can be imported
+    const newNoteTitle = rmFileNameExt(fileName);
+    
+    const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
+    const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
+    const newNoteObj = {
+      id: uuidv4(), // placeholder only
+      title: newNoteTitle,
+      content: getDefaultEditorValue(), // placeholder only
+      created_at: createdDate,
+      updated_at: lastModDate,
+      is_daily: regDateStr.test(newNoteTitle),
+      not_process: true,
+      file_path: file.file_path,
+    };
+    const newPreProcessedNote = {...defaultNote, ...newNoteObj};
+  
+    upsertNote(newPreProcessedNote); // upsert processed note with content later, good override
+    // push to Array
+    newPreNotesData.push(newPreProcessedNote);
+  }
+
+  return newPreNotesData;
+}
+
 /**
  * on Process Mds: 
  * 0- procee txt to Descendant[],
@@ -45,7 +83,11 @@ export function processJson(content: string) {
 export function processMds(fileList: FileMetaData[]) {
   const upsertNote = store.getState().upsertNote;
 
-  const noteTitleToIdCache: Record<string, string | undefined> = {};
+  let noteTitleToIdCache: Record<string, string | undefined> = {};
+  // init Title-ID cache per store
+  const storeCache = store.getState().noteTitleToIdMap;
+  noteTitleToIdCache = {...storeCache};
+
   const newNotesData: Note[] = [];
 
   for (const file of fileList) {
@@ -87,6 +129,8 @@ export function processMds(fileList: FileMetaData[]) {
       created_at: createdDate,
       updated_at: lastModDate,
       is_daily: regDateStr.test(newNoteTitle),
+      not_process: false,
+      file_path: file.file_path,
     };
     const newProcessedNote = {...defaultNote, ...newNoteObj};
 

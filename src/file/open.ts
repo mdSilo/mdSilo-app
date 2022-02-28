@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
-import { processJson, processMds } from './process';
+import { processJson, processMds, preProcessMds } from './process';
 
 /* 
 Open files: 
@@ -46,19 +46,21 @@ export const openDirDilog = async () => {
 };
 
 /**
- * Open dir and process files
+ * Open dir and pre-process files
  * @param dir 
  * @param writeHistory 
  * @returns 
  */
-export const openDir = async (dir: string, writeHistory = true): Promise<void> => {
-  //
+export const openDir = async (dir: string): Promise<void> => {
   const dirInfo = new DirectoryAPI(dir);
   console.log("dir api", dirInfo)
   if (!(await dirInfo.exists())) {
     console.log('Directory not exists');
     return;
   }
+
+  // attach listener to monitor changes in dir
+  dirInfo.listen(() => {/*TODO*/ console.log("listen dir change")}); // TODO
 
   const jsonInfo = new FileAPI('mdsilo_all.json', dir);
   console.log("json", jsonInfo)
@@ -69,14 +71,10 @@ export const openDir = async (dir: string, writeHistory = true): Promise<void> =
     return;
   }
 
-  const files = await dirInfo.getFiles();
-  const openFiles = files.files;
-  if (openFiles.length) {
-    // attach listener to monitor changes in dir
-    dirInfo.listen(() => {/*TODO*/ console.log("listen dir change")}); // TODO
-    // console.timeEnd(dir);
-    // process files
-    processMds(openFiles);
+  const files = await dirInfo.listFiles();
+  if (files.length) {
+    // pre process files: get meta without content
+    preProcessMds(files);
     return;
   }
 }
@@ -111,11 +109,7 @@ export const openFileDilog = async (ty: string, multi = true) => {
  * @param writeHistory 
  * @returns 
  */
-export async function openFile(
-  filePaths: string[], 
-  ty = 'md', 
-  writeHistory = true
-) {
+export async function openFile(filePaths: string[], ty = 'md') {
   if (ty === 'json') {
     const filePath = filePaths[0];
     if (filePath && filePath.endsWith('.json')) {

@@ -2,6 +2,10 @@ import { Descendant } from 'slate';
 import { ElementType } from 'editor/slate';
 import { createNodeId } from './plugins/withNodeId';
 
+
+export const RegUUID = 
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export const getDefaultEditorValue = (): Descendant[] => [
   { id: createNodeId(), type: ElementType.Paragraph, children: [{ text: '' }] },
 ];

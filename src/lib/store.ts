@@ -56,6 +56,13 @@ export type NotesData = {
   titleTree?: TitleTreeItem[];
 }
 
+export type PathTreeItem = {
+  id: string; // actually, it is path
+  title: Note['title'];  
+  children: PathTreeItem[];
+  collapsed: boolean;
+};
+
 export enum SidebarTab {
   Silo,
   Search,
@@ -65,6 +72,8 @@ export type Store = {
   // note
   notes: Notes;
   setNotes: Setter<Notes>;
+  noteTitleToIdMap: Record<string, string | undefined>;
+  setNoteTitleToIdMap: Setter<Record<string, string | undefined>>;
   // operate note
   upsertNote: (note: Note, ifUpTree?: boolean) => void;
   upsertTree: (note: Note) => void;
@@ -122,6 +131,8 @@ export const store = createVanilla<Store>(
       notes: {},  // all private notes and related wiki notes
       // Sets the notes
       setNotes: setter(set, 'notes'),
+      noteTitleToIdMap: {}, 
+      setNoteTitleToIdMap: setter(set, 'noteTitleToIdMap'),
       /**
        * update or insert the note
        * @param {Note} note the note to upsert
@@ -159,6 +170,8 @@ export const store = createVanilla<Store>(
               }
             }
           }
+          // set title-id map
+          state.noteTitleToIdMap[note.title.toLowerCase()] = note.id;
         });
       },
       upsertTree: (note: Note) => {
@@ -283,6 +296,14 @@ export const store = createVanilla<Store>(
 );
 
 export const useStore = create<Store>(store);
+
+export const computeTitleToId = (notes: Note[]) => {
+  const noteTitleToIdMap: Record<string, string | undefined> = {};
+  for (const note of notes) {
+    noteTitleToIdMap[note.title.toLowerCase()] = note.id;
+  }
+  return noteTitleToIdMap;
+}
 
 /**
  * Deletes the tree item with the given id and returns it.
