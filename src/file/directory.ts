@@ -2,6 +2,7 @@ import type { UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri'
 import { getCurrent } from '@tauri-apps/api/window'
 import { isTauri, normalizeSlash, joinPath } from './util';
+//import { openFile } from './open';
 
 interface SystemTime {
   nanos_since_epoch: number;
@@ -37,6 +38,18 @@ export interface SimpleFileMeta {
 interface DirectoryData {
   files: FileMetaData[];
   number_of_files: number;
+}
+
+interface EventPayload {
+  path: string;
+  event: string;
+}
+
+interface Event {
+  event: string;
+  windowLabel: string;
+  payload: EventPayload;
+  id: number;
 }
 
 let listener: UnlistenFn;
@@ -134,10 +147,22 @@ class DirectoryAPI {
    */
   async listen(callbackFn: () => void): Promise<void> {
     if (isTauri) {
+      // emit
       invoke('listen_dir', { dir: this.dirPath });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      listener = await getCurrent().listen('changes', (e: any) => {
+      // listen
+      listener = await getCurrent().listen('changes', async (e: Event) => {
         console.log(e);
+        // Try to sync the change on listen, but:
+        // 1- still need re-entry to reload the changes;
+        // 2- reduce performance much, for it also listen the changes by self
+        const payload: EventPayload = e.payload;
+        console.log("event payload", payload);
+        // const filePath = payload.path;
+        // const event = payload.event;
+        // console.log("event", event)
+        // if (event === 'write' || event === 'close_write') {
+        //   await openFile([filePath]);
+        // }
         callbackFn();
       });
     }

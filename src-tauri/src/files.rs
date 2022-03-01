@@ -256,10 +256,10 @@ pub async fn listen_dir(
     .lock()
     .unwrap()
     .watch(dir.clone(), RecursiveMode::NonRecursive)
-    .unwrap();
+    .unwrap_or(());
 
   window.once("unlisten_dir", move |_| {
-    watcher.lock().unwrap().unwatch(dir.clone()).unwrap();
+    watcher.lock().unwrap().unwatch(dir.clone()).unwrap_or(());
   });
 
   loop {
@@ -269,7 +269,6 @@ pub async fn listen_dir(
         op: Ok(op),
         ..
       }) => {
-        //window.emit("changes", path.to_str().unwrap().to_string());
         let event: String;
         if op.contains(notify::op::CREATE) {
           event = "create".to_string();
@@ -289,11 +288,11 @@ pub async fn listen_dir(
             .emit(
               "changes",
               Event {
-                path: path.to_str().unwrap().to_string(),
-                event: event,
+                path: path.to_str().unwrap_or("").to_string(),
+                event,
               },
             )
-            .unwrap();
+            .unwrap_or(());
         }
       },
       Ok(event) => println!("broken event: {:?}", event),
