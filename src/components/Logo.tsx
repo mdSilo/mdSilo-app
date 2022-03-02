@@ -1,4 +1,4 @@
-import logo from 'asset/logo-green.svg';
+import logo from 'asset/logo-dgreen.svg';
 
 type Props = {
   width?: number;

@@ -13,7 +13,6 @@ import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import SidebarItem from './SidebarItem';
-
 import Logo from '../Logo';
 
 export default function SideMenu() {

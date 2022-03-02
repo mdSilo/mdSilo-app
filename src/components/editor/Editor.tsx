@@ -51,7 +51,7 @@ import withBlockSideMenu from './blockmenu/withBlockSideMenu';
 import LinkAutocompletePopover from './autocomplete/LinkAutocompletePopover';
 import BlockAutocompletePopover from './autocomplete/BlockAutocompletePopover';
 import TagAutocompletePopover from './autocomplete/HashTagAutocompletePopover';
-import PubAutocompletePopover from './autocomplete/PubAutocompletePopover';
+//import PubAutocompletePopover from './autocomplete/PubAutocompletePopover';
 import SlashAutocompletePopover from './autocomplete/SlashAutocompletePopover';
 
 export type AddLinkPopoverState = {
@@ -334,7 +334,7 @@ function Editor(props: Props) {
       ) : null}
       {!(readMode || isWiki) ? <LinkAutocompletePopover /> : null}
       {!(readMode || isWiki) ? <BlockAutocompletePopover /> : null}
-      {!readMode ? <PubAutocompletePopover /> : null}
+      {/* {!readMode ? <PubAutocompletePopover /> : null} */}
       {!readMode ? <TagAutocompletePopover /> : null}
       {!readMode ? <SlashAutocompletePopover /> : null}
       {!readMode ? (

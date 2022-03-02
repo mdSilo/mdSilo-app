@@ -1,6 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconChevronsDown, IconChevronLeft, IconSettings, IconPizza } from '@tabler/icons';
+import { 
+  IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, IconPizza 
+} from '@tabler/icons';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import { DropdownItem } from 'components/misc/Dropdown';
@@ -45,6 +47,14 @@ export default function SidebarHeader(props: Props) {
           >
             <IconSettings size={18} className="mr-1" />
             <span>Settings</span>
+          </DropdownItem>
+          <DropdownItem
+            className="border-t dark:border-gray-700"
+            as='link'
+            href='https://mdsilo.com'
+          >
+            <IconBrowser size={18} className="mr-1" />
+            <span>Website</span>
           </DropdownItem>
           <DropdownItem
             className="border-t dark:border-gray-700"

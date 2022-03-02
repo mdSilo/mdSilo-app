@@ -6,8 +6,8 @@ import handleMark from './handleMark';
 import handleExternalLink from './handleExternalLink';
 import handleNoteLink from './handleNoteLink';
 import handleCustomNoteLink from './handleCustomNoteLink';
-import handleCustomPubLink from './handleCustomPubLink';
-import handlePubLink from './handlePubLink';
+//import handleCustomPubLink from './handleCustomPubLink';
+//import handlePubLink from './handlePubLink';
 import handleBlockReference from './handleBlockReference';
 import handleTag from './handleTag';
 
@@ -60,10 +60,16 @@ const handleInlineShortcuts = (editor: Editor, text: string, isWiki: boolean): b
 
     // Do not handle NoteLink, Block Reference if isWiki
     if (
-      isWiki && 
-      ( type === ElementType.BlockReference ||  
-        type === ElementType.NoteLink || 
-        type === CustomInlineShortcuts.CustomNoteLink
+      (isWiki 
+        && ( type === ElementType.BlockReference ||  
+          type === ElementType.NoteLink || 
+          type === CustomInlineShortcuts.CustomNoteLink
+        ) 
+      ) 
+      || // TODO: NO PubLink feature for app currently
+      (
+        type === ElementType.PubLink || 
+        type === CustomInlineShortcuts.CustomPubLink
       )
     ) {
       continue;
@@ -132,15 +138,15 @@ const handleInlineShortcuts = (editor: Editor, text: string, isWiki: boolean): b
         elementText === wholeMatch,
         text.length
       );
-    } else if (type === ElementType.PubLink) {
-      handled = handlePubLink(editor, result, endOfMatchPoint, text.length);
-    } else if (type === CustomInlineShortcuts.CustomPubLink) {
-      handled = handleCustomPubLink(
-        editor,
-        result,
-        endOfMatchPoint,
-        text.length
-      );
+    // } else if (type === ElementType.PubLink) {
+    //   handled = handlePubLink(editor, result, endOfMatchPoint, text.length);
+    // } else if (type === CustomInlineShortcuts.CustomPubLink) {
+    //   handled = handleCustomPubLink(
+    //     editor,
+    //     result,
+    //     endOfMatchPoint,
+    //     text.length
+    //   );
     } else if (type === ElementType.Tag) {
       handled = handleTag(editor, result, endOfMatchPoint, text.length);
     }
