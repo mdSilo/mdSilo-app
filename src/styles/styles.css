@@ -25,6 +25,13 @@
   .splash-bg {
     background: linear-gradient(55deg, #414b61 0 45%, #2d3343 45% 100%);
   }
+  .img-effect {
+    --m:
+      radial-gradient(circle farthest-side at right,#000 99%,#0000) 0 100%/46% 92% no-repeat,
+      radial-gradient(circle farthest-side at left,#000 99%,#0000) 100% 0/46% 92% no-repeat;
+    -webkit-mask: var(--m);
+            mask: var(--m);
+  }
 }
 
 :root {

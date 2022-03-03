@@ -52,10 +52,10 @@ pub fn get_data(key: String) -> Result<StorageData, String> {
       Ok(deser_bincode) => data = deser_bincode,
       Err(_) => data = str::from_utf8(&result).unwrap_or("").to_string(),
     },
-    Err(e) => {
-      status = false;
-      data = e.to_string();
-    }
+    Err(_e) => return Ok(StorageData {
+      status: false,
+      data: Value::Null,
+    })
   }
   
   let data = match serde_json::from_str(&data) {

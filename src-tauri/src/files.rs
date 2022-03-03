@@ -217,7 +217,7 @@ pub async fn create_file(file_path: String) -> bool {
   fs::write(file_path, "").is_ok()
 }
 
-/// reaf file to string
+/// read file to string
 #[tauri::command]
 pub async fn read_file(file_path: String) -> String {
   fs::read_to_string(file_path).unwrap_or(String::from("Nothing"))  // TODO: handle err

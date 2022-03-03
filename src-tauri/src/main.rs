@@ -5,6 +5,7 @@
 
 mod files;
 mod storage;
+mod tests;
 
 fn main() {
   tauri::Builder::default()
