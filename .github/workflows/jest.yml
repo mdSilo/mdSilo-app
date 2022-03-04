@@ -16,5 +16,5 @@ jobs:
       with:
         node-version: 16.x
 
-    - run: yarn lint
+    - run: yarn && yarn lint
     # - run: yarn test  # to tackle err: SyntaxError: Cannot use import statement outside a module
