@@ -5,9 +5,13 @@ mod tests {
 
   #[test]
   fn test_get_basename() {
-    assert_eq!(get_basename("/home/user/file.txt"), "file.txt");
-    assert_eq!(get_basename("/home/user/file.txt/"), "file.txt");
-    assert_eq!(get_basename("C://a/b/c"), "c");
+    assert_eq!(get_basename("/home/user/mdsilo.deb"), "mdsilo.deb");
+    assert_eq!(get_basename("/home/user/mdsilo.deb/"), "mdsilo.deb");
+    assert_eq!(get_basename("/home/user/mdsilo/"), "mdsilo");
+    assert_eq!(get_basename("/home/user/mdsilo"), "mdsilo");
+    assert_eq!(get_basename("C://Windows/AppData/mdsilo.msi"), "mdsilo.msi");
+    // assert_eq!(get_basename(r"C:\\Files\mdsilo"), "mdsilo");
+    // assert_eq!(get_basename(r"C:\\Downloads\mdsilo.msi"), "mdsilo.msi");
   }
 
   #[test]
@@ -55,7 +59,7 @@ mod tests {
   #[tokio::test]
   async fn test_file_operation() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-      .join("../temp/a/b")
+      .join("../temp/md/silo")
       .to_str()
       .unwrap()
       .to_string();
@@ -65,7 +69,7 @@ mod tests {
     assert_eq!(file_exist(&dir), true);
 
     let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-      .join("../temp/a/b/c.txt")
+      .join("../temp/md/silo/app.txt")
       .to_str()
       .unwrap()
       .to_string();
@@ -103,8 +107,8 @@ mod tests {
     let value: serde_json::Value = 
       serde_json::from_str(
         "{
-            \"id\": \"0XABCD\",
-            \"name\": \"Menlo Park, CA\"
+            \"id\": \"0X520\",
+            \"name\": \"mdsilo\"
         }"
       )
       .unwrap();

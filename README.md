@@ -20,6 +20,7 @@ This is desktop app, and still in active development. the web app is [here](http
 - Block Reference  
 - HashTag 
 - Full-text search 
+- Available for Windows, macOS, Linux
 
 
 ## Live Demo

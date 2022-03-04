@@ -12,9 +12,6 @@ export const openFiles = async (ty: string, multi = true) => {
   if (openPaths.length > 0) {
     // set currentDir
     const onePath = openPaths[0];
-    // const parentDirParts = onePath.split('/');
-    // parentDirParts.pop();
-    // const parentDir = parentDirParts.join('/');
     const parentDir = getDirname(onePath);
     // console.log("dir path", parentDir);
     cleanStore();

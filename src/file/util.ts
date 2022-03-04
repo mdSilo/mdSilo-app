@@ -66,9 +66,9 @@ export const joinPath = (...args: string[]): string => {
 };
 
 /**
- * Get dirname of the path( / end)
+ * Get dirname of the file path
  * @param {string} path path to be evaluated
- * @returns {any} result of the evaluated path
+ * @returns {any} result of the evaluated path( / end or '.')
  */
 export const getDirname = (path: string): string => {
 	if (path.length === 0) {
@@ -109,7 +109,7 @@ export function trimSlash(txt: string, mode = 'start') {
     }
     return txt;
   } else {
-    while (txt.endsWith('/')) {
+    while (txt.endsWith('/') && !(txt.length === 3 && /.:\//.test(txt))) {
       txt = txt.substring(0, txt.length - 1);
     }
     return txt;

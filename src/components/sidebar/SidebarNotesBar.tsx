@@ -5,7 +5,7 @@ import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import Tooltip from 'components/misc/Tooltip';
 import { isMobile } from 'utils/helper';
-import { trimSlash } from 'file/util';
+import { normalizeSlash } from 'file/util';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
 import { FileDrop } from './SideMenu';
 
@@ -48,6 +48,8 @@ function SidebarNotesBar(props: Props) {
   );
 }
 
+export default memo(SidebarNotesBar);
+
 type DropProps = {
   numOfNotes: number;
 };
@@ -57,7 +59,7 @@ function NoteBarDrop(props: DropProps) {
   
   const currentDir = useStore((state) => state.currentDir);
   const currentFolder = currentDir 
-    ? trimSlash(currentDir, 'end').split('/').pop() 
+    ? normalizeSlash(currentDir).split('/').pop() || '/'
     : 'md';
   const barClass = `px-2 text-sm bg-blue-500 text-gray-200 rounded overflow-hidden overflow-ellipsis whitespace-nowrap`; 
 
@@ -80,7 +82,3 @@ function NoteBarDrop(props: DropProps) {
     </Tooltip>
   );
 }
-
-
-
-export default memo(SidebarNotesBar);
