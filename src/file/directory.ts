@@ -151,12 +151,12 @@ class DirectoryAPI {
       invoke('listen_dir', { dir: this.dirPath });
       // listen
       listener = await getCurrent().listen('changes', async (e: Event) => {
-        console.log(e);
+        // console.log(e);
         // Try to sync the change on listen, but:
         // 1- still need re-entry to reload the changes;
         // 2- reduce performance much, for it also listen the changes by self
-        const payload: EventPayload = e.payload;
-        console.log("event payload", payload);
+        // const payload: EventPayload = e.payload;
+        // console.log("event payload", payload);
         // const filePath = payload.path;
         // const event = payload.event;
         // console.log("event", event)

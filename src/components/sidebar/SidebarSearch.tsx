@@ -120,7 +120,7 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
         if (isMobile(767)) {
           setIsSidebarOpen(false);
         }
-        //console.log("block hash", hash, text)
+        // console.log("block hash", hash, text)
         dispatch({view: 'md', params: {noteId, hash}});
       }}
     >

@@ -30,8 +30,7 @@ export function processJson(content: string) {
     wikiTree.forEach(item => store.getState().updateWikiTree(item.id, null));
     // TODO: json to mds and save locally
   } catch (e) {
-    console.log(e);
-    console.log("Please check the file, it must be the json you exported.")
+    console.log("Please check the JSON file: ", e)
   }
 }
 

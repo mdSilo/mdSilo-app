@@ -32,7 +32,6 @@ function getRecentDirPath() {
  */
 export const openDirDilog = async () => {
   const recentDirPath = getRecentDirPath();
-  console.log("default dir path: ", recentDirPath);
   const dirPath  = await dialog.open({
     title: `Open Folder`,
     directory: true,
@@ -53,18 +52,17 @@ export const openDirDilog = async () => {
  */
 export const openDir = async (dir: string): Promise<void> => {
   const dirInfo = new DirectoryAPI(dir);
-  console.log("dir api", dirInfo)
+  // console.log("dir api", dirInfo)
   if (!(await dirInfo.exists())) {
-    console.log('Directory not exists');
     return;
   }
 
   // attach listener to monitor changes in dir
   // TODO
-  // dirInfo.listen(() => {/*TODO*/ console.log("listen dir change")});
+  // dirInfo.listen(() => {/*TODO*/});
 
   const jsonInfo = new FileAPI('mdsilo_all.json', dir);
-  console.log("json", jsonInfo)
+  // console.log("json", jsonInfo)
   if (await jsonInfo.exists()) {
     // process json
     const fileContent = await jsonInfo.readFile();
@@ -159,6 +157,5 @@ export async function openUrl(url: string): Promise<boolean> {
     title: 'Select Folder to Save Data',
     defaultPath: recentDirPath,
   });
-  console.log('to folder', dirPath);
   return dirPath;
 };

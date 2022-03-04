@@ -9,7 +9,6 @@ import FileAPI from './files';
  */
 export async function writeFile(filePath: string, content: string) {
   const file = new FileAPI(filePath);
-  console.log("md file", file)
   await file.writeFile(content);
 }
 
@@ -20,7 +19,6 @@ export async function writeFile(filePath: string, content: string) {
  */
 export async function writeJsonFile(parentDir: string, json = '') {
   const jsonFile = new FileAPI('mdsilo_all.json', parentDir);
-  console.log("json file", jsonFile)
   const notesJson = json || buildNotesJson(true);
   await jsonFile.writeFile(notesJson);
 }

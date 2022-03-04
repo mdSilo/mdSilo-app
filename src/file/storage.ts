@@ -22,7 +22,6 @@ const DATA: LocalData = {};
 export const set = async (key: string, value: any): Promise<void> => {
 	if (isTauri) {
 		DATA[key] = value;
-		console.log("set data, go here??")
 		return await invoke('set_data', { key, value });
 	} else {
 		DATA[key] = value;

@@ -27,7 +27,7 @@ function Note(props: Props) {
   const { noteId, highlightedPath, className } = props;
   
   const parentDir = useStore((state) => state.currentDir);
-  console.log("current dir", parentDir);
+  // console.log("current dir", parentDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
   const note: NoteType | undefined = storeNotes[noteId];

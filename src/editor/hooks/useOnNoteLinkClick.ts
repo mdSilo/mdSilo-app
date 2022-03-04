@@ -13,12 +13,12 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
 
   const onClick = useCallback(
     (noteId: string, stackNote: boolean, highlightedPath?: Path) => {
-      //console.log("hl hash", highlightedPath)
+      // console.log("hl hash", highlightedPath)
       // If stackNote is false, open the note in its own page
       stackNote = false;
       if (!stackNote) {
         const hash = highlightedPath ? `0-${highlightedPath}` : '';
-        //console.log("here-1", highlightedPath)
+        // console.log("here-1", highlightedPath)
         dispatch({view: 'md', params: {noteId, hash}});
         return;
       }
@@ -29,7 +29,7 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
       const index = openNoteIds.findIndex(
         (openNoteId) => openNoteId === noteId
       );
-      console.log("here-2: index", openNoteIds, noteId, index)
+      // console.log("here-2: index", openNoteIds, noteId, index)
       if (index > -1) {
         const noteElement = document.getElementById(openNoteIds[index]);
         if (noteElement) {
@@ -48,7 +48,7 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
           dispatch({view: 'md', params: {noteId, stackIds: stackedNoteIds, hash}});
         }
 
-        console.log("here-2", highlightedPath)
+        // console.log("here-2", highlightedPath)
 
         return;
       }
@@ -58,7 +58,7 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
         (openNoteId) => openNoteId === currentNoteId
       );
       if (currentNoteIndex < 0) {
-        console.log(`Error: current ${currentNoteId} is not in open notes`);
+        // console.log(`Error: current ${currentNoteId} is not in open notes`);
         return;
       }
 
@@ -77,7 +77,7 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
         ? `${newNoteIndex}-${highlightedPath}`
         : undefined;
       dispatch({view: 'md', params: {noteId, stackIds: stackedNoteIds, hash}});
-      console.log("here-3", highlightedPath)
+      // console.log("here-3", highlightedPath)
     },
     [openNoteIds, viewState.params?.stackIds, dispatch, currentNoteId]
   );

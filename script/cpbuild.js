@@ -1,4 +1,4 @@
-const cpy = require('cpy');
+import { cpy } from 'cpy';
 
 (async () => {
 	await cpy(
