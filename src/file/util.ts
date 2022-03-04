@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { v4 as uuidv4 } from 'uuid';
 import { Note } from 'types/model';
 import { store, NotesData, Notes, NoteTreeItem, TitleTreeItem } from 'lib/store';
@@ -46,7 +47,7 @@ export const joinPath = (...args: string[]): string => {
     return '.';
   }
 
-  let joined: string = '';
+  let joined = '';
 
   for (const arg of args) {
     if (arg.length > 0) {

@@ -12,8 +12,9 @@ import { useStore } from 'lib/store';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
-import SidebarItem from './SidebarItem';
 import Logo from '../Logo';
+import SidebarItem from './SidebarItem';
+
 
 export default function SideMenu() {
   const currentView = useCurrentViewContext();

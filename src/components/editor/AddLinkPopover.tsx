@@ -8,7 +8,7 @@ import {
   insertExternalLink,
   insertNoteLink,
   removeLink,
-} from '../../editor/formatting';
+} from 'editor/formatting';
 import { isUrl, ciStringEqual } from 'utils/helper';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store } from 'lib/store';

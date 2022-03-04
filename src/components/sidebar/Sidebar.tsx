@@ -1,9 +1,8 @@
 import { memo } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { useTransition, animated } from '@react-spring/web';
+import { useTransition, animated, SpringConfig } from '@react-spring/web';
 import { isMobile } from 'utils/helper';
 import { useStore } from 'lib/store';
-import { SpringConfig } from '@react-spring/web';
 import SidebarContent from './SidebarContent';
 import SidebarHeader from './SidebarHeader';
 

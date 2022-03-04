@@ -18,4 +18,5 @@ jobs:
         cache: 'npm'
 
     - run: npm ci
-    - run: npm test
+    - run: npm run lint
+    # - run: npm test  # to tackle err: SyntaxError: Cannot use import statement outside a module

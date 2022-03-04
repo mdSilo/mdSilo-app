@@ -6,7 +6,7 @@ import useBlockSearch from 'editor/hooks/useBlockSearch';
 import { insertBlockReference } from 'editor/formatting';
 import { deleteText } from 'editor/transforms';
 import { createNodeId } from 'editor/plugins/withNodeId';
-import { isReferenceableBlockElement } from '../../../editor/checks';
+import { isReferenceableBlockElement } from 'editor/checks';
 import useDebounce from 'editor/hooks/useDebounce';
 import { store } from 'lib/store';
 import EditorPopover from '../EditorPopover';

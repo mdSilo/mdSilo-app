@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { RenderElementProps, useFocused, useSelected } from 'slate-react';
-import { Image as ImageType } from '../../../editor/slate';
+import { Image as ImageType } from 'editor/slate';
 
 type ImageElementProps = {
   element: ImageType;

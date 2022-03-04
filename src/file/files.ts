@@ -32,13 +32,13 @@ class FileAPI {
 					invoke<string>(
 						'read_file', { filePath: this.fileName}
 					).then(
-					  (fileContent: string) => resolve(fileContent)
+						(fileContent: string) => resolve(fileContent)
 					);
 				} else {
 					reject('Read file is currently not supported on web version');
 				}
 			} else {
-			  reject('File name is not a string');
+				reject('File name is not a string');
 			}
 		});
   }
@@ -67,7 +67,7 @@ class FileAPI {
    * Read metadata of a file
    * @returns {Promise<FileMetaData>}
    */
-	 async getMetadata(): Promise<FileMetaData> {
+	async getMetadata(): Promise<FileMetaData> {
 		return await invoke<FileMetaData>(
 			'get_file_meta', 
 			{ filePath: this.fileName }
@@ -81,7 +81,7 @@ class FileAPI {
   async isDir(): Promise<boolean> {
 		return new Promise((resolve) => {
 			invoke<boolean>('is_dir', { path: this.fileName }).then(
-			  (result: boolean) => resolve(result)
+				(result: boolean) => resolve(result)
 			);
 		});
   }
@@ -107,7 +107,7 @@ class FileAPI {
    * write to file
    * @returns {Promise<void>}
    */
-	 async writeFile(text: string): Promise<void> {
+	async writeFile(text: string): Promise<void> {
 		if (typeof this.fileName === 'string') {
 			if (isTauri) {
 				await invoke('create_dir_recursive', {

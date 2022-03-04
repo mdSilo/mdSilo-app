@@ -14,7 +14,7 @@ import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
 import { joinPath } from 'file/util';
-import ErrorBoundary from '../misc/ErrorBoundary';
+import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteHeader from './NoteHeader';
 
 type Props = {

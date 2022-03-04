@@ -64,8 +64,8 @@ class DirectoryAPI {
 	
   constructor(dirName: string, parentDir?: string) {
     if (parentDir) {
-	    this.parentDir = normalizeSlash(parentDir);
-	    this.dirPath = normalizeSlash(joinPath(parentDir, dirName));
+      this.parentDir = normalizeSlash(parentDir);
+      this.dirPath = normalizeSlash(joinPath(parentDir, dirName));
     } else {
       this.dirPath = normalizeSlash(dirName);
     }

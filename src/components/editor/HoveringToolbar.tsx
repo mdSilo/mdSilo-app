@@ -13,8 +13,8 @@ import {
 import classNames from 'classnames';
 import { toggleMark, isMarkActive, isElementActive } from 'editor/formatting';
 import { ElementType, Mark } from 'editor/slate';
-import Tooltip from '../misc/Tooltip';
 import { isMobile } from 'utils/helper';
+import Tooltip from '../misc/Tooltip';
 import EditorPopover from './EditorPopover';
 import type { AddLinkPopoverState } from './Editor';
 

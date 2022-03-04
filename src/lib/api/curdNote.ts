@@ -1,8 +1,8 @@
 import { store } from 'lib/store';
-import apiClient from './apiClient';
 import type { Note, User } from 'types/model';
 import type { PickPartial } from 'types/utils';
 import { defaultUserId } from 'types/model';
+import apiClient from './apiClient';
 
 // upsert
 // 

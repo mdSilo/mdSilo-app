@@ -3,9 +3,9 @@ import type { Range } from 'slate';
 import { ReactEditor, useSlate } from 'slate-react';
 import type { Placement, VirtualElement } from '@popperjs/core';
 import { usePopper } from 'react-popper';
-import Portal from '../misc/Portal';
 import useOnClickOutside from 'editor/hooks/useOnClickOutside';
 import useHotkeys from 'editor/hooks/useHotkeys';
+import Portal from 'components/misc/Portal';
 
 type Props = {
   children: ReactNode;

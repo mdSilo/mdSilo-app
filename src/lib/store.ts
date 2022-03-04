@@ -5,7 +5,7 @@ import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
 import { ciStringEqual } from 'utils/helper';
 import { Backlink } from 'editor/backlinks/useBacklinks';
-import Storage from 'file/storage';
+import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
 import type { NoteUpdate } from './api/curdNote';
 

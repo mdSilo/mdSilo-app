@@ -26,7 +26,7 @@ import {
   isElementActive,
   toggleElement,
   toggleMark,
-} from '../../editor/formatting';
+} from 'editor/formatting';
 import withAutoMarkdown from 'editor/plugins/withAutoMarkdown';
 import withBlockBreakout from 'editor/plugins/withBlockBreakout';
 import withLinks from 'editor/plugins/withLinks';

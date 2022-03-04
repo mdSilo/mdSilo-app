@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoke } from '@tauri-apps/api/tauri'
 import { isTauri } from './util';
 
