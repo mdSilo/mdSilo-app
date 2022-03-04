@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { invoke } from '@tauri-apps/api/tauri'
+import { useState, useMemo, useEffect } from 'react';
 import classNames from 'classnames';
 import 'styles/styles.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -46,6 +47,15 @@ const App = () => {
     [setIsSidebarOpen, setSidebarTab]
   );
   useHotkeys(hotkeys);
+
+  useEffect(() => {
+    const closeSplash = () => { invoke('close_splashscreen'); };
+    document.addEventListener('DOMContentLoaded', closeSplash);
+
+    return () => {
+      document.removeEventListener('DOMContentLoaded', closeSplash, true);
+    };
+  }, []);
 
   const appContainerClassName = classNames(
     'h-screen',

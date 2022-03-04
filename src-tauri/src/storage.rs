@@ -12,15 +12,13 @@ pub struct StorageData {
 
 #[tauri::command]
 pub fn set_data(key: String, value: Value) -> bool {
-  println!("local data dir: {:?}", local_data_dir());
+  // println!("local data dir: {:?}", local_data_dir());
 
   // Linux: /home/~username~/.local/share/mdsilo
   let storage_dir = match local_data_dir() {
     Some(dir) => Path::new(&dir).join("mdsilo"),
     None => { return false; }
   };
-
-  println!("local storage dir: {:?}", storage_dir);
 
   if fs::create_dir_all(storage_dir.clone()).is_err() {
    return false;
