@@ -5,13 +5,6 @@ import notes from '__fixtures__/notes';
 
 describe('Editor', () => {
   const renderEditor = () => {
-    const auth = {
-      isAuthed: false,
-      user: null,
-      signIn: jest.fn(),
-      signUp: jest.fn(),
-      signOut: jest.fn(),
-    };
     const firstNote = Object.values(store.getState().notes)[0].content;
     return render(
       <Editor value={firstNote} setValue={jest.fn()} onChange={jest.fn()} />
