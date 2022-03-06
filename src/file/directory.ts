@@ -169,6 +169,7 @@ class DirectoryAPI {
                   id: note.id,
                   not_process: true,
                 });
+                // console.log("updated not_process!");
               }
               break;
             }

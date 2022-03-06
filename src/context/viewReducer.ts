@@ -1,3 +1,5 @@
+import { store } from 'lib/store';
+
 export const initialState = {view: 'task'};
 
 type ViewParams = { noteId: string; stackIds?: string[], hash?: string };
@@ -17,8 +19,15 @@ export type ViewAction =
       params: ViewParams;
     };
 
-export function viewReducer(state: ViewState, action: ViewAction) {
-  switch (action.view) {
+export function viewReducer(state: ViewState, action: ViewAction): ViewState {
+  const actionView = action.view;
+  if (actionView === 'md') {
+    store.getState().setCurrentNoteId(action.params.noteId);
+  } else {
+    store.getState().setCurrentNoteId('');
+  }
+
+  switch (actionView) {
     case 'chronicle':
       return {...state, view: 'chronicle'};
     case 'task':
