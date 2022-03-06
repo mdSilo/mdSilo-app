@@ -8,7 +8,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "test": "react-scripts test",
+    "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!@tauri-apps)/\"",
     "lint": "eslint . --ext .tsx,.ts",
     "fix": "prettier --write src",
     "typecheck": "tsc",

@@ -1,6 +1,5 @@
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri'
-import { getCurrent } from '@tauri-apps/api/window'
 import { isTauri, normalizeSlash, joinPath } from './util';
 //import { openFile } from './open';
 
@@ -140,6 +139,7 @@ class DirectoryAPI {
     );
   }
 
+  // TODO: listen dir changes
   /**
    * Listen to changes in a directory
    * @param {() => void} callbackFn - callback
@@ -150,6 +150,7 @@ class DirectoryAPI {
       // emit
       invoke('listen_dir', { dir: this.dirPath });
       // listen
+      const { getCurrent } = await import('@tauri-apps/api/window');
       listener = await getCurrent().listen('changes', async (e: Event) => {
         // console.log(e);
         // Try to sync the change on listen, but:
@@ -174,6 +175,7 @@ class DirectoryAPI {
   */
   async unlisten(): Promise<void> {
     listener?.();
+    const { getCurrent } = await import('@tauri-apps/api/window');
     return getCurrent().emit('unlisten_dir');
   }
 }
