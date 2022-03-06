@@ -35,9 +35,10 @@ export default function BlockRefElement(props: BlockRefElementProps) {
     className
   );
 
-  const noteTitle = useStore((state) =>
-    blockReference ? state.notes[blockReference.noteId]?.title : null
+  const refNote = useStore((state) =>
+    blockReference ? state.notes[blockReference.noteId] : undefined
   );
+  const noteTitle = refNote?.title || '';
 
   const renderElement = useCallback((props: EditorElementProps) => {
     const elementType = props.element.type;
@@ -63,7 +64,8 @@ export default function BlockRefElement(props: BlockRefElementProps) {
             onBlockRefClick(
               blockReference.noteId,
               defaultStackingBehavior(e),
-              blockReference.path
+              refNote,
+              blockReference.path,
             );
           }
         }}

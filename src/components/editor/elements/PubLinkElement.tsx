@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { RenderElementProps } from 'slate-react';
 import classNames from 'classnames';
 import { store } from 'lib/store';
+import { Note } from 'types/model';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
@@ -30,9 +31,15 @@ export default function PubLinkElement(props: PubLinkElementProps) {
     useOnNoteLinkClick(currentNote.id);
   
   // Load wiki note first to get noteId if no noteId in Element, 
-  const getWikiNoteId = async (title: string, id: string) => {
+  //
+  type returnWiki = {
+    id: Note['id'] | null;
+    note: Note | undefined;
+  };
+  //
+  const getWikiNote = async (title: string, id: string): Promise<returnWiki> => {
     if (id.trim() && id.trim() !== title.trim()) {
-      return id;
+      return {id, note: undefined};
     } else if (title.trim()) {
       // first lookup in store locally
       const wikiNotes = Object.values(store.getState().notes).filter(n => n.is_wiki);
@@ -40,7 +47,7 @@ export default function PubLinkElement(props: PubLinkElementProps) {
         ciStringEqual(note.title, title) && note.is_wiki 
       );
       if (existingWikiNote) {
-        return existingWikiNote.id;
+        return {id: existingWikiNote.id, note: existingWikiNote};
       }
       
       // then load from db
@@ -52,13 +59,14 @@ export default function PubLinkElement(props: PubLinkElementProps) {
         // update the real noteId to Element's noteId
         const newId = wikiNote.id;
         await updateBacklinks(title, title, newId);
-        return newId;
+        return {id: wikiNote.id, note: wikiNote};
       } else {
-        // finally, new wiki Note 
-        const note = await newWikiPerTitle(title);
-        return note?.id;
+        // finally, new wiki Note, will upsertNote after new
+        const note = await newWikiPerTitle(title) || undefined;
+        return {id: note?.id || null, note};
       }
     }
+    return {id: null, note: undefined};
   }
 
   return (
@@ -71,9 +79,9 @@ export default function PubLinkElement(props: PubLinkElementProps) {
         className={linkClassName}
         onClick={async (e) => {
           e.stopPropagation();
-          const wikiNoteId = await getWikiNoteId(element.noteTitle, element.noteId);
-          if (!wikiNoteId) return;
-          onNoteLinkClick(wikiNoteId, defaultStackingBehavior(e));
+          const {id, note} = await getWikiNote(element.noteTitle, element.noteId);
+          if (!id) return;
+          onNoteLinkClick(id, defaultStackingBehavior(e), note);
         }}
         contentEditable={false}
         {...attributes}

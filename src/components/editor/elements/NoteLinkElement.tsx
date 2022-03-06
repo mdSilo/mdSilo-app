@@ -43,7 +43,7 @@ export default function NoteLinkElement(props: NoteLinkElementProps) {
         className={noteLinkClassName}
         onClick={async (e) => {
           e.stopPropagation();
-          onNoteLinkClick(noteId, defaultStackingBehavior(e));
+          onNoteLinkClick(noteId, defaultStackingBehavior(e), toNote);
         }}
         contentEditable={false}
         {...attributes}

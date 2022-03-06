@@ -23,7 +23,12 @@ const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
     <button
       className={containerClassName}
       onClick={(e) =>
-        onNoteLinkClick(noteId, defaultStackingBehavior(e), match.linePath)
+        onNoteLinkClick(
+          noteId, 
+          defaultStackingBehavior(e), 
+          undefined,
+          match.linePath
+        )
       }
     >
       <ReadOnlyEditor value={editorValue} />

@@ -6,6 +6,7 @@ import Tree from 'components/misc/Tree';
 import Tooltip from 'components/misc/Tooltip';
 import useSummary from 'editor/hooks/useSummary';
 import ReadOnlyEditor from 'components/editor/ReadOnlyEditor';
+import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 type Props = {
   anchor: string;
@@ -57,7 +58,10 @@ const noteToTreeData = () => (note: Note) => {
       <div className="flex flex-col w-full mx-auto overlfow-y-auto">
         <button 
           className="title link flex items-center text-lg py-2" 
-          onClick={() => dispatch({view: 'md', params: {noteId: note.id}})}
+          onClick={async () => {
+            const noteId = await openFileAndGetNoteId(note);
+            dispatch({view: 'md', params: {noteId}});
+          }}
         >
           <span className="text-lg overflow-x-hidden overflow-ellipsis whitespace-nowrap">
             {note.title}

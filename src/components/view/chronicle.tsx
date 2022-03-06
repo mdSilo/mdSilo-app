@@ -6,6 +6,7 @@ import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
 import { dateCompare, getStrDate } from 'utils/helper';
 import { getOrCreateNoteId } from 'editor/handleNoteId';
+import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 export default function Chronicle() {
   const notes = useStore((state) => state.notes);
@@ -23,13 +24,14 @@ export default function Chronicle() {
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
-  const onRecapDay = (date: string) => {
+  const onRecapDay = async (date: string) => {
     const noteId = getOrCreateNoteId(date);
     // redirect to journals when the note not be prepared
     if (noteId) {
       const note = store.getState().notes[noteId];
       if (note) {
-        dispatch({view: 'md', params: {noteId: note.id}});
+        const noteId = await openFileAndGetNoteId(note);
+        dispatch({view: 'md', params: {noteId}});
       } else {
         dispatch({view: 'journal'});
       }

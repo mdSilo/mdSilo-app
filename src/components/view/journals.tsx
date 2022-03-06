@@ -4,9 +4,10 @@ import { useStore } from 'lib/store';
 import { Note } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import FindOrCreateInput from 'components/note/NoteNewInput';
+import ReadOnlyEditor from 'components/editor/ReadOnlyEditor';
 import { realDateCompare, strToDate } from 'utils/helper';
 import { bleachLinks } from 'editor/hooks/useSummary';
-import ReadOnlyEditor from 'components/editor/ReadOnlyEditor';
+import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 export default function Journals() {
   const notes = useStore((state) => state.notes);
@@ -41,7 +42,6 @@ type NoteItemProps = {
 function NoteItem(props: NoteItemProps) {
   const { note } = props;
   const value: Descendant[] = bleachLinks(note.content);
-  const noteId = note.id;
 
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
@@ -49,7 +49,10 @@ function NoteItem(props: NoteItemProps) {
   return (
     <div className="flex flex-col w-full mx-auto overlfow-y-auto">
       <button 
-        onClick={() => dispatch({view: 'md', params: {noteId}})} 
+        onClick={async () => {
+          const noteId = await openFileAndGetNoteId(note);
+          dispatch({view: 'md', params: {noteId}});
+        }}
         className="flex items-center link text-lg py-2 pl-4"
       >
         <span className="title text-2xl text-yellow-500 font-semibold mt-4">

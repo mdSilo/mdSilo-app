@@ -8,10 +8,8 @@ import {
 } from 'react';
 import { IconCaretRight } from '@tabler/icons';
 import { useStore } from 'lib/store';
-import { Note } from 'types/model';
 import { isMobile } from 'utils/helper';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { openFile } from 'file/open';
 import SidebarItem from './SidebarItem';
 import SidebarNoteLinkDropdown from './SidebarNoteLinkDropdown';
 import { FlattenedNoteTreeItem } from './SidebarNotesTree';
@@ -32,18 +30,6 @@ const SidebarNoteLink = (
   const lastOpenNoteId = useStore(
     (state) => state.openNoteIds[state.openNoteIds.length - 1]
   );
-
-  // Q: it is better to put this func here or useOnNoteLinkClick?
-  const openFileAndGetNoteId = async (note: Note) => {
-    const filePath = note.file_path;
-    const noteId = note.id;
-
-    if (note.not_process && filePath) {
-      await openFile([filePath]);
-    }
-  
-    return noteId;
-  }
 
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick(lastOpenNoteId);
 
@@ -72,9 +58,7 @@ const SidebarNoteLink = (
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={async (e) => {
           e.preventDefault();
-          const noteId = await openFileAndGetNoteId(note);
-          if (!noteId) return;
-          onNoteLinkClick(noteId, e.shiftKey);
+          onNoteLinkClick(note.id, e.shiftKey, note);
           if (isMobile()) {
             setIsSidebarOpen(false);
           }

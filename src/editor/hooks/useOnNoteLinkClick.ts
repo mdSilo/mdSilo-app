@@ -1,7 +1,9 @@
 import { MouseEvent, useCallback } from 'react';
 import { Path } from 'slate';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { useStore } from 'lib/store';
+import { store, useStore } from 'lib/store';
+import { Note } from 'types/model';
+import { openFile } from 'file/open';
 
 export default function useOnNoteLinkClick(currentNoteId: string) {
   const currentView = useCurrentViewContext();
@@ -12,7 +14,9 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
   const isPageStackingOn = useStore((state) => state.isPageStackingOn);
 
   const onClick = useCallback(
-    (noteId: string, stackNote: boolean, highlightedPath?: Path) => {
+    async (toId: string, stackNote: boolean, note?: Note, highlightedPath?: Path) => {
+      const toNote = note || store.getState().notes[toId];
+      const noteId = await openFileAndGetNoteId(toNote);
       // console.log("hl hash", highlightedPath)
       // If stackNote is false, open the note in its own page
       stackNote = false;
@@ -90,3 +94,21 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
 
   return { onClick, defaultStackingBehavior };
 }
+
+
+// use case:
+// 1- openDie, preProcess first, set not_process fasle
+//    then real process on click
+// 2- a potential use case: listen dir change, 
+//   change the not_process to false if any change, reload change on click
+// 
+export const openFileAndGetNoteId = async (note: Note) => {
+  const filePath = note.file_path;
+  const noteId = note.id;
+
+  if (note.not_process && filePath) {
+    await openFile([filePath]);
+  }
+
+  return noteId;
+};
