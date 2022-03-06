@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/tauri';
 import { useState, useMemo, useEffect } from 'react';
 import classNames from 'classnames';
 import 'styles/styles.css';
