@@ -107,6 +107,7 @@ export const openFileAndGetNoteId = async (note: Note) => {
   const noteId = note.id;
 
   if (note.not_process && filePath) {
+    // console.log("re-load: ", filePath);
     await openFile([filePath]);
   }
 

@@ -1,7 +1,7 @@
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri'
+import { store } from 'lib/store';
 import { isTauri, normalizeSlash, joinPath } from './util';
-//import { openFile } from './open';
 
 interface SystemTime {
   nanos_since_epoch: number;
@@ -152,18 +152,28 @@ class DirectoryAPI {
       // listen
       const { getCurrent } = await import('@tauri-apps/api/window');
       listener = await getCurrent().listen('changes', async (e: Event) => {
-        // console.log(e);
-        // Try to sync the change on listen, but:
-        // 1- still need re-entry to reload the changes;
-        // 2- reduce performance much, for it also listen the changes by self
-        // const payload: EventPayload = e.payload;
-        // console.log("event payload", payload);
-        // const filePath = payload.path;
-        // const event = payload.event;
-        // console.log("event", event)
-        // if (event === 'write' || event === 'close_write') {
-        //   await openFile([filePath]);
-        // }
+        // console.log("listen event: ", e);
+        // sync the change on listen, set not_process false, but:
+        // need re-entry to reload the changes;
+        const payload: EventPayload = e.payload;
+        const filePath = payload.path;
+        const event = payload.event;
+        if (event === 'write' || event === 'close_write') {
+          const notesArr = Object.values(store.getState().notes);
+          for (const note of notesArr) {
+            if (note.file_path === filePath) {
+              const currentNoteId = store.getState().currentNoteId;
+              // any change on current note will not be loaded
+              if (note.id !== currentNoteId) {
+                store.getState().updateNote({
+                  id: note.id,
+                  not_process: true,
+                });
+              }
+              break;
+            }
+          }
+        }
         callbackFn();
       });
     }

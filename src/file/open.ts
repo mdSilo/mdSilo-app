@@ -59,7 +59,7 @@ export const openDir = async (dir: string): Promise<void> => {
 
   // attach listener to monitor changes in dir
   // TODO
-  // dirInfo.listen(() => {/*TODO*/});
+  dirInfo.listen(() => {/*TODO*/});
 
   const jsonInfo = new FileAPI('mdsilo_all.json', dir);
   // console.log("json", jsonInfo)

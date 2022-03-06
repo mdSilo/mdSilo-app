@@ -79,6 +79,8 @@ export type Store = {
   upsertTree: (note: Note) => void;
   updateNote: (note: NoteUpdate) => void;
   deleteNote: (noteId: string) => void;
+  currentNoteId: string;
+  setCurrentNoteId: Setter<string>;
   openNoteIds: string[];
   setOpenNoteIds: (openNoteIds: string[], index?: number) => void;
   noteTree: NoteTreeItem[];
@@ -211,6 +213,8 @@ export const store = createVanilla<Store>(
           }
         });
       },
+      currentNoteId: '',
+      setCurrentNoteId: setter(set, 'currentNoteId'),
       // The visible notes, including the main note and the stacked notes
       openNoteIds: [],
       // Replaces the open notes at the given index (0 by default)
@@ -272,7 +276,6 @@ export const store = createVanilla<Store>(
       setSidebarTab: setter(set, 'sidebarTab'),
       sidebarSearchQuery: '',
       setSidebarSearchQuery: setter(set, 'sidebarSearchQuery'),
-      
       currentDir: undefined,
       setCurrentDir: setter(set, 'currentDir'),
       ...userSettingsSlice(set),
