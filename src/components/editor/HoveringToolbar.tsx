@@ -9,8 +9,10 @@ import {
   IconCode,
   IconLink,
   IconPaint,
+  IconSearch,
 } from '@tabler/icons';
 import classNames from 'classnames';
+import { SidebarTab, useStore } from 'lib/store';
 import { toggleMark, isMarkActive, isElementActive } from 'editor/formatting';
 import { ElementType, Mark } from 'editor/slate';
 import { isMobile } from 'utils/helper';
@@ -64,6 +66,9 @@ export default function HoveringToolbar(props: Props) {
         Icon={IconCode}
         tooltip="Code (Ctrl+`)"
         aria-label="Code"
+      />
+      <SearchButton
+        className="border-l dark:border-gray-700"
       />
     </EditorPopover>
   );
@@ -174,6 +179,34 @@ const LinkButton = (props: LinkButtonProps) => {
       isActive={isActive}
       className={className}
       tooltip="Link to a note or web page (Ctrl+K)"
+    />
+  );
+};
+
+type SearchButtonProps = {
+  className?: string;
+};
+
+const SearchButton = (props: SearchButtonProps) => {
+  const { className = '' } = props;
+  const selectionText = window.getSelection()?.toString();
+
+  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const setSidebarTab = useStore((state) => state.setSidebarTab);
+  const setSidebarSearchQuery = useStore((state) => state.setSidebarSearchQuery);
+  
+  return (
+    <ToolbarButton
+      icon={IconSearch}
+      onClick={() => {
+        if (selectionText) {
+          setSidebarTab(SidebarTab.Search);
+          setSidebarSearchQuery(selectionText);
+          setIsSidebarOpen(true);
+        }
+      }}
+      className={className}
+      tooltip="Search Selected Text"
     />
   );
 };

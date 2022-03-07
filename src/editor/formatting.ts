@@ -213,7 +213,8 @@ const wrapLink = (editor: Editor, link: ExternalLink | NoteLink | PubLink) => {
   }
 };
 
-// Text is only used as the link text if the range is collapsed; otherwise, we reuse the existing selection text.
+// Text is only used as the link text if the range is collapsed; 
+// otherwise, we reuse the existing selection text.
 export const insertExternalLink = (
   editor: Editor,
   url: string,
