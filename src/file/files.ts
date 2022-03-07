@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { FileMetaData } from './directory';
-import { isTauri, joinPath, getDirname } from './util';
+import { isTauri, normalizeSlash, joinPath, getDirname } from './util';
 
 /** Invoke Rust command to handle files */
 class FileAPI {
@@ -15,9 +15,9 @@ class FileAPI {
   constructor(fileName: string, parentDir?: string) {
 		if (parentDir && typeof fileName === 'string') {
 			this.parentDir = parentDir;
-			this.fileName = joinPath(parentDir, fileName);
+			this.fileName = normalizeSlash(joinPath(parentDir, fileName));
 		} else {
-			this.fileName = fileName;
+			this.fileName = normalizeSlash(fileName);
 		} 
   }
 

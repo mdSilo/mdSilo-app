@@ -36,7 +36,7 @@ function Note(props: Props) {
   const initIsWiki = note?.is_wiki ?? false;
   // get title and content value
   const title = note?.title ?? 'demo note';
-  const [initTitle, ] = useState(title); // an initial title copy
+  const [initTitle, setInitTitle] = useState(title); // an initial title copy
   const value = note?.content ?? getDefaultEditorValue();
 
   const [isWiki, setIsWiki] = useState(initIsWiki);
@@ -105,7 +105,10 @@ function Note(props: Props) {
           await writeFile(newPath, content);
           await writeJsonFile(parentDir);
           // 3- delete the old redundant File
-          await deleteFile(joinPath(parentDir, `${initTitle}.md`));
+          const toDelPath = joinPath(parentDir, `${initTitle}.md`);
+          await deleteFile(toDelPath);
+          // 4- reset initTitle
+          setInitTitle(newTitle);
         }
       } else {
         toast.error(

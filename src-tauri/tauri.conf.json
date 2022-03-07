@@ -7,7 +7,8 @@
     "distDir": "../build",
     "devPath": "http://localhost:3000",
     "beforeDevCommand": "",
-    "beforeBuildCommand": ""
+    "beforeBuildCommand": "",
+    "withGlobalTauri": true
   },
   "tauri": {
     "bundle": {
@@ -50,17 +51,12 @@
       "active": false
     },
     "allowlist": {
-      "all": true,
-      "fs": {
-				"all": true,
-				"copyFile": true,
-				"createDir": true,
-				"readDir": true,
-				"removeDir": true,
-				"removeFile": true,
-				"renameFile": true,
-				"writeFile": true
-			}
+      "dialog": {
+        "all": true
+      },
+      "window": {
+        "all": true
+      }
     },
     "windows": [
       {
@@ -82,7 +78,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' style-src 'unsafe-inline' 'self' img-src: 'self'; script-src: 'unsafe-eval'"
     }
   }
 }

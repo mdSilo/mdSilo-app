@@ -37,7 +37,8 @@ export default function useDeleteNote(noteId: string, noteTitle: string) {
     // delete in disk
     const parentDir = store.getState().currentDir;
     if (parentDir) {
-      await deleteFile(joinPath(parentDir, `${noteTitle}.md`));
+      const toDelPath = joinPath(parentDir, `${noteTitle}.md`);
+      await deleteFile(toDelPath);
     }
   }, [dispatch, noteId, noteTitle, openNoteIds]);
 
