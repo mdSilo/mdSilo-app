@@ -3470,10 +3470,10 @@ cp-file@^9.1.0:
     nested-error-stacks "^2.0.0"
     p-event "^4.1.0"
 
-cpy@^9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/cpy/-/cpy-9.0.0.tgz#02943474fd96ea122443f3bb2c5f26e6b9a66fe7"
-  integrity sha512-+yJuWIPnwcdBx+vBcZkb1jeAu05TZlPTAXdZf/fMrksyPQf2tTQr3/zpm1CeBJxeS3E9t4X0HQnr+CMsKSDIXA==
+cpy@^9.0.1:
+  version "9.0.1"
+  resolved "https://registry.yarnpkg.com/cpy/-/cpy-9.0.1.tgz#7f3ad0ad5bafe0bc70645c4bb567969927cadb9f"
+  integrity sha512-D9U0DR5FjTCN3oMTcFGktanHnAG5l020yvOCR1zKILmAyPP7I/9pl6NFgRbDcmSENtbK1sQLBz1p9HIOlroiNg==
   dependencies:
     arrify "^3.0.0"
     cp-file "^9.1.0"
