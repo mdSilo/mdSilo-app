@@ -287,7 +287,7 @@ export const store = createVanilla<Store>(
       partialize: (state) => ({
         // user setting related
         userId: state.userId,
-        isSidebarOpen: state.isSidebarOpen,
+        // isSidebarOpen: state.isSidebarOpen, // don't persist
         darkMode: state.darkMode,
         isPageStackingOn: state.isPageStackingOn,
         isCheckSpellOn: state.isCheckSpellOn,

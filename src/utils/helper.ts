@@ -30,7 +30,8 @@ export function realDateCompare(d1: Date, d2: Date) {
 const SM_BREAKPOINT = 640;
 
 export const isMobile = (breakpoint: number = SM_BREAKPOINT) => {
-  return window.innerWidth <= breakpoint;
+  const winWidth = window.innerWidth;
+  return winWidth <= breakpoint && winWidth !== 0;
 };
 
 // str
