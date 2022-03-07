@@ -51,10 +51,19 @@
       "active": false
     },
     "allowlist": {
+      "clipboard": {
+        "all": true
+      },
       "dialog": {
         "all": true
       },
       "window": {
+        "all": true
+      },
+      "os": {
+        "all": true
+      },
+      "shell": {
         "all": true
       }
     },

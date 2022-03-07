@@ -12,10 +12,12 @@ import Sidebar from './sidebar/Sidebar';
 import MainView from './view/MainView';
 import FindOrCreateModal from './note/NoteNewModal';
 import SettingsModal from './settings/SettingsModal';
+import AboutModal from './settings/AboutModal';
 
 const App = () => {
   const [isFindOrCreateModalOpen, setIsFindOrCreateModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const darkMode = useStore((state) => state.darkMode);
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
@@ -70,6 +72,7 @@ const App = () => {
           <Sidebar
             setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
             setIsSettingsOpen={setIsSettingsOpen}
+            setIsAboutOpen={setIsAboutOpen}
           />
           <div className="relative flex flex-col flex-1 overflow-y-auto">
             <MainView />
@@ -77,12 +80,14 @@ const App = () => {
           {isFindOrCreateModalOpen ? (
             <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />
           ) : null}
-          {isSettingsOpen ? (
-            <SettingsModal 
-              isOpen={isSettingsOpen}
-              handleClose={() => setIsSettingsOpen(false)} 
-            />
-          ) : null}
+          <SettingsModal 
+            isOpen={isSettingsOpen}
+            handleClose={() => setIsSettingsOpen(false)} 
+          />
+          <AboutModal 
+            isOpen={isAboutOpen}
+            handleClose={() => setIsAboutOpen(false)} 
+          />
         </div>
       </div>
     </ProvideCurrentView>

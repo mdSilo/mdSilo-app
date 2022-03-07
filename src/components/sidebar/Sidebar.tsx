@@ -16,6 +16,7 @@ const SPRING_CONFIG: SpringConfig = {
 type Props = {
   setIsFindOrCreateModalOpen: Dispatch<SetStateAction<boolean>>;
   setIsSettingsOpen: Dispatch<SetStateAction<boolean>>;
+  setIsAboutOpen: Dispatch<SetStateAction<boolean>>;
   className?: string;
 };
 
@@ -23,6 +24,7 @@ function Sidebar(props: Props) {
   const { 
     setIsFindOrCreateModalOpen, 
     setIsSettingsOpen, 
+    setIsAboutOpen,
     className='' 
   } = props;
 
@@ -95,7 +97,10 @@ function Sidebar(props: Props) {
             <div
               className={`flex flex-col flex-none h-full border-r bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 ${className}`}
             >
-              <SidebarHeader setIsSettingsOpen={setIsSettingsOpen} />
+              <SidebarHeader 
+                setIsSettingsOpen={setIsSettingsOpen} 
+                setIsAboutOpen={setIsAboutOpen} 
+              />
               <SidebarContent
                 className="flex-1 overflow-x-hidden overflow-y-auto"
                 setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}

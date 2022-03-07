@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { Menu } from '@headlessui/react';
 import { 
-  IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, IconPizza 
+  IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, IconPizza, IconInfoCircle 
 } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
@@ -10,10 +10,11 @@ import { isMobile } from 'utils/helper';
 
 type Props = {
   setIsSettingsOpen: Dispatch<SetStateAction<boolean>>;
+  setIsAboutOpen: Dispatch<SetStateAction<boolean>>;
 };
 
 export default function SidebarHeader(props: Props) {
-  const { setIsSettingsOpen } = props;
+  const { setIsSettingsOpen, setIsAboutOpen } = props;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
 
   return (
@@ -63,6 +64,10 @@ export default function SidebarHeader(props: Props) {
           >
             <IconPizza size={18} className="mr-1" />
             <span>Sponsor</span>
+          </DropdownItem>
+          <DropdownItem onClick={() => setIsAboutOpen(true)}>
+            <IconInfoCircle size={18} className="mr-1" />
+            <span>About</span>
           </DropdownItem>
         </Menu.Items>
       </Menu>
