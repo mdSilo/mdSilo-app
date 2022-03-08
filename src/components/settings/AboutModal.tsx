@@ -1,7 +1,6 @@
 import { getVersion, getTauriVersion } from '@tauri-apps/api/app';
-import { arch, platform, version } from '@tauri-apps/api/os';
 import { writeText } from '@tauri-apps/api/clipboard';
-import { useCallback, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BaseModal } from './BaseModal';
 
 type Props = {
@@ -12,27 +11,15 @@ type Props = {
 export default function AboutModal({ isOpen, handleClose }: Props) {
   const [appVersion, setAppVersion] = useState('');
   const [tauriVersion, setTauriVersion] = useState('');
-  const [osVersion, setOsVersion] = useState('');
   const [hasVersion, setHasVersion] = useState(false);
 
-  const getAppVersion = useCallback(
-    async () => setAppVersion(await getVersion()), []
-  );
-  const getFrameVersion = useCallback(
-    async () => setTauriVersion(await getTauriVersion()), []
-  );
-  const getOsVersion = useCallback(
-    // the version is not the kernel version
-    async () => setOsVersion(`${await platform()} ${await arch()} ${await version()}`), []
-  );
   useEffect(() => {
     if (!hasVersion) {
-      getAppVersion();
-      getFrameVersion();
-      getOsVersion();
+      getVersion().then(ver => setAppVersion(ver)).catch(() => {/**/});
+      getTauriVersion().then(ver => setTauriVersion(ver)).catch(() => {/**/});
     }
     return () => { setHasVersion(true); };
-  }, [getAppVersion, getFrameVersion, getOsVersion, hasVersion]);
+  }, [hasVersion]);
 
   return (
     <BaseModal title="About" isOpen={isOpen} handleClose={handleClose}>
@@ -40,8 +27,11 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
         <h1>mdSilo Desktop</h1>
         <p className="mt-4 font-bold">App Version: {appVersion}</p>
         <p className="mt-4 font-bold">Tauri Version: {tauriVersion}</p>
-        <p className="mt-4 font-bold">OS Version: {osVersion}</p>
-        <button className="mt-4 font-bold pop-btn" onClick={() => writeText(`App: ${appVersion} Tauri: ${tauriVersion} OS: ${osVersion}`)}>
+        <button 
+          className="mt-4 font-bold pop-btn" 
+          onClick={async () => { 
+            await writeText(`App: ${appVersion} \n Tauri: ${tauriVersion}`);
+          }}>
           Copy
         </button>
       </div>

@@ -1,5 +1,5 @@
-import * as dialog from '@tauri-apps/api/dialog'
-import { invoke } from '@tauri-apps/api/tauri'
+import * as dialog from '@tauri-apps/api/dialog';
+import { invoke } from '@tauri-apps/api/tauri';
 import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
@@ -47,7 +47,6 @@ export const openDirDilog = async () => {
 /**
  * Open dir and pre-process files
  * @param dir 
- * @param writeHistory 
  * @returns 
  */
 export const openDir = async (dir: string): Promise<void> => {
@@ -84,7 +83,7 @@ export const openDir = async (dir: string): Promise<void> => {
  * @param multi multi-select or not
  * @returns 
  */
-export const openFileDilog = async (ty: string, multi = true) => {
+export const openFileDilog = async (ty: string[], multi = true) => {
   const recentDirPath = getRecentDirPath();
   const filePaths = await dialog.open({
     title: `Open ${ty} File`,
@@ -94,7 +93,7 @@ export const openFileDilog = async (ty: string, multi = true) => {
     filters: [
       {
         name: 'file', 
-        extensions:  ty === 'json' ? ['json'] : ty === 'md' ? ['md'] : ['md', 'json']
+        extensions: ty,
       }
     ],
   });
@@ -105,7 +104,6 @@ export const openFileDilog = async (ty: string, multi = true) => {
  * Open and process files
  * @param filePaths 
  * @param ty file type: md or json
- * @param writeHistory 
  * @returns 
  */
 export async function openFile(filePaths: string[], ty = 'md') {
@@ -121,18 +119,18 @@ export async function openFile(filePaths: string[], ty = 'md') {
       }
     }
   } else {
-    const openFiles = [];
+    const files = [];
     for (const filePath of filePaths) {
       const fileInfo = new FileAPI(filePath);
   
       if (await fileInfo.exists()) {
         // process json
         const fileMeta = await fileInfo.getMetadata();
-        openFiles.push(fileMeta);
+        files.push(fileMeta);
       } 
     }
     // process files
-    processMds(openFiles);
+    processMds(files);
     return;
   }
 }

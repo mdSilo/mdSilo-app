@@ -2,16 +2,18 @@ import { useCallback, useMemo, useState } from 'react';
 import { Editor, Element, Transforms, Path } from 'slate';
 import { ReactEditor, useSlateStatic, useSlate } from 'slate-react';
 import { 
-  IconDotsVertical, TablerIcon, 
+  IconDotsVertical, TablerIcon, IconPhoto,
   IconLink, IconListCheck, IconBraces, IconPrompt, IconTable
 } from '@tabler/icons';
 import { ReferenceableBlockElement, TableElement, ElementType, Table } from 'editor/slate';
+import { useStore } from 'lib/store';
 import Dropdown, { DropdownItem } from 'components/misc/Dropdown';
 import Portal from 'components/misc/Portal';
 import { isReferenceableBlockElement } from 'editor/checks';
 import { toggleElement, isElementActive } from 'editor/formatting';
 import { createNodeId } from 'editor/plugins/withNodeId';
 import { buildTable, resizeTable } from 'editor/plugins/withTable';
+import { uploadAndInsertImage } from 'editor/plugins/withImages';
 import ChangeBlockOptions from './ChangeBlockOptions';
 import TableModal from './TableModal';
 
@@ -25,6 +27,7 @@ type BlockMenuDropdownProps = {
 export default function BlockMenuDropdown(props: BlockMenuDropdownProps) {
   const { element, isWiki = false, className = '' } = props;
   const editor = useSlateStatic();
+  const currentDir = useStore(state => state.currentDir);
 
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
 
@@ -160,6 +163,12 @@ export default function BlockMenuDropdown(props: BlockMenuDropdownProps) {
         Icon={IconBraces}
         innerTxt="Code Block"
       />
+      <ImageButton
+        format={ElementType.Image}
+        element={element}
+        Icon={IconPhoto}
+        currentDir={currentDir}
+      />
       <DropdownItem 
         onClick={onCopyBlockRef}
         className="flex items-center px-2 py-2 cursor-pointer rounded hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600"
@@ -184,7 +193,7 @@ export default function BlockMenuDropdown(props: BlockMenuDropdownProps) {
       <ChangeBlockOptions
         element={element}
         className="border-t dark:border-gray-700"
-        optOuts= {["p", "img", "cl", "code"]}
+        optOuts= {["p", "cl", "code"]}
       />
     </Dropdown>
     {isTableModalOpen ? (
@@ -207,6 +216,7 @@ type DropdownOptionProps = {
   element: Element;
   Icon: TablerIcon;
   innerTxt?: string;
+  currentDir?: string;
   className?: string;
 };
 
@@ -234,6 +244,38 @@ const DropdownOption = ({
         className={`mr-1 ${isActive ? 'text-primary-500 dark:text-primary-400' : 'text-gray-800 dark:text-gray-200'}`}
       />
       <span>{innerTxt}</span>
+    </DropdownItem>
+  );
+};
+
+const ImageButton = ({
+  format,
+  element,
+  Icon,
+  currentDir,
+  className = '',
+}: DropdownOptionProps) => {
+  const editor = useSlate();
+  const path = useMemo(
+    () => ReactEditor.findPath(editor, element),
+    [editor, element]
+  );
+  const isActive = isElementActive(editor, format, path);
+
+  const onClick = useCallback(async() => {
+    await uploadAndInsertImage(editor, currentDir, path);
+  }, [currentDir, editor, path]);
+
+  return (
+    <DropdownItem
+      className={`flex items-center px-2 py-2 cursor-pointer rounded hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600 ${className}`}
+      onClick={onClick}
+    >
+      <Icon
+        size={18}
+        className={`mr-1 ${isActive ? 'text-primary-500 dark:text-primary-400' : 'text-gray-800 dark:text-gray-200'}`}
+      />
+      <span>Insert Image</span>
     </DropdownItem>
   );
 };

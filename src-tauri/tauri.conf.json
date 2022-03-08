@@ -60,12 +60,14 @@
       "window": {
         "all": true
       },
-      "os": {
-        "all": true
-      },
       "shell": {
         "all": true
-      }
+      },
+      "protocol": {
+				"all": true,
+				"asset": true,
+				"assetScope": ["*"]
+			}
     },
     "windows": [
       {
@@ -87,7 +89,7 @@
       }
     ],
     "security": {
-      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' style-src 'unsafe-inline' 'self' img-src: 'self'; script-src: 'unsafe-eval'"
+      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost"
     }
   }
 }

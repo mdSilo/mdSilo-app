@@ -6,7 +6,7 @@ import { getDirname } from 'file/util';
 import { writeAllFile } from 'file/write';
 
 export const openFiles = async (ty: string, multi = true) => {
-  const filePaths = await openFileDilog(ty, multi);
+  const filePaths = await openFileDilog([ty], multi);
   // console.log("file path", filePaths);
   const openPaths = typeof filePaths === 'string' ? [filePaths] : filePaths;
   if (openPaths.length > 0) {

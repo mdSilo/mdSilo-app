@@ -31,6 +31,8 @@ fn main() {
     files::create_file,
     files::read_file,
     files::write_file,
+    files::copy_file,
+    files::copy_file_to_assets,
     files::delete_files,
     files::list_directory,
     files::listen_dir,

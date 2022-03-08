@@ -84,6 +84,34 @@ mod tests {
     let read_file_text = read_file(file.clone()).await;
     assert_eq!(&to_write_text, &read_file_text);
 
+    // copy file
+    delete_files(vec![String::from("/home/uu/Documents/temple.jpg")]).await;
+    let copied = copy_file(
+      String::from("/home/uu/Pictures/temple.jpg"), 
+      String::from("/home/uu/Documents/temple.jpg")
+    )
+    .await;
+    assert_eq!(copied, true);
+    assert_eq!(file_exist("/home/uu/Documents/temple.jpg"), true);
+    
+    // copy file to assets
+    delete_files(vec![String::from("/home/uu/Documents/assets/temple.jpg")]).await;
+    let to_path = copy_file_to_assets(
+      String::from("/home/uu/Pictures/temple.jpg"), 
+      String::from("/home/uu/Documents")
+    )
+    .await;
+    assert_eq!(to_path, "/home/uu/Documents/assets/temple.jpg");
+    assert_eq!(file_exist("/home/uu/Documents/assets/temple.jpg"), true);
+    delete_files(vec![String::from("/home/uu/Documents/assets/beauty.jpg")]).await;
+    let to_path_1 = copy_file_to_assets(
+      String::from("/home/uu/Pictures/beauty.jpg"), 
+      String::from("/home/uu/Documents/")
+    )
+    .await;
+    assert_eq!(to_path_1, "/home/uu/Documents/assets/beauty.jpg");
+    assert_eq!(file_exist("/home/uu/Documents/assets/beauty.jpg"), true);
+
     // del files or dir
     let mut files = Vec::new();
     files.push(file.clone());

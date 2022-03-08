@@ -205,6 +205,7 @@ pub async fn create_dir_recursive(dir_path: String) -> bool {
 // create
 // rename
 // write
+// copy
 // delete
 
 /// Create a file
@@ -231,6 +232,33 @@ pub async fn write_file(file_path: String, text: String) -> bool {
   }
 
   fs::write(file_path, text).is_ok()
+}
+
+/// copy the assets(image...)
+#[tauri::command]
+pub async fn copy_file(src_path: String, to_path: String) -> bool {
+  if let Some(p) = Path::new(&to_path).parent() {
+    create_dir_recursive(p.display().to_string()).await;
+  }
+
+  fs::copy(src_path, to_path).is_ok()
+}
+
+/// copy the assets(image...) to given work dir
+#[tauri::command]
+pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
+  let file_name = get_basename(&src_path);
+  let to_path = Path::new(&work_dir).join("assets").join(&file_name);
+
+  if let Some(p) = Path::new(&to_path).parent() {
+    create_dir_recursive(p.display().to_string()).await;
+  }
+
+  if fs::copy(src_path, to_path.clone()).is_ok() {
+    return to_path.into_os_string().into_string().unwrap_or(String::new());
+  } else {
+    return String::new();
+  }
 }
 
 
@@ -280,13 +308,13 @@ pub async fn listen_dir(
           event = "write".to_string();
         } else if op.contains(notify::op::CLOSE_WRITE) {
           event = "close_write".to_string();
-        }else {
+        } else {
           event = "unknown".to_string();
         }
         if event != "unknown" {
           window
             .emit(
-              "changes",
+              "changes", // then Frontend listen the event changes.
               Event {
                 path: path.to_str().unwrap_or("").to_string(),
                 event,

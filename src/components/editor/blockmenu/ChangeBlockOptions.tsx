@@ -18,7 +18,6 @@ import { ElementType } from 'editor/slate';
 import Tooltip from 'components/misc/Tooltip';
 import { DropdownItem } from 'components/misc/Dropdown';
 
-
 type ChangeBlockOptionsProps = {
   element: Element;
   className?: string;
