@@ -85,6 +85,60 @@ mod tests {
     assert_eq!(&to_write_text, &read_file_text);
 
     // copy file
+    let to_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp/mdsilo/app.txt")
+      .to_str()
+      .unwrap()
+      .to_string();
+    let copied = copy_file(file.clone(), to_path.clone()).await;
+    assert_eq!(copied, true);
+    assert_eq!(file_exist(&to_path), true);
+    
+    // copy file to assets
+    let work_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp/silo")
+      .to_str()
+      .unwrap()
+      .to_string();
+    let asset_path = copy_file_to_assets(to_path.clone(), work_dir.clone()).await;
+    assert_eq!(is_dir(std::path::Path::new(work_dir.as_str())).unwrap(), true);
+    assert_eq!(asset_path, format!("{}/assets/app.txt", work_dir.clone()));
+    assert_eq!(file_exist(&asset_path), true);
+    
+    let asset_path_1 = copy_file_to_assets(to_path.clone(), format!("{}/", work_dir)).await;
+    assert_eq!(asset_path_1, format!("{}/assets/app.txt", work_dir.clone()));
+    assert_eq!(file_exist(&asset_path_1), true);
+
+    // del files or dir
+    let to_del_files = vec![file.clone(), to_path];
+    // files.push(file.clone());
+    delete_files(to_del_files).await;
+    assert_eq!(file_exist(&file), false);
+
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp")
+      .to_str()
+      .unwrap()
+      .to_string();
+    let to_del_dirs = vec![dir.clone()];
+    assert_eq!(file_exist(&asset_path_1), true);
+    delete_files(to_del_dirs.clone()).await;
+    // not del the dir, for a file in it
+    assert_eq!(file_exist(&asset_path_1), true);
+    assert_eq!(file_exist(&dir), true);
+
+    let to_del_files_1 = vec![asset_path_1.clone()];
+    delete_files(to_del_files_1).await;
+    assert_eq!(file_exist(&asset_path_1), false);
+    // now no file in it, dir deleted
+    delete_files(to_del_dirs.clone()).await;
+    assert_eq!(file_exist(&dir), false);
+  }
+
+  #[tokio::test]
+  #[ignore="on my computer only"]
+  async fn test_copy_file_operation() {
+    // copy file
     delete_files(vec![String::from("/home/uu/Documents/temple.jpg")]).await;
     let copied = copy_file(
       String::from("/home/uu/Pictures/temple.jpg"), 
@@ -103,6 +157,7 @@ mod tests {
     .await;
     assert_eq!(to_path, "/home/uu/Documents/assets/temple.jpg");
     assert_eq!(file_exist("/home/uu/Documents/assets/temple.jpg"), true);
+    
     delete_files(vec![String::from("/home/uu/Documents/assets/beauty.jpg")]).await;
     let to_path_1 = copy_file_to_assets(
       String::from("/home/uu/Pictures/beauty.jpg"), 
@@ -111,22 +166,6 @@ mod tests {
     .await;
     assert_eq!(to_path_1, "/home/uu/Documents/assets/beauty.jpg");
     assert_eq!(file_exist("/home/uu/Documents/assets/beauty.jpg"), true);
-
-    // del files or dir
-    let mut files = Vec::new();
-    files.push(file.clone());
-    delete_files(files).await;
-    assert_eq!(file_exist(&file), false);
-
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-      .join("../temp")
-      .to_str()
-      .unwrap()
-      .to_string();
-    let mut dirs = Vec::new();
-    dirs.push(dir.clone());
-    delete_files(dirs.clone()).await;
-    assert_eq!(file_exist(&dir), false);
   }
 
   #[test]

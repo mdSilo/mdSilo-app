@@ -262,7 +262,8 @@ pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
 }
 
 
-/// Delete a file 
+/// Delete files or dirs
+/// will not delete dir if any file in dir
 #[tauri::command]
 pub async fn delete_files(paths: Vec<String>) -> bool {
   trash::delete_all(paths).is_ok()
