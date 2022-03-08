@@ -5,6 +5,7 @@
 
 mod files;
 mod storage;
+mod paths;
 mod tests;
 
 use tauri::Manager;

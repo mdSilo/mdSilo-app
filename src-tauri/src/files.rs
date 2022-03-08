@@ -1,11 +1,12 @@
 use std::fs;
 use std::path::Path;
 use std::time::SystemTime;
+use std::sync::mpsc::channel;
 extern crate notify;
 extern crate trash;
 extern crate open;
 use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
-use std::sync::mpsc::channel;
+use crate::paths::PathBufExt;
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct SimpleFileMeta {
@@ -48,13 +49,18 @@ pub struct Event {
 }
 
 /// Get file_name of the path given
-pub fn get_basename(file_path: &str) -> String {
-  let name = Path::new(file_path).file_name();
-  match name {
-    // TODO: handle err
-    Some(name) => name.to_str().unwrap_or(file_path).to_string(),
-    None => file_path.to_string(),
+pub fn get_basename(file_path: &str) -> (String, bool) {
+  let path = Path::new(file_path);
+  let name = path.file_name();
+  let is_dir = path.is_dir();
+  if let Some(basename) = name {
+    match basename.to_str() {
+      // TODO: handle err
+      Some(n) => return (n.to_string(), is_dir),
+      None => return (String::new(), is_dir),
+    }
   }
+  (String::new(), is_dir)
 }
 
 pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
@@ -64,7 +70,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   };
 
   // name.ext
-  let file_name = get_basename(file_path);
+  let file_name = get_basename(file_path).0;
   //let file_type = metadata.file_type();
   let is_dir = metadata.is_dir();
   let is_file = metadata.is_file();
@@ -247,15 +253,29 @@ pub async fn copy_file(src_path: String, to_path: String) -> bool {
 /// copy the assets(image...) to given work dir
 #[tauri::command]
 pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
-  let file_name = get_basename(&src_path);
-  let to_path = Path::new(&work_dir).join("assets").join(&file_name);
+  let basename = get_basename(&src_path);
+  let is_dir = basename.1;
+  if is_dir {
+    return String::new();
+  }
+
+  let file_name = basename.0;
+  let to_path = Path::new(&work_dir)
+    .join("assets")
+    .join(&file_name)
+    .normalize_slash()
+    .unwrap_or(String::new());
+  
+  if to_path.len() == 0 {
+    return to_path;
+  }
 
   if let Some(p) = Path::new(&to_path).parent() {
     create_dir_recursive(p.display().to_string()).await;
   }
 
   if fs::copy(src_path, to_path.clone()).is_ok() {
-    return to_path.into_os_string().into_string().unwrap_or(String::new());
+    return to_path;
   } else {
     return String::new();
   }
@@ -263,7 +283,7 @@ pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
 
 
 /// Delete files or dirs
-/// will not delete dir if any file in dir
+/// note: will not delete dir if any file in dir on Linux
 #[tauri::command]
 pub async fn delete_files(paths: Vec<String>) -> bool {
   trash::delete_all(paths).is_ok()
