@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Path, Descendant } from 'slate';
-import { toast } from 'react-toastify';
 import Editor from 'components/editor/Editor';
 import Title from 'components/editor/Title';
 import Backlinks from 'components/editor/backlinks/Backlinks';
@@ -111,9 +110,7 @@ function Note(props: Props) {
           setInitTitle(newTitle);
         }
       } else {
-        toast.error(
-          `There's already a note called ${newTitle}. Please use a different title.`
-        );
+        // TODO: message to user
       }
     },
     [noteId, isWiki, storeNotes, updateNote, parentDir, value, initTitle]

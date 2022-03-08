@@ -16,7 +16,6 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { toast } from 'react-toastify';
 import { NoteTreeItem, useStore } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Portal from 'components/misc/Portal';
@@ -108,7 +107,7 @@ function SidebarNotesTree(props: Props) {
         // move locally
         moveNoteTreeItem(active.id, over.id);
       } else {
-        toast.error('An unexpected error occured.');
+        // TODO: msg to user
       }
 
       resetState();
