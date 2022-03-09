@@ -142,9 +142,6 @@ mod tests {
       .unwrap();
     let asset_path = copy_file_to_assets(to_path.clone(), work_dir.clone()).await;
     assert_eq!(is_dir(std::path::Path::new(work_dir.as_str())).unwrap(), true);
-    // Windows failed here:
-    // left: `"D:\\a\\mdSilo-app\\mdSilo-app\\src-tauri\\../temp/silo\\assets\\app.txt"`,
-    // right: `"D:\\a\\mdSilo-app\\mdSilo-app\\src-tauri\\../temp/silo/assets/app.txt"`',
     assert_eq!(asset_path, format!("{}/assets/app.txt", work_dir.clone()));
     assert_eq!(file_exist(&asset_path), true);
     
@@ -167,7 +164,7 @@ mod tests {
     assert_eq!(file_exist(&asset_path_1), true);
     delete_files(to_del_dirs.clone()).await;
     // not del the dir, for a file in it
-    // but macOS failed here:
+    // but on macOS:
     // left: `false`,  right: `true`' , thus dir deleted on macOS
     #[cfg(target_os = "linux")]
     assert_eq!(file_exist(&asset_path_1), true);

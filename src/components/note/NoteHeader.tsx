@@ -103,7 +103,7 @@ export default function NoteHeader(props: Props) {
             {({ open }) => (
               <>
                 <Menu.Button ref={menuButtonRef} className={buttonClassName}>
-                  <Tooltip content="Options (export, import, delete, etc.)">
+                  <Tooltip content="Options (Move, Delete...)">
                     <span className="flex items-center justify-center w-8 h-8">
                       <IconDots className={iconClassName} />
                     </span>

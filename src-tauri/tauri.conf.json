@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "mdsilo",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "build": {
     "distDir": "../build",
@@ -89,7 +89,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost"
+      "csp": "default-src 'self' asset: blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' style-src 'unsafe-inline' 'self'; img-src 'self' asset: https://asset.localhost"
     }
   }
 }

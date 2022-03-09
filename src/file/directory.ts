@@ -158,11 +158,14 @@ class DirectoryAPI {
         const payload: EventPayload = e.payload;
         const filePath = payload.path;
         const event = payload.event;
+        // console.log("event: ", event);
+        // console.log("file path: ", filePath);
         if (event === 'write' || event === 'close_write') {
           const notesArr = Object.values(store.getState().notes);
           for (const note of notesArr) {
             if (note.file_path === filePath) {
               const currentNoteId = store.getState().currentNoteId;
+              // console.log("note current ids: ", note.id, currentNoteId)
               // any change on current note will not be loaded
               if (note.id !== currentNoteId) {
                 store.getState().updateNote({
