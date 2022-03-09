@@ -1,4 +1,4 @@
-name: Test FE
+name: Lint, TypeCheck, Test
 
 on:
   push:
@@ -16,5 +16,6 @@ jobs:
       with:
         node-version: 16.x
 
-    - run: yarn && yarn lint
+    - run: yarn && yarn lint 
+    - run: yarn typecheck
     - run: yarn test 

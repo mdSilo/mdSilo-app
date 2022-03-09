@@ -1,6 +1,6 @@
 # Changelog
 
-## [app-v0.2.0] - 2022-XX-XX
+## [app-v0.2.0] - 2022-03-10
 
 ### Added
 - Splashscreen on loading  
@@ -27,4 +27,4 @@ initial release
 - Block Reference  
 - HashTag 
 - Full-text search 
-- Available for Windows, macOS, Linux (no Code Signing)
+- Available for Linux, Windows, macOS (no Code Signing currently)
