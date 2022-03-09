@@ -2,7 +2,7 @@
   "name": "mdsilo-app",
   "version": "0.2.0",
   "private": true,
-  "license": "AGPL",
+  "license": "AGPL3",
   "homepage": "https://mdsilo.com",
   "scripts": {
     "start": "react-scripts start",
