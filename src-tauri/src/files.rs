@@ -337,7 +337,7 @@ pub async fn listen_dir(
             .emit(
               "changes", // then Frontend listen the event changes.
               Event {
-                path: path.to_str().unwrap_or("").to_string(),
+                path: path.normalize_slash().unwrap_or(String::new()),
                 event,
               },
             )
