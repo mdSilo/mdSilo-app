@@ -86,7 +86,7 @@ export type Store = {
   noteTree: NoteTreeItem[];
   setNoteTree: Setter<NoteTreeItem[]>;
   moveNoteTreeItem: (noteId: string, newParentNoteId: string | null) => void;
-  toggleNoteTreeItemCollapsed: (noteId: string) => void;
+  toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => void;
   updateNoteTree: (item: NoteTreeItem, target: string | null) => void;
   wikiTree: WikiTreeItem[];
   setWikiTree: Setter<WikiTreeItem[]>;
@@ -248,12 +248,15 @@ export const store = createVanilla<Store>(
           if (item) {
             insertTreeItem(state.noteTree, item, newParentNoteId);
           }
+          if (newParentNoteId) {
+            toggleTreeItemCollapsed(state.noteTree, newParentNoteId, false);
+          }
         });
       },
       // Expands or collapses the tree item with the given noteId
-      toggleNoteTreeItemCollapsed: (noteId: string) => {
+      toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => {
         set((state) => {
-          toggleNoteTreeItemCollapsed(state.noteTree, noteId);
+          toggleTreeItemCollapsed(state.noteTree, noteId, toCollapsed);
         });
       },
       updateNoteTree: (item: NoteTreeItem, target: string | null) => {
@@ -371,17 +374,18 @@ const insertTreeItem = (
 /**
  * Expands or collapses the tree item with the given id, and returns true if it was updated.
  */
-const toggleNoteTreeItemCollapsed = (
+const toggleTreeItemCollapsed = (
   tree: NoteTreeItem[],
-  id: string
+  id: string,
+  toCollapsed?: boolean,
 ): boolean => {
   for (let i = 0; i < tree.length; i++) {
     const item = tree[i];
     if (item.id === id) {
-      tree[i] = { ...item, collapsed: !item.collapsed };
+      tree[i] = { ...item, collapsed: toCollapsed ?? !item.collapsed };
       return true;
     } else if (item.children.length > 0) {
-      const result = toggleNoteTreeItemCollapsed(item.children, id);
+      const result = toggleTreeItemCollapsed(item.children, id, toCollapsed);
       if (result) {
         return result;
       }

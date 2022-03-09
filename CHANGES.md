@@ -9,7 +9,8 @@
 - Insert Local Image  
 
 ### Fixed
-- normalize paths for Window, Linux, macOS
+- Normalize paths for Window, Linux, macOS  
+- Sync changes in store to JSON(persist)  
 
 ## [app-v0.1.0] - 2022-03-03
 

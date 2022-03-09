@@ -99,6 +99,7 @@ function Note(props: Props) {
           // on rename file: 
           // 1- new FilePath
           const newPath = joinPath(parentDir, `${newTitle}.md`);
+          updateNote({ id: noteId, file_path: newPath });
           // 2- swap value
           const content = value.map((n) => serialize(n)).join('');
           await writeFile(newPath, content);

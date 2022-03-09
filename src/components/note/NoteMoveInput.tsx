@@ -4,6 +4,7 @@ import { IconChevronsUp, IconSearch, TablerIcon } from '@tabler/icons';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store, useStore } from 'lib/store';
 import { ciStringCompare } from 'utils/helper';
+import { writeJsonFile } from 'file/write';
 
 enum OptionType {
   NOTE,
@@ -35,6 +36,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
 
   const noteTree = useStore((state) => state.noteTree);
   const moveNoteTreeItem = useStore((state) => state.moveNoteTreeItem);
+  const currentDir = useStore((state) => state.currentDir);
 
   const inputTxt = inputText.trim();
   const search = useNoteSearch({ numOfResults: 10 });
@@ -78,19 +80,19 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
 
   const onOptionClick = useCallback(
     async (option: Option) => {
-
       onOptionClickCallback?.();
-
-      // move tree locally
+      // move tree in store
       if (option.type === OptionType.ROOT) {
         moveNoteTreeItem(noteId, null);
       } else if (option.type === OptionType.NOTE) {
         moveNoteTreeItem(noteId, option.id);
-      } else {
-        throw new Error(`Option type ${option.type} is not supported`);
+      }
+      // sync the Moved hierarchy to JSON
+      if (currentDir) {
+        await writeJsonFile(currentDir);
       }
     },
-    [onOptionClickCallback, noteId, moveNoteTreeItem]
+    [onOptionClickCallback, currentDir, moveNoteTreeItem, noteId]
   );
 
   const onKeyDown = useCallback(

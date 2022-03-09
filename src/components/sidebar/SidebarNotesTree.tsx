@@ -19,6 +19,7 @@ import {
 import { NoteTreeItem, useStore } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Portal from 'components/misc/Portal';
+import { writeJsonFile } from 'file/write';
 import SidebarNoteLink from './SidebarNoteLink';
 import DraggableSidebarNoteLink from './DraggableSidebarNoteLink';
 
@@ -46,6 +47,7 @@ function SidebarNotesTree(props: Props) {
   }, [noteId]);
 
   const moveNoteTreeItem = useStore((state) => state.moveNoteTreeItem);
+  const currentDir = useStore((state) => state.currentDir);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(
@@ -102,17 +104,16 @@ function SidebarNotesTree(props: Props) {
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
-
       if (over) {
-        // move locally
         moveNoteTreeItem(active.id, over.id);
-      } else {
-        // TODO: msg to user
+      } 
+      // sync the Moved hierarchy to JSON
+      if (currentDir) {
+        await writeJsonFile(currentDir);
       }
-
       resetState();
     },
-    [resetState, moveNoteTreeItem]
+    [currentDir, resetState, moveNoteTreeItem]
   );
 
   const Row = useCallback(

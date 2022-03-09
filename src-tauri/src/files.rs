@@ -52,15 +52,15 @@ pub struct Event {
 pub fn get_basename(file_path: &str) -> (String, bool) {
   let path = Path::new(file_path);
   let name = path.file_name();
-  let is_dir = path.is_dir();
+  let is_file = path.is_file();
   if let Some(basename) = name {
     match basename.to_str() {
       // TODO: handle err
-      Some(n) => return (n.to_string(), is_dir),
-      None => return (String::new(), is_dir),
+      Some(n) => return (n.to_string(), is_file),
+      None => return (String::new(), is_file),
     }
   }
-  (String::new(), is_dir)
+  (String::new(), is_file)
 }
 
 pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
@@ -254,8 +254,8 @@ pub async fn copy_file(src_path: String, to_path: String) -> bool {
 #[tauri::command]
 pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
   let basename = get_basename(&src_path);
-  let is_dir = basename.1;
-  if is_dir {
+  let is_file = basename.1;
+  if !is_file {
     return String::new();
   }
 
@@ -308,16 +308,16 @@ pub async fn listen_dir(
     .unwrap_or(());
 
   window.once("unlisten_dir", move |_| {
-    watcher.lock().unwrap().unwatch(dir.clone()).unwrap_or(());
+    watcher
+      .lock()
+      .unwrap()
+      .unwatch(dir.clone())
+      .unwrap_or(());
   });
 
   loop {
     match rx.recv() {
-      Ok(RawEvent {
-        path: Some(path),
-        op: Ok(op),
-        ..
-      }) => {
+      Ok(RawEvent { path: Some(path), op: Ok(op), .. }) => {
         let event: String;
         if op.contains(notify::op::CREATE) {
           event = "create".to_string();
@@ -344,7 +344,7 @@ pub async fn listen_dir(
             .unwrap_or(());
         }
       },
-      Ok(event) => println!("broken event: {:?}", event),
+      Ok(event) => println!("Broken Event: {:?}", event),
       Err(e) => break Err(e.to_string()),
     }
   }

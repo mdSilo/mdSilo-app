@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import deleteBacklinks from 'editor/backlinks/deleteBacklinks';
 import { store, useStore } from 'lib/store';
-import { deleteFile } from 'file/write';
+import { writeJsonFile, deleteFile } from 'file/write';
 import { joinPath } from 'file/util';
 
 export default function useDeleteNote(noteId: string, noteTitle: string) {
@@ -18,27 +18,28 @@ export default function useDeleteNote(noteId: string, noteTitle: string) {
 
     if (deletedNoteIndex !== -1) {
       const noteIds = Object.keys(store.getState().notes);
-      // Redirect to first not-del note or to /app if no note already
+      // Redirect to first not-del note or to chronicle view 
       if (noteIds.length > 1) {
         for (const id of noteIds) {
           if (noteId !== id) {
-            dispatch({view: 'md', params: {noteId: id}})
+            dispatch({view: 'md', params: {noteId: id}});
             break;
           }
         }
       } else {
-        dispatch({view: 'chronicle'})
+        dispatch({view: 'chronicle'});
       }
     }
     
-    // delete in store locally and update backlinks, or (blockreference? TODO)
+    // delete in store, delete backlinks or (blockreference? TODO)
     store.getState().deleteNote(noteId);
     await deleteBacklinks(noteId);
-    // delete in disk
+    // delete in disk, write to JSON
     const parentDir = store.getState().currentDir;
     if (parentDir) {
       const toDelPath = joinPath(parentDir, `${noteTitle}.md`);
-      await deleteFile(toDelPath);
+      await deleteFile(toDelPath);  // delete file in Disk
+      await writeJsonFile(parentDir); // sync the deletion to JSON
     }
   }, [dispatch, noteId, noteTitle, openNoteIds]);
 
