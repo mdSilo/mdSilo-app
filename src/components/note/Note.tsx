@@ -110,15 +110,12 @@ function Note(props: Props) {
           // 4- reset initTitle
           setInitTitle(newTitle);
         }
-      } else {
-        // TODO: message to user
       }
     },
     [noteId, isWiki, storeNotes, updateNote, parentDir, value, initTitle]
   );
 
   // TODO: update wiki note to db
-  // TODO: Prompt the usr with a dialog box about unsaved changes if they navigate away
 
   const noteContainerClassName =
     'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-gray-800 dark:text-gray-200';

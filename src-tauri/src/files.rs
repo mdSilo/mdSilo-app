@@ -6,7 +6,7 @@ extern crate notify;
 extern crate trash;
 extern crate open;
 use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
-use crate::paths::PathBufExt;
+use crate::paths::{PathBufExt, PathExt};
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct SimpleFileMeta {
@@ -91,9 +91,13 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
     Ok(result) => result,
     Err(_e) => SystemTime::now(), // TODO: to log the err
   };
+
+  let normalized_path = Path::new(file_path)
+    .normalize_slash()
+    .unwrap_or(file_path.to_string()); // fallback on raw file_path, potential issue
   
   Ok(SimpleFileMeta {
-    file_path: file_path.to_string(),
+    file_path: normalized_path,
     file_name,
     created,
     last_modified,
@@ -117,7 +121,7 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     .unwrap_or(format!("{}: Something went wrong", file_path));
   
   Ok(FileMetaData {
-    file_path: file_path.to_string(),
+    file_path: meta_data.file_path,
     file_name: meta_data.file_name,
     file_text,
     created: meta_data.created,
@@ -227,7 +231,8 @@ pub async fn create_file(file_path: String) -> bool {
 /// read file to string
 #[tauri::command]
 pub async fn read_file(file_path: String) -> String {
-  fs::read_to_string(file_path).unwrap_or(String::from("Nothing"))  // TODO: handle err
+  // TODO: handle err
+  fs::read_to_string(file_path).unwrap_or(String::from("Nothing"))
 }
 
 /// write to a file

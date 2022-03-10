@@ -96,11 +96,9 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
 }
 
 
-// use case:
-// 1- openDie, preProcess first, set not_process fasle
-//    then real process on click
-// 2- a potential use case: listen dir change, 
-//   change the not_process to false if any change, reload change on click
+// openFile if not_process. use case:
+// 1- openDir, preProcess first, set not_process fasle, then process on click
+// 2- listen dir change, set not_process false if any change, reload change on click
 // 
 export const openFileAndGetNoteId = async (note: Note) => {
   const filePath = note.file_path;
