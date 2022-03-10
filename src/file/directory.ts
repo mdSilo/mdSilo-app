@@ -53,9 +53,7 @@ interface Event {
 
 let listener: UnlistenFn;
 
-/**
- * Invoke Rust command to read information of a directory
- */
+/** Invoke Rust command to handle directory */
 class DirectoryAPI {
   readonly dirPath: string;  // path
   readonly parentDir: string | undefined;
@@ -71,7 +69,7 @@ class DirectoryAPI {
   }
 
   /**
-   * Get files inside a directory
+   * Get files with simple metadata, w/o content
    * @returns {Promise<DirectoryData>}
   */
    listFiles(): Promise<SimpleFileMeta[]> {
@@ -88,7 +86,7 @@ class DirectoryAPI {
   }
 
   /**
-   * Get files inside a directory
+   * Get files with metadata and content
    * @returns {Promise<DirectoryData>}
   */
   getFiles(): Promise<DirectoryData> {
@@ -127,16 +125,6 @@ class DirectoryAPI {
   async exists(): Promise<boolean> {
     return await invoke(
      'file_exist', { filePath: this.dirPath}
-    );
-  }
-
-  /**
-   * Create dir if not exists
-   * @returns {any}
-   */
-  async mkdir(): Promise<boolean> {
-    return await invoke(
-      'create_dir_recursive', { dirPath: this.dirPath }
     );
   }
 

@@ -7,11 +7,6 @@ class FileAPI {
   readonly fileName: string;
   readonly parentDir: string | undefined;
 
-  /**
-   * Construct FileAPI Class
-   * @param {string} fileName - Your file path
-   * @param {string} parentDir - Parent directory of the file
-   */
   constructor(fileName: string, parentDir?: string) {
 		if (parentDir && typeof fileName === 'string') {
 			this.parentDir = parentDir;
@@ -73,12 +68,12 @@ class FileAPI {
   }
 
   /**
-   * Check if given path is directory
+   * Check if given path is file
    * @returns {Promise<boolean>}
    */
-  async isDir(): Promise<boolean> {
+  async isFile(): Promise<boolean> {
 		return new Promise((resolve) => {
-			invoke<boolean>('is_dir', { path: this.fileName }).then(
+			invoke<boolean>('is_file', { path: this.fileName }).then(
 				(result: boolean) => resolve(result)
 			);
 		});

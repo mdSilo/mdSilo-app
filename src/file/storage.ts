@@ -11,20 +11,16 @@ export interface LocalData {
 	[key: string]: any;
 }
 
-const DATA: LocalData = {};
-
 /**
  * Set data to local storage
  * @param {string} key 
- * @param {any} data 
+ * @param {any} value 
  * @returns {Promise<void>}
  */
 export const set = async (key: string, value: any): Promise<void> => {
 	if (isTauri) {
-		DATA[key] = value;
 		return await invoke('set_data', { key, value });
 	} else {
-		DATA[key] = value;
 		localStorage.setItem(key, JSON.stringify(value));
 	}
 };
@@ -32,28 +28,15 @@ export const set = async (key: string, value: any): Promise<void> => {
 /**
  * Get data from local storage
  * @param {string} key 
- * @param {boolean} force 
  * @returns {Promise<any>} 
  */
 export const get = async (key: string, force?: boolean): Promise<JSON | any> => {
-	if (Object.keys(DATA).includes(key) && !force) {
-		return DATA[key];
+	if (isTauri) {
+		const storeData: StorageData = await invoke('get_data', { key });
+		return storeData.status ? storeData.data : {};
 	} else {
-		if (isTauri) {
-			const storeData: StorageData = await invoke('get_data', { key });
-			const sData = storeData.data;
-			DATA[key] = sData;
-			return storeData.status ? sData : {};
-		} else {
-			const storeData = localStorage.getItem(key);
-			if (storeData) {
-				const sData = JSON.parse(storeData);
-				DATA[key] = sData;
-				return sData;
-			} else {
-				return {};
-			}
-		}
+		const storeData = localStorage.getItem(key);
+		return storeData ? JSON.parse(storeData) : {};
 	}
 };
 

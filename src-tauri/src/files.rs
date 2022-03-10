@@ -1,12 +1,12 @@
 use std::fs;
 use std::path::Path;
-use std::time::SystemTime;
 use std::sync::mpsc::channel;
+use std::time::SystemTime;
 extern crate notify;
-extern crate trash;
 extern crate open;
-use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
+extern crate trash;
 use crate::paths::{PathBufExt, PathExt};
+use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct SimpleFileMeta {
@@ -66,7 +66,7 @@ pub fn get_basename(file_path: &str) -> (String, bool) {
 // get dir path of a dir or file
 #[tauri::command]
 pub fn get_dirpath(path: &str) -> String {
-  let file_path = path.trim_end_matches("/");
+  let file_path = path.trim_end_matches('/');
   let path = Path::new(file_path);
   let is_dir = path.is_dir();
   let is_file = path.is_file();
@@ -74,9 +74,9 @@ pub fn get_dirpath(path: &str) -> String {
     return Path::new(file_path).normalize_slash().unwrap_or_default();
   } else if is_file {
     let dir_path = path.parent().unwrap_or(path);
-    return dir_path.normalize_slash().unwrap_or_default();
+    dir_path.normalize_slash().unwrap_or_default()
   } else {
-    return String::new();
+    String::new()
   }
 }
 
@@ -112,7 +112,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   let normalized_path = Path::new(file_path)
     .normalize_slash()
     .unwrap_or(file_path.to_string()); // fallback on raw file_path, potential issue
-  
+
   Ok(SimpleFileMeta {
     file_path: normalized_path,
     file_name,
@@ -131,12 +131,12 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
 pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   let meta_data = match get_simple_meta(file_path) {
     Ok(data) => data,
-    Err(e) => return Err(e.to_string()),
+    Err(e) => return Err(e),
   };
 
   let file_text = fs::read_to_string(file_path)
-    .unwrap_or(format!("{}: Something went wrong", file_path));
-  
+    .unwrap_or(format!("{}: Something wrong", file_path));
+
   Ok(FileMetaData {
     file_path: meta_data.file_path,
     file_name: meta_data.file_name,
@@ -153,7 +153,7 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
 
 /// Check if a given path is a directory
 ///
-/// Return false if file does not exist or it isn't a directory
+/// Return false if not exist or it isn't a directory
 #[tauri::command]
 pub fn is_dir(path: &Path) -> Result<bool, String> {
   if !Path::new(path).exists() {
@@ -161,6 +161,21 @@ pub fn is_dir(path: &Path) -> Result<bool, String> {
   } else {
     match fs::metadata(path) {
       Ok(meta) => Ok(meta.is_dir()),
+      Err(_e) => Ok(false),
+    }
+  }
+}
+
+/// Check if a given path is a file
+///
+/// Return false if not exist or it isn't
+#[tauri::command]
+pub fn is_file(path: &Path) -> Result<bool, String> {
+  if !Path::new(path).exists() {
+    Ok(false)
+  } else {
+    match fs::metadata(path) {
+      Ok(meta) => Ok(meta.is_file()),
       Err(_e) => Ok(false),
     }
   }
@@ -228,7 +243,7 @@ pub async fn create_dir_recursive(dir_path: String) -> bool {
   fs::create_dir_all(dir_path).is_ok()
 }
 
-// File operations: 
+// File operations:
 // create
 // rename
 // write
@@ -286,9 +301,9 @@ pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
     .join("assets")
     .join(&file_name)
     .normalize_slash()
-    .unwrap_or(String::new());
-  
-  if to_path.len() == 0 {
+    .unwrap_or_default();
+
+  if to_path.is_empty() {
     return to_path;
   }
 
@@ -297,12 +312,11 @@ pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
   }
 
   if fs::copy(src_path, to_path.clone()).is_ok() {
-    return to_path;
+    to_path
   } else {
-    return String::new();
+    String::new()
   }
 }
-
 
 /// Delete files or dirs
 /// note: will not delete dir if any file in dir on Linux
@@ -314,14 +328,12 @@ pub async fn delete_files(paths: Vec<String>) -> bool {
 /// Listen to change events in a directory
 #[tauri::command]
 pub async fn listen_dir(
-  dir: String, 
-  window: tauri::Window
+  dir: String,
+  window: tauri::Window,
 ) -> Result<String, String> {
   let (tx, rx) = channel();
 
-  let watcher = std::sync::Arc::new(
-    std::sync::Mutex::new(raw_watcher(tx).unwrap())
-  );
+  let watcher = std::sync::Arc::new(std::sync::Mutex::new(raw_watcher(tx).unwrap()));
 
   watcher
     .lock()
@@ -330,16 +342,16 @@ pub async fn listen_dir(
     .unwrap_or(());
 
   window.once("unlisten_dir", move |_| {
-    watcher
-      .lock()
-      .unwrap()
-      .unwatch(dir.clone())
-      .unwrap_or(());
+    watcher.lock().unwrap().unwatch(dir.clone()).unwrap_or(());
   });
 
   loop {
     match rx.recv() {
-      Ok(RawEvent { path: Some(path), op: Ok(op), .. }) => {
+      Ok(RawEvent {
+        path: Some(path),
+        op: Ok(op),
+        ..
+      }) => {
         let event: String;
         if op.contains(notify::op::CREATE) {
           event = "create".to_string();
@@ -359,13 +371,13 @@ pub async fn listen_dir(
             .emit(
               "changes", // then Frontend listen the event changes.
               Event {
-                path: path.normalize_slash().unwrap_or(String::new()),
+                path: path.normalize_slash().unwrap_or_default(),
                 event,
               },
             )
             .unwrap_or(());
         }
-      },
+      }
       Ok(event) => println!("Broken Event: {:?}", event),
       Err(e) => break Err(e.to_string()),
     }

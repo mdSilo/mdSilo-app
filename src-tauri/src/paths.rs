@@ -85,7 +85,7 @@ impl PathBufExt for PathBuf {
   /// same as '/'.
   ///
   /// On non-Windows OS, it is simply equivalent to [`std::path::PathBuf::from`].
-  /// 
+  ///
   #[cfg(not(target_os = "windows"))]
   fn from_slash<S: AsRef<str>>(s: S) -> Self {
     PathBuf::from(s.as_ref())
@@ -99,8 +99,8 @@ impl PathBufExt for PathBuf {
       .as_ref()
       .chars()
       .map(|c| match c {
-          '/' => path::MAIN_SEPARATOR,
-          c => c,
+        '/' => path::MAIN_SEPARATOR,
+        c => c,
       })
       .collect::<String>();
     PathBuf::from(s)
@@ -110,7 +110,7 @@ impl PathBufExt for PathBuf {
   ///
   /// Any '\' in the slash path is replaced with the file path separator.
   /// The replacements only happen on non-Windows.
-  /// 
+  ///
   #[cfg(not(target_os = "windows"))]
   fn from_backslash<S: AsRef<str>>(s: S) -> Self {
     use std::path;

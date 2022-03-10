@@ -1,7 +1,7 @@
-use std::fs;
-use std::str;
-use std::path::Path;
 use serde_json::Value;
+use std::fs;
+use std::path::Path;
+use std::str;
 use tauri::api::path::local_data_dir;
 
 #[derive(serde::Serialize, Debug, Default)]
@@ -17,22 +17,28 @@ pub fn set_data(key: String, value: Value) -> bool {
   // Linux: /home/~username~/.local/share/mdsilo
   let storage_dir = match local_data_dir() {
     Some(dir) => Path::new(&dir).join("mdsilo"),
-    None => { return false; }
+    None => {
+      return false;
+    }
   };
 
   if fs::create_dir_all(storage_dir.clone()).is_err() {
-   return false;
+    return false;
   };
 
-  let ser_value = match serde_json::to_vec(&value) {
+  let vec_value = match serde_json::to_vec(&value) {
     Ok(val) => val,
-    Err(_) => { return false; }
+    Err(_) => {
+      return false;
+    }
   };
-  let bin_value = match bincode::serialize(&ser_value) {
+  let bin_value = match bincode::serialize(&vec_value) {
     Ok(val) => val,
-    Err(_) => { return false; }
+    Err(_) => {
+      return false;
+    }
   };
-  
+
   fs::write(storage_dir.join(key), bin_value).is_ok()
 }
 
@@ -40,7 +46,9 @@ pub fn set_data(key: String, value: Value) -> bool {
 pub fn get_data(key: String) -> Result<StorageData, String> {
   let storage_dir = match local_data_dir() {
     Some(dir) => Path::new(&dir).join("mdsilo"),
-    None => { return Ok(StorageData::default()); }
+    None => {
+      return Ok(StorageData::default());
+    }
   };
 
   let mut status = true;
@@ -50,12 +58,14 @@ pub fn get_data(key: String) -> Result<StorageData, String> {
       Ok(deser_bincode) => data = deser_bincode,
       Err(_) => data = str::from_utf8(&result).unwrap_or("").to_string(),
     },
-    Err(_e) => return Ok(StorageData {
-      status: false,
-      data: Value::Null,
-    })
+    Err(_e) => {
+      return Ok(StorageData {
+        status: false,
+        data: Value::Null,
+      })
+    }
   }
-  
+
   let data = match serde_json::from_str(&data) {
     Ok(result) => result,
     Err(_) => {
@@ -70,7 +80,9 @@ pub fn get_data(key: String) -> Result<StorageData, String> {
 pub fn delete_data(key: String) -> bool {
   let storage_dir = match local_data_dir() {
     Some(dir) => Path::new(&dir).join("mdsilo"),
-    None => { return false; }
+    None => {
+      return false;
+    }
   };
 
   fs::remove_file(storage_dir.join(key)).is_ok()
