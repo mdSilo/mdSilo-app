@@ -37,7 +37,7 @@ function SidebarNotes(props: SidebarNotesProps) {
     setIsFindOrCreateModalOpen((isOpen) => !isOpen);
   }, [setIsSidebarOpen, setIsFindOrCreateModalOpen]);
 
-  const btnClass = "p-1 my-1 mx-4 rounded bg-blue-500 hover:text-yellow-500";
+  const btnClass = "p-1 mb-2 mx-4 text-white rounded bg-blue-500 hover:bg-blue-800";
 
   return (
     <ErrorBoundary>

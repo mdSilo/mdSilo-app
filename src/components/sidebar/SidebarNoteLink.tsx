@@ -10,6 +10,7 @@ import { IconCaretRight } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
+import Tooltip from 'components/misc/Tooltip';
 import SidebarItem from './SidebarItem';
 import SidebarNoteLinkDropdown from './SidebarNoteLinkDropdown';
 import { FlattenedNoteTreeItem } from './SidebarNotesTree';
@@ -82,9 +83,11 @@ const SidebarNoteLink = (
             fill="currentColor"
           />
         </button>
-        <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-          {note.title}
-        </span>
+        <Tooltip content={note.file_path} disabled={!(note.file_path)}>
+          <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
+            {note.title}
+          </span>
+        </Tooltip>
       </div>
       <SidebarNoteLinkDropdown
         note={note}

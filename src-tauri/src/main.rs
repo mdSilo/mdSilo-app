@@ -26,6 +26,7 @@ fn main() {
     close_splashscreen,
     files::read_directory,
     files::is_dir,
+    files::get_dirpath,
     files::get_file_meta,
     files::file_exist,
     files::create_dir_recursive,

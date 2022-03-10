@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { FileMetaData } from './directory';
-import { isTauri, normalizeSlash, joinPath, getDirname } from './util';
+import { isTauri, normalizeSlash, joinPath, getDirPath } from './util';
 
 /** Invoke Rust command to handle files */
 class FileAPI {
@@ -58,8 +58,7 @@ class FileAPI {
    */
   async exists(): Promise<boolean> {
 		return await invoke<boolean>(
-			'file_exist', 
-			{ filePath: this.fileName }
+			'file_exist', { filePath: this.fileName }
 		);
   }
 
@@ -69,8 +68,7 @@ class FileAPI {
    */
 	async getMetadata(): Promise<FileMetaData> {
 		return await invoke<FileMetaData>(
-			'get_file_meta', 
-			{ filePath: this.fileName }
+			'get_file_meta', { filePath: this.fileName }
 		);
   }
 
@@ -93,9 +91,8 @@ class FileAPI {
   async createFile(): Promise<void> {
 		if (typeof this.fileName === 'string') {
 			if (isTauri) {
-				await invoke('create_dir_recursive', {
-					dirPath: getDirname(this.fileName),
-				});
+				const dirPath = await getDirPath(this.fileName);
+				await invoke('create_dir_recursive', { dirPath });
 				return await invoke('create_file', { filePath: this.fileName });
 			} else {
 				return;
@@ -110,9 +107,8 @@ class FileAPI {
 	async writeFile(text: string): Promise<void> {
 		if (typeof this.fileName === 'string') {
 			if (isTauri) {
-				await invoke('create_dir_recursive', {
-					dirPath: getDirname(this.fileName),
-				});
+				const dirPath = await getDirPath(this.fileName);
+				await invoke('create_dir_recursive', { dirPath });
 				return await invoke('write_file', { filePath: this.fileName, text });
 			} else {
 				return;
@@ -126,8 +122,7 @@ class FileAPI {
 	 */
   async deleteFiles(): Promise<boolean> {
 		return await invoke<boolean>(
-			'delete_files', 
-			{ paths: [this.fileName] }
+			'delete_files', { paths: [this.fileName] }
 		);
   }
 }

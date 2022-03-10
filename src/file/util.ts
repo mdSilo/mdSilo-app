@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { invoke } from '@tauri-apps/api/tauri'
 import { v4 as uuidv4 } from 'uuid';
 import { Note } from 'types/model';
 import { store, NotesData, Notes, NoteTreeItem, TitleTreeItem } from 'lib/store';
@@ -48,7 +49,6 @@ export const joinPath = (...args: string[]): string => {
   }
 
   let joined = '';
-
   for (const arg of args) {
     if (arg.length > 0) {
       if (!joined) {
@@ -66,46 +66,19 @@ export const joinPath = (...args: string[]): string => {
 };
 
 /**
- * Get dirname of the file path
+ * Get dir path of the file path
  * @param {string} path path to be evaluated
- * @returns {any} result of the evaluated path( / end or '.')
+ * @returns {Promise<string>} result of the evaluated path: dir or ""
  */
-export const getDirname = (path: string): string => {
-	if (path.length === 0) {
-    return '.';
-  }
-
-	let code = path.charCodeAt(0);
-	const hasRoot = code === 47 || code === 92; // 47 - / slash, 92- \ backslash
-	let end = -1;
-	let matchedSlash = true;
-	for (let i = path.length - 1; i >= 1; --i) {
-		code = path.charCodeAt(i);
-		if (code === 47 || code === 92) {
-			if (!matchedSlash) {
-				end = i;
-				break;
-			}
-		} else {
-			// We saw the first non-path separator
-			matchedSlash = false;
-		}
-	}
-	if (end === -1) return hasRoot ? '/' : '.';
-	if (hasRoot && end === 1) return '//';
-	const result = path.slice(0, end);
-	if (!(result.endsWith('/') || result.endsWith('\\'))) {
-    return result + '/';
-  } else {
-    return result;
-  }
+export const getDirPath = async (path: string): Promise<string> => {
+  return await invoke('get_dirpath', { path });
 };
 
 
-export function trimSlash(txt: string, mode = 'start') {
+function trimSlash(txt: string, mode = 'start') {
   if (mode === 'start') {
     while (txt.startsWith('/')) {
-      txt = txt.substring(0);
+      txt = txt.substring(1);
     }
     return txt;
   } else {

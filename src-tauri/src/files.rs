@@ -48,7 +48,7 @@ pub struct Event {
   pub event: String,
 }
 
-/// Get file_name of the path given
+/// Get file_name or dir_name of the path given
 pub fn get_basename(file_path: &str) -> (String, bool) {
   let path = Path::new(file_path);
   let name = path.file_name();
@@ -61,6 +61,23 @@ pub fn get_basename(file_path: &str) -> (String, bool) {
     }
   }
   (String::new(), is_file)
+}
+
+// get dir path of a dir or file
+#[tauri::command]
+pub fn get_dirpath(path: &str) -> String {
+  let file_path = path.trim_end_matches("/");
+  let path = Path::new(file_path);
+  let is_dir = path.is_dir();
+  let is_file = path.is_file();
+  if is_dir {
+    return Path::new(file_path).normalize_slash().unwrap_or_default();
+  } else if is_file {
+    let dir_path = path.parent().unwrap_or(path);
+    return dir_path.normalize_slash().unwrap_or_default();
+  } else {
+    return String::new();
+  }
 }
 
 pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {

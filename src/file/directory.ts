@@ -125,7 +125,9 @@ class DirectoryAPI {
    * @returns {boolean}
   */
   async exists(): Promise<boolean> {
-   return await invoke('file_exist', { filePath: this.dirPath});
+    return await invoke(
+     'file_exist', { filePath: this.dirPath}
+    );
   }
 
   /**
@@ -134,8 +136,7 @@ class DirectoryAPI {
    */
   async mkdir(): Promise<boolean> {
     return await invoke(
-      'create_dir_recursive', 
-      { dirPath: this.dirPath }
+      'create_dir_recursive', { dirPath: this.dirPath }
     );
   }
 

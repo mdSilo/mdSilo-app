@@ -2,7 +2,7 @@ import { store } from 'lib/store';
 import { 
   openDirDilog, openDir, openFile, openFileDilog, saveDilog 
 } from 'file/open';
-import { getDirname } from 'file/util';
+import { getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
 
 export const openFiles = async (ty: string, multi = true) => {
@@ -12,7 +12,7 @@ export const openFiles = async (ty: string, multi = true) => {
   if (openPaths.length > 0) {
     // set currentDir
     const onePath = openPaths[0];
-    const parentDir = getDirname(onePath);
+    const parentDir = await getDirPath(onePath);
     // console.log("dir path", parentDir);
     cleanStore();
     store.getState().setCurrentDir(parentDir);
@@ -30,19 +30,21 @@ export const onOpenDir = async () => {
   // console.log("dir path", dirPath);
   if (dirPath && typeof dirPath === 'string') {
     cleanStore();
-    store.getState().setCurrentDir(dirPath);
-    store.getState().setRecentDir([dirPath]);
+    const normalizedDir = await getDirPath(dirPath);
+    store.getState().setCurrentDir(normalizedDir);
+    store.getState().setRecentDir([normalizedDir]);
     // console.log("rencent dir path", store.getState().recentDir);
-    await openDir(dirPath);
+    await openDir(normalizedDir);
   }
 };
 
 export const onSave = async () => {
   const dir = await saveDilog();
+  const normalizedDir = await getDirPath(dir);
   // console.log("save dir path", dir);
   const notesObj = store.getState().notes;
-  await writeAllFile(dir, notesObj);
-  store.getState().setCurrentDir(dir);
+  await writeAllFile(normalizedDir, notesObj);
+  store.getState().setCurrentDir(normalizedDir);
 };
 
 function cleanStore() {

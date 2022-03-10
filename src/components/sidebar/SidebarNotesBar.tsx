@@ -61,14 +61,14 @@ function NoteBarDrop(props: DropProps) {
   const currentFolder = currentDir 
     ? normalizeSlash(currentDir).split('/').pop() || '/'
     : 'md';
-  const barClass = `px-2 text-sm bg-blue-500 text-gray-200 rounded overflow-hidden overflow-ellipsis whitespace-nowrap`; 
+  const barClass = `px-2 text-sm bg-blue-500 text-white rounded overflow-hidden`; 
 
   return (
     <Tooltip content={currentDir ? currentDir : 'md'}>
       <div className="flex mx-2 my-1">
         <div className="relative">
           <Menu>
-            <Menu.Button className="px-2 text-gray-800 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-700 focus:outline-none">
+            <Menu.Button className="px-2 hover:bg-blue-500">
               <span className={barClass}>
                 {currentFolder}: {numOfNotes}
               </span>

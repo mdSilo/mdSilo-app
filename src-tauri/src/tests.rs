@@ -12,8 +12,10 @@ mod tests {
     assert_eq!(get_basename("/home/user/mdsilo/").0, "mdsilo");
     assert_eq!(get_basename("/home/user/mdsilo").0, "mdsilo");
     assert_eq!(get_basename("C://Windows/AppData/mdsilo.msi").0, "mdsilo.msi");
-    // assert_eq!(get_basename(r"C:\\Files\mdsilo").0, "mdsilo");
-    // assert_eq!(get_basename(r"C:\\Downloads\mdsilo.msi").0, "mdsilo.msi");
+    #[cfg(target_os = "windows")]
+    assert_eq!(get_basename(r"C:\\Files\mdsilo").0, "mdsilo");
+    #[cfg(target_os = "windows")]
+    assert_eq!(get_basename(r"C:\\Downloads\mdsilo.msi").0, "mdsilo.msi");
   }
 
   #[test]
@@ -26,6 +28,44 @@ mod tests {
       is_dir(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("cargo.toml")).unwrap(),
       false
     );
+  }
+
+  #[tokio::test]
+  async fn test_get_dirpath() {
+    let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp/mdsilo/mdSilo_app.deb")
+      .to_str()
+      .unwrap()
+      .to_string();
+    // create file
+    create_file(file.clone()).await;
+    let dir_of_file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp/mdsilo")
+      .to_str()
+      .unwrap()
+      .to_string();
+    // test get dir name of a file path
+    assert_eq!(get_dirpath(&file), dir_of_file);
+    assert_eq!(get_dirpath(&format!("{}/", file)), dir_of_file);
+
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp/mysilo")
+      .to_str()
+      .unwrap()
+      .to_string();
+    // create dir
+    create_dir_recursive(dir.clone()).await;
+    // test get dir name of a dir path
+    assert_eq!(get_dirpath(&dir), dir);
+    assert_eq!(get_dirpath(&format!("{}//", dir)), dir);
+    // del temp folder for test
+    let temp_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp")
+      .to_str()
+      .unwrap()
+      .to_string();
+    let to_del_dirs = vec![file, dir, temp_dir];
+    delete_files(to_del_dirs).await;
   }
 
   #[test]
