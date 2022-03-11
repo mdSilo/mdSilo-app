@@ -1,4 +1,3 @@
-
 import Toggle from 'components/misc/Toggle';
 
 type Props = {
@@ -24,19 +23,19 @@ export const SettingsToggle = (props: Props) => {
     <div className="flex flex-col items-center mb-4">
       <div className="mb-2">
         <h1 className="text-xl font-semibold">{name}</h1>
-        <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+        <p className="mt-1 text-sm text-gray-700">
           {descript}
         </p>
       </div>
       <div className="flex flex-row items-center">
-        <span className="text-sm text-gray-600 dark:text-gray-300">{optionLeft}</span>
+        <span className="text-sm text-gray-600">{optionLeft}</span>
         <Toggle
-          id="page-stack"
+          id={name.replaceAll(' ', '-')}
           className="items-center mx-2"
           isChecked={check}
           setIsChecked={handleCheck}
         />
-        <span className="text-sm text-gray-600 dark:text-gray-300">{optionRight}</span>
+        <span className="text-sm text-gray-600">{optionRight}</span>
       </div>
     </div>
   );

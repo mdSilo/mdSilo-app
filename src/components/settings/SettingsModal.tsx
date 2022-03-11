@@ -18,7 +18,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
 
   return (
     <BaseModal title="Settings" isOpen={isOpen} handleClose={handleClose}>
-      <div className="flex-1 p-6 bg-gray-50 dark:bg-gray-800 dark:text-gray-100">
+      <div className="flex-1 p-4 bg-gray-100">
         <SettingsToggle
           name="Theme" 
           descript="Dark Mode or Light Mode"
