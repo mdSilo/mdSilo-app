@@ -1,5 +1,5 @@
 import { Notes } from 'lib/store';
-import { buildNotesJson, getSerializedNote, joinPath } from './util';
+import { buildNotesJson, getSerializedNote, joinPaths } from './util';
 import FileAPI from './files';
 
 /**
@@ -42,7 +42,7 @@ export async function writeAllFile(dirPath: string, notesObj: Notes) {
   const myNotes = notesArr.filter(n => !n.is_wiki);
   for (const note of myNotes) {
     const fileName = note.is_wiki ? `wiki_${note.title}.md` : `${note.title}.md`;
-    const notePath = joinPath(dirPath, fileName);
+    const notePath = await joinPaths(dirPath, [fileName]);
     const content = getSerializedNote(note);
     await writeFile(notePath, content);
   }

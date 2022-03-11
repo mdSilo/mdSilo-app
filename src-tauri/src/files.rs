@@ -63,7 +63,7 @@ pub fn get_basename(file_path: &str) -> (String, bool) {
   (String::new(), is_file)
 }
 
-// get dir path of a dir or file
+// get dir path of a dir or file and normalize
 #[tauri::command]
 pub fn get_dirpath(path: &str) -> String {
   let file_path = path.trim_end_matches('/');
@@ -78,6 +78,28 @@ pub fn get_dirpath(path: &str) -> String {
   } else {
     String::new()
   }
+}
+
+// join path and normalize
+#[tauri::command]
+pub fn join_paths(root: &str, parts: Vec<&str>) -> String {
+  let mut root_path = 
+    Path::new(root.trim_end_matches(['/', '\\'])).to_path_buf();
+  if parts.is_empty() {
+    return root_path.normalize_slash().unwrap_or_default();
+  }
+
+  for part in parts {
+    let trim_part = part
+      .trim_start_matches(['/', '\\'])
+      .trim_end_matches(['/', '\\']);
+    if trim_part.is_empty() {
+      continue;
+    }
+    root_path = root_path.join(trim_part);
+  }
+
+  root_path.normalize_slash().unwrap_or_default()
 }
 
 pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {

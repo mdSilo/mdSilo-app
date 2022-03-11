@@ -3,7 +3,7 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import deleteBacklinks from 'editor/backlinks/deleteBacklinks';
 import { store, useStore } from 'lib/store';
 import { writeJsonFile, deleteFile } from 'file/write';
-import { joinPath } from 'file/util';
+import { joinPaths } from 'file/util';
 
 export default function useDeleteNote(noteId: string, noteTitle: string) {
   const openNoteIds = useStore((state) => state.openNoteIds);
@@ -37,7 +37,7 @@ export default function useDeleteNote(noteId: string, noteTitle: string) {
     // delete in disk, write to JSON
     const parentDir = store.getState().currentDir;
     if (parentDir) {
-      const toDelPath = joinPath(parentDir, `${noteTitle}.md`);
+      const toDelPath = await joinPaths(parentDir, [`${noteTitle}.md`]);
       await deleteFile(toDelPath);  // delete file in Disk
       await writeJsonFile(parentDir); // sync the deletion to JSON
     }

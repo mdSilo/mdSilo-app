@@ -28,6 +28,7 @@ fn main() {
       files::is_dir,
       files::is_file,
       files::get_dirpath,
+      files::join_paths,
       files::get_file_meta,
       files::file_exist,
       files::create_dir_recursive,

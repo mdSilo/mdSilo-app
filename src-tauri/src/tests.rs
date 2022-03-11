@@ -30,6 +30,22 @@ mod tests {
     );
   }
 
+  #[test]
+  fn test_join_paths() {
+    assert_eq!(join_paths("/home", vec![]), "/home");
+    assert_eq!(join_paths("/home/", vec!["md/", "/silo/"]), "/home/md/silo");
+    assert_eq!(join_paths("/home\\", vec!["\\md/", "/silo/\\"]), "/home/md/silo");
+    assert_eq!(
+      join_paths("/home\\", vec!["\\md/", "/silo.app/\\"]), 
+      "/home/md/silo.app"
+    );
+    #[cfg(target_os = "windows")]
+    assert_eq!(
+      join_paths("C:\\home\\", vec!["\\md\\", "\\silo.app/\\"]), 
+      "C:/home/md/silo.app"
+    );
+  }
+
   #[tokio::test]
   async fn test_get_dirpath() {
     let file = Path::new(env!("CARGO_MANIFEST_DIR"))

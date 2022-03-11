@@ -134,8 +134,6 @@ export default function AddLinkPopover(props: Props) {
       } else if (option.type === OptionType.REMOVE_LINK) {
         // Remove the link
         removeLink(editor);
-      } else {
-        throw new Error(`Option type ${option.type} is not supported`);
       }
     },
     [editor, hidePopover, linkTxt]

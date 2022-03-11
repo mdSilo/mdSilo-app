@@ -16,7 +16,7 @@ export const isTauri = Boolean(
 );
 
 /**
- * Normalize slashes of a file path
+ * Normalize slashes of a file path, sync version
  * @param {string} path
  * @returns {string}
  */
@@ -39,7 +39,7 @@ export const normalizeSlash = (path: string): string => {
 };
 
 /**
- * Join multiple path parts into a string.
+ * Join multi path parts into a string. sync version
  * @param {string[]} ...args paths
  * @returns {string}
  */
@@ -63,6 +63,16 @@ export const joinPath = (...args: string[]): string => {
   }
 
   return joined || '.';
+};
+
+/**
+ * Join multi path parts to a string as path
+ * @param {string} root path root
+ * @param {string[]} parts path parts
+ * @returns {Promise<string>} joined path
+ */
+ export const joinPaths = async (root: string, parts: string[]): Promise<string> => {
+  return await invoke('join_paths', { root, parts });
 };
 
 /**

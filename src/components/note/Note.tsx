@@ -12,7 +12,7 @@ import { ProvideCurrentMd } from 'context/useCurrentMd';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
-import { joinPath } from 'file/util';
+import { joinPaths } from 'file/util';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteHeader from './NoteHeader';
 
@@ -70,8 +70,9 @@ function Note(props: Props) {
       updateNote({ id: noteId, content: value });
       // write to local file
       if (parentDir) {
-        const notePath = joinPath(parentDir, `${title}.md`);
+        const notePath = await joinPaths(parentDir, [`${title}.md`]);
         const content = value.map((n) => serialize(n)).join('');
+        updateNote({ id: noteId, not_process: false, file_path: notePath });
         await writeFile(notePath, content);
         await writeJsonFile(parentDir);
       }
@@ -98,14 +99,14 @@ function Note(props: Props) {
         if (!isWiki && parentDir) {
           // on rename file: 
           // 1- new FilePath
-          const newPath = joinPath(parentDir, `${newTitle}.md`);
+          const newPath = await joinPaths(parentDir, [`${newTitle}.md`]);
           updateNote({ id: noteId, file_path: newPath });
           // 2- swap value
           const content = value.map((n) => serialize(n)).join('');
           await writeFile(newPath, content);
           await writeJsonFile(parentDir);
           // 3- delete the old redundant File
-          const toDelPath = joinPath(parentDir, `${initTitle}.md`);
+          const toDelPath = await joinPaths(parentDir, [`${initTitle}.md`]);
           await deleteFile(toDelPath);
           // 4- reset initTitle
           setInitTitle(newTitle);
