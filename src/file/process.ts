@@ -14,20 +14,16 @@ import { Note, defaultNote } from 'types/model';
 import { FileMetaData, SimpleFileMeta } from 'file/directory';
 
 export function processJson(content: string) {
-  const jsonNotesData = []; 
-  
   try {
     const notesData: NotesData = JSON.parse(content);
     const notesObj: Notes = notesData.notesObj;
-    const notesArr = Object.values(notesObj);
-    notesArr.forEach(note => store.getState().upsertNote(note, false)); // not upsert tree here
-    jsonNotesData.push(...notesArr);
-    // not upsert tree when upsertNote because it will flatten nested structure
-    // update tree from saved tree structure 
+    // restore notes from saved data 
+    store.getState().setNotes(notesObj);
+    // restore note tree from saved tree hierarchy
     const noteTree: NoteTreeItem[] = notesData.noteTree;
-    noteTree.forEach(item => store.getState().updateNoteTree(item, null));
+    store.getState().setNoteTree(noteTree);
     const wikiTree: WikiTreeItem[] = notesData.wikiTree;
-    wikiTree.forEach(item => store.getState().updateWikiTree(item.id, null));
+    store.getState().setWikiTree(wikiTree);
     // TODO: json to mds and save locally
   } catch (e) {
     console.log("Please check the JSON file: ", e)
