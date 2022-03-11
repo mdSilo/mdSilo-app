@@ -19,7 +19,7 @@
     "@dnd-kit/sortable": "^6.0.0",
     "@headlessui/react": "^1.5.0",
     "@popperjs/core": "^2.11.2",
-    "@react-spring/web": "^9.4.3",
+    "@react-spring/web": "^9.4.4",
     "@supabase/supabase-js": "^1.31.0",
     "@tabler/icons": "^1.54.0",
     "@tailwindcss/forms": "^0.5.0",
