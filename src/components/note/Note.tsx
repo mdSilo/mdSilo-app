@@ -70,14 +70,16 @@ function Note(props: Props) {
       updateNote({ id: noteId, content: value });
       // write to local file
       if (parentDir) {
-        const notePath = await joinPaths(parentDir, [`${title}.md`]);
+        const notePath = note.is_daily 
+          ? await joinPaths(parentDir, ['daily', `${title}.md`])
+          : await joinPaths(parentDir, [`${title}.md`]);
         const content = value.map((n) => serialize(n)).join('');
         updateNote({ id: noteId, not_process: false, file_path: notePath });
         await writeFile(notePath, content);
         await writeJsonFile(parentDir);
       }
     },
-    [noteId, parentDir, title, updateNote]
+    [note?.is_daily, noteId, parentDir, title, updateNote]
   );
 
   // update locally, set the syncState

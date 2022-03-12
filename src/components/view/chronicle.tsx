@@ -24,7 +24,7 @@ export default function Chronicle() {
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
-  const onRecapDay = async (date: string) => {
+  const onNewDailyNote = async (date: string) => {
     const noteId = getOrCreateNoteId(date);
     // redirect to journals when the note not be prepared
     if (noteId) {
@@ -50,7 +50,7 @@ export default function Chronicle() {
           <button onClick={() => dispatch({view: 'journal'})} className="link text-2xl">
             Journals
           </button>
-          <button className="link w-full mt-2" onClick={() => onRecapDay(today)}>
+          <button className="link w-full mt-2" onClick={() => onNewDailyNote(today)}>
             Today : {today}
           </button>
         </div>
@@ -61,7 +61,7 @@ export default function Chronicle() {
               anchor={d}
               notes={getDayNotes(d)}
               isDate={true}
-              onClick={onRecapDay}
+              onClick={onNewDailyNote}
             />
           ))}
         </div>

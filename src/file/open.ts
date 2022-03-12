@@ -57,7 +57,7 @@ export const openDir = async (dir: string): Promise<void> => {
   // attach listener to monitor changes in dir
   // TODO
   dirInfo.listen(() => {/*TODO*/});
-
+  // 1- try process mdsilo_all.json
   const jsonInfo = new FileAPI('mdsilo_all.json', dir);
   // console.log("json", jsonInfo)
   if (await jsonInfo.exists()) {
@@ -66,12 +66,16 @@ export const openDir = async (dir: string): Promise<void> => {
     const processed = processJson(fileContent);
     if (processed) return;
   }
-
+  // 2- list files
   const files = await dirInfo.listFiles();
   if (files.length) {
     // pre process files: get meta without content
     preProcessMds(files);
-    return;
+  }
+  // 3- try process daily dir
+  const dailyDir =  new DirectoryAPI('daily', dir);
+  if (await dailyDir.exists()) {
+    await openDir(dailyDir.dirPath);
   }
 }
 

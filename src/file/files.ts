@@ -102,8 +102,6 @@ class FileAPI {
 	async writeFile(text: string): Promise<void> {
 		if (typeof this.fileName === 'string') {
 			if (isTauri) {
-				const dirPath = await getDirPath(this.fileName);
-				await invoke('create_dir_recursive', { dirPath });
 				return await invoke('write_file', { filePath: this.fileName, text });
 			} else {
 				return;

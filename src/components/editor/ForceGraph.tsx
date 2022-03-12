@@ -23,6 +23,7 @@ import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
+import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 export type NodeDatum = {
   id: string;
@@ -50,7 +51,7 @@ export default function ForceGraph(props: Props) {
   const hoveredNode = useRef<NodeDatum | null>(null);
 
   const darkMode = useStore((state) => state.darkMode);
-
+  const storeNotes = useStore((state) => state.notes);
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
@@ -277,16 +278,18 @@ export default function ForceGraph(props: Props) {
           renderCanvas();
         }
       })
-      .on('click', (event) => {
+      .on('click', async (event) => {
         const { x, y } = getMousePos(context.canvas, event);
         const clickedNode = getNode(simulation, context.canvas, x, y);
-
         // Redirect to note when a node is clicked
         if (clickedNode && clickedNode.ty === 'link') {
-          dispatch({view: 'md', params: {noteId: clickedNode.id}});
+          const note = storeNotes[clickedNode.id];
+          if (!note) return;
+          const noteId = await openFileAndGetNoteId(note);
+          dispatch({view: 'md', params: { noteId }});
         }
       });
-  }, [data, dispatch, renderCanvas]);
+  }, [data, dispatch, renderCanvas, storeNotes]);
 
   /**
    * Set canvas width and height when its container changes size
