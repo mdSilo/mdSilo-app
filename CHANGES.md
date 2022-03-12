@@ -2,17 +2,20 @@
 
 ## [app-v0.3.0] - 2022-XX-XX
 
+### Added  
 
+### Fixed  
+- Settings toggle 
 
 ## [app-v0.2.0] - 2022-03-10
 
-### Added
+### Added  
 - Splashscreen on loading  
 - Sync changes by external editor  
 - Search button on HoveringToolBar  
 - Insert Local Image  
 
-### Fixed
+### Fixed  
 - Normalize paths for Window, Linux, macOS  
 - Sync changes in store to JSON(persist)  
 

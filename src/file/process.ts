@@ -13,20 +13,26 @@ import { ElementType, NoteLink } from 'editor/slate';
 import { Note, defaultNote } from 'types/model';
 import { FileMetaData, SimpleFileMeta } from 'file/directory';
 
-export function processJson(content: string) {
+export function processJson(content: string): boolean {
   try {
     const notesData: NotesData = JSON.parse(content);
     const notesObj: Notes = notesData.notesObj;
-    // restore notes from saved data 
-    store.getState().setNotes(notesObj);
-    // restore note tree from saved tree hierarchy
     const noteTree: NoteTreeItem[] = notesData.noteTree;
-    store.getState().setNoteTree(noteTree);
-    const wikiTree: WikiTreeItem[] = notesData.wikiTree;
-    store.getState().setWikiTree(wikiTree);
-    // TODO: json to mds and save locally
+    const wikiTree: WikiTreeItem[] = notesData.wikiTree || [];
+    if (notesObj && noteTree) {
+      // restore notes from saved data 
+      store.getState().setNotes(notesObj);
+      // restore note tree from saved tree hierarchy
+      store.getState().setNoteTree(noteTree);
+      store.getState().setWikiTree(wikiTree);
+      // TODO: json to mds and save locally
+      return true;
+    } else {
+      return false;
+    }
   } catch (e) {
-    console.log("Please check the JSON file: ", e)
+    console.log("Please check the JSON file: ", e);
+    return false;
   }
 }
 

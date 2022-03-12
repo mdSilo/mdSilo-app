@@ -52,9 +52,7 @@ export const openDirDilog = async () => {
 export const openDir = async (dir: string): Promise<void> => {
   const dirInfo = new DirectoryAPI(dir);
   // console.log("dir api", dirInfo)
-  if (!(await dirInfo.exists())) {
-    return;
-  }
+  if (!(await dirInfo.exists())) return;
 
   // attach listener to monitor changes in dir
   // TODO
@@ -65,8 +63,8 @@ export const openDir = async (dir: string): Promise<void> => {
   if (await jsonInfo.exists()) {
     // process json
     const fileContent = await jsonInfo.readFile();
-    processJson(fileContent);
-    return;
+    const processed = processJson(fileContent);
+    if (processed) return;
   }
 
   const files = await dirInfo.listFiles();
