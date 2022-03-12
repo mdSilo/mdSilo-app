@@ -127,8 +127,8 @@ export default function SlashAutocompletePopover() {
           const date = new Date();
           const day = date.getDate();
           const mon = date.getMonth() + 1;
-          const mdy = `${mon<10 ? '0' : ''}${mon}-${day<10 ? '0' : ''}${day}-${date.getFullYear()}`;
-          Transforms.insertText(editor, mdy);
+          const ymd = `${date.getFullYear()}-${mon<10 ? '0' : ''}${mon}-${day<10 ? '0' : ''}${day}`;
+          Transforms.insertText(editor, ymd);
         } else if (['todo', 'doing', 'done'].includes(ty)) {
           insertTag(editor, option.id);
         }

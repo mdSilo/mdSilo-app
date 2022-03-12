@@ -2,7 +2,8 @@
 
 ## [app-v0.3.0] - 2022-XX-XX
 
-### Added  
+### Added 
+- Daily note folder   
 
 ### Fixed  
 - Settings toggle 
