@@ -39,21 +39,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94a45b455c14666b85fc40a019e8ab9eb75e3a124e05494f5397122bc9eb06e0"
 
 [[package]]
-name = "app"
-version = "0.3.0"
-dependencies = [
- "bincode",
- "notify",
- "open",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tokio",
- "trash",
-]
-
-[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1723,6 +1708,21 @@ name = "matches"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
+
+[[package]]
+name = "mdsilo"
+version = "0.3.0"
+dependencies = [
+ "bincode",
+ "notify",
+ "open",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tokio",
+ "trash",
+]
 
 [[package]]
 name = "memchr"

@@ -1,13 +1,13 @@
 [package]
-name = "app"
+name = "mdsilo"
 version = "0.3.0"
-description = "mdsilo"
+description = "mdSilo Desktop"
 authors = ["dloh"]
 license = "AGPL3"
 repository = ""
-default-run = "app"
+default-run = "mdsilo"
 edition = "2021"
-rust-version = "1.58.1"
+rust-version = "1.59.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
