@@ -4,17 +4,13 @@ import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds, preProcessMds } from './process';
+import { writeJsonFile } from './write';
 
 /* 
 Open files: 
-  process and import to store, 
-  when edit any file, a json storing all data will be created and saved
-OPen json: 
+  process and import to store, a json storing all data will be created and saved
+Open json: 
   import to store, when edit any file, a .md will be created and saved 
-
-TODO: 
-a better way and eliminate the 'store' which is introduced from web app, but:
-each file or evne some blocks are not standalone but networked
 */
 
 function getRecentDirPath() {
@@ -108,7 +104,7 @@ export const openFileDilog = async (ty: string[], multi = true) => {
  * @param ty file type: md or json
  * @returns 
  */
-export async function openFile(filePaths: string[], ty = 'md') {
+export async function openFilePaths(filePaths: string[], ty = 'md') {
   if (ty === 'json') {
     const filePath = filePaths[0];
     if (filePath && filePath.endsWith('.json')) {
@@ -132,7 +128,13 @@ export async function openFile(filePaths: string[], ty = 'md') {
       } 
     }
     // process files
-    processMds(files);
+    const processedRes = processMds(files);
+    // sync store states to JSON
+    if (processedRes.length > 0) {
+      const currentDir = store.getState().currentDir;
+      if (currentDir) { await writeJsonFile(currentDir); } 
+    }
+
     return;
   }
 }

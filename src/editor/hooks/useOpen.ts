@@ -1,6 +1,6 @@
 import { store } from 'lib/store';
 import { 
-  openDirDilog, openDir, openFile, openFileDilog, saveDilog 
+  openDirDilog, openDir, openFilePaths, openFileDilog, saveDilog 
 } from 'file/open';
 import { getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
@@ -17,7 +17,7 @@ export const openFiles = async (ty: string, multi = true) => {
     cleanStore();
     store.getState().setCurrentDir(parentDir);
     store.getState().setRecentDir([parentDir]);
-    await openFile(openPaths, ty);
+    await openFilePaths(openPaths, ty);
   }
 };
 

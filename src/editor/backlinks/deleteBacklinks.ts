@@ -2,6 +2,7 @@ import { createEditor, Editor, Element, Transforms } from 'slate';
 import { ElementType } from 'editor/slate';
 import { Note } from 'types/model';
 import { store } from 'lib/store';
+import { writeJsonFile } from 'file/write';
 import { computeLinkedBacklinks } from './useBacklinks';
 
 const deleteBacklinks = async (noteId: string) => {
@@ -12,9 +13,7 @@ const deleteBacklinks = async (noteId: string) => {
   for (const backlink of backlinks) {
     const note = notes[backlink.id];
 
-    if (!note) {
-      continue;
-    }
+    if (!note) { continue; }
 
     const editor = createEditor();
     editor.children = note.content;
@@ -38,6 +37,8 @@ const deleteBacklinks = async (noteId: string) => {
   for (const newNote of updateData) {
     store.getState().updateNote(newNote);
   }
+  const currentDir = store.getState().currentDir;
+  if (currentDir) { await writeJsonFile(currentDir); } // sync store to JSON
 };
 
 export default deleteBacklinks;

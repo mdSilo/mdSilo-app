@@ -3,6 +3,7 @@ import produce from 'immer';
 import { ElementType } from 'editor/slate';
 import { Note } from 'types/model';
 import { store } from 'lib/store';
+import { writeJsonFile } from 'file/write';
 import { computeLinkedBacklinks } from './useBacklinks';
 
 
@@ -22,9 +23,7 @@ const updateBacklinks = async (newTitle: string, noteId: string, newId = '') => 
   for (const backlink of backlinks) {
     const note = notes[backlink.id];
 
-    if (!note) {
-      continue;
-    }
+    if (!note) { continue; }
 
     let newBacklinkContent = note.content;
     for (const match of backlink.matches) {
@@ -73,6 +72,8 @@ const updateBacklinks = async (newTitle: string, noteId: string, newId = '') => 
   for (const newNote of updateData) {
     store.getState().updateNote(newNote);
   }
+  const currentDir = store.getState().currentDir;
+  if (currentDir) { await writeJsonFile(currentDir); } // sync store to JSON
 };
 
 export default updateBacklinks;

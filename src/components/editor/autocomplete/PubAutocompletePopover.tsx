@@ -152,8 +152,6 @@ export default function PubAutocompletePopover() {
           }
         }
         store.getState().upsertNote(selectedNote);
-      } else {
-        throw new Error(`Option type ${option.type} is not supported`);
       }
 
       hidePopover();

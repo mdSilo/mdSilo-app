@@ -187,7 +187,7 @@ const computeUnlinkedMatches = (nodes: Descendant[], noteTitle: string) => {
 export const purgeUnLinkedWikiNotes = (notes?: Note[]) => {
   const allNotes = notes ? notes : Object.values(store.getState().notes);
   const wikiNotes = allNotes.filter(n => n.is_wiki);
-  const delNote = store.getState().deleteNote;
+  const deleteNote = store.getState().deleteNote;
   for (const wikiNote of wikiNotes) {
     const wikiNoteId = wikiNote.id;
     const matchArr = [];
@@ -213,7 +213,7 @@ export const purgeUnLinkedWikiNotes = (notes?: Note[]) => {
     }
 
     if (matchArr.length === 0) {
-      delNote(wikiNoteId);
+      deleteNote(wikiNoteId);
     }
   }
 };

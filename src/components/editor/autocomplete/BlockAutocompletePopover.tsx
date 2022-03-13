@@ -9,6 +9,7 @@ import { createNodeId } from 'editor/plugins/withNodeId';
 import { isReferenceableBlockElement } from 'editor/checks';
 import useDebounce from 'editor/hooks/useDebounce';
 import { store } from 'lib/store';
+import { writeJsonFile } from 'file/write';
 import EditorPopover from '../EditorPopover';
 
 // when type `((w`, block reference, search to block
@@ -78,12 +79,11 @@ export default function BlockAutocompletePopover() {
 
     try {
       const { anchor } = selection;
-
       const elementStart = Editor.start(editor, anchor.path);
       const elementRange = { anchor, focus: elementStart };
       const elementText = Editor.string(editor, elementRange);
-
       const result = elementText.match(BLOCK_REF_REGEX);
+      
       if (result && result.length > 0) {
         returnValue.result = result;
         returnValue.onOwnLine = result[0] === elementText;
@@ -131,12 +131,10 @@ export default function BlockAutocompletePopover() {
       // Handle inserting block reference
       if (option.type === OptionType.BLOCK) {
         let blockId;
-
-        // We still need this because there are cases where block ids might not exist
+        // block ids might not exist
         if (!option.blockId) {
           // Generate block id if it doesn't exist
           blockId = createNodeId();
-
           // Set block id on the block
           const noteEditor = createEditor();
           noteEditor.children = store.getState().notes[option.noteId].content;
@@ -145,23 +143,21 @@ export default function BlockAutocompletePopover() {
             { id: blockId },
             {
               at: option.path,
-              match: (n) =>
-                Element.isElement(n) && isReferenceableBlockElement(n),
+              match: (n) => Element.isElement(n) && isReferenceableBlockElement(n),
             }
           );
-
           // Update note locally
           store.getState().updateNote({
             id: option.noteId,
             content: noteEditor.children,
           });
+          const currentDir = store.getState().currentDir;
+          if (currentDir) { await writeJsonFile(currentDir); } // sync store to JSON
         } else {
           blockId = option.blockId;
         }
 
         insertBlockReference(editor, blockId, onOwnLine);
-      } else {
-        throw new Error(`Option type ${option.type} is not supported`);
       }
 
       hidePopover();

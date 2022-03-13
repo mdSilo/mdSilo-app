@@ -3,7 +3,7 @@ import { Path } from 'slate';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { store, useStore } from 'lib/store';
 import { Note } from 'types/model';
-import { openFile } from 'file/open';
+import { openFilePaths } from 'file/open';
 
 export default function useOnNoteLinkClick(currentNoteId: string) {
   const currentView = useCurrentViewContext();
@@ -107,7 +107,7 @@ export const openFileAndGetNoteId = async (note: Note) => {
 
   if (note.not_process && filePath) {
     // console.log("re-load: ", filePath);
-    await openFile([filePath]);
+    await openFilePaths([filePath]);
   }
 
   return noteId;

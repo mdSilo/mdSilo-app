@@ -56,13 +56,6 @@ export type NotesData = {
   titleTree?: TitleTreeItem[];
 }
 
-export type PathTreeItem = {
-  id: string; // actually, it is path
-  title: Note['title'];  
-  children: PathTreeItem[];
-  collapsed: boolean;
-};
-
 export enum SidebarTab {
   Silo,
   Search,
@@ -87,7 +80,6 @@ export type Store = {
   setNoteTree: Setter<NoteTreeItem[]>;
   moveNoteTreeItem: (noteId: string, newParentNoteId: string | null) => void;
   toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => void;
-  updateNoteTree: (item: NoteTreeItem, target: string | null) => void;
   wikiTree: WikiTreeItem[];
   setWikiTree: Setter<WikiTreeItem[]>;
   updateWikiTree: (wikiId: string, noteId: string | null) => void;
@@ -257,11 +249,6 @@ export const store = createVanilla<Store>(
       toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => {
         set((state) => {
           toggleTreeItemCollapsed(state.noteTree, noteId, toCollapsed);
-        });
-      },
-      updateNoteTree: (item: NoteTreeItem, target: string | null) => {
-        set((state) => {
-          insertTreeItem(state.noteTree, item, target);
         });
       },
       // Cache of block id to backlinks

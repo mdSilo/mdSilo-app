@@ -1,8 +1,9 @@
 import { createEditor, Editor, Element, Transforms } from 'slate';
 import { BlockReference, ElementType } from 'editor/slate';
 import { computeBlockBacklinks } from 'editor/backlinks/useBlockBacklinks';
-import { store } from 'lib/store';
 import { isReferenceableBlockElement } from 'editor/checks';
+import { store } from 'lib/store';
+import { writeJsonFile } from 'file/write';
 import { Note } from 'types/model';
 import { isPartialElement } from './withNodeId';
 
@@ -54,6 +55,8 @@ const replaceBlockRefs = async (editor: Editor, blockId: string) => {
   for (const newNote of updateData) {
     store.getState().updateNote(newNote);
   }
+  const currentDir = store.getState().currentDir;
+  if (currentDir) { await writeJsonFile(currentDir); } // sync store to JSON
 };
 
 const withBlockReferences = (editor: Editor) => {
