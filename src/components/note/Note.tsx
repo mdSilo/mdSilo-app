@@ -74,7 +74,8 @@ function Note(props: Props) {
           ? await joinPaths(parentDir, ['daily', `${title}.md`])
           : await joinPaths(parentDir, [`${title}.md`]);
         const content = value.map((n) => serialize(n)).join('');
-        updateNote({ id: noteId, not_process: false, file_path: notePath });
+        const relativePath = note.is_daily ? `daily/${title}.m` : `${title}.md`;
+        updateNote({ id: noteId, not_process: false, file_path: relativePath });
         await writeFile(notePath, content);
         await writeJsonFile(parentDir);
       }
@@ -102,7 +103,8 @@ function Note(props: Props) {
           // on rename file: 
           // 1- new FilePath
           const newPath = await joinPaths(parentDir, [`${newTitle}.md`]);
-          updateNote({ id: noteId, not_process: false, file_path: newPath });
+          const relativePath = `${title}.md`;
+          updateNote({ id: noteId, not_process: false, file_path: relativePath });
           // 2- swap value
           const content = value.map((n) => serialize(n)).join('');
           await writeFile(newPath, content);

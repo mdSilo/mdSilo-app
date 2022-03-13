@@ -54,15 +54,16 @@ export function preProcessMds(fileList: SimpleFileMeta[]) {
     
     const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
     const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
+    const isDaily = regDateStr.test(newNoteTitle);
     const newNoteObj = {
       id: uuidv4(), // placeholder only
       title: newNoteTitle,
       content: getDefaultEditorValue(), // placeholder only
       created_at: createdDate,
       updated_at: lastModDate,
-      is_daily: regDateStr.test(newNoteTitle),
+      is_daily: isDaily,
       not_process: true,
-      file_path: file.file_path,
+      file_path: isDaily ? `daily/${newNoteTitle}.md` : `${newNoteTitle}.md`,
     };
     const newPreProcessedNote = {...defaultNote, ...newNoteObj};
   
@@ -123,15 +124,16 @@ export function processMds(fileList: FileMetaData[]) {
     
     const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
     const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
+    const isDaily = regDateStr.test(newNoteTitle);
     const newNoteObj = {
       id: noteTitleToIdCache[newNoteTitle.toLowerCase()] ?? uuidv4(),
       title: newNoteTitle,
       content: slateContent.length > 0 ? slateContent : getDefaultEditorValue(),
       created_at: createdDate,
       updated_at: lastModDate,
-      is_daily: regDateStr.test(newNoteTitle),
+      is_daily: isDaily,
       not_process: false,
-      file_path: file.file_path,
+      file_path: isDaily ? `daily/${newNoteTitle}.md` : `${newNoteTitle}.md`,
     };
     const newProcessedNote = {...defaultNote, ...newNoteObj};
 

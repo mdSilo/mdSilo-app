@@ -46,13 +46,17 @@ export const uploadAndInsertImage = async (
     // move the image to current dir's asset folder 
     // TODO: how to just use relative path (./workDir/assets/img.png)
     // thus minimize the effect when move the work dir
-    let movedImgPath = imagePath;
+    //let movedImgPath = imagePath;
+    let relativeImgPath = imagePath;
     if (dir) {
-      movedImgPath = await invoke<string>(
+      const assetImgPath = await invoke<string[]>(
         'copy_file_to_assets', { srcPath: imagePath, workDir: dir }
-      ) || imagePath;
+      );
+      //movedImgPath = assetImgPath[0] || imagePath;
+      relativeImgPath = assetImgPath[1] || imagePath;
     }
-    const imageUrl = convertFileSrc(movedImgPath);
+    // const relativeImgPath = 
+    const imageUrl = convertFileSrc(relativeImgPath);
     insertImage(editor, imageUrl, path);
   }
 };

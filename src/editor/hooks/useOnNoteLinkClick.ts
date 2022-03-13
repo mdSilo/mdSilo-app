@@ -101,7 +101,8 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
 // 2- listen dir change, set not_process false if any change, reload change on click
 // 
 export const openFileAndGetNoteId = async (note: Note) => {
-  const filePath = note.file_path;
+  const currentDir = store.getState().currentDir;
+  const filePath = `${currentDir}/${note.file_path}`;
   const noteId = note.id;
 
   if (note.not_process && filePath) {

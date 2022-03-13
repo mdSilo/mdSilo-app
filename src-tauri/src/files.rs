@@ -311,11 +311,14 @@ pub async fn copy_file(src_path: String, to_path: String) -> bool {
 
 /// copy the assets(image...) to given work dir
 #[tauri::command]
-pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
+pub async fn copy_file_to_assets(
+  src_path: String, 
+  work_dir: String
+) -> (String, String) {
   let basename = get_basename(&src_path);
   let is_file = basename.1;
   if !is_file {
-    return String::new();
+    return (String::new(), String::new());
   }
 
   let file_name = basename.0;
@@ -324,9 +327,14 @@ pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
     .join(&file_name)
     .normalize_slash()
     .unwrap_or_default();
+  
+  let relative_to_path = Path::new("$DIR$/assets")
+    .join(&file_name)
+    .normalize_slash()
+    .unwrap_or_default();
 
   if to_path.is_empty() {
-    return to_path;
+    return (to_path, relative_to_path);
   }
 
   if let Some(p) = Path::new(&to_path).parent() {
@@ -334,9 +342,9 @@ pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> String {
   }
 
   if fs::copy(src_path, to_path.clone()).is_ok() {
-    to_path
+    (to_path, relative_to_path)
   } else {
-    String::new()
+    (String::new(), String::new())
   }
 }
 

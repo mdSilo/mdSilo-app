@@ -1,6 +1,7 @@
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri'
 import { store } from 'lib/store';
+import { writeJsonFile } from './write';
 import { isTauri, normalizeSlash, joinPath } from './util';
 
 interface SystemTime {
@@ -151,8 +152,9 @@ class DirectoryAPI {
         // console.log("file path: ", filePath);
         if (event === 'write' || event === 'close_write') {
           const notesArr = Object.values(store.getState().notes);
+          const currentDir = store.getState().currentDir;
           for (const note of notesArr) {
-            if (note.file_path === filePath) {
+            if (currentDir && `${currentDir}/${note.file_path}` === filePath) {
               const currentNoteId = store.getState().currentNoteId;
               // console.log("note current ids: ", note.id, currentNoteId)
               // any change on current note will not be loaded
@@ -161,6 +163,7 @@ class DirectoryAPI {
                   id: note.id,
                   not_process: true,
                 });
+                await writeJsonFile(currentDir);
                 // console.log("updated not_process!");
               }
               break;

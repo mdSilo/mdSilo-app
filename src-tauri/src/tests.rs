@@ -193,14 +193,20 @@ mod tests {
       .normalize_slash()
       .unwrap();
     let asset_path = copy_file_to_assets(to_path.clone(), work_dir.clone()).await;
+    let abs_path = asset_path.0;
+    let rel_path = asset_path.1;
     assert_eq!(is_dir(Path::new(work_dir.as_str())).unwrap(), true);
-    assert_eq!(asset_path, format!("{}/assets/app.txt", work_dir.clone()));
-    assert_eq!(file_exist(&asset_path), true);
-
+    assert_eq!(abs_path, format!("{}/assets/app.txt", work_dir.clone()));
+    assert_eq!(file_exist(&abs_path), true);
+    assert_eq!(rel_path, "$DIR$/assets/app.txt");
+    // override copy
     let asset_path_1 =
       copy_file_to_assets(to_path.clone(), format!("{}/", work_dir)).await;
-    assert_eq!(asset_path_1, format!("{}/assets/app.txt", work_dir.clone()));
-    assert_eq!(file_exist(&asset_path_1), true);
+    let abs_path_1 = asset_path_1.0;
+    let rel_path_1 = asset_path_1.1;
+    assert_eq!(abs_path_1, format!("{}/assets/app.txt", work_dir.clone()));
+    assert_eq!(file_exist(&abs_path_1), true);
+    assert_eq!(rel_path_1, "$DIR$/assets/app.txt");
 
     // del files or dir
     let to_del_files = vec![file.clone(), to_path];
@@ -214,20 +220,20 @@ mod tests {
       .unwrap()
       .to_string();
     let to_del_dirs = vec![dir.clone()];
-    assert_eq!(file_exist(&asset_path_1), true);
+    assert_eq!(file_exist(&abs_path_1), true);
     delete_files(to_del_dirs.clone()).await;
     // not del the dir, for a file in it
     // but on macOS:
     // left: `false`,  right: `true`' , thus dir deleted on macOS
     #[cfg(target_os = "linux")]
-    assert_eq!(file_exist(&asset_path_1), true);
+    assert_eq!(file_exist(&abs_path_1), true);
     #[cfg(target_os = "linux")]
     assert_eq!(file_exist(&dir), true);
 
-    let to_del_files_1 = vec![asset_path_1.clone()];
+    let to_del_files_1 = vec![abs_path_1.clone()];
     // if can exec on non-existing? on macOS
     delete_files(to_del_files_1).await;
-    assert_eq!(file_exist(&asset_path_1), false);
+    assert_eq!(file_exist(&abs_path_1), false);
     // now no file in it, dir deleted
     delete_files(to_del_dirs.clone()).await;
     assert_eq!(file_exist(&dir), false);
@@ -248,22 +254,28 @@ mod tests {
 
     // copy file to assets
     delete_files(vec![String::from("/home/uu/Documents/assets/temple.jpg")]).await;
-    let to_path = copy_file_to_assets(
+    let asset_path = copy_file_to_assets(
       String::from("/home/uu/Pictures/temple.jpg"),
       String::from("/home/uu/Documents"),
     )
     .await;
+    let to_path = asset_path.0;
+    let relative_path = asset_path.1;
     assert_eq!(to_path, "/home/uu/Documents/assets/temple.jpg");
     assert_eq!(file_exist("/home/uu/Documents/assets/temple.jpg"), true);
+    assert_eq!(relative_path, "$DIR$/assets/temple.jpg");
 
     delete_files(vec![String::from("/home/uu/Documents/assets/beauty.jpg")]).await;
-    let to_path_1 = copy_file_to_assets(
+    let asset_path_1 = copy_file_to_assets(
       String::from("/home/uu/Pictures/beauty.jpg"),
       String::from("/home/uu/Documents/"),
     )
     .await;
+    let to_path_1 = asset_path_1.0;
+    let relative_path_1 = asset_path_1.1;
     assert_eq!(to_path_1, "/home/uu/Documents/assets/beauty.jpg");
     assert_eq!(file_exist("/home/uu/Documents/assets/beauty.jpg"), true);
+    assert_eq!(relative_path_1, "$DIR$/assets/beauty.jpg");
   }
 
   #[test]

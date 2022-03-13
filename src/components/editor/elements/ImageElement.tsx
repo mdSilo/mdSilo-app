@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { RenderElementProps, useFocused, useSelected } from 'slate-react';
 import { Image as ImageType } from 'editor/slate';
+import { useStore } from 'lib/store';
 
 type ImageElementProps = {
   element: ImageType;
@@ -13,10 +14,13 @@ export default function ImageElement(props: ImageElementProps) {
   const { children, attributes, element, className = '' } = props;
   const selected = useSelected();
   const focused = useFocused();
+  const currentDir = useStore(state => state.currentDir);
+  const realImgUrl = 
+    currentDir ? element.url.replace('$DIR$', currentDir) : element.url;
   return (
     <div className={className} {...attributes}>
       <img
-        src={element.url}
+        src={realImgUrl}
         className={`select-none mx-auto max-w-full max-h-full ${
           selected && focused
             ? 'ring ring-primary-100 dark:ring-primary-900'
