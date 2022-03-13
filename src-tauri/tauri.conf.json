@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "mdsilo",
-    "version": "0.3.0"
+    "version": "0.2.1"
   },
   "build": {
     "distDir": "../build",

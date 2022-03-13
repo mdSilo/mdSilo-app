@@ -1,6 +1,6 @@
 # Changelog
 
-## [app-v0.3.0] - 2022-XX-XX
+## [app-v0.2.1] - 2022-XX-XX
 
 ### Added 
 - Daily note folder   
