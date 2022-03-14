@@ -31,21 +31,24 @@ export default function useDeleteNote(noteId: string, noteTitle: string) {
         dispatch({view: 'chronicle'});
       }
     }
-    
-    // delete in store, delete backlinks or (blockreference? TODO)
-    store.getState().deleteNote(noteId);
-    await deleteBacklinks(noteId);
-    // delete in disk, write to JSON
-    const parentDir = store.getState().currentDir;
-    if (parentDir) {
-      const isDaily = regDateStr.test(noteTitle);
-      const toDelPath = isDaily 
-        ? await joinPaths(parentDir, ['daily', `${noteTitle}.md`])
-        : await joinPaths(parentDir, [`${noteTitle}.md`]);
-      await deleteFile(toDelPath);  // delete file in Disk
-      await writeJsonFile(parentDir); // sync the deletion to JSON
-    }
+    doDeleteNote(noteId, noteTitle);
   }, [dispatch, noteId, noteTitle, openNoteIds]);
 
   return onDeleteClick;
+}
+
+export async function doDeleteNote(noteId: string, noteTitle: string) {
+  // delete in store, delete backlinks or (blockreference? TODO)
+  store.getState().deleteNote(noteId);
+  await deleteBacklinks(noteId);
+  // delete in disk, write to JSON
+  const parentDir = store.getState().currentDir;
+  if (parentDir) {
+    const isDaily = regDateStr.test(noteTitle);
+    const toDelPath = isDaily 
+      ? await joinPaths(parentDir, ['daily', `${noteTitle}.md`])
+      : await joinPaths(parentDir, [`${noteTitle}.md`]);
+    await deleteFile(toDelPath);  // delete file in Disk
+    await writeJsonFile(parentDir); // sync the deletion to JSON
+  }
 }

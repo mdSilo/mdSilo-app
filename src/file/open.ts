@@ -45,24 +45,24 @@ export const openDirDilog = async () => {
  * @param dir 
  * @returns 
  */
-export const openDir = async (dir: string): Promise<void> => {
+export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const dirInfo = new DirectoryAPI(dir);
   // console.log("dir api", dirInfo)
   if (!(await dirInfo.exists())) return;
 
   // attach listener to monitor changes in dir
   // TODO
-  dirInfo.listen(() => {/*TODO*/});
+  if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
   // 1- try process mdsilo_all.json
   const jsonInfo = new FileAPI('mdsilo_all.json', dir);
   // console.log("json", jsonInfo)
   if (await jsonInfo.exists()) {
     // process json
     const fileContent = await jsonInfo.readFile();
-    const processed = processJson(fileContent);
-    if (processed) return;
+    const jsonProcessed = processJson(fileContent);
+    if (jsonProcessed) { return; }
   }
-  // 2- list files
+  // 2- list files if no json processed
   const files = await dirInfo.listFiles();
   if (files.length) {
     // pre process files: get meta without content
@@ -71,7 +71,7 @@ export const openDir = async (dir: string): Promise<void> => {
   // 3- try process daily dir
   const dailyDir =  new DirectoryAPI('daily', dir);
   if (await dailyDir.exists()) {
-    await openDir(dailyDir.dirPath);
+    await openDir(dailyDir.dirPath, false);
   }
 }
 
@@ -102,7 +102,7 @@ export const openFileDilog = async (ty: string[], multi = true) => {
  * Open and process files
  * @param filePaths 
  * @param ty file type: md or json
- * @returns 
+ * @returns Promise<boolean>
  */
 export async function openFilePaths(filePaths: string[], ty = 'md') {
   if (ty === 'json') {
@@ -112,17 +112,15 @@ export async function openFilePaths(filePaths: string[], ty = 'md') {
       if (await jsonInfo.exists()) {
         // process json
         const fileContent = await jsonInfo.readFile();
-        processJson(fileContent);
-        return;
+        return processJson(fileContent);
       }
     }
   } else {
     const files = [];
     for (const filePath of filePaths) {
       const fileInfo = new FileAPI(filePath);
-  
       if (await fileInfo.exists()) {
-        // process json
+        // process md
         const fileMeta = await fileInfo.getMetadata();
         files.push(fileMeta);
       } 
@@ -133,9 +131,8 @@ export async function openFilePaths(filePaths: string[], ty = 'md') {
     if (processedRes.length > 0) {
       const currentDir = store.getState().currentDir;
       if (currentDir) { await writeJsonFile(currentDir); } 
+      return true;
     }
-
-    return;
   }
 }
 

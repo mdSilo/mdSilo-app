@@ -363,16 +363,25 @@ pub async fn listen_dir(
 ) -> Result<String, String> {
   let (tx, rx) = channel();
 
-  let watcher = std::sync::Arc::new(std::sync::Mutex::new(raw_watcher(tx).unwrap()));
+  let raw_watch = match raw_watcher(tx) {
+    Ok(watch) => watch,
+    Err(e) => return Err(format!("new watcher err: {}", e)),
+  };
+  let watcher = std::sync::Arc::new(
+    std::sync::Mutex::new(raw_watch)
+  );
 
-  watcher
-    .lock()
-    .unwrap()
-    .watch(dir.clone(), RecursiveMode::NonRecursive)
-    .unwrap_or(());
+  match watcher.lock() {
+    Ok(mut mutex_watch) => {
+      mutex_watch.watch(dir.clone(), RecursiveMode::Recursive).unwrap_or(());
+    },
+    Err(e) => return Err(format!("lock watcher on listen err: {}", e)),
+  };
 
   window.once("unlisten_dir", move |_| {
-    watcher.lock().unwrap().unwatch(dir.clone()).unwrap_or(());
+    if let Ok(mut watch) = watcher.lock() {
+      watch.unwatch(dir.clone()).unwrap_or(());
+    }
   });
 
   loop {
@@ -380,29 +389,31 @@ pub async fn listen_dir(
       Ok(RawEvent {
         path: Some(path),
         op: Ok(op),
-        ..
+        .. // cookie: Some(cookie),
       }) => {
-        let event: String;
-        if op.contains(notify::op::CREATE) {
-          event = "create".to_string();
-        } else if op.contains(notify::op::REMOVE) {
-          event = "remove".to_string();
-        } else if op.contains(notify::op::RENAME) {
-          event = "rename".to_string();
-        } else if op.contains(notify::op::WRITE) {
-          event = "write".to_string();
-        } else if op.contains(notify::op::CLOSE_WRITE) {
-          event = "close_write".to_string();
-        } else {
-          event = "unknown".to_string();
-        }
+        // println!("event, path: {:?}, op: {:?}, cookie: {}", path, op, cookie);
+        let event = 
+          if op.contains(notify::op::CREATE) {
+            "create"
+          } else if op.contains(notify::op::REMOVE) {
+             "remove"
+          } else if op.contains(notify::op::RENAME) {
+            "rename"
+          } else if op.contains(notify::op::WRITE) {
+            "write"
+          } else if op.contains(notify::op::CLOSE_WRITE) {
+            "close_write"
+          } else {
+            "unknown"
+          };
+        
         if event != "unknown" {
           window
             .emit(
               "changes", // then Frontend listen the event changes.
               Event {
                 path: path.normalize_slash().unwrap_or_default(),
-                event,
+                event: event.to_string(),
               },
             )
             .unwrap_or(());

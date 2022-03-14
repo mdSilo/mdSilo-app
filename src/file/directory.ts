@@ -1,7 +1,9 @@
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri'
+import { doDeleteNote } from 'editor/hooks/useDeleteNote';
 import { store } from 'lib/store';
 import { writeJsonFile } from './write';
+import { openFilePaths } from './open';
 import { isTauri, normalizeSlash, joinPath } from './util';
 
 interface SystemTime {
@@ -151,22 +153,34 @@ class DirectoryAPI {
         // console.log("event: ", event);
         // console.log("file path: ", filePath);
         if (event === 'write' || event === 'close_write') {
-          const notesArr = Object.values(store.getState().notes);
-          const currentDir = store.getState().currentDir;
-          for (const note of notesArr) {
-            if (currentDir && `${currentDir}/${note.file_path}` === filePath) {
-              const currentNoteId = store.getState().currentNoteId;
-              // console.log("note current ids: ", note.id, currentNoteId)
-              // any change on current note will not be loaded
-              if (note.id !== currentNoteId) {
-                store.getState().updateNote({
-                  id: note.id,
-                  not_process: true,
-                });
-                await writeJsonFile(currentDir);
-                // console.log("updated not_process!");
-              }
-              break;
+          const currentDir = store.getState().currentDir || '';
+          const note = currentDir ? getNotePerFilePath(filePath, currentDir) : undefined;
+          const currentNoteId = currentDir ? store.getState().currentNoteId : '';
+          // console.log("note current ids: ", note.id, currentNoteId)
+          // any change on current note will not be loaded
+          if (note && note.id !== currentNoteId) {
+            store.getState().updateNote({
+              id: note.id,
+              not_process: true,
+            });
+            await writeJsonFile(currentDir);
+            console.log("updated not_process!");
+          }
+        } else if (event === 'rename') {
+          const res = await openFilePaths([filePath]);
+          // docs: https://docs.rs/notify/latest/notify/op/index.html
+          // on Linux, Windows, rename will emit 2 events including src and dest path 
+          // console.log("open rename file", filePath, res)
+          // delete in JSON and store
+          if (!res) {
+            const currentDir = store.getState().currentDir || '';
+            const note = currentDir ? getNotePerFilePath(filePath, currentDir) : undefined;
+            const currentNoteId = currentDir ? store.getState().currentNoteId : '';
+            // console.log("delete note in: ", currentDir, res, note, currentNoteId);
+            // current note will not be deleted
+            if (note && note.id !== currentNoteId) {
+              await doDeleteNote(note.id, note.title);
+              console.log("delete note: ", note.id, currentNoteId);
             }
           }
         }
@@ -187,3 +201,13 @@ class DirectoryAPI {
 }
 
 export default DirectoryAPI;
+
+function getNotePerFilePath(filePath: string, currentDir?: string) {
+  const notesArr = Object.values(store.getState().notes);
+  for (const note of notesArr) {
+    const notePath = currentDir ? `${currentDir}/${note.file_path}` : note.file_path;
+    if (notePath === filePath) {
+      return note;
+    }
+  }
+}

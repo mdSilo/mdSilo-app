@@ -26,23 +26,22 @@ const SidebarNoteLink = (
 ) => {
   const { node, isHighlighted, className = '', style, ...otherProps } = props;
 
+  const currentDir = useStore((state) => state.currentDir);
   const note = useStore((state) => state.notes[node.id]);
+  const filePath = note.file_path;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const lastOpenNoteId = useStore(
     (state) => state.openNoteIds[state.openNoteIds.length - 1]
   );
-
+  
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick(lastOpenNoteId);
-
   const toggleNoteTreeItemCollapsed = useStore(
     (state) => state.toggleNoteTreeItemCollapsed
   );
-
   const onArrowClick = useCallback(
     () => toggleNoteTreeItemCollapsed(node.id),
     [node, toggleNoteTreeItemCollapsed]
   );
-
   // We add 16px for every level of nesting, plus 8px base padding
   const leftPadding = useMemo(() => node.depth * 16 + 8, [node.depth]);
 
@@ -83,7 +82,7 @@ const SidebarNoteLink = (
             fill="currentColor"
           />
         </button>
-        <Tooltip content={note.file_path} disabled={!(note.file_path)}>
+        <Tooltip content={`${currentDir}/${filePath}`} disabled={!currentDir || !filePath}>
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
             {note.title}
           </span>
