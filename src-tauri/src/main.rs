@@ -17,7 +17,9 @@ async fn close_splashscreen(window: tauri::Window) {
     splashscreen.close().unwrap_or(());
   }
   // Show main window
-  window.get_window("main").unwrap().show().unwrap_or(());
+  if let Some(mainwindow) = window.get_window("main") {
+    mainwindow.show().unwrap_or(());
+  }
 }
 
 fn main() {

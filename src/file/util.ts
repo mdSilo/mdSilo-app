@@ -21,21 +21,10 @@ export const isTauri = Boolean(
  * @returns {string}
  */
 export const normalizeSlash = (path: string): string => {
-  if (path === '\\' || path === '/') {
-    return '/';
-  }
-
+  // replace all '\' to '/'
   path = path.replace(/\\/g, '/');
-
-  if (path.length === 2 && /.:/.test(path)) {
-    return path + '/';
-  }
-
-  if (path.endsWith('/') && !(path.length === 3 && /.:\//.test(path))) { 
-    return path.slice(0, path.length - 1);
-  }
-  
-  return path;
+  // not end with '/', consistent with rust end: paths::normalize_slash
+  return trimSlash(path, 'end') || '/';
 };
 
 /**
@@ -44,29 +33,23 @@ export const normalizeSlash = (path: string): string => {
  * @returns {string}
  */
 export const joinPath = (...args: string[]): string => {
-  if (args.length === 0) {
-    return '.';
-  }
+  if (args.length === 0) { return '.'; }
 
-  let joined = '';
+  let joined: string | undefined = undefined;
   for (const arg of args) {
     if (arg.length > 0) {
-      if (!joined) {
-        joined = trimSlash(arg, 'end');
+      if (joined === undefined) {
+        joined = trimSlash(normalizeSlash(arg), 'end');
       } else {
-        if (!(joined.endsWith('/') || joined.endsWith('\\'))) {
-          joined += '/';
-          joined += trimSlashAll(arg);
-        } 
+        joined += `/${trimSlashAll(arg)}`;
       }
     }
   }
-
   return joined || '.';
 };
 
 /**
- * Join multi path parts to a string as path
+ * Join multi path parts to a string as path, async, invoke rust end
  * @param {string} root path root
  * @param {string[]} parts path parts
  * @returns {Promise<string>} joined path
@@ -84,31 +67,34 @@ export const getDirPath = async (path: string): Promise<string> => {
   return await invoke('get_dirpath', { path });
 };
 
-
+/**
+ * trim slash or backslash
+ * @param txt 
+ * @param mode start or end
+ * @returns triemed txt
+ */
 function trimSlash(txt: string, mode = 'start') {
   if (mode === 'start') {
-    while (txt.startsWith('/')) {
+    while (txt.startsWith('/') || txt.startsWith('\\')) {
       txt = txt.substring(1);
     }
     return txt;
   } else {
-    while (txt.endsWith('/') && !(txt.length === 3 && /.:\//.test(txt))) {
+    while (txt.endsWith('/') || txt.endsWith('\\')) {
       txt = txt.substring(0, txt.length - 1);
     }
     return txt;
   }
 }
-
-function trimSlashAll(txt: string) {
+// export for test
+export function trimSlashAll(txt: string) {
   const txt0 = trimSlash(txt);
   const txt1 = trimSlash(txt0, 'end');
   return txt1;
 }
 
-
 /* some helper to process note */
 // 
-
 export const getSerializedNote = (note: Note) =>
   note.content.map((n) => serialize(n)).join('');
 
@@ -154,13 +140,4 @@ export const buildNoteTree = (titleTree: TitleTreeItem[], notes: Notes): NoteTre
     return treeItem;
   });
   return noteTree;
-};
-
-// to be del
-export const getNoteAsBlob = (note: Note) => {
-  const serializedContent = getSerializedNote(note);
-  const blob = new Blob([serializedContent], {
-    type: 'text/markdown;charset=utf-8',
-  });
-  return blob;
 };

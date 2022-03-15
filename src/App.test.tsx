@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as fileUtil from 'file/util';
 import App from './components/App';
 
 beforeEach(() => {
@@ -18,6 +19,12 @@ beforeEach(() => {
 
 test('renders App component', () => {
   render(<App />);
-  const linkElement = screen.getByText('mdSilo');
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByText('mdSilo')).toBeInTheDocument();
+})
+
+test('file util', () => {
+  expect(fileUtil.normalizeSlash('C:/')).toBe('C:');
+  expect(fileUtil.normalizeSlash('C:\\Files\\mdsilo\\app.msi')).toBe('C:/Files/mdsilo/app.msi');
+  expect(fileUtil.joinPath(...['/', 'md', '/silo/'])).toBe('/md/silo');
+  expect(fileUtil.trimSlashAll('/\\md/silo\\')).toBe('md/silo');
 })

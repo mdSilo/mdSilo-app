@@ -140,6 +140,20 @@ mod tests {
     assert_eq!(slash1, Some("C:/md/silo".to_string()));
 
     #[cfg(target_os = "windows")]
+    let path_prefix = PathBuf::from_slash(r"C:\");
+    #[cfg(target_os = "windows")]
+    let path_prefix_slash = path1.normalize_slash();
+    #[cfg(target_os = "windows")]
+    assert_eq!(path_prefix_slash, Some("C:".to_string()));
+
+    #[cfg(target_os = "windows")]
+    let path_end_slash = PathBuf::from_slash(r"C:\md\silo\");
+    #[cfg(target_os = "windows")]
+    let path_without_endslash = path1.normalize_slash();
+    #[cfg(target_os = "windows")]
+    assert_eq!(path_without_endslash, Some("C:/md/silo".to_string()));
+
+    #[cfg(target_os = "windows")]
     let path2 = PathBuf::from_slash(r"\\?\UNC\server\share/md/silo");
     #[cfg(target_os = "windows")]
     assert_eq!(path2, PathBuf::from(r"\\?\UNC\server\share\md\silo"));
