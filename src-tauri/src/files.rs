@@ -66,7 +66,7 @@ pub fn get_basename(file_path: &str) -> (String, bool) {
 // get dir path of a dir or file and normalize
 #[tauri::command]
 pub fn get_dirpath(path: &str) -> String {
-  let file_path = path.trim_end_matches('/');
+  let file_path = path.trim_end_matches(['/', '\\']);
   let path = Path::new(file_path);
   let is_dir = path.is_dir();
   let is_file = path.is_file();
@@ -102,10 +102,16 @@ pub fn join_paths(root: &str, parts: Vec<&str>) -> String {
   root_path.normalize_slash().unwrap_or_default()
 }
 
+// get file metadate without content
 pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   let metadata = match fs::metadata(file_path) {
     Ok(data) => data,
-    Err(e) => return Err(e.to_string()),
+    Err(e) => return Err(format!("Err on read meatadata: {:?}", e)),
+  };
+
+  let normalized_path = match Path::new(file_path).normalize_slash() {
+    Some(normalized) => normalized,
+    None => return Err(format!("Err on normalize Path: {}", file_path)),
   };
 
   // name.ext
@@ -131,10 +137,6 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
     Err(_e) => SystemTime::now(), // TODO: to log the err
   };
 
-  let normalized_path = Path::new(file_path)
-    .normalize_slash()
-    .unwrap_or(file_path.to_string()); // fallback on raw file_path, potential issue
-
   Ok(SimpleFileMeta {
     file_path: normalized_path,
     file_name,
@@ -151,13 +153,15 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
 /// Get meatdata of a file
 #[tauri::command]
 pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
+  let file_text = match fs::read_to_string(file_path) {
+    Ok(text) => text,
+    Err(e) => return Err(format!("Err on read file: {:?}", e)),
+  };
+
   let meta_data = match get_simple_meta(file_path) {
     Ok(data) => data,
     Err(e) => return Err(e),
   };
-
-  let file_text = fs::read_to_string(file_path)
-    .unwrap_or(format!("{}: Something wrong", file_path));
 
   Ok(FileMetaData {
     file_path: meta_data.file_path,
@@ -236,8 +240,11 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
   let paths = fs::read_dir(dir).map_err(|err| err.to_string())?;
+  println!("files in dir: {:?}", paths);
+
   let mut filemetas = Vec::new();
   for path in paths {
+    // raw path, not normalized yet
     let file_path = match path {
       Ok(p) => p.path().display().to_string(),
       Err(_e) => continue,
@@ -250,6 +257,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
 
     filemetas.push(simple_meta);
   }
+  
   Ok(filemetas)
 }
 

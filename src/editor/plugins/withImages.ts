@@ -44,18 +44,14 @@ export const uploadAndInsertImage = async (
   const imagePath = await openFileDilog(imageExtensions, false);
   if (imagePath && typeof imagePath === 'string') {
     // move the image to current dir's asset folder 
-    // TODO: how to just use relative path (./workDir/assets/img.png)
-    // thus minimize the effect when move the work dir
-    //let movedImgPath = imagePath;
+    // use relative path ($workDir$/assets/img.png) 
     let relativeImgPath = imagePath;
     if (dir) {
       const assetImgPath = await invoke<string[]>(
         'copy_file_to_assets', { srcPath: imagePath, workDir: dir }
       );
-      //movedImgPath = assetImgPath[0] || imagePath;
       relativeImgPath = assetImgPath[1] || imagePath;
     }
-    // const relativeImgPath = 
     const imageUrl = convertFileSrc(relativeImgPath);
     insertImage(editor, imageUrl, path);
   }

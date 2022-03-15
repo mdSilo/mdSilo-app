@@ -50,20 +50,19 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   // console.log("dir api", dirInfo)
   if (!(await dirInfo.exists())) return;
 
-  // attach listener to monitor changes in dir
-  // TODO
+  // attach listener to monitor changes in dir // TODO
   if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
+
   // 1- try process mdsilo_all.json
   const jsonInfo = new FileAPI('mdsilo_all.json', dir);
   // console.log("json", jsonInfo)
   if (await jsonInfo.exists()) {
-    // process json
     const fileContent = await jsonInfo.readFile();
     const jsonProcessed = processJson(fileContent);
     if (jsonProcessed) { return; }
   }
   // 2- list files if no json processed
-  const files = await dirInfo.listFiles();
+  const files = await dirInfo.listDirectory();
   if (files.length) {
     // pre process files: get meta without content
     preProcessMds(files);
@@ -110,7 +109,6 @@ export async function openFilePaths(filePaths: string[], ty = 'md') {
     if (filePath && filePath.endsWith('.json')) {
       const jsonInfo = new FileAPI(filePath);
       if (await jsonInfo.exists()) {
-        // process json
         const fileContent = await jsonInfo.readFile();
         return processJson(fileContent);
       }
@@ -120,7 +118,6 @@ export async function openFilePaths(filePaths: string[], ty = 'md') {
     for (const filePath of filePaths) {
       const fileInfo = new FileAPI(filePath);
       if (await fileInfo.exists()) {
-        // process md
         const fileMeta = await fileInfo.getMetadata();
         files.push(fileMeta);
       } 
@@ -147,7 +144,7 @@ export async function openUrl(url: string): Promise<boolean> {
 }
 
 /**
- * dialog to get file paths to open
+ * dialog to get file paths to save data
  * @returns 
  */
  export const saveDilog = async () => {

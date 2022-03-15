@@ -15,17 +15,14 @@ export default function ImageElement(props: ImageElementProps) {
   const selected = useSelected();
   const focused = useFocused();
   const currentDir = useStore(state => state.currentDir);
-  const realImgUrl = 
-    currentDir ? element.url.replace('$DIR$', currentDir) : element.url;
+  const realImgUrl = element.url.replace('$DIR$', currentDir || '.');
   return (
     <div className={className} {...attributes}>
       <img
         src={realImgUrl}
-        className={`select-none mx-auto max-w-full max-h-full ${
-          selected && focused
-            ? 'ring ring-primary-100 dark:ring-primary-900'
-            : ''
-        }`}
+        className={`select-none mx-auto max-w-full max-h-full 
+          ${selected && focused ? 'ring ring-primary-100 dark:ring-primary-900' : ''}`
+        }
         contentEditable={false}
         alt={element.caption}
       />
