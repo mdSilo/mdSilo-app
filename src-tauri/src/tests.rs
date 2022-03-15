@@ -61,8 +61,12 @@ mod tests {
       .unwrap()
       .to_string();
     // test get dir name of a file path
+    #[cfg(not(target_os = "windows"))]
     assert_eq!(get_dirpath(&file), dir_of_file);
+    #[cfg(not(target_os = "windows"))]
     assert_eq!(get_dirpath(&format!("{}/", file)), dir_of_file);
+    // on Window: left: `"D:/a/mdSilo-app/mdSilo-app/src-tauri/../temp/mdsilo"`,
+    assert_eq!(get_dirpath(&file), get_dirpath(&format!("{}/", file)));
 
     let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp/mysilo")
@@ -72,7 +76,9 @@ mod tests {
     // create dir
     create_dir_recursive(dir.clone()).await;
     // test get dir name of a dir path
+    #[cfg(not(target_os = "windows"))]
     assert_eq!(get_dirpath(&dir), dir);
+    #[cfg(not(target_os = "windows"))]
     assert_eq!(get_dirpath(&format!("{}//", dir)), dir);
     // del temp folder for test
     let temp_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -142,7 +148,7 @@ mod tests {
     #[cfg(target_os = "windows")]
     let path_prefix = PathBuf::from_slash(r"C:\");
     #[cfg(target_os = "windows")]
-    let path_prefix_slash = path1.normalize_slash();
+    let path_prefix_slash = path_prefix.normalize_slash();
     #[cfg(target_os = "windows")]
     assert_eq!(path_prefix_slash, Some("C:".to_string()));
 
@@ -210,7 +216,7 @@ mod tests {
     let abs_path = asset_path.0;
     let rel_path = asset_path.1;
     assert_eq!(is_dir(Path::new(work_dir.as_str())).unwrap(), true);
-    assert_eq!(abs_path, format!("{}/assets/app.txt", work_dir.clone()));
+    assert_eq!(abs_path, format!("{}/assets/app.txt", work_dir.clone())); // Windows?
     assert_eq!(file_exist(&abs_path), true);
     assert_eq!(rel_path, "$DIR$/assets/app.txt");
     // override copy
@@ -218,13 +224,14 @@ mod tests {
       copy_file_to_assets(to_path.clone(), format!("{}/", work_dir)).await;
     let abs_path_1 = asset_path_1.0;
     let rel_path_1 = asset_path_1.1;
-    assert_eq!(abs_path_1, format!("{}/assets/app.txt", work_dir.clone()));
+    assert_eq!(abs_path_1, format!("{}/assets/app.txt", work_dir.clone())); // windows?
     assert_eq!(file_exist(&abs_path_1), true);
     assert_eq!(rel_path_1, "$DIR$/assets/app.txt");
 
     // del files or dir
     let to_del_files = vec![file.clone(), to_path];
     // files.push(file.clone());
+    // del src file
     delete_files(to_del_files).await;
     assert_eq!(file_exist(&file), false);
 
@@ -234,18 +241,20 @@ mod tests {
       .unwrap()
       .to_string();
     let to_del_dirs = vec![dir.clone()];
+    #[cfg(not(target_os = "macos"))]
     assert_eq!(file_exist(&abs_path_1), true);
+    #[cfg(target_os = "macos")]
+    assert_eq!(file_exist(&abs_path_1), false);
+
     delete_files(to_del_dirs.clone()).await;
-    // not del the dir, for a file in it
-    // but on macOS:
-    // left: `false`,  right: `true`' , thus dir deleted on macOS
+    // on Linux: not del the dir, for a file in it
     #[cfg(target_os = "linux")]
     assert_eq!(file_exist(&abs_path_1), true);
     #[cfg(target_os = "linux")]
     assert_eq!(file_exist(&dir), true);
 
     let to_del_files_1 = vec![abs_path_1.clone()];
-    // if can exec on non-existing? on macOS
+    // can exec del on non-existing on macOS
     delete_files(to_del_files_1).await;
     assert_eq!(file_exist(&abs_path_1), false);
     // now no file in it, dir deleted
