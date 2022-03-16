@@ -1,12 +1,12 @@
 # Changelog
 
-## [app-v0.2.1] - 2022-XX-XX
-
-### Added 
-- Daily note folder   
+## [app-v0.2.1] - 2022-03-17
 
 ### Fixed  
-- Settings toggle 
+- Daily note folder   
+- Settings toggle  
+- Save relative file/asset path in JSON  
+- Handle rename change by external editor  
 
 ## [app-v0.2.0] - 2022-03-10
 

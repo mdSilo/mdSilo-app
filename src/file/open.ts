@@ -144,7 +144,7 @@ export async function openUrl(url: string): Promise<boolean> {
 }
 
 /**
- * dialog to get file paths to save data
+ * dialog to get dir path to save data
  * @returns 
  */
  export const saveDilog = async () => {

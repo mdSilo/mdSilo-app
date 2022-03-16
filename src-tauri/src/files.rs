@@ -240,7 +240,7 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
   let paths = fs::read_dir(dir).map_err(|err| err.to_string())?;
-  println!("files in dir: {:?}", paths);
+  // println!("files in dir: {:?}", paths);
 
   let mut filemetas = Vec::new();
   for path in paths {
