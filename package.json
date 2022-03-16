@@ -11,7 +11,7 @@
     "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!@tauri-apps)/\"",
     "lint": "eslint . --ext .tsx,.ts",
     "fix": "prettier --write src",
-    "typecheck": "tsc",
+    "tc": "tsc",
     "tauri": "tauri"
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "@popperjs/core": "^2.11.4",
     "@react-spring/web": "^9.4.4",
     "@supabase/supabase-js": "^1.31.1",
-    "@tabler/icons": "^1.55.0",
+    "@tabler/icons": "^1.56.0",
     "@tailwindcss/forms": "^0.5.0",
     "@tailwindcss/typography": "^0.5.2",
     "@tauri-apps/api": "^1.0.0-rc.2",
@@ -35,8 +35,6 @@
     "fuse.js": "^6.5.3",
     "immer": "^9.0.12",
     "is-hotkey": "^0.2.0",
-    "postcss": "^8.4.11",
-    "postcss-loader": "^6.2.1",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-highlight-words": "^0.17.0",
@@ -51,7 +49,7 @@
     "slate-hyperscript": "^0.67.0",
     "slate-react": "^0.75.0",
     "tailwindcss": "^3.0.23",
-    "unified": "10.1.1",
+    "unified": "10.1.2",
     "uuid": "^8.3.2",
     "zustand": "^3.7.1"
   },
@@ -74,7 +72,8 @@
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.15.0",
     "@typescript-eslint/parser": "^5.15.0",
-    "eslint": "^8.11.0",
+    "postcss": "8.4.12",
+    "eslint": "8.11.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.25.4",
@@ -82,11 +81,8 @@
     "eslint-plugin-react": "^7.29.4",
     "eslint-plugin-react-hooks": "^4.3.0",
     "eslint-plugin-testing-library": "^5.1.0",
-    "prettier": "2.5.1",
+    "prettier": "2.6.0",
     "typescript": "^4.6.2"
-  },
-  "eslintConfig": {
-    "extends": []
   },
   "browserslist": {
     "production": [
