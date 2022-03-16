@@ -152,11 +152,8 @@ const TaskButton = (props: ButtonProps) => {
   );
 };
 
-type FileDropProps = {
-  className?: string;
-};
 
-export function FileDrop(props: FileDropProps) {
+export function FileDrop() {
   return (
     <>
       <DropdownItem 

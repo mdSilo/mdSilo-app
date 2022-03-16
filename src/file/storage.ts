@@ -30,7 +30,7 @@ export const set = async (key: string, value: any): Promise<void> => {
  * @param {string} key 
  * @returns {Promise<any>} 
  */
-export const get = async (key: string, force?: boolean): Promise<JSON | any> => {
+export const get = async (key: string): Promise<JSON | any> => {
 	if (isTauri) {
 		const storeData: StorageData = await invoke('get_data', { key });
 		return storeData.status ? storeData.data : {};

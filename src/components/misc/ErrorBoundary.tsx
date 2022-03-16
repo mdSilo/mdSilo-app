@@ -19,9 +19,9 @@ export default class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error) {
-    //
-  }
+  // componentDidCatch(error: Error) {
+  //   // sentry?
+  // }
 
   render() {
     const { children, fallback } = this.props;
