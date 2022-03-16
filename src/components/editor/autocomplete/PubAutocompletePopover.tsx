@@ -49,6 +49,7 @@ export default function PubAutocompletePopover() {
   // 2- store in a temp array
   // 3- useNoteSearch locally
   const [tempNotes, setTempNotes] = useState<Note[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getSearch = useCallback(async (linkText: string) => {
     //const notesRes = await loadDbWikiNotes(linkText); // FIXME TODO
     const notes = null; //notesRes?.data;

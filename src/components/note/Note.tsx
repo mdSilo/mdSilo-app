@@ -47,6 +47,7 @@ function Note(props: Props) {
   // load note if it isWiki
   // TODO, network request
   const loadNote = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (noteId: string) => {
     const note: NoteType = defaultDemoNote;
     if (note) {
