@@ -164,7 +164,7 @@ class DirectoryAPI {
               not_process: true,
             });
             await writeJsonFile(currentDir);
-            console.log("updated not_process!");
+            // console.log("updated not_process!");
           }
         } else if (event === 'rename') {
           const res = await openFilePaths([filePath]);
@@ -180,7 +180,7 @@ class DirectoryAPI {
             // current note will not be deleted
             if (note && note.id !== currentNoteId) {
               await doDeleteNote(note.id, note.title);
-              console.log("delete note: ", note.id, currentNoteId);
+              // console.log("delete note: ", note.id, currentNoteId);
             }
           }
         }

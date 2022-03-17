@@ -31,7 +31,7 @@ export function processJson(content: string): boolean {
       return false;
     }
   } catch (e) {
-    console.log("Please check the JSON file: ", e);
+    // console.log("Please check the JSON file: ", e); // TODO, msg
     return false;
   }
 }

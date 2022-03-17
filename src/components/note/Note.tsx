@@ -26,7 +26,7 @@ function Note(props: Props) {
   const { noteId, highlightedPath, className } = props;
   
   const parentDir = useStore((state) => state.currentDir);
-  console.log("currentDir", parentDir);
+  // console.log("currentDir", parentDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
   const note: NoteType | undefined = storeNotes[noteId];
@@ -75,7 +75,7 @@ function Note(props: Props) {
           ? await joinPaths(parentDir, ['daily', `${title}.md`])
           : await joinPaths(parentDir, [`${title}.md`]);
         const content = value.map((n) => serialize(n)).join('');
-        const relativePath = note.is_daily ? `daily/${title}.m` : `${title}.md`;
+        const relativePath = note.is_daily ? `daily/${title}.md` : `${title}.md`;
         updateNote({ id: noteId, not_process: false, file_path: relativePath });
         await writeFile(notePath, content);
         await writeJsonFile(parentDir);

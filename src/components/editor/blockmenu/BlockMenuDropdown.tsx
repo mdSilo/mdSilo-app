@@ -188,7 +188,7 @@ export default function BlockMenuDropdown(props: BlockMenuDropdownProps) {
         className="flex items-center px-2 py-2 cursor-pointer rounded hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600"
       >
         <IconPrompt size={18} className="mr-1" />
-        <span>Insert a Break</span>
+        <span>Insert New Line</span>
       </DropdownItem>
       <ChangeBlockOptions
         element={element}
