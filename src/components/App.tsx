@@ -58,10 +58,7 @@ const App = () => {
     };
   }, []);
 
-  const appContainerClassName = classNames(
-    'h-screen',
-    { dark: darkMode },
-  );
+  const appContainerClassName = classNames('h-screen', { dark: darkMode });
 
   return (
     <ProvideCurrentView>
