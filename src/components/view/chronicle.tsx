@@ -4,6 +4,7 @@ import { useStore, store } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
+import HeatMap from 'components/HeatMap';
 import { dateCompare, getStrDate } from 'utils/helper';
 import { getOrCreateNoteId } from 'editor/handleNoteId';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
@@ -26,7 +27,6 @@ export default function Chronicle() {
 
   const onNewDailyNote = async (date: string) => {
     const noteId = getOrCreateNoteId(date);
-    // redirect to journals when the note not be prepared
     if (noteId) {
       const note = store.getState().notes[noteId];
       if (note) {
@@ -54,6 +54,7 @@ export default function Chronicle() {
             Today : {today}
           </button>
         </div>
+        <HeatMap onClick={onNewDailyNote} />
         <div className="overlfow-y-auto">
           {dates.map((d) => (
             <NoteSumList

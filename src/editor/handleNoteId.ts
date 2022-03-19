@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { store } from 'lib/store';
 import { upsertDbNote } from 'lib/api/curdNote';
 import { defaultUserId, defaultNote } from 'types/model';
-import { ciStringEqual, regDateStr } from 'utils/helper';
+import { ciStringEqual, regDateStr, dailyTitleEqual } from 'utils/helper';
 
 // If the normalized note title exists, then returns the existing note id.
 // Otherwise, creates a new note id.
@@ -12,7 +12,8 @@ export const getOrCreateNoteId = (title: string): string => {
   const notes = store.getState().notes;
   const notesArr = Object.values(notes);
   const matchingNote = notesArr.find((note) =>
-    ciStringEqual(note.title, noteTitle) && !note.is_wiki
+    !note.is_wiki && 
+    (ciStringEqual(note.title, noteTitle) || dailyTitleEqual(note.title, noteTitle)) 
   );
 
   if (matchingNote) {

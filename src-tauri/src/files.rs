@@ -13,7 +13,7 @@ pub struct SimpleFileMeta {
   file_name: String,
   file_path: String,
   created: SystemTime,
-  last_modified: SystemTime,
+  last_modified: SystemTime, // locale
   last_accessed: SystemTime,
   size: u64,
   readonly: bool,

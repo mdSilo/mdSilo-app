@@ -48,6 +48,15 @@ export function ciStringEqual(str1: string, str2: string) {
   return ciStringCompare(str1, str2) === 0;
 }
 
+const ymdNums = (date: string) => {
+  const nums =  date.split('-').map(n => Number(n));
+  return nums;
+};
+export function dailyTitleEqual(str1: string, str2: string) {
+  if (!regDateStr.test(str1) || !regDateStr.test(str2)) return false;
+  return ymdNums(str1).join('') === ymdNums(str2).join('');
+}
+
 // url 
 // Adapted from https://stackoverflow.com/a/43467144
 export const isUrl = (str: string) => {

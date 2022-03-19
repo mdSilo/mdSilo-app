@@ -7,7 +7,7 @@ import { openFilePaths } from './open';
 import { isTauri, normalizeSlash, joinPath } from './util';
 
 interface SystemTime {
-  nanos_since_epoch: number;
+  nanos_since_epoch: number; // locale
   secs_since_epoch: number;
 }
 
