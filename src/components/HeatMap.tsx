@@ -9,7 +9,7 @@ type HeatMapProps = {
 export default function HeatMap({ onClick }: HeatMapProps) {
   const onDayClick = async (weekIdx: number, dayIdx: number) => {
     const date = getDate(weekIdx, dayIdx);
-    await onClick(date.local)
+    await onClick(date)
   };
 
   const hmLabelClass = "text-xs fill-gray-500";
@@ -68,24 +68,15 @@ function WeekHeatMap({ weekIdx, onClick }: WeekProps) {
   );
 }
 
-/** local and iso, format: yyyy-m-d / yyyy-mm-dd*/
+/** local date format: yyyy-m-d */
 function getDate(weekIdx: number, dayIdx: number) {
-  const date = new Date();
+  const date = new Date(); // today
   const day = date.getDate();
   const weekDay = date.getDay();
   const gapDay = (52 - weekIdx) * 7 - (dayIdx - weekDay);
   date.setDate(day - gapDay);
-  return {
-    local: getStrDate(date.toString()),
-    iso: date.toISOString().split('T')[0],
-  }
+  return getStrDate(date.toString());
 }
-
-const getLocalDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString(undefined, {
-    dateStyle: 'medium',
-  });
-};
 
 function calcMonStart() {
   const date = new Date();
@@ -105,10 +96,10 @@ function getData(weekIdx: number, dayIdx: number): ActivityData {
   let createNum = 0;
   let updateNum = 0;
   for (const note of notes) {
-    if (note.created_at.startsWith(date.iso)) {
+    if (getStrDate(note.created_at)=== date) {
       createNum += 1;
     }
-    if (note.updated_at.startsWith(date.iso)) {
+    if (getStrDate(note.updated_at) === date) {
       updateNum += 1;
     }
   }
@@ -122,7 +113,7 @@ function getData(weekIdx: number, dayIdx: number): ActivityData {
 function getDataToolTips(weekIdx: number, dayIdx: number) {
   const data = getData(weekIdx, dayIdx);
   const date = getDate(weekIdx, dayIdx);
-  return `${getLocalDate(date.iso)}:\nActivity: ${data.activityNum}\nCreated: ${data.createNum}\nUpdated: ${data.updateNum}`;
+  return `${date}:\nActivity: ${data.activityNum}\nCreated: ${data.createNum}\nUpdated: ${data.updateNum}`;
 }
 
 function getDayStyle(weekIdx: number, dayIdx: number) {

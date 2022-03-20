@@ -1,5 +1,11 @@
 # Changelog
 
+## [app-v0.3.0] - 2022-03-24
+
+### Added  
+- Daily Activity Graph  
+
+
 ## [app-v0.2.1] - 2022-03-17
 
 ### Fixed  

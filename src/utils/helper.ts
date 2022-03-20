@@ -5,6 +5,7 @@
 // string: yyyy-mm-dd  or yyyy-m-d
 export const regDateStr = /^([0-9]{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$/;
 
+/** yyyy-m-d */
 export function getStrDate(dateStr: string) {
   const date = new Date(dateStr);
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
