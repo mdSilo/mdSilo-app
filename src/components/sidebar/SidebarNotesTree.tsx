@@ -68,7 +68,6 @@ function SidebarNotesTree(props: Props) {
     (node: NoteTreeItem, depth: number, result: FlattenedNoteTreeItem[]) => {
       const { id, children, collapsed } = node;
       result.push({ id, depth, collapsed });
-
       /**
        * Only push in children if:
        * 1. The node is not collapsed

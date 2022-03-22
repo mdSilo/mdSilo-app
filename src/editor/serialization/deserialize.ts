@@ -142,6 +142,13 @@ export default function deserialize(
         // language: node.lang,
         children: [{ text: node.value ?? '' }],
       };
+    case 'tag':
+      return {
+        id: createNodeId(),
+        type: ElementType.Tag,
+        name: node.value ?? '',
+        children: [{ text: node.value ? `#${node.value}` : '' }],
+      };
 
     case 'html':
       return { text: node.value?.replace(/<br>|<br\/>/g, '\n') || '' };

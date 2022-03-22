@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import remarkToSlate from 'editor/serialization/remarkToSlate';
 import wikiLinkPlugin from 'editor/serialization/wikilink/index';
 import pubLinkPlugin from 'editor/serialization/publink/index';
+import tagPlugin from 'editor/serialization/hashtag/index';
 import { store, Notes, NoteTreeItem, WikiTreeItem, NotesData } from 'lib/store';
 import { getDefaultEditorValue } from 'editor/constants';
 import { ciStringEqual, regDateStr } from 'utils/helper';
@@ -106,6 +107,7 @@ export function processMds(fileList: FileMetaData[]) {
       .use(remarkGfm)
       .use(wikiLinkPlugin, { aliasDivider: '|' })
       .use(pubLinkPlugin, { aliasDivider: '|' })
+      .use(tagPlugin)
       .use(remarkToSlate)
       .processSync(fileContent);
 

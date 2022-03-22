@@ -157,7 +157,7 @@ function pubLink (opts = {}) {
   var call = { tokenize: tokenize }
 
   return {
-    text: { 123: call } // left curly bracket
+    text: { 123: call } // left curly bracket `{`
   }
 }
 

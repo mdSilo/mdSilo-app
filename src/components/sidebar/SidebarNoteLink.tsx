@@ -25,9 +25,10 @@ const SidebarNoteLink = (
   forwardedRef: ForwardedRef<HTMLDivElement>
 ) => {
   const { node, isHighlighted, className = '', style, ...otherProps } = props;
-
+  //console.log("node", node)
   const currentDir = useStore((state) => state.currentDir);
   const note = useStore((state) => state.notes[node.id]);
+  //console.log("note", note)
   const filePath = note.file_path;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const lastOpenNoteId = useStore(
@@ -42,7 +43,7 @@ const SidebarNoteLink = (
     () => toggleNoteTreeItemCollapsed(node.id),
     [node, toggleNoteTreeItemCollapsed]
   );
-  // We add 16px for every level of nesting, plus 8px base padding
+  // add 16px for every level of nesting, plus 8px base padding
   const leftPadding = useMemo(() => node.depth * 16 + 8, [node.depth]);
 
   return (

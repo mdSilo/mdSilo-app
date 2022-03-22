@@ -157,7 +157,7 @@ function wikiLink (opts = {}) {
   var call = { tokenize: tokenize }
 
   return {
-    text: { 91: call } // left square bracket
+    text: { 91: call } // left square bracket `[`
   }
 }
 
