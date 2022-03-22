@@ -70,7 +70,7 @@
     "@types/tailwindcss": "^3.0.9",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.15.0",
-    "@typescript-eslint/parser": "^5.15.0",
+    "@typescript-eslint/parser": "^5.16.0",
     "autoprefixer": "^10.4.3",
     "postcss": "8.4.12",
     "eslint": "8.11.0",
