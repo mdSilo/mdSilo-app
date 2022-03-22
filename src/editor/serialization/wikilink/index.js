@@ -3,14 +3,14 @@
 import { syntax } from './syntax'
 import { fromMarkdown } from './fromMarkdown'
 
-let warningIssued
+let warningIssued;
 
 function wikiLinkPlugin (opts = {}) {
-  const data = this.data()
+  const data = this.data();
 
   function add (field, value) {
-    if (data[field]) data[field].push(value)
-    else data[field] = [value]
+    if (data[field]) data[field].push(value);
+    else data[field] = [value];
   }
 
   if (!warningIssued &&
@@ -20,15 +20,13 @@ function wikiLinkPlugin (opts = {}) {
        (this.Compiler &&
         this.Compiler.prototype &&
         this.Compiler.prototype.visitors))) {
-    warningIssued = true
-    console.warn(
-      'Warning: please upgrade to remark 13 to use this plugin'
-    )
+    warningIssued = true;
+    console.warn('Warning: please upgrade to remark 13 to use this plugin');
   }
 
-  add('micromarkExtensions', syntax(opts))
-  add('fromMarkdownExtensions', fromMarkdown(opts))
+  add('micromarkExtensions', syntax(opts));
+  add('fromMarkdownExtensions', fromMarkdown(opts));
 }
 
-wikiLinkPlugin.wikiLinkPlugin = wikiLinkPlugin
-export default wikiLinkPlugin
+wikiLinkPlugin.wikiLinkPlugin = wikiLinkPlugin;
+export default wikiLinkPlugin;
