@@ -1701,10 +1701,10 @@
     "@svgr/plugin-svgo" "^5.5.0"
     loader-utils "^2.0.0"
 
-"@tabler/icons@^1.56.0":
-  version "1.56.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.56.0.tgz#f40be9518eefcd00df16e5acb249583392451ca2"
-  integrity sha512-SkkFghWu649AZY3K77SZCx/Gs5plu+OfmcWzZ4vw3DJH2eV4tD9XMUVHXsK1+u2NOskzDVqZjCDrMtsAkdW7KA==
+"@tabler/icons@^1.57.0":
+  version "1.57.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.57.0.tgz#9479141983482202837d8cedcc31a0d27d1c63dd"
+  integrity sha512-mPZi+F44gX4Ri7xPelxUj+RYZP9EmeQYUDq0Swrr8cVjSb/kk/SVxdIwwcioxr5nI8e+qQKwybeuIqIn/oKttA==
 
 "@tailwindcss/forms@^0.5.0":
   version "0.5.0"

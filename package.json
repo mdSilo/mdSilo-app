@@ -21,7 +21,7 @@
     "@popperjs/core": "^2.11.4",
     "@react-spring/web": "^9.4.4",
     "@supabase/supabase-js": "^1.31.1",
-    "@tabler/icons": "^1.56.0",
+    "@tabler/icons": "^1.57.0",
     "@tailwindcss/forms": "^0.5.0",
     "@tailwindcss/typography": "^0.5.2",
     "@tauri-apps/api": "^1.0.0-rc.2",
