@@ -53,6 +53,9 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   // attach listener to monitor changes in dir // TODO
   if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
 
+  store.getState().setMsgModalText('Importing, Please wait...');
+  store.getState().setMsgModalOpen(true);
+
   // 1- try process mdsilo_all.json
   const jsonInfo = new FileAPI('mdsilo_all.json', dir);
   // console.log("json", jsonInfo)
@@ -72,6 +75,9 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   if (await dailyDir.exists()) {
     await openDir(dailyDir.dirPath, false);
   }
+
+  store.getState().setMsgModalOpen(false);
+  store.getState().setMsgModalText('');
 }
 
 /**

@@ -23,7 +23,7 @@ export default function TagElement(props: Props) {
   const selected = useSelected();
   const focused = useFocused();
   const tagClassName = classNames(
-    'p-0.25 rounded cursor-pointer select-none text-blue-600 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700',
+    'p-1 rounded cursor-pointer select-none text-blue-600 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700',
     { 'bg-primary-100 dark:bg-primary-900': selected && focused },
     className
   );

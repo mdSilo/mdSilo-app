@@ -323,7 +323,7 @@ function Editor(props: Props) {
       value={value} 
       onChange={ !readMode ? onSlateChange : () => {/*do noting*/} }
     >
-      {isToolbarVisible  && !readMode ? (
+      {isToolbarVisible && !readMode ? (
         <HoveringToolbar setAddLinkPopoverState={setAddLinkPopoverState} />
       ) : null}
       {addLinkPopoverState.isVisible && !(readMode || isWiki) ? (

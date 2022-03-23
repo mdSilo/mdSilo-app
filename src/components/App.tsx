@@ -12,6 +12,7 @@ import MainView from './view/MainView';
 import FindOrCreateModal from './note/NoteNewModal';
 import SettingsModal from './settings/SettingsModal';
 import AboutModal from './settings/AboutModal';
+import MsgModal from './settings/MsgModal';
 
 const App = () => {
   const [isFindOrCreateModalOpen, setIsFindOrCreateModalOpen] = useState(false);
@@ -84,6 +85,7 @@ const App = () => {
             isOpen={isAboutOpen}
             handleClose={() => setIsAboutOpen(false)} 
           />
+          <MsgModal />
         </div>
       </div>
     </ProvideCurrentView>
