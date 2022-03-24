@@ -4,7 +4,10 @@
 
 ### Added  
 - Daily Activity Graph  
+- Message Modal  
 
+### Fixed  
+- Deserialize HashTag on open md file  
 
 ## [app-v0.2.1] - 2022-03-17
 

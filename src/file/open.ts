@@ -62,7 +62,10 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   if (await jsonInfo.exists()) {
     const fileContent = await jsonInfo.readFile();
     const jsonProcessed = processJson(fileContent);
-    if (jsonProcessed) { return; }
+    if (jsonProcessed) { 
+      closeMsgModal();
+      return; 
+    }
   }
   // 2- list files if no json processed
   const files = await dirInfo.listDirectory();
@@ -75,9 +78,7 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   if (await dailyDir.exists()) {
     await openDir(dailyDir.dirPath, false);
   }
-
-  store.getState().setMsgModalOpen(false);
-  store.getState().setMsgModalText('');
+  closeMsgModal();
 }
 
 /**
@@ -160,4 +161,9 @@ export async function openUrl(url: string): Promise<boolean> {
     defaultPath: recentDirPath,
   });
   return dirPath;
+};
+
+const closeMsgModal = () => {
+  store.getState().setMsgModalOpen(false);
+  store.getState().setMsgModalText('');
 };
