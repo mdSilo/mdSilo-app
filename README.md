@@ -20,7 +20,14 @@ This is desktop app, and still in active development. the web app is [here](http
 - Block Reference  
 - HashTag 
 - Full-text search 
-- Available for Windows, macOS, Linux
+- GitHub-like daily activity graph  
+- Available for Windows, macOS, Linux  
+
+## Tech Stack
+
+- Editor Framework: Slate    
+- Frontend Framework: React  
+- Cross-platform:  Tauri 
 
 
 ## Live Demo
