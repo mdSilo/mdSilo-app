@@ -1714,10 +1714,10 @@
     "@svgr/plugin-svgo" "^5.5.0"
     loader-utils "^2.0.0"
 
-"@tabler/icons@^1.63.0":
-  version "1.63.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.63.0.tgz#7cf1dffb279ac09031d616948774019910998850"
-  integrity sha512-CrtwngpsKcRBUBT5kbNKJS5UDJkexK4povE/5FOJv1EmNdFLN+cFMfkd2wy55zKSiTMZTNnSV9HYIZgvc6g23A==
+"@tabler/icons@^1.65.0":
+  version "1.65.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.65.0.tgz#53d0ec68bceeb15fe038c186eed9478aa8f068bf"
+  integrity sha512-xax2W/vgjPDEh1/fN2hFuSiwC9a9eFxl3oD4XnGrYVHf177+LLj4+on7O2WCGXnHnsIftPsqARnvbga1dGpu0g==
 
 "@tailwindcss/forms@^0.5.0":
   version "0.5.0"
