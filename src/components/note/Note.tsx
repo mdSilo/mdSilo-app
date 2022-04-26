@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Path, Descendant } from 'slate';
+import MsEditor from "mdsmirror";
 import Editor from 'components/editor/Editor';
 import Title from 'components/editor/Title';
 import Backlinks from 'components/editor/backlinks/Backlinks';
@@ -24,7 +25,7 @@ type Props = {
 
 function Note(props: Props) {
   const { noteId, highlightedPath, className } = props;
-  
+  const darkMode = useStore((state) => state.darkMode);
   const parentDir = useStore((state) => state.currentDir);
   // console.log("currentDir", parentDir);
   // get some property of note
@@ -37,6 +38,7 @@ function Note(props: Props) {
   const title = note?.title ?? 'demo note';
   const [initTitle, setInitTitle] = useState(title); // an initial title copy
   const value = note?.content ?? getDefaultEditorValue();
+  const mdContent: string = value.map((n) => serialize(n)).join('');
 
   const [isWiki, setIsWiki] = useState(initIsWiki);
   const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect
@@ -121,8 +123,6 @@ function Note(props: Props) {
     [noteId, isWiki, storeNotes, updateNote, parentDir, value, initTitle]
   );
 
-  // TODO: update wiki note to db
-
   const noteContainerClassName =
     'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-gray-800 dark:text-gray-200';
   const errorContainerClassName = 
@@ -166,7 +166,7 @@ function Note(props: Props) {
                 isDaily={isDaily}
                 isPub={isPub}
               />
-              <Editor
+              {/* <Editor
                 className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12"
                 noteId={noteId}
                 value={value}
@@ -175,7 +175,15 @@ function Note(props: Props) {
                 isWiki={isWiki}
                 isDaily={isDaily}
                 isPub={isPub}
-              />
+              /> */}
+              <div className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12">
+                <MsEditor 
+                  defaultValue=""
+                  value={mdContent}
+                  placeholder=""
+                  dark={darkMode}
+                />
+              </div>
               <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
                 <Backlinks className="mx-4 mb-8 md:mx-8 md:mb-12" isCollapse={isWiki} />
               </div>
