@@ -9,7 +9,7 @@ export const openFiles = async (ty: string, multi = true) => {
   const filePaths = await openFileDilog([ty], multi);
   // console.log("file path", filePaths);
   const openPaths = typeof filePaths === 'string' ? [filePaths] : filePaths;
-  if (openPaths.length > 0) {
+  if (openPaths && openPaths.length > 0) {
     // set currentDir
     const onePath = openPaths[0];
     const parentDir = await getDirPath(onePath);

@@ -1,7 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import type { Path, Descendant } from 'slate';
-import MsEditor from "mdsmirror";
-import Editor from 'components/editor/Editor';
+import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/editor/Title';
 import Backlinks from 'components/editor/backlinks/Backlinks';
 import { store, useStore } from 'lib/store';
@@ -19,12 +17,12 @@ import NoteHeader from './NoteHeader';
 
 type Props = {
   noteId: string;
-  highlightedPath?: Path;
+  highlightedPath?: any;
   className?: string;
 };
 
 function Note(props: Props) {
-  const { noteId, highlightedPath, className } = props;
+  const { noteId, className } = props;
   const darkMode = useStore((state) => state.darkMode);
   const parentDir = useStore((state) => state.currentDir);
   // console.log("currentDir", parentDir);
@@ -68,15 +66,16 @@ function Note(props: Props) {
   }, [noteId, isWiki, isLoaded, loadNote]);
 
   // update locally
-  const onValueChange = useCallback(
-    async (value: Descendant[]) => {
-      updateNote({ id: noteId, content: value });
+  const onContentChange = useCallback(
+    async (text: string, json: JSONContent) => {
+      //updateNote({ id: noteId, content: value });
+      console.log("on content change", text.length, json);
       // write to local file
       if (parentDir) {
         const notePath = note.is_daily 
           ? await joinPaths(parentDir, ['daily', `${title}.md`])
           : await joinPaths(parentDir, [`${title}.md`]);
-        const content = value.map((n) => serialize(n)).join('');
+        const content = text; //value.map((n) => serialize(n)).join('');
         const relativePath = note.is_daily ? `daily/${title}.md` : `${title}.md`;
         updateNote({ id: noteId, not_process: false, file_path: relativePath });
         await writeFile(notePath, content);
@@ -109,7 +108,7 @@ function Note(props: Props) {
           const relativePath = `${title}.md`;
           updateNote({ id: noteId, not_process: false, file_path: relativePath });
           // 2- swap value
-          const content = value.map((n) => serialize(n)).join('');
+          const content = mdContent; //value.map((n) => serialize(n)).join('');
           await writeFile(newPath, content);
           await writeJsonFile(parentDir);
           // 3- delete the old redundant File
@@ -120,7 +119,7 @@ function Note(props: Props) {
         }
       }
     },
-    [noteId, isWiki, storeNotes, updateNote, parentDir, value, initTitle]
+    [noteId, isWiki, storeNotes, updateNote, parentDir, mdContent, initTitle]
   );
 
   const noteContainerClassName =
@@ -166,22 +165,12 @@ function Note(props: Props) {
                 isDaily={isDaily}
                 isPub={isPub}
               />
-              {/* <Editor
-                className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12"
-                noteId={noteId}
-                value={value}
-                onChange={onValueChange}
-                highlightedPath={highlightedPath}
-                isWiki={isWiki}
-                isDaily={isDaily}
-                isPub={isPub}
-              /> */}
               <div className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12">
                 <MsEditor 
-                  defaultValue=""
                   value={mdContent}
-                  placeholder=""
                   dark={darkMode}
+                  onChange={onContentChange}
+                  onSearchSelectText={(txt) => console.log("search text", txt)}
                 />
               </div>
               <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
