@@ -1107,11 +1107,6 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@benrbray/prosemirror-math@0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@benrbray/prosemirror-math/-/prosemirror-math-0.2.2.tgz#5b2aeb7c8c5a41d2e39317fe1fbd7040fd347cc9"
-  integrity sha512-n+V8MNKaQ9HtA1IASzoBFwthFY55kpu2I+0aF103AbqUw5eM8YlxHeltnLqjnYRVY4/a6A9t9YlBMBQOli5jgw==
-
 "@csstools/normalize.css@*":
   version "12.0.0"
   resolved "https://registry.yarnpkg.com/@csstools/normalize.css/-/normalize.css-12.0.0.tgz#a9583a75c3f150667771f30b60d9f059473e62c4"
@@ -1784,10 +1779,10 @@
   resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.63.0.tgz#7cf1dffb279ac09031d616948774019910998850"
   integrity sha512-CrtwngpsKcRBUBT5kbNKJS5UDJkexK4povE/5FOJv1EmNdFLN+cFMfkd2wy55zKSiTMZTNnSV9HYIZgvc6g23A==
 
-"@tabler/icons@^1.66.0":
-  version "1.67.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.67.0.tgz#04894c9512c73aa2dfe290238d425cbc1467296b"
-  integrity sha512-t+XiVYMU+dSZcGqI0d9mCZJEbVAzrrUIiUtre78Rcp16au677WAC0YwS7+DNnbDuEj4XEnClaF9eXt+VMjka+w==
+"@tabler/icons@^1.68.0":
+  version "1.68.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.68.0.tgz#047bd88966cc24ef957b3c429a13bb82cca95561"
+  integrity sha512-UseBEEhv7r+Drl3iZih7rkwqkfJJZscjd5ZvK1WdIIulQsBa+qE8WBDGdAO0RtjkCclEK88z9kC0s5wiVPIvkw==
 
 "@tailwindcss/forms@^0.5.0":
   version "0.5.0"
@@ -6863,13 +6858,12 @@ mdn-data@2.0.4:
   resolved "https://registry.yarnpkg.com/mdn-data/-/mdn-data-2.0.4.tgz#699b3c38ac6f1d728091a64650b65d388502fd5b"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
 
-mdsmirror@0.1.8:
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.1.8.tgz#3f0534e80e1886ee3dc05982ab6b9910b0c6c46d"
-  integrity sha512-bz5X5PhtByeX34MdgCTjUHdTxTxCG3qNcDLZM+bY59+3OZs5KcNeRBB8cj32iJsR3GgxTPm28HoP9oUKvGAI8Q==
+mdsmirror@0.1.10:
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.1.10.tgz#2d85e307e4e7701e2561b03d0d60fd5f3f223793"
+  integrity sha512-KbcrMR5eNWPjKt+ryaryqvEoNM1WjnKLy55dHr9dVKnKobT2oQ+T4iWIWwX0agBQMugFSECeke9tjY4Wl0eF8w==
   dependencies:
-    "@benrbray/prosemirror-math" "0.2.2"
-    "@tabler/icons" "^1.66.0"
+    "@tabler/icons" "^1.68.0"
     copy-to-clipboard "^3.3.1"
     fuzzy-search "^3.2.1"
     katex "^0.15.3"
