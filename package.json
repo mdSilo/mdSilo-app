@@ -46,7 +46,7 @@
     "slate": "^0.76.1",
     "slate-history": "^0.66.0",
     "slate-hyperscript": "^0.67.0",
-    "slate-react": "^0.76.1",
+    "slate-react": "^0.78.1",
     "tailwindcss": "^3.0.23",
     "unified": "10.1.2",
     "uuid": "^8.3.2",
