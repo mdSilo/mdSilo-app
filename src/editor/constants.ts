@@ -19,7 +19,7 @@ export const getIndexDemoEditorValue = (): Descendant[] => [
 export const defaultDemoNote =  {
   id: 'ea3c58dm-ba42-4c24-9d59-409eacd1demo',
   title: 'demo note',
-  content: getIndexDemoEditorValue(),
+  content: '',
   user_id: '00000000-0000-0000-0000-000000000000',
   md_content: '',
   cover: '',

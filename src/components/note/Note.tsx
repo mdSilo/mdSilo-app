@@ -4,8 +4,7 @@ import Title from 'components/editor/Title';
 import Backlinks from 'components/editor/backlinks/Backlinks';
 import { store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
-import serialize from 'editor/serialization/serialize';
-import { getDefaultEditorValue, defaultDemoNote } from 'editor/constants';
+import { defaultDemoNote } from 'editor/constants';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import updateBacklinks from 'editor/backlinks/updateBacklinks';
@@ -35,8 +34,7 @@ function Note(props: Props) {
   // get title and content value
   const title = note?.title ?? 'demo note';
   const [initTitle, setInitTitle] = useState(title); // an initial title copy
-  const value = note?.content ?? getDefaultEditorValue();
-  const mdContent: string = value.map((n) => serialize(n)).join('');
+  const mdContent = note?.content ?? '';
 
   const [isWiki, setIsWiki] = useState(initIsWiki);
   const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect
@@ -173,9 +171,9 @@ function Note(props: Props) {
                   onSearchSelectText={(txt) => console.log("search text", txt)}
                 />
               </div>
-              <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
+              {/* <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
                 <Backlinks className="mx-4 mb-8 md:mx-8 md:mb-12" isCollapse={isWiki} />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/tauri';
 import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
-import { processJson, processMds, preProcessMds } from './process';
+import { processJson, processMds } from './process';
 import { writeJsonFile } from './write';
 
 /* 
@@ -41,7 +41,7 @@ export const openDirDilog = async () => {
 };
 
 /**
- * Open dir and pre-process files
+ * Open dir and process files
  * @param dir 
  * @returns 
  */
@@ -56,24 +56,26 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   store.getState().setMsgModalText('Importing, Please wait...');
   store.getState().setMsgModalOpen(true);
 
-  // 1- try process mdsilo_all.json
-  const jsonInfo = new FileAPI('mdsilo_all.json', dir);
+  // 0- try process mdsilo_all.json
+  //const jsonInfo = new FileAPI('mdsilo_all.json', dir);
   // console.log("json", jsonInfo)
-  if (await jsonInfo.exists()) {
-    const fileContent = await jsonInfo.readFile();
-    const jsonProcessed = processJson(fileContent);
-    if (jsonProcessed) { 
-      closeMsgModal();
-      return; 
-    }
-  }
-  // 2- list files if no json processed
-  const files = await dirInfo.listDirectory();
+  // if (await jsonInfo.exists()) {
+  //   const fileContent = await jsonInfo.readFile();
+  //   const jsonProcessed = processJson(fileContent);
+  //   if (jsonProcessed) { 
+  //     closeMsgModal();
+  //     return; 
+  //   }
+  // }
+
+  // 1- get files 
+  const dirData = await dirInfo.getFiles();
+  const files = dirData.files;
   if (files.length) {
-    // pre process files: get meta without content
-    preProcessMds(files);
+    processMds(files);
   }
-  // 3- try process daily dir
+  // TODO: sub folder 
+  // 2- try process daily dir
   const dailyDir =  new DirectoryAPI('daily', dir);
   if (await dailyDir.exists()) {
     await openDir(dailyDir.dirPath, false);

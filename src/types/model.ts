@@ -1,6 +1,4 @@
-import type { Descendant } from 'slate';
 import { NoteTreeItem, WikiTreeItem } from 'lib/store';
-import { getDefaultEditorValue } from 'editor/constants';
 
 export type User = {
   id: string;
@@ -12,9 +10,8 @@ export type User = {
 export type Note = {
   id: string;
   title: string;
-  content: Descendant[];
+  content: string;
   user_id: User['id'] | null;
-  md_content: string | null;
   cover: string | null;
   created_at: string;
   updated_at: string;
@@ -28,9 +25,8 @@ export type Note = {
 export const defaultUserId = '00000000-0000-0000-0000-000000000000';
 export const defaultNote =  {
   title: 'untitled',
-  content: getDefaultEditorValue(),
+  content: '',
   user_id: defaultUserId,
-  md_content: '',
   cover: '',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),

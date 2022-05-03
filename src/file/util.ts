@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoke } from '@tauri-apps/api/tauri'
 import { v4 as uuidv4 } from 'uuid';
-import { Note } from 'types/model';
 import { store, NotesData, Notes, NoteTreeItem, TitleTreeItem } from 'lib/store';
-import serialize from 'editor/serialization/serialize';
 import { purgeUnLinkedWikiNotes } from 'editor/backlinks/useBacklinks';
 import { ciStringEqual } from 'utils/helper';
 
@@ -95,9 +93,6 @@ export function trimSlashAll(txt: string) {
 
 /* some helper to process note */
 // 
-export const getSerializedNote = (note: Note) =>
-  note.content.map((n) => serialize(n)).join('');
-
 export const buildNotesJson = (withTitleTree = false) => {
   purgeUnLinkedWikiNotes();
   const notesObj = store.getState().notes;

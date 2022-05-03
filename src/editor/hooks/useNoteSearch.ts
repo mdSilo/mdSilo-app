@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import Fuse from 'fuse.js';
-import { createEditor, Descendant, Editor, Node, Path } from 'slate';
 import { store } from 'lib/store';
 import { Note } from 'types/model';
 import withLinks from 'editor/plugins/withLinks';

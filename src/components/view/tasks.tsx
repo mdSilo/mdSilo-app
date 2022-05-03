@@ -62,7 +62,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">Doing</b>
         </div>
       ),
-      children: getTaskNotes('#doing'),
+      children: [], // TODO getTaskNotes('#doing'),
     },
     {
       id: 'todo',
@@ -71,7 +71,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">To Do</b>
         </div>
       ),
-      children: getTaskNotes('#todo'),
+      children: [], // TODO getTaskNotes('#todo'),
     },
     {
       id: 'done',
@@ -80,7 +80,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">Done</b>
         </div>
       ),
-      children: getTaskNotes('#done'),
+      children: [], // TODO getTaskNotes('#done'),
     },
   ];
 
