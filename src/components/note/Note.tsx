@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
-import Title from 'components/editor/Title';
+import Title from 'components/note/Title';
 import Backlinks from 'components/editor/backlinks/Backlinks';
 import { store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
