@@ -1,27 +1,12 @@
-import { Descendant } from 'slate';
-import { ElementType } from 'editor/slate';
-import { createNodeId } from './plugins/withNodeId';
-
 
 export const RegUUID = 
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export const getDefaultEditorValue = (): Descendant[] => [
-  { id: createNodeId(), type: ElementType.Paragraph, children: [{ text: '' }] },
-];
-
-export const getIndexDemoEditorValue = (): Descendant[] => [
-  { id: "ea3c58df-ba42-4c24-9d59-409eacd15b76", type: ElementType.Paragraph, children: [{text:"A Knowledge Silo equipped with WYSIWYG Editor and Markdown support, runs entirely in web browser and has Local File System Access ability; it thus functions the same as a native app."}] },
-  { id: "f0a0eff2-ee22-4d75-aef6-2b763799a8e8", type: ElementType.Paragraph, children: [{text:"Free and Open Source. No registration or installation is required."}] },
-  { id: "e363b22d-bcce-4852-8430-ab81d526499e", type: ElementType.Paragraph, children: [{text:"Try Live Demo to see more and start writing..."}] },
-];
 
 export const defaultDemoNote =  {
   id: 'ea3c58dm-ba42-4c24-9d59-409eacd1demo',
   title: 'demo note',
   content: '',
   user_id: '00000000-0000-0000-0000-000000000000',
-  md_content: '',
   cover: '',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),

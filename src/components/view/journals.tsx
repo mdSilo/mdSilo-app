@@ -1,12 +1,10 @@
-import { Descendant } from 'slate';
+import MsEditor from "mdsmirror";
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
 import { Note } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import FindOrCreateInput from 'components/note/NoteNewInput';
-import ReadOnlyEditor from 'components/editor/ReadOnlyEditor';
 import { realDateCompare, strToDate } from 'utils/helper';
-import { bleachLinks } from 'editor/hooks/useSummary';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 export default function Journals() {
@@ -41,8 +39,6 @@ type NoteItemProps = {
 
 function NoteItem(props: NoteItemProps) {
   const { note } = props;
-  const value: Descendant[] = bleachLinks(note.content);
-
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
@@ -59,7 +55,7 @@ function NoteItem(props: NoteItemProps) {
           {note.title}
         </span>
       </button>
-      <ReadOnlyEditor value={value} className="pl-4" />
+      <MsEditor value={note.content} />
     </div>
   );
 }

@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
+import { parser } from "mdsmirror";
 import Fuse from 'fuse.js';
 import { store } from 'lib/store';
 import { Note } from 'types/model';
-import withLinks from 'editor/plugins/withLinks';
-import withTags from 'editor/plugins/withTags';
-import withVoidElements from 'editor/plugins/withVoidElements';
 
-export type NoteBlock = { text: string; path: Path };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type NoteBlock = { text: string; path?: any };
 
 type FuseDatum = {
   id: string;
@@ -89,20 +88,15 @@ const getFuseData = (notes: Note[], searchContent: boolean): FuseDatum[] => {
 };
 
 // Flatten the content into individual lines
-const flattenContent = (content: Descendant[]): NoteBlock[] => {
-  const editor = withVoidElements(withTags(withLinks(createEditor())));
-  editor.children = content;
-
-  const blocks = Editor.nodes(editor, {
-    at: [],
-    match: (n) => !Editor.isEditor(n) && Editor.isBlock(editor, n),
-    mode: 'lowest',
-  });
-
-  const result = [];
-  for (const [node, path] of blocks) {
-    const blockText = Node.string(node);
-    result.push({ text: blockText, path });
-  }
+const flattenContent = (content: string): NoteBlock[] => {
+  const docAST = parser.parse(content);
+  const result: NoteBlock[] = docAST.content.content
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((node: any) => node.isBlock)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((node: any) => { 
+      const block = { text: node.textContent, path: []};
+      return block;
+    });
   return result;
 };

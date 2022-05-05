@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
-import { createEditor, Editor, Element, Node } from 'slate';
-import type { NoteLink, PubLink, Tag } from 'editor/slate';
-import { ElementType } from 'editor/slate';
+// import { parser, serializer } from "mdsmirror";
 import type { GraphData } from 'components/editor/ForceGraph';
 import ForceGraph from 'components/editor/ForceGraph';
 import { NoteTreeItem, useStore } from 'lib/store';
@@ -43,49 +41,7 @@ export default function Graph() {
 
     // Search for links and hashtags in each note
     for (const note of notesArr) {
-      const editor = createEditor();
-      editor.children = note.content;
-
-      // Find note link elements that match noteId
-      // also find PubLink
-      const linkingElements = Editor.nodes(editor, {
-        at: [],
-        match: (n) =>
-          Element.isElement(n) &&
-          (n.type === ElementType.NoteLink || n.type === ElementType.PubLink) &&
-          !!Node.string(n), // ignore note links with empty link text
-      });
-
-      // Update linksByNoteId per noteLink
-      for (const [node] of linkingElements) {
-        const noteLinkElement = node as NoteLink | PubLink;
-
-        // Skip the node if it doesn't link to an existing note
-        if (!linksByNoteId[noteLinkElement.noteId]) {
-          linksByNoteId[note.id].add(noteLinkElement.noteId);
-          continue;
-        }
-
-        // Add the link to each note set
-        linksByNoteId[note.id].add(noteLinkElement.noteId);
-        linksByNoteId[noteLinkElement.noteId].add(note.id);
-      }
-
-      // Find out HashTags
-      const tagElements = Editor.nodes(editor, {
-        at: [],
-        match: (n) =>
-          Element.isElement(n) &&
-          n.type === ElementType.Tag &&
-          !!Node.string(n),
-      });
-
-      for (const [node] of tagElements) {
-        const tagElement = node as Tag;
-        tagNames.add(tagElement.name);
-        // Add the tag to each note set
-        linksByNoteId[note.id].add(tagElement.name);
-      }
+      // TODO
     }
 
     // Update linksByNoteId per noteTree nested structure

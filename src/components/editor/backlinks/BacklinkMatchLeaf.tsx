@@ -2,7 +2,6 @@ import { memo, useMemo } from 'react';
 import { BacklinkMatch } from 'editor/backlinks/useBacklinks';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import { useCurrentMdContext } from 'context/useCurrentMd';
-import ReadOnlyEditor from '../ReadOnlyEditor';
 
 type BacklinkMatchLeafProps = {
   noteId: string;
@@ -31,7 +30,7 @@ const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
         )
       }
     >
-      <ReadOnlyEditor value={editorValue} />
+      {/* <MsEditor value={editorValue} /> */}
     </button>
   );
 };

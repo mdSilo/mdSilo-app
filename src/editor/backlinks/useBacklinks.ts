@@ -1,13 +1,4 @@
 import { useMemo } from 'react';
-import {
-  createEditor,
-  Editor,
-  Element,
-  Node,
-  Descendant,
-  Path,
-  Text,
-} from 'slate';
 import { ElementType, FormattedText } from 'editor/slate';
 import { Notes, store, useStore } from 'lib/store';
 import type { Note } from 'types/model';
@@ -18,8 +9,8 @@ const DEBOUNCE_MS = 1000;
 
 export type BacklinkMatch = {
   lineElement: Element;
-  linePath: Path;
-  path: Path;
+  linePath: any;
+  path: any;
 };
 
 export type Backlink = {

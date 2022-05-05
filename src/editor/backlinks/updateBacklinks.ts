@@ -1,6 +1,3 @@
-import { Element } from 'slate';
-import produce from 'immer';
-import { ElementType } from 'editor/slate';
 import { Note } from 'types/model';
 import { store } from 'lib/store';
 import { writeJsonFile } from 'file/write';
@@ -25,42 +22,9 @@ const updateBacklinks = async (newTitle: string, noteId: string, newId = '') => 
 
     if (!note) { continue; }
 
-    let newBacklinkContent = note.content;
+    const newBacklinkContent = note.content;
     for (const match of backlink.matches) {
-      newBacklinkContent = produce(newBacklinkContent, (draftState) => {
-        // Path should not be empty
-        const path = match.path;
-        if (path.length <= 0) {
-          return;
-        }
-
-        // Get the node from the path
-        let linkNode = draftState[path[0]];
-        for (const pathNumber of path.slice(1)) {
-          linkNode = (linkNode as Element).children[pathNumber];
-        }
-
-        // Assert that linkNode is a note link or Pub link
-        if (
-          !Element.isElement(linkNode) ||
-          !(linkNode.type === ElementType.NoteLink || linkNode.type === ElementType.PubLink)
-        ) {
-          return;
-        }
-
-        // Update noteTitle property on the node
-        linkNode.noteTitle = newTitle;
-        // special case for update pub-link's noteId 
-        // for the noteId omitted when procee PubLink on import
-        if (newId && newTitle === noteId) {
-          linkNode.noteId = newId;
-        }
-
-        // If there is no custom text, then the link text should be the same as the note title
-        if (!linkNode.customText) {
-          linkNode.children = [{ text: newTitle }];
-        }
-      });
+      // TODO
     }
     updateData.push({
       id: backlink.id,

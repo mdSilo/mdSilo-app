@@ -1,4 +1,3 @@
-import { createEditor, Transforms } from 'slate';
 import { Note } from 'types/model';
 import { store } from 'lib/store';
 import { writeJsonFile } from 'file/write';
@@ -20,20 +19,11 @@ const updateBlockBacklinks = async (
 
     if (!note) { continue; }
 
-    const editor = createEditor();
-    editor.children = note.content;
-
-    // Update the text of each block reference
-    for (const match of backlink.matches) {
-      Transforms.insertText(editor, newText, {
-        at: match.path,
-        voids: true,
-      });
-    }
+    // TODO
 
     updateData.push({
       id: backlink.id,
-      content: editor.children,
+      content: note.content,
     });
   }
 
