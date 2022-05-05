@@ -1,4 +1,3 @@
-// import { Descendant } from 'slate';
 import { IconPencil } from '@tabler/icons';
 import MsEditor, { parser, serializer } from "mdsmirror";
 import { useCurrentViewContext } from 'context/useCurrentView';

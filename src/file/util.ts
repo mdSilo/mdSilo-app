@@ -2,7 +2,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { v4 as uuidv4 } from 'uuid';
 import { store, NotesData, Notes, NoteTreeItem, TitleTreeItem } from 'lib/store';
-import { purgeUnLinkedWikiNotes } from 'editor/backlinks/useBacklinks';
 import { ciStringEqual } from 'utils/helper';
 
 
@@ -94,7 +93,6 @@ export function trimSlashAll(txt: string) {
 /* some helper to process note */
 // 
 export const buildNotesJson = (withTitleTree = false) => {
-  purgeUnLinkedWikiNotes();
   const notesObj = store.getState().notes;
   const noteTree = store.getState().noteTree;
   const wikiTree = store.getState().wikiTree;

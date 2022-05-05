@@ -2,8 +2,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Note from 'components/note/Note';
 import { useStore } from 'lib/store';
-import useBlockBacklinks from 'editor/backlinks/useBlockBacklinks';
-
 
 export default function NotePage() {
   const currentView = useCurrentViewContext();

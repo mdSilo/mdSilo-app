@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 // import { parser, serializer } from "mdsmirror";
-import type { GraphData } from 'components/editor/ForceGraph';
-import ForceGraph from 'components/editor/ForceGraph';
+import type { GraphData } from 'components/view/ForceGraph';
+import ForceGraph from 'components/view/ForceGraph';
 import { NoteTreeItem, useStore } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { purgeUnLinkedWikiNotes } from 'editor/backlinks/useBacklinks';
 
 export default function Graph() {
-  purgeUnLinkedWikiNotes();
   const notes = useStore((state) => state.notes);
   const noteTree = useStore((state) => state.noteTree);
 

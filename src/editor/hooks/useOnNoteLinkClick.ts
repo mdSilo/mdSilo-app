@@ -1,5 +1,4 @@
 import { MouseEvent, useCallback } from 'react';
-import { Path } from 'slate';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { store, useStore } from 'lib/store';
 import { Note } from 'types/model';
@@ -14,7 +13,7 @@ export default function useOnNoteLinkClick(currentNoteId: string) {
   const isPageStackingOn = useStore((state) => state.isPageStackingOn);
 
   const onClick = useCallback(
-    async (toId: string, stackNote: boolean, note?: Note, highlightedPath?: Path) => {
+    async (toId: string, stackNote: boolean, note?: Note, highlightedPath?: any) => {
       const toNote = note || store.getState().notes[toId];
       const noteId = await openFileAndGetNoteId(toNote);
       // console.log("hl hash", highlightedPath)

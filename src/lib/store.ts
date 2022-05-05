@@ -4,7 +4,6 @@ import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
 import { ciStringEqual } from 'utils/helper';
-import { Backlink } from 'editor/backlinks/useBacklinks';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
 import type { NoteUpdate } from './api/curdNote';
@@ -83,8 +82,6 @@ export type Store = {
   wikiTree: WikiTreeItem[];
   setWikiTree: Setter<WikiTreeItem[]>;
   updateWikiTree: (wikiId: string, noteId: string | null) => void;
-  blockIdToBacklinksMap: Record<string, Backlink[] | undefined>;
-  setBlockIdToBacklinksMap: Setter<Record<string, Backlink[] | undefined>>;
   sidebarTab: SidebarTab;
   setSidebarTab: Setter<SidebarTab>;
   sidebarSearchQuery: string;
@@ -255,9 +252,6 @@ export const store = createVanilla<Store>(
           toggleTreeItemCollapsed(state.noteTree, noteId, toCollapsed);
         });
       },
-      // Cache of block id to backlinks
-      blockIdToBacklinksMap: {},
-      setBlockIdToBacklinksMap: setter(set, 'blockIdToBacklinksMap'),
       // wiki tree
       wikiTree: [],
       setWikiTree: setter(set, 'wikiTree'),

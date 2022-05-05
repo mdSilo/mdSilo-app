@@ -25,7 +25,7 @@ This is desktop app, and still in active development. the web app is [here](http
 
 ## Tech Stack
 
-- Editor Framework: Slate    
+- Editor Framework: ProseMirror      
 - Frontend Framework: React  
 - Cross-platform:  Tauri 
 

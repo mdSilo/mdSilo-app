@@ -1,13 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/note/Title';
-import Backlinks from 'components/editor/backlinks/Backlinks';
+//import Backlinks from 'components/editor/backlinks/Backlinks';
 import { store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultDemoNote } from 'editor/constants';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
-import updateBacklinks from 'editor/backlinks/updateBacklinks';
+//import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
 import { joinPaths } from 'file/util';
@@ -97,7 +97,7 @@ function Note(props: Props) {
       };
       if (isWiki || isTitleUnique()) {
         updateNote({ id: noteId, title: newTitle });
-        await updateBacklinks(newTitle, noteId); 
+        //await updateBacklinks(newTitle, noteId); 
         // write to local file
         if (!isWiki && parentDir) {
           // on rename file: 
