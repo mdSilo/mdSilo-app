@@ -31,11 +31,8 @@ const SidebarNoteLink = (
   //console.log("note", note)
   const filePath = note.file_path;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const lastOpenNoteId = useStore(
-    (state) => state.openNoteIds[state.openNoteIds.length - 1]
-  );
   
-  const { onClick: onNoteLinkClick } = useOnNoteLinkClick(lastOpenNoteId);
+  const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
   const toggleNoteTreeItemCollapsed = useStore(
     (state) => state.toggleNoteTreeItemCollapsed
   );
@@ -59,7 +56,7 @@ const SidebarNoteLink = (
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={async (e) => {
           e.preventDefault();
-          onNoteLinkClick(note.id, e.shiftKey, note);
+          onNoteLinkClick(note.id, note);
           if (isMobile()) {
             setIsSidebarOpen(false);
           }
