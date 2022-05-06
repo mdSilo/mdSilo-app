@@ -32,37 +32,35 @@ function Title(props: Props) {
 
   // Set the initial title
   useEffect(() => {
-    if (!titleRef.current || titleRef.current.textContent) {
+    if (!titleRef.current) {
       return;
     }
     titleRef.current.textContent = initialTitle;
   }, [initialTitle]);
 
   return (
-    <>
-      <div
-        ref={titleRef}
-        className={`title text-3xl md:text-4xl font-semibold border-none focus:outline-none p-0 leading-tight cursor-text ${className}`}
-        role="textbox"
-        placeholder="Untitled"
-        onKeyPress={(event) => {
-          // Disallow newlines in the title field
-          if (event.key === 'Enter') {
-            event.preventDefault();
-          }
-        }}
-        onPaste={(event) => {
-          // Remove styling and newlines from the text
+    <div
+      ref={titleRef}
+      className={`title text-3xl md:text-4xl font-semibold border-none focus:outline-none p-0 leading-tight cursor-text ${className}`}
+      role="textbox"
+      placeholder="Untitled"
+      onKeyPress={(event) => {
+        // Disallow newlines in the title field
+        if (event.key === 'Enter') {
           event.preventDefault();
-          let text = event.clipboardData.getData('text/plain');
-          text = text.replace(/\r?\n|\r/g, ' ');
-          document.execCommand('insertText', false, text);
-        }}
-        onBlur={emitChange}
-        contentEditable={!(readMode || isDaily || isPub)}
-        spellCheck={isCheckSpellOn}
-      />
-    </>
+        }
+      }}
+      onPaste={(event) => {
+        // Remove styling and newlines from the text
+        event.preventDefault();
+        let text = event.clipboardData.getData('text/plain');
+        text = text.replace(/\r?\n|\r/g, ' ');
+        document.execCommand('insertText', false, text);
+      }}
+      onBlur={emitChange}
+      contentEditable={!(readMode || isDaily || isPub)}
+      spellCheck={isCheckSpellOn}
+    />
   );
 }
 

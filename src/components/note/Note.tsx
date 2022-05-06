@@ -32,8 +32,8 @@ function Note(props: Props) {
   const isDaily = note?.is_daily ?? false;
   const initIsWiki = note?.is_wiki ?? false;
   // get title and content value
-  const title = note?.title ?? 'demo note';
-  const [initTitle, setInitTitle] = useState(title); // an initial title copy
+  const title = note?.title ?? '';
+  console.log("title", title);
   const mdContent = note?.content ?? '';
 
   const [isWiki, setIsWiki] = useState(initIsWiki);
@@ -65,18 +65,18 @@ function Note(props: Props) {
 
   // update locally
   const onContentChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
       //updateNote({ id: noteId, content: value });
-      console.log("on content change", text.length, json);
+      // console.log("on content change", text.length, json);
       // write to local file
       if (parentDir) {
         const notePath = note.is_daily 
           ? await joinPaths(parentDir, ['daily', `${title}.md`])
           : await joinPaths(parentDir, [`${title}.md`]);
-        const content = text; //value.map((n) => serialize(n)).join('');
         const relativePath = note.is_daily ? `daily/${title}.md` : `${title}.md`;
         updateNote({ id: noteId, not_process: false, file_path: relativePath });
-        await writeFile(notePath, content);
+        await writeFile(notePath, text);
         await writeJsonFile(parentDir);
       }
     },
@@ -96,28 +96,28 @@ function Note(props: Props) {
         ) === -1;
       };
       if (isWiki || isTitleUnique()) {
-        updateNote({ id: noteId, title: newTitle });
         //await updateBacklinks(newTitle, noteId); 
         // write to local file
         if (!isWiki && parentDir) {
           // on rename file: 
           // 1- new FilePath
           const newPath = await joinPaths(parentDir, [`${newTitle}.md`]);
-          const relativePath = `${title}.md`;
-          updateNote({ id: noteId, not_process: false, file_path: relativePath });
+          const relativePath = `${newTitle}.md`;
           // 2- swap value
-          const content = mdContent; //value.map((n) => serialize(n)).join('');
-          await writeFile(newPath, content);
+          await writeFile(newPath, mdContent);
           await writeJsonFile(parentDir);
           // 3- delete the old redundant File
-          const toDelPath = await joinPaths(parentDir, [`${initTitle}.md`]);
+          const oldTitle = storeNotes[noteId].title;
+          const toDelPath = await joinPaths(parentDir, [`${oldTitle}.md`]);
           await deleteFile(toDelPath);
-          // 4- reset initTitle
-          setInitTitle(newTitle);
+          // 4- update note in store
+          updateNote(
+            { id: noteId, title: newTitle, not_process: false, file_path: relativePath }
+          );
         }
       }
     },
-    [noteId, isWiki, storeNotes, updateNote, parentDir, mdContent, initTitle]
+    [noteId, isWiki, storeNotes, updateNote, parentDir, mdContent]
   );
 
   const noteContainerClassName =

@@ -43,10 +43,7 @@
     "react-scripts": "^5.0.0",
     "react-virtual": "^2.10.4",
     "react-virtualized": "^9.22.3",
-    "remark-gfm": "^3.0.1",
-    "remark-parse": "^10.0.1",
     "tailwindcss": "^3.0.23",
-    "unified": "10.1.2",
     "uuid": "^8.3.2",
     "zustand": "^3.7.2"
   },
