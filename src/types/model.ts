@@ -11,22 +11,22 @@ export type Note = {
   id: string;
   title: string;
   content: string;
-  user_id: User['id'] | null;
+  file_path: string;
   cover: string | null;
   created_at: string;
   updated_at: string;
   is_pub: boolean;
   is_wiki: boolean;
   is_daily: boolean;
+  user_id?: User['id'] | null;
   not_process?: boolean;
-  file_path?: string;
 };
 
 export const defaultUserId = '00000000-0000-0000-0000-000000000000';
 export const defaultNote =  {
   title: 'untitled',
   content: '',
-  user_id: defaultUserId,
+  file_path: '',
   cover: '',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),

@@ -1,8 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
 import { store, Notes, NoteTreeItem, WikiTreeItem, NotesData } from 'lib/store';
 import { ciStringEqual, regDateStr } from 'utils/helper';
 import { Note, defaultNote } from 'types/model';
-import { FileMetaData, SimpleFileMeta } from 'file/directory';
+import { FileMetaData } from 'file/directory';
 
 export function processJson(content: string): boolean {
   try {
@@ -38,12 +37,6 @@ export function processJson(content: string): boolean {
  */
 export function processMds(fileList: FileMetaData[]) {
   const upsertNote = store.getState().upsertNote;
-
-  let noteTitleToIdCache: Record<string, string | undefined> = {};
-  // init Title-ID cache per store
-  const storeCache = store.getState().noteTitleToIdMap;
-  noteTitleToIdCache = {...storeCache};
-
   const newNotesData: Note[] = [];
 
   for (const file of fileList) {
@@ -53,28 +46,26 @@ export function processMds(fileList: FileMetaData[]) {
       continue;
     }
     const fileContent = file.file_text;
-
+    const filePath = file.file_path;
 
     // new note from file
     // Issue Alert: same title but diff ext, only one file can be imported
     const newNoteTitle = rmFileNameExt(fileName);
-    
     const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
     const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
     const isDaily = regDateStr.test(newNoteTitle);
     const newNoteObj = {
-      id: noteTitleToIdCache[newNoteTitle.toLowerCase()] ?? uuidv4(),
+      id: filePath,
       title: newNoteTitle,
       content: fileContent,
       created_at: createdDate,
       updated_at: lastModDate,
       is_daily: isDaily,
       not_process: false,
-      file_path: isDaily ? `daily/${newNoteTitle}.md` : `${newNoteTitle}.md`,
+      file_path: filePath,
     };
     const newProcessedNote = {...defaultNote, ...newNoteObj};
 
-    
     upsertNote(newProcessedNote); // upsert processed note
     // push to Array
     newNotesData.push(newProcessedNote);

@@ -80,7 +80,7 @@ const SidebarNoteLink = (
             fill="currentColor"
           />
         </button>
-        <Tooltip content={`${currentDir}/${filePath}`} disabled={!currentDir || !filePath}>
+        <Tooltip content={filePath} disabled={!currentDir || !filePath}>
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
             {note.title}
           </span>

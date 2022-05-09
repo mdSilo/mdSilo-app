@@ -40,7 +40,7 @@ export async function upsertDbNote(note: NoteUpsert, userId: string) {
 // 
 export type NoteUpdate = PickPartial<
   Note, // id required
-  'title' | 'content' | 'user_id' | 'cover' | 'created_at' | 'updated_at' | 'is_pub' | 'is_wiki' | 'is_daily'
+  'title' | 'content' | 'file_path' | 'cover' | 'created_at' | 'updated_at' | 'is_pub' | 'is_wiki' | 'is_daily'
 >;
 
 export async function updateDbNote(note: NoteUpdate, userId: string) {

@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconDots, IconX, IconTrash, IconCornerDownRight } from '@tabler/icons';
+import { IconDots, IconTrash, IconCornerDownRight } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
-import { store, useStore } from 'lib/store';
+import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import Toggle from 'components/misc/Toggle';
@@ -20,35 +20,7 @@ type Props = {
 export default function NoteHeader(props: Props) {
   const { isWiki, isPub } = props;
   const currentNote = useCurrentMdContext();
-  const viewState = currentNote.state;
-  const dispatch = currentNote.dispatch;
-
-  const isCloseButtonVisible = useStore(
-    (state) => state.openNoteIds?.[0] !== currentNote.id
-  );
   const note = useStore((state) => state.notes[currentNote.id]);
-
-  const onClosePane = useCallback(() => {
-    const currentNoteIndex = store
-      .getState()
-      .openNoteIds.findIndex((openNoteId) => openNoteId === currentNote.id);
-
-    if (currentNoteIndex < 0) {
-      return;
-    }
-
-    // Remove from stacked notes and shallowly route
-    const stackedNoteIds = viewState.params?.stackIds || [];
-    stackedNoteIds.splice(
-      currentNoteIndex - 1, // Stacked notes don't include the main note
-      1
-    );
-
-    dispatch({
-      view: 'md', 
-      params: {noteId: currentNote.id, stackIds: stackedNoteIds}
-    });
-  }, [currentNote.id, dispatch, viewState.params?.stackIds]);
 
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
@@ -64,7 +36,6 @@ export default function NoteHeader(props: Props) {
   const setReadMode = useStore((state) => state.setReadMode);
   const wikiReadMode = useStore((state) => state.wikiReadMode);
   const setWikiReadMode = useStore((state) => state.setWikiReadMode);
-
 
   const [isMoveToModalOpen, setIsMoveToModalOpen] = useState(false);
   const onMoveToClick = useCallback(() => setIsMoveToModalOpen(true), []);
@@ -89,15 +60,6 @@ export default function NoteHeader(props: Props) {
         <span className="text-sm text-gray-300 dark:text-gray-500">Read</span>
       </div>
       <div>
-        {isCloseButtonVisible ? (
-          <Tooltip content="Close pane">
-            <button className={buttonClassName} onClick={onClosePane}>
-              <span className="flex items-center justify-center w-8 h-8">
-                <IconX className={iconClassName} />
-              </span>
-            </button>
-          </Tooltip>
-        ) : null}
         {!(isWiki || isPub) ? (
           <Menu>
             {({ open }) => (

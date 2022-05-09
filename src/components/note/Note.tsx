@@ -10,7 +10,7 @@ import { ProvideCurrentMd } from 'context/useCurrentMd';
 //import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
-import { joinPaths } from 'file/util';
+import { joinPaths, getDirPath } from 'file/util';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteHeader from './NoteHeader';
 
@@ -67,23 +67,18 @@ function Note(props: Props) {
   const onContentChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
-      //updateNote({ id: noteId, content: value });
       // console.log("on content change", text.length, json);
       // write to local file
-      if (parentDir) {
-        const notePath = note.is_daily 
-          ? await joinPaths(parentDir, ['daily', `${title}.md`])
-          : await joinPaths(parentDir, [`${title}.md`]);
-        const relativePath = note.is_daily ? `daily/${title}.md` : `${title}.md`;
-        updateNote({ id: noteId, not_process: false, file_path: relativePath });
-        await writeFile(notePath, text);
-        await writeJsonFile(parentDir);
+      updateNote({ id: noteId, not_process: false });
+      await writeFile(note.file_path, text);
+      if (parentDir) { 
+        await writeJsonFile(parentDir); 
       }
     },
-    [note?.is_daily, noteId, parentDir, title, updateNote]
+    [note.file_path, noteId, parentDir, updateNote]
   );
 
-  // update locally, set the syncState
+  // update locally
   const onTitleChange = useCallback(
     async (title: string) => {
       // update note title in storage as unique title
@@ -101,18 +96,17 @@ function Note(props: Props) {
         if (!isWiki && parentDir) {
           // on rename file: 
           // 1- new FilePath
-          const newPath = await joinPaths(parentDir, [`${newTitle}.md`]);
-          const relativePath = `${newTitle}.md`;
+          const oldPath = storeNotes[noteId].file_path;
+          const dirPath = await getDirPath(oldPath);
+          const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
           // 2- swap value
           await writeFile(newPath, mdContent);
           await writeJsonFile(parentDir);
           // 3- delete the old redundant File
-          const oldTitle = storeNotes[noteId].title;
-          const toDelPath = await joinPaths(parentDir, [`${oldTitle}.md`]);
-          await deleteFile(toDelPath);
+          await deleteFile(oldPath);
           // 4- update note in store
           updateNote(
-            { id: noteId, title: newTitle, not_process: false, file_path: relativePath }
+            { id: noteId, title: newTitle, not_process: false, file_path: newPath }
           );
         }
       }

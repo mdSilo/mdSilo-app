@@ -1,12 +1,11 @@
-import { MouseEvent, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { store, useStore } from 'lib/store';
+import { store } from 'lib/store';
 import { Note } from 'types/model';
 import { openFilePaths } from 'file/open';
 
 export default function useOnNoteLinkClick() {
   const currentView = useCurrentViewContext();
-  const viewState = currentView.state;
   const dispatch = currentView.dispatch;
 
   const onClick = useCallback(
@@ -31,8 +30,7 @@ export default function useOnNoteLinkClick() {
 // 2- listen dir change, set not_process false if any change, reload change on click
 // 
 export const openFileAndGetNoteId = async (note: Note) => {
-  const currentDir = store.getState().currentDir;
-  const filePath = `${currentDir}/${note.file_path}`;
+  const filePath = note.file_path;
   const noteId = note.id;
 
   if (filePath) {
