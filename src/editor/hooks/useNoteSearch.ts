@@ -88,6 +88,7 @@ const getFuseData = (notes: Note[], searchContent: boolean): FuseDatum[] => {
 };
 
 // Flatten the content into individual lines
+// TODO 
 const flattenContent = (content: string): NoteBlock[] => {
   const docAST = parser.parse(content);
   const result: NoteBlock[] = docAST.content.content

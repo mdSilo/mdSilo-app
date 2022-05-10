@@ -27,14 +27,14 @@ function Note(props: Props) {
   // console.log("currentDir", parentDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
-  const note: NoteType | undefined = storeNotes[noteId];
+  const note: NoteType | undefined = useStore((state) => state.notes[noteId]);
   const isPub = note?.is_pub ?? false;
   const isDaily = note?.is_daily ?? false;
   const initIsWiki = note?.is_wiki ?? false;
   // get title and content value
-  const title = note?.title ?? '';
+  const title = note?.title || '';
   console.log("title", title);
-  const mdContent = note?.content ?? '';
+  const mdContent = note?.content || '';
 
   const [isWiki, setIsWiki] = useState(initIsWiki);
   const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect

@@ -25,7 +25,7 @@ export type Note = {
 export const defaultUserId = '00000000-0000-0000-0000-000000000000';
 export const defaultNote =  {
   title: 'untitled',
-  content: '',
+  content: ' ',
   file_path: '',
   cover: '',
   created_at: new Date().toISOString(),

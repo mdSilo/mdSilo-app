@@ -1,12 +1,12 @@
 import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import type { TablerIcon } from '@tabler/icons';
 import { IconFilePlus, IconSearch } from '@tabler/icons';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { ciStringEqual, regDateStr } from 'utils/helper';
-import { store } from 'lib/store';
+import { joinPaths } from 'file/util';
+import { store, useStore } from 'lib/store';
 import { defaultNote } from 'types/model';
 
 enum OptionType {
@@ -32,6 +32,8 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
+  const parentDir = useStore((state) => state.currentDir);
+
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
 
@@ -41,8 +43,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
 
   const options = useMemo(() => {
     const result: Array<Option> = [];
-    // Show new note option if there isn't already a note called `inputTxt`
-    // (We assume if there is a note, then it will be the first result)
+    // Show new note option if there isn't a note called `inputTxt`
     if (
       inputTxt &&
       (searchResults.length <= 0 ||
@@ -71,11 +72,13 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       onOptionClickCallback?.();
 
       if (option.type === OptionType.NEW_NOTE) {
-        const noteId = uuidv4();
+        if (!parentDir) return;
+        const notePath = await joinPaths(parentDir, [`${inputTxt}.md`]);
         const note = { 
           ...defaultNote, 
-          id: noteId, 
+          id: notePath, 
           title: inputTxt,
+          file_path: notePath,
           is_daily: regDateStr.test(inputTxt),
         };
         store.getState().upsertNote(note);
@@ -83,11 +86,9 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         dispatch({view: 'md', params: {noteId: note.id}});
       } else if (option.type === OptionType.NOTE) {
         dispatch({view: 'md', params: {noteId: option.id}});
-      } else {
-        throw new Error(`Type ${option.type} is not supported`);
       }
     },
-    [dispatch, inputTxt, onOptionClickCallback]
+    [dispatch, inputTxt, onOptionClickCallback, parentDir]
   );
 
   const onKeyDown = useCallback(
