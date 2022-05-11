@@ -10,6 +10,7 @@ export type NoteBlock = { text: string; path?: any };
 type FuseDatum = {
   id: string;
   title: string;
+  file_path: string;
   update_at: string;
   blocks?: NoteBlock[];
 };
@@ -81,6 +82,7 @@ const getFuseData = (notes: Note[], searchContent: boolean): FuseDatum[] => {
     (note): FuseDatum => ({
       id: note.id,
       title: note.title,
+      file_path: note.file_path,
       update_at: note.updated_at,
       ...(searchContent ? { blocks: flattenContent(note.content) } : {}),
     })

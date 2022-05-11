@@ -2,14 +2,17 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/note/Title';
 //import Backlinks from 'components/editor/backlinks/Backlinks';
-import { store, useStore } from 'lib/store';
+import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
+import { defaultNote } from 'types/model';
 import { defaultDemoNote } from 'editor/constants';
+import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 //import updateBacklinks from 'editor/backlinks/updateBacklinks';
-import { ciStringEqual } from 'utils/helper';
+import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
+import { openUrl } from 'file/open';
 import { joinPaths, getDirPath } from 'file/util';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteHeader from './NoteHeader';
@@ -37,7 +40,15 @@ function Note(props: Props) {
   const mdContent = note?.content || '';
 
   const [isWiki, setIsWiki] = useState(initIsWiki);
-  const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect
+  const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect 
+
+  // for context 
+  const currentView = useCurrentViewContext();
+  const state = currentView.state;
+  const dispatch = currentView.dispatch;
+  const currentNoteValue = useMemo(() => (
+    { ty: 'note', id: noteId, state, dispatch }
+  ), [dispatch, noteId, state]);
 
   // note action
   const updateNote = useStore((state) => state.updateNote);
@@ -114,18 +125,71 @@ function Note(props: Props) {
     [noteId, isWiki, storeNotes, updateNote, parentDir, mdContent]
   );
 
+  // Search
+  const onSearchText = useCallback(
+    async (text: string) => {
+      store.getState().setSidebarTab(SidebarTab.Search);
+      store.getState().setSidebarSearchQuery(text);
+      store.getState().setIsSidebarOpen(true);
+    },
+    []
+  );
+
+  // Search note
+  const search = useNoteSearch({ numOfResults: 10 });
+  const onSearchNote = useCallback(
+    async (text: string) => {
+      const results = search(text);
+      const searchResults = results.map(res => {
+        const search = {
+          title: res.item.title,
+          url: res.item.file_path,
+        };
+        return search;
+      });
+      return searchResults;
+    },
+    [search]
+  );
+
+  // Create new note
+  const onCreateNote = useCallback(
+    async (title: string) => {
+      if (!parentDir) return '';
+      const notePath = await joinPaths(parentDir, [`${title}.md`]);
+      const note = { 
+        ...defaultNote, 
+        id: notePath, 
+        title,
+        file_path: notePath,
+        is_daily: regDateStr.test(title),
+      };
+      store.getState().upsertNote(note);
+      await writeFile(notePath, ' ');
+      // navigate to md view
+      // dispatch({view: 'md', params: {noteId: note.id}});
+      return notePath;
+    },
+    [parentDir]
+  );
+
+  // open link
+  const onOpenLink = useCallback(
+    async (href: string) => {
+      if (isUrl(href)) { 
+        await openUrl(href);
+      } else {
+        dispatch({view: 'md', params: {noteId: href}});
+      }
+      
+    },
+    [dispatch]
+  );
+
   const noteContainerClassName =
-    'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-gray-800 dark:text-gray-200';
+    'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-black dark:text-gray-200';
   const errorContainerClassName = 
     `${noteContainerClassName} items-center justify-center h-full p-4`;
-
-  // for context 
-  const currentView = useCurrentViewContext();
-  const state = currentView.state;
-  const dispatch = currentView.dispatch;
-  const currentNoteValue = useMemo(() => (
-    { ty: 'note', id: noteId, state, dispatch }
-  ), [dispatch, noteId, state]);
 
   const isNoteExists = useMemo(() => !!storeNotes[noteId], [noteId, storeNotes]);
 
@@ -162,7 +226,10 @@ function Note(props: Props) {
                   value={mdContent}
                   dark={darkMode}
                   onChange={onContentChange}
-                  onSearchSelectText={(txt) => console.log("search text", txt)}
+                  // onSearchLink={onSearchNote}
+                  // onCreateLink={onCreateNote}
+                  onSearchSelectText={(txt) => onSearchText(txt)}
+                  onOpenLink={onOpenLink}
                 />
               </div>
               {/* <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
