@@ -27,7 +27,8 @@ export const getOrCreateNoteId = (title: string): string => {
       title: noteTitle, 
       is_daily, 
     };
-    store.getState().upsertNote(newNote);  
+    store.getState().upsertNote(newNote);
+    store.getState().upsertTree(newNote);   
   }
 
   return noteId;

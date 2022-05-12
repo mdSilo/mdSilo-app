@@ -155,7 +155,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
 pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   let file_text = match fs::read_to_string(file_path) {
     Ok(text) => text,
-    Err(e) => return Err(format!("Err on read file: {:?}", e)),
+    Err(_e) => String::new(),
   };
 
   let meta_data = match get_simple_meta(file_path) {
@@ -229,6 +229,8 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
       continue;
     }
   }
+
+  // println!("num: {}, files: {:?}", number_of_files, files);
 
   Ok(FolderData {
     number_of_files,

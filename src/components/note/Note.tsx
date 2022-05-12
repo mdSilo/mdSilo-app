@@ -26,8 +26,8 @@ type Props = {
 function Note(props: Props) {
   const { noteId, className } = props;
   const darkMode = useStore((state) => state.darkMode);
-  const parentDir = useStore((state) => state.currentDir);
-  // console.log("currentDir", parentDir);
+  const currentDir = useStore((state) => state.currentDir);
+  // console.log("currentDir", currentDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
   const note: NoteType | undefined = useStore((state) => state.notes[noteId]);
@@ -58,12 +58,14 @@ function Note(props: Props) {
   const loadNote = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (noteId: string) => {
-    const note: NoteType = defaultDemoNote;
-    if (note) {
-      upsertNote(note);
-      setIsWiki(note.is_wiki);
-    }
-  }, [upsertNote]);
+      const note: NoteType = defaultDemoNote;
+      if (note) {
+        upsertNote(note);
+        setIsWiki(note.is_wiki);
+      }
+    }, 
+    [upsertNote]
+  );
 
   useEffect(() => { 
     if (isWiki && !isLoaded) {
@@ -82,11 +84,11 @@ function Note(props: Props) {
       // write to local file
       updateNote({ id: noteId, not_process: false });
       await writeFile(note.file_path, text);
-      if (parentDir) { 
-        await writeJsonFile(parentDir); 
+      if (currentDir) { 
+        await writeJsonFile(currentDir); 
       }
     },
-    [note.file_path, noteId, parentDir, updateNote]
+    [note.file_path, noteId, currentDir, updateNote]
   );
 
   // update locally
@@ -104,7 +106,7 @@ function Note(props: Props) {
       if (isWiki || isTitleUnique()) {
         //await updateBacklinks(newTitle, noteId); 
         // write to local file
-        if (!isWiki && parentDir) {
+        if (!isWiki && currentDir) {
           // on rename file: 
           // 1- new FilePath
           const oldPath = storeNotes[noteId].file_path;
@@ -112,7 +114,7 @@ function Note(props: Props) {
           const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
           // 2- swap value
           await writeFile(newPath, mdContent);
-          await writeJsonFile(parentDir);
+          await writeJsonFile(currentDir);
           // 3- delete the old redundant File
           await deleteFile(oldPath);
           // 4- update note in store
@@ -122,7 +124,7 @@ function Note(props: Props) {
         }
       }
     },
-    [noteId, isWiki, storeNotes, updateNote, parentDir, mdContent]
+    [noteId, isWiki, storeNotes, updateNote, currentDir, mdContent]
   );
 
   // Search
@@ -155,22 +157,23 @@ function Note(props: Props) {
   // Create new note
   const onCreateNote = useCallback(
     async (title: string) => {
-      if (!parentDir) return '';
+      const parentDir = await getDirPath(note.file_path);
       const notePath = await joinPaths(parentDir, [`${title}.md`]);
-      const note = { 
+      const newNote = { 
         ...defaultNote, 
         id: notePath, 
         title,
         file_path: notePath,
         is_daily: regDateStr.test(title),
       };
-      store.getState().upsertNote(note);
+      store.getState().upsertNote(newNote);
+      store.getState().upsertTree(newNote, parentDir);
       await writeFile(notePath, ' ');
       // navigate to md view
       // dispatch({view: 'md', params: {noteId: note.id}});
       return notePath;
     },
-    [parentDir]
+    [note.file_path]
   );
 
   // open link

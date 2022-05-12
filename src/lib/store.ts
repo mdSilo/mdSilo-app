@@ -35,6 +35,7 @@ export type Notes = Record<Note['id'], Note>;
 export type NoteTreeItem = {
   id: Note['id'];  
   children: NoteTreeItem[];
+  isDir: boolean;
   collapsed: boolean;
 };
 
@@ -67,8 +68,8 @@ export type Store = {
   noteTitleToIdMap: Record<string, string | undefined>;
   setNoteTitleToIdMap: Setter<Record<string, string | undefined>>;
   // operate note
-  upsertNote: (note: Note, ifUpTree?: boolean) => void;
-  upsertTree: (note: Note) => void;
+  upsertNote: (note: Note) => void;
+  upsertTree: (note: Note, targetId?: string, isDir?: boolean) => void;
   updateNote: (note: NoteUpdate) => void;
   deleteNote: (noteId: string) => void;
   currentNoteId: string;
@@ -131,9 +132,8 @@ export const store = createVanilla<Store>(
       /**
        * update or insert the note
        * @param {Note} note the note to upsert
-       * @param ifUpTree, boolean, optional, Defaut True,if upsertTree on upsert
        */
-      upsertNote: (note: Note, ifUpTree = true) => {
+      upsertNote: (note: Note) => {
         set((state) => {
           if (state.notes[note.id]) {
             // if existing per id
@@ -152,32 +152,21 @@ export const store = createVanilla<Store>(
             } else {
               // Insert new note
               state.notes[note.id] = note;
-              if (ifUpTree) {
-                if (note.is_wiki) {
-                  insertWikiTree(state.wikiTree, note.id, null);
-                } else {
-                  insertTreeItem(
-                    state.noteTree,
-                    { id: note.id, children: [], collapsed: true },
-                    null
-                  );
-                }
-              }
             }
           }
           // set title-id map
           state.noteTitleToIdMap[note.title.toLowerCase()] = note.id;
         });
       },
-      upsertTree: (note: Note) => {
+      upsertTree: (note: Note, targetId = '', isDir = false) => {
         set((state) => {
             if (note.is_wiki) {
             insertWikiTree(state.wikiTree, note.id, null);
           } else {
             insertTreeItem(
               state.noteTree,
-              { id: note.id, children: [], collapsed: true },
-              null
+              { id: note.id, children: [], collapsed: true, isDir },
+              targetId
             );
           }
         });
@@ -331,7 +320,8 @@ const insertTreeItem = (
   item: NoteTreeItem,
   targetId: string | null
 ): boolean => {
-  if (targetId === null) {
+  // no targetId, push to root
+  if (!targetId) {
     const itemExist = tree.find((n) => n.id === item.id);
     if (itemExist) { 
       return true; // existed
@@ -340,6 +330,7 @@ const insertTreeItem = (
     return true;
   }
 
+  // match targetId to insert
   for (let i = 0; i < tree.length; i++) {
     const treeItem = tree[i];
     if (treeItem.id === targetId) {
@@ -357,7 +348,9 @@ const insertTreeItem = (
       }
     }
   }
-  return false;
+  // no targetId matched, push to root
+  tree.push(item);
+  return true;
 };
 
 /**

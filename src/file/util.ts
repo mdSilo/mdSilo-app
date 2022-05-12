@@ -117,20 +117,3 @@ const buildTitleTree = (noteTree: NoteTreeItem[], notes: Notes): TitleTreeItem[]
   });
   return titleTree;
 };
-
-/**
- * map titleTree to noteTree
- * @param titleTree 
- * @param notes 
- * @returns noteTree
- */
-export const buildNoteTree = (titleTree: TitleTreeItem[], notes: Notes): NoteTreeItem[] => {
-  const noteTree = titleTree.map((item) => {
-    const note = Object.values(notes).find((n) => ciStringEqual(n.title, item.title));
-    const id = note?.id || uuidv4();
-    const children: NoteTreeItem[] = buildNoteTree(item.children, notes);
-    const treeItem: NoteTreeItem = {id, children, collapsed: false};
-    return treeItem;
-  });
-  return noteTree;
-};

@@ -3,8 +3,9 @@ import { invoke } from '@tauri-apps/api/tauri';
 import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
-import { processJson, processMds } from './process';
+import { processJson, processMds, processDirs } from './process';
 import { writeJsonFile } from './write';
+import { getDirPath } from './util';
 
 /* 
 Open files: 
@@ -71,15 +72,25 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   // 1- get files 
   const dirData = await dirInfo.getFiles();
   const files = dirData.files;
-  if (files.length) {
-    processMds(files);
-  }
+  const dirs = files.filter(f => f.is_dir);
+  const processedDirs = dirs.length ? processDirs(dirs) : [];
+  const mds = files.filter(f => f.is_file);
+  const processedMds =  mds.length ? processMds(mds) : [];
   // TODO: sub folder 
   // 2- try process daily dir
-  const dailyDir =  new DirectoryAPI('daily', dir);
-  if (await dailyDir.exists()) {
-    await openDir(dailyDir.dirPath, false);
-  }
+  // const dailyDir =  new DirectoryAPI('daily', dir);
+  // if (await dailyDir.exists()) {
+  //   await openDir(dailyDir.dirPath, false);
+  // }
+  const upsertNote = store.getState().upsertNote;
+  const upsertTree = store.getState().upsertTree;
+  const dirPath = dirInfo.dirPath;
+  processedDirs.forEach(dir => upsertTree(dir, dirPath, true));
+  processedMds.forEach(md => {
+    upsertNote(md);
+    upsertTree(md, dirPath, false);
+  });
+  
   closeMsgModal();
 }
 
@@ -136,7 +147,14 @@ export async function openFilePaths(filePaths: string[], ty = 'md') {
     // sync store states to JSON
     if (processedRes.length > 0) {
       const currentDir = store.getState().currentDir;
-      if (currentDir) { await writeJsonFile(currentDir); } 
+      const upsertNote = store.getState().upsertNote;
+      for (const md of processedRes) {
+        upsertNote(md);
+      }
+      if (currentDir) { 
+        await writeJsonFile(currentDir); 
+      } 
+
       return true;
     }
   }

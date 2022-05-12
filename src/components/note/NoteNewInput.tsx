@@ -32,7 +32,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
-  const parentDir = useStore((state) => state.currentDir);
+  const currentDir = useStore((state) => state.currentDir);
 
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
@@ -72,8 +72,8 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       onOptionClickCallback?.();
 
       if (option.type === OptionType.NEW_NOTE) {
-        if (!parentDir) return;
-        const notePath = await joinPaths(parentDir, [`${inputTxt}.md`]);
+        if (!currentDir) return;
+        const notePath = await joinPaths(currentDir, [`${inputTxt}.md`]);
         const note = { 
           ...defaultNote, 
           id: notePath, 
@@ -82,13 +82,14 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           is_daily: regDateStr.test(inputTxt),
         };
         store.getState().upsertNote(note);
+        store.getState().upsertTree(note, currentDir);
         // navigate to md view
         dispatch({view: 'md', params: {noteId: note.id}});
       } else if (option.type === OptionType.NOTE) {
         dispatch({view: 'md', params: {noteId: option.id}});
       }
     },
-    [dispatch, inputTxt, onOptionClickCallback, parentDir]
+    [dispatch, inputTxt, onOptionClickCallback, currentDir]
   );
 
   const onKeyDown = useCallback(

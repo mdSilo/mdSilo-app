@@ -36,13 +36,13 @@ export function processJson(content: string): boolean {
  * 3- Store: set Descendant[] to store system of App 
  */
 export function processMds(fileList: FileMetaData[]) {
-  const upsertNote = store.getState().upsertNote;
+  // const upsertNote = store.getState().upsertNote;
   const newNotesData: Note[] = [];
 
   for (const file of fileList) {
     const fileName = file.file_name;
     const checkMd = checkFileIsMd(fileName);
-    if (!fileName || !checkMd) {
+    if (!fileName || !file.is_file || !checkMd) {
       continue;
     }
     const fileContent = file.file_text;
@@ -66,12 +66,43 @@ export function processMds(fileList: FileMetaData[]) {
     };
     const newProcessedNote = {...defaultNote, ...newNoteObj};
 
-    upsertNote(newProcessedNote); // upsert processed note
+    // upsertNote(newProcessedNote); // upsert processed note
     // push to Array
     newNotesData.push(newProcessedNote);
   }
 
   return newNotesData;
+}
+
+export function processDirs(fileList: FileMetaData[]) {
+  // const upsertTree = store.getState().upsertTree;
+  const newDirsData: Note[] = [];
+
+  for (const file of fileList) {
+    const fileName = file.file_name;
+    
+    if (!fileName || !file.is_dir ) {
+      continue;
+    }
+
+    const filePath = file.file_path;
+    const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
+    const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
+    const newDirObj = {
+      id: filePath,
+      title: fileName,
+      created_at: createdDate,
+      updated_at: lastModDate,
+      file_path: filePath,
+    };
+    const newProcessedDir = {...defaultNote, ...newDirObj};
+
+    // upsertTree(newProcessedDir); // upsert processed note
+    // push to Array
+    newDirsData.push(newProcessedDir);
+  }
+
+  return newDirsData;
 }
 
 /* #endregion: import process */

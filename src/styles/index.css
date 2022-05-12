@@ -127,3 +127,10 @@ code {
     monospace;
 }
 
+ol {
+  list-style-type: decimal !important;
+}
+
+ul {
+  list-style-type: disc !important;
+}
