@@ -94,6 +94,7 @@ export function processDirs(fileList: FileMetaData[]) {
       created_at: createdDate,
       updated_at: lastModDate,
       file_path: filePath,
+      is_dir: true,
     };
     const newProcessedDir = {...defaultNote, ...newDirObj};
 

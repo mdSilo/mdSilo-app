@@ -79,31 +79,31 @@ const sortNoteTree = (
   // Copy tree shallowly
   const newTre = [...tree];
   // filte out the wiki
-  const noteTree = newTre.filter(n => !n.isDir)
-  const newTree = noteTree.filter(n => !notes[n.id].is_wiki && !notes[n.id].is_daily);
+  //const noteTree = newTre.filter(n => !n.isDir)
+  const newTree = newTre;//.filter(n => !notes[n.id].is_wiki && !notes[n.id].is_daily);
   // Sort tree items (one level)
-  if (newTree.length >= 2) {
-    newTree.sort((n1, n2) => {
-      const note1 = notes[n1.id];
-      const note2 = notes[n2.id];
-      switch (noteSort) {
-        case Sort.DateModifiedAscending:
-          return dateCompare(note1.updated_at, note2.updated_at);
-        case Sort.DateModifiedDescending:
-          return dateCompare(note2.updated_at, note1.updated_at);
-        case Sort.DateCreatedAscending:
-          return dateCompare(note1.created_at, note2.created_at);
-        case Sort.DateCreatedDescending:
-          return dateCompare(note2.created_at, note1.created_at);
-        case Sort.TitleAscending:
-          return ciStringCompare(note1.title, note2.title);
-        case Sort.TitleDescending:
-          return ciStringCompare(note2.title, note1.title);
-        default:
-          return ciStringCompare(note1.title, note2.title);
-      }
-    });
-  }
+  // if (newTree.length >= 2) {
+  //   newTree.sort((n1, n2) => {
+  //     const note1 = notes[n1.id];
+  //     const note2 = notes[n2.id];
+  //     switch (noteSort) {
+  //       case Sort.DateModifiedAscending:
+  //         return dateCompare(note1.updated_at, note2.updated_at);
+  //       case Sort.DateModifiedDescending:
+  //         return dateCompare(note2.updated_at, note1.updated_at);
+  //       case Sort.DateCreatedAscending:
+  //         return dateCompare(note1.created_at, note2.created_at);
+  //       case Sort.DateCreatedDescending:
+  //         return dateCompare(note2.created_at, note1.created_at);
+  //       case Sort.TitleAscending:
+  //         return ciStringCompare(note1.title, note2.title);
+  //       case Sort.TitleDescending:
+  //         return ciStringCompare(note2.title, note1.title);
+  //       default:
+  //         return ciStringCompare(note1.title, note2.title);
+  //     }
+  //   });
+  // }
   // Sort each tree item's children
   return newTree.map((item) => ({
     ...item,

@@ -20,6 +20,7 @@ export type Note = {
   is_daily: boolean;
   user_id?: User['id'] | null;
   not_process?: boolean;
+  is_dir?: boolean;
 };
 
 export const defaultUserId = '00000000-0000-0000-0000-000000000000';

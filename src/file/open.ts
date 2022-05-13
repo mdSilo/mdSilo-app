@@ -85,11 +85,21 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const upsertNote = store.getState().upsertNote;
   const upsertTree = store.getState().upsertTree;
   const dirPath = dirInfo.dirPath;
-  processedDirs.forEach(dir => upsertTree(dir, dirPath, true));
-  processedMds.forEach(md => {
+
+  for (const dir of processedDirs) {
+    const subDir =  new DirectoryAPI(dir.file_path);
+    if (await subDir.exists()) {
+      upsertNote(dir);
+      upsertTree(dir, dirPath, true);
+      // recursively sub folder
+      //await openDir(subDir.dirPath);
+    }
+  }
+
+  for (const md of processedMds) {
     upsertNote(md);
     upsertTree(md, dirPath, false);
-  });
+  }
   
   closeMsgModal();
 }
