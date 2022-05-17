@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoke } from '@tauri-apps/api/tauri'
-import { v4 as uuidv4 } from 'uuid';
-import { store, NotesData, Notes, NoteTreeItem, TitleTreeItem } from 'lib/store';
-import { ciStringEqual } from 'utils/helper';
+import { store, NotesData } from 'lib/store';
 
 
 export const isTauri = Boolean(
@@ -57,11 +55,21 @@ export const joinPath = (...args: string[]): string => {
 
 /**
  * Get dir path of the file path
- * @param {string} path path to be evaluated
- * @returns {Promise<string>} result of the evaluated path: dir or ""
+ * parent dir for file, and self for dir
+ * @param {string} path 
+ * @returns {Promise<string>}
  */
 export const getDirPath = async (path: string): Promise<string> => {
   return await invoke('get_dirpath', { path });
+};
+
+/**
+ * Get parent dir path of the file/dir path
+ * @param {string} path 
+ * @returns {Promise<string>}
+ */
+ export const getParentDir = async (path: string): Promise<string> => {
+  return await invoke('get_parent_dir', { path });
 };
 
 /**
@@ -92,28 +100,11 @@ export function trimSlashAll(txt: string) {
 
 /* some helper to process note */
 // 
-export const buildNotesJson = (withTitleTree = false) => {
+export const buildNotesJson = () => {
   const notesObj = store.getState().notes;
   const noteTree = store.getState().noteTree;
   const wikiTree = store.getState().wikiTree;
-  const titleTree = withTitleTree ? buildTitleTree(noteTree, notesObj) : [];
-  const notesData: NotesData = {notesObj, noteTree, wikiTree, titleTree};
+  const notesData: NotesData = {notesObj, noteTree, wikiTree};
   const notesJson = JSON.stringify(notesData);
   return notesJson;
 }
-
-/**
- * map noteTree to titleTree
- * @param noteTree 
- * @param notes 
- * @returns titleTree
- */
-const buildTitleTree = (noteTree: NoteTreeItem[], notes: Notes): TitleTreeItem[] => {
-  const titleTree = noteTree.map((item) => {
-    const title = notes[item.id].title;
-    const children: TitleTreeItem[] = buildTitleTree(item.children, notes);
-    const titleItem: TitleTreeItem = {title, children};
-    return titleItem;
-  });
-  return titleTree;
-};

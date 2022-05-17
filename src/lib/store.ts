@@ -47,16 +47,10 @@ export type WikiTreeItem = {
   children: Note['id'][]; // private notes
 };
 
-export type TitleTreeItem = {
-  title: Note['title'];
-  children: TitleTreeItem[];
-};
-
 export type NotesData = {
   notesObj: Notes;
   noteTree: NoteTreeItem[];
   wikiTree: WikiTreeItem[];
-  titleTree?: TitleTreeItem[];
 }
 
 export enum SidebarTab {

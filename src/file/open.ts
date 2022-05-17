@@ -5,7 +5,7 @@ import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds, processDirs } from './process';
 import { writeJsonFile } from './write';
-import { getDirPath } from './util';
+import { getParentDir } from './util';
 
 /* 
 Open files: 
@@ -57,18 +57,6 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   store.getState().setMsgModalText('Importing, Please wait...');
   store.getState().setMsgModalOpen(true);
 
-  // 0- try process mdsilo_all.json
-  //const jsonInfo = new FileAPI('mdsilo_all.json', dir);
-  // console.log("json", jsonInfo)
-  // if (await jsonInfo.exists()) {
-  //   const fileContent = await jsonInfo.readFile();
-  //   const jsonProcessed = processJson(fileContent);
-  //   if (jsonProcessed) { 
-  //     closeMsgModal();
-  //     return; 
-  //   }
-  // }
-
   // 1- get files 
   const dirData = await dirInfo.getFiles();
   const files = dirData.files;
@@ -76,30 +64,31 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const processedDirs = dirs.length ? processDirs(dirs) : [];
   const mds = files.filter(f => f.is_file);
   const processedMds =  mds.length ? processMds(mds) : [];
-  // TODO: sub folder 
-  // 2- try process daily dir
-  // const dailyDir =  new DirectoryAPI('daily', dir);
-  // if (await dailyDir.exists()) {
-  //   await openDir(dailyDir.dirPath, false);
-  // }
+
   const upsertNote = store.getState().upsertNote;
   const upsertTree = store.getState().upsertTree;
   const dirPath = dirInfo.dirPath;
 
-  for (const dir of processedDirs) {
-    const subDir =  new DirectoryAPI(dir.file_path);
+  // 2- process dirs
+  for (const subdir of processedDirs) {
+    const subDir =  new DirectoryAPI(subdir.file_path);
     if (await subDir.exists()) {
-      upsertNote(dir);
-      upsertTree(dir, dirPath, true);
-      // recursively sub folder
-      //await openDir(subDir.dirPath);
+      upsertNote(subdir);
+      const parentDir = await getParentDir(subdir.file_path);
+      console.log("dir path1", dirPath, dir, parentDir);
+      upsertTree(subdir, parentDir, true);
     }
   }
-
+  
+  // 3- process md files
   for (const md of processedMds) {
     upsertNote(md);
-    upsertTree(md, dirPath, false);
+    const parentDir = await getParentDir(md.file_path);
+    console.log("dir path2", dirPath, dir, parentDir);
+    upsertTree(md, parentDir, false);
   }
+
+  console.log("dir path", dirPath, dir);
   
   closeMsgModal();
 }

@@ -31,7 +31,7 @@ export default function NoteSumList(props: Props) {
           ) : null}
         </div>
       ),
-      children: notes.map(noteToTreeData()),
+      children: notes.filter(n => !n.is_dir).map(noteToTreeData()),
     }
   ];
 

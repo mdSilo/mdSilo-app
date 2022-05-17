@@ -1,5 +1,5 @@
 import { Dispatch, memo, SetStateAction, useCallback, useMemo } from 'react';
-import { Notes, NoteTreeItem, useStore } from 'lib/store';
+import { NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { ciStringCompare, dateCompare, isMobile } from 'utils/helper';
 import { onImportJson, onOpenFile, onOpenDir } from 'editor/hooks/useOpen';
@@ -19,8 +19,8 @@ function SidebarNotes(props: SidebarNotesProps) {
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
   const sortedNoteTree = useMemo(
-    () => sortNoteTree(noteTree, notes, noteSort),
-    [noteTree, notes, noteSort]
+    () => sortNoteTree(noteTree, noteSort),
+    [noteTree, noteSort]
   );
 
   // why pass numOfNotes to SidebarNotesBar from here?
@@ -73,7 +73,6 @@ function SidebarNotes(props: SidebarNotesProps) {
  */
 const sortNoteTree = (
   tree: NoteTreeItem[],
-  notes: Notes,
   noteSort: Sort
 ): NoteTreeItem[] => {
   // Copy tree shallowly
@@ -83,23 +82,21 @@ const sortNoteTree = (
   // Sort tree items (one level)
   if (newTree.length >= 2) {
     newTree.sort((n1, n2) => {
-      const note1 = notes[n1.id];
-      const note2 = notes[n2.id];
       switch (noteSort) {
         case Sort.DateModifiedAscending:
-          return dateCompare(note1.updated_at, note2.updated_at);
+          return dateCompare(n1.updated_at, n2.updated_at);
         case Sort.DateModifiedDescending:
-          return dateCompare(note2.updated_at, note1.updated_at);
+          return dateCompare(n2.updated_at, n1.updated_at);
         case Sort.DateCreatedAscending:
-          return dateCompare(note1.created_at, note2.created_at);
+          return dateCompare(n1.created_at, n2.created_at);
         case Sort.DateCreatedDescending:
-          return dateCompare(note2.created_at, note1.created_at);
+          return dateCompare(n2.created_at, n1.created_at);
         case Sort.TitleAscending:
-          return ciStringCompare(note1.title, note2.title);
+          return ciStringCompare(n1.title, n2.title);
         case Sort.TitleDescending:
-          return ciStringCompare(note2.title, note1.title);
+          return ciStringCompare(n2.title, n1.title);
         default:
-          return ciStringCompare(note1.title, note2.title);
+          return ciStringCompare(n1.title, n2.title);
       }
     });
     newTree.sort((n1, n2) => Number(Boolean(n2.isDir)) - Number(Boolean(n1.isDir)));
@@ -107,7 +104,7 @@ const sortNoteTree = (
   // Sort each tree item's children
   return newTree.map((item) => ({
     ...item,
-    children: sortNoteTree(item.children, notes, noteSort),
+    children: sortNoteTree(item.children, noteSort),
   }));
 };
 

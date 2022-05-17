@@ -1,5 +1,5 @@
 import { store, Notes, NoteTreeItem, WikiTreeItem, NotesData } from 'lib/store';
-import { ciStringEqual, regDateStr } from 'utils/helper';
+import { regDateStr } from 'utils/helper';
 import { Note, defaultNote } from 'types/model';
 import { FileMetaData } from 'file/directory';
 

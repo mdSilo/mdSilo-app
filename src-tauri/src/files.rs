@@ -80,6 +80,15 @@ pub fn get_dirpath(path: &str) -> String {
   }
 }
 
+// get parent dir path
+#[tauri::command]
+pub fn get_parent_dir(path: &str) -> String {
+  let file_path = path.trim_end_matches(['/', '\\']);
+  let path = Path::new(file_path);
+  let dir_path = path.parent().unwrap_or(path);
+  dir_path.normalize_slash().unwrap_or_default()
+}
+
 // join path and normalize
 #[tauri::command]
 pub fn join_paths(root: &str, parts: Vec<&str>) -> String {

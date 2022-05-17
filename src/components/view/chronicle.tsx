@@ -12,7 +12,7 @@ import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 export default function Chronicle() {
   const notes = useStore((state) => state.notes);
   const notesArr = Object.values(notes);
-  const myNotes = notesArr.filter(n => !n.is_wiki && !n.is_daily);
+  const myNotes = notesArr.filter(n => !n.is_wiki && !n.is_daily && !n.is_dir);
   myNotes.sort((n1, n2) => dateCompare(n2.created_at, n1.created_at));
   const upDates = myNotes.map(n => getStrDate(n.created_at));
   const dateSet = new Set(upDates);
