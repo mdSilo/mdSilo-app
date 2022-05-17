@@ -37,6 +37,9 @@ export type NoteTreeItem = {
   children: NoteTreeItem[];
   isDir: boolean;
   collapsed: boolean;
+  title: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type WikiTreeItem = {
@@ -165,7 +168,14 @@ export const store = createVanilla<Store>(
           } else {
             insertTreeItem(
               state.noteTree,
-              { id: note.id, children: [], collapsed: true, isDir },
+              { id: note.id, 
+                children: [], 
+                collapsed: true, 
+                isDir,
+                title: note.title,
+                created_at: note.created_at,
+                updated_at: note.updated_at,
+              },
               targetId
             );
           }
