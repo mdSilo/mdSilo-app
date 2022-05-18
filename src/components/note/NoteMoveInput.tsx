@@ -5,9 +5,10 @@ import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store, useStore } from 'lib/store';
 import { ciStringCompare } from 'utils/helper';
 import { writeJsonFile } from 'file/write';
+import FileAPI from 'file/files';
 
 enum OptionType {
-  NOTE,
+  DIR,
   ROOT,
 }
 
@@ -36,10 +37,11 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
 
   const noteTree = useStore((state) => state.noteTree);
   const moveNoteTreeItem = useStore((state) => state.moveNoteTreeItem);
+  const updateNote = useStore((state) => state.updateNote);
   const currentDir = useStore((state) => state.currentDir);
 
   const inputTxt = inputText.trim();
-  const search = useNoteSearch({ numOfResults: 10 });
+  const search = useNoteSearch({ numOfResults: 10, searchDir: true });
   const searchResults = useMemo(() => search(inputTxt), [search, inputTxt]);
 
   const options = useMemo(() => {
@@ -55,10 +57,10 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       });
       result.push(
         ...noteTree
-          .filter((item) => item.id !== noteId)
+          .filter((item) => item.isDir && item.id !== noteId)
           .map((item) => ({
             id: item.id,
-            type: OptionType.NOTE,
+            type: OptionType.DIR,
             text: notes[item.id].title,
           }))
           .sort((n1, n2) => ciStringCompare(n1.text, n2.text))
@@ -70,7 +72,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           .filter((result) => result.item.id !== noteId)
           .map((result) => ({
             id: result.item.id,
-            type: OptionType.NOTE,
+            type: OptionType.DIR,
             text: result.item.title,
           }))
       );
@@ -81,18 +83,28 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const onOptionClick = useCallback(
     async (option: Option) => {
       onOptionClickCallback?.();
+      let tarDir: string | undefined;
       // move tree in store
       if (option.type === OptionType.ROOT) {
         moveNoteTreeItem(noteId, null);
-      } else if (option.type === OptionType.NOTE) {
+        tarDir = currentDir;
+      } else if (option.type === OptionType.DIR) {
         moveNoteTreeItem(noteId, option.id);
+        tarDir = option.id;
+      }
+      // move file in disk
+      if (tarDir) {
+        const thisFile = new FileAPI(noteId);
+        const tarPath = await thisFile.moveFile(tarDir);
+        console.log("move: ", noteId, tarPath)
+        updateNote({id: noteId, file_path: tarPath})
       }
       // sync the Moved hierarchy to JSON
       if (currentDir) {
         await writeJsonFile(currentDir);
       }
     },
-    [onOptionClickCallback, currentDir, moveNoteTreeItem, noteId]
+    [onOptionClickCallback, currentDir, moveNoteTreeItem, noteId, updateNote]
   );
 
   const onKeyDown = useCallback(

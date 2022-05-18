@@ -20,6 +20,7 @@ type searchOptions = {
   searchContent?: boolean;
   extendedSearch?: boolean;
   searchWiki?: boolean;
+  searchDir?: boolean;
   notesBase?: Note[];
 };
 
@@ -29,16 +30,20 @@ export default function useNoteSearch({
   searchContent = false,
   extendedSearch = false,
   searchWiki = false,
+  searchDir = false,
   notesBase = [],
 }: searchOptions = {}) {
   const myNotes = useCallback(() => {
     const notes = store.getState().notes;
     const notesArr = Object.values(notes);
+    const dirNotes = searchDir 
+      ? notesArr.filter(n => n.is_dir) 
+      : notesArr.filter(n => !n.is_dir);
     const allNotes = searchWiki 
-      ? notesArr.filter(n => n.is_wiki) 
-      : notesArr.filter(n => !n.is_wiki);
+      ? dirNotes.filter(n => n.is_wiki) 
+      : dirNotes.filter(n => !n.is_wiki);
     return allNotes;
-  }, [searchWiki]);
+  }, [searchDir, searchWiki]);
 
   const search = useCallback(
     (searchText: string) => {

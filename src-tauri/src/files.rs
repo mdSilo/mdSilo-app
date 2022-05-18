@@ -49,6 +49,7 @@ pub struct Event {
 }
 
 /// Get file_name or dir_name of the path given
+#[tauri::command]
 pub fn get_basename(file_path: &str) -> (String, bool) {
   let path = Path::new(file_path);
   let name = path.file_name();
@@ -318,7 +319,7 @@ pub async fn write_file(file_path: String, text: String) -> bool {
   fs::write(file_path, text).is_ok()
 }
 
-/// copy the assets(image...)
+/// copy the file
 #[tauri::command]
 pub async fn copy_file(src_path: String, to_path: String) -> bool {
   if let Some(p) = Path::new(&to_path).parent() {

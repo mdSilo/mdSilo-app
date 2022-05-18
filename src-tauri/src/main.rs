@@ -29,6 +29,7 @@ fn main() {
       files::read_directory,
       files::is_dir,
       files::is_file,
+      files::get_basename,
       files::get_dirpath,
       files::get_parent_dir,
       files::join_paths,
