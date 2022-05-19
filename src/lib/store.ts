@@ -160,18 +160,27 @@ export const store = createVanilla<Store>(
             if (note.is_wiki) {
             insertWikiTree(state.wikiTree, note.id, null);
           } else {
-            insertTreeItem(
+            const itemToInsert = { 
+              id: note.id, 
+              children: [], 
+              collapsed: true, 
+              isDir,
+              title: note.title,
+              created_at: note.created_at,
+              updated_at: note.updated_at,
+            };
+            const inserted = insertTreeItem(
               state.noteTree,
-              { id: note.id, 
-                children: [], 
-                collapsed: true, 
-                isDir,
-                title: note.title,
-                created_at: note.created_at,
-                updated_at: note.updated_at,
-              },
+              itemToInsert,
               targetId
             );
+            if (!inserted) {
+              insertTreeItem(
+                state.noteTree,
+                itemToInsert,
+                null
+              );
+            }
           }
         });
       },
@@ -337,7 +346,7 @@ const insertTreeItem = (
   // match targetId to insert
   for (let i = 0; i < tree.length; i++) {
     const treeItem = tree[i];
-    if (treeItem.id === targetId) {
+    if (treeItem.id === targetId && treeItem.isDir) {
       const children = treeItem.children;
       const itemExist = children.find((n) => n.id === item.id);
       if (itemExist) {
@@ -352,9 +361,7 @@ const insertTreeItem = (
       }
     }
   }
-  // no targetId matched, push to root
-  tree.push(item);
-  return true;
+  return false;
 };
 
 /**

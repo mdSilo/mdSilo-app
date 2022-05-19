@@ -88,7 +88,7 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
     upsertTree(md, parentDir, false);
   }
 
-  console.log("dir path", dirPath, dir);
+  console.log("dir path", dirPath, dir, store.getState().noteTree);
   
   closeMsgModal();
 }
