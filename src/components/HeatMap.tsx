@@ -50,7 +50,6 @@ type WeekProps = {
 };
 
 function WeekHeatMap({ weekIdx, onClick }: WeekProps) {
-  
   return (
     <g transform={`translate(${16 * weekIdx}, 0)`}>
       {Array.from(Array(7).keys()).map(dayIdx => (

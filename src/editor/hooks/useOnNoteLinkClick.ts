@@ -9,6 +9,7 @@ export default function useOnNoteLinkClick() {
   const dispatch = currentView.dispatch;
 
   const onClick = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (toId: string, note?: Note, highlightedPath?: any) => {
       const toNote = note || store.getState().notes[toId];
       const noteId = await openFileAndGetNoteId(toNote);

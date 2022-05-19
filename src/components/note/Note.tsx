@@ -5,7 +5,6 @@ import Title from 'components/note/Title';
 import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
-import { defaultDemoNote } from 'editor/constants';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
@@ -30,7 +29,7 @@ function Note(props: Props) {
   // console.log("currentDir", currentDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
-  const note: NoteType | undefined = useStore((state) => state.notes[noteId]);
+  const note: NoteType = useStore((state) => state.notes[noteId]);
   const isPub = note?.is_pub ?? false;
   const isDaily = note?.is_daily ?? false;
   const initIsWiki = note?.is_wiki ?? false;
@@ -58,7 +57,7 @@ function Note(props: Props) {
   const loadNote = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (noteId: string) => {
-      const note: NoteType = defaultDemoNote;
+      const note: NoteType = {...defaultNote, id: '' };
       if (note) {
         upsertNote(note);
         setIsWiki(note.is_wiki);

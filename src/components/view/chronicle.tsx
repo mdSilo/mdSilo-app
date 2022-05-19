@@ -1,13 +1,12 @@
-//import { useMemo } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore, store } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
 import HeatMap from 'components/HeatMap';
-import { dateCompare, getStrDate } from 'utils/helper';
-import { getOrCreateNoteId } from 'editor/handleNoteId';
-import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
+import { dateCompare, getStrDate, regDateStr } from 'utils/helper';
+import { joinPaths } from 'file/util';
+import { defaultNote } from 'types/model';
 
 export default function Chronicle() {
   const notes = useStore((state) => state.notes);
@@ -24,18 +23,25 @@ export default function Chronicle() {
   
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
+  const currentDir = useStore(state => state.currentDir);
 
   const onNewDailyNote = async (date: string) => {
-    const noteId = getOrCreateNoteId(date);
-    if (noteId) {
-      const note = store.getState().notes[noteId];
-      if (note) {
-        const noteId = await openFileAndGetNoteId(note);
-        dispatch({view: 'md', params: {noteId}});
-      } else {
-        dispatch({view: 'journal'});
-      }
+    if (!currentDir || !regDateStr.test(date)) return;
+    const noteId = await joinPaths(currentDir, ['daily', `${date}.md`]);
+    const note = store.getState().notes[noteId];
+    if (!note) {
+      const newNote = {
+        ...defaultNote,
+        id: noteId, 
+        title: date, 
+        file_path: noteId,
+        is_daily: true, 
+      };
+      store.getState().upsertNote(newNote);
+      const dailyDir = await joinPaths(currentDir, ['daily']);
+      store.getState().upsertTree(newNote, dailyDir); 
     }
+    dispatch({view: 'md', params: {noteId}});
   };
 
   return (
@@ -70,4 +76,3 @@ export default function Chronicle() {
     </ErrorBoundary>
   );
 }
-
