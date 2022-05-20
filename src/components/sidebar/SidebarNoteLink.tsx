@@ -57,7 +57,7 @@ const SidebarNoteLink = (
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={async (e) => {
           e.preventDefault();
-          if (note.is_dir) return;
+          if (note?.is_dir) return;
           onNoteLinkClick(note.id, note);
           if (isMobile()) {
             setIsSidebarOpen(false);
@@ -66,7 +66,7 @@ const SidebarNoteLink = (
         style={{ paddingLeft: `${leftPadding}px` }}
         draggable={false}
       >
-        {note.is_dir ? (
+        {note?.is_dir ? (
           <button
             className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
             onClick={async(e) => {
@@ -98,11 +98,11 @@ const SidebarNoteLink = (
         )}
         <Tooltip content={filePath} disabled={!currentDir || !filePath}>
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-            {note.title}
+            {note?.title}
           </span>
         </Tooltip>
       </div>
-      {note.is_dir ? null : (
+      {note?.is_dir ? null : (
         <SidebarNoteLinkDropdown
           note={note}
           className="opacity-0.1 group-hover:opacity-100"

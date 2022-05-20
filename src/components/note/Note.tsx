@@ -82,12 +82,12 @@ function Note(props: Props) {
       // console.log("on content change", text.length, json);
       // write to local file
       updateNote({ id: noteId, not_process: false });
-      await writeFile(note.file_path, text);
+      await writeFile(note?.file_path, text);
       if (currentDir) { 
         await writeJsonFile(currentDir); 
       }
     },
-    [note.file_path, noteId, currentDir, updateNote]
+    [note?.file_path, noteId, currentDir, updateNote]
   );
 
   // update locally
@@ -156,7 +156,7 @@ function Note(props: Props) {
   // Create new note
   const onCreateNote = useCallback(
     async (title: string) => {
-      const parentDir = await getDirPath(note.file_path);
+      const parentDir = await getDirPath(note?.file_path);
       const notePath = await joinPaths(parentDir, [`${title}.md`]);
       const newNote = { 
         ...defaultNote, 
@@ -169,10 +169,10 @@ function Note(props: Props) {
       store.getState().upsertTree(newNote, parentDir);
       await writeFile(notePath, ' ');
       // navigate to md view
-      // dispatch({view: 'md', params: {noteId: note.id}});
+      // dispatch({view: 'md', params: {noteId: note?.id}});
       return notePath;
     },
-    [note.file_path]
+    [note?.file_path]
   );
 
   // open link
@@ -258,9 +258,9 @@ const getUntitledTitle = (noteId: string) => {
   while (
     notesArr.findIndex(
       (note) =>
-        note.id !== noteId &&
-        !note.is_wiki && 
-        ciStringEqual(note.title, getResult())
+        note?.id !== noteId &&
+        !note?.is_wiki && 
+        ciStringEqual(note?.title, getResult())
     ) > -1
   ) {
     suffix += 1;
