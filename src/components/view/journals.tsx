@@ -8,6 +8,7 @@ import { realDateCompare, strToDate } from 'utils/helper';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 export default function Journals() {
+  const currentDir = useStore((state) => state.currentDir);
   const notes = useStore((state) => state.notes);
   const notesArr = Object.values(notes);
   const dailyNotes = notesArr.filter(n => !n.is_wiki && n.is_daily);
@@ -18,9 +19,11 @@ export default function Journals() {
       <ErrorBoundary>
         <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-gray-800 dark:text-gray-200 overlfow-y-auto">
           <div className="flex justify-center my-6">
+          {currentDir ? (
             <FindOrCreateInput
               className="w-full bg-white rounded shadow-popover dark:bg-gray-800"
-            />
+            />) : null
+          }
           </div>
           <div className="overlfow-y-auto">
             {dailyNotes.map((n) => (

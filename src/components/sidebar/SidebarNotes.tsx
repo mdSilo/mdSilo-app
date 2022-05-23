@@ -15,6 +15,7 @@ type SidebarNotesProps = {
 function SidebarNotes(props: SidebarNotesProps) {
   const { className='', setIsFindOrCreateModalOpen } = props;
 
+  const currentDir = useStore((state) => state.currentDir);
   const notes = useStore((state) => state.notes);
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
@@ -42,11 +43,11 @@ function SidebarNotes(props: SidebarNotesProps) {
   return (
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
-        <SidebarNotesBar
+        {currentDir ? (<SidebarNotesBar
           noteSort={noteSort}
           numOfNotes={numOfNotes}
           setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
-        />
+        />) : null }
         {sortedNoteTree && sortedNoteTree.length > 0 ? (
           <SidebarNotesTree
             data={sortedNoteTree}
@@ -59,8 +60,6 @@ function SidebarNotes(props: SidebarNotesProps) {
             </p>
             <button className={btnClass} onClick={onOpenDir}>Open Folder</button>
             <button className={btnClass} onClick={onOpenFile}>Open File</button>
-            <button className={btnClass} onClick={onCreateNote}>New File</button>
-            <button className={btnClass} onClick={onImportJson}>Import JSON</button>
           </>
         )}
       </div>
