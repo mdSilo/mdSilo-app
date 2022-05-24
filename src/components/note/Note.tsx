@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/note/Title';
+import Markdown from 'components/note/Markdown';
 //import Backlinks from 'components/editor/backlinks/Backlinks';
 import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
@@ -25,6 +26,7 @@ type Props = {
 function Note(props: Props) {
   const { noteId, className } = props;
   const darkMode = useStore((state) => state.darkMode);
+  const rawMode = useStore((state) => state.rawMode);
   const currentDir = useStore((state) => state.currentDir);
   // console.log("currentDir", currentDir);
   // get some property of note
@@ -80,6 +82,19 @@ function Note(props: Props) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
+      // write to local file
+      updateNote({ id: noteId, not_process: false });
+      await writeFile(note?.file_path, text);
+      if (currentDir) { 
+        await writeJsonFile(currentDir); 
+      }
+    },
+    [note?.file_path, noteId, currentDir, updateNote]
+  );
+
+  const onMarkdownChange = useCallback(
+    async (text: string) => {
+      console.log("on content change", text);
       // write to local file
       updateNote({ id: noteId, not_process: false });
       await writeFile(note?.file_path, text);
@@ -213,7 +228,7 @@ function Note(props: Props) {
     >
       <ProvideCurrentMd value={currentNoteValue}>
         <div id={noteId} className={`${noteContainerClassName} ${className}`}>
-          <NoteHeader isWiki={isWiki} isPub={isPub} />
+          <NoteHeader />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col flex-1 w-full mx-auto md:w-128 lg:w-160 xl:w-192">
               <Title
@@ -224,15 +239,22 @@ function Note(props: Props) {
                 isPub={isPub}
               />
               <div className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12">
-                <MsEditor 
-                  value={mdContent}
-                  dark={darkMode}
-                  onChange={onContentChange}
-                  // onSearchLink={onSearchNote}
-                  // onCreateLink={onCreateNote}
-                  onSearchSelectText={(txt) => onSearchText(txt)}
-                  onOpenLink={onOpenLink}
-                />
+                {rawMode ? (
+                  <Markdown
+                    initialContent={mdContent}
+                    onChange={onMarkdownChange}
+                  />
+                ) : (
+                  <MsEditor 
+                    value={mdContent}
+                    dark={darkMode}
+                    onChange={onContentChange}
+                    // onSearchLink={onSearchNote}
+                    // onCreateLink={onCreateNote}
+                    onSearchSelectText={(txt) => onSearchText(txt)}
+                    onOpenLink={onOpenLink}
+                  />
+                )}
               </div>
               {/* <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
                 <Backlinks className="mx-4 mb-8 md:mx-8 md:mb-12" isCollapse={isWiki} />

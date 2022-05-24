@@ -1,8 +1,8 @@
-import { Dispatch, memo, SetStateAction, useCallback, useMemo } from 'react';
+import { Dispatch, memo, SetStateAction, useMemo } from 'react';
 import { NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
-import { ciStringCompare, dateCompare, isMobile } from 'utils/helper';
-import { onImportJson, onOpenFile, onOpenDir } from 'editor/hooks/useOpen';
+import { ciStringCompare, dateCompare } from 'utils/helper';
+import { onOpenFile, onOpenDir } from 'editor/hooks/useOpen';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree from './SidebarNotesTree';
@@ -30,14 +30,6 @@ function SidebarNotes(props: SidebarNotesProps) {
   const myNotes = noteList.filter(n => !n.is_wiki && !n.is_daily);
   const numOfNotes = useMemo(() => myNotes.length, [myNotes]);
   
-  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const onCreateNote = useCallback(() => {
-    if (isMobile()) {
-      setIsSidebarOpen(false);
-    }
-    setIsFindOrCreateModalOpen((isOpen) => !isOpen);
-  }, [setIsSidebarOpen, setIsFindOrCreateModalOpen]);
-
   const btnClass = "p-1 mb-2 mx-4 text-white rounded bg-blue-500 hover:bg-blue-800";
 
   return (

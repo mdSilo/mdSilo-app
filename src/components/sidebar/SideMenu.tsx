@@ -1,20 +1,19 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconBookmarks, IconCheckbox, IconFile,
-  IconFolderPlus, IconFileText, IconFileUpload, IconDeviceFloppy 
+  IconFolderPlus, IconFileText, IconDeviceFloppy 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
-import { onImportJson, onOpenFile, onOpenDir, onSave } from 'editor/hooks/useOpen';
+import { onOpenFile, onOpenDir, onSave } from 'editor/hooks/useOpen';
 import { useStore } from 'lib/store';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import Logo from '../Logo';
 import SidebarItem from './SidebarItem';
-
 
 export default function SideMenu() {
   const currentView = useCurrentViewContext();
@@ -40,10 +39,10 @@ export default function SideMenu() {
         hotkey: 'mod+shift+c',
         callback: dispatchChron,
       },
-      {
-        hotkey: 'mod+shift+t',
-        callback: dispatchTask,
-      },
+      // {
+      //   hotkey: 'mod+shift+t',
+      //   callback: dispatchTask,
+      // },
     ],
     [dispatchGraph, dispatchChron, dispatchTask]
   );
@@ -61,10 +60,10 @@ export default function SideMenu() {
         viewTy={viewTy} 
         onDispatch={dispatchGraph} 
       />
-      <TaskButton 
+      {/* <TaskButton 
         viewTy={viewTy} 
         onDispatch={dispatchTask} 
-      />
+      /> */}
       <FileButton />
     </div>
   );
@@ -170,10 +169,6 @@ export function FileDrop() {
       <DropdownItem onClick={onOpenFile}>
         <IconFileText size={18} className="mr-1" />
         <Tooltip content="Open .md"><span>Text</span></Tooltip>
-      </DropdownItem>
-      <DropdownItem onClick={onImportJson}>
-        <IconFileUpload size={18} className="mr-1" />
-        <Tooltip content="Import JSON"><span>JSON</span></Tooltip>
       </DropdownItem>
     </>  
   );
