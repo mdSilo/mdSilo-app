@@ -157,9 +157,10 @@ function Note(props: Props) {
     async (text: string) => {
       const results = search(text);
       const searchResults = results.map(res => {
+        const itemTitle = res.item.title;
         const search = {
-          title: res.item.title,
-          url: res.item.file_path,
+          title: itemTitle,
+          url: itemTitle.replaceAll(/\s/g, '_'),
         };
         return search;
       });
@@ -180,14 +181,19 @@ function Note(props: Props) {
         file_path: notePath,
         is_daily: regDateStr.test(title),
       };
+      // Alert: need to make sure the title is unique within currentDir, TODO
       store.getState().upsertNote(newNote);
       store.getState().upsertTree(newNote, parentDir);
-      await writeFile(notePath, ' ');
+      // the note id and file_path may be changed on upsert if the note is exsiting per title
+      const upsertedNote = Object.values(storeNotes).find((n) =>
+        ciStringEqual(n.title, title)
+      );
+      await writeFile(upsertedNote?.file_path || notePath, ' ');
       // navigate to md view
       // dispatch({view: 'md', params: {noteId: note?.id}});
-      return notePath;
+      return title.replaceAll(/\s/g, '_');
     },
-    [note?.file_path]
+    [note?.file_path, storeNotes]
   );
 
   // open link
@@ -196,11 +202,16 @@ function Note(props: Props) {
       if (isUrl(href)) { 
         await openUrl(href);
       } else {
-        dispatch({view: 'md', params: {noteId: href}});
+        // find the note per title
+        const title = href.replaceAll('_', ' ').trim();
+        const toNote = Object.values(storeNotes).find((n) =>
+          ciStringEqual(n.title, title)
+        );
+        if (!toNote) return;
+        dispatch({view: 'md', params: {noteId: toNote.file_path}});
       }
-      
     },
-    [dispatch]
+    [dispatch, storeNotes]
   );
 
   const noteContainerClassName =
@@ -249,8 +260,8 @@ function Note(props: Props) {
                     value={mdContent}
                     dark={darkMode}
                     onChange={onContentChange}
-                    // onSearchLink={onSearchNote}
-                    // onCreateLink={onCreateNote}
+                    onSearchLink={onSearchNote}
+                    onCreateLink={onCreateNote}
                     onSearchSelectText={(txt) => onSearchText(txt)}
                     onOpenLink={onOpenLink}
                   />

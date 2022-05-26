@@ -145,6 +145,8 @@ export const store = createVanilla<Store>(
               state.notes[existingNote.id] = {
                 ...state.notes[existingNote.id],
                 ...note,
+                id: existingNote.id,
+                file_path: existingNote.file_path,
               };
             } else {
               // Insert new note
