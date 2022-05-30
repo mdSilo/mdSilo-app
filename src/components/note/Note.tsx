@@ -19,6 +19,7 @@ import NoteHeader from './NoteHeader';
 
 type Props = {
   noteId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   highlightedPath?: any;
   className?: string;
 };

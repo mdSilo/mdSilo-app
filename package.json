@@ -1,6 +1,6 @@
 {
   "name": "mdsilo-app",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "license": "AGPL3",
   "homepage": "https://mdsilo.com",
@@ -17,7 +17,7 @@
   "dependencies": {
     "@dnd-kit/core": "^5.0.3",
     "@dnd-kit/sortable": "^6.0.1",
-    "@headlessui/react": "^1.6.2",
+    "@headlessui/react": "^1.6.4",
     "@popperjs/core": "^2.11.5",
     "@react-spring/web": "^9.4.5",
     "@supabase/supabase-js": "^1.35.3",
@@ -47,7 +47,7 @@
     "zustand": "^3.7.2"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.0.0-rc.12",
+    "@tauri-apps/cli": "^1.0.0-rc.13",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",
