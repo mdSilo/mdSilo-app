@@ -19,6 +19,7 @@ import {
 import { NoteTreeItem, useStore } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Portal from 'components/misc/Portal';
+import { moveNoteTreeItem } from 'components/note/NoteMoveInput';
 import { writeJsonFile } from 'file/write';
 import FileAPI from 'file/files';
 import SidebarNoteLink from './SidebarNoteLink';
@@ -47,13 +48,7 @@ function SidebarNotesTree(props: Props) {
     return id && typeof id === 'string' ? id : undefined;
   }, [noteId]);
 
-  //const moveNoteTreeItem = useStore((state) => state.moveNoteTreeItem);
-  //const updateNote = useStore((state) => state.updateNote);
-  //const noteTree = useStore((state) => state.noteTree);
   const notes = useStore((state) => state.notes);
-  const deleteNote = useStore((state) => state.deleteNote);
-  const upsertNote = useStore((state) => state.upsertNote);
-  const upsertTree = useStore((state) => state.upsertTree);
   const currentDir = useStore((state) => state.currentDir);
 
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -117,21 +112,12 @@ function SidebarNotesTree(props: Props) {
         if (!tarDir || !tarDir.is_dir) return;
 
         const activeId = active.id;
-        // moveNoteTreeItem(active.id, over.id);
         const thisFile = new FileAPI(activeId);
         const tarPath = await thisFile.moveFile(dirId);
         if (tarPath) {
           const oldNote =  notes[activeId];
-          const newNote = {
-            ...oldNote,
-            id: tarPath,
-            file_path: tarPath,
-          };
-          deleteNote(activeId);
-          upsertNote(newNote);
-          upsertTree(newNote, dirId);
+          moveNoteTreeItem(activeId, dirId, tarPath, oldNote); 
         }
-        console.log("drag: ", activeId, dirId);
       } 
       // sync the Moved hierarchy to JSON
       if (currentDir) {
@@ -139,7 +125,7 @@ function SidebarNotesTree(props: Props) {
       }
       resetState();
     },
-    [currentDir, resetState, notes, deleteNote, upsertNote, upsertTree]
+    [currentDir, resetState, notes]
   );
 
   const Row = useCallback(

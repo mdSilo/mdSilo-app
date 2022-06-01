@@ -69,7 +69,7 @@ export type Store = {
   setOpenNoteIds: (openNoteIds: string[], index?: number) => void;
   noteTree: NoteTreeItem[];
   setNoteTree: Setter<NoteTreeItem[]>;
-  moveNoteTreeItem: (noteId: string, newParentNoteId: string | null) => void;
+  moveNoteTreeItem: (srcPath: string, tarDir: string, tarPath: string) => void;
   toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => void;
   sidebarTab: SidebarTab;
   setSidebarTab: Setter<SidebarTab>;
@@ -223,20 +223,24 @@ export const store = createVanilla<Store>(
       // The tree of notes visible in the sidebar
       noteTree: [], // private notes
       setNoteTree: setter(set, 'noteTree'),
-      // Moves the tree item with the given noteId to the given newParentNoteId's children
-      moveNoteTreeItem: (noteId: string, newParentNoteId: string | null) => {
+      // Moves the tree item with the given noteId to the given newParentNoteId's children 
+      // TODO: why this does not work? 
+      moveNoteTreeItem: (srcPath: string, tarDir: string, tarPath: string) => {
         // Don't do anything if the note ids are the same
-        if (noteId === newParentNoteId) {
+        if (srcPath === tarPath) {
           return;
         }
         set((state) => {
-          const item = deleteTreeItem(state.noteTree, noteId);
-          if (item) {
-            insertTreeItem(state.noteTree, item, newParentNoteId);
-          }
-          if (newParentNoteId) {
-            toggleTreeItemCollapsed(state.noteTree, newParentNoteId, false);
-          }
+          const oldNote =  state.notes[srcPath];
+          const newNote = {
+            ...oldNote,
+            id: tarPath,
+            file_path: tarPath,
+          };
+          state.deleteNote(srcPath);
+          state.upsertNote(newNote);
+          state.upsertTree(newNote, tarDir);
+          console.log("move item: ", srcPath, tarPath);
         });
       },
       // Expands or collapses the tree item with the given noteId

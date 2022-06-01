@@ -26,10 +26,10 @@ const SidebarNoteLink = (
   forwardedRef: ForwardedRef<HTMLDivElement>
 ) => {
   const { node, isHighlighted, className = '', style, ...otherProps } = props;
-  //console.log("node", node)
+  // console.log("node", node)
   const currentDir = useStore((state) => state.currentDir);
   const note = useStore((state) => state.notes[node.id]);
-  //console.log("note", note)
+  // console.log("note", note)
   const filePath = note?.file_path;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   

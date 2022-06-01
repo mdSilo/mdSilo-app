@@ -2,7 +2,8 @@ import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { IconChevronsUp, IconSearch, TablerIcon } from '@tabler/icons';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
-import { useStore } from 'lib/store';
+import { store, useStore } from 'lib/store';
+import type { Note } from 'types/model';
 import { ciStringCompare } from 'utils/helper';
 import { writeJsonFile } from 'file/write';
 import FileAPI from 'file/files';
@@ -37,9 +38,6 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
 
   const noteTree = useStore((state) => state.noteTree);
   const notes = useStore((state) => state.notes);
-  const deleteNote = useStore((state) => state.deleteNote);
-  const upsertNote = useStore((state) => state.upsertNote);
-  const upsertTree = useStore((state) => state.upsertTree);
   const currentDir = useStore((state) => state.currentDir);
 
   const inputTxt = inputText.trim();
@@ -85,12 +83,9 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
     async (option: Option) => {
       onOptionClickCallback?.();
       let tarDir: string | undefined;
-      // move tree in store
       if (option.type === OptionType.ROOT) {
-        // moveNoteTreeItem(noteId, null);
         tarDir = currentDir;
       } else if (option.type === OptionType.DIR) {
-        // moveNoteTreeItem(noteId, option.id);
         tarDir = option.id;
       }
       // move file in disk and store
@@ -99,23 +94,15 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         const tarPath = await thisFile.moveFile(tarDir);
         if (tarPath) {
           const oldNote =  notes[noteId];
-          const newNote = {
-            ...oldNote,
-            id: tarPath,
-            file_path: tarPath,
-          };
-          deleteNote(noteId);
-          upsertNote(newNote);
-          upsertTree(newNote, tarDir);
+          moveNoteTreeItem(noteId, tarDir, tarPath, oldNote);
         }
-        console.log("move: ", noteId, tarPath)
       }
       // sync the Moved hierarchy to JSON
       if (currentDir) {
         await writeJsonFile(currentDir);
       }
     },
-    [onOptionClickCallback, currentDir, noteId, notes, deleteNote, upsertNote, upsertTree]
+    [onOptionClickCallback, currentDir, noteId, notes]
   );
 
   const onKeyDown = useCallback(
@@ -200,4 +187,27 @@ const OptionItem = (props: OptionProps) => {
   );
 };
 
-export default forwardRef(MoveToInput);
+export default forwardRef(MoveToInput); 
+
+
+//
+export const moveNoteTreeItem = (
+  srcPath: string, 
+  tarDir: string, 
+  tarPath: string,
+  oldNote: Note,
+) => {
+  // Don't do anything if the note ids are the same
+  if (srcPath === tarPath) {
+    return;
+  }
+  const newNote = {
+    ...oldNote,
+    id: tarPath,
+    file_path: tarPath,
+  };
+  store.getState().deleteNote(srcPath);
+  store.getState().upsertNote(newNote);
+  store.getState().upsertTree(newNote, tarDir);
+  console.log("move item: ", srcPath, tarPath);
+}

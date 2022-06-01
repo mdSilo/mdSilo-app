@@ -13,9 +13,7 @@ export default function useOnNoteLinkClick() {
     async (toId: string, note?: Note, highlightedPath?: any) => {
       const toNote = note || store.getState().notes[toId];
       const noteId = await openFileAndGetNoteId(toNote);
-      // console.log("hl hash", highlightedPath)
       const hash = highlightedPath ? `0-${highlightedPath}` : '';
-      // console.log("here-1", highlightedPath)
       dispatch({view: 'md', params: {noteId, hash}});
       return;
     },

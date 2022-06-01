@@ -38,7 +38,6 @@ function Note(props: Props) {
   const initIsWiki = note?.is_wiki ?? false;
   // get title and content value
   const title = note?.title || '';
-  console.log("title", title);
   const mdContent = note?.content || '';
 
   const [isWiki, setIsWiki] = useState(initIsWiki);
@@ -95,7 +94,7 @@ function Note(props: Props) {
 
   const onMarkdownChange = useCallback(
     async (text: string) => {
-      console.log("on content change", text);
+      // console.log("on markdown content change", text);
       // write to local file
       updateNote({ id: noteId, not_process: false });
       await writeFile(note?.file_path, text);
