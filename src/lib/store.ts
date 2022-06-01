@@ -42,15 +42,9 @@ export type NoteTreeItem = {
   updated_at: string;
 };
 
-export type WikiTreeItem = {
-  id: Note['id'];         // wiki note
-  children: Note['id'][]; // private notes
-};
-
 export type NotesData = {
   notesObj: Notes;
   noteTree: NoteTreeItem[];
-  wikiTree: WikiTreeItem[];
 }
 
 export enum SidebarTab {
@@ -77,9 +71,6 @@ export type Store = {
   setNoteTree: Setter<NoteTreeItem[]>;
   moveNoteTreeItem: (noteId: string, newParentNoteId: string | null) => void;
   toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => void;
-  wikiTree: WikiTreeItem[];
-  setWikiTree: Setter<WikiTreeItem[]>;
-  updateWikiTree: (wikiId: string, noteId: string | null) => void;
   sidebarTab: SidebarTab;
   setSidebarTab: Setter<SidebarTab>;
   sidebarSearchQuery: string;
@@ -159,9 +150,7 @@ export const store = createVanilla<Store>(
       },
       upsertTree: (note: Note, targetId = '', isDir = false) => {
         set((state) => {
-            if (note.is_wiki) {
-            insertWikiTree(state.wikiTree, note.id, null);
-          } else {
+          if (!note.is_wiki) {
             const itemToInsert = { 
               id: note.id, 
               children: [], 
@@ -254,14 +243,6 @@ export const store = createVanilla<Store>(
       toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => {
         set((state) => {
           toggleTreeItemCollapsed(state.noteTree, noteId, toCollapsed);
-        });
-      },
-      // wiki tree
-      wikiTree: [],
-      setWikiTree: setter(set, 'wikiTree'),
-      updateWikiTree: (wikiId: string, noteId: string | null) => {
-        set((state) => {
-          insertWikiTree(state.wikiTree, wikiId, noteId);
         });
       },
       sidebarTab: SidebarTab.Silo,
@@ -408,61 +389,4 @@ export const getNoteTreeItem = (
     }
   }
   return null;
-};
-
-// wikiTree
-export const insertWikiTree = (
-  tree: WikiTreeItem[],
-  wikiId: string,
-  noteId: string | null
-) => {
-  for (let i = 0; i < tree.length; i++) {
-    const treeItem = tree[i];
-    if (treeItem.id === wikiId) {
-      if (noteId) {
-        const children = treeItem.children;
-        if (children.includes(noteId)) {
-          return true;  // dup
-        }
-        treeItem.children.push(noteId);
-      }
-      return true;
-    }
-  }
-  const newItem = {id: wikiId, children: noteId ? [noteId] : []};
-  tree.push(newItem);
-  return true;
-};
-
-export const deleteWikiChild = (
-  tree: WikiTreeItem[],
-  wikiId: string,
-  noteId: string,
-): boolean => {
-  for (let i = 0; i < tree.length; i++) {
-    const treeItem = tree[i];
-    if (treeItem.id === wikiId) {
-      const children = treeItem.children;
-      const idx = children.indexOf(noteId);
-      if (idx >= 0) {
-        treeItem.children.splice(idx, 1);
-        return true;
-      }
-      // if (children.length == 0) {
-      //   tree.splice(i, 1);
-      // }
-    }
-  }
-  return false;
-};
-
-export const getAllWikiId = (
-  tree: WikiTreeItem[],
-): string[] => {
-  const wikiIds = [];
-  for (let i = 0; i < tree.length; i++) {
-    const treeItem = tree[i];
-    wikiIds.push(treeItem.id);
-  }
-  return wikiIds;
 };

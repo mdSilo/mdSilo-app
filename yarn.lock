@@ -6397,10 +6397,10 @@ jsonpointer@^5.0.0:
     array-includes "^3.1.3"
     object.assign "^4.1.2"
 
-katex@^0.15.3:
-  version "0.15.3"
-  resolved "https://registry.yarnpkg.com/katex/-/katex-0.15.3.tgz#08781a7ed26800b20380d959d1ffcd62bca0ec14"
-  integrity sha512-Al6V7RJsmjklT9QItyHWGaQCt+NYTle1bZwB1e9MR/tLoIT1MXaHy9UpfGSB7eaqDgjjqqRxQOaQGrALCrEyBQ==
+katex@^0.15.6:
+  version "0.15.6"
+  resolved "https://registry.yarnpkg.com/katex/-/katex-0.15.6.tgz#c4e2f6ced2ac4de1ef6f737fe7c67d3026baa0e5"
+  integrity sha512-UpzJy4yrnqnhXvRPhjEuLA4lcPn6eRngixW7Q3TJErjg3Aw2PuLFBzTkdUb89UtumxjhHTqL3a5GDGETMSwgJA==
   dependencies:
     commander "^8.0.0"
 
@@ -6650,15 +6650,15 @@ mdn-data@2.0.4:
   resolved "https://registry.yarnpkg.com/mdn-data/-/mdn-data-2.0.4.tgz#699b3c38ac6f1d728091a64650b65d388502fd5b"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
 
-mdsmirror@0.1.10:
-  version "0.1.10"
-  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.1.10.tgz#2d85e307e4e7701e2561b03d0d60fd5f3f223793"
-  integrity sha512-KbcrMR5eNWPjKt+ryaryqvEoNM1WjnKLy55dHr9dVKnKobT2oQ+T4iWIWwX0agBQMugFSECeke9tjY4Wl0eF8w==
+mdsmirror@0.1.12:
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.1.12.tgz#202a345222062d35aa0b6fe405796ae1d5d54a6a"
+  integrity sha512-i8Bzrz1JqHEoYAdgfKxocQQ1C1IippREvhjKCTj2j3mlxa1mXdW8eLzmuL3Ix0B2iz01eAh46O/ijzk8vg5vHQ==
   dependencies:
     "@tabler/icons" "^1.68.0"
     copy-to-clipboard "^3.3.1"
     fuzzy-search "^3.2.1"
-    katex "^0.15.3"
+    katex "^0.15.6"
     lodash "^4.17.21"
     markdown-it "^12.3.2"
     markdown-it-container "^3.0.0"
@@ -6679,7 +6679,7 @@ mdsmirror@0.1.10:
     prosemirror-view "^1.23.12"
     react-medium-image-zoom "^3.1.3"
     react-portal "^4.2.2"
-    refractor "^3.5.0"
+    refractor "^3.6.0"
     resize-observer-polyfill "^1.5.1"
     slugify "^1.6.5"
     smooth-scroll-into-view-if-needed "^1.1.33"
@@ -8364,7 +8364,7 @@ redent@^3.0.0:
     indent-string "^4.0.0"
     strip-indent "^3.0.0"
 
-refractor@^3.5.0:
+refractor@^3.6.0:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/refractor/-/refractor-3.6.0.tgz#ac318f5a0715ead790fcfb0c71f4dd83d977935a"
   integrity sha512-MY9W41IOWxxk31o+YvFCNyNzdkc9M20NoZK5vq6jkv4I/uh2zkWcfudj0Q1fovjUQJrNewS9NMzeTtqPf+n5EA==

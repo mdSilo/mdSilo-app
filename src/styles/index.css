@@ -126,11 +126,3 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-
-ol {
-  list-style-type: decimal !important;
-}
-
-ul {
-  list-style-type: disc !important;
-}

@@ -1,10 +1,9 @@
-import { NoteTreeItem, WikiTreeItem } from 'lib/store';
+import { NoteTreeItem } from 'lib/store';
 
 export type User = {
   id: string;
   subscription_id: string | null;
   note_tree: NoteTreeItem[];
-  wiki_tree: WikiTreeItem[] | null;
 };
 
 export type Note = {

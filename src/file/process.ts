@@ -1,4 +1,4 @@
-import { store, Notes, NoteTreeItem, WikiTreeItem, NotesData } from 'lib/store';
+import { store, Notes, NoteTreeItem, NotesData } from 'lib/store';
 import { regDateStr } from 'utils/helper';
 import { Note, defaultNote } from 'types/model';
 import { FileMetaData } from 'file/directory';
@@ -8,13 +8,11 @@ export function processJson(content: string): boolean {
     const notesData: NotesData = JSON.parse(content);
     const notesObj: Notes = notesData.notesObj;
     const noteTree: NoteTreeItem[] = notesData.noteTree;
-    const wikiTree: WikiTreeItem[] = notesData.wikiTree || [];
     if (notesObj && noteTree) {
       // restore notes from saved data 
       store.getState().setNotes(notesObj);
       // restore note tree from saved tree hierarchy
       store.getState().setNoteTree(noteTree);
-      store.getState().setWikiTree(wikiTree);
       // TODO: json to mds and save locally
       return true;
     } else {

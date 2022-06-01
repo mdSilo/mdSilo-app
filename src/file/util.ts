@@ -103,8 +103,7 @@ export function trimSlashAll(txt: string) {
 export const buildNotesJson = () => {
   const notesObj = store.getState().notes;
   const noteTree = store.getState().noteTree;
-  const wikiTree = store.getState().wikiTree;
-  const notesData: NotesData = {notesObj, noteTree, wikiTree};
+  const notesData: NotesData = {notesObj, noteTree};
   const notesJson = JSON.stringify(notesData);
   return notesJson;
 }

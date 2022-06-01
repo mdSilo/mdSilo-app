@@ -28,9 +28,6 @@ export async function upsertDbNote(note: NoteUpsert, userId: string) {
     await apiClient
       .from<User>('users')
       .update({ note_tree: store.getState().noteTree });
-    await apiClient
-      .from<User>('users')
-      .update({ wiki_tree: store.getState().wikiTree });
   }
 
   return response;
