@@ -1,4 +1,12 @@
-# Changelog
+# Changelog 
+
+## [app-v0.4.0-beta.1] - 2022-06-03 
+
+### Chnages
+
+- Migrate Slate to Prosemirror (⚠️Breaking changes⚠️ and more features are still WIP)
+- Editor Support: Markdown, Table, Code block highlight, Math Block...,  
+- Switch between WYSIWYG mode and Raw Markdown mode, 
 
 ## [app-v0.3.0] - 2022-03-24
 
@@ -9,7 +17,7 @@
 ### Fixed  
 - Deserialize HashTag on open md file  
 
-## [app-v0.2.1] - 2022-03-17
+## [app-v0.2.1] - 2022-03-17  
 
 ### Fixed  
 - Daily note folder   
