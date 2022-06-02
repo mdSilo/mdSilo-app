@@ -2,7 +2,7 @@ import { store } from 'lib/store';
 import { 
   openDirDilog, openDir, openFilePaths, openFileDilog, saveDilog 
 } from 'file/open';
-import { getDirPath } from 'file/util';
+import { normalizeSlash, getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
 
 export const openFiles = async (ty: string, multi = true) => {
@@ -40,8 +40,8 @@ export const onOpenDir = async () => {
 
 export const onSave = async () => {
   const dir = await saveDilog();
-  const normalizedDir = await getDirPath(dir);
-  // console.log("save dir path", dir);
+  const normalizedDir = normalizeSlash(dir);
+  // console.log("save dir path", dir, normalizedDir);
   const notesObj = store.getState().notes;
   await writeAllFile(normalizedDir, notesObj);
   store.getState().setCurrentDir(normalizedDir);

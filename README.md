@@ -4,8 +4,9 @@
 A mind silo for storing ideas, thought, knowledge with a powerful writing tool.
 built with React and [Tauri](https://github.com/tauri-apps). 
 
-[Demo](https://mdsilo.com/)  
-[Discord](https://discord.gg/EXYSEHRTFt) 
+[Demo](https://mdsilo.com/)    
+[Discord](https://discord.gg/EXYSEHRTFt)  
+[Download](https://github.com/danloh/mdSilo-app/releases) 
 
 This is desktop app, and still in active development. the web app is [here](https://github.com/danloh/mdSilo-web)
 
@@ -14,9 +15,9 @@ This is desktop app, and still in active development. the web app is [here](http
 - WYSIWYG Editor, Real time preview, 
 - Markdown support: Table, Math, Code Highlight...   
 - Slash commands, hotkeys and more toolkits...   
-- Chronicle view 
+- Chronicle view, Graph view... 
 - Full-text search 
-- GitHub-like daily activity graph  
+- GitHub-like daily activities graph  
 - Available for Windows, macOS, Linux 
 
 ## Tech Stack

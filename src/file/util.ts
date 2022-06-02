@@ -54,7 +54,16 @@ export const joinPath = (...args: string[]): string => {
 };
 
 /**
- * Get dir path of the file path
+ * create dir 
+ * @param {string} dirPath 
+ * @returns {Promise<boolean>}
+ */
+ export const createDirRecursive = async (dirPath: string): Promise<boolean> => {
+  return await invoke('create_dir_recursive', { dirPath });
+};
+
+/**
+ * Get dir path of the file path, the path must be existing on disk
  * parent dir for file, and self for dir
  * @param {string} path 
  * @returns {Promise<string>}
