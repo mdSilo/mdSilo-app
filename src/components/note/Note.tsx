@@ -1,20 +1,20 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/note/Title';
 import Markdown from 'components/note/Markdown';
-//import Backlinks from 'components/editor/backlinks/Backlinks';
+import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
+//import Backlinks from 'components/editor/backlinks/Backlinks';
 //import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
 import { openUrl } from 'file/open';
 import { joinPaths, getDirPath } from 'file/util';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteHeader from './NoteHeader';
 
 type Props = {
@@ -35,13 +35,10 @@ function Note(props: Props) {
   const note: NoteType = useStore((state) => state.notes[noteId]);
   const isPub = note?.is_pub ?? false;
   const isDaily = note?.is_daily ?? false;
-  const initIsWiki = note?.is_wiki ?? false;
+  const isWiki = note?.is_wiki ?? false;
   // get title and content value
   const title = note?.title || '';
   const mdContent = note?.content || '';
-
-  const [isWiki, setIsWiki] = useState(initIsWiki);
-  const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect 
 
   // for context 
   const currentView = useCurrentViewContext();
@@ -53,29 +50,6 @@ function Note(props: Props) {
 
   // note action
   const updateNote = useStore((state) => state.updateNote);
-  const upsertNote = useStore((state) => state.upsertNote);
-  // load note if it isWiki
-  // TODO, network request
-  const loadNote = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (noteId: string) => {
-      const note: NoteType = {...defaultNote, id: '' };
-      if (note) {
-        upsertNote(note);
-        setIsWiki(note.is_wiki);
-      }
-    }, 
-    [upsertNote]
-  );
-
-  useEffect(() => { 
-    if (isWiki && !isLoaded) {
-      loadNote(noteId);
-    }
-    return () => {
-      setIsLoaded(true);
-    }
-  }, [noteId, isWiki, isLoaded, loadNote]);
 
   // update locally
   const onContentChange = useCallback(
@@ -268,7 +242,7 @@ function Note(props: Props) {
                 )}
               </div>
               {/* <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
-                <Backlinks className="mx-4 mb-8 md:mx-8 md:mb-12" isCollapse={isWiki} />
+                <Backlinks className="mx-4 mb-8 md:mx-8 md:mb-12" isCollapse={true} />
               </div> */}
             </div>
           </div>

@@ -281,13 +281,6 @@ export const store = createVanilla<Store>(
 
 export const useStore = create<Store>(store);
 
-export const computeTitleToId = (notes: Note[]) => {
-  const noteTitleToIdMap: Record<string, string | undefined> = {};
-  for (const note of notes) {
-    noteTitleToIdMap[note.title.toLowerCase()] = note.id;
-  }
-  return noteTitleToIdMap;
-}
 
 /**
  * Deletes the tree item with the given id and returns it.
