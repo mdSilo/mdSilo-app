@@ -31,10 +31,10 @@ export default function SideMenu() {
 
   const hotkeys = useMemo(
     () => [
-      // {
-      //   hotkey: 'mod+shift+g',
-      //   callback: dispatchGraph,
-      // },
+      {
+        hotkey: 'mod+shift+g',
+        callback: dispatchGraph,
+      },
       {
         hotkey: 'mod+shift+c',
         callback: dispatchChron,
@@ -56,11 +56,11 @@ export default function SideMenu() {
         viewTy={viewTy} 
         onDispatch={dispatchChron} 
       />
-      {/* <GraphButton 
+      <GraphButton 
         viewTy={viewTy} 
         onDispatch={dispatchGraph} 
       />
-      <TaskButton 
+      {/* <TaskButton 
         viewTy={viewTy} 
         onDispatch={dispatchTask} 
       /> */}

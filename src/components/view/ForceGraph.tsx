@@ -1,3 +1,6 @@
+// Modified from: https://github.com/churichard/notabase/blob/main/components/ForceGraph.tsx 
+// GNU AFFERO GENERAL PUBLIC LICENSE Version 3
+
 import {
   MutableRefObject,
   useCallback,

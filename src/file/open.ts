@@ -147,8 +147,11 @@ export async function openFilePaths(filePaths: string[], ty = 'md') {
     if (processedRes.length > 0) {
       const currentDir = store.getState().currentDir;
       const upsertNote = store.getState().upsertNote;
+      const upsertTree = store.getState().upsertTree;
       for (const md of processedRes) {
         upsertNote(md);
+        const parentDir = await getParentDir(md.file_path);
+        upsertTree(md, parentDir, false);
       }
       if (currentDir) { 
         await writeJsonFile(currentDir); 

@@ -2,12 +2,14 @@ import { useMemo } from 'react';
 // import { parser, serializer } from "mdsmirror";
 import type { GraphData } from 'components/view/ForceGraph';
 import ForceGraph from 'components/view/ForceGraph';
-import { NoteTreeItem, useStore } from 'lib/store';
+import { useStore } from 'lib/store';
+import { ciStringEqual, isUrl } from 'utils/helper';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
+
+const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
 
 export default function Graph() {
   const notes = useStore((state) => state.notes);
-  const noteTree = useStore((state) => state.noteTree);
 
   // Compute graph data
   const graphData: GraphData = useMemo(() => {
@@ -20,30 +22,24 @@ export default function Graph() {
       linksByNoteId[note.id] = new Set();
     }
 
-    const genLinkPerNoteTree = (tree: NoteTreeItem[]) => {
-      for (const item of tree) {
-        const children = item.children;
-        if (children.length > 0) {
-          for (const child of children) {
-            linksByNoteId[item.id].add(child.id);
-            linksByNoteId[child.id].add(item.id);
-            const subChildren = child.children;
-            genLinkPerNoteTree(subChildren);
+    // initiate tag set, TODO
+    const tagNames: Set<string> = new Set();
+
+    // Search for links in each note
+    for (const note of notesArr) {
+      const link_array: RegExpMatchArray[] = [...note.content.matchAll(LINK_REGEX)];
+      for (const match of link_array) {
+        const href = match[2];
+        if (!isUrl(href)) {
+          const title = href.replaceAll('_', ' ');
+          const existingNote = notesArr.find(n => ciStringEqual(n.title, title));
+          if (existingNote) {
+            linksByNoteId[note.id].add(existingNote.id);
+            linksByNoteId[existingNote.id].add(note.id);
           }
         }
       }
     }
-
-    // initiate tag set
-    const tagNames: Set<string> = new Set();
-
-    // Search for links and hashtags in each note
-    for (const note of notesArr) {
-      // TODO
-    }
-
-    // Update linksByNoteId per noteTree nested structure
-    genLinkPerNoteTree(noteTree);
 
     // Create graph data
     for (const note of notesArr) {
@@ -78,7 +74,7 @@ export default function Graph() {
     }
 
     return data;
-  }, [notes, noteTree]);
+  }, [notes]);
 
   return (
     <ErrorBoundary>
