@@ -1,17 +1,16 @@
 import { useCallback } from 'react';
+import { parser } from "mdsmirror";
 import Fuse from 'fuse.js';
-import { createEditor, Descendant, Editor, Node, Path } from 'slate';
 import { store } from 'lib/store';
 import { Note } from 'types/model';
-import withLinks from 'editor/plugins/withLinks';
-import withTags from 'editor/plugins/withTags';
-import withVoidElements from 'editor/plugins/withVoidElements';
 
-export type NoteBlock = { text: string; path: Path };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type NoteBlock = { text: string; path?: any };
 
 type FuseDatum = {
   id: string;
   title: string;
+  file_path: string;
   update_at: string;
   blocks?: NoteBlock[];
 };
@@ -21,6 +20,7 @@ type searchOptions = {
   searchContent?: boolean;
   extendedSearch?: boolean;
   searchWiki?: boolean;
+  searchDir?: boolean;
   notesBase?: Note[];
 };
 
@@ -30,16 +30,20 @@ export default function useNoteSearch({
   searchContent = false,
   extendedSearch = false,
   searchWiki = false,
+  searchDir = false,
   notesBase = [],
 }: searchOptions = {}) {
   const myNotes = useCallback(() => {
     const notes = store.getState().notes;
     const notesArr = Object.values(notes);
+    const dirNotes = searchDir 
+      ? notesArr.filter(n => n.is_dir) 
+      : notesArr.filter(n => !n.is_dir);
     const allNotes = searchWiki 
-      ? notesArr.filter(n => n.is_wiki) 
-      : notesArr.filter(n => !n.is_wiki);
+      ? dirNotes.filter(n => n.is_wiki) 
+      : dirNotes.filter(n => !n.is_wiki);
     return allNotes;
-  }, [searchWiki]);
+  }, [searchDir, searchWiki]);
 
   const search = useCallback(
     (searchText: string) => {
@@ -83,6 +87,7 @@ const getFuseData = (notes: Note[], searchContent: boolean): FuseDatum[] => {
     (note): FuseDatum => ({
       id: note.id,
       title: note.title,
+      file_path: note.file_path,
       update_at: note.updated_at,
       ...(searchContent ? { blocks: flattenContent(note.content) } : {}),
     })
@@ -90,20 +95,16 @@ const getFuseData = (notes: Note[], searchContent: boolean): FuseDatum[] => {
 };
 
 // Flatten the content into individual lines
-const flattenContent = (content: Descendant[]): NoteBlock[] => {
-  const editor = withVoidElements(withTags(withLinks(createEditor())));
-  editor.children = content;
-
-  const blocks = Editor.nodes(editor, {
-    at: [],
-    match: (n) => !Editor.isEditor(n) && Editor.isBlock(editor, n),
-    mode: 'lowest',
-  });
-
-  const result = [];
-  for (const [node, path] of blocks) {
-    const blockText = Node.string(node);
-    result.push({ text: blockText, path });
-  }
+// TODO 
+const flattenContent = (content: string): NoteBlock[] => {
+  const docAST = parser.parse(content);
+  const result: NoteBlock[] = docAST.content.content
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((node: any) => node.isBlock)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((node: any) => { 
+      const block = { text: node.textContent, path: []};
+      return block;
+    });
   return result;
 };

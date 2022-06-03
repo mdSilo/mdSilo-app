@@ -1,15 +1,14 @@
-import { Descendant } from 'slate';
+import MsEditor from "mdsmirror";
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
 import { Note } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import FindOrCreateInput from 'components/note/NoteNewInput';
-import ReadOnlyEditor from 'components/editor/ReadOnlyEditor';
 import { realDateCompare, strToDate } from 'utils/helper';
-import { bleachLinks } from 'editor/hooks/useSummary';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 export default function Journals() {
+  const currentDir = useStore((state) => state.currentDir);
   const notes = useStore((state) => state.notes);
   const notesArr = Object.values(notes);
   const dailyNotes = notesArr.filter(n => !n.is_wiki && n.is_daily);
@@ -20,9 +19,11 @@ export default function Journals() {
       <ErrorBoundary>
         <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-gray-800 dark:text-gray-200 overlfow-y-auto">
           <div className="flex justify-center my-6">
+          {currentDir ? (
             <FindOrCreateInput
               className="w-full bg-white rounded shadow-popover dark:bg-gray-800"
-            />
+            />) : null
+          }
           </div>
           <div className="overlfow-y-auto">
             {dailyNotes.map((n) => (
@@ -41,8 +42,6 @@ type NoteItemProps = {
 
 function NoteItem(props: NoteItemProps) {
   const { note } = props;
-  const value: Descendant[] = bleachLinks(note.content);
-
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
@@ -59,7 +58,7 @@ function NoteItem(props: NoteItemProps) {
           {note.title}
         </span>
       </button>
-      <ReadOnlyEditor value={value} className="pl-4" />
+      <MsEditor value={note.content} />
     </div>
   );
 }

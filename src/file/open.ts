@@ -3,8 +3,9 @@ import { invoke } from '@tauri-apps/api/tauri';
 import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
-import { processJson, processMds, preProcessMds } from './process';
+import { processJson, processMds, processDirs } from './process';
 import { writeJsonFile } from './write';
+import { getParentDir } from './util';
 
 /* 
 Open files: 
@@ -41,7 +42,7 @@ export const openDirDilog = async () => {
 };
 
 /**
- * Open dir and pre-process files
+ * Open dir and process files
  * @param dir 
  * @returns 
  */
@@ -56,28 +57,39 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   store.getState().setMsgModalText('Importing, Please wait...');
   store.getState().setMsgModalOpen(true);
 
-  // 1- try process mdsilo_all.json
-  const jsonInfo = new FileAPI('mdsilo_all.json', dir);
-  // console.log("json", jsonInfo)
-  if (await jsonInfo.exists()) {
-    const fileContent = await jsonInfo.readFile();
-    const jsonProcessed = processJson(fileContent);
-    if (jsonProcessed) { 
-      closeMsgModal();
-      return; 
+  // 1- get files and dirs
+  const dirData = await dirInfo.getFiles();
+  const files = dirData.files;
+  const dirs = files.filter(f => f.is_dir);
+  const processedDirs = dirs.length ? processDirs(dirs) : [];
+  const mds = files.filter(f => f.is_file);
+  const processedMds =  mds.length ? processMds(mds) : [];
+
+  const upsertNote = store.getState().upsertNote;
+  const upsertTree = store.getState().upsertTree;
+  // const dirPath = dirInfo.dirPath;
+
+  // 2- process dirs
+  for (const subdir of processedDirs) {
+    const subDir =  new DirectoryAPI(subdir.file_path);
+    if (await subDir.exists()) {
+      upsertNote(subdir);
+      const parentDir = await getParentDir(subdir.file_path);
+      // console.log("dir path1", dirPath, dir, parentDir);
+      upsertTree(subdir, parentDir, true);
     }
   }
-  // 2- list files if no json processed
-  const files = await dirInfo.listDirectory();
-  if (files.length) {
-    // pre process files: get meta without content
-    preProcessMds(files);
+  
+  // 3- process md files
+  for (const md of processedMds) {
+    upsertNote(md);
+    const parentDir = await getParentDir(md.file_path);
+    // console.log("dir path2", dirPath, dir, parentDir);
+    upsertTree(md, parentDir, false);
   }
-  // 3- try process daily dir
-  const dailyDir =  new DirectoryAPI('daily', dir);
-  if (await dailyDir.exists()) {
-    await openDir(dailyDir.dirPath, false);
-  }
+
+  // console.log("dir path", dirPath, dir, store.getState().noteTree);
+  
   closeMsgModal();
 }
 
@@ -134,7 +146,17 @@ export async function openFilePaths(filePaths: string[], ty = 'md') {
     // sync store states to JSON
     if (processedRes.length > 0) {
       const currentDir = store.getState().currentDir;
-      if (currentDir) { await writeJsonFile(currentDir); } 
+      const upsertNote = store.getState().upsertNote;
+      const upsertTree = store.getState().upsertTree;
+      for (const md of processedRes) {
+        upsertNote(md);
+        const parentDir = await getParentDir(md.file_path);
+        upsertTree(md, parentDir, false);
+      }
+      if (currentDir) { 
+        await writeJsonFile(currentDir); 
+      } 
+
       return true;
     }
   }

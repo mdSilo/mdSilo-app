@@ -1,5 +1,4 @@
 import { Note } from 'types/model';
-import { getSerializedNote } from 'file/util';
 
 type Props = {
   note: Note;
@@ -7,9 +6,9 @@ type Props = {
 
 export default function NoteMetadata(props: Props) {
   const { note } = props;
-  const serNoteCtn = getSerializedNote(note);
-  const wordCount = countWords(serNoteCtn);
-  const ctnLen = serNoteCtn.length;
+  const mdContent = note.content;
+  const wordCount = countWords(mdContent);
+  const ctnLen = mdContent.length;
   return (
     <div className="px-4 py-2 space-y-1 text-xs text-gray-600 border-t dark:border-gray-700 dark:text-gray-400">
       <p>~{wordCount} words, {ctnLen} characters </p>

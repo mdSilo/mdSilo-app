@@ -1,5 +1,5 @@
 import { Notes } from 'lib/store';
-import { buildNotesJson, getSerializedNote, joinPaths } from './util';
+import { buildNotesJson, joinPaths } from './util';
 import FileAPI from './files';
 
 /**
@@ -18,8 +18,8 @@ export async function writeFile(filePath: string, content: string) {
  * @param json optional
  */
 export async function writeJsonFile(parentDir: string, json = '') {
-  const jsonFile = new FileAPI('mdsilo_all.json', parentDir);
-  const notesJson = json || buildNotesJson(true);
+  const jsonFile = new FileAPI('mdsilo.json', parentDir);
+  const notesJson = json || buildNotesJson();
   await jsonFile.writeFile(notesJson);
 }
 
@@ -43,7 +43,7 @@ export async function writeAllFile(dirPath: string, notesObj: Notes) {
   for (const note of myNotes) {
     const fileName = note.is_wiki ? `wiki_${note.title}.md` : `${note.title}.md`;
     const notePath = await joinPaths(dirPath, [fileName]);
-    const content = getSerializedNote(note);
+    const content = note.content;
     await writeFile(notePath, content);
   }
   // save json with all notes, data

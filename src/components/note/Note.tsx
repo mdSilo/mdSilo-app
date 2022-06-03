@@ -1,90 +1,85 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import type { Path, Descendant } from 'slate';
-import Editor from 'components/editor/Editor';
-import Title from 'components/editor/Title';
-import Backlinks from 'components/editor/backlinks/Backlinks';
-import { store, useStore } from 'lib/store';
+import { memo, useCallback, useMemo } from 'react';
+import MsEditor, { JSONContent } from "mdsmirror";
+import Title from 'components/note/Title';
+import Markdown from 'components/note/Markdown';
+import ErrorBoundary from 'components/misc/ErrorBoundary';
+import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
-import serialize from 'editor/serialization/serialize';
-import { getDefaultEditorValue, defaultDemoNote } from 'editor/constants';
+import { defaultNote } from 'types/model';
+import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
-import updateBacklinks from 'editor/backlinks/updateBacklinks';
-import { ciStringEqual } from 'utils/helper';
+//import Backlinks from 'components/editor/backlinks/Backlinks';
+//import updateBacklinks from 'editor/backlinks/updateBacklinks';
+import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
-import { joinPaths } from 'file/util';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
+import { openUrl } from 'file/open';
+import { joinPaths, getDirPath } from 'file/util';
 import NoteHeader from './NoteHeader';
 
 type Props = {
   noteId: string;
-  highlightedPath?: Path;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  highlightedPath?: any;
   className?: string;
 };
 
 function Note(props: Props) {
-  const { noteId, highlightedPath, className } = props;
-  
-  const parentDir = useStore((state) => state.currentDir);
-  // console.log("currentDir", parentDir);
+  const { noteId, className } = props;
+  const darkMode = useStore((state) => state.darkMode);
+  const rawMode = useStore((state) => state.rawMode);
+  const currentDir = useStore((state) => state.currentDir);
+  // console.log("currentDir", currentDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
-  const note: NoteType | undefined = storeNotes[noteId];
+  const note: NoteType = useStore((state) => state.notes[noteId]);
   const isPub = note?.is_pub ?? false;
   const isDaily = note?.is_daily ?? false;
-  const initIsWiki = note?.is_wiki ?? false;
+  const isWiki = note?.is_wiki ?? false;
   // get title and content value
-  const title = note?.title ?? 'demo note';
-  const [initTitle, setInitTitle] = useState(title); // an initial title copy
-  const value = note?.content ?? getDefaultEditorValue();
+  const title = note?.title || '';
+  const mdContent = note?.content || '';
 
-  const [isWiki, setIsWiki] = useState(initIsWiki);
-  const [isLoaded, setIsLoaded] = useState(false)  // for clean up in useEffect
+  // for context 
+  const currentView = useCurrentViewContext();
+  const state = currentView.state;
+  const dispatch = currentView.dispatch;
+  const currentNoteValue = useMemo(() => (
+    { ty: 'note', id: noteId, state, dispatch }
+  ), [dispatch, noteId, state]);
 
   // note action
   const updateNote = useStore((state) => state.updateNote);
-  const upsertNote = useStore((state) => state.upsertNote);
-  // load note if it isWiki
-  // TODO, network request
-  const loadNote = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (noteId: string) => {
-    const note: NoteType = defaultDemoNote;
-    if (note) {
-      upsertNote(note);
-      setIsWiki(note.is_wiki);
-    }
-  }, [upsertNote]);
-
-  useEffect(() => { 
-    if (isWiki && !isLoaded) {
-      loadNote(noteId);
-    }
-    return () => {
-      setIsLoaded(true);
-    }
-  }, [noteId, isWiki, isLoaded, loadNote]);
 
   // update locally
-  const onValueChange = useCallback(
-    async (value: Descendant[]) => {
-      updateNote({ id: noteId, content: value });
+  const onContentChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async (text: string, json: JSONContent) => {
+      // console.log("on content change", text.length, json);
       // write to local file
-      if (parentDir) {
-        const notePath = note.is_daily 
-          ? await joinPaths(parentDir, ['daily', `${title}.md`])
-          : await joinPaths(parentDir, [`${title}.md`]);
-        const content = value.map((n) => serialize(n)).join('');
-        const relativePath = note.is_daily ? `daily/${title}.md` : `${title}.md`;
-        updateNote({ id: noteId, not_process: false, file_path: relativePath });
-        await writeFile(notePath, content);
-        await writeJsonFile(parentDir);
+      updateNote({ id: noteId, not_process: false });
+      await writeFile(note?.file_path, text);
+      if (currentDir) { 
+        await writeJsonFile(currentDir); 
       }
     },
-    [note?.is_daily, noteId, parentDir, title, updateNote]
+    [note?.file_path, noteId, currentDir, updateNote]
   );
 
-  // update locally, set the syncState
+  const onMarkdownChange = useCallback(
+    async (text: string) => {
+      // console.log("on markdown content change", text);
+      // write to local file
+      updateNote({ id: noteId, not_process: false });
+      await writeFile(note?.file_path, text);
+      if (currentDir) { 
+        await writeJsonFile(currentDir); 
+      }
+    },
+    [note?.file_path, noteId, currentDir, updateNote]
+  );
+
+  // update locally
   const onTitleChange = useCallback(
     async (title: string) => {
       // update note title in storage as unique title
@@ -97,44 +92,106 @@ function Note(props: Props) {
         ) === -1;
       };
       if (isWiki || isTitleUnique()) {
-        updateNote({ id: noteId, title: newTitle });
-        await updateBacklinks(newTitle, noteId); 
+        //await updateBacklinks(newTitle, noteId); 
         // write to local file
-        if (!isWiki && parentDir) {
+        if (!isWiki && currentDir) {
           // on rename file: 
           // 1- new FilePath
-          const newPath = await joinPaths(parentDir, [`${newTitle}.md`]);
-          const relativePath = `${title}.md`;
-          updateNote({ id: noteId, not_process: false, file_path: relativePath });
+          const oldPath = storeNotes[noteId].file_path;
+          const dirPath = await getDirPath(oldPath);
+          const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
           // 2- swap value
-          const content = value.map((n) => serialize(n)).join('');
-          await writeFile(newPath, content);
-          await writeJsonFile(parentDir);
+          await writeFile(newPath, mdContent);
+          await writeJsonFile(currentDir);
           // 3- delete the old redundant File
-          const toDelPath = await joinPaths(parentDir, [`${initTitle}.md`]);
-          await deleteFile(toDelPath);
-          // 4- reset initTitle
-          setInitTitle(newTitle);
+          await deleteFile(oldPath);
+          // 4- update note in store
+          updateNote(
+            { id: noteId, title: newTitle, not_process: false, file_path: newPath }
+          );
         }
       }
     },
-    [noteId, isWiki, storeNotes, updateNote, parentDir, value, initTitle]
+    [noteId, isWiki, storeNotes, updateNote, currentDir, mdContent]
   );
 
-  // TODO: update wiki note to db
+  // Search
+  const onSearchText = useCallback(
+    async (text: string) => {
+      store.getState().setSidebarTab(SidebarTab.Search);
+      store.getState().setSidebarSearchQuery(text);
+      store.getState().setIsSidebarOpen(true);
+    },
+    []
+  );
+
+  // Search note
+  const search = useNoteSearch({ numOfResults: 10 });
+  const onSearchNote = useCallback(
+    async (text: string) => {
+      const results = search(text);
+      const searchResults = results.map(res => {
+        const itemTitle = res.item.title;
+        const search = {
+          title: itemTitle,
+          url: itemTitle.replaceAll(/\s/g, '_'),
+        };
+        return search;
+      });
+      return searchResults;
+    },
+    [search]
+  );
+
+  // Create new note
+  const onCreateNote = useCallback(
+    async (title: string) => {
+      const parentDir = await getDirPath(note?.file_path);
+      const notePath = await joinPaths(parentDir, [`${title}.md`]);
+      const newNote = { 
+        ...defaultNote, 
+        id: notePath, 
+        title,
+        file_path: notePath,
+        is_daily: regDateStr.test(title),
+      };
+      // Alert: need to make sure the title is unique within currentDir, TODO
+      store.getState().upsertNote(newNote);
+      store.getState().upsertTree(newNote, parentDir);
+      // the note id and file_path may be changed on upsert if the note is exsiting per title
+      const upsertedNote = Object.values(storeNotes).find((n) =>
+        ciStringEqual(n.title, title)
+      );
+      await writeFile(upsertedNote?.file_path || notePath, ' ');
+      // navigate to md view
+      // dispatch({view: 'md', params: {noteId: note?.id}});
+      return title.replaceAll(/\s/g, '_');
+    },
+    [note?.file_path, storeNotes]
+  );
+
+  // open link
+  const onOpenLink = useCallback(
+    async (href: string) => {
+      if (isUrl(href)) { 
+        await openUrl(href);
+      } else {
+        // find the note per title
+        const title = href.replaceAll('_', ' ').trim();
+        const toNote = Object.values(storeNotes).find((n) =>
+          ciStringEqual(n.title, title)
+        );
+        if (!toNote) return;
+        dispatch({view: 'md', params: {noteId: toNote.file_path}});
+      }
+    },
+    [dispatch, storeNotes]
+  );
 
   const noteContainerClassName =
-    'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-gray-800 dark:text-gray-200';
+    'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-black dark:text-gray-200';
   const errorContainerClassName = 
     `${noteContainerClassName} items-center justify-center h-full p-4`;
-
-  // for context 
-  const currentView = useCurrentViewContext();
-  const state = currentView.state;
-  const dispatch = currentView.dispatch;
-  const currentNoteValue = useMemo(() => (
-    { ty: 'note', id: noteId, state, dispatch }
-  ), [dispatch, noteId, state]);
 
   const isNoteExists = useMemo(() => !!storeNotes[noteId], [noteId, storeNotes]);
 
@@ -156,7 +213,7 @@ function Note(props: Props) {
     >
       <ProvideCurrentMd value={currentNoteValue}>
         <div id={noteId} className={`${noteContainerClassName} ${className}`}>
-          <NoteHeader isWiki={isWiki} isPub={isPub} />
+          <NoteHeader />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col flex-1 w-full mx-auto md:w-128 lg:w-160 xl:w-192">
               <Title
@@ -166,19 +223,27 @@ function Note(props: Props) {
                 isDaily={isDaily}
                 isPub={isPub}
               />
-              <Editor
-                className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12"
-                noteId={noteId}
-                value={value}
-                onChange={onValueChange}
-                highlightedPath={highlightedPath}
-                isWiki={isWiki}
-                isDaily={isDaily}
-                isPub={isPub}
-              />
-              <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
-                <Backlinks className="mx-4 mb-8 md:mx-8 md:mb-12" isCollapse={isWiki} />
+              <div className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12">
+                {rawMode ? (
+                  <Markdown
+                    initialContent={mdContent}
+                    onChange={onMarkdownChange}
+                  />
+                ) : (
+                  <MsEditor 
+                    value={mdContent}
+                    dark={darkMode}
+                    onChange={onContentChange}
+                    onSearchLink={onSearchNote}
+                    onCreateLink={onCreateNote}
+                    onSearchSelectText={(txt) => onSearchText(txt)}
+                    onOpenLink={onOpenLink}
+                  />
+                )}
               </div>
+              {/* <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
+                <Backlinks className="mx-4 mb-8 md:mx-8 md:mb-12" isCollapse={true} />
+              </div> */}
             </div>
           </div>
         </div>
@@ -200,9 +265,9 @@ const getUntitledTitle = (noteId: string) => {
   while (
     notesArr.findIndex(
       (note) =>
-        note.id !== noteId &&
-        !note.is_wiki && 
-        ciStringEqual(note.title, getResult())
+        note?.id !== noteId &&
+        !note?.is_wiki && 
+        ciStringEqual(note?.title, getResult())
     ) > -1
   ) {
     suffix += 1;

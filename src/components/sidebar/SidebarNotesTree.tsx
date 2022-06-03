@@ -19,7 +19,9 @@ import {
 import { NoteTreeItem, useStore } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Portal from 'components/misc/Portal';
+import { moveNoteTreeItem } from 'components/note/NoteMoveInput';
 import { writeJsonFile } from 'file/write';
+import FileAPI from 'file/files';
 import SidebarNoteLink from './SidebarNoteLink';
 import DraggableSidebarNoteLink from './DraggableSidebarNoteLink';
 
@@ -46,24 +48,11 @@ function SidebarNotesTree(props: Props) {
     return id && typeof id === 'string' ? id : undefined;
   }, [noteId]);
 
-  const moveNoteTreeItem = useStore((state) => state.moveNoteTreeItem);
+  const notes = useStore((state) => state.notes);
   const currentDir = useStore((state) => state.currentDir);
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    })
-  );
-
+  
   const flattenNode = useCallback(
     (node: NoteTreeItem, depth: number, result: FlattenedNoteTreeItem[]) => {
       const { id, children, collapsed } = node;
@@ -95,6 +84,20 @@ function SidebarNotesTree(props: Props) {
     setActiveId(null);
   }, []);
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     setActiveId(active.id);
@@ -104,7 +107,17 @@ function SidebarNotesTree(props: Props) {
     async (event: DragEndEvent) => {
       const { active, over } = event;
       if (over) {
-        moveNoteTreeItem(active.id, over.id);
+        const dirId = over.id;
+        const tarDir = notes[dirId];
+        if (!tarDir || !tarDir.is_dir) return;
+
+        const activeId = active.id;
+        const thisFile = new FileAPI(activeId);
+        const tarPath = await thisFile.moveFile(dirId);
+        if (tarPath) {
+          const oldNote =  notes[activeId];
+          moveNoteTreeItem(activeId, dirId, tarPath, oldNote); 
+        }
       } 
       // sync the Moved hierarchy to JSON
       if (currentDir) {
@@ -112,7 +125,7 @@ function SidebarNotesTree(props: Props) {
       }
       resetState();
     },
-    [currentDir, resetState, moveNoteTreeItem]
+    [currentDir, resetState, notes]
   );
 
   const Row = useCallback(

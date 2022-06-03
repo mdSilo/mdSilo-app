@@ -1,11 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoke } from '@tauri-apps/api/tauri'
-import { v4 as uuidv4 } from 'uuid';
-import { Note } from 'types/model';
-import { store, NotesData, Notes, NoteTreeItem, TitleTreeItem } from 'lib/store';
-import serialize from 'editor/serialization/serialize';
-import { purgeUnLinkedWikiNotes } from 'editor/backlinks/useBacklinks';
-import { ciStringEqual } from 'utils/helper';
+import { store, NotesData } from 'lib/store';
 
 
 export const isTauri = Boolean(
@@ -59,12 +54,31 @@ export const joinPath = (...args: string[]): string => {
 };
 
 /**
- * Get dir path of the file path
- * @param {string} path path to be evaluated
- * @returns {Promise<string>} result of the evaluated path: dir or ""
+ * create dir 
+ * @param {string} dirPath 
+ * @returns {Promise<boolean>}
+ */
+ export const createDirRecursive = async (dirPath: string): Promise<boolean> => {
+  return await invoke('create_dir_recursive', { dirPath });
+};
+
+/**
+ * Get dir path of the file path, the path must be existing on disk
+ * parent dir for file, and self for dir
+ * @param {string} path 
+ * @returns {Promise<string>}
  */
 export const getDirPath = async (path: string): Promise<string> => {
   return await invoke('get_dirpath', { path });
+};
+
+/**
+ * Get parent dir path of the file/dir path
+ * @param {string} path 
+ * @returns {Promise<string>}
+ */
+ export const getParentDir = async (path: string): Promise<string> => {
+  return await invoke('get_parent_dir', { path });
 };
 
 /**
@@ -95,49 +109,10 @@ export function trimSlashAll(txt: string) {
 
 /* some helper to process note */
 // 
-export const getSerializedNote = (note: Note) =>
-  note.content.map((n) => serialize(n)).join('');
-
-export const buildNotesJson = (withTitleTree = false) => {
-  purgeUnLinkedWikiNotes();
+export const buildNotesJson = () => {
   const notesObj = store.getState().notes;
   const noteTree = store.getState().noteTree;
-  const wikiTree = store.getState().wikiTree;
-  const titleTree = withTitleTree ? buildTitleTree(noteTree, notesObj) : [];
-  const notesData: NotesData = {notesObj, noteTree, wikiTree, titleTree};
+  const notesData: NotesData = {notesObj, noteTree};
   const notesJson = JSON.stringify(notesData);
   return notesJson;
 }
-
-/**
- * map noteTree to titleTree
- * @param noteTree 
- * @param notes 
- * @returns titleTree
- */
-const buildTitleTree = (noteTree: NoteTreeItem[], notes: Notes): TitleTreeItem[] => {
-  const titleTree = noteTree.map((item) => {
-    const title = notes[item.id].title;
-    const children: TitleTreeItem[] = buildTitleTree(item.children, notes);
-    const titleItem: TitleTreeItem = {title, children};
-    return titleItem;
-  });
-  return titleTree;
-};
-
-/**
- * map titleTree to noteTree
- * @param titleTree 
- * @param notes 
- * @returns noteTree
- */
-export const buildNoteTree = (titleTree: TitleTreeItem[], notes: Notes): NoteTreeItem[] => {
-  const noteTree = titleTree.map((item) => {
-    const note = Object.values(notes).find((n) => ciStringEqual(n.title, item.title));
-    const id = note?.id || uuidv4();
-    const children: NoteTreeItem[] = buildNoteTree(item.children, notes);
-    const treeItem: NoteTreeItem = {id, children, collapsed: false};
-    return treeItem;
-  });
-  return noteTree;
-};

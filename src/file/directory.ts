@@ -18,11 +18,11 @@ export interface FileMetaData {
   file_text: string;
   created: SystemTime;
   last_modified: SystemTime;
-  last_accessed?: SystemTime;
-  size?: number;
-  readonly?: boolean;
-  is_dir?: boolean;
-  is_file?: boolean;
+  last_accessed: SystemTime;
+  size: number;
+  readonly: boolean;
+  is_dir: boolean;
+  is_file: boolean;
 }
 
 export interface SimpleFileMeta {

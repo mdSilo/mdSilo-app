@@ -1,11 +1,9 @@
-// import { Descendant } from 'slate';
 import { IconPencil } from '@tabler/icons';
+import MsEditor, { parser, serializer } from "mdsmirror";
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { Note } from 'types/model';
 import Tree from 'components/misc/Tree';
 import Tooltip from 'components/misc/Tooltip';
-import useSummary from 'editor/hooks/useSummary';
-import ReadOnlyEditor from 'components/editor/ReadOnlyEditor';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 type Props = {
@@ -33,7 +31,7 @@ export default function NoteSumList(props: Props) {
           ) : null}
         </div>
       ),
-      children: notes.map(noteToTreeData()),
+      children: notes.filter(n => !n.is_dir).map(noteToTreeData()),
     }
   ];
 
@@ -46,9 +44,13 @@ export default function NoteSumList(props: Props) {
 
 // eslint-disable-next-line react/display-name
 const noteToTreeData = () => (note: Note) => {
-  const summary = useSummary(note.content);
-  const value = summary.slice(0, 2);
-
+  const doc = parser.parse(note.content);
+  const value = doc.content.content
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((node: any) => node.type.name === 'paragraph')
+    .slice(0, 2);
+  const sum: string = serializer.serialize(value);
+  
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
   
@@ -57,17 +59,17 @@ const noteToTreeData = () => (note: Note) => {
     labelNode: (
       <div className="flex flex-col w-full mx-auto overlfow-y-auto">
         <button 
-          className="title link flex items-center text-lg py-2" 
+          className="link flex items-center py-2" 
           onClick={async () => {
             const noteId = await openFileAndGetNoteId(note);
             dispatch({view: 'md', params: {noteId}});
           }}
         >
-          <span className="text-lg overflow-x-hidden overflow-ellipsis whitespace-nowrap">
+          <span className="text-2xl font-semibold overflow-x-hidden overflow-ellipsis whitespace-nowrap">
             {note.title}
           </span>
         </button>
-        <ReadOnlyEditor value={value} />
+        <MsEditor value={sum} readOnly={true} />
       </div>
     ),
     showArrow: false,

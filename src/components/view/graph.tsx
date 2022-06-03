@@ -1,17 +1,15 @@
 import { useMemo } from 'react';
-import { createEditor, Editor, Element, Node } from 'slate';
-import type { NoteLink, PubLink, Tag } from 'editor/slate';
-import { ElementType } from 'editor/slate';
-import type { GraphData } from 'components/editor/ForceGraph';
-import ForceGraph from 'components/editor/ForceGraph';
-import { NoteTreeItem, useStore } from 'lib/store';
+// import { parser, serializer } from "mdsmirror";
+import type { GraphData } from 'components/view/ForceGraph';
+import ForceGraph from 'components/view/ForceGraph';
+import { useStore } from 'lib/store';
+import { ciStringEqual, isUrl } from 'utils/helper';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { purgeUnLinkedWikiNotes } from 'editor/backlinks/useBacklinks';
+
+const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
 
 export default function Graph() {
-  purgeUnLinkedWikiNotes();
   const notes = useStore((state) => state.notes);
-  const noteTree = useStore((state) => state.noteTree);
 
   // Compute graph data
   const graphData: GraphData = useMemo(() => {
@@ -24,72 +22,24 @@ export default function Graph() {
       linksByNoteId[note.id] = new Set();
     }
 
-    const genLinkPerNoteTree = (tree: NoteTreeItem[]) => {
-      for (const item of tree) {
-        const children = item.children;
-        if (children.length > 0) {
-          for (const child of children) {
-            linksByNoteId[item.id].add(child.id);
-            linksByNoteId[child.id].add(item.id);
-            const subChildren = child.children;
-            genLinkPerNoteTree(subChildren);
+    // initiate tag set, TODO
+    const tagNames: Set<string> = new Set();
+
+    // Search for links in each note
+    for (const note of notesArr) {
+      const link_array: RegExpMatchArray[] = [...note.content.matchAll(LINK_REGEX)];
+      for (const match of link_array) {
+        const href = match[2];
+        if (!isUrl(href)) {
+          const title = href.replaceAll('_', ' ');
+          const existingNote = notesArr.find(n => ciStringEqual(n.title, title));
+          if (existingNote) {
+            linksByNoteId[note.id].add(existingNote.id);
+            linksByNoteId[existingNote.id].add(note.id);
           }
         }
       }
     }
-
-    // initiate tag set
-    const tagNames: Set<string> = new Set();
-
-    // Search for links and hashtags in each note
-    for (const note of notesArr) {
-      const editor = createEditor();
-      editor.children = note.content;
-
-      // Find note link elements that match noteId
-      // also find PubLink
-      const linkingElements = Editor.nodes(editor, {
-        at: [],
-        match: (n) =>
-          Element.isElement(n) &&
-          (n.type === ElementType.NoteLink || n.type === ElementType.PubLink) &&
-          !!Node.string(n), // ignore note links with empty link text
-      });
-
-      // Update linksByNoteId per noteLink
-      for (const [node] of linkingElements) {
-        const noteLinkElement = node as NoteLink | PubLink;
-
-        // Skip the node if it doesn't link to an existing note
-        if (!linksByNoteId[noteLinkElement.noteId]) {
-          linksByNoteId[note.id].add(noteLinkElement.noteId);
-          continue;
-        }
-
-        // Add the link to each note set
-        linksByNoteId[note.id].add(noteLinkElement.noteId);
-        linksByNoteId[noteLinkElement.noteId].add(note.id);
-      }
-
-      // Find out HashTags
-      const tagElements = Editor.nodes(editor, {
-        at: [],
-        match: (n) =>
-          Element.isElement(n) &&
-          n.type === ElementType.Tag &&
-          !!Node.string(n),
-      });
-
-      for (const [node] of tagElements) {
-        const tagElement = node as Tag;
-        tagNames.add(tagElement.name);
-        // Add the tag to each note set
-        linksByNoteId[note.id].add(tagElement.name);
-      }
-    }
-
-    // Update linksByNoteId per noteTree nested structure
-    genLinkPerNoteTree(noteTree);
 
     // Create graph data
     for (const note of notesArr) {
@@ -124,7 +74,7 @@ export default function Graph() {
     }
 
     return data;
-  }, [notes, noteTree]);
+  }, [notes]);
 
   return (
     <ErrorBoundary>

@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import deleteBacklinks from 'editor/backlinks/deleteBacklinks';
 import { store, useStore } from 'lib/store';
 import { regDateStr } from 'utils/helper';
 import { writeJsonFile, deleteFile } from 'file/write';
@@ -40,7 +39,7 @@ export default function useDeleteNote(noteId: string, noteTitle: string) {
 export async function doDeleteNote(noteId: string, noteTitle: string) {
   // delete in store, delete backlinks or (blockreference? TODO)
   store.getState().deleteNote(noteId);
-  await deleteBacklinks(noteId);
+  // await deleteBacklinks(noteId); // TODO
   // delete in disk, write to JSON
   const parentDir = store.getState().currentDir;
   if (parentDir) {

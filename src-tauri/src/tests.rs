@@ -64,7 +64,11 @@ mod tests {
     #[cfg(not(target_os = "windows"))]
     assert_eq!(get_dirpath(&file), dir_of_file);
     #[cfg(not(target_os = "windows"))]
+    assert_eq!(get_parent_dir(&file), dir_of_file);
+    #[cfg(not(target_os = "windows"))]
     assert_eq!(get_dirpath(&format!("{}/", file)), dir_of_file);
+    #[cfg(not(target_os = "windows"))]
+    assert_eq!(get_parent_dir(&format!("{}/", file)), dir_of_file);
     // on Window: left: `"D:/a/mdSilo-app/mdSilo-app/src-tauri/../temp/mdsilo"`,
     let window_dir_of_file = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp/mdsilo")
@@ -72,6 +76,8 @@ mod tests {
       .unwrap();
     assert_eq!(get_dirpath(&file), window_dir_of_file);
     assert_eq!(get_dirpath(&file), get_dirpath(&format!("{}/", file)));
+    assert_eq!(get_parent_dir(&file), window_dir_of_file);
+    assert_eq!(get_parent_dir(&file), get_parent_dir(&format!("{}/", file)));
 
     let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp/mysilo")
@@ -85,12 +91,18 @@ mod tests {
     assert_eq!(get_dirpath(&dir), dir);
     #[cfg(not(target_os = "windows"))]
     assert_eq!(get_dirpath(&format!("{}//", dir)), dir);
-    // del temp folder for test
+    
     let temp_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp")
       .to_str()
       .unwrap()
       .to_string();
+    
+    #[cfg(not(target_os = "windows"))]
+    assert_eq!(get_parent_dir(&dir), temp_dir);
+    #[cfg(not(target_os = "windows"))]
+    assert_eq!(get_parent_dir(&format!("{}//", dir)), temp_dir);
+    // del temp folder for test
     let to_del_dirs = vec![file, dir, temp_dir];
     delete_files(to_del_dirs).await;
   }
@@ -253,18 +265,15 @@ mod tests {
       .to_string();
     let to_del_dirs = vec![dir.clone()];
     delete_files(to_del_dirs.clone()).await;
-    // on Linux: not del the dir, for a file in it
-    #[cfg(target_os = "linux")]
-    assert_eq!(file_exist(&abs_path_1), true);
-    #[cfg(target_os = "linux")]
-    assert_eq!(file_exist(&dir), true);
+    assert_eq!(file_exist(&abs_path_1), false);
+    assert_eq!(file_exist(&dir), false);
 
     let to_del_files_1 = vec![abs_path_1.clone()];
     // can exec del on non-existing on macOS
     delete_files(to_del_files_1).await;
     assert_eq!(file_exist(&abs_path_1), false);
     // now no file in it, dir deleted
-    delete_files(to_del_dirs.clone()).await;
+    delete_files(to_del_dirs).await;
     assert_eq!(file_exist(&dir), false);
   }
 

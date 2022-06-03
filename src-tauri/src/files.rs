@@ -49,6 +49,7 @@ pub struct Event {
 }
 
 /// Get file_name or dir_name of the path given
+#[tauri::command]
 pub fn get_basename(file_path: &str) -> (String, bool) {
   let path = Path::new(file_path);
   let name = path.file_name();
@@ -78,6 +79,15 @@ pub fn get_dirpath(path: &str) -> String {
   } else {
     String::new()
   }
+}
+
+// get parent dir path
+#[tauri::command]
+pub fn get_parent_dir(path: &str) -> String {
+  let file_path = path.trim_end_matches(['/', '\\']);
+  let path = Path::new(file_path);
+  let dir_path = path.parent().unwrap_or(path);
+  dir_path.normalize_slash().unwrap_or_default()
 }
 
 // join path and normalize
@@ -155,7 +165,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
 pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   let file_text = match fs::read_to_string(file_path) {
     Ok(text) => text,
-    Err(e) => return Err(format!("Err on read file: {:?}", e)),
+    Err(_e) => String::new(),
   };
 
   let meta_data = match get_simple_meta(file_path) {
@@ -229,6 +239,8 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
       continue;
     }
   }
+
+  // println!("num: {}, files: {:?}", number_of_files, files);
 
   Ok(FolderData {
     number_of_files,
@@ -307,7 +319,7 @@ pub async fn write_file(file_path: String, text: String) -> bool {
   fs::write(file_path, text).is_ok()
 }
 
-/// copy the assets(image...)
+/// copy the file
 #[tauri::command]
 pub async fn copy_file(src_path: String, to_path: String) -> bool {
   if let Some(p) = Path::new(&to_path).parent() {

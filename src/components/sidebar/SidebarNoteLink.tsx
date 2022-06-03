@@ -6,11 +6,12 @@ import {
   useCallback,
   useMemo,
 } from 'react';
-import { IconCaretRight } from '@tabler/icons';
+import { IconCaretRight, IconNotes } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
+import { openDir } from 'file/open';
 import SidebarItem from './SidebarItem';
 import SidebarNoteLinkDropdown from './SidebarNoteLinkDropdown';
 import { FlattenedNoteTreeItem } from './SidebarNotesTree';
@@ -25,17 +26,14 @@ const SidebarNoteLink = (
   forwardedRef: ForwardedRef<HTMLDivElement>
 ) => {
   const { node, isHighlighted, className = '', style, ...otherProps } = props;
-  //console.log("node", node)
+  // console.log("node", node)
   const currentDir = useStore((state) => state.currentDir);
   const note = useStore((state) => state.notes[node.id]);
-  //console.log("note", note)
-  const filePath = note.file_path;
+  // console.log("note", note)
+  const filePath = note?.file_path;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const lastOpenNoteId = useStore(
-    (state) => state.openNoteIds[state.openNoteIds.length - 1]
-  );
   
-  const { onClick: onNoteLinkClick } = useOnNoteLinkClick(lastOpenNoteId);
+  const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
   const toggleNoteTreeItemCollapsed = useStore(
     (state) => state.toggleNoteTreeItemCollapsed
   );
@@ -59,7 +57,8 @@ const SidebarNoteLink = (
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={async (e) => {
           e.preventDefault();
-          onNoteLinkClick(note.id, e.shiftKey, note);
+          if (note?.is_dir) return;
+          onNoteLinkClick(note.id, note);
           if (isMobile()) {
             setIsSidebarOpen(false);
           }
@@ -67,32 +66,48 @@ const SidebarNoteLink = (
         style={{ paddingLeft: `${leftPadding}px` }}
         draggable={false}
       >
-        <button
-          className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onArrowClick?.();
-          }}
-        >
-          <IconCaretRight
-            className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${
-              !node.collapsed ? 'rotate-90' : ''
-            }`}
-            size={16}
-            fill="currentColor"
-          />
-        </button>
-        <Tooltip content={`${currentDir}/${filePath}`} disabled={!currentDir || !filePath}>
+        {note?.is_dir ? (
+          <button
+            className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
+            onClick={async(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (node.collapsed) {
+                await openDir(note.file_path);
+              }
+              onArrowClick?.();
+            }}
+          >
+            <IconCaretRight
+              className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${
+                !node.collapsed ? 'rotate-90' : ''
+              }`}
+              size={16}
+              fill="currentColor"
+            />
+          </button>
+        ) : (
+          <div
+            className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
+          >
+            <IconNotes 
+              className="flex-shrink-0 text-gray-500 dark:text-gray-100"
+              size={16}
+            />
+          </div>
+        )}
+        <Tooltip content={filePath} disabled={!currentDir || !filePath}>
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-            {note.title}
+            {note?.title}
           </span>
         </Tooltip>
       </div>
-      <SidebarNoteLinkDropdown
-        note={note}
-        className="opacity-0.1 group-hover:opacity-100"
-      />
+      {note?.is_dir ? null : (
+        <SidebarNoteLinkDropdown
+          note={note}
+          className="opacity-0.1 group-hover:opacity-100"
+        />
+      )}
     </SidebarItem>
   );
 };

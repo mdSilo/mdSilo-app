@@ -3,11 +3,13 @@ import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { IconChevronsUp, IconSearch, TablerIcon } from '@tabler/icons';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store, useStore } from 'lib/store';
+import type { Note } from 'types/model';
 import { ciStringCompare } from 'utils/helper';
 import { writeJsonFile } from 'file/write';
+import FileAPI from 'file/files';
 
 enum OptionType {
-  NOTE,
+  DIR,
   ROOT,
 }
 
@@ -35,17 +37,16 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
 
   const noteTree = useStore((state) => state.noteTree);
-  const moveNoteTreeItem = useStore((state) => state.moveNoteTreeItem);
+  const notes = useStore((state) => state.notes);
   const currentDir = useStore((state) => state.currentDir);
 
   const inputTxt = inputText.trim();
-  const search = useNoteSearch({ numOfResults: 10 });
+  const search = useNoteSearch({ numOfResults: 10, searchDir: true });
   const searchResults = useMemo(() => search(inputTxt), [search, inputTxt]);
 
   const options = useMemo(() => {
     const result: Option[] = [];
     if (!inputTxt) {
-      const notes = store.getState().notes;
       // Include the root and nine top-level notes sorted alphabetically
       result.push({
         id: 'root',
@@ -55,10 +56,10 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       });
       result.push(
         ...noteTree
-          .filter((item) => item.id !== noteId)
+          .filter((item) => item.isDir && item.id !== noteId)
           .map((item) => ({
             id: item.id,
-            type: OptionType.NOTE,
+            type: OptionType.DIR,
             text: notes[item.id].title,
           }))
           .sort((n1, n2) => ciStringCompare(n1.text, n2.text))
@@ -70,29 +71,38 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           .filter((result) => result.item.id !== noteId)
           .map((result) => ({
             id: result.item.id,
-            type: OptionType.NOTE,
+            type: OptionType.DIR,
             text: result.item.title,
           }))
       );
     }
     return result;
-  }, [searchResults, noteId, inputTxt, noteTree]);
+  }, [searchResults, noteId, inputTxt, noteTree, notes]);
 
   const onOptionClick = useCallback(
     async (option: Option) => {
       onOptionClickCallback?.();
-      // move tree in store
+      let tarDir: string | undefined;
       if (option.type === OptionType.ROOT) {
-        moveNoteTreeItem(noteId, null);
-      } else if (option.type === OptionType.NOTE) {
-        moveNoteTreeItem(noteId, option.id);
+        tarDir = currentDir;
+      } else if (option.type === OptionType.DIR) {
+        tarDir = option.id;
+      }
+      // move file in disk and store
+      if (tarDir) {
+        const thisFile = new FileAPI(noteId);
+        const tarPath = await thisFile.moveFile(tarDir);
+        if (tarPath) {
+          const oldNote =  notes[noteId];
+          moveNoteTreeItem(noteId, tarDir, tarPath, oldNote);
+        }
       }
       // sync the Moved hierarchy to JSON
       if (currentDir) {
         await writeJsonFile(currentDir);
       }
     },
-    [onOptionClickCallback, currentDir, moveNoteTreeItem, noteId]
+    [onOptionClickCallback, currentDir, noteId, notes]
   );
 
   const onKeyDown = useCallback(
@@ -177,4 +187,27 @@ const OptionItem = (props: OptionProps) => {
   );
 };
 
-export default forwardRef(MoveToInput);
+export default forwardRef(MoveToInput); 
+
+
+//
+export const moveNoteTreeItem = (
+  srcPath: string, 
+  tarDir: string, 
+  tarPath: string,
+  oldNote: Note,
+) => {
+  // Don't do anything if the note ids are the same
+  if (srcPath === tarPath) {
+    return;
+  }
+  const newNote = {
+    ...oldNote,
+    id: tarPath,
+    file_path: tarPath,
+  };
+  store.getState().deleteNote(srcPath);
+  store.getState().upsertNote(newNote);
+  store.getState().upsertTree(newNote, tarDir);
+  console.log("move item: ", srcPath, tarPath);
+}
