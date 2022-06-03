@@ -81,7 +81,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">Done</b>
         </div>
       ),
-      children: [], // TODO getTaskNotes('#done'),
+      children: getTaskNotes('#done'),
     },
   ];
 

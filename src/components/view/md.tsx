@@ -39,22 +39,22 @@ export default function NotePage() {
  * and 2,3 signifies the path to be highlighted). Parses the url and
  * returns the open note index and the path to be highlighted as an object.
  */
-const getHighlightedPath = (hash: string): { index: number; path: any } | null => {
-  if (!hash) {
-    return null;
-  }
+// const getHighlightedPath = (hash: string): { index: number; path: any } | null => {
+//   if (!hash) {
+//     return null;
+//   }
 
-  const [strIndex, ...strPath] = hash.split(/[-,]+/);
+//   const [strIndex, ...strPath] = hash.split(/[-,]+/);
 
-  const index = Number.parseInt(strIndex);
-  const path = strPath.map((pathSegment) => Number.parseInt(pathSegment));
-  if (
-    Number.isNaN(index) ||
-    path.length <= 0 ||
-    path.some((segment) => Number.isNaN(segment))
-  ) {
-    return null;
-  }
+//   const index = Number.parseInt(strIndex);
+//   const path = strPath.map((pathSegment) => Number.parseInt(pathSegment));
+//   if (
+//     Number.isNaN(index) ||
+//     path.length <= 0 ||
+//     path.some((segment) => Number.isNaN(segment))
+//   ) {
+//     return null;
+//   }
 
-  return { index, path };
-};
+//   return { index, path };
+// };

@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
-  IconMenu2, IconDna, IconBookmarks, IconCheckbox, IconFile,
+  IconMenu2, IconDna, IconBookmarks, IconFile,
   IconFolderPlus, IconFileText, IconDeviceFloppy 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
@@ -22,9 +22,9 @@ export default function SideMenu() {
   const dispatchChron = useCallback(
     () => dispatch({view: 'chronicle'}), [dispatch]
   );
-  const dispatchTask = useCallback(
-    () => dispatch({view: 'task'}), [dispatch]
-  );
+  // const dispatchTask = useCallback(
+  //   () => dispatch({view: 'task'}), [dispatch]
+  // );
   const dispatchGraph = useCallback(
     () => dispatch({view: 'graph'}), [dispatch]
   );
@@ -44,7 +44,7 @@ export default function SideMenu() {
       //   callback: dispatchTask,
       // },
     ],
-    [dispatchGraph, dispatchChron, dispatchTask]
+    [dispatchGraph, dispatchChron]
   );
   useHotkeys(hotkeys);
 
@@ -133,23 +133,23 @@ const ChronButton = (props: ButtonProps) => {
   );
 };
 
-const TaskButton = (props: ButtonProps) => {
-  const { viewTy, onClick, onDispatch } = props;
+// const TaskButton = (props: ButtonProps) => {
+//   const { viewTy, onClick, onDispatch } = props;
 
-  return (
-    <SidebarItem isHighlighted={viewTy === 'task'} onClick={onClick}>
-      <Tooltip
-        content="Track Personal Tasks (Ctrl+Shift+T)"
-        placement="right"
-        touch={true}
-      >
-        <button className={btnClass} onClick={onDispatch}>
-          <IconCheckbox size={24} className={btnIconClass} />
-        </button>
-      </Tooltip>
-    </SidebarItem>
-  );
-};
+//   return (
+//     <SidebarItem isHighlighted={viewTy === 'task'} onClick={onClick}>
+//       <Tooltip
+//         content="Track Personal Tasks (Ctrl+Shift+T)"
+//         placement="right"
+//         touch={true}
+//       >
+//         <button className={btnClass} onClick={onDispatch}>
+//           <IconCheckbox size={24} className={btnIconClass} />
+//         </button>
+//       </Tooltip>
+//     </SidebarItem>
+//   );
+// };
 
 
 export function FileDrop() {
