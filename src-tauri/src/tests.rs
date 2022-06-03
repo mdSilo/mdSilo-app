@@ -265,18 +265,15 @@ mod tests {
       .to_string();
     let to_del_dirs = vec![dir.clone()];
     delete_files(to_del_dirs.clone()).await;
-    // on Linux: not del the dir, for a file in it
-    #[cfg(target_os = "linux")]
-    assert_eq!(file_exist(&abs_path_1), true);
-    #[cfg(target_os = "linux")]
-    assert_eq!(file_exist(&dir), true);
+    assert_eq!(file_exist(&abs_path_1), false);
+    assert_eq!(file_exist(&dir), false);
 
     let to_del_files_1 = vec![abs_path_1.clone()];
     // can exec del on non-existing on macOS
     delete_files(to_del_files_1).await;
     assert_eq!(file_exist(&abs_path_1), false);
     // now no file in it, dir deleted
-    delete_files(to_del_dirs.clone()).await;
+    delete_files(to_del_dirs).await;
     assert_eq!(file_exist(&dir), false);
   }
 

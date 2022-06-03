@@ -59,13 +59,13 @@ const noteToTreeData = () => (note: Note) => {
     labelNode: (
       <div className="flex flex-col w-full mx-auto overlfow-y-auto">
         <button 
-          className="title link flex items-center text-lg py-2" 
+          className="link flex items-center py-2" 
           onClick={async () => {
             const noteId = await openFileAndGetNoteId(note);
             dispatch({view: 'md', params: {noteId}});
           }}
         >
-          <span className="text-lg overflow-x-hidden overflow-ellipsis whitespace-nowrap">
+          <span className="text-2xl font-semibold overflow-x-hidden overflow-ellipsis whitespace-nowrap">
             {note.title}
           </span>
         </button>
