@@ -2,6 +2,7 @@ import { IconPencil } from '@tabler/icons';
 import MsEditor, { parser, serializer } from "mdsmirror";
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { Note } from 'types/model';
+import { useStore } from 'lib/store';
 import Tree from 'components/misc/Tree';
 import Tooltip from 'components/misc/Tooltip';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
@@ -53,6 +54,8 @@ const noteToTreeData = () => (note: Note) => {
   
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
+
+  const darkMode = useStore((state) => state.darkMode);
   
   return {
     id: note.id,
@@ -69,7 +72,7 @@ const noteToTreeData = () => (note: Note) => {
             {note.title}
           </span>
         </button>
-        <MsEditor value={sum} readOnly={true} />
+        <MsEditor value={sum} dark={darkMode} readOnly={true} />
       </div>
     ),
     showArrow: false,

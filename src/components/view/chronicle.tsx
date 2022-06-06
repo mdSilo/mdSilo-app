@@ -46,7 +46,7 @@ export default function Chronicle() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-gray-800 dark:text-gray-200 overlfow-y-auto">
+      <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-fit mx-auto bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
         <div className="flex justify-center my-6">
           {currentDir ? (
             <FindOrCreateInput

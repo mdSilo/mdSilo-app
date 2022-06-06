@@ -15,7 +15,7 @@ export default function HeatMap({ onClick }: HeatMapProps) {
   const hmLabelClass = "text-xs fill-gray-500";
 
   return (
-    <div className="overflow-auto p-2 m-2">
+    <div className="overflow-auto p-1 m-1">
       <svg width="828" height="128" className="hm-svg">
         <g transform="translate(10, 20)">
           {Array.from(Array(53).keys()).map(weekIdx => (

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconDots, IconTrash, IconCornerDownRight } from '@tabler/icons';
+import { IconDots, IconTrash } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { useStore } from 'lib/store';
@@ -10,7 +10,6 @@ import Portal from 'components/misc/Portal';
 import Toggle from 'components/misc/Toggle';
 import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';
-import MoveToModal from 'components/note/NoteMoveModal';
 import NoteDelModal from 'components/note/NoteDelModal';
 
 export default function NoteHeader() {
@@ -38,9 +37,6 @@ export default function NoteHeader() {
     }, 
     [note, setRawMode]
   );
-
-  const [isMoveToModalOpen, setIsMoveToModalOpen] = useState(false);
-  const onMoveToClick = useCallback(() => setIsMoveToModalOpen(true), []);
 
   const [isNoteDelModalOpen, setIsNoteDelModalOpen] = useState(false);
   const onDelClick = useCallback(() => setIsNoteDelModalOpen(true), []);
@@ -89,10 +85,6 @@ export default function NoteHeader() {
                         <IconTrash size={18} className="mr-1" />
                         <span>Delete Permanently</span>
                       </DropdownItem>
-                      <DropdownItem onClick={onMoveToClick}>
-                        <IconCornerDownRight size={18} className="mr-1" />
-                        <span>Move to</span>
-                      </DropdownItem>
                       <NoteMetadata note={note} />
                     </Menu.Items>
                   </Portal>
@@ -102,14 +94,7 @@ export default function NoteHeader() {
           </Menu>
         ) : null}
       </div>
-      {isMoveToModalOpen ? (
-        <Portal>
-          <MoveToModal
-            noteId={currentNote.id}
-            setIsOpen={setIsMoveToModalOpen}
-          />
-        </Portal>
-      ) : isNoteDelModalOpen ? (
+      {isNoteDelModalOpen ? (
         <Portal>
           <NoteDelModal
             noteId={currentNote.id}

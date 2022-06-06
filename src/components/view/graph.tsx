@@ -14,7 +14,7 @@ export default function Graph() {
   // Compute graph data
   const graphData: GraphData = useMemo(() => {
     const data: GraphData = { nodes: [], links: [] };
-    const notesArr = Object.values(notes);
+    const notesArr = Object.values(notes).filter(n => !n.is_dir && !n.is_wiki);
 
     // Initialize linksByNoteId: {id: Set[ids]}
     const linksByNoteId: Record<string, Set<string>> = {};
