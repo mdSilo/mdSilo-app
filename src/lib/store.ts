@@ -3,12 +3,17 @@ import createVanilla from 'zustand/vanilla';
 import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
+import type { PickPartial } from 'types/utils';
 import { ciStringEqual } from 'utils/helper';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
-import type { NoteUpdate } from './api/curdNote';
 
 export { default as shallowEqual } from 'zustand/shallow';
+
+type NoteUpdate = PickPartial<
+  Note, // id required
+  'title' | 'content' | 'file_path' | 'cover' | 'created_at' | 'updated_at' | 'is_pub' | 'is_wiki' | 'is_daily'
+>;
 
 const immer =
   <T extends State>(
