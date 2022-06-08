@@ -7,6 +7,7 @@ import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
+import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 //import Backlinks from 'components/editor/backlinks/Backlinks';
@@ -182,7 +183,8 @@ function Note(props: Props) {
           ciStringEqual(n.title, title)
         );
         if (!toNote) return;
-        dispatch({view: 'md', params: {noteId: toNote.file_path}});
+        const noteId = await openFileAndGetNoteId(toNote);
+        dispatch({view: 'md', params: { noteId }});
       }
     },
     [dispatch, storeNotes]

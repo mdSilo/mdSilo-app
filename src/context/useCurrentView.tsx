@@ -7,9 +7,11 @@ import {
   ViewState,
 } from './viewReducer';
 
+export type DispatchType = Dispatch<ViewAction>;
+
 type CurrentView = {
   state: ViewState;
-  dispatch: Dispatch<ViewAction>;
+  dispatch: DispatchType;
 };
 
 const CurrentViewContext = createContext<CurrentView | undefined>(undefined);

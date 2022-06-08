@@ -1,6 +1,6 @@
 import { IconPencil } from '@tabler/icons';
 import MsEditor, { parser, serializer } from "mdsmirror";
-import { useCurrentViewContext } from 'context/useCurrentView';
+import { useCurrentViewContext, DispatchType } from 'context/useCurrentView';
 import { Note } from 'types/model';
 import { useStore } from 'lib/store';
 import Tree from 'components/misc/Tree';
@@ -17,6 +17,10 @@ type Props = {
 
 export default function NoteSumList(props: Props) {
   const { anchor, notes, className, isDate, onClick } = props;
+  const currentView = useCurrentViewContext();
+  const dispatch = currentView.dispatch;
+  const darkMode = useStore((state) => state.darkMode);
+
   const nodeData = [
     {
       id: anchor,
@@ -32,7 +36,7 @@ export default function NoteSumList(props: Props) {
           ) : null}
         </div>
       ),
-      children: notes.filter(n => !n.is_dir).map(noteToTreeData()),
+      children: notes.filter(n => !n.is_dir).map(noteToTreeData(dispatch, darkMode)),
     }
   ];
 
@@ -44,18 +48,13 @@ export default function NoteSumList(props: Props) {
 }
 
 // eslint-disable-next-line react/display-name
-const noteToTreeData = () => (note: Note) => {
+const noteToTreeData = (dispatch: DispatchType, darkMode: boolean) => (note: Note) => {
   const doc = parser.parse(note.content);
   const value = doc.content.content
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((node: any) => node.type.name === 'paragraph')
     .slice(0, 2);
   const sum: string = serializer.serialize(value);
-  
-  const currentView = useCurrentViewContext();
-  const dispatch = currentView.dispatch;
-
-  const darkMode = useStore((state) => state.darkMode);
   
   return {
     id: note.id,

@@ -10,8 +10,8 @@ use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct SimpleFileMeta {
-  file_name: String,
   file_path: String,
+  file_name: String,
   created: SystemTime,
   last_modified: SystemTime, // locale
   last_accessed: SystemTime,

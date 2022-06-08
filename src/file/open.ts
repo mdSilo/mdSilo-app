@@ -46,6 +46,58 @@ export const openDirDilog = async () => {
  * @param dir 
  * @returns 
  */
+ export const listDir = async (dir: string, toListen=true): Promise<void> => {
+  const dirInfo = new DirectoryAPI(dir);
+  // console.log("dir api", dirInfo)
+  if (!(await dirInfo.exists())) return;
+
+  // attach listener to monitor changes in dir // TODO
+  if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
+
+  store.getState().setMsgModalText('Importing, Please wait...');
+  store.getState().setMsgModalOpen(true);
+
+  // 1- get files and dirs
+  const dirData = await dirInfo.listDirectory();
+  const files = dirData;
+  const dirs = files.filter(f => f.is_dir).map(d => ({...d, file_text: ''}));
+  const processedDirs = dirs.length ? processDirs(dirs) : [];
+  const mds = files.filter(f => f.is_file).map(d => ({...d, file_text: ''}));
+  const processedMds =  mds.length ? processMds(mds) : [];
+
+  const upsertNote = store.getState().upsertNote;
+  const upsertTree = store.getState().upsertTree;
+  // const dirPath = dirInfo.dirPath;
+
+  // 2- upsert store dirs
+  for (const subdir of processedDirs) {
+    const subDir =  new DirectoryAPI(subdir.file_path);
+    if (await subDir.exists()) {
+      upsertNote(subdir);
+      const parentDir = await getParentDir(subdir.file_path);
+      // console.log("dir path1", dirPath, dir, parentDir);
+      upsertTree(subdir, parentDir, true);
+    }
+  }
+  
+  // 3- upsert store md files
+  for (const md of processedMds) {
+    upsertNote(md);
+    const parentDir = await getParentDir(md.file_path);
+    // console.log("dir path2", dirPath, dir, parentDir);
+    upsertTree(md, parentDir, false);
+  }
+
+  // console.log("dir path", dirPath, dir, store.getState().noteTree);
+  
+  closeMsgModal();
+}
+
+/**
+ * Open dir and process files
+ * @param dir 
+ * @returns 
+ */
 export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const dirInfo = new DirectoryAPI(dir);
   // console.log("dir api", dirInfo)
@@ -69,7 +121,7 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const upsertTree = store.getState().upsertTree;
   // const dirPath = dirInfo.dirPath;
 
-  // 2- process dirs
+  // 2- upsert store dirs
   for (const subdir of processedDirs) {
     const subDir =  new DirectoryAPI(subdir.file_path);
     if (await subDir.exists()) {
@@ -80,7 +132,7 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
     }
   }
   
-  // 3- process md files
+  // 3- upsert store md files
   for (const md of processedMds) {
     upsertNote(md);
     const parentDir = await getParentDir(md.file_path);
