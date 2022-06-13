@@ -1,10 +1,12 @@
 # Changelog 
 
-## [app-v0.4.0-beta.2] - 2022-XX-XX 
+## [app-v0.4.0-beta.2] - 2022-06-13 
 
 ### Chnages
 
-- Using CodeMirror in Raw Markdown Mode
+- Using CodeMirror in Raw Markdown Mode; 
+- Fix Graph view: no folder node now; 
+- Fix style and other bugs
 
 
 ## [app-v0.4.0-beta.1] - 2022-06-03 
