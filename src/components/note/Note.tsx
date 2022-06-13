@@ -217,19 +217,20 @@ function Note(props: Props) {
         <div id={noteId} className={`${noteContainerClassName} ${className}`}>
           <NoteHeader />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
-            <div className="flex flex-col flex-1 w-full mx-auto md:w-128 lg:w-160 xl:w-192">
+            <div className="flex flex-col flex-1 w-full mx-auto px-8 md:px-12">
               <Title
-                className="px-8 pb-1 md:px-12"
+                className="px-2 pb-1"
                 initialTitle={title}
                 onChange={onTitleChange}
                 isDaily={isDaily}
                 isPub={isPub}
               />
-              <div className="flex-1 px-8 pt-2 pb-8 md:pb-12 md:px-12">
+              <div className="flex-1 px-2 pt-2 pb-8">
                 {rawMode ? (
                   <Markdown
                     initialContent={mdContent}
                     onChange={onMarkdownChange}
+                    dark={darkMode}
                   />
                 ) : (
                   <MsEditor 

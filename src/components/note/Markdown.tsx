@@ -1,9 +1,13 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo } from 'react';
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { languages } from "@codemirror/language-data";
 import { useStore } from 'lib/store';
+import CodeMirror from "./codemirror/index";
 
 type Props = {
   initialContent: string;
   onChange: (value: string) => void;
+  dark: boolean;
   className?: string;
 };
 
@@ -11,45 +15,26 @@ function Markdown(props: Props) {
   const { 
     initialContent, 
     onChange, 
+    dark,
     className = '',
   } = props;
-  const mdRef = useRef<HTMLPreElement | null>(null);
 
-  const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
-  const readMode = useStore((state) => state.readMode);
+  const readMode = useStore((state) => state.readMode); 
 
-  const emitChange = () => {
-    if (!mdRef.current) {
-      return;
-    }
-    const content = mdRef.current.textContent ?? '';
-    onChange(content);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onValueChange = (value: string, _viewUpdate: unknown) => {
+    // console.log('md Changed, value:', value, _viewUpdate);
+    onChange(value);
   };
 
-  // Set the initial title
-  useEffect(() => {
-    if (!mdRef.current) {
-      return;
-    }
-    mdRef.current.textContent = initialContent;
-  }, [initialContent]);
-
   return (
-    <pre
-      ref={mdRef}
-      className={`border-none focus:outline-none p-0 whitespace-pre-wrap ${className}`}
-      role="textbox"
-      placeholder="Start Writing..."
-      onPaste={(event) => {
-        // Remove styling and newlines from the text
-        event.preventDefault();
-        let text = event.clipboardData.getData('text/plain');
-        text = text.replace(/\r?\n|\r/g, ' ');
-        document.execCommand('insertText', false, text);
-      }}
-      onInput={emitChange}
-      contentEditable={!readMode}
-      spellCheck={isCheckSpellOn}
+    <CodeMirror
+      value={initialContent}
+      onChange={onValueChange}
+      extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
+      className={`border-none focus:outline-none p-0 break-words ${className}`}
+      theme={dark ? 'dark' : 'light'}
+      editable={!readMode}
     />
   );
 }

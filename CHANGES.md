@@ -1,5 +1,12 @@
 # Changelog 
 
+## [app-v0.4.0-beta.2] - 2022-XX-XX 
+
+### Chnages
+
+- Using CodeMirror in Raw Markdown Mode
+
+
 ## [app-v0.4.0-beta.1] - 2022-06-03 
 
 ### Chnages
