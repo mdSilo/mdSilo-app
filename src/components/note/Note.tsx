@@ -10,13 +10,13 @@ import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
-//import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
 import { openUrl } from 'file/open';
 import { joinPaths, getDirPath } from 'file/util';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
+import updateBacklinks from './backlinks/updateBacklinks';
 
 type Props = {
   noteId: string;
@@ -81,10 +81,11 @@ function Note(props: Props) {
   );
 
   // update locally
+  // FIXME:  sidebar noteTree occur err on rename 
   const onTitleChange = useCallback(
-    async (title: string) => {
+    async (newtitle: string) => {
       // update note title in storage as unique title
-      const newTitle = title.trim() || getUntitledTitle(noteId);
+      const newTitle = newtitle.trim() || getUntitledTitle(noteId);
       const isTitleUnique = () => {
         const notesArr = Object.values(storeNotes);
         return notesArr.findIndex(
@@ -93,7 +94,7 @@ function Note(props: Props) {
         ) === -1;
       };
       if (isWiki || isTitleUnique()) {
-        //await updateBacklinks(newTitle, noteId); 
+        await updateBacklinks(title, newTitle); 
         // write to local file
         if (!isWiki && currentDir) {
           // on rename file: 
@@ -113,7 +114,7 @@ function Note(props: Props) {
         }
       }
     },
-    [noteId, isWiki, storeNotes, updateNote, currentDir, mdContent]
+    [noteId, isWiki, storeNotes, title, currentDir, mdContent, updateNote]
   );
 
   // Search

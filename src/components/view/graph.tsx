@@ -6,7 +6,7 @@ import { useStore } from 'lib/store';
 import { ciStringEqual, isUrl } from 'utils/helper';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 
-const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
+export const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
 
 export default function Graph() {
   const notes = useStore((state) => state.notes);
