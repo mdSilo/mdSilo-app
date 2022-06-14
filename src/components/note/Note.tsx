@@ -10,13 +10,13 @@ import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
-//import Backlinks from 'components/editor/backlinks/Backlinks';
 //import updateBacklinks from 'editor/backlinks/updateBacklinks';
 import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
 import { openUrl } from 'file/open';
 import { joinPaths, getDirPath } from 'file/util';
 import NoteHeader from './NoteHeader';
+import Backlinks from './backlinks/Backlinks';
 
 type Props = {
   noteId: string;
@@ -244,9 +244,9 @@ function Note(props: Props) {
                   />
                 )}
               </div>
-              {/* <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
-                <Backlinks className="mx-4 mb-8 md:mx-8 md:mb-12" isCollapse={true} />
-              </div> */}
+              <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
+                {rawMode ? null : (<Backlinks className="mx-4 mb-8" isCollapse={true} />)}
+              </div>
             </div>
           </div>
         </div>
