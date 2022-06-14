@@ -49,6 +49,22 @@ export function ciStringEqual(str1: string, str2: string) {
   return ciStringCompare(str1, str2) === 0;
 }
 
+// shorten a string but must include centre text
+export function shortenString(txt: string, centre: string, len = 128) {
+  const txtLen = txt.length;
+  if (txtLen <= len) return txt;
+  
+  const idx = txt.indexOf(centre);
+  const cenLen = centre.length;
+  const step = Math.floor((len - cenLen) / 2);
+  const span1 = idx - step; 
+  const span2 = idx + cenLen + step;
+  const start = Math.max(span1 + Math.min(txtLen - span2, 0), 0);
+  const end = Math.min(txtLen, span2 - Math.min(span1, 0));
+
+  return txt.substring(start, end);
+}
+
 const ymdNums = (date: string) => {
   const nums =  date.split('-').map(n => Number(n));
   return nums;

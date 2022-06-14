@@ -2,6 +2,7 @@ import { memo } from 'react';
 import MsEditor from "mdsmirror";
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import { useStore } from 'lib/store';
+import { shortenString } from 'utils/helper';
 import { BacklinkMatch } from './useBacklinks';
 
 type BacklinkMatchLeafProps = {
@@ -14,6 +15,10 @@ const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
   const { noteId, match, className } = props;
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
   const darkMode = useStore((state) => state.darkMode);
+  const leafValue: string = match.context 
+    ? getContextString(match.context) || match.text  
+    : match.text;
+  const editorValue = shortenString(leafValue, match.text);
 
   const containerClassName = `block text-left text-xs rounded p-2 my-1 w-full break-words ${className}`;
 
@@ -22,9 +27,13 @@ const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
       className={containerClassName}
       onClick={() => onNoteLinkClick(noteId)}
     >
-      <MsEditor value={match.text} dark={darkMode} readOnly={true} />
+      <MsEditor value={editorValue} dark={darkMode} readOnly={true} />
     </button>
   );
 };
 
 export default memo(BacklinkMatchLeaf);
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getContextString = (nodes: any[]) => 
+  nodes.reduce((res, node) => res + ' ' + (node.text || ''), '');

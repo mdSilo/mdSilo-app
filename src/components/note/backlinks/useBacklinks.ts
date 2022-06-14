@@ -10,6 +10,8 @@ export type BacklinkMatch = {
   text: string;
   from: number;
   to: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  context: any; // Node[] | Node
 };
 
 export type Backlink = {
@@ -39,10 +41,6 @@ export default function useBacklinks(noteId: string) {
   return { linkedBacklinks, unlinkedBacklinks };
 }
 
-// note: 
-// the backlinks generated and updated locally only
-// will not make public any private data involved even on wiki note
-
 // Searches the notes linked to the given noteId
 export const computeLinkedBacklinks = (
   notes: Notes,
@@ -60,7 +58,7 @@ export const computeLinkedBacklinks = (
       result.push({
         id: note.id,
         title: note.title,
-        matches: [],
+        matches,
       });
     }
   }
@@ -68,9 +66,9 @@ export const computeLinkedBacklinks = (
 };
 
 const computeLinkedMatches = (content: string, noteTitle: string) => {
+  const out: BacklinkMatch[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const findMatch = (node: any) => {
-    const out: BacklinkMatch[] = [];
+  const findMatch = (node: any, context?: any) => {
     if (node.text && node.marks && node.marks.length > 0) {
       for (const mark of node.marks) {
         if (mark.type === "link" && mark.attrs) {
@@ -78,7 +76,7 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
           if (href && !isUrl(href)) {
             const title = href.replaceAll('_', ' ');
             if (ciStringEqual(noteTitle, title)) {
-              out.push({ text: node.text, from: node.from, to: node.to })
+              out.push({ text: node.text, from: node.from, to: node.to, context })
             }
           }
         }
@@ -86,16 +84,19 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
     }
     if (node.content?.length > 0) {
       for (const n of node.content) {
-        findMatch(n);
+        findMatch(n, node.content);
       }
     }
+
     return out;
   }
 
   const doc = parser.parse(content);
-  const json = getJSONContent(doc);
+  //console.log(">> doc: ", doc, content)
+  const json = getJSONContent(doc); 
+  // console.log(">>json: ", json)
   const result: BacklinkMatch[] = findMatch(json);
-  
+
   return result;
 };
 
@@ -130,19 +131,20 @@ const computeUnlinkedBacklinks = (
 };
 
 const computeUnlinkedMatches = (content: string, noteTitle: string) => {
+  const out: BacklinkMatch[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const findMatch = (node: any) => {
-    const out: BacklinkMatch[] = [];
+  const findMatch = (node: any, context?: any) => {
     if (node.text && node.text.includes(noteTitle)) {
       out.push({
         text: node.text,
         from: node.from,
         to: node.to,
+        context,
       });
     }
     if (node.content?.length > 0) {
       for (const n of node.content) {
-        findMatch(n);
+        findMatch(n, node.content);
       }
     }
     return out;

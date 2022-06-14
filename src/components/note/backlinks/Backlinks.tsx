@@ -3,7 +3,7 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import Tree from 'components/misc/Tree';
 import useBacklinks from './useBacklinks';
 import type { Backlink, BacklinkMatch } from './useBacklinks';
-import BacklinkReferenceBranch from './BacklinkReferenceBranch';
+import BacklinkBranch from './BacklinkBranch';
 import BacklinkMatchLeaf from './BacklinkMatchLeaf';
 import BacklinkNoteBranch from './BacklinkNoteBranch';
 
@@ -57,20 +57,12 @@ const getTreeData = (
   return [
     {
       id: 'linked-backlinks',
-      labelNode: (
-        <BacklinkReferenceBranch
-          title={`${numOfLinkedMatches} Direct Mentions`}
-        />
-      ),
+      labelNode: (<BacklinkBranch title={`${numOfLinkedMatches} Direct Mentions`}/>),
       children: linkedBacklinks.map(backlinkToTreeData(true)),
     },
     {
       id: 'unlinked-backlinks',
-      labelNode: (
-        <BacklinkReferenceBranch
-          title={`${numOfUnlinkedMatches} Indirect Mentions`}
-        />
-      ),
+      labelNode: (<BacklinkBranch title={`${numOfUnlinkedMatches} Indirect Mentions`}/>),
       children: unlinkedBacklinks.map(backlinkToTreeData(false)),
     },
   ];
