@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, memo, useRef } from 'react';
 import { useVirtual } from 'react-virtual';
 import { FlattenedTreeNode, TreeNode as TreeNodeType } from './Tree';
-import TreeNode from './TreeNode';
+import TreeNodeElement from './TreeNodeElement';
 
 type Props = {
   data: TreeNodeType[];
@@ -74,7 +74,7 @@ function VirtualTree(props: Props) {
         {rowVirtualizer.virtualItems.map((virtualRow, index) => {
           const node = flattenedData[virtualRow.index];
           return (
-            <TreeNode
+            <TreeNodeElement
               key={`${node.id}-${index}`}
               ref={virtualRow.measureRef}
               node={node}

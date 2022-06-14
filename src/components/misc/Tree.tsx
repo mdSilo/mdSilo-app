@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, ReactNode, memo } from 'react';
-import TreeNodeElement from './TreeNode';
+import TreeNodeElement from './TreeNodeElement';
 
 export type TreeNode = {
   id: string;

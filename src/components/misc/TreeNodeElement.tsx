@@ -8,7 +8,7 @@ type Props = {
   style?: CSSProperties;
 };
 
-const TreeNode = (props: Props, forwardedRef: ForwardedRef<HTMLDivElement>) => {
+const TreeNodeElement = (props: Props, forwardedRef: ForwardedRef<HTMLDivElement>) => {
   const { node, onClick, style } = props;
 
   const leftPadding = useMemo(() => {
@@ -44,4 +44,4 @@ const TreeNode = (props: Props, forwardedRef: ForwardedRef<HTMLDivElement>) => {
   );
 };
 
-export default memo(forwardRef(TreeNode));
+export default memo(forwardRef(TreeNodeElement));
