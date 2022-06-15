@@ -51,6 +51,5 @@ function cleanStore() {
   // cleaning store
   store.getState().setNoteTree([]);
   store.getState().setNotes({});
-  store.getState().setOpenNoteIds([]);
   store.getState().setCurrentDir(undefined);
 }

@@ -61,8 +61,6 @@ export type Store = {
   // note
   notes: Notes;
   setNotes: Setter<Notes>;
-  noteTitleToIdMap: Record<string, string | undefined>;
-  setNoteTitleToIdMap: Setter<Record<string, string | undefined>>;
   // operate note
   upsertNote: (note: Note) => void;
   upsertTree: (note: Note, targetId?: string, isDir?: boolean) => void;
@@ -70,11 +68,8 @@ export type Store = {
   deleteNote: (noteId: string) => void;
   currentNoteId: string;
   setCurrentNoteId: Setter<string>;
-  openNoteIds: string[];
-  setOpenNoteIds: (openNoteIds: string[], index?: number) => void;
   noteTree: NoteTreeItem[];
   setNoteTree: Setter<NoteTreeItem[]>;
-  moveNoteTreeItem: (srcPath: string, tarDir: string, tarPath: string) => void;
   toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => void;
   sidebarTab: SidebarTab;
   setSidebarTab: Setter<SidebarTab>;
@@ -120,8 +115,6 @@ export const store = createVanilla<Store>(
       notes: {},  // all private notes and related wiki notes
       // Sets the notes
       setNotes: setter(set, 'notes'),
-      noteTitleToIdMap: {}, 
-      setNoteTitleToIdMap: setter(set, 'noteTitleToIdMap'),
       /**
        * update or insert the note
        * @param {Note} note the note to upsert
@@ -149,8 +142,6 @@ export const store = createVanilla<Store>(
               state.notes[note.id] = note;
             }
           }
-          // set title-id map
-          state.noteTitleToIdMap[note.title.toLowerCase()] = note.id;
         });
       },
       upsertTree: (note: Note, targetId = '', isDir = false) => {
@@ -206,48 +197,9 @@ export const store = createVanilla<Store>(
       },
       currentNoteId: '',
       setCurrentNoteId: setter(set, 'currentNoteId'),
-      // The visible notes, including the main note and the stacked notes
-      openNoteIds: [],
-      // Replaces the open notes at the given index (0 by default)
-      setOpenNoteIds: (newOpenNoteIds: string[], index?: number) => {
-        if (!index) {
-          set((state) => {
-            state.openNoteIds = newOpenNoteIds;
-          });
-          return;
-        }
-        // Replace the notes after the current note with the new note
-        set((state) => {
-          state.openNoteIds.splice(
-            index,
-            state.openNoteIds.length - index,
-            ...newOpenNoteIds
-          );
-        });
-      },
       // The tree of notes visible in the sidebar
       noteTree: [], // private notes
       setNoteTree: setter(set, 'noteTree'),
-      // Moves the tree item with the given noteId to the given newParentNoteId's children 
-      // TODO: why this does not work? 
-      moveNoteTreeItem: (srcPath: string, tarDir: string, tarPath: string) => {
-        // Don't do anything if the note ids are the same
-        if (srcPath === tarPath) {
-          return;
-        }
-        set((state) => {
-          const oldNote =  state.notes[srcPath];
-          const newNote = {
-            ...oldNote,
-            id: tarPath,
-            file_path: tarPath,
-          };
-          state.deleteNote(srcPath);
-          state.upsertNote(newNote);
-          state.upsertTree(newNote, tarDir);
-          console.log("move item: ", srcPath, tarPath);
-        });
-      },
       // Expands or collapses the tree item with the given noteId
       toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => {
         set((state) => {
@@ -273,9 +225,8 @@ export const store = createVanilla<Store>(
       partialize: (state) => ({
         // user setting related
         userId: state.userId,
-        // isSidebarOpen: state.isSidebarOpen, // don't persist
         darkMode: state.darkMode,
-        isPageStackingOn: state.isPageStackingOn,
+        isRTL: state.isRTL,
         isCheckSpellOn: state.isCheckSpellOn,
         noteSort: state.noteSort,
         recentDir: state.recentDir,

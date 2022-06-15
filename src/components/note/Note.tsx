@@ -29,6 +29,7 @@ function Note(props: Props) {
   const { noteId, className } = props;
   const darkMode = useStore((state) => state.darkMode);
   const rawMode = useStore((state) => state.rawMode);
+  const isRTL = useStore((state) => state.isRTL);
   const currentDir = useStore((state) => state.currentDir);
   // console.log("currentDir", currentDir);
   // get some property of note
@@ -249,6 +250,7 @@ function Note(props: Props) {
                   <MsEditor 
                     value={mdContent}
                     dark={darkMode}
+                    dir={isRTL ? 'rtl' : 'auto'}
                     onChange={onContentChange}
                     onSearchLink={onSearchNote}
                     onCreateLink={onCreateNote}

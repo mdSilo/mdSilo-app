@@ -52,7 +52,9 @@ export function ciStringEqual(str1: string, str2: string) {
 // shorten a string but must include centre text
 export function shortenString(txt: string, centre: string, len = 128) {
   const txtLen = txt.length;
-  if (txtLen <= len) return txt;
+  if (txtLen <= len) {
+    return txt.replaceAll(centre, `==${centre}==`);
+  }
   
   const idx = txt.indexOf(centre);
   const cenLen = centre.length;
@@ -62,7 +64,7 @@ export function shortenString(txt: string, centre: string, len = 128) {
   const start = Math.max(span1 + Math.min(txtLen - span2, 0), 0);
   const end = Math.min(txtLen, span2 - Math.min(span1, 0));
 
-  return txt.substring(start, end);
+  return txt.substring(start, end).replaceAll(centre, `==${centre}==`);
 }
 
 const ymdNums = (date: string) => {

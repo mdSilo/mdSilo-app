@@ -26,16 +26,14 @@ export type UserSettings = {
   setDarkMode: Setter<boolean>;
   isSidebarOpen: boolean;
   setIsSidebarOpen: Setter<boolean>;
-  isPageStackingOn: boolean;
-  setIsPageStackingOn: Setter<boolean>;
+  isRTL: boolean;
+  setIsRTL: Setter<boolean>;
   noteSort: Sort;
   setNoteSort: Setter<Sort>;
   isCheckSpellOn: boolean;
   setIsCheckSpellOn: Setter<boolean>;
   readMode: boolean;
   setReadMode: Setter<boolean>;
-  wikiReadMode: boolean;
-  setWikiReadMode: Setter<boolean>;
   rawMode: boolean;  // Raw markdown or WYSIWYG
   setRawMode: Setter<boolean>;
   recentDir: string[];
@@ -51,16 +49,14 @@ const userSettingsSlice = (
   setDarkMode: setter(set, 'darkMode'),
   isSidebarOpen: true,
   setIsSidebarOpen: setter(set, 'isSidebarOpen'),
-  isPageStackingOn: true,
-  setIsPageStackingOn: setter(set, 'isPageStackingOn'),
+  isRTL: false,
+  setIsRTL: setter(set, 'isRTL'),
   noteSort: Sort.TitleAscending,
   setNoteSort: setter(set, 'noteSort'),
   isCheckSpellOn: true,
   setIsCheckSpellOn: setter(set, 'isCheckSpellOn'),
   readMode: false,
   setReadMode: setter(set, 'readMode'),
-  wikiReadMode: true,
-  setWikiReadMode: setter(set, 'wikiReadMode'),
   rawMode: false,
   setRawMode: setter(set, 'rawMode'),
   recentDir: [],
