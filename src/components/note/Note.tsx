@@ -51,6 +51,9 @@ function Note(props: Props) {
 
   // note action
   const updateNote = useStore((state) => state.updateNote);
+  const deleteNote = useStore((state) => state.deleteNote);
+  const upsertNote = useStore((state) => state.upsertNote);
+  const upsertTree = useStore((state) => state.upsertTree);
 
   // update locally
   const onContentChange = useCallback(
@@ -81,7 +84,6 @@ function Note(props: Props) {
   );
 
   // update locally
-  // FIXME:  sidebar noteTree occur err on rename 
   const onTitleChange = useCallback(
     async (newtitle: string) => {
       // update note title in storage as unique title
@@ -93,28 +95,38 @@ function Note(props: Props) {
           (n) => n.id !== noteId && !n.is_wiki && ciStringEqual(n.title, newTitle)
         ) === -1;
       };
-      if (isWiki || isTitleUnique()) {
+      if (!isWiki && isTitleUnique() && currentDir) {
         await updateBacklinks(title, newTitle); 
-        // write to local file
-        if (!isWiki && currentDir) {
-          // on rename file: 
-          // 1- new FilePath
-          const oldPath = storeNotes[noteId].file_path;
-          const dirPath = await getDirPath(oldPath);
-          const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
-          // 2- swap value
-          await writeFile(newPath, mdContent);
-          await writeJsonFile(currentDir);
-          // 3- delete the old redundant File
-          await deleteFile(oldPath);
-          // 4- update note in store
-          updateNote(
-            { id: noteId, title: newTitle, not_process: false, file_path: newPath }
-          );
-        }
+        // on rename file: 
+        // 1- new FilePath
+        const oldNote = storeNotes[noteId];
+        const oldPath = oldNote.file_path;
+        const dirPath = await getDirPath(oldPath);
+        const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
+        // 2- swap value
+        await writeFile(newPath, mdContent);
+        await writeJsonFile(currentDir);
+        // 3- delete the old redundant File
+        await deleteFile(oldPath);
+        // 4- update note in store
+        deleteNote(oldPath);
+        const newNote = {
+          ...oldNote,
+          id: newPath,
+          title: newTitle, 
+          not_process: false,
+          file_path: newPath,
+        };
+        upsertNote(newNote);
+        upsertTree(newNote, dirPath);
+        // nav to renamed note
+        dispatch({view: 'md', params: {noteId: newPath}});
       }
     },
-    [noteId, isWiki, storeNotes, title, currentDir, mdContent, updateNote]
+    [
+      noteId, isWiki, currentDir, storeNotes, title, mdContent, 
+      deleteNote, upsertNote, upsertTree, dispatch
+    ]
   );
 
   // Search

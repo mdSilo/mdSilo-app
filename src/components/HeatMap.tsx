@@ -118,13 +118,18 @@ function getDataToolTips(weekIdx: number, dayIdx: number) {
 function getDayStyle(weekIdx: number, dayIdx: number) {
   const data = getData(weekIdx, dayIdx);
   const an = data.activityNum;
-  const anStyle = an === 0 
-    ? 'fill-gray-200 dark:fill-gray-600'
-    : an >= 12 
-      ? 'fill-green-500'
-      : an >= 6 
-        ? 'fill-cyan-500'
-        : 'fill-primary-200 dark:fill-primary-900';
+  const today = new Date();
+  const weekDay = today.getDay();
+  const isAfterToday = weekIdx >= 52 && dayIdx > weekDay;
+  const anStyle = isAfterToday 
+    ? 'fill-transparent' 
+    : an === 0 
+      ? 'fill-gray-200 dark:fill-gray-600'
+      : an >= 12 
+        ? 'fill-green-500'
+        : an >= 6 
+          ? 'fill-cyan-500'
+          : 'fill-primary-200 dark:fill-primary-900';
 
   return `${anStyle} cursor-pointer`;
 }
