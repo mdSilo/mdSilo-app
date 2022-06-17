@@ -1,7 +1,12 @@
 # Changelog 
 
-## [app-v0.4.0] - 2022-XX-XX 
+## [app-v0.4.1] - 2022-XX-XX 
 
+- Fix bugs 
+
+## [app-v0.4.0] - 2022-06-16
+
+update deps to stable version 
 
 ## [app-v0.4.0-beta.3] - 2022-06-15 
 

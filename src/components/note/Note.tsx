@@ -161,6 +161,13 @@ function Note(props: Props) {
   // Create new note
   const onCreateNote = useCallback(
     async (title: string) => {
+      title = title.trim();
+      const existingNote = Object.values(storeNotes).find((n) =>
+        ciStringEqual(n.title, title)
+      );
+      if (existingNote) {
+        return existingNote.title.replaceAll(/\s/g, '_');
+      }
       const parentDir = await getDirPath(note?.file_path);
       const notePath = await joinPaths(parentDir, [`${title}.md`]);
       const newNote = { 
@@ -170,16 +177,10 @@ function Note(props: Props) {
         file_path: notePath,
         is_daily: regDateStr.test(title),
       };
-      // Alert: need to make sure the title is unique within currentDir, TODO
       store.getState().upsertNote(newNote);
       store.getState().upsertTree(newNote, parentDir);
-      // the note id and file_path may be changed on upsert if the note is exsiting per title
-      const upsertedNote = Object.values(storeNotes).find((n) =>
-        ciStringEqual(n.title, title)
-      );
-      await writeFile(upsertedNote?.file_path || notePath, ' ');
-      // navigate to md view
-      // dispatch({view: 'md', params: {noteId: note?.id}});
+      await writeFile(notePath, ' ');
+      
       return title.replaceAll(/\s/g, '_');
     },
     [note?.file_path, storeNotes]

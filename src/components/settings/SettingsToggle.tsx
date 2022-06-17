@@ -30,7 +30,7 @@ export const SettingsToggle = (props: Props) => {
       <div className="flex flex-row items-center">
         <span className="text-sm text-gray-600">{optionLeft}</span>
         <Toggle
-          id={name.replaceAll(' ', '-')}
+          id={name.replaceAll(/\s/g, '-')}
           className="items-center mx-2"
           isChecked={check}
           setIsChecked={handleCheck}
