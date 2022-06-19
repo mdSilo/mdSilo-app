@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { IconCaretRight, IconPoint } from '@tabler/icons';
-import { Heading } from './Note'
+
+export type Heading = {
+  title: string;
+  level: number;
+  id: string;
+};
 
 type Props = {
   headings: Heading[];
@@ -11,7 +16,6 @@ type Props = {
 export default function Toc(props: Props) {
   const { headings, metaInfo = '', className = '' } = props;
   const [showTOC, setShowTOC] = useState<boolean>(false);
-
 
   return (
     <>
@@ -27,7 +31,7 @@ export default function Toc(props: Props) {
           size={16}
           fill="currentColor"
         />
-        Table of Content {` ${metaInfo}`}
+        Table of Contents {` ${metaInfo}`}
       </button>
       {showTOC && headings.length ? (
         <div className={`pb-4 border-b-2 border-gray-200 dark:border-gray-600 ${className}`}>

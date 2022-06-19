@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/note/Title';
-import Toc from 'components/note/Toc';
+import Toc, { Heading } from 'components/note/Toc';
 import Markdown from 'components/note/Markdown';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { SidebarTab, store, useStore } from 'lib/store';
@@ -19,12 +19,6 @@ import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import updateBacklinks from './backlinks/updateBacklinks';
 
-export type Heading = {
-  title: string;
-  level: number;
-  id: string;
-};
-
 type Props = {
   noteId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,11 +31,12 @@ function Note(props: Props) {
 
   const [headings, setHeadings] = useState<Heading[]>([]);
   const editorInstance = useRef<MsEditor>(null);
-  useEffect(() => {
+  const getHeading = () => {
     const hdings = editorInstance.current?.getHeadings();
     // console.log(hdings); 
     setHeadings(hdings ?? []);
-  }, [noteId]);
+  };
+  useEffect(() => { getHeading(); }, [noteId]);
 
   const darkMode = useStore((state) => state.darkMode);
   const rawMode = useStore((state) => state.rawMode);
@@ -83,6 +78,7 @@ function Note(props: Props) {
       if (currentDir) { 
         await writeJsonFile(currentDir); 
       }
+      getHeading();
     },
     [note?.file_path, noteId, currentDir, updateNote]
   );
