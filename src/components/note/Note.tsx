@@ -1,6 +1,7 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/note/Title';
+import Toc from 'components/note/Toc';
 import Markdown from 'components/note/Markdown';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { SidebarTab, store, useStore } from 'lib/store';
@@ -18,6 +19,12 @@ import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import updateBacklinks from './backlinks/updateBacklinks';
 
+export type Heading = {
+  title: string;
+  level: number;
+  id: string;
+};
+
 type Props = {
   noteId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,6 +34,15 @@ type Props = {
 
 function Note(props: Props) {
   const { noteId, className } = props;
+
+  const [headings, setHeadings] = useState<Heading[]>([]);
+  const editorInstance = useRef<MsEditor>(null);
+  useEffect(() => {
+    const hdings = editorInstance.current?.getHeadings();
+    // console.log(hdings); 
+    setHeadings(hdings ?? []);
+  }, [noteId]);
+
   const darkMode = useStore((state) => state.darkMode);
   const rawMode = useStore((state) => state.rawMode);
   const isRTL = useStore((state) => state.isRTL);
@@ -240,6 +256,10 @@ function Note(props: Props) {
                 isDaily={isDaily}
                 isPub={isPub}
               />
+              {!rawMode && headings.length > 0 
+                ? (<Toc headings={headings} />) 
+                : null
+              }
               <div className="flex-1 px-2 pt-2 pb-8">
                 {rawMode ? (
                   <Markdown
@@ -249,6 +269,7 @@ function Note(props: Props) {
                   />
                 ) : (
                   <MsEditor 
+                    ref={editorInstance}
                     value={mdContent}
                     dark={darkMode}
                     dir={isRTL ? 'rtl' : 'auto'}

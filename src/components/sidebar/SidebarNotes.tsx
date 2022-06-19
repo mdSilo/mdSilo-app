@@ -30,7 +30,7 @@ function SidebarNotes(props: SidebarNotesProps) {
   const myNotes = noteList.filter(n => !n.is_wiki && !n.is_daily);
   const numOfNotes = useMemo(() => myNotes.length, [myNotes]);
   
-  const btnClass = "p-1 mb-2 mx-4 text-white rounded bg-blue-500 hover:bg-blue-800";
+  const btnClass = "p-1 mt-4 mx-4 text-white rounded bg-blue-500 hover:bg-blue-800";
 
   return (
     <ErrorBoundary>
@@ -47,9 +47,6 @@ function SidebarNotes(props: SidebarNotesProps) {
           />
         ) : (
           <>
-            <p className="flex-1 px-6 my-2 text-center text-gray-500">
-              No md yet
-            </p>
             <button className={btnClass} onClick={onOpenDir}>Open Folder</button>
             <button className={btnClass} onClick={onOpenFile}>Open File</button>
           </>

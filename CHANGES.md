@@ -2,6 +2,10 @@
 
 ## [app-v0.4.1] - 2022-XX-XX 
 
+### Added  
+- TOC   
+
+### Fixed  
 - Fix bugs 
 
 ## [app-v0.4.0] - 2022-06-16
