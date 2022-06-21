@@ -3,7 +3,9 @@
 ## [app-v0.4.1] - 2022-XX-XX 
 
 ### Added  
-- TOC   
+- TOC 
+- Editor Support: Hashtag, wikiLink(partly),
+
 
 ### Fixed  
 - Fix bugs 

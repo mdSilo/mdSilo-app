@@ -1683,6 +1683,11 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
+"@juggle/resize-observer@^3.3.1":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/@juggle/resize-observer/-/resize-observer-3.3.1.tgz#b50a781709c81e10701004214340f25475a171a0"
+  integrity sha512-zMM9Ds+SawiUkakS7y94Ymqx+S0ORzpG3frZirN3l+UlXUmSUR7hF4wxCVqW+ei94JzV5kt0uXBcoOEAuiydrw==
+
 "@lezer/common@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@lezer/common/-/common-1.0.0.tgz#1c95ae53ec17706aa3cbcc88b52c23f22ed56096"
@@ -2056,15 +2061,10 @@
     "@svgr/plugin-svgo" "^5.5.0"
     loader-utils "^2.0.0"
 
-"@tabler/icons@^1.68.0":
-  version "1.68.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.68.0.tgz#047bd88966cc24ef957b3c429a13bb82cca95561"
-  integrity sha512-UseBEEhv7r+Drl3iZih7rkwqkfJJZscjd5ZvK1WdIIulQsBa+qE8WBDGdAO0RtjkCclEK88z9kC0s5wiVPIvkw==
-
-"@tabler/icons@^1.69.0":
-  version "1.69.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.69.0.tgz#5ae7404289f19f1971884f00995fec7d177e6239"
-  integrity sha512-RNlzhDUYh1UFTbNtrztEUosY+OJGRXACBe+TD2j87IRQtosmiXrQf2v0oksdFdsFkwwVoR31dTKBuB3SDO5IBQ==
+"@tabler/icons@^1.70.0", "@tabler/icons@^1.71.0":
+  version "1.71.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.71.0.tgz#74d771aa18487ea92af07c67048e411ada0f0427"
+  integrity sha512-hOeXAWSXGgT2S8O9QrRTomEq6YE1AtuXrcOy5DgGVI93xub1JnGSA3Z9gZzuND4pSJ+Ee+geI5u8hTYbfIsuGw==
 
 "@tailwindcss/forms@^0.5.2":
   version "0.5.2"
@@ -5356,11 +5356,6 @@ fuse.js@^6.5.3:
   resolved "https://registry.yarnpkg.com/fuse.js/-/fuse.js-6.5.3.tgz#7446c0acbc4ab0ab36fa602e97499bdb69452b93"
   integrity sha512-sA5etGE7yD/pOqivZRBvUBd/NaL2sjAu6QuSaFoe1H2BrJSkH/T/UXAJ8CdXdw7DvY3Hs8CXKYkDWX7RiP5KOg==
 
-fuzzy-search@^3.2.1:
-  version "3.2.1"
-  resolved "https://registry.yarnpkg.com/fuzzy-search/-/fuzzy-search-3.2.1.tgz#65d5faad6bc633aee86f1898b7788dfe312ac6c9"
-  integrity sha512-vAcPiyomt1ioKAsAL2uxSABHJ4Ju/e4UeDM+g1OlR0vV4YhLGMNsdLNvZTpEDY4JCSt0E4hASCNM5t2ETtsbyg==
-
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/gensync/-/gensync-1.0.0-beta.2.tgz#32a6ee76c3d7f52d46b2b1ae5d93fea8580a25e0"
@@ -6909,14 +6904,14 @@ mdn-data@2.0.4:
   resolved "https://registry.yarnpkg.com/mdn-data/-/mdn-data-2.0.4.tgz#699b3c38ac6f1d728091a64650b65d388502fd5b"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
 
-mdsmirror@0.1.13:
-  version "0.1.13"
-  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.1.13.tgz#a25acf0a12d20f7fdfdd93d065dcd129ef527fa8"
-  integrity sha512-vpnWgeq4aifHWp8QS8h6PuPHbK/uBECF1zaqjvDJSqDYZqXa2fTpdVWqaCgBu0InLqEOe+8+c3uIXmKQCasbQg==
+mdsmirror@0.1.16:
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.1.16.tgz#d6646c2ffbe092c5e5472199b9380968f91eb4c2"
+  integrity sha512-GlXoYiPNIR+1lGbdeOna/mL2+QyerqZ7fbkWoqCGbjHLh6txC9fLV/ndFIEdB/0bmDGUmY0I9wQEbmBtkuvOvA==
   dependencies:
-    "@tabler/icons" "^1.68.0"
+    "@juggle/resize-observer" "^3.3.1"
+    "@tabler/icons" "^1.70.0"
     copy-to-clipboard "^3.3.1"
-    fuzzy-search "^3.2.1"
     katex "^0.15.6"
     lodash "^4.17.21"
     markdown-it "^12.3.2"
@@ -6939,7 +6934,6 @@ mdsmirror@0.1.13:
     react-medium-image-zoom "^3.1.3"
     react-portal "^4.2.2"
     refractor "^3.6.0"
-    resize-observer-polyfill "^1.5.1"
     slugify "^1.6.5"
     smooth-scroll-into-view-if-needed "^1.1.33"
 
@@ -8737,11 +8731,6 @@ requires-port@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/requires-port/-/requires-port-1.0.0.tgz#925d2601d39ac485e091cf0da5c6e694dc3dcaff"
   integrity sha1-kl0mAdOaxIXgkc8NpcbmlNw9yv8=
-
-resize-observer-polyfill@^1.5.1:
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/resize-observer-polyfill/-/resize-observer-polyfill-1.5.1.tgz#0e9020dd3d21024458d4ebd27e23e40269810464"
-  integrity sha512-LwZrotdHOo12nQuZlHEmtuXdqGoOD0OhaxopaNFxWzInpEgaLWoVuAMbTzixuosCx2nEG58ngzW3vxdWoxIgdg==
 
 resolve-cwd@^3.0.0:
   version "3.0.0"

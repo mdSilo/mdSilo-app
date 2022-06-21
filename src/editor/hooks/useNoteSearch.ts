@@ -24,7 +24,7 @@ type searchOptions = {
   notesBase?: Note[];
 };
 
-// search Notes per kw or hashtag
+// search Notes per kw
 export default function useNoteSearch({
   numOfResults = -1,
   searchContent = false,
@@ -95,12 +95,13 @@ const getFuseData = (notes: Note[], searchContent: boolean): FuseDatum[] => {
 };
 
 // Flatten the content into individual lines
-// TODO 
+// TODO: def path to scroll to searched anchor
 const flattenContent = (content: string): NoteBlock[] => {
   const docAST = parser.parse(content);
+  // console.log("searcg doc ast: ", docAST);
   const result: NoteBlock[] = docAST.content.content
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((node: any) => node.isBlock)
+    //.filter((node: any) => node.isBlock)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((node: any) => { 
       const block = { text: node.textContent, path: []};

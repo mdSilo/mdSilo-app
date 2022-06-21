@@ -29,6 +29,7 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
       if (!isUrl(href)) {
         const title = href.replaceAll('_', ' ');
         if (ciStringEqual(noteTitle, title)) {
+          newTitle = newTitle?.trim();
           const replaceTo = newTitle
             ? `[${match[1]}](${newTitle.replaceAll(/\s/g, '_')})` // rename
             : match[1]                                            // delete

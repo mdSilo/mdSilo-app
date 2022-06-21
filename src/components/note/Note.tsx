@@ -158,7 +158,7 @@ function Note(props: Props) {
     async (text: string) => {
       const results = search(text);
       const searchResults = results.map(res => {
-        const itemTitle = res.item.title;
+        const itemTitle = res.item.title.trim();
         const search = {
           title: itemTitle,
           url: itemTitle.replaceAll(/\s/g, '_'),
@@ -178,7 +178,7 @@ function Note(props: Props) {
         ciStringEqual(n.title, title)
       );
       if (existingNote) {
-        return existingNote.title.replaceAll(/\s/g, '_');
+        return existingNote.title.trim().replaceAll(/\s/g, '_');
       }
       const parentDir = await getDirPath(note?.file_path);
       const notePath = await joinPaths(parentDir, [`${title}.md`]);
@@ -273,6 +273,7 @@ function Note(props: Props) {
                     onSearchLink={onSearchNote}
                     onCreateLink={onCreateNote}
                     onSearchSelectText={(txt) => onSearchText(txt)}
+                    onClickHashtag={(txt) => onSearchText(`#${txt}#`)}
                     onOpenLink={onOpenLink}
                   />
                 )}
