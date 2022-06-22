@@ -170,7 +170,8 @@ function Note(props: Props) {
     [search]
   );
 
-  // Create new note
+  // Create new note 
+  // NOTE: the unique title is case insensitive
   const onCreateNote = useCallback(
     async (title: string) => {
       title = title.trim();

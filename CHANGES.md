@@ -3,12 +3,13 @@
 ## [app-v0.4.1] - 2022-XX-XX 
 
 ### Added  
-- TOC 
-- Editor Support: Hashtag, wikiLink(partly),
-
+- Table of Contents  
+- WikiLink(`[[note]]`)  
+- Hashtag(buggy on Mac and Win)
 
 ### Fixed  
-- Fix bugs 
+- Fix bug on create new note via `new or find`
+- Fix bug on unique title (case insensitive) 
 
 ## [app-v0.4.0] - 2022-06-16
 

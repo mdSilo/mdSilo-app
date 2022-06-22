@@ -26,7 +26,7 @@ export default function useBacklinks(noteId: string) {
     DEBOUNCE_MS
   );
   
-  const noteTitle = notes[noteId].title;
+  const noteTitle = notes[noteId]?.title || '';
 
   const linkedBacklinks = useMemo(
     () => computeLinkedBacklinks(notes, noteTitle),
@@ -46,6 +46,10 @@ export const computeLinkedBacklinks = (
   notes: Notes,
   noteTitle: string
 ): Backlink[] => {
+  if (!noteTitle || !noteTitle.trim()) {
+    return [];
+  }
+
   const result: Backlink[] = [];
   const notesArr = Object.values(notes);
   const myNotes = notesArr.filter(n => !n.is_wiki);
@@ -106,7 +110,7 @@ const computeUnlinkedBacklinks = (
   notes: Notes,
   noteTitle: string | undefined
 ): Backlink[] => {
-  if (!noteTitle) {
+  if (!noteTitle || !noteTitle.trim()) {
     return [];
   }
 
