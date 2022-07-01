@@ -33,7 +33,7 @@
     "fuse.js": "^6.5.3",
     "immer": "^9.0.15",
     "is-hotkey": "^0.2.0",
-    "mdsmirror": "0.1.16",
+    "mdsmirror": "0.1.18",
     "codemirror": "6.0.0",
     "@codemirror/state": "6.0.0",
     "@codemirror/view": "6.0.0",
