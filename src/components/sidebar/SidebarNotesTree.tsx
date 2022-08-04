@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import {
@@ -100,18 +100,18 @@ function SidebarNotesTree(props: Props) {
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
-    setActiveId(active.id);
+    setActiveId(String(active.id));
   }, []);
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
       if (over) {
-        const dirId = over.id;
+        const dirId = String(over.id);
         const tarDir = notes[dirId];
         if (!tarDir || !tarDir.is_dir) return;
 
-        const activeId = active.id;
+        const activeId = String(active.id);
         const thisFile = new FileAPI(activeId);
         const tarPath = await thisFile.moveFile(dirId);
         if (tarPath) {
@@ -129,7 +129,7 @@ function SidebarNotesTree(props: Props) {
   );
 
   const Row = useCallback(
-    ({ index, style }) => {
+    ({ index, style }: {index: number; style: React.CSSProperties}) => {
       const node = flattenedData[index];
       return (
         <DraggableSidebarNoteLink
