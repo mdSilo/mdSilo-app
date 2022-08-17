@@ -1,6 +1,12 @@
 # Changelog 
 
-## [app-v0.4.1] - 2022-XX-XX 
+## [app-v0.4.2] - 2022-XX-XX 
+
+### Added  
+- Subscript text (`~sub~`) and superscript text (`^sup^`) support  
+
+
+## [app-v0.4.1] - 2022-06-22 
 
 ### Added  
 - Table of Contents  
