@@ -1,6 +1,6 @@
 import { store } from 'lib/store';
 import { 
-  openDirDilog, openDir, openFilePaths, openFileDilog, saveDilog 
+  openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog 
 } from 'file/open';
 import { normalizeSlash, getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
@@ -35,6 +35,20 @@ export const onOpenDir = async () => {
     store.getState().setRecentDir([normalizedDir]);
     // console.log("rencent dir path", store.getState().recentDir);
     await openDir(normalizedDir);
+  }
+};
+
+// Open Folder, Folder in Dropdown, sub-folder
+export const onListDir = async () => {
+  const dirPath = await openDirDilog();
+  // console.log("dir path", dirPath);
+  if (dirPath && typeof dirPath === 'string') {
+    cleanStore();
+    const normalizedDir = await getDirPath(dirPath);
+    store.getState().setCurrentDir(normalizedDir);
+    store.getState().setRecentDir([normalizedDir]);
+    // console.log("rencent dir path", store.getState().recentDir);
+    await listDir(normalizedDir);
   }
 };
 

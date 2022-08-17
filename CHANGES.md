@@ -9,9 +9,8 @@
 ## [app-v0.4.1] - 2022-06-22 
 
 ### Added  
-- Table of Contents  
-- WikiLink(`[[note]]`)  
-- Hashtag(buggy on Mac and Win)
+- Table of Contents: generate TOC automatically    
+- WikiLink(`[[note]]`)    
 
 ### Fixed  
 - Fix bug on create new note via `new or find`
@@ -28,7 +27,7 @@ update deps to stable version
 
 ## [app-v0.4.0-beta.2] - 2022-06-13 
 
-### Chnages
+### Changes
 
 - Using CodeMirror in Raw Markdown Mode; 
 - Fix Graph view: no folder node now; 
@@ -37,7 +36,7 @@ update deps to stable version
 
 ## [app-v0.4.0-beta.1] - 2022-06-03 
 
-### Chnages
+### Changes
 
 - Migrate Slate to Prosemirror (⚠️Breaking changes⚠️ and more features are still WIP)
 - Editor Support: Markdown, Table, Code block highlight, Math Block...,  

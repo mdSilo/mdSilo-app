@@ -19,8 +19,7 @@ const immer =
   <T extends State>(
     config: StateCreator<T, (fn: (draft: Draft<T>) => void) => void>
   ): StateCreator<T> =>
-  (set, get, api) =>
-    config((fn) => set(produce<T>(fn)), get, api);
+  (set, get, api) => config((fn) => set(produce<T>(fn)), get, api);
 
 // storage in LOCAL_DATA_DIR
 const storage: StateStorage = {
@@ -47,9 +46,16 @@ export type NoteTreeItem = {
   updated_at: string;
 };
 
+export type DailyActivity = {
+  date: string;
+  create: number;
+  update: number;
+}
+
 export type NotesData = {
   notesObj: Notes;
   noteTree: NoteTreeItem[];
+  activities?: DailyActivity[];
 }
 
 export enum SidebarTab {
@@ -112,8 +118,7 @@ export const store = createVanilla<Store>(
   persist(
     immer((set) => ({
       //  Map of note id to notes
-      notes: {},  // all private notes and related wiki notes
-      // Sets the notes
+      notes: {},  // all private notes
       setNotes: setter(set, 'notes'),
       /**
        * update or insert the note
@@ -206,8 +211,10 @@ export const store = createVanilla<Store>(
           toggleTreeItemCollapsed(state.noteTree, noteId, toCollapsed);
         });
       },
+
       sidebarTab: SidebarTab.Silo,
-      setSidebarTab: setter(set, 'sidebarTab'),
+      setSidebarTab: setter(set, 'sidebarTab'), 
+      // search note
       sidebarSearchQuery: '',
       setSidebarSearchQuery: setter(set, 'sidebarSearchQuery'),
       currentDir: undefined,

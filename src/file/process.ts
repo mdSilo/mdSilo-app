@@ -28,13 +28,8 @@ export function processJson(content: string): boolean {
 
 /**
  * on Process Mds: 
- * 0- procee txt to Descendant[],
- * 1- process Linking in content, create needed note; 
- * 2- save txt to File System;
- * 3- Store: set Descendant[] to store system of App 
  */
 export function processMds(fileList: FileMetaData[]) {
-  // const upsertNote = store.getState().upsertNote;
   const newNotesData: Note[] = [];
 
   for (const file of fileList) {
@@ -64,7 +59,6 @@ export function processMds(fileList: FileMetaData[]) {
     };
     const newProcessedNote = {...defaultNote, ...newNoteObj};
 
-    // upsertNote(newProcessedNote); // upsert processed note
     // push to Array
     newNotesData.push(newProcessedNote);
   }
@@ -73,7 +67,6 @@ export function processMds(fileList: FileMetaData[]) {
 }
 
 export function processDirs(fileList: FileMetaData[]) {
-  // const upsertTree = store.getState().upsertTree;
   const newDirsData: Note[] = [];
 
   for (const file of fileList) {
@@ -96,7 +89,6 @@ export function processDirs(fileList: FileMetaData[]) {
     };
     const newProcessedDir = {...defaultNote, ...newDirObj};
 
-    // upsertTree(newProcessedDir); // upsert processed note
     // push to Array
     newDirsData.push(newProcessedDir);
   }

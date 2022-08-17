@@ -2,7 +2,7 @@ import { Dispatch, memo, SetStateAction, useMemo } from 'react';
 import { NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { ciStringCompare, dateCompare } from 'utils/helper';
-import { onOpenFile, onOpenDir } from 'editor/hooks/useOpen';
+import { onOpenFile, onListDir } from 'editor/hooks/useOpen';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree from './SidebarNotesTree';
@@ -47,7 +47,7 @@ function SidebarNotes(props: SidebarNotesProps) {
           />
         ) : (
           <>
-            <button className={btnClass} onClick={onOpenDir}>Open Folder</button>
+            <button className={btnClass} onClick={onListDir}>Open Folder</button>
             <button className={btnClass} onClick={onOpenFile}>Open File</button>
           </>
         )}

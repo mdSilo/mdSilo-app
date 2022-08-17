@@ -7,7 +7,7 @@ import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
-import { onOpenFile, onOpenDir, onSave } from 'editor/hooks/useOpen';
+import { onOpenFile, onListDir, onSave } from 'editor/hooks/useOpen';
 import { useStore } from 'lib/store';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
@@ -162,7 +162,7 @@ export function FileDrop() {
         <IconDeviceFloppy size={18} className="mr-1" />
         <Tooltip content="Save All Data"><span>Save</span></Tooltip>
       </DropdownItem>
-      <DropdownItem onClick={onOpenDir}>
+      <DropdownItem onClick={onListDir}>
         <IconFolderPlus size={18} className="mr-1" />
         <Tooltip content="Open Folder"><span>Folder</span></Tooltip>
       </DropdownItem>

@@ -42,7 +42,7 @@ export const openDirDilog = async () => {
 };
 
 /**
- * Open dir and process files
+ * Open dir and process files w/ content, upsert note and tree to store
  * @param dir 
  * @returns 
  */
@@ -94,7 +94,7 @@ export const openDirDilog = async () => {
 }
 
 /**
- * Open dir and process files
+ * Open dir and process files, upsert note and tree to store
  * @param dir 
  * @returns 
  */
@@ -169,7 +169,7 @@ export const openFileDilog = async (ty: string[], multi = true) => {
 };
 
 /**
- * Open and process files
+ * Open and process files, upsert note and tree to store
  * @param filePaths 
  * @param ty file type: md or json
  * @returns Promise<boolean>
