@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
-import Markdown from 'components/note/Markdown';
+import RawMarkdown from 'components/md/Markdown';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
@@ -259,10 +259,11 @@ function Note(props: Props) {
               }
               <div className="flex-1 px-2 pt-2 pb-8">
                 {rawMode ? (
-                  <Markdown
+                  <RawMarkdown
                     initialContent={mdContent}
                     onChange={onMarkdownChange}
                     dark={darkMode}
+                    className={"text-xl"}
                   />
                 ) : (
                   <MsEditor 

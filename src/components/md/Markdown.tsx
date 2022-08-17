@@ -1,13 +1,13 @@
 import { memo } from 'react';
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
-import { useStore } from 'lib/store';
-import CodeMirror from "./codemirror/index";
+import CodeMirror from "./ReactCodeMirror";
 
 type Props = {
   initialContent: string;
   onChange: (value: string) => void;
   dark: boolean;
+  readMode?: boolean;
   className?: string;
 };
 
@@ -16,10 +16,11 @@ function Markdown(props: Props) {
     initialContent, 
     onChange, 
     dark,
+    readMode = false,
     className = '',
   } = props;
 
-  const readMode = useStore((state) => state.readMode); 
+  //const readMode = useStore((state) => state.readMode); 
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onValueChange = (value: string, _viewUpdate: unknown) => {
