@@ -106,7 +106,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   );
 
   const onKeyDown = useCallback(
-    (event) => {
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
       // Update the selected option based on arrow key input
       if (event.key === 'ArrowUp') {
         event.preventDefault();
