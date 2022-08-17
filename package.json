@@ -33,7 +33,13 @@
     "fuse.js": "^6.6.2",
     "immer": "^9.0.15",
     "is-hotkey": "^0.2.0",
-    "mdsmirror": "0.1.18",
+    "mdsmirror": "0.1.16",
+    "codemirror": "6.0.0",
+    "@codemirror/state": "6.0.0",
+    "@codemirror/view": "6.0.0",
+    "@codemirror/commands": "6.0.0",
+    "@codemirror/lang-markdown": "6.0.0",
+    "@codemirror/language-data": "6.0.0",
     "styled-components": "^5.3.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -42,7 +48,7 @@
     "react-scripts": "^5.0.1",
     "react-virtual": "^2.10.4",
     "react-virtualized": "^9.22.3",
-    "tailwindcss": "^3.1.7",
+    "tailwindcss": "^3.1.8",
     "zustand": "^3.7.2"
   },
   "devDependencies": {
