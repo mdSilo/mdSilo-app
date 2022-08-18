@@ -38,7 +38,10 @@ export const onOpenDir = async () => {
   }
 };
 
-// Open Folder, Folder in Dropdown, sub-folder, Sidemenu-File Menu
+// used for 4: 
+// SidebarNotes init Open Folder,
+// File Drop(SidebarNotesBar Dropdown-Folder, SideMenu/FileButton Dropdown-Folder),
+// SidebarNoteList - SidebarNoteLink - sub-folder, 
 export const onListDir = async () => {
   const dirPath = await openDirDilog();
   // console.log("dir path", dirPath);

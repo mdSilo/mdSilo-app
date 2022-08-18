@@ -4,7 +4,7 @@ import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
-import { ciStringEqual } from 'utils/helper';
+// import { ciStringEqual } from 'utils/helper';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
 
@@ -123,57 +123,40 @@ export const store = createVanilla<Store>(
       upsertNote: (note: Note) => {
         set((state) => {
           if (state.notes[note.id]) {
-            // if existing per id
+            // if existing per id, update 
             state.notes[note.id] = { ...state.notes[note.id], ...note };
           } else {
-            // // if existing per title
-            // const existingNote = Object.values(state.notes).find((n) =>
-            //   ciStringEqual(n.title, note.title)
-            // );
-            // if (existingNote) {
-            //   // Update existing note
-            //   state.notes[existingNote.id] = {
-            //     ...state.notes[existingNote.id],
-            //     ...note,
-            //     id: existingNote.id,
-            //     file_path: existingNote.file_path,
-            //   };
-            // } else {
-            //   // Insert new note
-            //   state.notes[note.id] = note;
-            // }
+            // otherwise, new insert
             state.notes[note.id] = note;
           }
+          // alert: not check title unique, wiki-link will link to first searched note
         });
       },
       upsertTree: (note: Note, targetId = '', isDir = false) => {
         set((state) => {
           // the treeItem must be an existing note
-          // if (!state.notes[note.id]) return;
-          if (!note.is_wiki) {
-            const itemToInsert = { 
-              id: note.id, 
-              children: [], 
-              collapsed: true, 
-              isDir,
-              title: note.title,
-              created_at: note.created_at,
-              updated_at: note.updated_at,
-            };
-            // to target
-            const inserted = insertTreeItem(
+          const itemToInsert = { 
+            id: note.id, 
+            children: [], 
+            collapsed: true, 
+            isDir,
+            title: note.title,
+            created_at: note.created_at,
+            updated_at: note.updated_at,
+          };
+          // insert to target
+          const inserted = insertTreeItem(
+            state.noteTree,
+            itemToInsert,
+            targetId
+          );
+          // otherwise to root
+          if (!inserted) {
+            insertTreeItem(
               state.noteTree,
               itemToInsert,
-              targetId
+              null
             );
-            // otherwise to root
-            if (!inserted) {
-              insertTreeItem(
-                state.noteTree,
-                itemToInsert,
-                null
-              );
-            }
           }
         });
       },

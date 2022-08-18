@@ -207,8 +207,11 @@ function Note(props: Props) {
       } else {
         // find the note per title
         const title = href.replaceAll('_', ' ').trim();
+        // ISSUE ALERT: 
+        // maybe more than one notes with same title(ci), 
+        // but only link to first searched one 
         const toNote = Object.values(storeNotes).find((n) =>
-          ciStringEqual(n.title, title)
+          ciStringEqual(n.title, title)  // need to be case insensitive?
         );
         if (!toNote) return;
         const noteId = await openFileAndGetNoteId(toNote);

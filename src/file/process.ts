@@ -42,8 +42,6 @@ export function processMds(fileList: FileMetaData[]) {
     const filePath = file.file_path;
 
     // new note from file
-    // Note: same title but diff ext, only one file can be imported
-    // why need to de-ext? the title must be unique to ensure wiki-link works 
     const newNoteTitle = rmFileNameExt(fileName);
     const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
     const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
