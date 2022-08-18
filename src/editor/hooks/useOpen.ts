@@ -38,7 +38,7 @@ export const onOpenDir = async () => {
   }
 };
 
-// Open Folder, Folder in Dropdown, sub-folder
+// Open Folder, Folder in Dropdown, sub-folder, Sidemenu-File Menu
 export const onListDir = async () => {
   const dirPath = await openDirDilog();
   // console.log("dir path", dirPath);

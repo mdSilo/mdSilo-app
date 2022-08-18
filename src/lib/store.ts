@@ -46,16 +46,12 @@ export type NoteTreeItem = {
   updated_at: string;
 };
 
-export type DailyActivity = {
-  date: string;
-  create: number;
-  update: number;
-}
+export type DailyActivities = Record<string, {create: number; update: number;}>;
 
 export type NotesData = {
   notesObj: Notes;
   noteTree: NoteTreeItem[];
-  activities?: DailyActivity[];
+  activities?: DailyActivities;
 }
 
 export enum SidebarTab {
@@ -130,27 +126,30 @@ export const store = createVanilla<Store>(
             // if existing per id
             state.notes[note.id] = { ...state.notes[note.id], ...note };
           } else {
-            // if existing per title
-            const existingNote = Object.values(state.notes).find((n) =>
-              ciStringEqual(n.title, note.title)
-            );
-            if (existingNote) {
-              // Update existing note
-              state.notes[existingNote.id] = {
-                ...state.notes[existingNote.id],
-                ...note,
-                id: existingNote.id,
-                file_path: existingNote.file_path,
-              };
-            } else {
-              // Insert new note
-              state.notes[note.id] = note;
-            }
+            // // if existing per title
+            // const existingNote = Object.values(state.notes).find((n) =>
+            //   ciStringEqual(n.title, note.title)
+            // );
+            // if (existingNote) {
+            //   // Update existing note
+            //   state.notes[existingNote.id] = {
+            //     ...state.notes[existingNote.id],
+            //     ...note,
+            //     id: existingNote.id,
+            //     file_path: existingNote.file_path,
+            //   };
+            // } else {
+            //   // Insert new note
+            //   state.notes[note.id] = note;
+            // }
+            state.notes[note.id] = note;
           }
         });
       },
       upsertTree: (note: Note, targetId = '', isDir = false) => {
         set((state) => {
+          // the treeItem must be an existing note
+          // if (!state.notes[note.id]) return;
           if (!note.is_wiki) {
             const itemToInsert = { 
               id: note.id, 
@@ -161,11 +160,13 @@ export const store = createVanilla<Store>(
               created_at: note.created_at,
               updated_at: note.updated_at,
             };
+            // to target
             const inserted = insertTreeItem(
               state.noteTree,
               itemToInsert,
               targetId
             );
+            // otherwise to root
             if (!inserted) {
               insertTreeItem(
                 state.noteTree,

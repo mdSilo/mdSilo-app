@@ -88,14 +88,15 @@ type ActivityData = {
   activityNum: number; 
   createNum: number;
   updateNum: number;
-}
+};
+
 function getData(weekIdx: number, dayIdx: number): ActivityData {
   const date = getDate(weekIdx, dayIdx);
   const notes = Object.values(store.getState().notes);
   let createNum = 0;
   let updateNum = 0;
   for (const note of notes) {
-    if (getStrDate(note.created_at)=== date) {
+    if (getStrDate(note.created_at) === date) {
       createNum += 1;
     }
     if (getStrDate(note.updated_at) === date) {
