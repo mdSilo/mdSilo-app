@@ -4,7 +4,7 @@ import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
-// import { ciStringEqual } from 'utils/helper';
+import type { ActivityRecord } from 'components/HeatMap';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
 
@@ -46,12 +46,10 @@ export type NoteTreeItem = {
   updated_at: string;
 };
 
-export type DailyActivities = Record<string, {create: number; update: number;}>;
-
 export type NotesData = {
   notesObj: Notes;
   noteTree: NoteTreeItem[];
-  activities?: DailyActivities;
+  activities?: ActivityRecord;
 }
 
 export enum SidebarTab {
@@ -73,6 +71,8 @@ export type Store = {
   noteTree: NoteTreeItem[];
   setNoteTree: Setter<NoteTreeItem[]>;
   toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => void;
+  activities: ActivityRecord;
+  setActivities: Setter<ActivityRecord>;
   sidebarTab: SidebarTab;
   setSidebarTab: Setter<SidebarTab>;
   sidebarSearchQuery: string;
@@ -196,6 +196,9 @@ export const store = createVanilla<Store>(
         });
       },
 
+      activities: {},
+      setActivities: setter(set, 'activities'),
+
       sidebarTab: SidebarTab.Silo,
       setSidebarTab: setter(set, 'sidebarTab'), 
       // search note
@@ -221,6 +224,7 @@ export const store = createVanilla<Store>(
         isCheckSpellOn: state.isCheckSpellOn,
         noteSort: state.noteSort,
         recentDir: state.recentDir,
+        activities: state.activities,
       }),
     }
   )

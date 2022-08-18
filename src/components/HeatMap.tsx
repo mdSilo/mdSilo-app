@@ -1,5 +1,14 @@
+import { useState } from 'react';
 import { store } from 'lib/store';
 import { getStrDate } from 'utils/helper';
+
+type ActivityData = {
+  activityNum: number; 
+  createNum: number;
+  updateNum: number;
+};
+
+export type ActivityRecord = Record<string, ActivityData>;
 
 type HeatMapProps = {
   onClick: (date: string) => Promise<void>;
@@ -12,6 +21,8 @@ export default function HeatMap({ onClick }: HeatMapProps) {
     await onClick(date)
   };
 
+  const [activeRecord, ] = useState<ActivityRecord>(genData());
+
   const hmLabelClass = "text-xs fill-gray-500";
 
   return (
@@ -19,7 +30,12 @@ export default function HeatMap({ onClick }: HeatMapProps) {
       <svg width="828" height="128" className="hm-svg">
         <g transform="translate(10, 20)">
           {Array.from(Array(53).keys()).map(weekIdx => (
-            <WeekHeatMap key={`week-${weekIdx}`} weekIdx={weekIdx} onClick={onDayClick} />
+            <WeekHeatMap 
+              key={`week-${weekIdx}`} 
+              data={activeRecord}
+              weekIdx={weekIdx} 
+              onClick={onDayClick} 
+            />
           ))}
           {Array.from(Array(12).keys()).map(monIdx => (
             <text 
@@ -44,12 +60,13 @@ export default function HeatMap({ onClick }: HeatMapProps) {
 }
 
 type WeekProps = {
+  data: ActivityRecord;
   weekIdx: number;
   onClick: (weekIdx: number, dayIdx: number) => Promise<void>;
   className?: string;
 };
 
-function WeekHeatMap({ weekIdx, onClick }: WeekProps) {
+function WeekHeatMap({ data, weekIdx, onClick }: WeekProps) {
   return (
     <g transform={`translate(${16 * weekIdx}, 0)`}>
       {Array.from(Array(7).keys()).map(dayIdx => (
@@ -57,14 +74,46 @@ function WeekHeatMap({ weekIdx, onClick }: WeekProps) {
           key={`day-${dayIdx}`} width="11" height="11" rx="2" ry="2"  
           x={`${16 - weekIdx}`} 
           y={`${15 * dayIdx}`} 
-          className={getDayStyle(weekIdx, dayIdx)} 
+          className={getDayStyle(data, weekIdx, dayIdx)} 
           onClick={async () => await onClick(weekIdx, dayIdx)}
         >
-          <title>{getDataToolTips(weekIdx, dayIdx)}</title>
+          <title>{getDataToolTips(data, weekIdx, dayIdx)}</title>
         </rect>
       ))}
     </g>
   );
+}
+
+function genData(): ActivityRecord {
+  const activity: ActivityRecord = {};
+  // current, the update_at maybe overrided
+  const notes = Object.values(store.getState().notes);
+  const createDays = notes.map(n => getStrDate(n.created_at));
+  const updateDays = notes.map(n => getStrDate(n.updated_at));
+  // stored 
+  const storedActivities = store.getState().activities;
+  const storedDays = Object.keys(storedActivities);
+
+  const allDays = [...createDays, ...updateDays, ...storedDays];
+  const allDaysSet = new Set(allDays);
+
+  for (const day of allDaysSet) {
+    const createNum = createDays.filter(d => d === day).length;
+    const updateNum = updateDays.filter(d => d === day).length;
+    const activityNum = createNum + updateNum;
+    const storedDay = storedActivities[day]; // canbe undefined
+
+    activity[day] = {
+      activityNum: Math.max(activityNum, storedDay?.activityNum || 0), 
+      createNum: Math.max(createNum, storedDay?.createNum || 0), 
+      updateNum: Math.max(updateNum, storedDay?.updateNum || 0),
+    };
+  }
+  // console.log("res", activity);
+  // persist in store
+  store.getState().setActivities(activity);
+
+  return activity;
 }
 
 /** local date format: yyyy-m-d */
@@ -84,41 +133,24 @@ function calcMonStart() {
   return startIdx;
 }
 
-type ActivityData = {
-  activityNum: number; 
-  createNum: number;
-  updateNum: number;
-};
-
-function getData(weekIdx: number, dayIdx: number): ActivityData {
+function getData(
+  data: ActivityRecord,
+  weekIdx: number, 
+  dayIdx: number
+): ActivityData {
   const date = getDate(weekIdx, dayIdx);
-  const notes = Object.values(store.getState().notes);
-  let createNum = 0;
-  let updateNum = 0;
-  for (const note of notes) {
-    if (getStrDate(note.created_at) === date) {
-      createNum += 1;
-    }
-    if (getStrDate(note.updated_at) === date) {
-      updateNum += 1;
-    }
-  }
-  return {
-    activityNum: createNum + updateNum,
-    createNum,
-    updateNum,
-  };
+  return data[date];
 }
 
-function getDataToolTips(weekIdx: number, dayIdx: number) {
-  const data = getData(weekIdx, dayIdx);
+function getDataToolTips(data: ActivityRecord, weekIdx: number, dayIdx: number) {
+  const aData = getData(data, weekIdx, dayIdx);
   const date = getDate(weekIdx, dayIdx);
-  return `${date}:\nActivity: ${data.activityNum}\nCreated: ${data.createNum}\nUpdated: ${data.updateNum}`;
+  return `${date}:\nActivity: ${aData?.activityNum || 0}\nCreated: ${aData?.createNum || 0}\nUpdated: ${aData?.updateNum || 0}`;
 }
 
-function getDayStyle(weekIdx: number, dayIdx: number) {
-  const data = getData(weekIdx, dayIdx);
-  const an = data.activityNum;
+function getDayStyle(data: ActivityRecord, weekIdx: number, dayIdx: number) {
+  const aData = getData(data, weekIdx, dayIdx);
+  const an = aData?.activityNum || 0;
   const today = new Date();
   const weekDay = today.getDay();
   const isAfterToday = weekIdx >= 52 && dayIdx > weekDay;

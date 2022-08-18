@@ -1,30 +1,17 @@
-import { store, Notes, NoteTreeItem, NotesData } from 'lib/store';
+import { NotesData } from 'lib/store';
 import { regDateStr } from 'utils/helper';
 import { Note, defaultNote } from 'types/model';
 import { FileMetaData } from 'file/directory';
 
-export function processJson(content: string): boolean {
+export function processJson(content: string): NotesData {
   try {
     const notesData: NotesData = JSON.parse(content);
-    const notesObj: Notes = notesData.notesObj;
-    const noteTree: NoteTreeItem[] = notesData.noteTree;
-    if (notesObj && noteTree) {
-      // restore notes from saved data 
-      store.getState().setNotes(notesObj);
-      // restore note tree from saved tree hierarchy
-      store.getState().setNoteTree(noteTree);
-      // TODO: json to mds and save locally
-      return true;
-    } else {
-      return false;
-    }
+    return notesData;
   } catch (e) {
-    store.getState().setMsgModalText('Please Check the JSON file');
-    store.getState().setMsgModalOpen(true);
-    return false;
+    console.log('Please Check the JSON file');
+    return {notesObj: {}, noteTree: []};
   }
 }
-
 
 /**
  * on Process Mds: 

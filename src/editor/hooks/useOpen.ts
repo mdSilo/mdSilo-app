@@ -5,8 +5,8 @@ import {
 import { normalizeSlash, getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
 
-export const openFiles = async (ty: string, multi = true) => {
-  const filePaths = await openFileDilog([ty], multi);
+const openFiles = async (multi = true) => {
+  const filePaths = await openFileDilog(['md'], multi);
   // console.log("file path", filePaths);
   const openPaths = typeof filePaths === 'string' ? [filePaths] : filePaths;
   if (openPaths && openPaths.length > 0) {
@@ -17,13 +17,11 @@ export const openFiles = async (ty: string, multi = true) => {
     cleanStore();
     store.getState().setCurrentDir(parentDir);
     store.getState().setRecentDir([parentDir]);
-    await openFilePaths(openPaths, ty);
+    await openFilePaths(openPaths);
   }
 };
 
-export const onImportJson = async () => await openFiles('json', false);
-
-export const onOpenFile = async () => await openFiles('md');
+export const onOpenFile = async () => await openFiles();
 
 export const onOpenDir = async () => {
   const dirPath = await openDirDilog();

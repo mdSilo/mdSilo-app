@@ -169,47 +169,51 @@ export const openFileDilog = async (ty: string[], multi = true) => {
 };
 
 /**
- * Open and process files, upsert note and tree to store
+ * Open and process md files, upsert note and tree to store
  * @param filePaths 
- * @param ty file type: md or json
  * @returns Promise<boolean>
  */
-export async function openFilePaths(filePaths: string[], ty = 'md') {
-  if (ty === 'json') {
-    const filePath = filePaths[0];
-    if (filePath && filePath.endsWith('.json')) {
-      const jsonInfo = new FileAPI(filePath);
-      if (await jsonInfo.exists()) {
-        const fileContent = await jsonInfo.readFile();
-        return processJson(fileContent);
-      }
+export async function openFilePaths(filePaths: string[]) {
+  const files = [];
+  for (const filePath of filePaths) {
+    const fileInfo = new FileAPI(filePath);
+    if (await fileInfo.exists()) {
+      const fileMeta = await fileInfo.getMetadata();
+      files.push(fileMeta);
+    } 
+  }
+  // process files
+  const processedRes = processMds(files);
+  // sync store states to JSON
+  if (processedRes.length > 0) {
+    const currentDir = store.getState().currentDir;
+    const upsertNote = store.getState().upsertNote;
+    const upsertTree = store.getState().upsertTree;
+    for (const md of processedRes) {
+      upsertNote(md);
+      const parentDir = await getParentDir(md.file_path);
+      upsertTree(md, parentDir, false);
     }
-  } else {
-    const files = [];
-    for (const filePath of filePaths) {
-      const fileInfo = new FileAPI(filePath);
-      if (await fileInfo.exists()) {
-        const fileMeta = await fileInfo.getMetadata();
-        files.push(fileMeta);
-      } 
-    }
-    // process files
-    const processedRes = processMds(files);
-    // sync store states to JSON
-    if (processedRes.length > 0) {
-      const currentDir = store.getState().currentDir;
-      const upsertNote = store.getState().upsertNote;
-      const upsertTree = store.getState().upsertTree;
-      for (const md of processedRes) {
-        upsertNote(md);
-        const parentDir = await getParentDir(md.file_path);
-        upsertTree(md, parentDir, false);
-      }
-      if (currentDir) { 
-        await writeJsonFile(currentDir); 
-      } 
+    if (currentDir) { 
+      await writeJsonFile(currentDir); 
+    } 
 
-      return true;
+    return true;
+  }
+}
+
+/**
+ * Open and process JSON
+ * @param filePath
+ * @returns Promise<boolean>
+ */
+export async function openJSONFilePath(filePath: string) {
+  if (filePath && filePath.endsWith('mdsilo.json')) {
+    const jsonInfo = new FileAPI(filePath);
+    if (await jsonInfo.exists()) {
+      const fileContent = await jsonInfo.readFile();
+      const notesData = processJson(fileContent);
+      return notesData;
     }
   }
 }
