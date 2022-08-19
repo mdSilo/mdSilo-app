@@ -231,7 +231,7 @@ function Note(props: Props) {
   if (!isNoteExists) {
     return (
       <div className={errorContainerClassName}>
-        <p>it does not look like this note exists! {noteId}</p>
+        <p>It does not look like this note exists: {noteId}</p>
       </div>
     );
   }

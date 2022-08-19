@@ -29,14 +29,15 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
         <p className="mt-4 font-bold">App Version: {appVersion}</p>
         <p className="mt-4 font-bold">Tauri Version: {tauriVersion}</p>
         <button 
-          className="mt-4 font-bold pop-btn" 
+          className="link mt-2"
           onClick={async () => { 
             await writeText(`App: ${appVersion} \n Tauri: ${tauriVersion}`);
-          }}>
+          }}
+        >
           Copy
         </button>
         <button
-          className="link mt-2"
+          className="mt-4 font-bold pop-btn" 
           onClick={async () => {
             await openUrl("https://github.com/mdSilo/mdSilo/releases");
           }}
