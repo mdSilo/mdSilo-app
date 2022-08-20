@@ -1,4 +1,5 @@
 import MsEditor from "mdsmirror";
+import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Chronicle from './chronicle';
 import Journals from './journals';
@@ -31,17 +32,19 @@ export default function MainView() {
 
 function DefaultView() {
   return (
-    <div className="flex flex-col p-8 w-full h-full mx-auto bg-white overflow-auto">
-      <p className="text-2xl py-3 text-center text-primary-500">
-        Hello, welcome to mdSilo Desktop.
-      </p>
-      <MsEditor 
-        dark={false} 
-        value={defaultValue} 
-        onClickHashtag={(text) => { console.info("Click Hahtag: ", text);}}
-        onShowToast={() => {/* nothing*/}}
-      />
-    </div>
+    <ErrorBoundary>
+      <div className="flex flex-col p-8 w-full h-full mx-auto bg-white overflow-auto">
+        <p className="text-2xl py-3 text-center text-primary-500">
+          Hello, welcome to mdSilo Desktop.
+        </p>
+        <MsEditor 
+          dark={false} 
+          value={defaultValue} 
+          onClickHashtag={(text) => { console.info("Click Hahtag: ", text);}}
+          onShowToast={() => {/* nothing*/}}
+        />
+      </div>
+    </ErrorBoundary>
   );
 }
 
