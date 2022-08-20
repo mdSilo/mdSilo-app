@@ -49,7 +49,7 @@ function NoteItem(props: NoteItemProps) {
     <div className="flex flex-col w-full mx-auto overlfow-y-auto">
       <button 
         onClick={async () => {
-          const noteId = await openFileAndGetNoteId(note);
+          const noteId = await openFileAndGetNoteId(note.id);
           dispatch({view: 'md', params: {noteId}});
         }}
         className="flex items-center link text-lg py-2 pl-4"

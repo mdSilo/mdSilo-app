@@ -19,18 +19,17 @@ import { FlattenedNoteTreeItem } from './SidebarNotesTree';
 interface Props extends HTMLAttributes<HTMLDivElement> {
   node: FlattenedNoteTreeItem;
   isHighlighted?: boolean;
+  currentDir: string | undefined;
 }
 
 const SidebarNoteLink = (
   props: Props,
   forwardedRef: ForwardedRef<HTMLDivElement>
 ) => {
-  const { node, isHighlighted, className = '', style, ...otherProps } = props;
+  const { node, isHighlighted, currentDir, className = '', style, ...otherProps } = props;
   // console.log("node", node)
-  const currentDir = useStore((state) => state.currentDir);
-  const note = useStore((state) => state.notes[node.id]);
-  // console.log("note", note)
-  const filePath = note?.file_path;
+
+  const filePath = node.id;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
@@ -57,8 +56,8 @@ const SidebarNoteLink = (
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={async (e) => {
           e.preventDefault();
-          if (note?.is_dir) return;
-          onNoteLinkClick(note.id, note);
+          if (node.isDir) return;
+          onNoteLinkClick(node.id);
           if (isMobile()) {
             setIsSidebarOpen(false);
           }
@@ -66,14 +65,14 @@ const SidebarNoteLink = (
         style={{ paddingLeft: `${leftPadding}px` }}
         draggable={false}
       >
-        {note?.is_dir ? (
+        {node.isDir ? (
           <button
             className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
             onClick={async(e) => {
               e.preventDefault();
               e.stopPropagation();
               if (node.collapsed) {
-                await listDir(note.file_path);
+                await listDir(node.id);
               }
               onArrowClick?.();
             }}
@@ -98,13 +97,13 @@ const SidebarNoteLink = (
         )}
         <Tooltip content={filePath} disabled={!currentDir || !filePath}>
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-            {note?.title}
+            {node.title}
           </span>
         </Tooltip>
       </div>
-      {note?.is_dir ? null : (
+      {node.isDir ? null : (
         <SidebarNoteLinkDropdown
-          note={note}
+          noteId={node.id}
           className="opacity-0.1 group-hover:opacity-100"
         />
       )}

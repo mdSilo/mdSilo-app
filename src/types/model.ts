@@ -7,7 +7,7 @@ export type User = {
 };
 
 export type Note = {
-  id: string;
+  id: string;  // !!Important!! id === file_path
   title: string;
   content: string;
   file_path: string;

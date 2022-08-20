@@ -215,7 +215,7 @@ function Note(props: Props) {
           ciStringEqual(n.title, title)  // need to be case insensitive?
         );
         if (!toNote) return;
-        const noteId = await openFileAndGetNoteId(toNote);
+        const noteId = await openFileAndGetNoteId(toNote.id);
         dispatch({view: 'md', params: { noteId }});
       }
     },

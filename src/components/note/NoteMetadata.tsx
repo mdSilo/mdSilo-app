@@ -1,17 +1,23 @@
-import { Note } from 'types/model';
+import { useStore } from 'lib/store';
 
 type Props = {
-  note: Note;
+  noteId: string;
 };
 
 export default function NoteMetadata(props: Props) {
-  const { note } = props;
-  const mdContent = note.content;
+  const { noteId } = props;
+  const note = useStore((state) => state.notes[noteId]);
+
+  if (!note) {
+    return null;
+  }
+
+  const mdContent = note.content || '';
   const wordCount = countWords(mdContent);
   const ctnLen = mdContent.length;
   return (
     <div className="px-4 py-2 space-y-1 text-xs text-gray-600 border-t dark:border-gray-700 dark:text-gray-400">
-      <p>~{wordCount} words, {ctnLen} characters </p>
+      {ctnLen > 0 ? (<p>~{wordCount} words, {ctnLen} characters </p>) : null}
       <p>Created: {getReadableDatetime(note.created_at)}</p>
       <p>Modified: {getReadableDatetime(note.updated_at)}</p>
     </div>

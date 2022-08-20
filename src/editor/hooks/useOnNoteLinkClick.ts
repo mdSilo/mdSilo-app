@@ -1,7 +1,5 @@
 import { useCallback } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { store } from 'lib/store';
-import { Note } from 'types/model';
 import { openFilePaths } from 'file/open';
 
 export default function useOnNoteLinkClick() {
@@ -10,9 +8,8 @@ export default function useOnNoteLinkClick() {
 
   const onClick = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (toId: string, note?: Note, highlightedPath?: any) => {
-      const toNote = note || store.getState().notes[toId];
-      const noteId = await openFileAndGetNoteId(toNote);
+    async (toId: string, highlightedPath?: any) => {
+      const noteId = await openFileAndGetNoteId(toId);
       const hash = highlightedPath ? `0-${highlightedPath}` : '';
       dispatch({view: 'md', params: {noteId, hash}});
       return;
@@ -34,9 +31,8 @@ export default function useOnNoteLinkClick() {
 //    when switch mode, 
 //    sum list(chronicle)
 //    journal
-export const openFileAndGetNoteId = async (note: Note) => {
-  const filePath = note.file_path;
-  const noteId = note.id;
+export const openFileAndGetNoteId = async (noteId: string) => {
+  const filePath = noteId;
 
   if (filePath) {
     // console.log("re-load: ", filePath);

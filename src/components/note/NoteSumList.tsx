@@ -61,7 +61,7 @@ const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
         <button 
           className="link flex items-center py-2" 
           onClick={async () => {
-            const noteId = await openFileAndGetNoteId(note);
+            const noteId = await openFileAndGetNoteId(note.id);
             dispatch({view: 'md', params: {noteId}});
           }}
         >

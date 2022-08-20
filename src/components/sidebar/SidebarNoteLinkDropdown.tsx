@@ -2,19 +2,18 @@ import { memo, useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
 import { IconCornerDownRight, IconDots } from '@tabler/icons';
 import { usePopper } from 'react-popper';
-import { Note } from 'types/model';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Portal from 'components/misc/Portal';
 import MoveToModal from 'components/note/NoteMoveModal';
 import NoteMetadata from 'components/note/NoteMetadata';
 
 type Props = {
-  note: Note;
+  noteId: string;
   className?: string;
 };
 
 const SidebarNoteLinkDropdown = (props: Props) => {
-  const { note, className } = props;
+  const { noteId, className } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
@@ -55,7 +54,7 @@ const SidebarNoteLinkDropdown = (props: Props) => {
                     <IconCornerDownRight size={18} className="mr-1" />
                     <span>Move to</span>
                   </DropdownItem>
-                  <NoteMetadata note={note} />
+                  <NoteMetadata noteId={noteId} />
                 </Menu.Items>
               </Portal>
             )}
@@ -64,7 +63,7 @@ const SidebarNoteLinkDropdown = (props: Props) => {
       </Menu>
       {isMoveToModalOpen ? (
         <Portal>
-          <MoveToModal noteId={note.id} setIsOpen={setIsMoveToModalOpen} />
+          <MoveToModal noteId={noteId} setIsOpen={setIsMoveToModalOpen} />
         </Portal>
       ) : null}
     </>

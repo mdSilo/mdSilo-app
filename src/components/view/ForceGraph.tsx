@@ -288,7 +288,7 @@ export default function ForceGraph(props: Props) {
         if (clickedNode && clickedNode.ty === 'link') {
           const note = storeNotes[clickedNode.id];
           if (!note) return;
-          const noteId = await openFileAndGetNoteId(note);
+          const noteId = await openFileAndGetNoteId(note.id);
           dispatch({view: 'md', params: { noteId }});
         }
       });

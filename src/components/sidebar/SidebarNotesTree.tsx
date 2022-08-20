@@ -1,12 +1,16 @@
 import React, { useMemo, useCallback, memo } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
-import { NoteTreeItem } from 'lib/store';
+import { NoteTreeItem, useStore } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarNoteLink from './SidebarNoteLink';
 
 export type FlattenedNoteTreeItem = {
   id: string;
+  title: string;
+  created_at: string;
+  updated_at: string; 
+  isDir: boolean;
   depth: number;
   collapsed: boolean;
 };
@@ -27,11 +31,13 @@ function SidebarNotesTree(props: Props) {
     const id = noteId;
     return id && typeof id === 'string' ? id : undefined;
   }, [noteId]);
+
+  const currentDir = useStore((state) => state.currentDir);
   
   const flattenNode = useCallback(
     (node: NoteTreeItem, depth: number, result: FlattenedNoteTreeItem[]) => {
-      const { id, children, collapsed } = node;
-      result.push({ id, depth, collapsed });
+      const { id, title, created_at, updated_at, isDir, children, collapsed } = node;
+      result.push({ id, title, created_at, updated_at, isDir, depth, collapsed });
       /**
        * Only push in children if:
        * 1. The node is not collapsed
@@ -62,11 +68,12 @@ function SidebarNotesTree(props: Props) {
           key={`${node.id}-${index}`}
           node={node}
           isHighlighted={node.id === currentNoteId}
+          currentDir={currentDir}
           style={style}
         />
       );
     },
-    [currentNoteId, flattenedData]
+    [currentDir, currentNoteId, flattenedData]
   );
 
   return (

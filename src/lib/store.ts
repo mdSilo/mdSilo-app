@@ -37,13 +37,13 @@ const storage: StateStorage = {
 export type Notes = Record<Note['id'], Note>;
 
 export type NoteTreeItem = {
-  id: Note['id'];  
-  children: NoteTreeItem[];
-  isDir: boolean;
-  collapsed: boolean;
+  id: Note['id']; 
   title: string;
   created_at: string;
-  updated_at: string;
+  updated_at: string; 
+  isDir: boolean;
+  children: NoteTreeItem[];
+  collapsed: boolean;
 };
 
 export type NotesData = {

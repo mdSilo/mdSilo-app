@@ -32,7 +32,7 @@ export default function NoteHeader() {
   const setRawMode = useStore((state) => state.setRawMode);
   const setRaw = useCallback(
     async (isRaw: boolean) => {
-      await openFileAndGetNoteId(note);
+      await openFileAndGetNoteId(note.id);
       setRawMode(isRaw);
     }, 
     [note, setRawMode]
@@ -85,7 +85,7 @@ export default function NoteHeader() {
                         <IconTrash size={18} className="mr-1" />
                         <span>Delete Permanently</span>
                       </DropdownItem>
-                      <NoteMetadata note={note} />
+                      <NoteMetadata noteId={note.id} />
                     </Menu.Items>
                   </Portal>
                 )}
