@@ -59,6 +59,7 @@ export const openDirDilog = async () => {
 
   // 1- get files and dirs
   const dirData = await dirInfo.listDirectory();
+  // console.log("dir data 0", dirData);
   const files = dirData;
   const dirs = files.filter(f => f.is_dir).map(d => ({...d, file_text: ''}));
   const processedDirs = dirs.length ? processDirs(dirs) : [];
@@ -68,6 +69,7 @@ export const openDirDilog = async () => {
   const upsertNote = store.getState().upsertNote;
   const upsertTree = store.getState().upsertTree;
   // const dirPath = dirInfo.dirPath;
+  // console.log("dir path 0", dirPath, dir);
 
   // 2- upsert store dirs
   for (const subdir of processedDirs) {

@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
-  IconMenu2, IconDna, IconBookmarks, IconFile,
+  IconMenu2, IconDna, IconCalendar, IconFile,
   IconFolderPlus, IconFileText, IconDeviceFloppy 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
@@ -126,7 +126,7 @@ const ChronButton = (props: ButtonProps) => {
         touch={true}
       >
         <button className={btnClass} onClick={onDispatch}>
-          <IconBookmarks size={24} className={btnIconClass} />
+          <IconCalendar size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>

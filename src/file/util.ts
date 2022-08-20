@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { window as appWindow } from '@tauri-apps/api';
 import { invoke } from '@tauri-apps/api/tauri'
 import { store, NotesData } from 'lib/store';
 
@@ -9,6 +10,12 @@ export const isTauri = Boolean(
   && (window as any).__TAURI__ !== undefined 
   && (window as any).promisified !== null
 );
+
+export const setWindowTitle = (title: string): void => {
+	if (isTauri) {
+		appWindow.getCurrent().setTitle(title);
+	}
+};
 
 /**
  * Normalize slashes of a file path, sync version

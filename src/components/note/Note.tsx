@@ -14,7 +14,7 @@ import { ProvideCurrentMd } from 'context/useCurrentMd';
 import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
 import { writeFile, writeJsonFile, deleteFile } from 'file/write';
 import { openUrl } from 'file/open';
-import { joinPaths, getDirPath } from 'file/util';
+import { joinPaths, getDirPath, setWindowTitle } from 'file/util';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import updateBacklinks from './backlinks/updateBacklinks';
@@ -96,6 +96,7 @@ function Note(props: Props) {
     [note?.file_path, noteId, currentDir, updateNote]
   );
 
+  setWindowTitle(`/ ${title} - mdSilo`);
   // update locally
   const onTitleChange = useCallback(
     async (newtitle: string) => {

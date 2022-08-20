@@ -1,4 +1,5 @@
 import { store } from 'lib/store';
+import { setWindowTitle } from 'file/util';
 
 export const initialState = {view: 'default'};
 
@@ -25,6 +26,7 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
     store.getState().setCurrentNoteId(action.params.noteId);
   } else {
     store.getState().setCurrentNoteId('');
+    setWindowTitle(`: ${actionView} - mdSilo`);
   }
 
   switch (actionView) {
