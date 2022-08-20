@@ -1,6 +1,6 @@
 import { store } from 'lib/store';
 
-export const initialState = {view: 'chronicle'};
+export const initialState = {view: 'default'};
 
 type ViewParams = { noteId: string; stackIds?: string[], hash?: string };
 
