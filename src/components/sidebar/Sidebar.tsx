@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
 import { useTransition, animated, SpringConfig } from '@react-spring/web';
 import { isMobile } from 'utils/helper';
 import { useStore } from 'lib/store';
@@ -14,19 +13,11 @@ const SPRING_CONFIG: SpringConfig = {
 } as const;
 
 type Props = {
-  setIsFindOrCreateModalOpen: Dispatch<SetStateAction<boolean>>;
-  setIsSettingsOpen: Dispatch<SetStateAction<boolean>>;
-  setIsAboutOpen: Dispatch<SetStateAction<boolean>>;
   className?: string;
 };
 
 function Sidebar(props: Props) {
-  const { 
-    setIsFindOrCreateModalOpen, 
-    setIsSettingsOpen, 
-    setIsAboutOpen,
-    className='' 
-  } = props;
+  const { className='' } = props; 
 
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
@@ -97,14 +88,8 @@ function Sidebar(props: Props) {
             <div
               className={`flex flex-col flex-none h-full border-r border-lime-900 bg-gray-50 dark:bg-gray-800 dark:text-gray-300 ${className}`}
             >
-              <SidebarHeader 
-                setIsSettingsOpen={setIsSettingsOpen} 
-                setIsAboutOpen={setIsAboutOpen} 
-              />
-              <SidebarContent
-                className="flex-1 overflow-x-hidden overflow-y-auto"
-                setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
-              />
+              <SidebarHeader />
+              <SidebarContent className="flex-1 overflow-x-hidden overflow-y-auto" />
             </div>
           </animated.div>
         </>

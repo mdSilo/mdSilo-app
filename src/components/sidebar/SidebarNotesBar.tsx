@@ -1,32 +1,25 @@
-import { Dispatch, SetStateAction, useCallback, memo } from 'react';
+import { memo } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconFeather } from '@tabler/icons';
+import { IconArrowBarToUp } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import Tooltip from 'components/misc/Tooltip';
-import { isMobile } from 'utils/helper';
-import { normalizeSlash } from 'file/util';
+import { normalizeSlash, getParentDir } from 'file/util';
+import { listDirPath } from 'editor/hooks/useOpen';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
 import { FileDrop } from './SideMenu';
 
 type Props = {
   noteSort: Sort;
   numOfNotes: number;
-  setIsFindOrCreateModalOpen: Dispatch<SetStateAction<boolean>>;
 };
 
 function SidebarNotesBar(props: Props) {
-  const { noteSort, numOfNotes, setIsFindOrCreateModalOpen} = props;
-
+  const { noteSort, numOfNotes} = props;
   const setNoteSort = useStore((state) => state.setNoteSort);
-  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const onCreateNoteClick = useCallback(() => {
-    if (isMobile()) {
-      setIsSidebarOpen(false);
-    }
-    setIsFindOrCreateModalOpen((isOpen) => !isOpen);
-  }, [setIsSidebarOpen, setIsFindOrCreateModalOpen]);
 
+  const currentDir = useStore((state) => state.currentDir);
+  
   return (
     <div className="flex items-center justify-between border-t dark:border-gray-700">
       <div className="flex mx-2 my-1">
@@ -36,12 +29,17 @@ function SidebarNotesBar(props: Props) {
         />
       </div>
       <NoteBarDrop numOfNotes={numOfNotes} />
-      <Tooltip content="New (Alt+N)">
+      <Tooltip content="Go Upper Folder">
         <button
-          className="p-1 mx-2 my-1 rounded hover:bg-gray-200 active:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600"
-          onClick={onCreateNoteClick}
+          className="p-1 mx-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          onClick={async (e) => {
+            e.preventDefault();
+            if (!currentDir) return;
+            const parentDir = await getParentDir(currentDir);
+            await listDirPath(parentDir);
+          }}
         >
-          <IconFeather size={16} className="text-gray-600 dark:text-gray-300" />
+          <IconArrowBarToUp size={16} className="text-gray-600 dark:text-gray-300" />
         </button>
       </Tooltip>
     </div>

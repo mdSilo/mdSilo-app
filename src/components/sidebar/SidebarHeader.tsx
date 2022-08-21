@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from 'react';
 import { Menu } from '@headlessui/react';
 import { 
   IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, IconPizza, IconInfoCircle 
@@ -8,14 +7,11 @@ import Tooltip from 'components/misc/Tooltip';
 import { DropdownItem } from 'components/misc/Dropdown';
 import { isMobile } from 'utils/helper';
 
-type Props = {
-  setIsSettingsOpen: Dispatch<SetStateAction<boolean>>;
-  setIsAboutOpen: Dispatch<SetStateAction<boolean>>;
-};
 
-export default function SidebarHeader(props: Props) {
-  const { setIsSettingsOpen, setIsAboutOpen } = props;
+export default function SidebarHeader() {
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
+  const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
 
   return (
     <div className="relative">

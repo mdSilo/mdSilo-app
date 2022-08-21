@@ -26,6 +26,12 @@ export type UserSettings = {
   setDarkMode: Setter<boolean>;
   isSidebarOpen: boolean;
   setIsSidebarOpen: Setter<boolean>;
+  isSettingsOpen: boolean;
+  setIsSettingsOpen: Setter<boolean>;
+  isAboutOpen: boolean;
+  setIsAboutOpen: Setter<boolean>;
+  isFindOrCreateModalOpen: boolean;
+  setIsFindOrCreateModalOpen: Setter<boolean>;
   isRTL: boolean;
   setIsRTL: Setter<boolean>;
   noteSort: Sort;
@@ -49,6 +55,12 @@ const userSettingsSlice = (
   setDarkMode: setter(set, 'darkMode'),
   isSidebarOpen: true,
   setIsSidebarOpen: setter(set, 'isSidebarOpen'),
+  isSettingsOpen: false,
+  setIsSettingsOpen: setter(set, 'isSettingsOpen'),
+  isAboutOpen: false,
+  setIsAboutOpen: setter(set, 'isAboutOpen'),
+  isFindOrCreateModalOpen: false,
+  setIsFindOrCreateModalOpen: setter(set, 'isFindOrCreateModalOpen'),
   isRTL: false,
   setIsRTL: setter(set, 'isRTL'),
   noteSort: Sort.TitleAscending,

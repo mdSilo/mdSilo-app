@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
-  IconMenu2, IconDna, IconCalendar, IconFile,
+  IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, 
   IconFolderPlus, IconFileText, IconDeviceFloppy 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
@@ -9,6 +9,7 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
 import { onOpenFile, onListDir, onSave } from 'editor/hooks/useOpen';
 import { useStore } from 'lib/store';
+import { isMobile } from 'utils/helper';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
@@ -52,6 +53,7 @@ export default function SideMenu() {
     <div className="flex flex-col h-full">
       <Logo />
       <OpenButton />
+      <NewButton />
       <ChronButton 
         viewTy={viewTy} 
         onDispatch={dispatchChron} 
@@ -85,6 +87,32 @@ const OpenButton = () => {
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
           <IconMenu2 size={24} className={btnIconClass} />
+        </button>
+      </Tooltip>
+    </SidebarItem>
+  );
+}
+
+const NewButton = () => {
+  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
+  const isFindOrCreateModalOpen = useStore((state) => state.isFindOrCreateModalOpen);
+
+  const onCreateNoteClick = useCallback(() => {
+    if (isMobile()) {
+      setIsSidebarOpen(false);
+    }
+    setIsFindOrCreateModalOpen((isOpen) => !isOpen);
+  }, [setIsSidebarOpen, setIsFindOrCreateModalOpen]);
+
+  return (
+    <SidebarItem isHighlighted={isFindOrCreateModalOpen}>
+      <Tooltip content="New Writing (Alt+N)" placement="right">
+        <button
+          className={btnClass}
+          onClick={onCreateNoteClick}
+        >
+          <IconFeather size={25} className="flex-shrink-0 mx-1 text-primary-600" />
         </button>
       </Tooltip>
     </SidebarItem>

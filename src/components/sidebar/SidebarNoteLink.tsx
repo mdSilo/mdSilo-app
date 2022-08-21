@@ -11,7 +11,7 @@ import { useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
-import { listDir } from 'file/open';
+import { listDirPath } from 'editor/hooks/useOpen';
 import SidebarItem from './SidebarItem';
 import SidebarNoteLinkDropdown from './SidebarNoteLinkDropdown';
 import { FlattenedNoteTreeItem } from './SidebarNotesTree';
@@ -56,8 +56,14 @@ const SidebarNoteLink = (
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={async (e) => {
           e.preventDefault();
-          if (node.isDir) return;
-          onNoteLinkClick(node.id);
+          if (node.isDir) {
+            if (node.collapsed) {
+              await listDirPath(node.id);
+            }
+            onArrowClick?.();
+          } else {
+            onNoteLinkClick(node.id);
+          }
           if (isMobile()) {
             setIsSidebarOpen(false);
           }
@@ -65,36 +71,22 @@ const SidebarNoteLink = (
         style={{ paddingLeft: `${leftPadding}px` }}
         draggable={false}
       >
-        {node.isDir ? (
-          <button
-            className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
-            onClick={async(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (node.collapsed) {
-                await listDir(node.id);
-              }
-              onArrowClick?.();
-            }}
-          >
+        <div
+          className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
+        >
+          {node.isDir ? (
             <IconCaretRight
-              className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${
-                !node.collapsed ? 'rotate-90' : ''
-              }`}
+              className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${!node.collapsed ? 'rotate-90' : ''}`}
               size={16}
               fill="currentColor"
             />
-          </button>
-        ) : (
-          <div
-            className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
-          >
+          ) : (
             <IconNotes 
               className="flex-shrink-0 text-gray-500 dark:text-gray-100"
               size={16}
             />
-          </div>
-        )}
+          )}
+        </div>
         <Tooltip content={filePath} disabled={!currentDir || !filePath}>
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
             {node.title}

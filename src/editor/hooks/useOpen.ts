@@ -53,6 +53,20 @@ export const onListDir = async () => {
   }
 };
 
+export const listDirPath = async (dirPath: string, reset=true) => {
+  // console.log("dir path", dirPath);
+  const normalizedDir = await getDirPath(dirPath);
+  if (reset) {
+    store.getState().setNoteTree([]);
+    store.getState().setCurrentDir(undefined);
+    store.getState().setCurrentDir(normalizedDir);
+    // console.log("rencent dir path", store.getState().recentDir);
+    await listDir(normalizedDir);
+  } else {
+    await listDir(normalizedDir);
+  }
+};
+
 export const onSave = async () => {
   const dir = await saveDilog();
   const normalizedDir = normalizeSlash(dir);

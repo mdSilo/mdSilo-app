@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction } from 'react';
 import { IconFolder, IconSearch } from '@tabler/icons';
 import Tooltip from 'components/misc/Tooltip';
 import { SidebarTab as SidebarTabType, useStore } from 'lib/store';
@@ -8,11 +7,10 @@ import SidebarTab from './SidebarTab';
 
 type Props = {
   className?: string;
-  setIsFindOrCreateModalOpen: Dispatch<SetStateAction<boolean>>;
 };
 
 export default function SidebarContent(props: Props) {
-  const { className, setIsFindOrCreateModalOpen } = props;
+  const { className } = props;
   const activeTab = useStore((state) => state.sidebarTab);
   const setActiveTab = useStore((state) => state.setSidebarTab);
 
@@ -21,9 +19,7 @@ export default function SidebarContent(props: Props) {
       <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="flex flex-col flex-1 overflow-x-hidden">
         {activeTab === SidebarTabType.Silo ? (
-          <SidebarNotes
-            setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
-          />
+          <SidebarNotes />
         ) : null}
         {activeTab === SidebarTabType.Search ? <SidebarSearch /> : null}
       </div>

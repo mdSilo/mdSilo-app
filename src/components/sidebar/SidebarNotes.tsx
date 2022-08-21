@@ -1,4 +1,4 @@
-import { Dispatch, memo, SetStateAction, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettingsSlice';
 import { ciStringCompare, dateCompare } from 'utils/helper';
@@ -9,11 +9,10 @@ import SidebarNotesTree from './SidebarNotesTree';
 
 type SidebarNotesProps = {
   className?: string;
-  setIsFindOrCreateModalOpen: Dispatch<SetStateAction<boolean>>;
 };
 
 function SidebarNotes(props: SidebarNotesProps) {
-  const { className='', setIsFindOrCreateModalOpen } = props;
+  const { className='' } = props;
 
   const currentDir = useStore((state) => state.currentDir);
   const notes = useStore((state) => state.notes);
@@ -35,11 +34,12 @@ function SidebarNotes(props: SidebarNotesProps) {
   return (
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
-        {currentDir ? (<SidebarNotesBar
-          noteSort={noteSort}
-          numOfNotes={numOfNotes}
-          setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
-        />) : null }
+        {currentDir ? (
+          <SidebarNotesBar
+            noteSort={noteSort}
+            numOfNotes={numOfNotes}
+          />
+        ) : null }
         {sortedNoteTree && sortedNoteTree.length > 0 ? (
           <SidebarNotesTree
             data={sortedNoteTree}

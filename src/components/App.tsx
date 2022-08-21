@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import { useState, useMemo, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import classNames from 'classnames';
 import 'styles/styles.css';
 import 'tippy.js/dist/tippy.css';
@@ -15,13 +15,17 @@ import AboutModal from './settings/AboutModal';
 import MsgModal from './settings/MsgModal';
 
 const App = () => {
-  const [isFindOrCreateModalOpen, setIsFindOrCreateModalOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const isFindOrCreateModalOpen= useStore((state) => state.isFindOrCreateModalOpen);
+  const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
+
   const darkMode = useStore((state) => state.darkMode);
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
+  const isSettingsOpen = useStore((state) => state.isSettingsOpen);
+  const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
+  const isAboutOpen = useStore((state) => state.isAboutOpen);
 
   const hotkeys = useMemo(
     () => [
@@ -46,7 +50,7 @@ const App = () => {
         callback: () => setSidebarTab(SidebarTab.Search),
       },
     ],
-    [setIsSidebarOpen, setSidebarTab]
+    [setIsFindOrCreateModalOpen, setIsSidebarOpen, setSidebarTab]
   );
   useHotkeys(hotkeys);
 
@@ -66,11 +70,7 @@ const App = () => {
       <div id="app-container" className={appContainerClassName}>
         <div className="flex w-full h-full dark:bg-gray-900">
           <SideMenu />
-          <Sidebar
-            setIsFindOrCreateModalOpen={setIsFindOrCreateModalOpen}
-            setIsSettingsOpen={setIsSettingsOpen}
-            setIsAboutOpen={setIsAboutOpen}
-          />
+          <Sidebar />
           <div className="relative flex flex-col flex-1 overflow-y-auto">
             <MainView />
           </div>
