@@ -46,9 +46,12 @@ export type NoteTreeItem = {
   collapsed: boolean;
 };
 
+// dir map notes
+export type NoteTree = Record<Note['id'], NoteTreeItem[]>;
+
 export type NotesData = {
   notesObj: Notes;
-  noteTree: NoteTreeItem[];
+  noteTree: NoteTree;
   activities?: ActivityRecord;
 }
 
@@ -63,14 +66,14 @@ export type Store = {
   setNotes: Setter<Notes>;
   // operate note
   upsertNote: (note: Note) => void;
-  upsertTree: (note: Note, targetId?: string, isDir?: boolean) => void;
+  upsertTree: (targetDir: string, note: Note, isDir?: boolean) => void;
   updateNote: (note: NoteUpdate) => void;
   deleteNote: (noteId: string) => void;
   currentNoteId: string;
   setCurrentNoteId: Setter<string>;
-  noteTree: NoteTreeItem[];
-  setNoteTree: Setter<NoteTreeItem[]>;
-  toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => void;
+  noteTree: NoteTree;
+  setNoteTree: Setter<NoteTree>;
+  toggleNoteTreeItemCollapsed: (dir: string, noteId: string, toCollapsed?: boolean) => void;
   activities: ActivityRecord;
   setActivities: Setter<ActivityRecord>;
   sidebarTab: SidebarTab;
@@ -132,9 +135,8 @@ export const store = createVanilla<Store>(
           // alert: not check title unique, wiki-link will link to first searched note
         });
       },
-      upsertTree: (note: Note, targetId = '', isDir = false) => {
+      upsertTree: (targetDir: string, note: Note, isDir = false) => {
         set((state) => {
-          // the treeItem must be an existing note
           const itemToInsert = { 
             id: note.id, 
             children: [], 
@@ -144,20 +146,9 @@ export const store = createVanilla<Store>(
             created_at: note.created_at,
             updated_at: note.updated_at,
           };
-          // insert to target
-          const inserted = insertTreeItem(
-            state.noteTree,
-            itemToInsert,
-            targetId
-          );
-          // otherwise to root
-          if (!inserted) {
-            insertTreeItem(
-              state.noteTree,
-              itemToInsert,
-              null
-            );
-          }
+          const targetList = state.noteTree[targetDir] || [];
+          insertTreeItem(targetList, itemToInsert);
+          state.noteTree[targetDir] = targetList;
         });
       },
       // Update the given note
@@ -176,23 +167,18 @@ export const store = createVanilla<Store>(
       deleteNote: (noteId: string) => {
         set((state) => {
           delete state.notes[noteId];
-          const item = deleteTreeItem(state.noteTree, noteId);
-          if (item && item.children.length > 0) {
-            for (const child of item.children) {
-              insertTreeItem(state.noteTree, child, null);
-            }
-          }
+          deleteTreeItem(state.noteTree, noteId);
         });
       },
       currentNoteId: '',
       setCurrentNoteId: setter(set, 'currentNoteId'),
       // The tree of notes visible in the sidebar
-      noteTree: [], // private notes
+      noteTree: {},
       setNoteTree: setter(set, 'noteTree'),
-      // Expands or collapses the tree item with the given noteId
-      toggleNoteTreeItemCollapsed: (noteId: string, toCollapsed?: boolean) => {
+      // Expands or collapses the tree item with the given noteId, to be del 
+      toggleNoteTreeItemCollapsed: (dir: string, noteId: string, toCollapsed?: boolean) => {
         set((state) => {
-          toggleTreeItemCollapsed(state.noteTree, noteId, toCollapsed);
+          toggleTreeItemCollapsed(state.noteTree, dir, noteId, toCollapsed);
         });
       },
 
@@ -237,18 +223,16 @@ export const useStore = create<Store>(store);
  * Deletes the tree item with the given id and returns it.
  */
 const deleteTreeItem = (
-  tree: NoteTreeItem[],
+  tree: NoteTree,
   id: string
 ): NoteTreeItem | null => {
-  for (let i = 0; i < tree.length; i++) {
-    const item = tree[i];
-    if (item.id === id) {
-      tree.splice(i, 1);
-      return item;
-    } else if (item.children.length > 0) {
-      const result = deleteTreeItem(item.children, id);
-      if (result) {
-        return result;
+  for (const [key, treeList] of Object.entries(tree)) {
+    for (let i = 0; i < treeList.length; i++) {
+      const item = treeList[i];
+      if (item.id === id) {
+        treeList.splice(i, 1);
+        tree[key] = treeList;
+        return item;
       }
     }
   }
@@ -262,57 +246,30 @@ const deleteTreeItem = (
 const insertTreeItem = (
   tree: NoteTreeItem[],
   item: NoteTreeItem,
-  targetId: string | null
 ): boolean => {
-  // no targetId, push to root
-  if (!targetId) {
-    const itemExist = tree.find((n) => n.id === item.id);
-    if (itemExist) { 
-      return true; // existed
-    }
-    tree.push(item);
-    return true;
+  const itemExist = tree.find((n) => n.id === item.id);
+  if (itemExist) { 
+    return true; // existed
   }
-
-  // match targetId to insert
-  for (let i = 0; i < tree.length; i++) {
-    const treeItem = tree[i];
-    if (treeItem.id === targetId && treeItem.isDir) {
-      const children = treeItem.children;
-      const itemExist = children.find((n) => n.id === item.id);
-      if (itemExist) {
-        return true; // existed
-      }
-      children.push(item);
-      return true;
-    } else if (treeItem.children.length > 0) {
-      const result = insertTreeItem(treeItem.children, item, targetId);
-      if (result) {
-        return result;
-      }
-    }
-  }
-  return false;
+  tree.push(item);
+  return true;
 };
 
 /**
  * Expands or collapses the tree item with the given id, and returns true if it was updated.
  */
 const toggleTreeItemCollapsed = (
-  tree: NoteTreeItem[],
+  tree: NoteTree,
+  dir: string,
   id: string,
   toCollapsed?: boolean,
 ): boolean => {
-  for (let i = 0; i < tree.length; i++) {
-    const item = tree[i];
+  const allItem = tree[dir];
+  for (let i = 0; i < allItem.length; i++) {
+    const item = allItem[i];
     if (item.id === id) {
-      tree[i] = { ...item, collapsed: toCollapsed ?? !item.collapsed };
+      tree[dir][i] = { ...item, collapsed: toCollapsed ?? !item.collapsed };
       return true;
-    } else if (item.children.length > 0) {
-      const result = toggleTreeItemCollapsed(item.children, id, toCollapsed);
-      if (result) {
-        return result;
-      }
     }
   }
   return false;

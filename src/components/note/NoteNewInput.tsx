@@ -82,7 +82,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           is_daily: regDateStr.test(inputTxt),
         };
         store.getState().upsertNote(note);
-        store.getState().upsertTree(note, currentDir);
+        store.getState().upsertTree(currentDir, note);
         // navigate to md view
         dispatch({view: 'md', params: {noteId: note.id}});
       } else if (option.type === OptionType.NOTE) {

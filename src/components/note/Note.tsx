@@ -75,10 +75,13 @@ function Note(props: Props) {
       // write to local file
       updateNote({ id: noteId, not_process: false });
       await writeFile(note?.file_path, text);
+      if (currentDir) { 
+        // await writeJsonFile(currentDir); 
+      }
       
       getHeading();
     },
-    [note?.file_path, noteId, updateNote]
+    [currentDir, note?.file_path, noteId, updateNote]
   );
 
   const onMarkdownChange = useCallback(
@@ -126,7 +129,7 @@ function Note(props: Props) {
           file_path: newPath,
         };
         upsertNote(newNote);
-        upsertTree(newNote, dirPath);
+        upsertTree(dirPath, newNote);
         // nav to renamed note
         dispatch({view: 'md', params: {noteId: newPath}});
       }
@@ -186,7 +189,7 @@ function Note(props: Props) {
         is_daily: regDateStr.test(title),
       };
       store.getState().upsertNote(newNote);
-      store.getState().upsertTree(newNote, parentDir);
+      store.getState().upsertTree(parentDir, newNote);
       await writeFile(notePath, ' ');
       
       return title.replaceAll(/\s/g, '_');
@@ -298,7 +301,7 @@ const getUntitledTitle = (noteId: string) => {
   const getResult = () => (suffix > 0 ? `${title} ${suffix}` : title);
 
   let suffix = 0;
-  const notesArr = Object.values(store.getState().notes);
+  const notesArr: NoteType[] = Object.values(store.getState().notes);
   while (
     notesArr.findIndex(
       (note) =>

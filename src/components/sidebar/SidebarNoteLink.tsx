@@ -3,7 +3,6 @@ import {
   forwardRef,
   HTMLAttributes,
   memo,
-  useCallback,
   useMemo,
 } from 'react';
 import { IconCaretRight, IconNotes } from '@tabler/icons';
@@ -33,13 +32,7 @@ const SidebarNoteLink = (
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
-  const toggleNoteTreeItemCollapsed = useStore(
-    (state) => state.toggleNoteTreeItemCollapsed
-  );
-  const onArrowClick = useCallback(
-    () => toggleNoteTreeItemCollapsed(node.id),
-    [node, toggleNoteTreeItemCollapsed]
-  );
+  
   // add 16px for every level of nesting, plus 8px base padding
   const leftPadding = useMemo(() => node.depth * 16 + 8, [node.depth]);
 
@@ -57,12 +50,9 @@ const SidebarNoteLink = (
         onClick={async (e) => {
           e.preventDefault();
           if (node.isDir) {
-            if (node.collapsed) {
-              await listDirPath(node.id);
-            }
-            onArrowClick?.();
+            await listDirPath(node.id, false);
           } else {
-            onNoteLinkClick(node.id);
+            await onNoteLinkClick(node.id);
           }
           if (isMobile()) {
             setIsSidebarOpen(false);

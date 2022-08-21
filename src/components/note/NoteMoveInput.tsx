@@ -54,7 +54,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         icon: IconChevronsUp,
       });
       result.push(
-        ...noteTree
+        ...Object.values(noteTree).flat()
           .filter((item) => item.isDir && item.id !== noteId)
           .map((item) => ({
             id: item.id,
@@ -203,6 +203,6 @@ export const moveNoteTreeItem = (
   };
   store.getState().deleteNote(srcPath);
   store.getState().upsertNote(newNote);
-  store.getState().upsertTree(newNote, tarDir);
+  store.getState().upsertTree(tarDir, newNote);
   // console.log("move item: ", srcPath, tarPath);
 }

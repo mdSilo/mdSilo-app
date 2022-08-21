@@ -49,8 +49,8 @@ export default function Chronicle() {
         file_path: dailyDir,
         is_dir: true, 
       };
-      store.getState().upsertTree(newDailyDir, currentDir, true); 
-      store.getState().upsertTree(newNote, dailyDir); 
+      store.getState().upsertTree(currentDir, newDailyDir, true); 
+      store.getState().upsertTree(dailyDir, newNote); 
     }
     dispatch({view: 'md', params: {noteId}});
   };

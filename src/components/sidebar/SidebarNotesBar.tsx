@@ -36,7 +36,7 @@ function SidebarNotesBar(props: Props) {
             e.preventDefault();
             if (!currentDir) return;
             const parentDir = await getParentDir(currentDir);
-            await listDirPath(parentDir);
+            await listDirPath(parentDir, false);
           }}
         >
           <IconArrowBarToUp size={16} className="text-gray-600 dark:text-gray-300" />

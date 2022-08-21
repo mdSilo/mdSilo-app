@@ -18,10 +18,14 @@ function SidebarNotes(props: SidebarNotesProps) {
   
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
-  const [sortedNoteTree, numOfNotes] = useMemo(
-    () => {return [sortNoteTree(noteTree, noteSort), noteTree.length];},
-    [noteTree, noteSort]
-  );
+  const [sortedNoteTree, numOfNotes] = useMemo(() => {
+    if (currentDir) {
+      const treeList = noteTree[currentDir] || [];
+      return [sortNoteTree(treeList, noteSort), treeList.length];
+    } else {
+      return [[], 0];
+    }
+  }, [noteTree, currentDir, noteSort]);
 
   // console.log("tree", numOfNotes, sortedNoteTree, currentDir)
   

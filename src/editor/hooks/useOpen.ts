@@ -53,16 +53,21 @@ export const onListDir = async () => {
   }
 };
 
-export const listDirPath = async (dirPath: string, reset = true) => {
+export const listDirPath = async (dirPath: string, noCache = true) => {
   // console.log("dir path", dirPath);
   const normalizedDir = await getDirPath(dirPath);
-  if (reset) {
-    store.getState().setNoteTree([]);
+  if (noCache) {
+    store.getState().setNoteTree({});
     store.getState().setCurrentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
     await listDir(normalizedDir);
   } else {
-    await listDir(normalizedDir);
+    const itemList = store.getState().noteTree[normalizedDir];
+    if (itemList) {
+      store.getState().setCurrentDir(normalizedDir);
+    } else {
+      await listDir(normalizedDir);
+    }
   }
 };
 
@@ -77,9 +82,7 @@ export const onSave = async () => {
 
 function cleanStore() {
   // cleaning store
-  store.getState().setNoteTree([]);
-  // const currentNoteId = store.getState().currentNoteId;
-  // const currentNote = store.getState().notes[currentNoteId];
+  store.getState().setNoteTree({});
   store.getState().setNotes({});
   store.getState().setCurrentDir(undefined);
 }
