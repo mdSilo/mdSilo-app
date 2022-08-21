@@ -204,5 +204,5 @@ export const moveNoteTreeItem = (
   store.getState().deleteNote(srcPath);
   store.getState().upsertNote(newNote);
   store.getState().upsertTree(newNote, tarDir);
-  console.log("move item: ", srcPath, tarPath);
+  // console.log("move item: ", srcPath, tarPath);
 }

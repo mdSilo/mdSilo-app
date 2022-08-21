@@ -2,7 +2,6 @@ import type { UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri'
 import { doDeleteNote } from 'editor/hooks/useDeleteNote';
 import { store } from 'lib/store';
-import { writeJsonFile } from './write';
 import { openFilePaths } from './open';
 import { isTauri, normalizeSlash, joinPath } from './util';
 
@@ -163,7 +162,6 @@ class DirectoryAPI {
               id: note.id,
               not_process: true,
             });
-            await writeJsonFile(currentDir);
             // console.log("updated not_process!");
           }
         } else if (event === 'rename') {

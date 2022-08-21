@@ -23,12 +23,7 @@ function SidebarNotes(props: SidebarNotesProps) {
     [noteTree, noteSort]
   );
 
-  // why pass numOfNotes to SidebarNotesBar from here?
-  // we get notes here
-  // const notes = useStore((state) => state.notes);
-  // const noteList = Object.values(notes);
-  // const myNotes = noteList.filter(n => !n.is_wiki && !n.is_daily);
-  // const numOfNotes = useMemo(() => noteTree.length, [noteTree]);
+  // console.log("tree", numOfNotes, sortedNoteTree, currentDir)
   
   const btnClass = "p-1 mt-4 mx-4 text-white rounded bg-blue-500 hover:bg-blue-800";
 

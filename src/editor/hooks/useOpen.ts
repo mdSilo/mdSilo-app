@@ -58,7 +58,6 @@ export const listDirPath = async (dirPath: string, reset = true) => {
   const normalizedDir = await getDirPath(dirPath);
   if (reset) {
     store.getState().setNoteTree([]);
-    store.getState().setCurrentDir(undefined);
     store.getState().setCurrentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
     await listDir(normalizedDir);
