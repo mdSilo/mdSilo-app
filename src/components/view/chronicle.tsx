@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore, store } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
 import HeatMap from 'components/HeatMap';
+import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { dateCompare, getStrDate, regDateStr } from 'utils/helper';
 import { joinPaths } from 'file/util';
 import { defaultNote } from 'types/model';
@@ -27,7 +29,8 @@ export default function Chronicle() {
 
   const onNewDailyNote = async (date: string) => {
     if (!currentDir || !regDateStr.test(date)) return;
-    const noteId = await joinPaths(currentDir, ['daily', `${date}.md`]);
+    const genNoteId = await joinPaths(currentDir, ['daily', `${date}.md`]);
+    const noteId = await openFileAndGetNoteId(genNoteId);
     const note = store.getState().notes[noteId];
     if (!note) {
       const newNote = {
@@ -39,10 +42,26 @@ export default function Chronicle() {
       };
       store.getState().upsertNote(newNote);
       const dailyDir = await joinPaths(currentDir, ['daily']);
+      const newDailyDir = {
+        ...defaultNote,
+        id: dailyDir, 
+        title: 'daily', 
+        file_path: dailyDir,
+        is_dir: true, 
+      };
+      store.getState().upsertTree(newDailyDir, currentDir, true); 
       store.getState().upsertTree(newNote, dailyDir); 
     }
     dispatch({view: 'md', params: {noteId}});
   };
+
+  const [firstDay, setFirstDay] = useState<string>('');
+  const showDailyNote = (date: string) => {
+    setFirstDay(date);
+  };
+
+  const first = firstDay ? [firstDay] : [];
+  const dateList = [...first, ...dates];
 
   return (
     <ErrorBoundary>
@@ -62,15 +81,15 @@ export default function Chronicle() {
             Today : {today}
           </button>
         </div>
-        <HeatMap onClick={onNewDailyNote} />
-        <div className="overlfow-y-auto">
-          {dates.map((d) => (
+        <HeatMap onClickCell={showDailyNote} />
+        <div className="overlfow-auto">
+          {dateList.slice(0,42).map((d, idx) => (
             <NoteSumList
-              key={d}
+              key={`${d}-${idx}`}
               anchor={d}
               notes={getDayNotes(d)}
               isDate={true}
-              onClick={onNewDailyNote}
+              onClick={onNewDailyNote} 
             />
           ))}
         </div>

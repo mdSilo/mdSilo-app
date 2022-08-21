@@ -11,17 +11,17 @@ type ActivityData = {
 export type ActivityRecord = Record<string, ActivityData>;
 
 type HeatMapProps = {
-  onClick: (date: string) => Promise<void>;
+  onClickCell: (date: string) => void;
   className?: string;
 };
 
-export default function HeatMap({ onClick }: HeatMapProps) {
+export default function HeatMap({ onClickCell }: HeatMapProps) {
+  const [activeRecord, ] = useState<ActivityRecord>(genData());
+
   const onDayClick = async (weekIdx: number, dayIdx: number) => {
     const date = getDate(weekIdx, dayIdx);
-    await onClick(date)
+    onClickCell(date);
   };
-
-  const [activeRecord, ] = useState<ActivityRecord>(genData());
 
   const hmLabelClass = "text-xs fill-gray-500";
 
