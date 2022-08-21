@@ -12,7 +12,7 @@ import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
-import { writeFile, writeJsonFile, deleteFile } from 'file/write';
+import { writeFile, deleteFile } from 'file/write';
 import { openUrl } from 'file/open';
 import { joinPaths, getDirPath, setWindowTitle } from 'file/util';
 import NoteHeader from './NoteHeader';
@@ -75,12 +75,10 @@ function Note(props: Props) {
       // write to local file
       updateNote({ id: noteId, not_process: false });
       await writeFile(note?.file_path, text);
-      if (currentDir) { 
-        await writeJsonFile(currentDir); 
-      }
+      
       getHeading();
     },
-    [note?.file_path, noteId, currentDir, updateNote]
+    [note?.file_path, noteId, updateNote]
   );
 
   const onMarkdownChange = useCallback(
@@ -89,11 +87,8 @@ function Note(props: Props) {
       // write to local file
       updateNote({ id: noteId, not_process: false });
       await writeFile(note?.file_path, text);
-      if (currentDir) { 
-        await writeJsonFile(currentDir); 
-      }
     },
-    [note?.file_path, noteId, currentDir, updateNote]
+    [note?.file_path, noteId, updateNote]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`);
@@ -119,7 +114,6 @@ function Note(props: Props) {
         const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
         // 2- swap value
         await writeFile(newPath, mdContent);
-        await writeJsonFile(currentDir);
         // 3- delete the old redundant File
         await deleteFile(oldPath);
         // 4- update note in store

@@ -5,7 +5,6 @@ import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store, useStore } from 'lib/store';
 import type { Note } from 'types/model';
 import { ciStringCompare } from 'utils/helper';
-import { writeJsonFile } from 'file/write';
 import FileAPI from 'file/files';
 
 enum OptionType {
@@ -96,10 +95,6 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           const oldNote =  notes[noteId];
           moveNoteTreeItem(noteId, tarDir, tarPath, oldNote);
         }
-      }
-      // sync the Moved hierarchy to JSON
-      if (currentDir) {
-        await writeJsonFile(currentDir);
       }
     },
     [onOptionClickCallback, currentDir, noteId, notes]

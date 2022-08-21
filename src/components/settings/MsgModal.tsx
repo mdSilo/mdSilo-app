@@ -13,7 +13,7 @@ export default function MsgModal() {
   };
 
   return (
-    <BaseModal title="Message" isOpen={isOpen} handleClose={handleClose}>
+    <BaseModal title="" isOpen={isOpen} handleClose={handleClose}>
       <div className="flex flex-col justify-center px-6">
         <button>{msgModalText}</button>
       </div>

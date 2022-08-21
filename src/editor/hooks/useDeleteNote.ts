@@ -3,7 +3,7 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import { store } from 'lib/store';
 import { regDateStr } from 'utils/helper';
 import updateBacklinks from 'components/note/backlinks/updateBacklinks';
-import { writeJsonFile, deleteFile } from 'file/write';
+import { deleteFile } from 'file/write';
 import { joinPaths } from 'file/util';
 
 export default function useDeleteNote(noteId: string, noteTitle: string) {
@@ -31,6 +31,5 @@ export async function doDeleteNote(noteId: string, noteTitle: string) {
       ? await joinPaths(parentDir, ['daily', `${noteTitle}.md`])
       : await joinPaths(parentDir, [`${noteTitle}.md`]);
     await deleteFile(toDelPath);    // delete file in Disk
-    await writeJsonFile(parentDir); // sync the deletion to JSON
   }
 }

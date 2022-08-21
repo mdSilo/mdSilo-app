@@ -4,7 +4,6 @@ import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds, processDirs } from './process';
-import { writeJsonFile } from './write';
 import { getParentDir } from './util';
 
 /* 
@@ -75,19 +74,21 @@ export const openDirDilog = async () => {
   for (const subdir of processedDirs) {
     const subDir =  new DirectoryAPI(subdir.file_path);
     if (await subDir.exists()) {
-      upsertNote(subdir);
-      const parentDir = await getParentDir(subdir.file_path);
+      // alway insert to root
+      const parentDir = undefined; // await getParentDir(subdir.file_path);
       // console.log("dir path1", dirPath, dir, parentDir);
       upsertTree(subdir, parentDir, true);
+      upsertNote(subdir);
     }
   }
   
   // 3- upsert store md files
   for (const md of processedMds) {
-    upsertNote(md);
-    const parentDir = await getParentDir(md.file_path);
+    // alway insert to root
+    const parentDir = undefined; // await getParentDir(md.file_path);
     // console.log("dir path2", dirPath, dir, parentDir);
     upsertTree(md, parentDir, false);
+    upsertNote(md);
   }
 
   // console.log("dir path", dirPath, dir, store.getState().noteTree);
@@ -188,7 +189,6 @@ export async function openFilePaths(filePaths: string[]) {
   const processedRes = processMds(files);
   // sync store states to JSON
   if (processedRes.length > 0) {
-    const currentDir = store.getState().currentDir;
     const upsertNote = store.getState().upsertNote;
     const upsertTree = store.getState().upsertTree;
     for (const md of processedRes) {
@@ -196,9 +196,6 @@ export async function openFilePaths(filePaths: string[]) {
       const parentDir = await getParentDir(md.file_path);
       upsertTree(md, parentDir, false);
     }
-    if (currentDir) { 
-      await writeJsonFile(currentDir); 
-    } 
 
     return true;
   }

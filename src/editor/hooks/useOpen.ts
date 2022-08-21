@@ -53,7 +53,7 @@ export const onListDir = async () => {
   }
 };
 
-export const listDirPath = async (dirPath: string, reset=true) => {
+export const listDirPath = async (dirPath: string, reset = true) => {
   // console.log("dir path", dirPath);
   const normalizedDir = await getDirPath(dirPath);
   if (reset) {
@@ -79,6 +79,8 @@ export const onSave = async () => {
 function cleanStore() {
   // cleaning store
   store.getState().setNoteTree([]);
+  // const currentNoteId = store.getState().currentNoteId;
+  // const currentNote = store.getState().notes[currentNoteId];
   store.getState().setNotes({});
   store.getState().setCurrentDir(undefined);
 }

@@ -15,19 +15,20 @@ function SidebarNotes(props: SidebarNotesProps) {
   const { className='' } = props;
 
   const currentDir = useStore((state) => state.currentDir);
-  const notes = useStore((state) => state.notes);
+  
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
-  const sortedNoteTree = useMemo(
-    () => sortNoteTree(noteTree, noteSort),
+  const [sortedNoteTree, numOfNotes] = useMemo(
+    () => {return [sortNoteTree(noteTree, noteSort), noteTree.length];},
     [noteTree, noteSort]
   );
 
   // why pass numOfNotes to SidebarNotesBar from here?
   // we get notes here
-  const noteList = Object.values(notes);
-  const myNotes = noteList.filter(n => !n.is_wiki && !n.is_daily);
-  const numOfNotes = useMemo(() => myNotes.length, [myNotes]);
+  // const notes = useStore((state) => state.notes);
+  // const noteList = Object.values(notes);
+  // const myNotes = noteList.filter(n => !n.is_wiki && !n.is_daily);
+  // const numOfNotes = useMemo(() => noteTree.length, [noteTree]);
   
   const btnClass = "p-1 mt-4 mx-4 text-white rounded bg-blue-500 hover:bg-blue-800";
 
@@ -45,7 +46,7 @@ function SidebarNotes(props: SidebarNotesProps) {
             data={sortedNoteTree}
             className="flex-1 overflow-y-auto"
           />
-        ) : (
+        ) : currentDir ? null : (
           <>
             <button className={btnClass} onClick={onListDir}>Open Folder</button>
             <button className={btnClass} onClick={onOpenFile}>Open File</button>
