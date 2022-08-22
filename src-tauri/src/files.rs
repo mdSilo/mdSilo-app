@@ -19,6 +19,7 @@ pub struct SimpleFileMeta {
   readonly: bool,
   is_dir: bool,
   is_file: bool,
+  is_hidden: bool,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]
@@ -34,6 +35,7 @@ pub struct FileMetaData {
   readonly: bool,
   is_dir: bool,
   is_file: bool,
+  is_hidden: bool,
 }
 
 #[derive(serde::Serialize)]
@@ -46,6 +48,27 @@ pub struct FolderData {
 pub struct Event {
   pub path: String,
   pub event: String,
+}
+
+// Check if a file is hidden
+#[cfg(windows)]
+#[inline]
+pub fn check_hidden(file_path: &str) -> bool {
+  // reference: https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfileattributesa
+  let attributes = if let Ok(attr) = fs::metadata(file_path) {
+    attr.file_attributes()
+  } else {
+    2 
+  };
+  // FILE_ATTRIBUTE_HIDDEN 2 (0x2)
+  (attributes & 0x2) > 0
+}
+
+#[cfg(unix)]
+#[inline]
+pub fn check_hidden(file_path: &str) -> bool {
+  let basename = get_basename(file_path).0;
+  basename.starts_with(".")
 }
 
 /// Get file_name or dir_name of the path given
@@ -129,6 +152,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   //let file_type = metadata.file_type();
   let is_dir = metadata.is_dir();
   let is_file = metadata.is_file();
+  let is_hidden = check_hidden(file_path);
   let size = metadata.len();
   let readonly = metadata.permissions().readonly();
 
@@ -153,10 +177,11 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
     created,
     last_modified,
     last_accessed,
-    is_dir,
-    is_file,
     size,
     readonly,
+    is_dir,
+    is_file,
+    is_hidden,
   })
 }
 
@@ -180,10 +205,11 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     created: meta_data.created,
     last_modified: meta_data.last_modified,
     last_accessed: meta_data.last_accessed,
-    is_dir: meta_data.is_dir,
-    is_file: meta_data.is_file,
     size: meta_data.size,
     readonly: meta_data.readonly,
+    is_dir: meta_data.is_dir,
+    is_file: meta_data.is_file,
+    is_hidden: meta_data.is_hidden,
   })
 }
 

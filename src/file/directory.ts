@@ -22,6 +22,7 @@ export interface FileMetaData {
   readonly: boolean;
   is_dir: boolean;
   is_file: boolean;
+  is_hidden: boolean;
 }
 
 export interface SimpleFileMeta {
@@ -34,6 +35,7 @@ export interface SimpleFileMeta {
   readonly: boolean;
   is_dir: boolean;
   is_file: boolean;
+  is_hidden: boolean;
 }
 
 interface DirectoryData {

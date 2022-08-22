@@ -42,7 +42,7 @@ export const openDirDilog = async () => {
 };
 
 /**
- * Open dir and process files w/ content, upsert note and tree to store
+ * Open dir and process files w/o content, upsert note and tree to store
  * @param dir 
  * @returns 
  */
@@ -60,7 +60,8 @@ export const openDirDilog = async () => {
   // 1- get files and dirs
   const dirData = await dirInfo.listDirectory();
   // console.log("dir data 0", dirData);
-  const files = dirData;
+  const files = dirData.filter(f => !f.is_hidden);
+
   const dirs = files.filter(f => f.is_dir).map(d => ({...d, file_text: ''}));
   const processedDirs = dirs.length ? processDirs(dirs) : [];
   const mds = files.filter(f => f.is_file).map(d => ({...d, file_text: ''}));
@@ -113,7 +114,8 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
 
   // 1- get files and dirs
   const dirData = await dirInfo.getFiles();
-  const files = dirData.files;
+  const files = dirData.files.filter(f => !f.is_hidden);
+
   const dirs = files.filter(f => f.is_dir);
   const processedDirs = dirs.length ? processDirs(dirs) : [];
   const mds = files.filter(f => f.is_file);
@@ -238,7 +240,7 @@ export async function openJSONFilePath(filePath: string) {
   // otherwise: 
   // 1- get files
   const dirData = await dirInfo.getFiles();
-  const files = dirData.files;
+  const files = dirData.files.filter(f => !f.is_hidden);
   
   // 2- process mds and upsert store
   const mds = files.filter(f => f.is_file);
