@@ -6,6 +6,8 @@ extern crate notify;
 extern crate open;
 extern crate trash;
 use crate::paths::{PathBufExt, PathExt};
+#[cfg(windows)]
+use std::os::windows::fs::MetadataExt;
 use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
 
 #[derive(serde::Serialize, Clone, Debug)]
