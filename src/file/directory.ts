@@ -3,7 +3,8 @@ import { invoke } from '@tauri-apps/api/tauri'
 import { doDeleteNote } from 'editor/hooks/useDeleteNote';
 import { store } from 'lib/store';
 import { openFilePaths } from './open';
-import { isTauri, normalizeSlash, joinPath } from './util';
+import { rmFileNameExt } from './process';
+import { isTauri, normalizeSlash, joinPath, getBaseName } from './util';
 
 interface SystemTime {
   nanos_since_epoch: number; // locale
@@ -163,16 +164,20 @@ class DirectoryAPI {
           const res = await openFilePaths([filePath]);
           // docs: https://docs.rs/notify/latest/notify/op/index.html
           // on Linux, Windows, rename will emit 2 events, including src and dest path 
-          // console.log("open rename file", filePath, res)
+          // console.log("open rename file", filePath, res, event)
           // delete in store
           if (!res) {
-            const note = getNotePerFilePath(filePath)
+            const baseName = await getBaseName(filePath);
+            let title = baseName[0];
+            const isFile = baseName[1];
+            if (isFile) {
+              title = rmFileNameExt(title);
+            }
+            await doDeleteNote(filePath, title);
             const currentNoteId = store.getState().currentNoteId;
-            // console.log("delete note: ", res, note, currentNoteId);
-            // current note will not be deleted
-            if (note && note.id !== currentNoteId) {
-              await doDeleteNote(note.id, note.title);
-              // console.log("delete note: ", note.id, currentNoteId);
+            // console.log("delete note: ", res, filePath, currentNoteId);
+            if (filePath === currentNoteId) {
+              store.getState().setCurrentNoteId('');
             }
           }
         } else if (event === 'create') {
@@ -197,14 +202,3 @@ class DirectoryAPI {
 }
 
 export default DirectoryAPI;
-
-// a helper 
-function getNotePerFilePath(filePath: string) {
-  const notesArr = Object.values(store.getState().notes);
-  for (const note of notesArr) {
-    const notePath = note.file_path;
-    if (notePath === filePath) {
-      return note;
-    }
-  }
-}

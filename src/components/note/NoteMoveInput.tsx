@@ -1,11 +1,12 @@
 import type { ForwardedRef } from 'react';
-import { forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useMemo, useState, useEffect } from 'react';
 import { IconChevronsUp, IconSearch, TablerIcon } from '@tabler/icons';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store, useStore } from 'lib/store';
 import type { Note } from 'types/model';
 import { ciStringCompare } from 'utils/helper';
 import FileAPI from 'file/files';
+import { loadDir } from 'file/open';
 
 enum OptionType {
   DIR,
@@ -32,12 +33,21 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
     className = '',
   } = props;
 
+  const isLoaded = useStore((state) => state.isLoaded);
+  const setIsLoaded = useStore((state) => state.setIsLoaded);
+  const initDir = useStore((state) => state.initDir);
+  // console.log("loaded?", isLoaded);
+  useEffect(() => {
+    if (!isLoaded && initDir) {
+      loadDir(initDir).then(() => setIsLoaded(true));
+    }
+  }, [initDir, isLoaded, setIsLoaded]);
+
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
 
   const noteTree = useStore((state) => state.noteTree);
   const notes = useStore((state) => state.notes);
-  const currentDir = useStore((state) => state.currentDir);
 
   const inputTxt = inputText.trim();
   const search = useNoteSearch({ numOfResults: 10, searchDir: true });
@@ -59,7 +69,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           .map((item) => ({
             id: item.id,
             type: OptionType.DIR,
-            text: notes[item.id].title,
+            text: item.title,
           }))
           .sort((n1, n2) => ciStringCompare(n1.text, n2.text))
           .slice(0, 9)
@@ -76,14 +86,14 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       );
     }
     return result;
-  }, [searchResults, noteId, inputTxt, noteTree, notes]);
+  }, [searchResults, noteId, inputTxt, noteTree]);
 
   const onOptionClick = useCallback(
     async (option: Option) => {
       onOptionClickCallback?.();
       let tarDir: string | undefined;
       if (option.type === OptionType.ROOT) {
-        tarDir = currentDir;
+        tarDir = initDir;
       } else if (option.type === OptionType.DIR) {
         tarDir = option.id;
       }
@@ -97,7 +107,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         }
       }
     },
-    [onOptionClickCallback, currentDir, noteId, notes]
+    [onOptionClickCallback, initDir, noteId, notes]
   );
 
   const onKeyDown = useCallback(

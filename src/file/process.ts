@@ -89,7 +89,7 @@ export function processDirs(fileList: FileMetaData[]) {
  *
  * @param {string} fname, file name.
  */
-const rmFileNameExt = (fname: string) => {
+export const rmFileNameExt = (fname: string) => {
   return fname.replace(/\.[^/.]+$/, '');
 }
 

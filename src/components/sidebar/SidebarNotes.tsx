@@ -65,8 +65,6 @@ const sortNoteTree = (
 ): NoteTreeItem[] => {
   // Copy tree shallowly
   const newTree = [...tree];
-  // filte out the wiki
-  // const newTree = newTre;//.filter(n => !notes[n.id].is_wiki && !notes[n.id].is_daily);
   // Sort tree items (one level)
   if (newTree.length >= 2) {
     newTree.sort((n1, n2) => {

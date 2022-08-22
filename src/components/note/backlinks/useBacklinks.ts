@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { parser, getJSONContent } from "mdsmirror";
 import { Notes, useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
 import { ciStringEqual, isUrl } from 'utils/helper';
+import { loadDir } from 'file/open';
 
 const DEBOUNCE_MS = 1000;
 
@@ -21,6 +22,16 @@ export type Backlink = {
 };
 
 export default function useBacklinks(noteId: string) {
+  const isLoaded = useStore((state) => state.isLoaded);
+  const setIsLoaded = useStore((state) => state.setIsLoaded);
+  const initDir = useStore((state) => state.initDir);
+  // console.log("loaded?", isLoaded);
+  useEffect(() => {
+    if (!isLoaded && initDir) {
+      loadDir(initDir).then(() => setIsLoaded(true));
+    }
+  }, [initDir, isLoaded, setIsLoaded]);
+  
   const [notes] = useDebounce(
     useStore((state) => state.notes),
     DEBOUNCE_MS

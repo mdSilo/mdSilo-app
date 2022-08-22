@@ -2,6 +2,7 @@ import { store } from 'lib/store';
 import { ciStringEqual, isUrl } from 'utils/helper';
 import { LINK_REGEX } from 'components/view/graph'
 import { writeFile } from 'file/write';
+import { loadDir } from 'file/open';
 import { computeLinkedBacklinks } from './useBacklinks';
 
 /**
@@ -11,6 +12,14 @@ import { computeLinkedBacklinks } from './useBacklinks';
  * @param newTitle of current note, it is undefined on delete note 
  */
 const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
+  const isLoaded = store.getState().isLoaded;
+  const setIsLoaded = store.getState().setIsLoaded;
+  const initDir = store.getState().initDir;
+  // console.log("loaded?", isLoaded);
+  if (!isLoaded && initDir) {
+    loadDir(initDir).then(() => setIsLoaded(true));
+  }
+
   const notes = store.getState().notes;
   const updateNote = store.getState().updateNote;
   const backlinks = computeLinkedBacklinks(notes, noteTitle);
