@@ -84,9 +84,19 @@ export const getDirPath = async (path: string): Promise<string> => {
  * @param {string} path 
  * @returns {Promise<string>}
  */
- export const getParentDir = async (path: string): Promise<string> => {
+export const getParentDir = async (path: string): Promise<string> => {
   return await invoke('get_parent_dir', { path });
 };
+
+/**
+ * get basename of file or dir
+ * @returns {Promise<[string, boolean]>} [name, is_file]
+ */
+export const getBaseName = async (filePath: string): Promise<[string, boolean]> => {
+  return await invoke<[string, boolean]>(
+    'get_basename', { filePath }
+  );
+}
 
 /**
  * trim slash or backslash

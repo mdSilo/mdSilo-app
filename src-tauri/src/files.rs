@@ -71,7 +71,7 @@ pub fn check_hidden(file_path: &str) -> bool {
   basename.starts_with(".")
 }
 
-/// Get file_name or dir_name of the path given
+// Get file_name or dir_name of the path given: (name, is_file)
 #[tauri::command]
 pub fn get_basename(file_path: &str) -> (String, bool) {
   let path = Path::new(file_path);

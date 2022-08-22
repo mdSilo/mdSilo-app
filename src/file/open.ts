@@ -1,10 +1,11 @@
 import * as dialog from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api/tauri';
 import { store } from 'lib/store';
+import { defaultNote, Note } from 'types/model';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds, processDirs } from './process';
-import { getParentDir, joinPaths } from './util';
+import { getParentDir, getBaseName, joinPaths } from './util';
 import { writeJsonFile } from './write';
 
 /* 
@@ -173,18 +174,25 @@ export const openFileDilog = async (ty: string[], multi = true) => {
 };
 
 /**
- * Open and process md files, upsert note and tree to store
+ * Open and process md files or dirs, upsert note and tree to store
  * @param filePaths 
  * @returns Promise<boolean>
  */
 export async function openFilePaths(filePaths: string[]) {
   const files = [];
+  const dirs = [];
+  let res = false;
+
   for (const filePath of filePaths) {
     const fileInfo = new FileAPI(filePath);
     if (await fileInfo.exists()) {
       const fileMeta = await fileInfo.getMetadata();
-      files.push(fileMeta);
-    } 
+      if (fileMeta.is_file) {
+        files.push(fileMeta);
+      } else {
+        dirs.push(fileMeta);
+      }
+    }
   }
   // process files
   const processedRes = processMds(files);
@@ -196,10 +204,57 @@ export async function openFilePaths(filePaths: string[]) {
       upsertNote(md);
       const parentDir = await getParentDir(md.file_path);
       upsertTree(parentDir, md, false);
+      upsertTreeRecursively(parentDir);
     }
-
-    return true;
+    res = true;
   }
+
+  // process dirs
+  const processedDirs = processDirs(dirs);
+  // sync store states to JSON
+  if (processedDirs.length > 0) {
+    const upsertTree = store.getState().upsertTree;
+    for (const dir of processedDirs) {
+      const parentDir = await getParentDir(dir.file_path);
+      upsertTree(parentDir, dir, true);
+      upsertTreeRecursively(parentDir);
+    }
+    res = true;
+  }
+
+  return res;
+}
+
+/**
+ * upsert dir to Tree Recursively till initDIr
+ * @param dirPath 
+ * @returns 
+ */
+export async function upsertTreeRecursively(dirPath: string) {
+  const initDir = store.getState().initDir;
+  if (!initDir || !dirPath.startsWith(initDir) || dirPath === initDir) return;
+
+  // const noteTree = store.getState().noteTree;
+  // if (noteTree[dirPath]) return;
+
+  const dirName = (await getBaseName(dirPath))[0]; 
+  if (!dirName.trim()) return;
+
+  const newDir: Note = { 
+    ...defaultNote, 
+    id: dirPath, 
+    title: dirName,
+    file_path: dirPath,
+    is_dir: true,
+  };
+  
+  const upsertTree = store.getState().upsertTree; 
+  const parentDir = await getParentDir(dirPath);
+  upsertTree(parentDir, newDir, true);
+  // then recursively
+  upsertTreeRecursively(parentDir);
+  
+  return true;
 }
 
 /**

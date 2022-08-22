@@ -132,7 +132,6 @@ class DirectoryAPI {
     );
   }
 
-  // TODO: listen dir changes
   /**
    * Listen to changes in a directory
    * @param {() => void} callbackFn - callback
@@ -146,43 +145,40 @@ class DirectoryAPI {
       const { getCurrent } = await import('@tauri-apps/api/window');
       listener = await getCurrent().listen('changes', async (e: Event) => {
         // console.log("listen event: ", e);
-        // sync the change on listen, set not_process false, but:
-        // need re-entry to reload the changes;
+        // sync the change on listen, set not_process false
         const payload: EventPayload = e.payload;
-        const filePath = payload.path;
+        const filePath = payload.path; // FULL PATH
         const event = payload.event;
         // console.log("event: ", event);
         // console.log("file path: ", filePath);
         if (event === 'write' || event === 'close_write') {
-          const currentDir = store.getState().currentDir || '';
-          const note = currentDir ? getNotePerFilePath(filePath, currentDir) : undefined;
-          const currentNoteId = currentDir ? store.getState().currentNoteId : '';
-          // console.log("note current ids: ", note.id, currentNoteId)
+          const currentNoteId = store.getState().currentNoteId;
+          // console.log("write: ", event, filePath, currentNoteId)
           // any change on current note will not be loaded
-          if (note && note.id !== currentNoteId) {
-            store.getState().updateNote({
-              id: note.id,
-              not_process: true,
-            });
+          if (filePath !== currentNoteId) {
+            await openFilePaths([filePath]);
             // console.log("updated not_process!");
           }
         } else if (event === 'rename') {
           const res = await openFilePaths([filePath]);
           // docs: https://docs.rs/notify/latest/notify/op/index.html
-          // on Linux, Windows, rename will emit 2 events including src and dest path 
+          // on Linux, Windows, rename will emit 2 events, including src and dest path 
           // console.log("open rename file", filePath, res)
-          // delete in JSON and store
+          // delete in store
           if (!res) {
-            const currentDir = store.getState().currentDir || '';
-            const note = currentDir ? getNotePerFilePath(filePath, currentDir) : undefined;
-            const currentNoteId = currentDir ? store.getState().currentNoteId : '';
-            // console.log("delete note in: ", currentDir, res, note, currentNoteId);
+            const note = getNotePerFilePath(filePath)
+            const currentNoteId = store.getState().currentNoteId;
+            // console.log("delete note: ", res, note, currentNoteId);
             // current note will not be deleted
             if (note && note.id !== currentNoteId) {
               await doDeleteNote(note.id, note.title);
               // console.log("delete note: ", note.id, currentNoteId);
             }
           }
+        } else if (event === 'create') {
+          // console.log("create: ", filePath)
+          // open, upsert 
+          await openFilePaths([filePath]);
         }
         callbackFn();
       });
@@ -202,10 +198,11 @@ class DirectoryAPI {
 
 export default DirectoryAPI;
 
-function getNotePerFilePath(filePath: string, currentDir?: string) {
+// a helper 
+function getNotePerFilePath(filePath: string) {
   const notesArr = Object.values(store.getState().notes);
   for (const note of notesArr) {
-    const notePath = currentDir ? `${currentDir}/${note.file_path}` : note.file_path;
+    const notePath = note.file_path;
     if (notePath === filePath) {
       return note;
     }
