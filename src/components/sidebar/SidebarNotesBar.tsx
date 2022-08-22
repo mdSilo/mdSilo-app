@@ -18,7 +18,9 @@ function SidebarNotesBar(props: Props) {
   const { noteSort, numOfNotes} = props;
   const setNoteSort = useStore((state) => state.setNoteSort);
 
+  const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
+  const checkInit: boolean = !currentDir || currentDir === initDir;
   
   return (
     <div className="flex items-center justify-between border-t dark:border-gray-700">
@@ -29,15 +31,16 @@ function SidebarNotesBar(props: Props) {
         />
       </div>
       <NoteBarDrop numOfNotes={numOfNotes} />
-      <Tooltip content="Go Upper Folder">
+      <Tooltip content={checkInit ? "" : "Go Upper Folder"}>
         <button
           className="p-1 mx-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={async (e) => {
             e.preventDefault();
-            if (!currentDir) return;
+            if (!currentDir || currentDir === initDir) return;
             const parentDir = await getParentDir(currentDir);
             await listDirPath(parentDir, false);
           }}
+          disabled={checkInit}
         >
           <IconArrowBarToUp size={16} className="text-gray-600 dark:text-gray-300" />
         </button>

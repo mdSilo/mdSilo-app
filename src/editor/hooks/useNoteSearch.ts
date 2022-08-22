@@ -3,6 +3,7 @@ import { parser } from "mdsmirror";
 import Fuse from 'fuse.js';
 import { store } from 'lib/store';
 import { Note } from 'types/model';
+import { loadDir } from 'file/open';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type NoteBlock = { text: string; path?: any };
@@ -34,6 +35,13 @@ export default function useNoteSearch({
   notesBase = [],
 }: searchOptions = {}) {
   const myNotes = useCallback(() => {
+    const isLoaded = store.getState().isLoaded;
+    const initDir = store.getState().initDir;
+    // console.log("loaded?", isLoaded);
+    if (!isLoaded && initDir) {
+      loadDir(initDir).then(() => store.getState().setIsLoaded(true));
+    }
+
     const notes = store.getState().notes;
     const notesArr = Object.values(notes);
     const dirNotes = searchDir 

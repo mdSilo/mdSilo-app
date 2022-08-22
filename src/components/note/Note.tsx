@@ -12,7 +12,7 @@ import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
-import { writeFile, deleteFile } from 'file/write';
+import { writeFile, deleteFile, writeJsonFile } from 'file/write';
 import { openUrl } from 'file/open';
 import { joinPaths, getDirPath, setWindowTitle } from 'file/util';
 import NoteHeader from './NoteHeader';
@@ -41,14 +41,14 @@ function Note(props: Props) {
   const darkMode = useStore((state) => state.darkMode);
   const rawMode = useStore((state) => state.rawMode);
   const isRTL = useStore((state) => state.isRTL);
-  const currentDir = useStore((state) => state.currentDir);
-  // console.log("currentDir", currentDir);
+  
+  const initDir = useStore((state) => state.initDir);
+  // console.log("initDir", initDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
   const note: NoteType = useStore((state) => state.notes[noteId]);
   const isPub = note?.is_pub ?? false;
   const isDaily = note?.is_daily ?? false;
-  const isWiki = note?.is_wiki ?? false;
   // get title and content value
   const title = note?.title || '';
   const mdContent = note?.content || '';
@@ -75,13 +75,13 @@ function Note(props: Props) {
       // write to local file
       updateNote({ id: noteId, not_process: false });
       await writeFile(note?.file_path, text);
-      if (currentDir) { 
-        // await writeJsonFile(currentDir); 
+      if (initDir) { 
+        await writeJsonFile(initDir); 
       }
       
       getHeading();
     },
-    [currentDir, note?.file_path, noteId, updateNote]
+    [initDir, note?.file_path, noteId, updateNote]
   );
 
   const onMarkdownChange = useCallback(
@@ -90,8 +90,11 @@ function Note(props: Props) {
       // write to local file
       updateNote({ id: noteId, not_process: false });
       await writeFile(note?.file_path, text);
+      if (initDir) { 
+        await writeJsonFile(initDir); 
+      }
     },
-    [note?.file_path, noteId, updateNote]
+    [initDir, note?.file_path, noteId, updateNote]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`);
@@ -107,7 +110,7 @@ function Note(props: Props) {
           (n) => n.id !== noteId && !n.is_wiki && ciStringEqual(n.title, newTitle)
         ) === -1;
       };
-      if (!isWiki && isTitleUnique() && currentDir) {
+      if (isTitleUnique()) {
         await updateBacklinks(title, newTitle); 
         // on rename file: 
         // 1- new FilePath
@@ -132,12 +135,13 @@ function Note(props: Props) {
         upsertTree(dirPath, newNote);
         // nav to renamed note
         dispatch({view: 'md', params: {noteId: newPath}});
+        
+        if (initDir) { 
+          await writeJsonFile(initDir); 
+        }
       }
     },
-    [
-      noteId, isWiki, currentDir, storeNotes, title, mdContent, 
-      deleteNote, upsertNote, upsertTree, dispatch
-    ]
+    [noteId, storeNotes, title, mdContent, deleteNote, upsertNote, upsertTree, dispatch, initDir]
   );
 
   // Search

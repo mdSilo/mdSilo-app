@@ -4,7 +4,8 @@ import { store } from 'lib/store';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds, processDirs } from './process';
-import { getParentDir } from './util';
+import { getParentDir, joinPaths } from './util';
+import { writeJsonFile } from './write';
 
 /* 
 Open files: 
@@ -214,6 +215,49 @@ export async function openJSONFilePath(filePath: string) {
     }
   }
 }
+
+/**
+ * load all notes with content recursively
+ * @param dir initDir
+ */
+ export const loadDir = async (dir: string) => {
+  const dirInfo = new DirectoryAPI(dir);
+  // console.log("dir api", dirInfo)
+  if (!(await dirInfo.exists())) return;
+
+  // firstly, try to use json to avoid heavy loading job 
+  const jsonPath = await joinPaths(dir, ['mdsilo.json']);
+  const jsonData = await openJSONFilePath(jsonPath);
+  const isLoaded = jsonData?.isLoaded;
+  if (isLoaded) {
+    store.getState().setNotes(jsonData.notesObj);
+    return;
+  }
+
+  const upsertNote = store.getState().upsertNote;
+  // otherwise: 
+  // 1- get files
+  const dirData = await dirInfo.getFiles();
+  const files = dirData.files;
+  
+  // 2- process mds and upsert store
+  const mds = files.filter(f => f.is_file);
+  const processedMds =  mds.length ? processMds(mds) : [];
+  // upsert 
+  for (const md of processedMds) {
+    upsertNote(md);
+  }
+
+  // 3- process sub-dirs recursively
+  const dirs = files.filter(f => f.is_dir);
+  const processedDirs = dirs.length ? processDirs(dirs) : [];
+  // process recursively
+  for (const subdir of processedDirs) {
+    await loadDir(subdir.file_path);
+  }
+  // write the loading to json
+  await writeJsonFile(dir); 
+};
 
 /**
  * open an url

@@ -1,14 +1,25 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 // import { parser, serializer } from "mdsmirror";
+import ErrorBoundary from 'components/misc/ErrorBoundary';
 import type { GraphData } from 'components/view/ForceGraph';
 import ForceGraph from 'components/view/ForceGraph';
 import { useStore } from 'lib/store';
 import { ciStringEqual, isUrl } from 'utils/helper';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
+import { loadDir } from 'file/open';
 
 export const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
 
 export default function Graph() {
+  const isLoaded = useStore((state) => state.isLoaded);
+  const setIsLoaded = useStore((state) => state.setIsLoaded);
+  const initDir = useStore((state) => state.initDir);
+  // console.log("loaded?", isLoaded);
+  useEffect(() => {
+    if (!isLoaded && initDir) {
+      loadDir(initDir).then(() => setIsLoaded(true));
+    }
+  }, [initDir, isLoaded, setIsLoaded]);
+
   const notes = useStore((state) => state.notes);
 
   // Compute graph data

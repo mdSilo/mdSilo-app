@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore, store } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -9,8 +9,19 @@ import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { dateCompare, getStrDate, regDateStr } from 'utils/helper';
 import { joinPaths } from 'file/util';
 import { defaultNote } from 'types/model';
+import { loadDir } from 'file/open';
 
 export default function Chronicle() {
+  const isLoaded = useStore((state) => state.isLoaded);
+  const setIsLoaded = useStore((state) => state.setIsLoaded);
+  const initDir = useStore((state) => state.initDir);
+  // console.log("loaded?", isLoaded);
+  useEffect(() => {
+    if (!isLoaded && initDir) {
+      loadDir(initDir).then(() => setIsLoaded(true));
+    }
+  }, [initDir, isLoaded, setIsLoaded]);
+  
   const notes = useStore((state) => state.notes);
   const notesArr = Object.values(notes);
   const myNotes = notesArr.filter(n => !n.is_wiki && !n.is_daily && !n.is_dir);

@@ -50,6 +50,7 @@ export type NoteTreeItem = {
 export type NoteTree = Record<Note['id'], NoteTreeItem[]>;
 
 export type NotesData = {
+  isLoaded: boolean;
   notesObj: Notes;
   noteTree: NoteTree;
   activities?: ActivityRecord;
@@ -80,6 +81,10 @@ export type Store = {
   setSidebarTab: Setter<SidebarTab>;
   sidebarSearchQuery: string;
   setSidebarSearchQuery: Setter<string>;
+  initDir: string | undefined;  // first open dir path
+  setInitDir: Setter<string | undefined>;
+  isLoaded: boolean;  // is all loaded
+  setIsLoaded: Setter<boolean>;
   currentDir: string | undefined;  // dir path
   setCurrentDir: Setter<string | undefined>;
   msgModalText: string; 
@@ -190,6 +195,10 @@ export const store = createVanilla<Store>(
       // search note
       sidebarSearchQuery: '',
       setSidebarSearchQuery: setter(set, 'sidebarSearchQuery'),
+      initDir: undefined,
+      setInitDir: setter(set, 'initDir'),
+      isLoaded: false,
+      setIsLoaded: setter(set, 'isLoaded'),
       currentDir: undefined,
       setCurrentDir: setter(set, 'currentDir'),
       msgModalText: '',

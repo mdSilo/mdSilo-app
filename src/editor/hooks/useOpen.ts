@@ -46,6 +46,7 @@ export const onListDir = async () => {
   if (dirPath && typeof dirPath === 'string') {
     cleanStore();
     const normalizedDir = await getDirPath(dirPath);
+    store.getState().setInitDir(normalizedDir);
     store.getState().setCurrentDir(normalizedDir);
     store.getState().setRecentDir([normalizedDir]);
     // console.log("rencent dir path", store.getState().recentDir);
