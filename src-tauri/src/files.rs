@@ -187,7 +187,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   })
 }
 
-/// Get meatdata of a file
+// Get meatdata of a file
 #[tauri::command]
 pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   let file_text = match fs::read_to_string(file_path) {
@@ -215,9 +215,9 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   })
 }
 
-/// Check if a given path is a directory
-///
-/// Return false if not exist or it isn't a directory
+// Check if a given path is a directory
+//
+// Return false if not exist or it isn't a directory
 #[tauri::command]
 pub fn is_dir(path: &Path) -> Result<bool, String> {
   if !Path::new(path).exists() {
@@ -230,9 +230,9 @@ pub fn is_dir(path: &Path) -> Result<bool, String> {
   }
 }
 
-/// Check if a given path is a file
-///
-/// Return false if not exist or it isn't
+// Check if a given path is a file
+//
+// Return false if not exist or it isn't
 #[tauri::command]
 pub fn is_file(path: &Path) -> Result<bool, String> {
   if !Path::new(path).exists() {
@@ -245,7 +245,7 @@ pub fn is_file(path: &Path) -> Result<bool, String> {
   }
 }
 
-/// Read files and its information of a directory
+// Read files and its information of a directory
 #[tauri::command]
 pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
   let paths = fs::read_dir(dir).map_err(|err| err.to_string())?;
@@ -276,7 +276,7 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
   })
 }
 
-/// Get array of files of a directory
+// Get array of files of a directory
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
   let paths = fs::read_dir(dir).map_err(|err| err.to_string())?;
@@ -301,13 +301,13 @@ pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
   Ok(filemetas)
 }
 
-/// Check if path given exists
+// Check if path given exists
 #[tauri::command]
 pub fn file_exist(file_path: &str) -> bool {
   fs::metadata(file_path).is_ok()
 }
 
-/// Create directory recursively
+// Create directory recursively
 #[tauri::command]
 pub async fn create_dir_recursive(dir_path: String) -> bool {
   fs::create_dir_all(dir_path).is_ok()
@@ -320,7 +320,7 @@ pub async fn create_dir_recursive(dir_path: String) -> bool {
 // copy
 // delete
 
-/// Create a file
+// Create a file
 #[tauri::command]
 pub async fn create_file(file_path: String) -> bool {
   if let Some(p) = Path::new(&file_path).parent() {
@@ -330,14 +330,14 @@ pub async fn create_file(file_path: String) -> bool {
   fs::write(file_path, "").is_ok()
 }
 
-/// read file to string
+// read file to string
 #[tauri::command]
 pub async fn read_file(file_path: String) -> String {
   // TODO: handle err
   fs::read_to_string(file_path).unwrap_or(String::from("Nothing"))
 }
 
-/// write to a file
+// write to a file
 #[tauri::command]
 pub async fn write_file(file_path: String, text: String) -> bool {
   if let Some(p) = Path::new(&file_path).parent() {
@@ -347,7 +347,7 @@ pub async fn write_file(file_path: String, text: String) -> bool {
   fs::write(file_path, text).is_ok()
 }
 
-/// copy the file
+// copy the file
 #[tauri::command]
 pub async fn copy_file(src_path: String, to_path: String) -> bool {
   if let Some(p) = Path::new(&to_path).parent() {
@@ -357,7 +357,7 @@ pub async fn copy_file(src_path: String, to_path: String) -> bool {
   fs::copy(src_path, to_path).is_ok()
 }
 
-/// copy the assets(image...) to given work dir
+// copy the assets(image...) to given work dir
 #[tauri::command]
 pub async fn copy_file_to_assets(
   src_path: String, 
@@ -396,14 +396,14 @@ pub async fn copy_file_to_assets(
   }
 }
 
-/// Delete files or dirs
-/// note: will not delete dir if any file in dir on Linux
+// Delete files or dirs
+// note: will not delete dir if any file in dir on Linux
 #[tauri::command]
 pub async fn delete_files(paths: Vec<String>) -> bool {
   trash::delete_all(paths).is_ok()
 }
 
-/// Listen to change events in a directory
+// Listen to change events in a directory
 #[tauri::command]
 pub async fn listen_dir(
   dir: String,
@@ -473,7 +473,7 @@ pub async fn listen_dir(
   }
 }
 
-/// opn url with default web browser
+// opn url with default web browser
 #[tauri::command]
 pub fn open_url(url: String) -> bool {
   open::that(url).is_ok()

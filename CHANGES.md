@@ -1,9 +1,15 @@
 # Changelog 
 
-## [app-v0.4.2] - 2022-XX-XX 
+## [app-v0.5.0] - 2022-XX-XX
+
+### Added 
+
+
+## [app-v0.4.2] - 2022-08-22 
 
 ### Added  
 - Subscript text (`~sub~`) and superscript text (`^sup^`) support  
+- Ignore hidden files and folders
 
 
 ## [app-v0.4.1] - 2022-06-22 

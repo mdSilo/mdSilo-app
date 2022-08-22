@@ -38,7 +38,7 @@ const countWords = (str: string) => {
   // remove all not ASCII
   // https://en.wikipedia.org/wiki/List_of_Unicode_characters
   const str1 = str0.replace(/[^!-~\d\s]+/gi,' ')
-  /// remove characters, number
+  // remove characters, number
   const str2 = str0.replace(/[!-~\d\s]+/gi, '')
 
   const matches1 = str1.match(/[\u00FF-\uFFFF]|\S+/g);
