@@ -78,7 +78,7 @@ function Note(props: Props) {
       if (initDir) { 
         await writeJsonFile(initDir); 
       }
-      
+      // update TOC if any 
       getHeading();
     },
     [initDir, note?.file_path, noteId, updateNote]
@@ -105,25 +105,24 @@ function Note(props: Props) {
       const newTitle = newtitle.trim() || getUntitledTitle(noteId);
       const isTitleUnique = () => {
         const notesArr = Object.values(storeNotes);
-        return notesArr.findIndex(
-          // no need to be unique for wiki note title
-          (n) => n.id !== noteId && !n.is_wiki && ciStringEqual(n.title, newTitle)
-        ) === -1;
+        return notesArr.findIndex((n) => ciStringEqual(n.title, newTitle)) === -1;
       };
       if (isTitleUnique()) {
         await updateBacklinks(title, newTitle); 
         // on rename file: 
+        // 0- reload the old note to store.  
+        const oldPath = await openFileAndGetNoteId(noteId);
         // 1- new FilePath
-        const oldNote = storeNotes[noteId];
-        const oldPath = oldNote.file_path;
         const dirPath = await getDirPath(oldPath);
         const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
-        // 2- swap value
-        await writeFile(newPath, mdContent);
-        // 3- delete the old redundant File
+        // 2- swap value on disk: delete then write
         await deleteFile(oldPath);
-        // 4- update note in store
+        // mdConten did not live update here
+        await writeFile(newPath, store.getState().notes[noteId]?.content || mdContent);
+        // 3- delete the old redundant in store before upsert note
         deleteNote(oldPath);
+        // 4- update note in store
+        const oldNote = storeNotes[noteId];
         const newNote = {
           ...oldNote,
           id: newPath,
@@ -133,7 +132,7 @@ function Note(props: Props) {
         };
         upsertNote(newNote);
         upsertTree(dirPath, newNote);
-        // nav to renamed note
+        // 5- nav to renamed note
         dispatch({view: 'md', params: {noteId: newPath}});
         
         if (initDir) { 
