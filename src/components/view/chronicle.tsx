@@ -15,7 +15,7 @@ export default function Chronicle() {
   const isLoaded = useStore((state) => state.isLoaded);
   const setIsLoaded = useStore((state) => state.setIsLoaded);
   const initDir = useStore((state) => state.initDir);
-  console.log("c loaded?", isLoaded);
+  // console.log("c loaded?", isLoaded);
   useEffect(() => {
     if (!isLoaded && initDir) {
       loadDir(initDir).then(() => setIsLoaded(true));
@@ -86,7 +86,7 @@ type Props = {
 
 function HeatMapAndList(props: Props) {
   const { onNewDailyNote } = props
-  console.log("heat loaded?");
+  // console.log("heat loaded?");
 
   const notes = useStore((state) => state.notes);
 

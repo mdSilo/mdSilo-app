@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, memo } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
-import { NoteTreeItem, useStore } from 'lib/store';
+import { NoteTreeItem } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarNoteLink from './SidebarNoteLink';
 
@@ -31,8 +31,6 @@ function SidebarNotesTree(props: Props) {
     const id = noteId;
     return id && typeof id === 'string' ? id : undefined;
   }, [noteId]);
-
-  const currentDir = useStore((state) => state.currentDir);
   
   const flattenNode = useCallback(
     (node: NoteTreeItem, depth: number, result: FlattenedNoteTreeItem[]) => {
@@ -68,12 +66,11 @@ function SidebarNotesTree(props: Props) {
           key={`${node.id}-${index}`}
           node={node}
           isHighlighted={node.id === currentNoteId}
-          currentDir={currentDir}
           style={style}
         />
       );
     },
-    [currentDir, currentNoteId, flattenedData]
+    [currentNoteId, flattenedData]
   );
 
   return (

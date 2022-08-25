@@ -4,13 +4,13 @@ import {
 } from 'file/open';
 import { normalizeSlash, getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
+import { Log } from 'file/log';
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);
   // console.log("file path", filePaths);
   const openPaths = typeof filePaths === 'string' ? [filePaths] : filePaths;
   if (openPaths && openPaths.length > 0) {
-    // set currentDir
     const onePath = openPaths[0];
     const parentDir = await getDirPath(onePath);
     // console.log("dir path", parentDir);
@@ -56,6 +56,7 @@ export const onListDir = async () => {
 
 export const listDirPath = async (dirPath: string, noCache = true) => {
   // console.log("dir path", dirPath);
+  Log('Info', `List dir: ${dirPath}`);
   const normalizedDir = await getDirPath(dirPath);
   if (noCache) {
     store.getState().setNoteTree({});

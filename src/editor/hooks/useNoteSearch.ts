@@ -37,7 +37,7 @@ export default function useNoteSearch({
   const myNotes = useCallback(() => {
     const isLoaded = store.getState().isLoaded;
     const initDir = store.getState().initDir;
-    // console.log("loaded?", isLoaded);
+    // console.log("s loaded?", isLoaded);
     if (!isLoaded && initDir) {
       loadDir(initDir).then(() => store.getState().setIsLoaded(true));
     }

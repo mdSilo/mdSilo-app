@@ -7,6 +7,7 @@
 ## [app-v0.4.3] - 2022-XX-XX 
 
 ### Added 
+- Task view
 
 ### Fixed 
 - Loss content on rename 

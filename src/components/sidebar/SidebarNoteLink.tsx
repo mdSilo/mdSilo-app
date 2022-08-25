@@ -18,14 +18,13 @@ import { FlattenedNoteTreeItem } from './SidebarNotesTree';
 interface Props extends HTMLAttributes<HTMLDivElement> {
   node: FlattenedNoteTreeItem;
   isHighlighted?: boolean;
-  currentDir: string | undefined;
 }
 
 const SidebarNoteLink = (
   props: Props,
   forwardedRef: ForwardedRef<HTMLDivElement>
 ) => {
-  const { node, isHighlighted, currentDir, className = '', style, ...otherProps } = props;
+  const { node, isHighlighted, className = '', style, ...otherProps } = props;
   // console.log("node: ", node)
 
   const filePath = node.id;
@@ -77,7 +76,7 @@ const SidebarNoteLink = (
             />
           )}
         </div>
-        <Tooltip content={filePath} disabled={!currentDir || !filePath}>
+        <Tooltip content={filePath} disabled={!filePath}>
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
             {node.title}
           </span>

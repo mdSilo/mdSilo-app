@@ -5,15 +5,11 @@ import FindOrCreateInput from 'components/note/NoteNewInput';
 import { matchSort, SearchLeaf } from 'components/sidebar/SidebarSearch';
 import Tree from 'components/misc/Tree';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
-import { dateCompare, getStrDate } from 'utils/helper';
+import { getStrDate } from 'utils/helper';
 
 export default function Tasks() {
   const currentDir = useStore((state) => state.currentDir);
-  const notes = useStore((state) => state.notes);
-  const notesArr = Object.values(notes);
-  const myNotes = notesArr.filter(n => !n.is_wiki);
-  myNotes.sort((n1, n2) => dateCompare(n2.updated_at, n1.updated_at));
-
+  // console.log("t loaded?");
   const [collapseIds, setCollapseIds] = useState<string[]>([]);
   const onClose = useCallback(
     (ids: string[]) => setCollapseIds(ids), []
@@ -63,7 +59,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">Doing</b>
         </div>
       ),
-      children: [], // TODO getTaskNotes('#doing'),
+      children: getTaskNotes('#doing#'),
     },
     {
       id: 'todo',
@@ -72,7 +68,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">To Do</b>
         </div>
       ),
-      children: [], // TODO getTaskNotes('#todo'),
+      children: getTaskNotes('#todo#'),
     },
     {
       id: 'done',
@@ -81,7 +77,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">Done</b>
         </div>
       ),
-      children: getTaskNotes('#done'),
+      children: getTaskNotes('#done#'),
     },
   ];
 
