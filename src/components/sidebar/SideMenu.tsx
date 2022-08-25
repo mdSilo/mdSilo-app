@@ -167,7 +167,7 @@ const TaskButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'task'} onClick={onClick}>
       <Tooltip
-        content="Track Personal Tasks (Ctrl+Shift+T)"
+        content="Tasks View (Ctrl+Shift+T)"
         placement="right"
         touch={true}
       >

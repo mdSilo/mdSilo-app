@@ -10,14 +10,15 @@
 - Task view
 
 ### Fixed 
-- Loss content on rename 
+- Loss content on rename; 
 - Bug on Chronicle view 
+- Rendering error if any heading folded
 - and a few improvement 
 
 ## [app-v0.4.2] - 2022-08-22 
 
 ### Added  
-- Subscript text (`~sub~`) and superscript text (`^sup^`) support  
+- Subscript text (`-sub-`) and superscript text (`^sup^`) support  
 - Ignore hidden files and folders
 
 

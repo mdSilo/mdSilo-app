@@ -1,23 +1,36 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useStore } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import FindOrCreateInput from 'components/note/NoteNewInput';
 import { matchSort, SearchLeaf } from 'components/sidebar/SidebarSearch';
-import Tree from 'components/misc/Tree';
+import Tree, { TreeNode } from 'components/misc/Tree';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { getStrDate } from 'utils/helper';
+import { loadDir } from 'file/open';
 
 export default function Tasks() {
   const currentDir = useStore((state) => state.currentDir);
-  // console.log("t loaded?");
+  const isLoaded = useStore((state) => state.isLoaded);
+  const setIsLoaded = useStore((state) => state.setIsLoaded);
+  const initDir = useStore((state) => state.initDir);
+  // console.log("t loaded?", isLoaded);
+  useEffect(() => {
+    if (!isLoaded && initDir) {
+      loadDir(initDir).then(() => setIsLoaded(true));
+    }
+  }, [initDir, isLoaded, setIsLoaded]);
+
   const [collapseIds, setCollapseIds] = useState<string[]>([]);
   const onClose = useCallback(
     (ids: string[]) => setCollapseIds(ids), []
   );
 
-  const search = useNoteSearch({ searchContent: true, extendedSearch: true });
-  const getTaskNotes = (searchQuery: string) => {
+  const search = useNoteSearch(
+    { searchContent: true, extendedSearch: true }
+  );
+  const getTaskNotes = useCallback((searchQuery: string) => {
     const searchResults = search(searchQuery);
+    // console.log("search res: ", searchQuery, searchResults);
     return searchResults.map((result, index) => ({
       id: `${result.item.id}-${index}`,
       labelNode: (
@@ -47,11 +60,10 @@ export default function Tasks() {
           }))
         : undefined,
     }))
-  };
-
+  }, [search]);
 
   const taskDivClass = 'flex mt-1 p-1 rounded';
-  const tasks = [
+  const tasks: TreeNode[] = useMemo(() => [
     {
       id: 'doing',
       labelNode: (
@@ -79,7 +91,7 @@ export default function Tasks() {
       ),
       children: getTaskNotes('#done#'),
     },
-  ];
+  ], [getTaskNotes]);
 
   return (
     <>

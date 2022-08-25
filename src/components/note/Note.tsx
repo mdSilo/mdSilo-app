@@ -73,7 +73,8 @@ function Note(props: Props) {
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
       // write to local file
-      updateNote({ id: noteId, not_process: false });
+      // !!Alert: editor will fail if update content here, FIXME: cannot update content
+      updateNote({ id: noteId, not_process: true });
       await writeFile(note?.file_path, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
@@ -88,7 +89,7 @@ function Note(props: Props) {
     async (text: string) => {
       // console.log("on markdown content change", text);
       // write to local file
-      updateNote({ id: noteId, not_process: false });
+      updateNote({ id: noteId, content: text, not_process: false });
       await writeFile(note?.file_path, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
