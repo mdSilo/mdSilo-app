@@ -1,4 +1,5 @@
 import { Component, ReactNode } from 'react';
+import { Log } from 'file/log';
 
 type Props = {
   children: ReactNode;
@@ -19,9 +20,10 @@ export default class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  // componentDidCatch(error: Error) {
-  //   // sentry?
-  // }
+  componentDidCatch(error: Error) {
+    // sentry? TODO
+    Log('Error', `${error.name}: ${error.message}, ${error.cause}, ${error.stack}`);
+  }
 
   render() {
     const { children, fallback } = this.props;
