@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { store } from 'lib/store';
+import { useCallback, useMemo } from 'react';
+import { store, useStore } from 'lib/store';
 import { getStrDate } from 'utils/helper';
+import { Note } from 'types/model';
 
 type ActivityData = {
   activityNum: number; 
@@ -15,13 +16,52 @@ type HeatMapProps = {
   className?: string;
 };
 
-export default function HeatMap({ onClickCell }: HeatMapProps) {
-  const [activeRecord, ] = useState<ActivityRecord>(genData());
+export default function HeatMap(props: HeatMapProps) {
+  const { onClickCell } = props;
 
-  const onDayClick = async (weekIdx: number, dayIdx: number) => {
+  const notes = useStore((state) => state.notes);
+
+  const noteList: Note[] = useMemo(() => {
+    const noteList: Note[] = Object.values(notes) || [];
+    return noteList;
+  }, [notes]);
+
+  const activeRecord = useMemo(() => {
+    const activity: ActivityRecord = {};
+    // current, the update_at maybe overrided
+    //const notes = Object.values(store.getState().notes);
+    const createDays = noteList.map(n => getStrDate(n.created_at));
+    const updateDays = noteList.map(n => getStrDate(n.updated_at));
+    // stored 
+    const storedActivities = store.getState().activities;
+    const storedDays = Object.keys(storedActivities);
+
+    const allDays = [...createDays, ...updateDays, ...storedDays];
+    const allDaysSet = new Set(allDays);
+
+    for (const day of allDaysSet) {
+      const createNum = createDays.filter(d => d === day).length;
+      const updateNum = updateDays.filter(d => d === day).length;
+      const activityNum = createNum + updateNum;
+      const storedDay = storedActivities[day]; // canbe undefined
+
+      activity[day] = {
+        activityNum: Math.max(activityNum, storedDay?.activityNum || 0), 
+        createNum: Math.max(createNum, storedDay?.createNum || 0), 
+        updateNum: Math.max(updateNum, storedDay?.updateNum || 0),
+      };
+    }
+    // console.log("res", activity);
+    // persist in store
+    store.getState().setActivities(activity);
+
+    return activity;
+  }, [noteList]);
+
+  const onDayClick = useCallback(async (weekIdx: number, dayIdx: number) => {
     const date = getDate(weekIdx, dayIdx);
     onClickCell(date);
-  };
+  }, [onClickCell]);
 
   const hmLabelClass = "text-xs fill-gray-500";
 
@@ -82,38 +122,6 @@ function WeekHeatMap({ data, weekIdx, onClick }: WeekProps) {
       ))}
     </g>
   );
-}
-
-function genData(): ActivityRecord {
-  const activity: ActivityRecord = {};
-  // current, the update_at maybe overrided
-  const notes = Object.values(store.getState().notes);
-  const createDays = notes.map(n => getStrDate(n.created_at));
-  const updateDays = notes.map(n => getStrDate(n.updated_at));
-  // stored 
-  const storedActivities = store.getState().activities;
-  const storedDays = Object.keys(storedActivities);
-
-  const allDays = [...createDays, ...updateDays, ...storedDays];
-  const allDaysSet = new Set(allDays);
-
-  for (const day of allDaysSet) {
-    const createNum = createDays.filter(d => d === day).length;
-    const updateNum = updateDays.filter(d => d === day).length;
-    const activityNum = createNum + updateNum;
-    const storedDay = storedActivities[day]; // canbe undefined
-
-    activity[day] = {
-      activityNum: Math.max(activityNum, storedDay?.activityNum || 0), 
-      createNum: Math.max(createNum, storedDay?.createNum || 0), 
-      updateNum: Math.max(updateNum, storedDay?.updateNum || 0),
-    };
-  }
-  // console.log("res", activity);
-  // persist in store
-  store.getState().setActivities(activity);
-
-  return activity;
 }
 
 /** local date format: yyyy-m-d */

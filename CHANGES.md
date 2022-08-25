@@ -6,7 +6,12 @@
 
 ## [app-v0.4.3] - 2022-XX-XX 
 
+### Added 
+
 ### Fixed 
+- Loss content on rename 
+- Bug on Chronicle view 
+- and a few improvement 
 
 ## [app-v0.4.2] - 2022-08-22 
 

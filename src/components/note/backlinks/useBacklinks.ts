@@ -25,7 +25,7 @@ export default function useBacklinks(noteId: string) {
   const isLoaded = useStore((state) => state.isLoaded);
   const setIsLoaded = useStore((state) => state.setIsLoaded);
   const initDir = useStore((state) => state.initDir);
-  // console.log("loaded?", isLoaded);
+  // console.log("b loaded?", isLoaded);
   useEffect(() => {
     if (!isLoaded && initDir) {
       loadDir(initDir).then(() => setIsLoaded(true));
