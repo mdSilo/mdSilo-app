@@ -26,7 +26,10 @@ import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
+import { ciStringEqual, isUrl } from 'utils/helper';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
+
+export const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
 
 export type NodeDatum = {
   id: string;
@@ -42,12 +45,12 @@ export type GraphData = { nodes: NodeDatum[]; links: LinkDatum[] };
 type DragEvent = D3DragEvent<HTMLCanvasElement, NodeDatum, NodeDatum>;
 
 type Props = {
-  data: GraphData;
   className?: string;
 };
 
 export default function ForceGraph(props: Props) {
-  const { data, className } = props;
+  const { className } = props;
+  console.log("f g loaded?");
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const transform = useRef(zoomIdentity);
@@ -57,6 +60,72 @@ export default function ForceGraph(props: Props) {
   const storeNotes = useStore((state) => state.notes);
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
+  const notes = useStore((state) => state.notes);
+
+  // Compute graph data
+  const data: GraphData = useMemo(() => {
+    const data: GraphData = { nodes: [], links: [] };
+    const notesArr = Object.values(notes).filter(n => !n.is_dir && !n.is_wiki);
+
+    // Initialize linksByNoteId: {id: Set[ids]}
+    const linksByNoteId: Record<string, Set<string>> = {};
+    for (const note of notesArr) {
+      linksByNoteId[note.id] = new Set();
+    }
+
+    // initiate tag set, TODO
+    const tagNames: Set<string> = new Set();
+
+    // Search for links in each note
+    for (const note of notesArr) {
+      const link_array: RegExpMatchArray[] = [...note.content.matchAll(LINK_REGEX)];
+      for (const match of link_array) {
+        const href = match[2];
+        if (!isUrl(href)) {
+          const title = href.replaceAll('_', ' ');
+          const existingNote = notesArr.find(n => ciStringEqual(n.title, title));
+          if (existingNote) {
+            linksByNoteId[note.id].add(existingNote.id);
+            linksByNoteId[existingNote.id].add(note.id);
+          }
+        }
+      }
+    }
+
+    // Create graph data
+    for (const note of notesArr) {
+      // Populate links
+      const linkedIds = linksByNoteId[note.id].values(); // including notes and tags
+      const numOfLinks = linksByNoteId[note.id].size;
+      for (const linkedId of linkedIds) {
+        data.links.push({ 
+          source: note.id, 
+          target: linkedId, 
+          ty: tagNames.has(linkedId) ? 'tag' : 'link', 
+        });
+      }
+      // Populate nodes
+      data.nodes.push({
+        id: note.id,
+        name: note.title,
+        radius: getRadius(numOfLinks),
+        ty: 'link',
+      });
+    }
+
+    // update tag nodes to data.nodes
+    for (const tag of tagNames) {
+      // Populate nodes
+      data.nodes.push({
+        id: tag,
+        name: `#${tag}`,
+        radius: 3,
+        ty: 'tag',
+      });
+    }
+
+    return data;
+  }, [notes]);
 
   const neighbors = useMemo(() => {
     const neighbors: Record<string, boolean> = {};
@@ -361,6 +430,13 @@ export default function ForceGraph(props: Props) {
     </div>
   );
 }
+
+const getRadius = (numOfLinks: number) => {
+  const MAX_RADIUS = 10;
+  const BASE_RADIUS = 3;
+  const LINK_MULTIPLIER = 0.5;
+  return Math.min(BASE_RADIUS + LINK_MULTIPLIER * numOfLinks, MAX_RADIUS);
+};
 
 const isNodeDatum = (
   datum: string | number | NodeDatum

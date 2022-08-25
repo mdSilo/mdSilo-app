@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { store, useStore } from 'lib/store';
+import { store } from 'lib/store';
 import { getStrDate } from 'utils/helper';
 import { Note } from 'types/model';
 
@@ -12,24 +12,17 @@ type ActivityData = {
 export type ActivityRecord = Record<string, ActivityData>;
 
 type HeatMapProps = {
+  noteList: Note[];
   onClickCell: (date: string) => void;
   className?: string;
 };
 
 export default function HeatMap(props: HeatMapProps) {
-  const { onClickCell } = props;
-
-  const notes = useStore((state) => state.notes);
-
-  const noteList: Note[] = useMemo(() => {
-    const noteList: Note[] = Object.values(notes) || [];
-    return noteList;
-  }, [notes]);
+  const { noteList, onClickCell } = props;
 
   const activeRecord = useMemo(() => {
     const activity: ActivityRecord = {};
     // current, the update_at maybe overrided
-    //const notes = Object.values(store.getState().notes);
     const createDays = noteList.map(n => getStrDate(n.created_at));
     const updateDays = noteList.map(n => getStrDate(n.updated_at));
     // stored 

@@ -24,7 +24,6 @@ export default function Chronicle() {
 
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
-  const today = getStrDate((new Date()).toString());
 
   const onNewDailyNote = useCallback(async (date: string) => {
     if (!initDir || !regDateStr.test(date)) return;
@@ -54,12 +53,8 @@ export default function Chronicle() {
     dispatch({view: 'md', params: {noteId}});
   }, [dispatch, initDir]);
 
-  const [firstDay, setFirstDay] = useState<string>('');
-  const showDailyNote = (date: string) => {
-    setFirstDay(date);
-  };
+  const today = getStrDate((new Date()).toString());
 
-  
   return (
     <ErrorBoundary>
       <div className="flex flex-1 flex-col flex-shrink-0 py-6 px-12 w-full mx-auto bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
@@ -67,8 +62,8 @@ export default function Chronicle() {
           {initDir ? (
             <FindOrCreateInput
               className="w-full bg-white rounded shadow-popover dark:bg-gray-800"
-            />) : null
-          }
+            />
+          ) : null}
         </div>
         <div className="my-1 p-1 rounded text-center">
           <button onClick={() => dispatch({view: 'journal'})} className="link text-2xl">
@@ -78,30 +73,38 @@ export default function Chronicle() {
             Today : {today}
           </button>
         </div>
-        <HeatMap onClickCell={showDailyNote} />
-        <DateNoteList onNewDailyNote={onNewDailyNote} firstDay={firstDay} />
+        <HeatMapAndList onNewDailyNote={onNewDailyNote} />
       </div>
     </ErrorBoundary>
   );
 }
 
-type DateNotesProps = {
+type Props = {
   onNewDailyNote: (date: string) => void;
-  firstDay: string;
   className?: string;
 };
 
-function DateNoteList(props: DateNotesProps) {
-  const { onNewDailyNote, firstDay } = props
+function HeatMapAndList(props: Props) {
+  const { onNewDailyNote } = props
+  console.log("heat loaded?");
 
   const notes = useStore((state) => state.notes);
+
+  const noteList: Note[] = useMemo(() => {
+    const noteList: Note[] = Object.values(notes) || [];
+    return noteList;
+  }, [notes]);
   
   const sortedNotes = useMemo(() => {
-    const notesArr = Object.values(notes);
-    const myNotes = notesArr.filter(n => !n.is_wiki && !n.is_daily && !n.is_dir);
+    const myNotes = noteList.filter(n => !n.is_wiki && !n.is_daily && !n.is_dir);
     myNotes.sort((n1, n2) => dateCompare(n2.created_at, n1.created_at));
     return myNotes;
-  }, [notes])
+  }, [noteList])
+
+  const [firstDay, setFirstDay] = useState<string>('');
+  const showDailyNote = useCallback((date: string) => {
+    setFirstDay(date);
+  }, []);
 
   const dateArr = useMemo(() => {
     const upDates = sortedNotes.map(n => getStrDate(n.created_at));
@@ -119,16 +122,19 @@ function DateNoteList(props: DateNotesProps) {
   );
   
   return (
-    <div className="overlfow-auto">
-      {dateArr.slice(0,42).map((d, idx) => (
-        <NoteSumList
-          key={`${d}-${idx}`}
-          anchor={d}
-          notes={getDayNotes(d)}
-          isDate={true}
-          onClick={onNewDailyNote} 
-        />
-      ))}
-    </div>
+    <>
+      <HeatMap noteList={noteList} onClickCell={showDailyNote} />
+      <div className="overlfow-auto">
+        {dateArr.slice(0,42).map((d, idx) => (
+          <NoteSumList
+            key={`${d}-${idx}`}
+            anchor={d}
+            notes={getDayNotes(d)}
+            isDate={true}
+            onClick={onNewDailyNote} 
+          />
+        ))}
+      </div>
+    </>
   );
 }

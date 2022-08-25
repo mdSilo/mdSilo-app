@@ -278,9 +278,9 @@ export async function openJSONFilePath(filePath: string) {
 
 /**
  * load all notes with content recursively
- * @param dir initDir
+ * @param dir dir
  */
- export const loadDir = async (dir: string) => {
+const loadDirRecursively = async (dir: string) => {
   const dirInfo = new DirectoryAPI(dir);
   // console.log("dir api", dirInfo)
   if (!(await dirInfo.exists())) return;
@@ -314,8 +314,16 @@ export async function openJSONFilePath(filePath: string) {
   // process recursively
   for (const subdir of processedDirs) {
     upsertNote(subdir);
-    await loadDir(subdir.file_path);
+    await loadDirRecursively(subdir.file_path);
   }
+};
+
+/**
+ * load all notes with content and sub dir
+ * @param dir initDir
+ */
+ export const loadDir = async (dir: string) => {
+  await loadDirRecursively(dir)
   // write the loading to json
   await writeJsonFile(dir); 
 };

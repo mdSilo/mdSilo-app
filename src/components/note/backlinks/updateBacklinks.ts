@@ -1,6 +1,6 @@
 import { store } from 'lib/store';
 import { ciStringEqual, isUrl } from 'utils/helper';
-import { LINK_REGEX } from 'components/view/graph'
+import { LINK_REGEX } from 'components/view/ForceGraph'
 import { writeFile } from 'file/write';
 import { loadDir } from 'file/open';
 import { computeLinkedBacklinks } from './useBacklinks';
