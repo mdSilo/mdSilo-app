@@ -25,7 +25,7 @@ export default function useBacklinks(noteId: string) {
   const isLoaded = useStore((state) => state.isLoaded);
   const setIsLoaded = useStore((state) => state.setIsLoaded);
   const initDir = useStore((state) => state.initDir);
-  console.log("b loaded?", isLoaded);
+  // console.log("b loaded?", isLoaded);
   useEffect(() => {
     if (!isLoaded && initDir) {
       loadDir(initDir).then(() => setIsLoaded(true));
@@ -107,7 +107,7 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
   }
 
   const doc = parser.parse(content);
-  //console.log(">> doc: ", doc, content)
+  // console.log(">> doc: ", doc, content)
   const json = getJSONContent(doc); 
   // console.log(">>json: ", json)
   const result: BacklinkMatch[] = findMatch(json);

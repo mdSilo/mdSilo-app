@@ -28,7 +28,7 @@ type Props = {
 
 function Note(props: Props) {
   const { noteId, className } = props;
-  console.log("loading",noteId)
+  // console.log("loading",noteId)
   const [headings, setHeadings] = useState<Heading[]>([]);
   const editorInstance = useRef<MsEditor>(null);
   const getHeading = () => {

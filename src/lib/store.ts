@@ -42,8 +42,8 @@ export type NoteTreeItem = {
   created_at: string;
   updated_at: string; 
   isDir: boolean;
-  children: NoteTreeItem[];
-  collapsed: boolean;
+  children: NoteTreeItem[]; // to del
+  collapsed: boolean;       // to del
 };
 
 // dir map notes
@@ -74,7 +74,6 @@ export type Store = {
   setCurrentNoteId: Setter<string>;
   noteTree: NoteTree;
   setNoteTree: Setter<NoteTree>;
-  toggleNoteTreeItemCollapsed: (dir: string, noteId: string, toCollapsed?: boolean) => void;
   activities: ActivityRecord;
   setActivities: Setter<ActivityRecord>;
   sidebarTab: SidebarTab;
@@ -142,17 +141,21 @@ export const store = createVanilla<Store>(
         set((state) => {
           const itemsToInsert: NoteTreeItem[] = noteList.map(note => ({ 
             id: note.id, 
-            children: [], 
-            collapsed: true, 
-            isDir: note.is_dir ?? false,
             title: note.title,
             created_at: note.created_at,
             updated_at: note.updated_at,
+            isDir: note.is_dir ?? false,
+            children: [], 
+            collapsed: true, 
           }));
           const targetList = state.noteTree[targetDir] || [];
           const newTargetList = [...targetList, ...itemsToInsert];
-          const newTargetSet = new Set(newTargetList);
-          const newList = Array.from(newTargetSet);
+          const newList: NoteTreeItem[] = [];
+          newTargetList.forEach(item => {
+            if (!newList.some(n => n.id === item.id)) {
+              newList.push(item)
+            }
+          })
           state.noteTree[targetDir] = newList;
         });
       },
@@ -180,13 +183,7 @@ export const store = createVanilla<Store>(
       // The tree of notes visible in the sidebar
       noteTree: {},
       setNoteTree: setter(set, 'noteTree'),
-      // Expands or collapses the tree item with the given noteId, to be del 
-      toggleNoteTreeItemCollapsed: (dir: string, noteId: string, toCollapsed?: boolean) => {
-        set((state) => {
-          toggleTreeItemCollapsed(state.noteTree, dir, noteId, toCollapsed);
-        });
-      },
-
+      // daily activities 
       activities: {},
       setActivities: setter(set, 'activities'),
 
@@ -244,26 +241,6 @@ const deleteTreeItem = (
     }
   }
   return null;
-};
-
-/**
- * Expands or collapses the tree item with the given id, and returns true if it was updated.
- */
-const toggleTreeItemCollapsed = (
-  tree: NoteTree,
-  dir: string,
-  id: string,
-  toCollapsed?: boolean,
-): boolean => {
-  const allItem = tree[dir];
-  for (let i = 0; i < allItem.length; i++) {
-    const item = allItem[i];
-    if (item.id === id) {
-      tree[dir][i] = { ...item, collapsed: toCollapsed ?? !item.collapsed };
-      return true;
-    }
-  }
-  return false;
 };
 
 /**
