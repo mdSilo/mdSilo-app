@@ -55,9 +55,6 @@ export const openDirDilog = async () => {
   // attach listener to monitor changes in dir // TODO
   if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
 
-  store.getState().setMsgModalText('Importing, Please wait...');
-  store.getState().setMsgModalOpen(true);
-
   // 1- get files and dirs
   const dirData = await dirInfo.listDirectory();
   // console.log("dir data 0", dirData);
@@ -92,8 +89,6 @@ export const openDirDilog = async () => {
   upsertTree(dirPath, treeItemList);
 
   // console.log("dir path", dirPath, dir, store.getState().noteTree);
-  
-  closeMsgModal();
 }
 
 /**
@@ -108,9 +103,6 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
 
   // attach listener to monitor changes in dir // TODO
   if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
-
-  store.getState().setMsgModalText('Importing, Please wait...');
-  store.getState().setMsgModalOpen(true);
 
   // 1- get files and dirs
   const dirData = await dirInfo.getFiles();
@@ -142,8 +134,6 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   }
   // 4- upsertTree
   upsertTree(dirPath, treeItemList);
-
-  closeMsgModal();
 }
 
 /**
@@ -353,9 +343,4 @@ export async function openUrl(url: string): Promise<boolean> {
     defaultPath: recentDirPath,
   });
   return dirPath;
-};
-
-const closeMsgModal = () => {
-  store.getState().setMsgModalOpen(false);
-  store.getState().setMsgModalText('');
 };

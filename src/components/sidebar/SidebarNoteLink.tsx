@@ -38,8 +38,6 @@ const SidebarNoteLink = (
     console.log("click, isLoading", isLoading, node.id);
     if (node.isDir) {
       if (isLoading) {
-        store.getState().setMsgModalText('Loading, Please wait...');
-        store.getState().setMsgModalOpen(true);
         return;
       }
       await listDirPath(node.id, false);

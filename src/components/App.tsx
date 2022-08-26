@@ -12,7 +12,6 @@ import MainView from './view/MainView';
 import FindOrCreateModal from './note/NoteNewModal';
 import SettingsModal from './settings/SettingsModal';
 import AboutModal from './settings/AboutModal';
-import MsgModal from './settings/MsgModal';
 
 const App = () => {
   const isFindOrCreateModalOpen= useStore((state) => state.isFindOrCreateModalOpen);
@@ -26,16 +25,6 @@ const App = () => {
   const isSettingsOpen = useStore((state) => state.isSettingsOpen);
   const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
   const isAboutOpen = useStore((state) => state.isAboutOpen); 
-
-  const msgModalText = useStore((state) => state.msgModalText);
-  const setMsgModalText = useStore((state) => state.setMsgModalText);
-  const msgModalOpen = useStore((state) => state.msgModalOpen);
-  const setMsgModalOpen = useStore((state) => state.setMsgModalOpen);
-  const isMsgOpen = msgModalOpen && Boolean(msgModalText.trim());
-  const handleCloseMsg = () => { 
-    setMsgModalOpen(false);
-    setMsgModalText('');
-  };
 
   const hotkeys = useMemo(
     () => [
@@ -94,11 +83,6 @@ const App = () => {
           <AboutModal 
             isOpen={isAboutOpen}
             handleClose={() => setIsAboutOpen(false)} 
-          />
-          <MsgModal 
-            isOpen={isMsgOpen}
-            msg={msgModalText}
-            handleClose={handleCloseMsg} 
           />
         </div>
       </div>

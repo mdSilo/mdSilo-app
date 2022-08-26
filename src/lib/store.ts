@@ -89,10 +89,6 @@ export type Store = {
   setIsLoaded: Setter<boolean>;
   currentDir: string | undefined;  // dir path
   setCurrentDir: Setter<string | undefined>;
-  msgModalText: string; 
-  setMsgModalText: Setter<string>;
-  msgModalOpen: boolean; 
-  setMsgModalOpen: Setter<boolean>;
 } & UserSettings;
 
 type FunctionPropertyNames<T> = {
@@ -207,10 +203,6 @@ export const store = createVanilla<Store>(
       setIsLoaded: setter(set, 'isLoaded'),
       currentDir: undefined,
       setCurrentDir: setter(set, 'currentDir'),
-      msgModalText: '',
-      setMsgModalText: setter(set, 'msgModalText'),
-      msgModalOpen: false,
-      setMsgModalOpen: setter(set, 'msgModalOpen'),
       ...userSettingsSlice(set),
     })),
     {
