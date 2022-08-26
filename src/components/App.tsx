@@ -25,7 +25,17 @@ const App = () => {
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   const isSettingsOpen = useStore((state) => state.isSettingsOpen);
   const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
-  const isAboutOpen = useStore((state) => state.isAboutOpen);
+  const isAboutOpen = useStore((state) => state.isAboutOpen); 
+
+  const msgModalText = useStore((state) => state.msgModalText);
+  const setMsgModalText = useStore((state) => state.setMsgModalText);
+  const msgModalOpen = useStore((state) => state.msgModalOpen);
+  const setMsgModalOpen = useStore((state) => state.setMsgModalOpen);
+  const isMsgOpen = msgModalOpen && Boolean(msgModalText.trim());
+  const handleCloseMsg = () => { 
+    setMsgModalOpen(false);
+    setMsgModalText('');
+  };
 
   const hotkeys = useMemo(
     () => [
@@ -85,7 +95,11 @@ const App = () => {
             isOpen={isAboutOpen}
             handleClose={() => setIsAboutOpen(false)} 
           />
-          <MsgModal />
+          <MsgModal 
+            isOpen={isMsgOpen}
+            msg={msgModalText}
+            handleClose={handleCloseMsg} 
+          />
         </div>
       </div>
     </ProvideCurrentView>
