@@ -55,19 +55,17 @@ export const onListDir = async () => {
 };
 
 export const listDirPath = async (dirPath: string, noCache = true) => {
-  // console.log("dir path", dirPath);
+  console.log("dir path", dirPath);
   Log('Info', `List dir: ${dirPath}`);
   const normalizedDir = await getDirPath(dirPath);
+  store.getState().setCurrentDir(normalizedDir);
   if (noCache) {
     store.getState().setNoteTree({});
-    store.getState().setCurrentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
     await listDir(normalizedDir);
   } else {
     const itemList = store.getState().noteTree[normalizedDir];
-    if (itemList) {
-      store.getState().setCurrentDir(normalizedDir);
-    } else {
+    if (!itemList)  {
       await listDir(normalizedDir);
     }
   }

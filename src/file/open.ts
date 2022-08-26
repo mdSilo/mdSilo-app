@@ -72,23 +72,24 @@ export const openDirDilog = async () => {
   const upsertTree = store.getState().upsertTree;
   const dirPath = dirInfo.dirPath;
   // console.log("dir path 0", dirPath, dir);
-
+  const treeItemList: Note[] = [];
   // 2- upsert store dirs
   for (const subdir of processedDirs) {
     const subDir =  new DirectoryAPI(subdir.file_path);
     if (await subDir.exists()) {
       // console.log("dir path1", dirPath, dir);
-      upsertTree(dirPath, subdir, true);
+      treeItemList.push(subdir);
       upsertNote(subdir); 
     }
   }
-  
   // 3- upsert store md files
   for (const md of processedMds) {
     // console.log("dir path2", dirPath, dir);
-    upsertTree(dirPath, md, false);
+    treeItemList.push(md);
     upsertNote(md);
   }
+  // 4- upsertTree
+  upsertTree(dirPath, treeItemList);
 
   // console.log("dir path", dirPath, dir, store.getState().noteTree);
   
@@ -123,24 +124,25 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const upsertNote = store.getState().upsertNote;
   const upsertTree = store.getState().upsertTree;
   const dirPath = dirInfo.dirPath;
-
+  const treeItemList: Note[] = [];
   // 2- upsert store dirs
   for (const subdir of processedDirs) {
     const subDir =  new DirectoryAPI(subdir.file_path);
     if (await subDir.exists()) {
       // console.log("dir path1", dirPath, dir);
-      upsertTree(dirPath, subdir, true);
+      treeItemList.push(subdir);
       upsertNote(subdir);
     }
   }
-  
   // 3- upsert store md files
   for (const md of processedMds) {
     // console.log("dir path2", dirPath, dir);
-    upsertTree(dirPath, md, false);
+    treeItemList.push(md);
     upsertNote(md);
   }
-  
+  // 4- upsertTree
+  upsertTree(dirPath, treeItemList);
+
   closeMsgModal();
 }
 
@@ -197,7 +199,7 @@ export async function openFilePaths(filePaths: string[]) {
     for (const md of processedRes) {
       upsertNote(md);
       const parentDir = await getParentDir(md.file_path);
-      upsertTree(parentDir, md, false);
+      upsertTree(parentDir, [md]);
       upsertTreeRecursively(parentDir);
     }
     res = true;
@@ -212,7 +214,7 @@ export async function openFilePaths(filePaths: string[]) {
     for (const dir of processedDirs) {
       upsertNote(dir);
       const parentDir = await getParentDir(dir.file_path);
-      upsertTree(parentDir, dir, true);
+      upsertTree(parentDir, [dir]);
       upsertTreeRecursively(parentDir);
     }
     res = true;
@@ -246,7 +248,7 @@ export async function upsertTreeRecursively(dirPath: string) {
   
   const upsertTree = store.getState().upsertTree; 
   const parentDir = await getParentDir(dirPath);
-  upsertTree(parentDir, newDir, true);
+  upsertTree(parentDir, [newDir]);
   // then recursively
   upsertTreeRecursively(parentDir);
   

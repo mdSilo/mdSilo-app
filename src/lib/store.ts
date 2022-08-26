@@ -67,7 +67,7 @@ export type Store = {
   setNotes: Setter<Notes>;
   // operate note
   upsertNote: (note: Note) => void;
-  upsertTree: (targetDir: string, note: Note, isDir?: boolean) => void;
+  upsertTree: (targetDir: string, noteList: Note[], isDir?: boolean) => void;
   updateNote: (note: NoteUpdate) => void;
   deleteNote: (noteId: string) => void;
   currentNoteId: string;
@@ -142,20 +142,22 @@ export const store = createVanilla<Store>(
           // alert: not check title unique, wiki-link will link to first searched note
         });
       },
-      upsertTree: (targetDir: string, note: Note, isDir = false) => {
+      upsertTree: (targetDir: string, noteList: Note[]) => {
         set((state) => {
-          const itemToInsert = { 
+          const itemsToInsert: NoteTreeItem[] = noteList.map(note => ({ 
             id: note.id, 
             children: [], 
             collapsed: true, 
-            isDir,
+            isDir: note.is_dir ?? false,
             title: note.title,
             created_at: note.created_at,
             updated_at: note.updated_at,
-          };
+          }));
           const targetList = state.noteTree[targetDir] || [];
-          insertTreeItem(targetList, itemToInsert);
-          state.noteTree[targetDir] = targetList;
+          const newTargetList = [...targetList, ...itemsToInsert];
+          const newTargetSet = new Set(newTargetList);
+          const newList = Array.from(newTargetSet);
+          state.noteTree[targetDir] = newList;
         });
       },
       // Update the given note
@@ -250,22 +252,6 @@ const deleteTreeItem = (
     }
   }
   return null;
-};
-
-/**
- * Inserts the given item into the tree as a child of the item with targetId, and returns true if it was inserted.
- * If targetId is null, inserts the item into the root level.
- */
-const insertTreeItem = (
-  tree: NoteTreeItem[],
-  item: NoteTreeItem,
-): boolean => {
-  const itemExist = tree.find((n) => n.id === item.id);
-  if (itemExist) { 
-    return true; // existed
-  }
-  tree.push(item);
-  return true;
 };
 
 /**

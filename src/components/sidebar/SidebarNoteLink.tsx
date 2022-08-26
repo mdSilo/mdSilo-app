@@ -31,10 +31,11 @@ const SidebarNoteLink = (
   const filePath = node.id;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const isLoading = useStore((state) => state.isLoading);
-
+  console.log("isLoading", isLoading, node.id);
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick(); 
   const onClickFile = useCallback(async (e) => {
     e.preventDefault();
+    console.log("click, isLoading", isLoading, node.id);
     if (node.isDir) {
       if (isLoading) {
         store.getState().setMsgModalText('Loading, Please wait...');

@@ -28,7 +28,7 @@ type Props = {
 
 function Note(props: Props) {
   const { noteId, className } = props;
-
+  console.log("loading",noteId)
   const [headings, setHeadings] = useState<Heading[]>([]);
   const editorInstance = useRef<MsEditor>(null);
   const getHeading = () => {
@@ -132,7 +132,7 @@ function Note(props: Props) {
           file_path: newPath,
         };
         upsertNote(newNote);
-        upsertTree(dirPath, newNote);
+        upsertTree(dirPath, [newNote]);
         // 5- nav to renamed note
         dispatch({view: 'md', params: {noteId: newPath}});
         
@@ -193,7 +193,7 @@ function Note(props: Props) {
         is_daily: regDateStr.test(title),
       };
       store.getState().upsertNote(newNote);
-      store.getState().upsertTree(parentDir, newNote);
+      store.getState().upsertTree(parentDir, [newNote]);
       await writeFile(notePath, ' ');
       
       return title.replaceAll(/\s/g, '_');

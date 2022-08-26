@@ -18,6 +18,7 @@ function SidebarNotes(props: SidebarNotesProps) {
   
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
+  console.log("note tree", noteTree)
   const [sortedNoteTree, numOfNotes] = useMemo(() => {
     if (currentDir) {
       const treeList = noteTree[currentDir] || [];
