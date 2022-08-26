@@ -4,7 +4,7 @@ import { useStore, store } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
-import HeatMap from 'components/HeatMap';
+import HeatMap from 'components/view/HeatMap';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { dateCompare, getStrDate, regDateStr } from 'utils/helper';
 import { joinPaths } from 'file/util';

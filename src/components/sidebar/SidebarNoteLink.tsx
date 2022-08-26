@@ -7,7 +7,7 @@ import {
   useMemo,
 } from 'react';
 import { IconCaretRight, IconNotes } from '@tabler/icons';
-import { store, useStore } from 'lib/store';
+import { useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
@@ -27,7 +27,6 @@ const SidebarNoteLink = (
 ) => {
   const { node, isHighlighted, className = '', style, ...otherProps } = props;
   // console.log("node: ", node)
-
   const filePath = node.id;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const isLoading = useStore((state) => state.isLoading);

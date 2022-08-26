@@ -4,7 +4,7 @@ import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
-import type { ActivityRecord } from 'components/HeatMap';
+import type { ActivityRecord } from 'components/view/HeatMap';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
 

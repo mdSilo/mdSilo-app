@@ -7,13 +7,16 @@
 ## [app-v0.4.3] - 2022-XX-XX 
 
 ### Added 
-- Task view
+- Task view 
+
+### Changed
+- `-sub-` instead of `~sub~` (conflict with `~~strikethrough~~`)
 
 ### Fixed 
 - Loss content on rename; 
-- Bug on Chronicle view 
-- Rendering error if any heading folded
-- and a few improvement 
+- Bug on Chronicle view;   
+- Bug on message modal(removed);  
+- Rendering error if any heading folded;  
 
 ## [app-v0.4.2] - 2022-08-22 
 
