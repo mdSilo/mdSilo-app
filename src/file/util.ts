@@ -13,7 +13,8 @@ export const isTauri = Boolean(
 
 export const setWindowTitle = (title: string): void => {
 	if (isTauri) {
-		appWindow.getCurrent().setTitle(title);
+    const isLoading = store.getState().isLoading;
+		appWindow.getCurrent().setTitle(`${title} ${isLoading ? ' --- Loading ---' : ''}`);
 	}
 };
 
