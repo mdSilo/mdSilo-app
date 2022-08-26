@@ -323,9 +323,11 @@ const loadDirRecursively = async (dir: string) => {
  * @param dir initDir
  */
  export const loadDir = async (dir: string) => {
+  store.getState().setIsLoading(true);
   await loadDirRecursively(dir)
   // write the loading to json
   await writeJsonFile(dir); 
+  store.getState().setIsLoading(false);
 };
 
 /**

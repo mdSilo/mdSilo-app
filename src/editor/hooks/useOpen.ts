@@ -83,8 +83,10 @@ export const onSave = async () => {
 };
 
 function cleanStore() {
-  // cleaning store
+  // cleaning store, *first tree then notes*
   store.getState().setNoteTree({});
   store.getState().setNotes({});
   store.getState().setCurrentDir(undefined);
+  store.getState().setIsLoaded(false);
+  store.getState().setIsLoading(false);
 }

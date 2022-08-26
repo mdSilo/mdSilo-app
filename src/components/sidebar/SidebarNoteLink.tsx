@@ -3,10 +3,11 @@ import {
   forwardRef,
   HTMLAttributes,
   memo,
+  useCallback,
   useMemo,
 } from 'react';
 import { IconCaretRight, IconNotes } from '@tabler/icons';
-import { useStore } from 'lib/store';
+import { store, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
@@ -29,8 +30,25 @@ const SidebarNoteLink = (
 
   const filePath = node.id;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  
-  const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
+  const isLoading = useStore((state) => state.isLoading);
+
+  const { onClick: onNoteLinkClick } = useOnNoteLinkClick(); 
+  const onClickFile = useCallback(async (e) => {
+    e.preventDefault();
+    if (node.isDir) {
+      if (isLoading) {
+        store.getState().setMsgModalText('Loading, Please wait...');
+        store.getState().setMsgModalOpen(true);
+        return;
+      }
+      await listDirPath(node.id, false);
+    } else {
+      await onNoteLinkClick(node.id);
+    }
+    if (isMobile()) {
+      setIsSidebarOpen(false);
+    }
+  }, [isLoading, node, onNoteLinkClick, setIsSidebarOpen])
   
   // add 16px for every level of nesting, plus 8px base padding
   const leftPadding = useMemo(() => node.depth * 16 + 8, [node.depth]);
@@ -46,17 +64,7 @@ const SidebarNoteLink = (
       <div
         role="button"
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
-        onClick={async (e) => {
-          e.preventDefault();
-          if (node.isDir) {
-            await listDirPath(node.id, false);
-          } else {
-            await onNoteLinkClick(node.id);
-          }
-          if (isMobile()) {
-            setIsSidebarOpen(false);
-          }
-        }}
+        onClick={onClickFile}
         style={{ paddingLeft: `${leftPadding}px` }}
         draggable={false}
       >

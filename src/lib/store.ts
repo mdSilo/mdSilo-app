@@ -83,7 +83,9 @@ export type Store = {
   setSidebarSearchQuery: Setter<string>;
   initDir: string | undefined;  // first open dir path
   setInitDir: Setter<string | undefined>;
-  isLoaded: boolean;  // is all loaded
+  isLoading: boolean;  // is loading all?
+  setIsLoading: Setter<boolean>;
+  isLoaded: boolean;  // is all loaded?
   setIsLoaded: Setter<boolean>;
   currentDir: string | undefined;  // dir path
   setCurrentDir: Setter<string | undefined>;
@@ -197,6 +199,8 @@ export const store = createVanilla<Store>(
       setSidebarSearchQuery: setter(set, 'sidebarSearchQuery'),
       initDir: undefined,
       setInitDir: setter(set, 'initDir'),
+      isLoading: false,
+      setIsLoading: setter(set, 'isLoading'),
       isLoaded: false,
       setIsLoaded: setter(set, 'isLoaded'),
       currentDir: undefined,
