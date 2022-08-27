@@ -58,7 +58,7 @@ function NoteItem(props: NoteItemProps) {
           {note.title}
         </span>
       </button>
-      <MsEditor value={note.content} />
+      <MsEditor value={note.content} disables={['sub']} />
     </div>
   );
 }

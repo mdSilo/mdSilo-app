@@ -281,7 +281,8 @@ function Note(props: Props) {
                     onCreateLink={onCreateNote}
                     onSearchSelectText={(txt) => onSearchText(txt)}
                     onClickHashtag={(txt) => onSearchText(`#${txt}#`)}
-                    onOpenLink={onOpenLink}
+                    onOpenLink={onOpenLink} 
+                    disables={['sub']}
                   />
                 )}
               </div>

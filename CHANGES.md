@@ -9,8 +9,8 @@
 ### Added 
 - Task view 
 
-### Changed
-- `-sub-` instead of `~sub~` (conflict with `~~strikethrough~~`)
+### Removed
+- remove `~sub~` support (conflict with `~~strikethrough~~`)
 
 ### Fixed 
 - Loss content on rename; 
@@ -21,7 +21,7 @@
 ## [app-v0.4.2] - 2022-08-22 
 
 ### Added  
-- Subscript text (`-sub-`) and superscript text (`^sup^`) support  
+- Subscript text (`~sub~`) and superscript text (`^sup^`) support  
 - Ignore hidden files and folders
 
 

@@ -41,7 +41,8 @@ function DefaultView() {
           dark={false} 
           value={defaultValue} 
           onClickHashtag={(text) => { console.info("Click Hahtag: ", text);}}
-          onShowToast={() => {/* nothing*/}}
+          onShowToast={() => {/* nothing*/}} 
+          disables={['sub']}
         />
       </div>
     </ErrorBoundary>
