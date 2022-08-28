@@ -15,6 +15,8 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   const setIsRTL = useStore((state) => state.setIsRTL);
   const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
   const setIsCheckSpellOn = useStore((state) => state.setIsCheckSpellOn);
+  // const readMode = useStore((state) => state.readMode);
+  // const setReadMode = useStore((state) => state.setReadMode);
 
   return (
     <BaseModal title="Settings" isOpen={isOpen} handleClose={handleClose}>
@@ -27,6 +29,13 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           optionLeft="Light" 
           optionRight="Dark"
         />
+        {/* <SettingsToggle
+          name="Write or Read Only" 
+          check={readMode}
+          handleCheck={setReadMode}
+          optionLeft="Write" 
+          optionRight="Read"
+        /> */}
         <SettingsToggle
           name="Spell Check" 
           descript="Spell checker works for English"

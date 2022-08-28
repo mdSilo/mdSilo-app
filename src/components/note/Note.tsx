@@ -40,6 +40,7 @@ function Note(props: Props) {
 
   const darkMode = useStore((state) => state.darkMode);
   const rawMode = useStore((state) => state.rawMode);
+  const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
   
   const initDir = useStore((state) => state.initDir);
@@ -268,6 +269,7 @@ function Note(props: Props) {
                     initialContent={mdContent}
                     onChange={onMarkdownChange}
                     dark={darkMode}
+                    readMode={readMode}
                     className={"text-xl"}
                   />
                 ) : (
@@ -275,6 +277,8 @@ function Note(props: Props) {
                     ref={editorInstance}
                     value={mdContent}
                     dark={darkMode}
+                    readOnly={readMode}
+                    readOnlyWriteCheckboxes={readMode}
                     dir={isRTL ? 'rtl' : 'auto'}
                     onChange={onContentChange}
                     onSearchLink={onSearchNote}
