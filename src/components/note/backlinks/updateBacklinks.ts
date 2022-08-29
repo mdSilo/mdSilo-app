@@ -1,6 +1,6 @@
 import { store } from 'lib/store';
 import { ciStringEqual, isUrl } from 'utils/helper';
-import { LINK_REGEX } from 'components/view/ForceGraph'
+import { LINK_REGEX, WIKILINK_REGEX } from 'components/view/ForceGraph'
 import { writeFile } from 'file/write';
 import { loadDir } from 'file/open';
 import { computeLinkedBacklinks } from './useBacklinks';
@@ -31,8 +31,9 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
       continue;
     }
 
-    const link_array: RegExpMatchArray[] = [...note.content.matchAll(LINK_REGEX)];
     let content = note.content;
+    // CASE: []()
+    const link_array: RegExpMatchArray[] = [...note.content.matchAll(LINK_REGEX)];
     for (const match of link_array) {
       const href = match[2];
       if (!isUrl(href)) {
@@ -46,6 +47,24 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
         }
       }
     }
+    // CASE: [[]]
+    // FIXME: miss `[[]]` on compute backlink 
+    const wiki_array: RegExpMatchArray[] = [...note.content.matchAll(WIKILINK_REGEX)];
+    // console.log("wiki arr", wiki_array, noteTitle, newTitle)
+    for (const match of wiki_array) {
+      const href = match[1];
+      if (!isUrl(href)) {
+        const title = href;
+        if (ciStringEqual(noteTitle, title)) {
+          newTitle = newTitle?.trim();
+          const replaceTo = newTitle
+            ? `[[newTitle]]` // rename
+            : match[1]       // delete
+          content = content.replaceAll(match[0], replaceTo);
+        }
+      }
+    }
+
     // update content and write file
     updateNote({ id: note.id, not_process: false, content });
     await writeFile(note?.file_path, content);

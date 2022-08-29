@@ -80,13 +80,14 @@ export const computeLinkedBacklinks = (
   return result;
 };
 
+// FIXME: miss `[[]]` on compute backlink, the type is labeled as text not wikilink
 const computeLinkedMatches = (content: string, noteTitle: string) => {
   const out: BacklinkMatch[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const findMatch = (node: any, context?: any) => {
     if (node.text && node.marks && node.marks.length > 0) {
       for (const mark of node.marks) {
-        if (mark.type === "link" && mark.attrs) {
+        if ((mark.type === "link" || mark.type === 'wikilink') && mark.attrs) {
           const href = mark.attrs.href;
           if (href && !isUrl(href)) {
             const title = href.replaceAll('_', ' ');
@@ -109,7 +110,7 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
   const doc = parser.parse(content);
   // console.log(">> doc: ", doc, content)
   const json = getJSONContent(doc); 
-  // console.log(">>json: ", json)
+  // console.log(">>json: ", noteTitle, json)
   const result: BacklinkMatch[] = findMatch(json);
 
   return result;

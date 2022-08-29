@@ -30,6 +30,7 @@ import { ciStringEqual, isUrl } from 'utils/helper';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 
 export const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
+export const WIKILINK_REGEX = /\[\[(.+)\]\]/g;
 
 export type NodeDatum = {
   id: string;
@@ -76,13 +77,27 @@ export default function ForceGraph(props: Props) {
     // initiate tag set, TODO
     const tagNames: Set<string> = new Set();
 
-    // Search for links in each note
+    // Search for links in each note 
     for (const note of notesArr) {
+      // CASE []()
       const link_array: RegExpMatchArray[] = [...note.content.matchAll(LINK_REGEX)];
       for (const match of link_array) {
         const href = match[2];
         if (!isUrl(href)) {
           const title = href.replaceAll('_', ' ');
+          const existingNote = notesArr.find(n => ciStringEqual(n.title, title));
+          if (existingNote) {
+            linksByNoteId[note.id].add(existingNote.id);
+            linksByNoteId[existingNote.id].add(note.id);
+          }
+        }
+      }
+      // CASE [[]]
+      const wiki_array: RegExpMatchArray[] = [...note.content.matchAll(WIKILINK_REGEX)];
+      for (const match of wiki_array) {
+        const href = match[1];
+        if (!isUrl(href)) {
+          const title = href;
           const existingNote = notesArr.find(n => ciStringEqual(n.title, title));
           if (existingNote) {
             linksByNoteId[note.id].add(existingNote.id);

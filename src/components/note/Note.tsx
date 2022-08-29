@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import MsEditor, { JSONContent } from "mdsmirror";
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
@@ -185,17 +185,7 @@ function Note(props: Props) {
         return existingNote.title.trim().replaceAll(/\s/g, '_');
       }
       const parentDir = await getDirPath(note?.file_path);
-      const notePath = await joinPaths(parentDir, [`${title}.md`]);
-      const newNote = { 
-        ...defaultNote, 
-        id: notePath, 
-        title,
-        file_path: notePath,
-        is_daily: regDateStr.test(title),
-      };
-      store.getState().upsertNote(newNote);
-      store.getState().upsertTree(parentDir, [newNote]);
-      await writeFile(notePath, ' ');
+      await createNewNote(parentDir, title);
       
       return title.replaceAll(/\s/g, '_');
     },
@@ -216,7 +206,13 @@ function Note(props: Props) {
         const toNote = Object.values(storeNotes).find((n) =>
           ciStringEqual(n.title, title)  // need to be case insensitive?
         );
-        if (!toNote) return;
+        if (!toNote) {
+          // IF note is not existing, create new
+          const parentDir = await getDirPath(note?.file_path);
+          const newNotePath = await createNewNote(parentDir, title);
+          dispatch({view: 'md', params: { noteId: newNotePath }});
+          return;
+        }
         const noteId = await openFileAndGetNoteId(toNote.id);
         dispatch({view: 'md', params: { noteId }});
       }
@@ -323,4 +319,20 @@ const getUntitledTitle = (noteId: string) => {
   }
 
   return getResult();
+};
+
+const createNewNote = async (parentDir: string, title: string) => {
+  const notePath = await joinPaths(parentDir, [`${title}.md`]);
+  const newNote = { 
+    ...defaultNote, 
+    id: notePath, 
+    title,
+    file_path: notePath,
+    is_daily: regDateStr.test(title),
+  };
+  store.getState().upsertNote(newNote);
+  store.getState().upsertTree(parentDir, [newNote]);
+  await writeFile(notePath, ' ');
+
+  return notePath;
 };
