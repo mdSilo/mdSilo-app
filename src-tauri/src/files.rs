@@ -358,6 +358,7 @@ pub async fn copy_file(src_path: String, to_path: String) -> bool {
 }
 
 // copy the assets(image...) to given work dir
+// return (absolute_path, relative_path_to_work_dir )
 #[tauri::command]
 pub async fn copy_file_to_assets(
   src_path: String, 

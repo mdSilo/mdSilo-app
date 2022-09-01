@@ -217,8 +217,15 @@ function Note(props: Props) {
         dispatch({view: 'md', params: { noteId }});
       }
     },
-    [dispatch, storeNotes]
+    [dispatch, note, storeNotes]
   );
+
+   // open Attachment file using defult application
+  // TODO, default application for different file type 
+  // const onClickAttachment = useCallback(async (href: string) => {
+  //   if (!href.startsWith('file:')) return;
+  //   await openUrl(href);  
+  // }, []);
 
   const noteContainerClassName =
     'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-black dark:text-gray-200';
@@ -275,7 +282,7 @@ function Note(props: Props) {
                     dark={darkMode}
                     readOnly={readMode}
                     readOnlyWriteCheckboxes={readMode}
-                    dir={isRTL ? 'rtl' : 'auto'}
+                    dir={isRTL ? 'rtl' : 'ltr'}
                     onChange={onContentChange}
                     onSearchLink={onSearchNote}
                     onCreateLink={onCreateNote}
