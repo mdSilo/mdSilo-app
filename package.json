@@ -67,7 +67,7 @@
     "@types/react-virtualized": "^9.21.21",
     "@types/tailwindcss": "^3.1.0",
     "@typescript-eslint/eslint-plugin": "^5.17.0",
-    "@typescript-eslint/parser": "^5.17.0",
+    "@typescript-eslint/parser": "^5.36.1",
     "autoprefixer": "^10.4.8",
     "postcss": "8.4.14",
     "eslint": "8.12.0",
