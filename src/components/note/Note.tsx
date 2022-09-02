@@ -1,5 +1,7 @@
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
-import MsEditor, { JSONContent } from "mdsmirror";
+import MsEditor, { JSONContent, Attach } from "mdsmirror";
+import { invoke } from '@tauri-apps/api';
+import { convertFileSrc } from '@tauri-apps/api/tauri';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
@@ -12,12 +14,16 @@ import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
+import imageExtensions from 'utils/image-extensions';
+import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
-import { openUrl } from 'file/open';
+import { openFileDilog, openUrl } from 'file/open';
 import { joinPaths, getDirPath, setWindowTitle } from 'file/util';
+import { getFileExt } from 'file/process';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import updateBacklinks from './backlinks/updateBacklinks';
+
 
 type Props = {
   noteId: string;
@@ -42,6 +48,7 @@ function Note(props: Props) {
   const rawMode = useStore((state) => state.rawMode);
   const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
+  const useAsset = useStore((state) => state.useAsset);
   
   const initDir = useStore((state) => state.initDir);
   // console.log("initDir", initDir);
@@ -220,12 +227,48 @@ function Note(props: Props) {
     [dispatch, note, storeNotes]
   );
 
-   // open Attachment file using defult application
-  // TODO, default application for different file type 
-  // const onClickAttachment = useCallback(async (href: string) => {
-  //   if (!href.startsWith('file:')) return;
-  //   await openUrl(href);  
-  // }, []);
+  // attach file 
+  const onAttachFile = useCallback(
+    async (accept: string) => {
+      const ext = accept === 'image/*' ? imageExtensions : ['pdf'];
+      const filePath = await openFileDilog(ext, false);
+      if (filePath && typeof filePath === 'string') {
+        let fullPath = filePath;
+        // console.log("use asset", useAsset)
+        if (initDir && useAsset) {
+          const assetPath = await invoke<string[]>(
+            'copy_file_to_assets', { srcPath: filePath, workDir: initDir }
+          );
+          // console.log("asset path", assetPath)
+          fullPath = assetPath[0] || filePath;
+        }
+        const fileInfo = new FileAPI(fullPath);
+        if (await fileInfo.exists()) {
+          const fileMeta = await fileInfo.getMetadata();
+          const fname = fileMeta.file_name;
+          const fileExt = getFileExt(fname);
+          const fileUrl = accept === 'image/*' 
+            ? convertFileSrc(fullPath)
+            : encodeURI(fullPath);
+          const attach: Attach = {
+            type: accept === 'image/*' ? `image/${fileExt}` : fileExt,
+            name: fname,
+            size: fileMeta.size,
+            src:  fileUrl,
+          };
+          return [attach];
+        }
+      }
+      return [];
+    },
+    [initDir, useAsset]
+  );
+
+   // open Attachment file using defult application 
+  const onClickAttachment = useCallback(async (href: string) => {
+    // console.log("file href", href, decodeURI(href))
+    await openUrl(decodeURI(href));
+  }, []);
 
   const noteContainerClassName =
     'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-black dark:text-gray-200';
@@ -289,6 +332,8 @@ function Note(props: Props) {
                     onSearchSelectText={(txt) => onSearchText(txt)}
                     onClickHashtag={(txt) => onSearchText(`#${txt}#`)}
                     onOpenLink={onOpenLink} 
+                    attachFile={onAttachFile} 
+                    onClickAttachment={onClickAttachment} 
                     disables={['sub']}
                   />
                 )}

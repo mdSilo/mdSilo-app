@@ -2030,15 +2030,10 @@
     "@svgr/plugin-svgo" "^5.5.0"
     loader-utils "^2.0.0"
 
-"@tabler/icons@^1.70.0":
-  version "1.71.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.71.0.tgz#74d771aa18487ea92af07c67048e411ada0f0427"
-  integrity sha512-hOeXAWSXGgT2S8O9QrRTomEq6YE1AtuXrcOy5DgGVI93xub1JnGSA3Z9gZzuND4pSJ+Ee+geI5u8hTYbfIsuGw==
-
-"@tabler/icons@^1.84.0":
-  version "1.84.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.84.0.tgz#b784509a73884ce4c24e3ddba0bb3512be5c681d"
-  integrity sha512-j1ykzKg9XPkuiK3xN8cNVZA+3+ij4gmdRlnxW8dR1QiBDEWHIU0KXIF8Wt1KDC6nR/LmjL+OMJkUdmRj/k2YtQ==
+"@tabler/icons@^1.92.0":
+  version "1.92.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.92.0.tgz#e068938db61d5f932d317a8fd18acd5c0204496e"
+  integrity sha512-eZP5jYvNPtZKiWj1Bn2C+zjvGXhQoormXAyE3TH7ihCxXBHMzKF/ZLYhU3rnMC/+NjuLDBifKc6dmwoh7s62vQ==
 
 "@tailwindcss/forms@^0.5.2":
   version "0.5.2"
@@ -6927,13 +6922,13 @@ mdn-data@2.0.4:
   resolved "https://registry.yarnpkg.com/mdn-data/-/mdn-data-2.0.4.tgz#699b3c38ac6f1d728091a64650b65d388502fd5b"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
 
-mdsmirror@0.1.22:
-  version "0.1.22"
-  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.1.22.tgz#56aa0ac73958a3a901cb050f004f9353e9429b9e"
-  integrity sha512-QeRnyhOa9m1LVd10kMX35pBN29IfKRUblgj6Vg5ymTqnYZhEFipB+OxkuWFiXsoS/BUFsPV07tzddQAN+DSFYw==
+mdsmirror@0.1.23:
+  version "0.1.23"
+  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.1.23.tgz#55a956133f261bcd004f6bcd2e1f453f00a841e2"
+  integrity sha512-wYc0fSvra+EnwUO4Yn9z9MvEMciosRzgkkOJvSU+HbQpo6lAFZUMOL4CrIe5WtK0hUh5oPgNXmKlLG8ADJQ4vA==
   dependencies:
     "@juggle/resize-observer" "^3.3.1"
-    "@tabler/icons" "^1.70.0"
+    "@tabler/icons" "^1.92.0"
     copy-to-clipboard "^3.3.1"
     katex "^0.15.6"
     lodash "^4.17.21"

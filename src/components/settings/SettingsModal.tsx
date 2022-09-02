@@ -15,6 +15,8 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   const setIsRTL = useStore((state) => state.setIsRTL);
   const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
   const setIsCheckSpellOn = useStore((state) => state.setIsCheckSpellOn);
+  const useAsset = useStore((state) => state.useAsset);
+  const setUseAsset = useStore((state) => state.setUseAsset);
   // const readMode = useStore((state) => state.readMode);
   // const setReadMode = useStore((state) => state.setReadMode);
 
@@ -28,6 +30,14 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           handleCheck={setDarkMode}
           optionLeft="Light" 
           optionRight="Dark"
+        />
+        <SettingsToggle
+          name="Use Asset Folder" 
+          descript="Asset Folder to store images, attached files..."
+          check={useAsset}
+          handleCheck={setUseAsset}
+          optionLeft="No" 
+          optionRight="Yes"
         />
         {/* <SettingsToggle
           name="Write or Read Only" 

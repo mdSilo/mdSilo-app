@@ -42,6 +42,8 @@ export type UserSettings = {
   setReadMode: Setter<boolean>;
   rawMode: boolean;  // Raw markdown or WYSIWYG
   setRawMode: Setter<boolean>;
+  useAsset: boolean;
+  setUseAsset: Setter<boolean>;
   recentDir: string[];
   setRecentDir: Setter<string[]>;
 };
@@ -71,6 +73,8 @@ const userSettingsSlice = (
   setReadMode: setter(set, 'readMode'),
   rawMode: false,
   setRawMode: setter(set, 'rawMode'),
+  useAsset: false,
+  setUseAsset: setter(set, 'useAsset'),
   recentDir: [],
   setRecentDir: setter(set, 'recentDir'),
 });

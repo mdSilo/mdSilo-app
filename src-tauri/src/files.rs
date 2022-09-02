@@ -14,6 +14,7 @@ use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
 pub struct SimpleFileMeta {
   file_path: String,
   file_name: String,
+  // file_type: fs::FileType,
   created: SystemTime,
   last_modified: SystemTime, // locale
   last_accessed: SystemTime,
@@ -28,7 +29,7 @@ pub struct SimpleFileMeta {
 pub struct FileMetaData {
   file_path: String,
   file_name: String,
-  //file_type: String,
+  // file_type: fs::FileType,
   file_text: String,
   created: SystemTime,
   last_modified: SystemTime,
@@ -151,7 +152,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
 
   // name.ext
   let file_name = get_basename(file_path).0;
-  //let file_type = metadata.file_type();
+  // let file_type = metadata.file_type();
   let is_dir = metadata.is_dir();
   let is_file = metadata.is_file();
   let is_hidden = check_hidden(file_path);
@@ -176,6 +177,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   Ok(SimpleFileMeta {
     file_path: normalized_path,
     file_name,
+    // file_type,
     created,
     last_modified,
     last_accessed,
@@ -203,6 +205,7 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   Ok(FileMetaData {
     file_path: meta_data.file_path,
     file_name: meta_data.file_name,
+    // file_type: meta_data.file_type,
     file_text,
     created: meta_data.created,
     last_modified: meta_data.last_modified,

@@ -93,6 +93,10 @@ export const rmFileNameExt = (fname: string) => {
   return fname.replace(/\.[^/.]+$/, '');
 }
 
+export const getFileExt = (fname: string) => {
+  return fname.slice((fname.lastIndexOf(".") - 1 >>> 0) + 2);
+}
+
 const checkFileIsMd = (fname: string) => {
   const check = /\.(text|txt|md|mkdn|mdwn|mdown|markdown){1}$/i.test(fname);
   return check;

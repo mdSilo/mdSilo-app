@@ -4,7 +4,15 @@
 
 ### Added 
 
-## [app-v0.4.3] - 2022-XX-XX 
+## [app-v0.4.4] - 2022-XX-XX 
+
+### Added 
+- Add local Image and attach local file 
+
+- [ ] pin recently opened dir 
+
+
+## [app-v0.4.3] - 2022-08-26 
 
 ### Added 
 - Task view 

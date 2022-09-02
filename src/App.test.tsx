@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import * as fileUtil from 'file/util';
-import { rmFileNameExt } from 'file/process';
+import { rmFileNameExt, getFileExt } from 'file/process';
 import { shortenString } from 'utils/helper';
 import App from './components/App';
 
@@ -32,12 +32,15 @@ test('file util', () => {
   expect(fileUtil.trimSlashAll('/\\md/silo\\')).toBe('md/silo');
 })
 
-test('rm file ext', () => {
+test('file ext', () => {
   expect(rmFileNameExt('/home/user/mdsilo.md')).toBe('/home/user/mdsilo');
   expect(rmFileNameExt('/home/user/md.silo.md')).toBe('/home/user/md.silo');
   expect(rmFileNameExt('mdSilo.md')).toBe('mdSilo');
   expect(rmFileNameExt('md.Silo.md')).toBe('md.Silo');
   expect(rmFileNameExt('/home/user/mdsilo')).toBe('/home/user/mdsilo');
+  expect(getFileExt('mdsilo')).toBe('');
+  expect(getFileExt('mdsilo.dmg')).toBe('dmg');
+  expect(getFileExt('md.silo.dmg')).toBe('dmg');
 })
 
 test('string util', () => {
