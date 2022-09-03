@@ -16,7 +16,7 @@ const openFiles = async (multi = true) => {
     // console.log("dir path", parentDir);
     cleanStore();
     store.getState().setCurrentDir(parentDir);
-    store.getState().setRecentDir([parentDir]);
+    store.getState().upsertRecentDir(parentDir);
     await openFilePaths(openPaths);
   }
 };
@@ -30,7 +30,7 @@ export const onOpenDir = async () => {
     cleanStore();
     const normalizedDir = await getDirPath(dirPath);
     store.getState().setCurrentDir(normalizedDir);
-    store.getState().setRecentDir([normalizedDir]);
+    store.getState().upsertRecentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
     await openDir(normalizedDir);
   }
@@ -48,7 +48,7 @@ export const onListDir = async () => {
     const normalizedDir = await getDirPath(dirPath);
     store.getState().setInitDir(normalizedDir);
     store.getState().setCurrentDir(normalizedDir);
-    store.getState().setRecentDir([normalizedDir]);
+    store.getState().upsertRecentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
     await listDir(normalizedDir);
   }

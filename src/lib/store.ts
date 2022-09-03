@@ -214,6 +214,7 @@ export const store = createVanilla<Store>(
         isCheckSpellOn: state.isCheckSpellOn,
         noteSort: state.noteSort,
         recentDir: state.recentDir,
+        pinnedDir: state.pinnedDir,
         activities: state.activities,
       }),
     }

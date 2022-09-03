@@ -1,14 +1,14 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
-  IconFolderPlus, IconFileText, IconDeviceFloppy 
+  IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
 import { onOpenFile, onListDir, onSave } from 'editor/hooks/useOpen';
-import { useStore } from 'lib/store';
+import { store, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
@@ -181,6 +181,11 @@ const TaskButton = (props: ButtonProps) => {
 
 
 export function FileDrop() {
+  const onClear = useCallback(() => {
+    // to see recent history
+    store.getState().setCurrentDir(undefined);
+    // store.getState().setInitDir(undefined);
+  }, []);
   return (
     <>
       <DropdownItem 
@@ -198,7 +203,11 @@ export function FileDrop() {
         <IconFileText size={18} className="mr-1" />
         <Tooltip content="Open .md"><span>Text</span></Tooltip>
       </DropdownItem>
-    </>  
+      <DropdownItem onClick={onClear}>
+        <IconClearAll size={18} className="mr-1" />
+        <Tooltip content="Open Recent History"><span>Recent</span></Tooltip>
+      </DropdownItem>
+    </>
   );
 }
 

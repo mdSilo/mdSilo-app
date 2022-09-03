@@ -6,6 +6,7 @@ import { onOpenFile, onListDir } from 'editor/hooks/useOpen';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree from './SidebarNotesTree';
+import SidebarHistory from './SidebarHistory';
 
 type SidebarNotesProps = {
   className?: string;
@@ -50,6 +51,7 @@ function SidebarNotes(props: SidebarNotesProps) {
           <>
             <button className={btnClass} onClick={onListDir}>Open Folder</button>
             <button className={btnClass} onClick={onOpenFile}>Open File</button>
+            <SidebarHistory />
           </>
         )}
       </div>

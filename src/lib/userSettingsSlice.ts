@@ -46,6 +46,10 @@ export type UserSettings = {
   setUseAsset: Setter<boolean>;
   recentDir: string[];
   setRecentDir: Setter<string[]>;
+  upsertRecentDir: (dir: string) => void;
+  deleteRecentDir: (dir: string) => void;
+  pinnedDir: string;
+  setPinnedDir: Setter<string>;
 };
 
 const userSettingsSlice = (
@@ -77,6 +81,29 @@ const userSettingsSlice = (
   setUseAsset: setter(set, 'useAsset'),
   recentDir: [],
   setRecentDir: setter(set, 'recentDir'),
+  upsertRecentDir: (dir: string) => {
+    set((state) => {
+      const history = state.recentDir || [];
+      const idx = history.indexOf(dir);
+      if (idx >= 0) {
+        history.splice(idx, 1);
+      }
+      history.push(dir);
+      state.recentDir = history;
+    });
+  },
+  deleteRecentDir: (dir: string) => {
+    set((state) => {
+      const history = state.recentDir || [];
+      const idx = history.indexOf(dir);
+      if (idx >= 0) {
+        history.splice(idx, 1);
+      }
+      state.recentDir = history;
+    });
+  },
+  pinnedDir: '',
+  setPinnedDir: setter(set, 'pinnedDir'),
 });
 
 export default userSettingsSlice;
