@@ -44,7 +44,7 @@ function SidebarHistory(props: Props) {
           </Tooltip>
         </div>
       ) : (
-        <p className="text-slate-500">No Pinned Folder</p>
+        <p className="text-slate-500 text-center">No Pinned Folder</p>
       )}
       <b className="text-center m-2">Recent History</b>
       {[...history].reverse().map((item, idx) => (

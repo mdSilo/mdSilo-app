@@ -57,6 +57,17 @@ const App = () => {
     const closeSplash = () => { invoke('close_splashscreen'); };
     document.addEventListener('DOMContentLoaded', closeSplash);
 
+    // TODO: Customize contextmenu  
+    // document.addEventListener(
+    //   "contextmenu",
+    //   function (event) {
+    //     console.log("contex menu", event)
+    //     event.preventDefault();
+    //     return false;
+    //   },
+    //   { capture: true }
+    // );
+  
     return () => {
       document.removeEventListener('DOMContentLoaded', closeSplash, true);
     };
