@@ -44,6 +44,7 @@ function NoteItem(props: NoteItemProps) {
   const { note } = props;
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
+  const darkMode = useStore((state) => state.darkMode);
 
   return (
     <div className="flex flex-col w-full mx-auto overlfow-y-auto">
@@ -58,7 +59,7 @@ function NoteItem(props: NoteItemProps) {
           {note.title}
         </span>
       </button>
-      <MsEditor value={note.content} disables={['sub']} />
+      <MsEditor value={note.content} dark={darkMode} disables={['sub']} />
     </div>
   );
 }

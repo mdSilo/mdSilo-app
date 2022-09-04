@@ -2,10 +2,10 @@ import { useMemo, useEffect } from 'react';
 import { parser, Task, getTasks } from "mdsmirror";
 import { Notes, useStore } from 'lib/store';
 import { loadDir } from 'file/open';
+import { Note } from 'types/model';
 
 export type DocTask = {
-  id: string;
-  title: string;
+  note: Note;
   tasks: Task[];
 };
 
@@ -37,11 +37,7 @@ export const computeTasks = (notes: Notes): DocTask[] => {
   for (const note of myNotes) {
     const tasks = computeNoteTasks(note.content);
     if (tasks.length > 0) {
-      result.push({
-        id: note.id,
-        title:note.title,
-        tasks,
-      });
+      result.push({ note, tasks });
     }
   }
   return result;

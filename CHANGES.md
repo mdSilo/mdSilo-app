@@ -8,8 +8,7 @@
 
 ### Added 
 - Add local Image and attach local file 
-
-- [ ] pin recently opened dir 
+- Recent history 
 
 
 ## [app-v0.4.3] - 2022-08-26 
