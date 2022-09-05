@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
-import MsEditor, { JSONContent, Attach } from "mdsmirror";
+import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import { invoke } from '@tauri-apps/api';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import Title from 'components/note/Title';
@@ -334,6 +334,7 @@ function Note(props: Props) {
                     onOpenLink={onOpenLink} 
                     attachFile={onAttachFile} 
                     onClickAttachment={onClickAttachment} 
+                    embeds={embeds}
                     disables={['sub']}
                   />
                 )}

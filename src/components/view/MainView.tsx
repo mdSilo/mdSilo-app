@@ -57,11 +57,13 @@ This is an editable demo.
 :::
 
 ## Features
-  - 📝 WYSIWYG Markdown Editor: Table, Math, Code block, Wiki Link...  
-  - 🔀 Seamless switch between WYSIWYG and raw Markdown
+  - 📝 WYSIWYG Markdown Editor: Table, Math, Code block, Hashtag...  
+  - 🔀 Seamless switch between WYSIWYG and raw Markdown 
+  - 🗄️ Build personal wiki with bidirectional links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...   
   - 🕸️ Graph view to visualize the networked writing  
-  - 📅 Chronicle view and Daily activities tracker  
+  - 📅 Chronicle view and Daily activities graph  
+  - ✔️ Task view to track todo/doing/done  
   - 🔍 Full-text search 
   - ✨ Available for Windows, macOS, Linux and Web  
 

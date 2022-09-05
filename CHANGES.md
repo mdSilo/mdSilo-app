@@ -7,9 +7,9 @@
 ## [app-v0.4.4] - 2022-XX-XX 
 
 ### Added 
-- Add local Image and attach local file 
 - Recent history  
-
+- Insert local image and attach local file(PDF) 
+- Embed Airtable, Codepen, YouTube, and more  
 
 ## [app-v0.4.3] - 2022-08-26 
 
