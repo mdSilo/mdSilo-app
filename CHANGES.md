@@ -8,7 +8,7 @@
 
 ### Added 
 - Add local Image and attach local file 
-- Recent history 
+- Recent history  
 
 
 ## [app-v0.4.3] - 2022-08-26 
