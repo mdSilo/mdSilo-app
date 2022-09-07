@@ -4,7 +4,7 @@
 
 ### Added 
 
-## [app-v0.4.4] - 2022-XX-XX 
+## [app-v0.4.4] - 2022-09-05 
 
 ### Added 
 - Recent history  
