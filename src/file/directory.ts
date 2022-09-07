@@ -45,7 +45,7 @@ interface DirectoryData {
 }
 
 interface EventPayload {
-  path: string;
+  paths: string[];
   event: string;
 }
 
@@ -148,25 +148,24 @@ class DirectoryAPI {
         // console.log("listen event: ", e);
         // sync the change on listen, set not_process false
         const payload: EventPayload = e.payload;
-        const filePath = payload.path; // FULL PATH
+        const filePaths = payload.paths; // FULL PATH
         const event = payload.event;
-        // console.log("event: ", event);
-        // console.log("file path: ", filePath);
+        // console.log("event kind: ", event);
+        // console.log("file paths: ", filePaths);
         if (event === 'write' || event === 'close_write') {
           const currentNoteId = store.getState().currentNoteId;
-          // console.log("write: ", event, filePath, currentNoteId)
-          // any change on current note will not be loaded
-          if (filePath !== currentNoteId) {
-            await openFilePaths([filePath]);
-            // console.log("updated not_process!");
+          // console.log("write: ", event, filePaths, currentNoteId)
+          // any change on current note will not be loaded 
+          for (const filePath of filePaths) {
+            if (filePath !== currentNoteId) {
+              await openFilePaths([filePath]);
+            }
           }
-        } else if (event === 'rename') {
-          const res = await openFilePaths([filePath]);
-          // docs: https://docs.rs/notify/latest/notify/op/index.html
-          // on Linux, Windows, rename will emit 2 events, including src and dest path 
-          // console.log("open rename file", filePath, res, event)
-          // delete in store
-          if (!res) {
+        } else if (event === 'renameFrom') {
+          const currentNoteId = store.getState().currentNoteId;
+          for (const filePath of filePaths) {
+            // console.log("open renamed file", filePath, event)
+            // delete in store
             const baseName = await getBaseName(filePath);
             let title = baseName[0];
             const isFile = baseName[1];
@@ -174,16 +173,21 @@ class DirectoryAPI {
               title = rmFileNameExt(title);
             }
             await doDeleteNote(filePath, title);
-            const currentNoteId = store.getState().currentNoteId;
             // console.log("delete note: ", res, filePath, currentNoteId);
             if (filePath === currentNoteId) {
               store.getState().setCurrentNoteId('');
             }
           }
+        } else if (event === 'renameTo') {
+          await openFilePaths(filePaths)
+          // for (const filePath of filePaths) {
+          //   const res = await openFilePaths([filePath]);
+          //   console.log("open rename file", filePath, res, event)
+          // }
         } else if (event === 'create') {
           // console.log("create: ", filePath)
           // open, upsert 
-          await openFilePaths([filePath]);
+          await openFilePaths(filePaths);
         }
         callbackFn();
       });

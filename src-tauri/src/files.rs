@@ -6,9 +6,13 @@ extern crate notify;
 extern crate open;
 extern crate trash;
 use crate::paths::{PathBufExt, PathExt};
+use notify::{
+  event::{EventKind, ModifyKind, RenameMode},
+  RecommendedWatcher, Event as RawEvent, RecursiveMode, Watcher, Config
+};
 #[cfg(windows)]
 use std::os::windows::fs::MetadataExt;
-use notify::{raw_watcher, RawEvent, RecursiveMode, Watcher};
+
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct SimpleFileMeta {
@@ -49,7 +53,7 @@ pub struct FolderData {
 
 #[derive(serde::Serialize, Clone)]
 pub struct Event {
-  pub path: String,
+  pub paths: Vec<String>,
   pub event: String,
 }
 
@@ -415,7 +419,9 @@ pub async fn listen_dir(
 ) -> Result<String, String> {
   let (tx, rx) = channel();
 
-  let raw_watch = match raw_watcher(tx) {
+  //let mut watcher = RecommendedWatcher::new(tx, Config::default())?;
+
+  let raw_watch = match RecommendedWatcher::new(tx, Config::default()) {
     Ok(watch) => watch,
     Err(e) => return Err(format!("new watcher err: {}", e)),
   };
@@ -425,53 +431,65 @@ pub async fn listen_dir(
 
   match watcher.lock() {
     Ok(mut mutex_watch) => {
-      mutex_watch.watch(dir.clone(), RecursiveMode::Recursive).unwrap_or(());
+      mutex_watch.watch(dir.as_ref(), RecursiveMode::Recursive).unwrap_or(());
     },
     Err(e) => return Err(format!("lock watcher on listen err: {}", e)),
   };
 
   window.once("unlisten_dir", move |_| {
     if let Ok(mut watch) = watcher.lock() {
-      watch.unwatch(dir.clone()).unwrap_or(());
+      watch.unwatch(dir.as_ref()).unwrap_or(());
     }
   });
 
   loop {
     match rx.recv() {
-      Ok(RawEvent {
-        path: Some(path),
-        op: Ok(op),
-        .. // cookie: Some(cookie),
-      }) => {
-        // println!("event, path: {:?}, op: {:?}, cookie: {}", path, op, cookie);
-        let event = 
-          if op.contains(notify::op::CREATE) {
-            "create"
-          } else if op.contains(notify::op::REMOVE) {
-             "remove"
-          } else if op.contains(notify::op::RENAME) {
-            "rename"
-          } else if op.contains(notify::op::WRITE) {
-            "write"
-          } else if op.contains(notify::op::CLOSE_WRITE) {
-            "close_write"
-          } else {
-            "unknown"
-          };
-        
-        if event != "unknown" {
-          window
-            .emit(
-              "changes", // then Frontend listen the event changes.
-              Event {
-                path: path.normalize_slash().unwrap_or_default(),
-                event: event.to_string(),
+      Ok(event) => { 
+        match event {
+          Ok(RawEvent {
+            paths,  // Vec<PthBuff>
+            kind,   // EventKind: Access,Create,Modify,Remove
+            attrs,  // EventAttributes: tracker, flag... 
+          }) => {
+            println!("event, paths: {:?}, kind: {:?}, attrs: {:?}", paths, kind, attrs);
+
+            let event_kind = match kind {
+              EventKind::Access(_) => "access",
+              EventKind::Create(_) => "create",
+              EventKind::Modify(modify_kind) => {
+                match modify_kind {
+                  ModifyKind::Name(rename) => {
+                    match rename {
+                      RenameMode::To => "renameTo",
+                      RenameMode::From => "renameFrom",
+                      _ => "rename",
+                    }
+                  },
+                  _ => "write",
+                }
               },
-            )
-            .unwrap_or(());
+              EventKind::Remove(_) => "remove",
+              _ => "unknown", 
+            };
+            
+            if event_kind != "unknown" {
+              window
+                .emit(
+                  "changes", // then Frontend listen the event changes.
+                  Event {
+                    paths: paths
+                      .iter()
+                      .map(|path| path.normalize_slash().unwrap_or_default())
+                      .collect(),
+                    event: event_kind.to_string(),
+                  },
+                )
+                .unwrap_or(());
+            }
+          },
+          Err(e) => return Err(format!("error on revieve event: {}", e)),
         }
-      }
-      Ok(event) => println!("Broken Event: {:?}", event),
+      },
       Err(e) => break Err(e.to_string()),
     }
   }
