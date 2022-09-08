@@ -162,6 +162,7 @@ class DirectoryAPI {
             }
           }
         } else if (event === 'renameFrom') {
+          // on Linux, del is renameFrom
           const currentNoteId = store.getState().currentNoteId;
           for (const filePath of filePaths) {
             // console.log("open renamed file", filePath, event)

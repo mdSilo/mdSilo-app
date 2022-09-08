@@ -449,12 +449,12 @@ pub async fn listen_dir(
           Ok(RawEvent {
             paths,  // Vec<PthBuff>
             kind,   // EventKind: Access,Create,Modify,Remove
-            attrs,  // EventAttributes: tracker, flag... 
+            ..      // attrs,  // EventAttributes: tracker, flag... 
           }) => {
-            println!("event, paths: {:?}, kind: {:?}, attrs: {:?}", paths, kind, attrs);
+            // println!("event, paths: {:?}, kind: {:?}, attrs: {:?}", paths, kind, attrs);
 
             let event_kind = match kind {
-              EventKind::Access(_) => "access",
+              // EventKind::Access(_) => "access",
               EventKind::Create(_) => "create",
               EventKind::Modify(modify_kind) => {
                 match modify_kind {
