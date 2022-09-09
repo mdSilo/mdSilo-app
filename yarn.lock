@@ -2035,10 +2035,10 @@
   resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.92.0.tgz#e068938db61d5f932d317a8fd18acd5c0204496e"
   integrity sha512-eZP5jYvNPtZKiWj1Bn2C+zjvGXhQoormXAyE3TH7ihCxXBHMzKF/ZLYhU3rnMC/+NjuLDBifKc6dmwoh7s62vQ==
 
-"@tabler/icons@^1.93.0":
-  version "1.93.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.93.0.tgz#466a0bc96e0b90a2cac9e9b4cf49f4fd8ad1761b"
-  integrity sha512-PNvchJ7wUkMmSi5L1fxSj1eCuQHhznLoZiUtsf7rv+/58fd4SaZPMTqC+c3tw8Ha8VvsmZfLTRlSffDTE9KkJQ==
+"@tabler/icons@^1.94.0":
+  version "1.94.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.94.0.tgz#c0630361f69ec67121da48d694630acc6e6963b9"
+  integrity sha512-yM2lfFjZWRDmPoP3KUdwguls1M2nLzuxrADaM0oBr151wTCOeAcc6KRMV4It4wLt5R3HdxgFHv//IWLgLODhlg==
 
 "@tailwindcss/forms@^0.5.3":
   version "0.5.3"

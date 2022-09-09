@@ -7,6 +7,7 @@ mod files;
 mod paths;
 mod storage;
 mod tests;
+// mod pdf;
 
 use tauri::Manager;
 
@@ -48,6 +49,7 @@ fn main() {
       storage::set_data,
       storage::get_data,
       storage::delete_data,
+      // pdf::write_to_pdf, 
     ])
     .run(tauri::generate_context!())
     .expect("error while running");
