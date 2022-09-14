@@ -15,8 +15,6 @@ pub struct NoteData {
   cover: String,
   created_at: String,
   updated_at: String,
-  is_pub: bool,
-  is_wiki: bool,
   is_daily: bool,
   user_id: String,
   not_process: bool,

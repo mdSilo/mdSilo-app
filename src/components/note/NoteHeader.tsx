@@ -15,8 +15,6 @@ import NoteDelModal from 'components/note/NoteDelModal';
 export default function NoteHeader() {
   const currentNote = useCurrentMdContext();
   const note = useStore((state) => state.notes[currentNote.id]);
-  const isWiki = note?.is_wiki;
-  const isPub = note?.is_pub;
 
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
@@ -46,7 +44,7 @@ export default function NoteHeader() {
   const iconClassName = 'text-gray-600 dark:text-gray-300';
 
   return (
-    <div className={`flex items-center justify-between w-full px-2 py-1 mb-2 text-right ${isWiki ? 'bg-blue-100 dark:bg-blue-900': 'bg-gray-100 dark:bg-gray-800'}`}>
+    <div className={`flex items-center justify-between w-full px-2 py-1 mb-2 text-right`}>
       <div className="flex items-center">
         <span className="text-sm text-gray-300 dark:text-gray-500">WYSIWYG</span>
         <Toggle
@@ -58,41 +56,39 @@ export default function NoteHeader() {
         <span className="text-sm text-gray-300 dark:text-gray-500">Markdown</span>
       </div>
       <div>
-        {!(isWiki || isPub) ? (
-          <Menu>
-            {({ open }) => (
-              <>
-                <Menu.Button ref={menuButtonRef} className={buttonClassName}>
-                  <Tooltip content="Options (Move, Delete...)">
-                    <span className="flex items-center justify-center w-8 h-8">
-                      <IconDots className={iconClassName} />
-                    </span>
-                  </Tooltip>
-                </Menu.Button>
-                {open && (
-                  <Portal>
-                    <Menu.Items
-                      ref={setPopperElement}
-                      className="z-10 w-56 overflow-hidden bg-white rounded shadow-popover dark:bg-gray-800 focus:outline-none"
-                      static
-                      style={styles.popper}
-                      {...attributes.popper}
+        <Menu>
+          {({ open }) => (
+            <>
+              <Menu.Button ref={menuButtonRef} className={buttonClassName}>
+                <Tooltip content="Options (Move, Delete...)">
+                  <span className="flex items-center justify-center w-8 h-8">
+                    <IconDots className={iconClassName} />
+                  </span>
+                </Tooltip>
+              </Menu.Button>
+              {open && (
+                <Portal>
+                  <Menu.Items
+                    ref={setPopperElement}
+                    className="z-10 w-56 overflow-hidden bg-white rounded shadow-popover dark:bg-gray-800 focus:outline-none"
+                    static
+                    style={styles.popper}
+                    {...attributes.popper}
+                  >
+                    <DropdownItem
+                      onClick={onDelClick}
+                      className="border-t dark:border-gray-700"
                     >
-                      <DropdownItem
-                        onClick={onDelClick}
-                        className="border-t dark:border-gray-700"
-                      >
-                        <IconTrash size={18} className="mr-1" />
-                        <span>Delete Permanently</span>
-                      </DropdownItem>
-                      <NoteMetadata noteId={note.id} />
-                    </Menu.Items>
-                  </Portal>
-                )}
-              </>
-            )}
-          </Menu>
-        ) : null}
+                      <IconTrash size={18} className="mr-1" />
+                      <span>Delete Permanently</span>
+                    </DropdownItem>
+                    <NoteMetadata noteId={note.id} />
+                  </Menu.Items>
+                </Portal>
+              )}
+            </>
+          )}
+        </Menu>
       </div>
       {isNoteDelModalOpen ? (
         <Portal>

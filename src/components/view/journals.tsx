@@ -11,7 +11,7 @@ export default function Journals() {
   const currentDir = useStore((state) => state.currentDir);
   const notes = useStore((state) => state.notes);
   const notesArr = Object.values(notes);
-  const dailyNotes = notesArr.filter(n => !n.is_wiki && n.is_daily);
+  const dailyNotes = notesArr.filter(n => n.is_daily);
   dailyNotes.sort((n1, n2) => realDateCompare(strToDate(n2.title), strToDate(n1.title)));
 
   return (

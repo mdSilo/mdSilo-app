@@ -96,7 +96,7 @@ function HeatMapAndList(props: Props) {
   }, [notes]);
   
   const sortedNotes = useMemo(() => {
-    const myNotes = noteList.filter(n => !n.is_wiki && !n.is_daily && !n.is_dir);
+    const myNotes = noteList.filter(n => !n.is_daily && !n.is_dir);
     myNotes.sort((n1, n2) => dateCompare(n2.created_at, n1.created_at));
     return myNotes;
   }, [noteList])

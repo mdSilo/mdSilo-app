@@ -32,8 +32,7 @@ export default function useTasks() {
 
 export const computeTasks = (notes: Notes): DocTask[] => {
   const result: DocTask[] = [];
-  const notesArr = Object.values(notes);
-  const myNotes = notesArr.filter(n => !n.is_wiki);
+  const myNotes = Object.values(notes);
   for (const note of myNotes) {
     const tasks = computeNoteTasks(note.content);
     if (tasks.length > 0) {

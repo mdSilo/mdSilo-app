@@ -55,7 +55,6 @@ function Note(props: Props) {
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
   const note: NoteType = useStore((state) => state.notes[noteId]);
-  const isPub = note?.is_pub ?? false;
   const isDaily = note?.is_daily ?? false;
   // get title and content value
   const title = note?.title || '';
@@ -303,7 +302,6 @@ function Note(props: Props) {
                 initialTitle={title}
                 onChange={onTitleChange}
                 isDaily={isDaily}
-                isPub={isPub}
               />
               {!rawMode && headings.length > 0 
                 ? (<Toc headings={headings} />) 
@@ -364,7 +362,6 @@ const getUntitledTitle = (noteId: string) => {
     notesArr.findIndex(
       (note) =>
         note?.id !== noteId &&
-        !note?.is_wiki && 
         ciStringEqual(note?.title, getResult())
     ) > -1
   ) {

@@ -6,7 +6,6 @@ type Props = {
   onChange: (value: string) => void;
   className?: string;
   isDaily?: boolean;
-  isPub?: boolean;
 };
 
 function Title(props: Props) {
@@ -14,8 +13,7 @@ function Title(props: Props) {
     initialTitle, 
     onChange, 
     className = '', 
-    isDaily = false, 
-    isPub = false 
+    isDaily = false,
   } = props;
   const titleRef = useRef<HTMLDivElement | null>(null);
 
@@ -58,7 +56,7 @@ function Title(props: Props) {
         document.execCommand('insertText', false, text);
       }}
       onBlur={emitChange}
-      contentEditable={!(readMode || isDaily || isPub)}
+      contentEditable={!(readMode || isDaily)}
       spellCheck={isCheckSpellOn}
     />
   );

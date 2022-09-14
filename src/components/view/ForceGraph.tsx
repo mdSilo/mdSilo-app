@@ -66,7 +66,7 @@ export default function ForceGraph(props: Props) {
   // Compute graph data
   const data: GraphData = useMemo(() => {
     const data: GraphData = { nodes: [], links: [] };
-    const notesArr = Object.values(notes).filter(n => !n.is_dir && !n.is_wiki);
+    const notesArr = Object.values(notes).filter(n => !n.is_dir);
 
     // Initialize linksByNoteId: {id: Set[ids]}
     const linksByNoteId: Record<string, Set<string>> = {};

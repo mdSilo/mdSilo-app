@@ -12,7 +12,7 @@ export { default as shallowEqual } from 'zustand/shallow';
 
 type NoteUpdate = PickPartial<
   Note, // id required
-  'title' | 'content' | 'file_path' | 'cover' | 'created_at' | 'updated_at' | 'is_pub' | 'is_wiki' | 'is_daily'
+  'title' | 'content' | 'file_path' | 'cover' | 'created_at' | 'updated_at' | 'is_daily'
 >;
 
 const immer =

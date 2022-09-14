@@ -62,8 +62,7 @@ export const computeLinkedBacklinks = (
   }
 
   const result: Backlink[] = [];
-  const notesArr = Object.values(notes);
-  const myNotes = notesArr.filter(n => !n.is_wiki);
+  const myNotes = Object.values(notes);
   for (const note of myNotes) {
     if (ciStringEqual(note.title, noteTitle)) {
       continue;
@@ -127,9 +126,7 @@ const computeUnlinkedBacklinks = (
   }
 
   const result: Backlink[] = [];
-  const notesArr = Object.values(notes);
-  // filter out isWiki
-  const myNotes = notesArr.filter(n => !n.is_wiki);
+  const myNotes = Object.values(notes);
   for (const note of myNotes) {
     if (ciStringEqual(note.title, noteTitle)) {
       continue;

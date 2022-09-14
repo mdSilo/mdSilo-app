@@ -38,10 +38,9 @@ export async function deleteFile(filePath: string) {
  */
 export async function writeAllFile(dirPath: string, notesObj: Notes) {
   // save mds
-  const notesArr = Object.values(notesObj);
-  const myNotes = notesArr.filter(n => !n.is_wiki);
+  const myNotes = Object.values(notesObj);
   for (const note of myNotes) {
-    const fileName = note.is_wiki ? `wiki_${note.title}.md` : `${note.title}.md`;
+    const fileName = `${note.title}.md`;
     const notePath = await joinPaths(dirPath, [fileName]);
     const content = note.content;
     await writeFile(notePath, content);
