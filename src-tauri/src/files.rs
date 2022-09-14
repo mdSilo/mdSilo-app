@@ -31,24 +31,24 @@ pub struct SimpleFileMeta {
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct FileMetaData {
-  file_path: String,
-  file_name: String,
-  // file_type: fs::FileType,
-  file_text: String,
-  created: SystemTime,
-  last_modified: SystemTime,
-  last_accessed: SystemTime,
-  size: u64,
-  readonly: bool,
-  is_dir: bool,
-  is_file: bool,
-  is_hidden: bool,
+  pub file_path: String,
+  pub file_name: String,
+  // pub file_type: fs::FileType,
+  pub file_text: String,
+  pub created: SystemTime,
+  pub last_modified: SystemTime,
+  pub last_accessed: SystemTime,
+  pub size: u64,
+  pub readonly: bool,
+  pub is_dir: bool,
+  pub is_file: bool,
+  pub is_hidden: bool,
 }
 
 #[derive(serde::Serialize)]
 pub struct FolderData {
-  number_of_files: u16,
-  files: Vec<FileMetaData>,
+  pub number_of_files: u16,
+  pub files: Vec<FileMetaData>,
 }
 
 #[derive(serde::Serialize, Clone)]
