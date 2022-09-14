@@ -31,6 +31,7 @@ export const onOpenDir = async () => {
   if (dirPath && typeof dirPath === 'string') {
     cleanStore();
     const normalizedDir = await getDirPath(dirPath);
+    store.getState().setInitDir(normalizedDir);
     store.getState().setCurrentDir(normalizedDir);
     store.getState().upsertRecentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
@@ -38,10 +39,9 @@ export const onOpenDir = async () => {
   }
 };
 
-// used for 4: 
+// used for list init dir: 
 // SidebarNotes init Open Folder,
-// File Drop(SidebarNotesBar Dropdown-Folder, SideMenu/FileButton Dropdown-Folder),
-// SidebarNoteList - SidebarNoteLink - sub-folder, 
+// File Drop(SidebarNotesBar Dropdown-Folder, SideMenu/FileButton Dropdown-Folder)
 export const onListDir = async () => {
   const dirPath = await openDirDilog();
   // console.log("dir path", dirPath);
@@ -52,11 +52,17 @@ export const onListDir = async () => {
     store.getState().setCurrentDir(normalizedDir);
     store.getState().upsertRecentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
+    // listen on init dir only
     await listDir(normalizedDir);
+    // load dir/sub-dirs to json on rust end 
     invoke<boolean>('write_json', { dir: normalizedDir });
   }
 };
 
+// use for list sub-dir: 
+// SidebarNoteLink, to sub-dir
+// SidebarNotesBar, to upper-dir
+// SidebarHistory, to recent dir 
 export const listDirPath = async (dirPath: string, noCache = true) => {
   // console.log("dir path", dirPath);
   Log('Info', `List dir: ${dirPath}`);
@@ -65,11 +71,11 @@ export const listDirPath = async (dirPath: string, noCache = true) => {
   if (noCache) {
     store.getState().setNoteTree({});
     // console.log("rencent dir path", store.getState().recentDir);
-    await listDir(normalizedDir);
+    await listDir(normalizedDir, false);
   } else {
     const itemList = store.getState().noteTree[normalizedDir];
     if (!itemList)  {
-      await listDir(normalizedDir);
+      await listDir(normalizedDir, false);
     }
   }
 };

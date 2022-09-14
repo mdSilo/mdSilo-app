@@ -120,11 +120,11 @@ function HistoryItem(props: ItemProps) {
 
 function subDirPath(dir: string) {
   const parts = dir.split(/[/\\]/);
-  const last1 = parts.pop() || '';
+  const last1 = parts.pop() || '.';
   const last2 = parts.pop() || '';
-  const newDir = `~/${last2}/${last1}`;
+  const newDir = `~${last2 ? '/' : ''}${last2}/${last1}`;
   const len = newDir.length;
   const start = Math.max(len - 20, 0);
-  const prefix= start > 0 ? '...' : ''
+  const prefix = start > 0 ? '...' : ''
   return prefix + newDir.substring(start);
 }
