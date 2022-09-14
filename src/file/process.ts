@@ -9,7 +9,7 @@ export function processJson(content: string): NotesData {
     return notesData;
   } catch (e) {
     // console.log('Please Check the JSON file: ', e);
-    return {isLoaded: false, notesObj: {}, noteTree: {}};
+    return {isloaded: false, notesobj: {}, notetree: {}};
   }
 }
 

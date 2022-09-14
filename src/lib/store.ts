@@ -50,9 +50,9 @@ export type NoteTreeItem = {
 export type NoteTree = Record<Note['id'], NoteTreeItem[]>;
 
 export type NotesData = {
-  isLoaded: boolean;
-  notesObj: Notes;
-  noteTree: NoteTree;
+  isloaded: boolean;
+  notesobj: Notes;
+  notetree: NoteTree;
   activities?: ActivityRecord;
 }
 

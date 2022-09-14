@@ -2,9 +2,9 @@ import type { UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri'
 import { doDeleteNote } from 'editor/hooks/useDeleteNote';
 import { store } from 'lib/store';
-import { openFilePaths } from './open';
+import { openFilePaths, openJSONFilePath } from './open';
 import { rmFileNameExt } from './process';
-import { isTauri, normalizeSlash, joinPath, getBaseName } from './util';
+import { isTauri, normalizeSlash, joinPath, getBaseName, joinPaths } from './util';
 
 interface SystemTime {
   nanos_since_epoch: number; // locale
@@ -190,7 +190,18 @@ class DirectoryAPI {
           // open, upsert 
           await openFilePaths(filePaths);
         } else if (event === 'loaded') {
-          console.log("load: ", filePaths)
+          console.log("load: ", filePaths, event)
+          if (!filePaths || filePaths.length < 1) return;
+          // json to store 
+          const dir = filePaths[0];
+          const jsonPath = await joinPaths(dir, ['mdsilo.json']);
+          const jsonData = await openJSONFilePath(jsonPath);
+          if (jsonData) {
+            store.getState().setNotes(jsonData.notesobj);
+            //store.getState().setNoteTree(jsonData.notetree);
+            store.getState().setIsLoaded(true);
+            store.getState().setIsLoading(false);
+          }
         }
         callbackFn();
       });

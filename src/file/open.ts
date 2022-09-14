@@ -280,9 +280,9 @@ const loadDirRecursively = async (dir: string) => {
   // firstly, try to use json to avoid heavy loading job 
   const jsonPath = await joinPaths(dir, ['mdsilo.json']);
   const jsonData = await openJSONFilePath(jsonPath);
-  const isLoaded = jsonData?.isLoaded;
+  const isLoaded = jsonData?.isloaded;
   if (isLoaded) {
-    store.getState().setNotes(jsonData.notesObj);
+    store.getState().setNotes(jsonData.notesobj);
     return;
   }
 
