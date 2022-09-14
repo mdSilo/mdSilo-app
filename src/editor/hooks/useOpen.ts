@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api';
 import { store } from 'lib/store';
 import { 
   openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog 
@@ -5,6 +6,7 @@ import {
 import { normalizeSlash, getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
 import { Log } from 'file/log';
+
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);
@@ -51,6 +53,7 @@ export const onListDir = async () => {
     store.getState().upsertRecentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
     await listDir(normalizedDir);
+    invoke<boolean>('write_json', { dir: normalizedDir });
   }
 };
 

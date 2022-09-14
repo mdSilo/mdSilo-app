@@ -333,6 +333,16 @@ export async function openUrl(url: string): Promise<boolean> {
 }
 
 /**
+ * load dir / sub-dirs and write to json on rust end 
+ * @returns boolean 
+ */
+ export async function loadOpenDir(dir: string): Promise<boolean> {
+  return await invoke<boolean>(
+    'write_json', { dir }
+  );
+}
+
+/**
  * dialog to get dir path to save data
  * @returns 
  */

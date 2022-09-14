@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::path::Path;
-use std::time::{UNIX_EPOCH};
-use chrono::{Local, TimeZone, SecondsFormat};
+use std::time::UNIX_EPOCH;
+use chrono::{Utc, TimeZone, SecondsFormat};
 use async_recursion::async_recursion;
-use crate::files::{read_directory, write_file}; 
+use crate::files::{read_directory, write_file, EventPayload}; 
 use crate::storage::get_data;
 
 #[derive(serde::Serialize, Clone, Debug, Default)]
@@ -41,13 +41,13 @@ pub struct ActivityData {
   update_num: u32,
 }
 
-pub type ActivityRecord = HashMap<String, ActivityData>;
+pub type ActivityRecord = HashMap<String, ActivityData>; 
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct JsonData {
-  is_loaded: bool,
-  notes_obj: NotesData,
-  note_tree: NoteTree,
+  isloaded: bool,
+  notesobj: NotesData,
+  notetree: NoteTree,
   activities: ActivityRecord,
 }
 
@@ -63,21 +63,24 @@ pub async fn load_dir_recursively(
   // loop 
   let mut tree_items = Vec::new();
   for file in files {
-    let file_name = file.file_name.clone();
-    let file_title = Path::new(&file_name)
+    let fname = file.file_name.clone();
+    let is_dir = file.is_dir;
+    let check_md = !is_dir && (fname.ends_with(".md") || fname.ends_with(".txt"));
+    if !is_dir && !check_md { continue; }
+
+    let file_title = Path::new(&fname)
       .file_stem()
       .unwrap_or_default()
       .to_owned()
       .into_string()
       .unwrap_or_default();
     let file_path = file.file_path.clone();
-    let is_dir = file.is_dir;
 
     let mod_since_the_epoch = file.last_modified
       .duration_since(UNIX_EPOCH)
       .unwrap_or_default()
       .as_millis();
-    let last_mod_date = Local
+    let last_mod_date = Utc
       .timestamp_millis(mod_since_the_epoch as i64)
       .to_rfc3339_opts(SecondsFormat::Millis, true);
 
@@ -85,7 +88,7 @@ pub async fn load_dir_recursively(
       .duration_since(UNIX_EPOCH)
       .unwrap_or_default()
       .as_millis();
-    let created_date = Local
+    let created_date = Utc
       .timestamp_millis(create_since_the_epoch as i64)
       .to_rfc3339_opts(SecondsFormat::Millis, true);
 
@@ -127,7 +130,7 @@ pub async fn load_dir(dir: &str) -> (NotesData, NoteTree) {
   // init data and tree
   let mut notes_data: NotesData = HashMap::new();
   let mut notes_tree: NoteTree = HashMap::new();
-  load_dir_recursively(dir, &mut notes_data, &mut notes_tree);
+  load_dir_recursively(dir, &mut notes_data, &mut notes_tree).await;
 
   return (notes_data, notes_tree);
 }
@@ -142,17 +145,31 @@ pub fn get_activity_data() -> ActivityRecord {
 }
 
 #[tauri::command]
-pub async fn write_json(dir: String) {
+pub async fn write_json(dir: String, window: tauri::Window) -> bool {
+  println!("load dir: {}", dir);
   let notes_data = load_dir(&dir).await;
   let activity = get_activity_data();
   let data = JsonData {
-    is_loaded: true,
-    notes_obj: notes_data.0,
-    note_tree: notes_data.1,
+    isloaded: true,
+    notesobj: notes_data.0,
+    notetree: notes_data.1,
     activities: activity,
   };
 
   let json = serde_json::to_string(&data).unwrap_or_default();
   let to_dir = format!("{}/mdsilo.json", dir);
-  write_file(to_dir, json).await;
+  let res = write_file(to_dir, json).await; 
+
+  window.emit(
+    "changes", 
+    EventPayload {
+      paths: vec![dir],
+      event: if res { String::from("loaded") } else { String::from("unloaded") },
+    },
+  )
+  .unwrap_or(());
+
+  println!("loaded dir?: {}", res);
+
+  return res;
 }

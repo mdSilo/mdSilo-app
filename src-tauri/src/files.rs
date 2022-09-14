@@ -52,7 +52,7 @@ pub struct FolderData {
 }
 
 #[derive(serde::Serialize, Clone)]
-pub struct Event {
+pub struct EventPayload {
   pub paths: Vec<String>,
   pub event: String,
 }
@@ -473,18 +473,17 @@ pub async fn listen_dir(
             };
             
             if event_kind != "unknown" {
-              window
-                .emit(
-                  "changes", // then Frontend listen the event changes.
-                  Event {
-                    paths: paths
-                      .iter()
-                      .map(|path| path.normalize_slash().unwrap_or_default())
-                      .collect(),
-                    event: event_kind.to_string(),
-                  },
-                )
-                .unwrap_or(());
+              window.emit(
+                "changes", // then Frontend listen the event changes.
+                EventPayload {
+                  paths: paths
+                    .iter()
+                    .map(|path| path.normalize_slash().unwrap_or_default())
+                    .collect(),
+                  event: event_kind.to_string(),
+                },
+              )
+              .unwrap_or(());
             }
           },
           Err(e) => return Err(format!("error on revieve event: {}", e)),

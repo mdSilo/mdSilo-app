@@ -186,9 +186,11 @@ class DirectoryAPI {
           //   console.log("open rename file", filePath, res, event)
           // }
         } else if (event === 'create') {
-          // console.log("create: ", filePath)
+          // console.log("create: ", filePaths)
           // open, upsert 
           await openFilePaths(filePaths);
+        } else if (event === 'loaded') {
+          console.log("load: ", filePaths)
         }
         callbackFn();
       });
