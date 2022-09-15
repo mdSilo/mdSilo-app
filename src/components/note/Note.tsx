@@ -81,7 +81,7 @@ function Note(props: Props) {
       // console.log("on content change", text.length, json);
       // write to local file
       // !!Alert: editor will fail if update content here, FIXME: cannot update content
-      updateNote({ id: noteId, not_process: true });
+      // updateNote({ id: noteId });
       await writeFile(note?.file_path, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
@@ -89,14 +89,14 @@ function Note(props: Props) {
       // update TOC if any 
       getHeading();
     },
-    [initDir, note?.file_path, noteId, updateNote]
+    [initDir, note?.file_path]
   );
 
   const onMarkdownChange = useCallback(
     async (text: string) => {
       // console.log("on markdown content change", text);
       // write to local file
-      updateNote({ id: noteId, content: text, not_process: false });
+      updateNote({ id: noteId, content: text });
       await writeFile(note?.file_path, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
@@ -134,8 +134,7 @@ function Note(props: Props) {
         const newNote = {
           ...oldNote,
           id: newPath,
-          title: newTitle, 
-          not_process: false,
+          title: newTitle,
           file_path: newPath,
         };
         upsertNote(newNote);

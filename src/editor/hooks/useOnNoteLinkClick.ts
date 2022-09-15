@@ -21,10 +21,8 @@ export default function useOnNoteLinkClick() {
 }
 
 
-// openFile if not_process. use case:
-// 1- openDir, preProcess first, set not_process fasle, then process on click
-// 2- listen dir change, set not_process false if any change, reload change on click
-// 3- always reload file. there are 7 to open note: 
+// openFile, use case:
+// always reload file. there are 7 to open note: 
 //    inline note link,
 //    onNoteLinkClick(side note list, backlink)
 //    graph view, 

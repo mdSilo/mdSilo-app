@@ -66,7 +66,7 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
     }
 
     // update content and write file
-    updateNote({ id: note.id, not_process: false, content });
+    updateNote({ id: note.id, content });
     await writeFile(note?.file_path, content);
   }
 };

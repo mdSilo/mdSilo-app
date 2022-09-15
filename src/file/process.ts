@@ -40,7 +40,6 @@ export function processMds(fileList: FileMetaData[]) {
       created_at: createdDate,
       updated_at: lastModDate,
       is_daily: isDaily,
-      not_process: false,
       file_path: filePath,
     };
     const newProcessedNote = {...defaultNote, ...newNoteObj};

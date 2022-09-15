@@ -15,8 +15,6 @@ export type Note = {
   created_at: string;
   updated_at: string;
   is_daily: boolean;
-  user_id?: User['id'] | null;
-  not_process?: boolean;
   is_dir?: boolean;
 };
 

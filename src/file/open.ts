@@ -214,6 +214,33 @@ export async function openFilePaths(filePaths: string[]) {
 }
 
 /**
+ * Open and process md file or dir
+ * @param filePath
+ * @returns Promise<Note[]>
+ */
+ export async function openFilePath(filePath: string) {
+  const files = [];
+  const dirs = [];
+
+  const fileInfo = new FileAPI(filePath);
+  if (await fileInfo.exists()) {
+    const fileMeta = await fileInfo.getMetadata();
+    if (fileMeta.is_file) {
+      files.push(fileMeta);
+    } else {
+      dirs.push(fileMeta);
+    }
+  }
+  
+  // process files
+  const processedRes = processMds(files);
+  // process dirs
+  const processedDirs = processDirs(dirs);
+
+  return [...processedDirs, ...processedRes];
+}
+
+/**
  * upsert dir to Tree Recursively till initDIr
  * @param dirPath 
  * @returns 

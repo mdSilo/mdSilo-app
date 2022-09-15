@@ -146,7 +146,7 @@ class DirectoryAPI {
       const { getCurrent } = await import('@tauri-apps/api/window');
       listener = await getCurrent().listen('changes', async (e: Event) => {
         // console.log("listen event: ", e);
-        // sync the change on listen, set not_process false
+        // sync the change on listen
         const payload: EventPayload = e.payload;
         const filePaths = payload.paths; // FULL PATH
         const event = payload.event;

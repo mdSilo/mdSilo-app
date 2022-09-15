@@ -16,8 +16,6 @@ pub struct NoteData {
   created_at: String,
   updated_at: String,
   is_daily: bool,
-  user_id: String,
-  not_process: bool,
   is_dir: bool,
 }
 
