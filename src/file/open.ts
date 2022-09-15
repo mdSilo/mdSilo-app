@@ -361,12 +361,11 @@ export async function openUrl(url: string): Promise<boolean> {
 
 /**
  * load dir / sub-dirs and write to json on rust end 
- * @returns boolean 
+ * @returns  
  */
- export async function loadOpenDir(dir: string): Promise<boolean> {
-  return await invoke<boolean>(
-    'write_json', { dir }
-  );
+ export async function loadOpenDir(dir: string): Promise<void> {
+  store.getState().setIsLoading(true);
+  invoke<boolean>('write_json', { dir });
 }
 
 /**

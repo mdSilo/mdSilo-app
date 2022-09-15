@@ -48,21 +48,28 @@ export const onListDir = async () => {
   if (dirPath && typeof dirPath === 'string') {
     cleanStore();
     const normalizedDir = await getDirPath(dirPath);
-    store.getState().setInitDir(normalizedDir);
-    store.getState().setCurrentDir(normalizedDir);
-    store.getState().upsertRecentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
-    // listen on init dir only
-    await listDir(normalizedDir);
-    // load dir/sub-dirs to json on rust end 
-    invoke<boolean>('write_json', { dir: normalizedDir });
+    await listInitDir(normalizedDir);
   }
+};
+
+// use for list init dir
+// onListDir 
+// SidebarHistory, to recent dir 
+export const listInitDir = async (dirPath: string) => {
+  store.getState().setInitDir(dirPath);
+  store.getState().setCurrentDir(dirPath);
+  store.getState().upsertRecentDir(dirPath);
+  // listen on init dir only
+  await listDir(dirPath);
+  // load dir/sub-dirs to json on rust end 
+  invoke<boolean>('write_json', { dir: dirPath });
+  store.getState().setIsLoading(true);
 };
 
 // use for list sub-dir: 
 // SidebarNoteLink, to sub-dir
 // SidebarNotesBar, to upper-dir
-// SidebarHistory, to recent dir 
 export const listDirPath = async (dirPath: string, noCache = true) => {
   // console.log("dir path", dirPath);
   Log('Info', `List dir: ${dirPath}`);

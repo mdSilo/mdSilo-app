@@ -37,7 +37,7 @@ function SidebarNotesBar(props: Props) {
           onClick={async (e) => {
             e.preventDefault();
             if (!currentDir || currentDir === initDir) return;
-            const parentDir = await getParentDir(currentDir);
+            const parentDir: string = await getParentDir(currentDir);
             await listDirPath(parentDir, false);
           }}
           disabled={checkInit}

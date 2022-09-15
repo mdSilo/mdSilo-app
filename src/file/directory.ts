@@ -190,7 +190,7 @@ class DirectoryAPI {
           // open, upsert 
           await openFilePaths(filePaths);
         } else if (event === 'loaded') {
-          console.log("load: ", filePaths, event)
+          // console.log("load: ", filePaths, event);
           if (!filePaths || filePaths.length < 1) return;
           // json to store 
           const dir = filePaths[0];

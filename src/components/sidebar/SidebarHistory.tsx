@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { IconPin, IconTrash } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
-import { listDirPath } from 'editor/hooks/useOpen';
+import { listInitDir } from 'editor/hooks/useOpen';
 
 type Props = {
   className?: string;
@@ -14,18 +14,14 @@ function SidebarHistory(props: Props) {
   const history: string[] = useStore((state) => state.recentDir);
   const deleteRecentDir = useStore((state) => state.deleteRecentDir);
   const setRecentDir = useStore((state) => state.setRecentDir);
-  const upsertRecentDir = useStore((state) => state.upsertRecentDir);
   const pinnedDir: string = useStore((state) => state.pinnedDir);
   const setPinnedDir = useStore((state) => state.setPinnedDir);
-  const setInitDir = useStore((state) => state.setInitDir);
 
   const openRecentDir = useCallback(
     async (e: React.MouseEvent<HTMLDivElement, MouseEvent>, dir: string) => {
       e.preventDefault();
-      setInitDir(dir);
-      upsertRecentDir(dir);
-      await listDirPath(dir, false);
-    }, [setInitDir, upsertRecentDir]
+      await listInitDir(dir);
+    }, []
   );
 
   return (

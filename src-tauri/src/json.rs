@@ -144,7 +144,6 @@ pub fn get_activity_data() -> ActivityRecord {
 
 #[tauri::command]
 pub async fn write_json(dir: String, window: tauri::Window) -> bool {
-  println!("load dir: {}", dir);
   let notes_data = load_dir(&dir).await;
   let activity = get_activity_data();
   let data = JsonData {
@@ -158,6 +157,8 @@ pub async fn write_json(dir: String, window: tauri::Window) -> bool {
   let to_dir = format!("{}/mdsilo.json", dir);
   let res = write_file(to_dir, json).await; 
 
+  println!("loaded dir: {} ? -> {}", dir, res);
+
   window.emit(
     "changes", 
     EventPayload {
@@ -166,8 +167,6 @@ pub async fn write_json(dir: String, window: tauri::Window) -> bool {
     },
   )
   .unwrap_or(());
-
-  println!("loaded dir?: {}", res);
 
   return res;
 }
