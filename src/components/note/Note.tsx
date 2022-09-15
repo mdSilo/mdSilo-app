@@ -11,6 +11,7 @@ import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
+import { listDirPath } from 'editor/hooks/useOpen';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
@@ -18,7 +19,7 @@ import imageExtensions from 'utils/image-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
 import { openFileDilog, openUrl } from 'file/open';
-import { joinPaths, getDirPath, setWindowTitle } from 'file/util';
+import { joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir } from 'file/util';
 import { getFileExt } from 'file/process';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
@@ -51,6 +52,7 @@ function Note(props: Props) {
   const useAsset = useStore((state) => state.useAsset);
   
   const initDir = useStore((state) => state.initDir);
+  const currentDir = useStore((state) => state.currentDir);
   // console.log("initDir", initDir);
   // get some property of note
   const storeNotes = useStore((state) => state.notes);
@@ -59,6 +61,10 @@ function Note(props: Props) {
   // get title and content value
   const title = note?.title || '';
   const mdContent = note?.content || '';
+  const notePath = note?.file_path;
+  const shortNotePath = initDir && notePath 
+    ? notePath.replace(initDir, normalizeSlash(initDir).split('/').pop() || '.')
+    : notePath;
 
   // for context 
   const currentView = useCurrentViewContext();
@@ -82,14 +88,14 @@ function Note(props: Props) {
       // write to local file
       // !!Alert: editor will fail if update content here, FIXME: cannot update content
       // updateNote({ id: noteId });
-      await writeFile(note?.file_path, text);
+      await writeFile(notePath, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
       }
       // update TOC if any 
       getHeading();
     },
-    [initDir, note?.file_path]
+    [initDir, notePath]
   );
 
   const onMarkdownChange = useCallback(
@@ -97,12 +103,12 @@ function Note(props: Props) {
       // console.log("on markdown content change", text);
       // write to local file
       updateNote({ id: noteId, content: text });
-      await writeFile(note?.file_path, text);
+      await writeFile(notePath, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
       }
     },
-    [initDir, note?.file_path, noteId, updateNote]
+    [initDir, notePath, noteId, updateNote]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`);
@@ -189,12 +195,12 @@ function Note(props: Props) {
       if (existingNote) {
         return existingNote.title.trim().replaceAll(/\s/g, '_');
       }
-      const parentDir = await getDirPath(note?.file_path);
+      const parentDir = await getDirPath(notePath);
       await createNewNote(parentDir, title);
       
       return title.replaceAll(/\s/g, '_');
     },
-    [note?.file_path, storeNotes]
+    [notePath, storeNotes]
   );
 
   // open link
@@ -213,7 +219,7 @@ function Note(props: Props) {
         );
         if (!toNote) {
           // IF note is not existing, create new
-          const parentDir = await getDirPath(note?.file_path);
+          const parentDir = await getDirPath(notePath);
           const newNotePath = await createNewNote(parentDir, title);
           dispatch({view: 'md', params: { noteId: newNotePath }});
           return;
@@ -222,7 +228,7 @@ function Note(props: Props) {
         dispatch({view: 'md', params: { noteId }});
       }
     },
-    [dispatch, note, storeNotes]
+    [dispatch, notePath, storeNotes]
   );
 
   // attach file 
@@ -296,6 +302,17 @@ function Note(props: Props) {
           <NoteHeader />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col flex-1 w-full mx-auto px-8 md:px-12">
+              <div
+                className="px-2 pb-1 text-slate-500 text-sm cursor-pointer"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  const parentDir: string = await getParentDir(notePath);
+                  if (parentDir === currentDir) return;
+                  await listDirPath(parentDir, false);
+                }}
+              >
+                {shortNotePath}
+              </div>
               <Title
                 className="px-2 pb-1"
                 initialTitle={title}
