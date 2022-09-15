@@ -202,6 +202,8 @@ class DirectoryAPI {
             store.getState().setIsLoaded(true);
             store.getState().setIsLoading(false);
           }
+        } else if (event === 'unloaded') {
+          store.getState().setIsLoaded(false);
         }
         callbackFn();
       });

@@ -1,7 +1,6 @@
-import { invoke } from '@tauri-apps/api';
 import { store } from 'lib/store';
 import { 
-  openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog 
+  openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir 
 } from 'file/open';
 import { normalizeSlash, getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
@@ -63,8 +62,7 @@ export const listInitDir = async (dirPath: string) => {
   // listen on init dir only
   await listDir(dirPath);
   // load dir/sub-dirs to json on rust end 
-  invoke<boolean>('write_json', { dir: dirPath });
-  store.getState().setIsLoading(true);
+  loadDir(dirPath);
 };
 
 // use for list sub-dir: 

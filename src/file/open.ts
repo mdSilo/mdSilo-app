@@ -5,8 +5,7 @@ import { defaultNote, Note } from 'types/model';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds, processDirs } from './process';
-import { getParentDir, getBaseName, joinPaths } from './util';
-import { writeJsonFile } from './write';
+import { getParentDir, getBaseName } from './util';
 
 /* 
 Open files: 
@@ -296,76 +295,23 @@ export async function openJSONFilePath(filePath: string) {
 // backlinks(useBacklinks, updateBacklinks)
 
 /**
- * load all notes with content recursively
- * @param dir dir
+ * load dir / sub-dirs and write to json on rust end 
+ * @returns void 
  */
-const loadDirRecursively = async (dir: string) => {
-  const dirInfo = new DirectoryAPI(dir);
-  // console.log("dir api", dirInfo)
-  if (!(await dirInfo.exists())) return;
-
-  // firstly, try to use json to avoid heavy loading job 
-  const jsonPath = await joinPaths(dir, ['mdsilo.json']);
-  const jsonData = await openJSONFilePath(jsonPath);
-  const isLoaded = jsonData?.isloaded;
-  if (isLoaded) {
-    store.getState().setNotes(jsonData.notesobj);
-    return;
-  }
-
-  const upsertNote = store.getState().upsertNote;
-  // otherwise: 
-  // 1- get files
-  const dirData = await dirInfo.getFiles();
-  const files = dirData.files.filter(f => !f.is_hidden);
-  
-  // 2- process mds and upsert store
-  const mds = files.filter(f => f.is_file);
-  const processedMds =  mds.length ? processMds(mds) : [];
-  // upsert 
-  for (const md of processedMds) {
-    upsertNote(md);
-  }
-
-  // 3- process sub-dirs recursively
-  const dirs = files.filter(f => f.is_dir);
-  const processedDirs = dirs.length ? processDirs(dirs) : [];
-  // process recursively
-  for (const subdir of processedDirs) {
-    upsertNote(subdir);
-    await loadDirRecursively(subdir.file_path);
-  }
-};
-
-/**
- * load all notes with content and sub dir
- * @param dir initDir
- */
- export const loadDir = async (dir: string) => {
+export async function loadDir(dir: string) {
+  const isLoading = store.getState().isLoading;
+  if (isLoading) return;
+  invoke<boolean>('write_json', { dir });
+  console.log("trigger loadDir", dir, isLoading);
   store.getState().setIsLoading(true);
-  await loadDirRecursively(dir)
-  // write the loading to json
-  await writeJsonFile(dir); 
-  store.getState().setIsLoading(false);
-};
+}
 
 /**
  * open an url
  * @returns boolean, if opened
  */
 export async function openUrl(url: string): Promise<boolean> {
-  return await invoke<boolean>(
-    'open_url', { url }
-  );
-}
-
-/**
- * load dir / sub-dirs and write to json on rust end 
- * @returns  
- */
- export async function loadOpenDir(dir: string): Promise<void> {
-  store.getState().setIsLoading(true);
-  invoke<boolean>('write_json', { dir });
+  return await invoke<boolean>('open_url', { url });
 }
 
 /**
