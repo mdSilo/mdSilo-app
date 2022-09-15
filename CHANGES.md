@@ -1,8 +1,12 @@
 # Changelog 
 
-## [app-v0.5.0] - 2022-XX-XX
+## [app-v0.5.0] - 2022-XX-XX 
+
+## [app-v0.4.5] - 2022-XX-XX
 
 ### Added 
+- Create new folder on move note 
+
 
 ## [app-v0.4.4] - 2022-09-05 
 

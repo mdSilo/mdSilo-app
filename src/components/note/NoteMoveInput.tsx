@@ -1,16 +1,18 @@
 import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState, useEffect } from 'react';
-import { IconChevronsUp, IconSearch, TablerIcon } from '@tabler/icons';
+import { IconChevronsUp, IconFolderPlus, IconSearch, TablerIcon } from '@tabler/icons';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store, useStore } from 'lib/store';
 import type { Note } from 'types/model';
 import { ciStringCompare } from 'utils/helper';
 import FileAPI from 'file/files';
 import { loadDir } from 'file/open';
+import { createDirRecursive, joinPaths } from 'file/util';
 
 enum OptionType {
   DIR,
   ROOT,
+  NEW,
 }
 
 type Option = {
@@ -36,6 +38,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const isLoaded = useStore((state) => state.isLoaded);
   const setIsLoaded = useStore((state) => state.setIsLoaded);
   const initDir = useStore((state) => state.initDir);
+  const currentDir = useStore((state) => state.currentDir);
   // console.log("loaded?", isLoaded);
   useEffect(() => {
     if (!isLoaded && initDir) {
@@ -75,6 +78,12 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           .slice(0, 9)
       );
     } else {
+      result.push({
+        id: 'NEW_FOLDER',
+        type: OptionType.NEW,
+        text: `New Folder: ${inputTxt}`,
+        icon: IconFolderPlus,
+      });
       result.push(
         ...searchResults
           .filter((result) => result.item.id !== noteId)
@@ -96,6 +105,12 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         tarDir = initDir;
       } else if (option.type === OptionType.DIR) {
         tarDir = option.id;
+      } else if (option.type === OptionType.NEW) {
+        if (currentDir) {
+          const newDir = await joinPaths(currentDir, [inputTxt]);
+          const res = await createDirRecursive(newDir);
+          tarDir = res ? newDir : undefined;
+        }
       }
       // move file in disk and store
       if (tarDir) {
@@ -107,7 +122,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         }
       }
     },
-    [onOptionClickCallback, initDir, noteId, notes]
+    [onOptionClickCallback, initDir, currentDir, inputTxt, noteId, notes]
   );
 
   const onKeyDown = useCallback(

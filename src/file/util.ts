@@ -57,7 +57,7 @@ export const joinPath = (...args: string[]): string => {
  * @param {string[]} parts path parts
  * @returns {Promise<string>} joined path
  */
- export const joinPaths = async (root: string, parts: string[]): Promise<string> => {
+export const joinPaths = async (root: string, parts: string[]): Promise<string> => {
   return await invoke('join_paths', { root, parts });
 };
 
@@ -66,7 +66,7 @@ export const joinPath = (...args: string[]): string => {
  * @param {string} dirPath 
  * @returns {Promise<boolean>}
  */
- export const createDirRecursive = async (dirPath: string): Promise<boolean> => {
+export const createDirRecursive = async (dirPath: string): Promise<boolean> => {
   return await invoke('create_dir_recursive', { dirPath });
 };
 

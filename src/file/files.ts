@@ -131,7 +131,7 @@ class FileAPI {
 
 	/**
    * move file to dir
-   * @returns {Promise<string | undefined>}
+   * @returns new file path
    */
 	async moveFile(tar: string): Promise<string | undefined> {
 		if (typeof this.fileName === 'string') {
