@@ -157,7 +157,7 @@ pub async fn write_json(dir: String, window: tauri::Window) -> bool {
   let to_dir = format!("{}/mdsilo.json", dir);
   let res = write_file(to_dir, json).await; 
 
-  println!("loaded dir: {} ? -> {}", dir, res);
+  // println!("loaded dir: {} ? -> {}", dir, res);
 
   window.emit(
     "changes", 

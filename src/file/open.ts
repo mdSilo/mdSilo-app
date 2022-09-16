@@ -325,7 +325,7 @@ export async function loadDir(dir: string) {
   const isLoading = store.getState().isLoading;
   if (isLoading) return;
   invoke<boolean>('write_json', { dir });
-  console.log("trigger loadDir", dir, isLoading);
+  // console.log("trigger loadDir", dir, isLoading);
   store.getState().setIsLoading(true);
 }
 

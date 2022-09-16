@@ -4,8 +4,9 @@
 
 ## [app-v0.4.5] - 2022-XX-XX
 
-### Added 
-- Create new folder on move note 
+- Create new folder on move note  
+- Move loading directory job to backend(Rust)  
+- Fixed some bugs  
 
 
 ## [app-v0.4.4] - 2022-09-05 
