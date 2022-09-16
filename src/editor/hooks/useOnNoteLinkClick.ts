@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { openFilePaths } from 'file/open';
+import { openFilePath } from 'file/open';
 
 export default function useOnNoteLinkClick() {
   const currentView = useCurrentViewContext();
@@ -9,8 +9,10 @@ export default function useOnNoteLinkClick() {
   const onClick = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (toId: string, highlightedPath?: any) => {
-      const noteId = await openFileAndGetNoteId(toId);
-      const hash = highlightedPath ? `0-${highlightedPath}` : '';
+      const note = await openFilePath(toId, true);
+      if (!note) return;
+      const noteId = note.id;
+      const hash = highlightedPath ? `0-${highlightedPath}` : ''; // TODO
       dispatch({view: 'md', params: {noteId, hash}});
       return;
     },
@@ -19,23 +21,3 @@ export default function useOnNoteLinkClick() {
 
   return { onClick };
 }
-
-
-// openFile, use case:
-// always reload file. there are 7 to open note: 
-//    inline note link,
-//    onNoteLinkClick(side note list, backlink)
-//    graph view, 
-//    when switch mode, 
-//    sum list(chronicle)
-//    journal
-export const openFileAndGetNoteId = async (noteId: string) => {
-  const filePath = noteId;
-
-  if (filePath) {
-    // console.log("re-load: ", filePath);
-    await openFilePaths([filePath]);
-  }
-
-  return noteId;
-};

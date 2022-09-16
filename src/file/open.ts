@@ -1,6 +1,6 @@
 import * as dialog from '@tauri-apps/api/dialog';
 import { invoke } from '@tauri-apps/api/tauri';
-import { store } from 'lib/store';
+import { Notes, store } from 'lib/store';
 import { defaultNote, Note } from 'types/model';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
@@ -212,12 +212,21 @@ export async function openFilePaths(filePaths: string[]) {
   return res;
 }
 
+// openFile, use case:
+// always reload file. there are 7 to open note: 
+//    inline note link,
+//    onNoteLinkClick(side note list, backlink)
+//    graph view, 
+//    when switch mode, 
+//    sum list(chronicle)
+//    journal
+
 /**
  * Open and process md file or dir
  * @param filePath
- * @returns Promise<Note[]>
+ * @returns Promise<Note | undefined>
  */
- export async function openFilePath(filePath: string) {
+ export async function openFilePath(filePath: string, setCurrent: boolean) {
   const files = [];
   const dirs = [];
 
@@ -229,18 +238,32 @@ export async function openFilePaths(filePaths: string[]) {
     } else {
       dirs.push(fileMeta);
     }
+  } else {
+    return;
   }
   
   // process files
   const processedRes = processMds(files);
   // process dirs
   const processedDirs = processDirs(dirs);
+  const note = [...processedDirs, ...processedRes][0];
+  if (note) {
+    store.getState().upsertNote(note);
+    const parentDir = await getParentDir(note.file_path);
+    store.getState().upsertTree(parentDir, [note]);
+    upsertTreeRecursively(parentDir);
+    if (setCurrent) {
+      const cNote: Notes = {};
+      cNote[note.id] = note;
+      store.getState().setCurrentNote(cNote);
+    }
+  }
 
-  return [...processedDirs, ...processedRes];
+  return note;
 }
 
 /**
- * upsert dir to Tree Recursively till initDIr
+ * upsert dir to Tree Recursively till initDir
  * @param dirPath 
  * @returns 
  */

@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { useStore, store } from 'lib/store';
+import { useStore, store, Notes } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import NoteSumList from 'components/note/NoteSumList';
 import FindOrCreateInput from 'components/note/NoteNewInput';
 import HeatMap from 'components/view/HeatMap';
-import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { dateCompare, getStrDate, regDateStr } from 'utils/helper';
 import { joinPaths } from 'file/util';
 import { defaultNote, Note } from 'types/model';
-import { loadDir } from 'file/open';
+import { loadDir, openFilePath } from 'file/open';
 
 export default function Chronicle() {
   const isLoaded = useStore((state) => state.isLoaded);
@@ -27,9 +26,8 @@ export default function Chronicle() {
 
   const onNewDailyNote = useCallback(async (date: string) => {
     if (!initDir || !regDateStr.test(date)) return;
-    const genNoteId = await joinPaths(initDir, ['daily', `${date}.md`]);
-    const noteId = await openFileAndGetNoteId(genNoteId);
-    const note = store.getState().notes[noteId];
+    const noteId = await joinPaths(initDir, ['daily', `${date}.md`]);
+    const note = await openFilePath(noteId, true);
     if (!note) {
       const newNote: Note = {
         ...defaultNote,
@@ -49,8 +47,11 @@ export default function Chronicle() {
       };
       store.getState().upsertTree(initDir, [newDailyDir]); 
       store.getState().upsertTree(dailyDir, [newNote]); 
+      const cNote: Notes = {};
+      cNote[noteId] = newNote;
+      store.getState().setCurrentNote(cNote);
     }
-    dispatch({view: 'md', params: {noteId}});
+    dispatch({view: 'md', params: { noteId }});
   }, [dispatch, initDir]);
 
   const today = getStrDate((new Date()).toString());

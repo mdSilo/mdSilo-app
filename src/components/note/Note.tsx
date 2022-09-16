@@ -10,7 +10,6 @@ import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
-import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
 import { listDirPath } from 'editor/hooks/useOpen';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
@@ -18,7 +17,7 @@ import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
 import imageExtensions from 'utils/image-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
-import { openFileDilog, openUrl } from 'file/open';
+import { openFileDilog, openFilePath, openUrl } from 'file/open';
 import { joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir } from 'file/util';
 import { getFileExt } from 'file/process';
 import NoteHeader from './NoteHeader';
@@ -29,7 +28,7 @@ import updateBacklinks from './backlinks/updateBacklinks';
 type Props = {
   noteId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  highlightedPath?: any;
+  highlightedPath?: any; // TODO 
   className?: string;
 };
 
@@ -54,14 +53,13 @@ function Note(props: Props) {
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
   // console.log("initDir", initDir);
-  // get some property of note
   const storeNotes = useStore((state) => state.notes);
-  const note: NoteType = useStore((state) => state.notes[noteId]);
-  const isDaily = note?.is_daily ?? false;
-  // get title and content value
-  const title = note?.title || '';
-  const mdContent = note?.content || '';
-  const notePath = note?.file_path;
+  // get note and properties: title,  content value.... 
+  const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
+  const isDaily = thisNote?.is_daily ?? false;
+  const title = thisNote?.title || '';
+  const mdContent = thisNote?.content || '';
+  const notePath = thisNote?.file_path;
   const shortNotePath = initDir && notePath 
     ? notePath.replace(initDir, normalizeSlash(initDir).split('/').pop() || '.')
     : notePath;
@@ -85,9 +83,8 @@ function Note(props: Props) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
-      // write to local file
-      // !!Alert: editor will fail if update content here, FIXME: cannot update content
-      // updateNote({ id: noteId });
+      // write to local file and store
+      updateNote({ id: noteId, content: text });
       await writeFile(notePath, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
@@ -95,13 +92,13 @@ function Note(props: Props) {
       // update TOC if any 
       getHeading();
     },
-    [initDir, notePath]
+    [initDir, noteId, notePath, updateNote]
   );
 
   const onMarkdownChange = useCallback(
     async (text: string) => {
       // console.log("on markdown content change", text);
-      // write to local file
+      // write to local file and store
       updateNote({ id: noteId, content: text });
       await writeFile(notePath, text);
       if (initDir) { 
@@ -125,13 +122,13 @@ function Note(props: Props) {
         await updateBacklinks(title, newTitle); 
         // on rename file: 
         // 0- reload the old note to store.  
-        const oldPath = await openFileAndGetNoteId(noteId);
+        await openFilePath(noteId, false);
+        const oldPath = noteId;
         // 1- new FilePath
         const dirPath = await getDirPath(oldPath);
         const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
         // 2- swap value on disk: delete then write
         await deleteFile(oldPath);
-        // mdConten did not live update here
         await writeFile(newPath, store.getState().notes[noteId]?.content || mdContent);
         // 3- delete the old redundant in store before upsert note
         deleteNote(oldPath);
@@ -146,6 +143,7 @@ function Note(props: Props) {
         upsertNote(newNote);
         upsertTree(dirPath, [newNote]);
         // 5- nav to renamed note
+        await openFilePath(newPath, true);
         dispatch({view: 'md', params: {noteId: newPath}});
         
         if (initDir) { 
@@ -221,11 +219,12 @@ function Note(props: Props) {
           // IF note is not existing, create new
           const parentDir = await getDirPath(notePath);
           const newNotePath = await createNewNote(parentDir, title);
+          await openFilePath(newNotePath, true);
           dispatch({view: 'md', params: { noteId: newNotePath }});
           return;
         }
-        const noteId = await openFileAndGetNoteId(toNote.id);
-        dispatch({view: 'md', params: { noteId }});
+        await openFilePath(toNote.id, true);
+        dispatch({view: 'md', params: { noteId: toNote.id }});
       }
     },
     [dispatch, notePath, storeNotes]

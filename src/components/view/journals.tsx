@@ -5,7 +5,7 @@ import { Note } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import FindOrCreateInput from 'components/note/NoteNewInput';
 import { realDateCompare, strToDate } from 'utils/helper';
-import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
+import { openFilePath } from "file/open";
 
 export default function Journals() {
   const currentDir = useStore((state) => state.currentDir);
@@ -50,8 +50,8 @@ function NoteItem(props: NoteItemProps) {
     <div className="flex flex-col w-full mx-auto overlfow-y-auto">
       <button 
         onClick={async () => {
-          const noteId = await openFileAndGetNoteId(note.id);
-          dispatch({view: 'md', params: {noteId}});
+          await openFilePath(note.id, true);
+          dispatch({view: 'md', params: { noteId: note.id }});
         }}
         className="flex items-center link text-lg py-2 pl-4"
       >

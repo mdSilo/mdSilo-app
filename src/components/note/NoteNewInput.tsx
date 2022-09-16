@@ -6,7 +6,8 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { ciStringEqual, regDateStr } from 'utils/helper';
 import { joinPaths } from 'file/util';
-import { store, useStore } from 'lib/store';
+import { openFilePath } from 'file/open';
+import { Notes, store, useStore } from 'lib/store';
 import { defaultNote } from 'types/model';
 
 enum OptionType {
@@ -84,8 +85,12 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         store.getState().upsertNote(note);
         store.getState().upsertTree(currentDir, [note]);
         // navigate to md view
+        const cNote: Notes = {};
+        cNote[note.id] = note;
+        store.getState().setCurrentNote(cNote);
         dispatch({view: 'md', params: {noteId: note.id}});
       } else if (option.type === OptionType.NOTE) {
+        await openFilePath(option.id, true);
         dispatch({view: 'md', params: {noteId: option.id}});
       }
     },

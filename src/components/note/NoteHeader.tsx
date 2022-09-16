@@ -4,13 +4,14 @@ import { IconDots, IconTrash } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { useStore } from 'lib/store';
-import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
+import { openFilePath } from 'file/open';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import Toggle from 'components/misc/Toggle';
 import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';
 import NoteDelModal from 'components/note/NoteDelModal';
+
 
 export default function NoteHeader() {
   const currentNote = useCurrentMdContext();
@@ -30,7 +31,7 @@ export default function NoteHeader() {
   const setRawMode = useStore((state) => state.setRawMode);
   const setRaw = useCallback(
     async (isRaw: boolean) => {
-      await openFileAndGetNoteId(note.id);
+      await openFilePath(note.id, true);
       setRawMode(isRaw);
     }, 
     [note, setRawMode]

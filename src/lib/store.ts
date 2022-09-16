@@ -72,6 +72,8 @@ export type Store = {
   deleteNote: (noteId: string) => void;
   currentNoteId: string;
   setCurrentNoteId: Setter<string>;
+  currentNote: Notes;  // one record only
+  setCurrentNote: Setter<Notes>;
   noteTree: NoteTree;
   setNoteTree: Setter<NoteTree>;
   activities: ActivityRecord;
@@ -180,6 +182,8 @@ export const store = createVanilla<Store>(
       },
       currentNoteId: '',
       setCurrentNoteId: setter(set, 'currentNoteId'),
+      currentNote: {},
+      setCurrentNote: setter(set, 'currentNote'),
       // The tree of notes visible in the sidebar
       noteTree: {},
       setNoteTree: setter(set, 'noteTree'),

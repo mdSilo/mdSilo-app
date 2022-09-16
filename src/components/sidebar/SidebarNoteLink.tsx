@@ -29,17 +29,12 @@ const SidebarNoteLink = (
   // console.log("node: ", node)
   const filePath = node.id;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const isLoading = useStore((state) => state.isLoading);
   // console.log("isLoading", isLoading, node.id);
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick(); 
   const onClickFile = useCallback(async (e) => {
     e.preventDefault();
     // console.log("click, isLoading", isLoading, node.id);
     if (node.isDir) {
-      // TODO: to del? 
-      if (isLoading) {
-        return;
-      }
       await listDirPath(node.id, false);
     } else {
       await onNoteLinkClick(node.id);
@@ -47,7 +42,7 @@ const SidebarNoteLink = (
     if (isMobile()) {
       setIsSidebarOpen(false);
     }
-  }, [isLoading, node, onNoteLinkClick, setIsSidebarOpen])
+  }, [node, onNoteLinkClick, setIsSidebarOpen])
   
   // add 16px for every level of nesting, plus 8px base padding
   const leftPadding = useMemo(() => node.depth * 16 + 8, [node.depth]);

@@ -4,7 +4,7 @@ import { useCurrentViewContext, DispatchType } from 'context/useCurrentView';
 import { Note } from 'types/model';
 import Tree from 'components/misc/Tree';
 import Tooltip from 'components/misc/Tooltip';
-import { openFileAndGetNoteId } from 'editor/hooks/useOnNoteLinkClick';
+import { openFilePath } from 'file/open';
 
 type Props = {
   anchor: string;
@@ -61,8 +61,8 @@ const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
         <button 
           className="link flex items-center py-2" 
           onClick={async () => {
-            const noteId = await openFileAndGetNoteId(note.id);
-            dispatch({view: 'md', params: {noteId}});
+            await openFilePath(note.id, true);
+            dispatch({view: 'md', params: { noteId: note.id }});
           }}
         >
           <span className="text-2xl font-semibold overflow-x-hidden overflow-ellipsis whitespace-nowrap">

@@ -6,6 +6,7 @@ import useNoteSearch, { NoteBlock } from 'editor/hooks/useNoteSearch';
 import useDebounce from 'editor/hooks/useDebounce';
 import { useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
+import { openFilePath } from 'file/open';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import VirtualTree from '../misc/VirtualTree';
 
@@ -114,13 +115,14 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
   return (
     <button
       className="w-full text-left rounded hover:bg-gray-200 active:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600"
-      onClick={() => {
+      onClick={async () => {
         const hash = block ? `0-${block.path}` : '';
-        // should close Sidebar before go to note page
+        // close Sidebar before go to note page on small screen
         if (isMobile(767)) {
           setIsSidebarOpen(false);
         }
         // console.log("block hash", hash, text)
+        await openFilePath(noteId, true);
         dispatch({view: 'md', params: {noteId, hash}});
       }}
     >
