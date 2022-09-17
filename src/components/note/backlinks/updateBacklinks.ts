@@ -1,5 +1,5 @@
 import { store } from 'lib/store';
-import { ciStringEqual, isUrl } from 'utils/helper';
+import { isUrl } from 'utils/helper';
 import { LINK_REGEX, WIKILINK_REGEX } from 'components/view/ForceGraph'
 import { writeFile } from 'file/write';
 import { loadDir } from 'file/open';
@@ -38,7 +38,7 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
       const href = match[2];
       if (!isUrl(href)) {
         const title = href.replaceAll('_', ' ');
-        if (ciStringEqual(noteTitle, title)) {
+        if (noteTitle === title) {
           newTitle = newTitle?.trim();
           const replaceTo = newTitle
             ? `[${match[1]}](${newTitle.replaceAll(/\s/g, '_')})` // rename
@@ -55,7 +55,7 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
       const href = match[1];
       if (!isUrl(href)) {
         const title = href;
-        if (ciStringEqual(noteTitle, title)) {
+        if (noteTitle === title) {
           newTitle = newTitle?.trim();
           const replaceTo = newTitle
             ? `[[newTitle]]` // rename

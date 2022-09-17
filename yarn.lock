@@ -2040,10 +2040,10 @@
   resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.92.0.tgz#e068938db61d5f932d317a8fd18acd5c0204496e"
   integrity sha512-eZP5jYvNPtZKiWj1Bn2C+zjvGXhQoormXAyE3TH7ihCxXBHMzKF/ZLYhU3rnMC/+NjuLDBifKc6dmwoh7s62vQ==
 
-"@tabler/icons@^1.95.1":
-  version "1.95.1"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.95.1.tgz#d2bdaea4c5f4cfddc8347a89b0ce8c749ccda415"
-  integrity sha512-b3fwRzYwQPKqMT9Vw1AMv2I/uEAwrPgicMeGg9Qvg1mckFvy60iTC4MQkdVlgUeLxdPKDO+yGystfVrQp2OPyA==
+"@tabler/icons@^1.96.0":
+  version "1.96.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-1.96.0.tgz#ff3cb1a5ddc38b96f54a54b9c0b5e1ed88c24da7"
+  integrity sha512-ZAQ64CHi5sOFQE7COoBmZbhIBtTX+4XNuiVZsr8kcqJX1bmrw6dFU0W9ONJamt/2TO997uVfSqxr2o0WZqZr/g==
 
 "@tailwindcss/forms@^0.5.3":
   version "0.5.3"

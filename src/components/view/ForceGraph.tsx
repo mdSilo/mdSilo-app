@@ -26,7 +26,7 @@ import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
-import { ciStringEqual, isUrl } from 'utils/helper';
+import { isUrl } from 'utils/helper';
 import { openFilePath } from 'file/open';
 
 export const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
@@ -85,7 +85,7 @@ export default function ForceGraph(props: Props) {
         const href = match[2];
         if (!isUrl(href)) {
           const title = href.replaceAll('_', ' ');
-          const existingNote = notesArr.find(n => ciStringEqual(n.title, title));
+          const existingNote = notesArr.find(n => (n.title === title));
           if (existingNote) {
             linksByNoteId[note.id].add(existingNote.id);
             linksByNoteId[existingNote.id].add(note.id);
@@ -98,7 +98,7 @@ export default function ForceGraph(props: Props) {
         const href = match[1];
         if (!isUrl(href)) {
           const title = href;
-          const existingNote = notesArr.find(n => ciStringEqual(n.title, title));
+          const existingNote = notesArr.find(n => (n.title === title));
           if (existingNote) {
             linksByNoteId[note.id].add(existingNote.id);
             linksByNoteId[existingNote.id].add(note.id);

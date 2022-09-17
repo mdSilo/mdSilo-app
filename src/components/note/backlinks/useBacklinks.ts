@@ -2,7 +2,7 @@ import { useMemo, useEffect } from 'react';
 import { parser, getJSONContent } from "mdsmirror";
 import { Notes, useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
-import { ciStringEqual, isUrl } from 'utils/helper';
+import { isUrl } from 'utils/helper';
 import { loadDir } from 'file/open';
 
 const DEBOUNCE_MS = 1000;
@@ -64,7 +64,7 @@ export const computeLinkedBacklinks = (
   const result: Backlink[] = [];
   const myNotes = Object.values(notes);
   for (const note of myNotes) {
-    if (ciStringEqual(note.title, noteTitle)) {
+    if (note.title === noteTitle) {
       continue;
     }
     const matches = computeLinkedMatches(note.content, noteTitle);
@@ -90,7 +90,7 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
           const href = mark.attrs.href;
           if (href && !isUrl(href)) {
             const title = href.replaceAll('_', ' ');
-            if (ciStringEqual(noteTitle, title)) {
+            if (noteTitle === title) {
               out.push({ text: node.text, from: node.from, to: node.to, context })
             }
           }
@@ -128,7 +128,7 @@ const computeUnlinkedBacklinks = (
   const result: Backlink[] = [];
   const myNotes = Object.values(notes);
   for (const note of myNotes) {
-    if (ciStringEqual(note.title, noteTitle)) {
+    if (note.title === noteTitle) {
       continue;
     }
     const matches = computeUnlinkedMatches(note.content, noteTitle);

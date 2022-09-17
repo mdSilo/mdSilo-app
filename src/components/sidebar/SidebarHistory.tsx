@@ -31,7 +31,7 @@ function SidebarHistory(props: Props) {
         <div
           role="button"
           className="text-center py-1 border-b dark:border-gray-700"
-          onClick={(e) => openRecentDir(e, pinnedDir)}
+          onClick={async (e) => await openRecentDir(e, pinnedDir)}
         >
           <Tooltip content={pinnedDir}>
             <p className="text-green-500 text-lg overflow-hidden overflow-ellipsis whitespace-nowrap">
@@ -68,7 +68,7 @@ export default memo(SidebarHistory);
 type ItemProps = {
   setPinnedDir: (dir: string) => void;
   deleteRecentDir: (dir: string) => void;
-  openRecentDir: (e: React.MouseEvent<HTMLDivElement, MouseEvent>, dir: string) => void;
+  openRecentDir: (e: React.MouseEvent<HTMLDivElement, MouseEvent>, dir: string) => Promise<void>;
   dir: string;
 }
 
@@ -91,7 +91,7 @@ function HistoryItem(props: ItemProps) {
       <div
         role="button"
         className="text-center px-1 hover:bg-gray-200 dark:hover:bg-gray-700"
-        onClick={(e) => openRecentDir(e, dir)}
+        onClick={async (e) => await openRecentDir(e, dir)}
       >
         <Tooltip content={dir}>
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">

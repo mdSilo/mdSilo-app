@@ -116,7 +116,7 @@ function Note(props: Props) {
       const newTitle = newtitle.trim() || getUntitledTitle(noteId);
       const isTitleUnique = () => {
         const notesArr = Object.values(storeNotes);
-        return notesArr.findIndex((n) => ciStringEqual(n.title, newTitle)) === -1;
+        return notesArr.findIndex((n) => (n.title === newTitle)) === -1;
       };
       if (isTitleUnique()) {
         await updateBacklinks(title, newTitle); 
@@ -183,13 +183,10 @@ function Note(props: Props) {
   );
 
   // Create new note 
-  // NOTE: the unique title is case insensitive
   const onCreateNote = useCallback(
     async (title: string) => {
       title = title.trim();
-      const existingNote = Object.values(storeNotes).find((n) =>
-        ciStringEqual(n.title, title)
-      );
+      const existingNote = Object.values(storeNotes).find((n) => (n.title === title));
       if (existingNote) {
         return existingNote.title.trim().replaceAll(/\s/g, '_');
       }
@@ -212,9 +209,7 @@ function Note(props: Props) {
         // ISSUE ALERT: 
         // maybe more than one notes with same title(ci), 
         // but only link to first searched one 
-        const toNote = Object.values(storeNotes).find((n) =>
-          ciStringEqual(n.title, title)  // need to be case insensitive?
-        );
+        const toNote = Object.values(storeNotes).find((n) => (n.title === title));
         if (!toNote) {
           // IF note is not existing, create new
           const parentDir = await getDirPath(notePath);
