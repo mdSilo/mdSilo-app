@@ -58,7 +58,7 @@ function Note(props: Props) {
   const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
   const isDaily = thisNote?.is_daily ?? false;
   const title = thisNote?.title || '';
-  const mdContent = thisNote?.content || '';
+  const mdContent = thisNote?.content || ' '; // show ' ' if null  
   const notePath = thisNote?.file_path;
   const shortNotePath = initDir && notePath 
     ? notePath.replace(initDir, normalizeSlash(initDir).split('/').pop() || '.')
