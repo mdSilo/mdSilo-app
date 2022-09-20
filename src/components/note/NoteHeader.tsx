@@ -1,13 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconDots, IconTrash } from '@tabler/icons';
+import { IconDots, IconFileText, IconMarkdown, IconTrash } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { useStore } from 'lib/store';
 import { openFilePath } from 'file/open';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
-import Toggle from 'components/misc/Toggle';
 import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';
 import NoteDelModal from 'components/note/NoteDelModal';
@@ -42,19 +41,22 @@ export default function NoteHeader() {
 
   const buttonClassName =
     'rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-700 dark:active:bg-gray-600';
-  const iconClassName = 'text-gray-600 dark:text-gray-300';
+  const iconClass = 'text-gray-600 dark:text-gray-300';
+  const switchClass = `px-1 ${buttonClassName}`; 
 
   return (
     <div className={`flex items-center justify-between w-full px-2 py-1 mb-2 text-right`}>
       <div className="flex items-center">
-        <span className="text-sm text-gray-300 dark:text-gray-500">WYSIWYG</span>
-        <Toggle
-          id="rawmode"
-          className="mx-2"
-          isChecked={rawMode}
-          setIsChecked={setRaw}
-        />
-        <span className="text-sm text-gray-300 dark:text-gray-500">Markdown</span>
+        <Tooltip content="WYSIWYG">
+          <button className={switchClass} onClick={() => setRaw(false)}>
+            <IconFileText size={18} className={`${rawMode ? iconClass : 'text-green-500'}`} />
+          </button>
+        </Tooltip>
+        <Tooltip content="Markdown">
+          <button className={switchClass} onClick={() => setRaw(true)}>
+            <IconMarkdown size={18} className={`${rawMode ? 'text-green-200' : iconClass}`} />
+          </button>
+        </Tooltip>
       </div>
       <div>
         <Menu>
@@ -63,7 +65,7 @@ export default function NoteHeader() {
               <Menu.Button ref={menuButtonRef} className={buttonClassName}>
                 <Tooltip content="Options (Move, Delete...)">
                   <span className="flex items-center justify-center w-8 h-8">
-                    <IconDots className={iconClassName} />
+                    <IconDots size={18} className={iconClass} />
                   </span>
                 </Tooltip>
               </Menu.Button>
