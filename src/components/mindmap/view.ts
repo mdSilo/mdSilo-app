@@ -4,9 +4,6 @@
 import * as d3 from 'd3';
 import { flextree } from './flextree';
 
-
-
-
 function getTextWidth(text: any, font: any) {
   // re-use canvas object for better performance
   const canvas = (getTextWidth as any).canvas || 
@@ -17,13 +14,15 @@ function getTextWidth(text: any, font: any) {
   return metrics.width;
 }
 
-function traverseBranchId(node: any, branch: any, state: any) {
+function traverseBranchId(node: any, branch: number, state: any) {
+  console.log("branch", branch)
   if (!("branch" in node)) {
     node.branch = branch;
   }
   if (node.children) {
-    node.children.forEach((d: any) => {
-      traverseBranchId(d, branch, state);
+    node.children.forEach((d: any, i: number) => {
+      console.log("sub i", i)
+      traverseBranchId(d, i + branch, state);
     });
   }
 }
@@ -214,7 +213,8 @@ Object.assign(Markmap.prototype, {
     }
 
     if (data.children) {
-      data.children.forEach((d: any, i: any) => {
+      data.children.forEach((d: any, i: number) => {
+        console.log("i", i)
         traverseBranchId(d, i, state);
       });
     }
@@ -226,7 +226,7 @@ Object.assign(Markmap.prototype, {
   setData: function(data: any) {
     // @ts-expect-error all
     const state = this.state;
-
+    console.log("data", data)
     this.preprocessData(data, state.root);
 
     state.root = data;
@@ -355,8 +355,8 @@ Object.assign(Markmap.prototype, {
         .attr('rx', 10)
         .attr('ry', 10)
         .attr('height', state.nodeHeight)
-        .attr('fill', function(d: any) { return d3.rgb(color(d.branch)).brighter(1.2); })
-        .attr('stroke', function(d: any) { return color(d.branch); })
+        .attr('fill', (d: any) => { return d3.rgb(color(d.branch)).brighter(1.2); })
+        .attr('stroke', (d: any) => { return color(d.branch); })
         .attr('stroke-width', 1);
 
       node.select('text')
@@ -398,11 +398,11 @@ Object.assign(Markmap.prototype, {
 
       nodeEnter.append('rect')
         .attr('class', 'markmap-node-rect')
-        .attr("y", function(d: any) { return -linkWidth(d) / 2 })
+        .attr("y", (d: any) => { return -linkWidth(d) / 2 })
         .attr('x', function(d: any) { return d.y_size; })
         .attr('width', 0)
         .attr('height', linkWidth)
-        .attr('fill', function(d: any) { return color(d.branch); });
+        .attr('fill', (d: any) => { return color(d.branch); });
 
       nodeEnter.append("circle")
         .attr('class', 'markmap-node-circle')
@@ -466,7 +466,7 @@ Object.assign(Markmap.prototype, {
       // Enter any new links at the parent's previous position.
       link.enter().insert("path", "g")
         .attr("class", "markmap-link")
-        .attr('stroke', (d: any) => color(d.target.branch))
+        .attr('stroke', (d: any) => { /* console.log("d",d);  */return color(d.target.branch);})
         .attr('stroke-width', (l: any) => linkWidth(l.target))
         .attr("d", () => {
           const o = {x: source.x0, y: source.y0 + source.y_size};
