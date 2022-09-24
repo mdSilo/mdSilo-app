@@ -4,9 +4,12 @@
 
 ## [app-v0.4.6] - 2022-XX-XX 
 
-### Features
+### Features 
 
-### Bug Fixes
+- Mindmap
+- [ ] Folder Management
+
+### Bug Fixes 
 
 ### Improvements 
 
@@ -125,4 +128,4 @@ initial release
 - Block Reference  
 - HashTag 
 - Full-text search 
-- Available for Linux, Windows, macOS (no Code Signing currently)
+- Available for Linux, Windows, macOS (no Code Signing currently) 

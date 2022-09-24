@@ -1,7 +1,7 @@
+/* eslint-disable import/no-named-as-default-member */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-prototype-builtins */
 
-import * as d3 from 'd3';
+import d3 from 'd3';
 import { flextree } from './flextree';
 
 function getTextWidth(text: any, font: any) {
@@ -15,13 +15,13 @@ function getTextWidth(text: any, font: any) {
 }
 
 function traverseBranchId(node: any, branch: number, state: any) {
-  console.log("branch", branch)
+  // console.log("branch", branch)
   if (!("branch" in node)) {
     node.branch = branch;
   }
   if (node.children) {
     node.children.forEach((d: any, i: number) => {
-      console.log("sub i", i)
+      // console.log("sub i", i)
       traverseBranchId(d, i + branch, state);
     });
   }
@@ -147,7 +147,7 @@ Object.assign(Markmap.prototype, {
 
     // disable panning using right mouse button
     svg.on("mousedown", function() {
-      const ev = d3.event;
+      const ev: any = d3.event;
       if (ev.button === 2) {
         ev.stopImmediatePropagation();
       }
@@ -214,7 +214,7 @@ Object.assign(Markmap.prototype, {
 
     if (data.children) {
       data.children.forEach((d: any, i: number) => {
-        console.log("i", i)
+        // console.log("i", i)
         traverseBranchId(d, i, state);
       });
     }
@@ -226,7 +226,7 @@ Object.assign(Markmap.prototype, {
   setData: function(data: any) {
     // @ts-expect-error all
     const state = this.state;
-    console.log("data", data)
+    // console.log("data", data)
     this.preprocessData(data, state.root);
 
     state.root = data;

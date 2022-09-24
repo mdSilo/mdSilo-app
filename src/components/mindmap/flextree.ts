@@ -1,11 +1,12 @@
+/* eslint-disable import/no-named-as-default-member */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as d3 from 'd3';
+import d3 from 'd3';
 
 // Node-link tree diagram using the Reingold-Tilford "tidy" algorithm,
 // as improved by A.J. van der Ploeg, 2013, "Drawing Non-layered Tidy
 // Trees in Linear Time".
 export function flextree() {
-  const hierarchy = d3.layout.hierarchy().sort(null).value(null);
+  const hierarchy = d3.layout.hierarchy(); //.sort(null).value(null);
 
   // The spacing between nodes can be specified in one of two ways:
   // - separation - returns center-to-center distance
@@ -23,8 +24,8 @@ export function flextree() {
   let wroot: any = null;
 
   // The main layout function:
-  function tree(d: any, i: any) {
-    const nodes = hierarchy.call(tree, d, i),
+  function tree(d: any) {
+    const nodes = hierarchy.call(tree, d),
         t = nodes[0],
         wt = wrapTree(t);
 

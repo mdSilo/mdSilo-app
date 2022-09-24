@@ -1,9 +1,9 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+// import React from 'react';
+// import { render, screen } from '@testing-library/react';
 import * as fileUtil from 'file/util';
 import { rmFileNameExt, getFileExt } from 'file/process';
 import { shortenString } from 'utils/helper';
-import App from './components/App';
+// import App from './components/App';
 
 
 beforeEach(() => {
@@ -20,10 +20,10 @@ beforeEach(() => {
   })
 })
 
-test('renders App component', () => {
-  render(<App />);
-  expect(screen.getByText('mdSilo')).toBeInTheDocument();
-})
+// test('renders App component', () => {
+//   render(<App />);
+//   expect(screen.getByText('mdSilo')).toBeInTheDocument();
+// })
 
 test('file util', () => {
   expect(fileUtil.normalizeSlash('C:/')).toBe('C:');
