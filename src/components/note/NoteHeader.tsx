@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconDots, IconFileText, IconMarkdown, IconTrash } from '@tabler/icons';
+import { IconDots, IconFileText, IconMarkdown, IconSitemap, IconTrash } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { useStore } from 'lib/store';
@@ -29,9 +29,9 @@ export default function NoteHeader() {
   const rawMode = useStore((state) => state.rawMode);
   const setRawMode = useStore((state) => state.setRawMode);
   const setRaw = useCallback(
-    async (isRaw: boolean) => {
+    async (mode: string) => {
       await openFilePath(note.id, true);
-      setRawMode(isRaw);
+      setRawMode(mode);
     }, 
     [note, setRawMode]
   );
@@ -48,13 +48,18 @@ export default function NoteHeader() {
     <div className={`flex items-center justify-between w-full px-2 py-1 mb-2 text-right`}>
       <div className="flex items-center">
         <Tooltip content="WYSIWYG">
-          <button className={switchClass} onClick={() => setRaw(false)}>
-            <IconFileText size={18} className={`${rawMode ? iconClass : 'text-green-500'}`} />
+          <button className={switchClass} onClick={() => setRaw('wysiwyg')}>
+            <IconFileText className={`${rawMode === 'wysiwyg' ? 'text-green-500' :iconClass}`} />
           </button>
         </Tooltip>
         <Tooltip content="Markdown">
-          <button className={switchClass} onClick={() => setRaw(true)}>
-            <IconMarkdown size={18} className={`${rawMode ? 'text-green-200' : iconClass}`} />
+          <button className={switchClass} onClick={() => setRaw('raw')}>
+            <IconMarkdown className={`${rawMode === 'raw' ? 'text-green-200' : iconClass}`} />
+          </button>
+        </Tooltip>
+        <Tooltip content="Mindmap">
+          <button className={switchClass} onClick={() => setRaw('mindmap')}>
+            <IconSitemap className={`${rawMode === 'mindmap' ? 'text-green-200' : iconClass}`} />
           </button>
         </Tooltip>
       </div>
@@ -82,7 +87,7 @@ export default function NoteHeader() {
                       onClick={onDelClick}
                       className="border-t dark:border-gray-700"
                     >
-                      <IconTrash size={18} className="mr-1" />
+                      <IconTrash className="mr-1" />
                       <span>Delete Permanently</span>
                     </DropdownItem>
                     <NoteMetadata noteId={note.id} />

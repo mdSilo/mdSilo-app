@@ -40,8 +40,8 @@ export type UserSettings = {
   setIsCheckSpellOn: Setter<boolean>;
   readMode: boolean;
   setReadMode: Setter<boolean>;
-  rawMode: boolean;  // Raw markdown or WYSIWYG
-  setRawMode: Setter<boolean>;
+  rawMode: string; // 'raw' | 'wysiwyg' | 'mindmap'; 
+  setRawMode: Setter<string>;
   useAsset: boolean;
   setUseAsset: Setter<boolean>;
   recentDir: string[];
@@ -75,7 +75,7 @@ const userSettingsSlice = (
   setIsCheckSpellOn: setter(set, 'isCheckSpellOn'),
   readMode: false,
   setReadMode: setter(set, 'readMode'),
-  rawMode: false,
+  rawMode: 'wysiwyg',
   setRawMode: setter(set, 'rawMode'),
   useAsset: false,
   setUseAsset: setter(set, 'useAsset'),

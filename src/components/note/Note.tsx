@@ -5,6 +5,7 @@ import { convertFileSrc } from '@tauri-apps/api/tauri';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
+import { Mindmap } from 'components/mindmap/mindmap';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
@@ -313,12 +314,12 @@ function Note(props: Props) {
                 onChange={onTitleChange}
                 isDaily={isDaily}
               />
-              {!rawMode && headings.length > 0 
+              {(rawMode === 'wysiwyg') && headings.length > 0 
                 ? (<Toc headings={headings} />) 
                 : null
               }
               <div className="flex-1 px-2 pt-2 pb-8">
-                {rawMode ? (
+                {rawMode === 'raw' ? (
                   <RawMarkdown
                     initialContent={mdContent}
                     onChange={onMarkdownChange}
@@ -326,7 +327,7 @@ function Note(props: Props) {
                     readMode={readMode}
                     className={"text-xl"}
                   />
-                ) : (
+                ) : rawMode === 'wysiwyg' ? (
                   <MsEditor 
                     ref={editorInstance}
                     value={mdContent}
@@ -345,10 +346,15 @@ function Note(props: Props) {
                     embeds={embeds}
                     disables={['sub']}
                   />
+                ) : (
+                  <Mindmap key={title} mdValue={mdContent} />
                 )}
               </div>
               <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
-                {rawMode ? null : (<Backlinks className="mx-4 mb-8" isCollapse={true} />)}
+                {rawMode !== 'wysiwyg' 
+                  ? null 
+                  : (<Backlinks className="mx-4 mb-8" isCollapse={true} />)
+                }
               </div>
             </div>
           </div>
