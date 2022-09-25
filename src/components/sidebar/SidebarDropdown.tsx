@@ -70,4 +70,4 @@ const SidebarNoteLinkDropdown = (props: Props) => {
   );
 };
 
-export default memo(SidebarNoteLinkDropdown);
+export const SidebarNoteDropdown = memo(SidebarNoteLinkDropdown);
