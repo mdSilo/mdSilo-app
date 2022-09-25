@@ -7,7 +7,7 @@
 ### Features 
 
 - Mindmap
-- [ ] Folder Management
+- Folder Management
 
 ### Bug Fixes 
 
