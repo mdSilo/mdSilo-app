@@ -6,6 +6,7 @@ import Tooltip from 'components/misc/Tooltip';
 import { normalizeSlash, getParentDir } from 'file/util';
 import { listDirPath } from 'editor/hooks/useOpen';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
+import { SidebarDirDropdown } from './SidebarDropdown';
 
 type Props = {
   noteSort: Sort;
@@ -36,9 +37,18 @@ function SidebarNotesBar(props: Props) {
       <Tooltip content={currentDir ? currentDir : 'md'}>
         <div className="flex mx-2 my-1">
           <div className="relative">
-            <span className={barClass}>
-              {currentFolder}: {numOfNotes}
-            </span>
+            {currentDir ? (
+              <SidebarDirDropdown
+                dirPath={currentDir}
+                className="group-hover:opacity-100"
+                isOnBar={true}
+                menuBtn={`${currentFolder}: ${numOfNotes}`}
+              />
+            ) : (
+              <span className={barClass}>
+                {currentFolder}: {numOfNotes}
+              </span>
+            )}
           </div>
         </div>
       </Tooltip>

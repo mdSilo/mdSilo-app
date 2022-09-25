@@ -81,10 +81,12 @@ export const SidebarNoteDropdown = memo(SidebarNoteLinkDropdown);
 type DirProps = {
   dirPath: string;
   className?: string;
+  isOnBar?: boolean;
+  menuBtn?: string;
 };
 
 const SidebarDirLinkDropdown = (props: DirProps) => {
-  const { dirPath, className } = props;
+  const { dirPath, className = '', isOnBar = false, menuBtn } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
@@ -127,11 +129,17 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
           <>
             <Menu.Button
               ref={containerRef}
-              className={`rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500 ${className}`}
+              className={`rounded hover:bg-gray-300 dark:hover:bg-gray-600 ${className}`}
             >
-              <span className="flex items-center justify-center w-8 h-8">
-                <IconDotsDiagonal className="text-gray-600 dark:text-gray-200" />
-              </span>
+              {menuBtn ? (
+                <span className="px-2 text-sm bg-blue-500 text-white rounded overflow-hidden">
+                  {menuBtn}
+                </span>
+              ) : (
+                <span className="flex items-center justify-center w-8 h-8">
+                  <IconDotsDiagonal className="text-gray-600 dark:text-gray-200" />
+                </span>
+              )}
             </Menu.Button>
             {open && (
               <Portal>
@@ -146,14 +154,18 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
                     <IconPlus size={18} className="mr-1" />
                     <span>New Subfolder</span>
                   </DropdownItem>
-                  <DropdownItem onClick={onRenameDirClick}>
-                    <IconId size={18} className="mr-1" />
-                    <span>Rename</span>
-                  </DropdownItem>
-                  <DropdownItem onClick={onDelDirClick}>
-                    <IconTrash size={18} className="mr-1" />
-                    <span>Delete</span>
-                  </DropdownItem>
+                  {isOnBar ? null : (
+                    <>
+                      <DropdownItem onClick={onRenameDirClick}>
+                        <IconId size={18} className="mr-1" />
+                        <span>Rename</span>
+                      </DropdownItem>
+                      <DropdownItem onClick={onDelDirClick}>
+                        <IconTrash size={18} className="mr-1" />
+                        <span>Delete</span>
+                      </DropdownItem>
+                    </>
+                  )}
                 </Menu.Items>
               </Portal>
             )}

@@ -189,6 +189,11 @@ class DirectoryAPI {
           // console.log("create: ", filePaths)
           // open, upsert 
           await openFilePaths(filePaths);
+        } else if (event === 'remove') {
+          for (const filePath of filePaths) {
+            store.getState().deleteNote(filePath);
+            // console.log("delete file", filePath, event);
+          }
         } else if (event === 'loaded') {
           // console.log("load: ", filePaths, event);
           if (!filePaths || filePaths.length < 1) return;

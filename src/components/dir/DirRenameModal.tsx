@@ -30,9 +30,10 @@ export default function DirRenameModal(props: Props) {
           className="mt-4 font-bold pop-btn" 
           onClick={async (e) => {
             e.preventDefault();
-            const parentDir = await getParentDir(dirPath)
+            const parentDir = await getParentDir(dirPath);
             const newDir = await joinPaths(parentDir, [inputText]);
             await renameFile(dirPath, newDir);
+            handleClose();
           }}
         >
           Rename Folder

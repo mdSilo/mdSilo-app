@@ -21,7 +21,8 @@ export default function DirDelModal(props: Props) {
           className="mt-4 font-bold text-red-600 pop-btn" 
           onClick={async (e) => {
             e.preventDefault();
-            await deleteFiles([dirPath])
+            await deleteFiles([dirPath]);
+            handleClose();
           }}
         >
           Confirm Delete Folder and All Items

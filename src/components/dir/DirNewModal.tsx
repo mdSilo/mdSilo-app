@@ -32,6 +32,7 @@ export default function DirNewModal(props: Props) {
             e.preventDefault();
             const newDir = await joinPaths(dirPath, [inputText]);
             await createDirRecursive(newDir);
+            handleClose();
           }}
         >
           Create Subfolder
