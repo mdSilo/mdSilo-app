@@ -354,6 +354,12 @@ pub async fn write_file(file_path: String, text: String) -> bool {
   fs::write(file_path, text).is_ok()
 }
 
+// rename the file
+#[tauri::command]
+pub async fn rename_file(from_path: String, to_path: String) -> bool {
+  fs::rename(from_path, to_path).is_ok()
+}
+
 // copy the file
 #[tauri::command]
 pub async fn copy_file(src_path: String, to_path: String) -> bool {

@@ -188,24 +188,24 @@ export function FileDrop() {
   }, []);
   return (
     <>
-      <DropdownItem 
-        onClick={onSave} 
-        className="border-b-2 border-gray-200 dark:border-gray-600"
-      >
-        <IconDeviceFloppy size={18} className="mr-1" />
-        <Tooltip content="Save All Data"><span>Save</span></Tooltip>
-      </DropdownItem>
       <DropdownItem onClick={onListDir}>
         <IconFolderPlus size={18} className="mr-1" />
-        <Tooltip content="Open Folder"><span>Folder</span></Tooltip>
+        <Tooltip content="Open Folder"><span>Open Folder</span></Tooltip>
       </DropdownItem>
       <DropdownItem onClick={onOpenFile}>
         <IconFileText size={18} className="mr-1" />
-        <Tooltip content="Open .md"><span>Text</span></Tooltip>
+        <Tooltip content="Open .md"><span>Open File</span></Tooltip>
       </DropdownItem>
       <DropdownItem onClick={onClear}>
         <IconClearAll size={18} className="mr-1" />
         <Tooltip content="Open Recent History"><span>Recent</span></Tooltip>
+      </DropdownItem>
+      <DropdownItem 
+        onClick={onSave} 
+        className="border-t-2 border-gray-200 dark:border-gray-600"
+      >
+        <IconDeviceFloppy size={18} className="mr-1" />
+        <Tooltip content="Save All Data"><span>Save</span></Tooltip>
       </DropdownItem>
     </>
   );

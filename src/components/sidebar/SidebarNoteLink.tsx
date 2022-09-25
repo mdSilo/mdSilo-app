@@ -13,7 +13,7 @@ import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
 import { listDirPath } from 'editor/hooks/useOpen';
 import SidebarItem from './SidebarItem';
-import { SidebarNoteDropdown } from './SidebarDropdown';
+import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
 import { FlattenedNoteTreeItem } from './SidebarNotesTree';
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
@@ -84,7 +84,12 @@ const SidebarNoteLink = (
           </span>
         </Tooltip>
       </div>
-      {node.isDir ? null : (
+      {node.isDir ? (
+        <SidebarDirDropdown
+          dirPath={node.id}
+          className="opacity-0.1 group-hover:opacity-100"
+        />
+      ) : (
         <SidebarNoteDropdown
           noteId={node.id}
           className="opacity-0.1 group-hover:opacity-100"

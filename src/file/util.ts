@@ -71,6 +71,25 @@ export const createDirRecursive = async (dirPath: string): Promise<boolean> => {
 };
 
 /**
+ * delete dir or file
+ * @param {string[]} paths 
+ * @returns {Promise<boolean>}
+ */
+export const deleteFiles = async (paths: string[]): Promise<boolean> => {
+  return await invoke('delete_files', { paths });
+};
+
+/**
+ * rename dir or file
+ * @param {string} fromPath 
+ * @param {string} toPath 
+ * @returns {Promise<boolean>}
+ */
+export const renameFile = async (fromPath: string, toPath: string): Promise<boolean> => {
+  return await invoke('rename_file', { fromPath, toPath });
+};
+
+/**
  * Get dir path of the file path, the path must be existing on disk
  * parent dir for file, and self for dir
  * @param {string} path 

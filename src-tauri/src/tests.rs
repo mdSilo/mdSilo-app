@@ -246,13 +246,33 @@ mod tests {
     assert_eq!(file_exist(&abs_path_1), true);
     assert_eq!(rel_path_1, "$DIR$/assets/app.txt");
 
+    // rename file
+    let from_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp/frommdsilo")
+      .to_str()
+      .unwrap()
+      .to_string();
+    let to_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../temp/tomdsilo")
+      .to_str()
+      .unwrap()
+      .to_string();
+    create_dir_recursive(from_dir.clone()).await;
+    assert_eq!(file_exist(&from_dir), true);
+    // rename
+    rename_file(from_dir.clone(), to_dir.clone()).await;
+    assert_eq!(file_exist(&from_dir), false);
+    assert_eq!(file_exist(&to_dir), true);
+
     // del files or dir
-    let to_del_files = vec![file.clone(), to_path.clone()];
+    let to_del_files = vec![file.clone(), to_path.clone(), to_dir.clone()];
     // files.push(file.clone());
     // del src file
     delete_files(to_del_files).await;
     assert_eq!(file_exist(&file), false);
     assert_eq!(file_exist(&to_path), false);
+    assert_eq!(file_exist(&to_dir), false);
+    
     #[cfg(not(target_os = "macos"))]
     assert_eq!(file_exist(&abs_path_1), true);
     // on macOS: 
