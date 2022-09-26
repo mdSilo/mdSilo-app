@@ -40,20 +40,27 @@ export function Mindmap(props: Props) {
 
   const saveSVG = useCallback(async () => {
     if (!svgElement || !initDir) return;
+    const w = svgElement.clientWidth;
+    const h = svgElement.clientHeight;
+    if (w && h) {
+      svgElement.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    }
+    svgElement.setAttribute("style", "background-color:white");
+    // console.log("w/h", w, h, svgElement);
     const styleNode = document.createElement('style');
     styleNode.setAttribute('type', 'text/css');
     styleNode.innerHTML = `svg#mindmap {width: 100%; height: 100%;} .markmap-node-circle {fill: #fff; stroke-width: 1.5px;} .markmap-node-text {fill: #000; font: 10px sans-serif;} .markmap-link {fill: none;}`;
     svgElement.appendChild(styleNode);
     const dir = await saveDilog();
-    const saveDir = normalizeSlash(dir);
-    // `${initDir}/mindmap/${title.trim().replaceAll(' ', '-') || 'untitle'}.svg`, 
+    const defaultDir = `${initDir}/mindmap/${title.trim().replaceAll(' ', '-') || 'untitle'}.svg`;
+    const saveDir = normalizeSlash(dir || defaultDir); 
     await writeFile(saveDir, svgElement.outerHTML);
   }, [svgElement, initDir, title]);
 
   return (
     <div className={`w-full h-full bg-slate-100 ${className}`}>
       <svg
-        id= "mindmap"
+        id="mindmap"
         ref={svgRef}
         version="1.1" 
         xmlns="http://www.w3.org/2000/svg" 
