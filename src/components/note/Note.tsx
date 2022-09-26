@@ -347,7 +347,7 @@ function Note(props: Props) {
                     disables={['sub']}
                   />
                 ) : (
-                  <Mindmap key={title} mdValue={mdContent} />
+                  <Mindmap key={title} title={title} mdValue={mdContent} initDir={initDir} />
                 )}
               </div>
               <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">

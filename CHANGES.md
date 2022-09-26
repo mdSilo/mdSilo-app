@@ -6,12 +6,14 @@
 
 ### Features 
 
-- Mindmap
-- Folder Management
+- Mindmap: visualize Markdown(headings and list items) as mindmap.
+- Folder Management: create subfolder/rename/delete 
 
 ### Bug Fixes 
 
 ### Improvements 
+
+- Listen remove event in directory 
 
 ## [app-v0.4.5] - 2022-09-19
 
