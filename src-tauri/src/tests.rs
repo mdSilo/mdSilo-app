@@ -56,6 +56,8 @@ mod tests {
       .to_string();
     // create file
     create_file(file.clone()).await;
+    
+    #[cfg(not(target_os = "windows"))]
     let dir_of_file = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp/mdsilo")
       .to_str()

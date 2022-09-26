@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconDots, IconFileText, IconMarkdown, IconSitemap, IconTrash } from '@tabler/icons';
+import { IconDots, IconFileText, IconMarkdown, IconTournament, IconTrash } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { useStore } from 'lib/store';
@@ -54,12 +54,12 @@ export default function NoteHeader() {
         </Tooltip>
         <Tooltip content="Markdown">
           <button className={switchClass} onClick={() => setRaw('raw')}>
-            <IconMarkdown className={`${rawMode === 'raw' ? 'text-green-200' : iconClass}`} />
+            <IconMarkdown className={`${rawMode === 'raw' ? 'text-green-500' : iconClass}`} />
           </button>
         </Tooltip>
         <Tooltip content="Mindmap">
           <button className={switchClass} onClick={() => setRaw('mindmap')}>
-            <IconSitemap className={`${rawMode === 'mindmap' ? 'text-green-200' : iconClass}`} />
+            <IconTournament className={`rotate-180 ${rawMode === 'mindmap' ? 'text-green-500' : iconClass}`} />
           </button>
         </Tooltip>
       </div>
