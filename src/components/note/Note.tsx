@@ -79,6 +79,10 @@ function Note(props: Props) {
   const upsertNote = useStore((state) => state.upsertNote);
   const upsertTree = useStore((state) => state.upsertTree);
 
+  // for split view
+  const [rawCtn, setRawCtn] = useState<string | null>(null);
+  const [mdCtn, setMdCtn] = useState<string | null>(null);
+
   // update locally
   const onContentChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -86,6 +90,7 @@ function Note(props: Props) {
       // console.log("on content change", text.length, json);
       // write to local file and store
       updateNote({ id: noteId, content: text });
+      if (rawMode === 'split') { setRawCtn(text); }
       await writeFile(notePath, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
@@ -93,7 +98,7 @@ function Note(props: Props) {
       // update TOC if any 
       getHeading();
     },
-    [initDir, noteId, notePath, updateNote]
+    [initDir, noteId, notePath, rawMode, updateNote]
   );
 
   const onMarkdownChange = useCallback(
@@ -101,12 +106,13 @@ function Note(props: Props) {
       // console.log("on markdown content change", text);
       // write to local file and store
       updateNote({ id: noteId, content: text });
+      if (rawMode === 'split') { setMdCtn(text); }
       await writeFile(notePath, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
       }
     },
-    [initDir, notePath, noteId, updateNote]
+    [updateNote, noteId, rawMode, notePath, initDir]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`);
@@ -346,8 +352,40 @@ function Note(props: Props) {
                     embeds={embeds}
                     disables={['sub']}
                   />
-                ) : (
+                ) : rawMode === 'mindmap' ? (
                   <Mindmap key={title} title={title} mdValue={mdContent} initDir={initDir} />
+                ) : (
+                  <div className="grid grid-cols-2 gap-1 justify-between">
+                    <div className="flex-1 mr-4 border-r-2 border-gray-200 dark:border-gray-600">
+                      <RawMarkdown
+                        initialContent={rawCtn || mdContent}
+                        onChange={onMarkdownChange}
+                        dark={darkMode}
+                        readMode={readMode}
+                        className={"text-xl"}
+                      />
+                    </div>
+                    <div className="flex-1 ml-4">
+                      <MsEditor 
+                        ref={editorInstance}
+                        value={mdCtn || mdContent}
+                        dark={darkMode}
+                        readOnly={readMode}
+                        readOnlyWriteCheckboxes={readMode}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        onChange={onContentChange}
+                        onSearchLink={onSearchNote}
+                        onCreateLink={onCreateNote}
+                        onSearchSelectText={(txt) => onSearchText(txt)}
+                        onClickHashtag={(txt) => onSearchText(`#${txt}#`)}
+                        onOpenLink={onOpenLink} 
+                        attachFile={onAttachFile} 
+                        onClickAttachment={onClickAttachment} 
+                        embeds={embeds}
+                        disables={['sub']}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
               <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">

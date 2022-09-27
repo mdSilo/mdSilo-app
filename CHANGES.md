@@ -8,6 +8,7 @@
 
 - Mindmap: visualize Markdown(headings and list items) as mindmap.
 - Folder Management: create subfolder/rename/delete 
+- Split view: raw markdown and WYSIWYG on the same page 
 
 ### Bug Fixes 
 
