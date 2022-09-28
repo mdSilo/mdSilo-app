@@ -14,7 +14,9 @@ pub struct StorageData {
 pub fn set_data(key: String, value: Value) -> bool {
   // println!("local data dir: {:?}", local_data_dir());
 
-  // Linux: /home/~username~/.local/share/mdsilo
+  // Linux: $HOME/.local/share/mdsilo
+  // macOS: $HOME/Library/Application
+  // Windows: $HOME/AppData/Local/mdsilo
   let storage_dir = match local_data_dir() {
     Some(dir) => Path::new(&dir).join("mdsilo"),
     None => {
