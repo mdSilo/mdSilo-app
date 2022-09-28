@@ -19,7 +19,7 @@ export default function NotePage() {
 
   return (
     <div className="flex flex-1 overflow-x-auto divide-x divide-gray-200 dark:divide-gray-700">
-      <Note noteId={noteId} className="sticky left-0" />
+      <Note key={noteId} noteId={noteId} className="sticky left-0" />
     </div>
   );
 }

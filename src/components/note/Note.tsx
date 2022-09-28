@@ -344,6 +344,7 @@ function Note(props: Props) {
               <div className="flex-1 px-2 pt-2 pb-8">
                 {rawMode === 'raw' ? (
                   <RawMarkdown
+                    key={`raw-${title}`}
                     initialContent={mdContent}
                     onChange={onMarkdownChange}
                     dark={darkMode}
@@ -352,6 +353,7 @@ function Note(props: Props) {
                   />
                 ) : rawMode === 'wysiwyg' ? (
                   <MsEditor 
+                    key={`wys-${noteId}`}
                     ref={editorInstance}
                     value={mdContent}
                     dark={darkMode}
@@ -370,11 +372,12 @@ function Note(props: Props) {
                     disables={['sub']}
                   />
                 ) : rawMode === 'mindmap' ? (
-                  <Mindmap key={title} title={title} mdValue={mdContent} initDir={initDir} />
+                  <Mindmap key={`mp-${noteId}`} title={title} mdValue={mdContent} initDir={initDir} />
                 ) : (
                   <div className="grid grid-cols-2 gap-1 justify-between">
                     <div className="flex-1 mr-4 border-r-2 border-gray-200 dark:border-gray-600">
                       <RawMarkdown
+                        key={`raws-${title}`}
                         initialContent={focusOn === 'wysiwyg' ? rawCtn || mdContent : mdContent}
                         onChange={onMarkdownChange}
                         dark={darkMode}
@@ -385,6 +388,7 @@ function Note(props: Props) {
                     </div>
                     <div className="flex-1 ml-4">
                       <MsEditor 
+                        key={`wyss-${title}`}
                         ref={editorInstance}
                         value={focusOn === 'raw' ? mdCtn || mdContent : mdContent}
                         dark={darkMode}
