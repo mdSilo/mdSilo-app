@@ -1,6 +1,6 @@
 {
   "name": "mdsilo-app",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "private": true,
   "license": "AGPL3",
   "homepage": "https://mdsilo.com",
@@ -15,22 +15,25 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "codemirror": "6.0.0",
     "@codemirror/commands": "6.0.0",
     "@codemirror/lang-markdown": "6.0.0",
     "@codemirror/language-data": "6.0.0",
     "@codemirror/state": "6.0.0",
     "@codemirror/view": "6.0.0",
+
+    "remarkable": "2.0.1",
+    "d3": "3.5.6",
+
     "@headlessui/react": "^1.7.2",
     "@popperjs/core": "^2.11.6",
-    "@react-spring/web": "^9.5.4",
-    "@tabler/icons": "^1.96.0",
+    "@react-spring/web": "^9.5.5",
+    "@tabler/icons": "^1.101.0",
     "@tailwindcss/forms": "^0.5.3",
     "@tailwindcss/typography": "^0.5.7",
     "@tauri-apps/api": "^1.1.0",
     "@tippyjs/react": "^4.2.6",
     "classnames": "^2.3.2",
-    "codemirror": "6.0.0",
-    "d3": "3.5.6",
     "d3-drag": "^3.0.0",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
@@ -46,8 +49,7 @@
     "react-scripts": "^5.0.1",
     "react-virtual": "^2.10.4",
     "react-virtualized": "^9.22.3",
-    "remarkable": "2.0.1",
-    "styled-components": "^5.3.5",
+    "styled-components": "5.3.5",
     "tailwindcss": "^3.1.8",
     "zustand": "^3.7.2"
   },
@@ -55,14 +57,14 @@
     "@tauri-apps/cli": "^1.1.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^12.1.4",
-    "@types/d3": "^3.5.47",
+    "@types/d3": "3.5.47",
     "@types/d3-drag": "^3.0.1",
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.3",
     "@types/d3-zoom": "^3.0.1",
     "@types/is-hotkey": "^0.1.7",
     "@types/jest": "^29.0.3",
-    "@types/node": "^18.7.19",
+    "@types/node": "^18.7.23",
     "@types/react": "^17.0.43",
     "@types/react-dom": "^17.0.14",
     "@types/react-highlight-words": "^0.16.4",
@@ -82,7 +84,7 @@
     "eslint-plugin-testing-library": "^5.7.0",
     "postcss": "8.4.16",
     "prettier": "2.7.1",
-    "typescript": "^4.8.3"
+    "typescript": "^4.8.4"
   },
   "browserslist": {
     "production": [

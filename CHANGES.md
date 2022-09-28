@@ -2,7 +2,17 @@
 
 ## [app-v0.5.0] - 2022-XX-XX 
 
-## [app-v0.4.6] - 2022-XX-XX 
+## [app-v0.4.7] - 2022-XX-XX 
+
+### Features 
+
+- [ ] Diagram: mermaid  
+
+### Bug Fixes 
+
+### Improvements 
+
+## [app-v0.4.6] - 2022-09-28 
 
 ### Features 
 
