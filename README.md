@@ -33,7 +33,7 @@ built with React and [Tauri](https://github.com/tauri-apps).
   - [X] Headings and TOC, 
   - [X] List item: ordered list, bullet list, check list and nested list
   - [X] Table
-  - [X] BlockKquotes  
+  - [X] Blockquotes  
   - [X] Horizontal Rules 
 
 - Markdown extension
@@ -62,7 +62,7 @@ built with React and [Tauri](https://github.com/tauri-apps).
   - [X] Backlinks 
   - [X] Recent history 
   - [ ] Export as PDF,HTML, ... 
-  - [ ] Version control: git intergration 
+  - [ ] Version control: git integration 
 
 
 ## Live Demo

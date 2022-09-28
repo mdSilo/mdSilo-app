@@ -6,6 +6,7 @@ import CodeMirror from "./ReactCodeMirror";
 type Props = {
   initialContent: string;
   onChange: (value: string) => void;
+  onFocus?: () => void;
   dark: boolean;
   readMode?: boolean;
   className?: string;
@@ -15,6 +16,7 @@ function Markdown(props: Props) {
   const { 
     initialContent, 
     onChange, 
+    onFocus,
     dark,
     readMode = false,
     className = '',
@@ -32,6 +34,7 @@ function Markdown(props: Props) {
     <CodeMirror
       value={initialContent}
       onChange={onValueChange}
+      onFocus={onFocus}
       extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
       className={`border-none focus:outline-none p-0 break-words ${className}`}
       theme={dark ? 'dark' : 'light'}

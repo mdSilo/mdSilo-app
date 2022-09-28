@@ -7,7 +7,7 @@ import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
 import { Mindmap } from 'components/mindmap/mindmap';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { SidebarTab, store, useStore } from 'lib/store';
+import { Notes, SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
@@ -82,6 +82,17 @@ function Note(props: Props) {
   // for split view
   const [rawCtn, setRawCtn] = useState<string | null>(null);
   const [mdCtn, setMdCtn] = useState<string | null>(null);
+  const [focusOn, setFocusOn] = useState<string | null>(null);
+  const switchFocus = useCallback(
+    (on: string) => {
+      // refresh current note
+      const cNote: Notes = {};
+      cNote[noteId] = storeNotes[noteId];
+      store.getState().setCurrentNote(cNote);
+      // switch focus 
+      setFocusOn(on);
+    }, [noteId, storeNotes]
+  );
 
   // update locally
   const onContentChange = useCallback(
@@ -90,7 +101,10 @@ function Note(props: Props) {
       // console.log("on content change", text.length, json);
       // write to local file and store
       updateNote({ id: noteId, content: text });
-      if (rawMode === 'split') { setRawCtn(text); }
+      if (rawMode === 'split' && focusOn === 'wysiwyg') { 
+        setMdCtn(null);
+        setRawCtn(text); 
+      }
       await writeFile(notePath, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
@@ -98,7 +112,7 @@ function Note(props: Props) {
       // update TOC if any 
       getHeading();
     },
-    [initDir, noteId, notePath, rawMode, updateNote]
+    [focusOn, initDir, noteId, notePath, rawMode, updateNote]
   );
 
   const onMarkdownChange = useCallback(
@@ -106,13 +120,16 @@ function Note(props: Props) {
       // console.log("on markdown content change", text);
       // write to local file and store
       updateNote({ id: noteId, content: text });
-      if (rawMode === 'split') { setMdCtn(text); }
+      if (rawMode === 'split' && focusOn === 'raw') { 
+        setRawCtn(null); 
+        setMdCtn(text); 
+      }
       await writeFile(notePath, text);
       if (initDir) { 
         await writeJsonFile(initDir); 
       }
     },
-    [updateNote, noteId, rawMode, notePath, initDir]
+    [updateNote, noteId, rawMode, focusOn, notePath, initDir]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`);
@@ -358,17 +375,18 @@ function Note(props: Props) {
                   <div className="grid grid-cols-2 gap-1 justify-between">
                     <div className="flex-1 mr-4 border-r-2 border-gray-200 dark:border-gray-600">
                       <RawMarkdown
-                        initialContent={rawCtn || mdContent}
+                        initialContent={focusOn === 'wysiwyg' ? rawCtn || mdContent : mdContent}
                         onChange={onMarkdownChange}
                         dark={darkMode}
                         readMode={readMode}
                         className={"text-xl"}
+                        onFocus={() => switchFocus('raw')}
                       />
                     </div>
                     <div className="flex-1 ml-4">
                       <MsEditor 
                         ref={editorInstance}
-                        value={mdCtn || mdContent}
+                        value={focusOn === 'raw' ? mdCtn || mdContent : mdContent}
                         dark={darkMode}
                         readOnly={readMode}
                         readOnlyWriteCheckboxes={readMode}
@@ -383,6 +401,7 @@ function Note(props: Props) {
                         onClickAttachment={onClickAttachment} 
                         embeds={embeds}
                         disables={['sub']}
+                        onFocus={() => switchFocus('wysiwyg')}
                       />
                     </div>
                   </div>
