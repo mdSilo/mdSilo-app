@@ -18,3 +18,12 @@ export const Log = async (type: string, info: string): Promise<void> => {
 	log.logs = [...preLogs, { type, info, timestamp: new Date() }];
 	await Storage.set('log', log);
 };
+
+/**
+ * Get the logs 
+ * @returns {Promise<LogItem[]>}
+ */
+ export const getLog = async (): Promise<LogItem[]> => {
+	const log: { logs: LogItem[] } = await Storage.get('log');
+	return log.logs;
+};

@@ -15,6 +15,7 @@
 ### Improvements 
 
 - Listen remove event in directory 
+- Copy log for debug 
 
 ## [app-v0.4.5] - 2022-09-19
 

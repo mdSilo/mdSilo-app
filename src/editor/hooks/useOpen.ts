@@ -4,8 +4,6 @@ import {
 } from 'file/open';
 import { normalizeSlash, getDirPath } from 'file/util';
 import { writeAllFile } from 'file/write';
-import { Log } from 'file/log';
-
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);
@@ -70,7 +68,6 @@ export const listInitDir = async (dirPath: string) => {
 // SidebarNotesBar, to upper-dir
 export const listDirPath = async (dirPath: string, noCache = true) => {
   // console.log("dir path", dirPath);
-  Log('Info', `List dir: ${dirPath}`);
   const normalizedDir = await getDirPath(dirPath);
   store.getState().setCurrentDir(normalizedDir);
   if (noCache) {
