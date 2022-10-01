@@ -70,8 +70,8 @@
     "windows": [
       {
         "title": "mdSilo",
-        "width": 1000,
-        "height": 750,
+        "width": 1024,
+        "height": 768,
 				"minWidth": 800,
 				"minHeight": 600,
 				"resizable": true,
@@ -87,7 +87,7 @@
       }
     ],
     "security": {
-      "csp": "default-src blob: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'"
+      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'"
     }
   }
 }
