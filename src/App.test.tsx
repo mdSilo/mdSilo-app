@@ -2,7 +2,7 @@
 // import { render, screen } from '@testing-library/react';
 import * as fileUtil from 'file/util';
 import { rmFileNameExt, getFileExt } from 'file/process';
-import { shortenString } from 'utils/helper';
+import { shortenString, decodeHTMLEntity } from 'utils/helper';
 // import App from './components/App';
 
 
@@ -20,6 +20,10 @@ beforeEach(() => {
   })
 })
 
+// FIXME: 
+// TypeError: Cannot read properties of undefined (reading 'document')
+// import d3 from 'd3'; on mindmap/view
+// 
 // test('renders App component', () => {
 //   render(<App />);
 //   expect(screen.getByText('mdSilo')).toBeInTheDocument();
@@ -53,4 +57,11 @@ test('string util', () => {
     .toBe('dustry. Lorem Ipsum has ==been== the industry.');
   expect(shortenString('Ipsum is simply dummy text of the print', 'dummy', 42))
     .toBe('Ipsum is simply ==dummy== text of the print');
+})
+
+test('decode html entity', () => {
+  const txt = 'Lorem&gt; Ipsum &amp; is simply &lt; dummy &quot; text &apos; of the printing and typesetting &copy; industry';
+  expect(decodeHTMLEntity(txt)).toBe(
+    'Lorem&gt; Ipsum &amp; is simply &lt; dummy &quot; text &apos; of the printing and typesetting © industry'
+  );
 })

@@ -7797,10 +7797,10 @@ mdn-data@2.0.4:
   resolved "https://registry.npmjs.org/mdn-data/-/mdn-data-2.0.4.tgz"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
 
-mdsmirror@0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.0.4.tgz#3451c9ef688e54c205a24e2b5121b77ed753e424"
-  integrity sha512-xf1k0c1dvXd08kQ1SHKk4j9gCQ/ZnVfifHCl2KVKbhZB9ijH8EYZv/21AqMpVojpY+AvGEK0jhRTxV8FFvPEaA==
+mdsmirror@0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.0.7.tgz#6b00d469193f926257f6990b0da543016074333d"
+  integrity sha512-0Am5Kr80qu9h5GxXtFLPvt1MFK3p8wdQpNl+GxBXEmpKdaUr6O9rr0Ebihk8BGnN0bQ1k/CJWFCHpsyW/J/xNQ==
   dependencies:
     "@juggle/resize-observer" "^3.3.1"
     "@tabler/icons" "^1.92.0"

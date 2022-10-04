@@ -27,6 +27,19 @@ export function realDateCompare(d1: Date, d2: Date) {
   return d1.getTime() - d2.getTime();
 }
 
+export function decodeHTMLEntity(text: string) {
+  const dummy = document.createElement("div");
+  const txt = text.replace(
+    /(&(?!(amp|gt|lt|quot|apos))[^;]+;)/g, // excerpt these html entities
+    (a: string) => {
+      dummy.innerHTML = a;
+      return dummy.textContent || ' '; // real value
+    }
+  );
+
+  return txt;
+}
+
 // device
 const SM_BREAKPOINT = 640;
 

@@ -14,11 +14,11 @@ import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { listDirPath } from 'editor/hooks/useOpen';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
-import { ciStringEqual, regDateStr, isUrl } from 'utils/helper';
+import { ciStringEqual, regDateStr, isUrl, decodeHTMLEntity } from 'utils/helper';
 import imageExtensions from 'utils/image-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
-import { openFileDilog, openFilePath, openUrl } from 'file/open';
+import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
 import { joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir } from 'file/util';
 import { getFileExt } from 'file/process';
 import NoteHeader from './NoteHeader';
@@ -292,6 +292,15 @@ function Note(props: Props) {
     await openUrl(decodeURI(href));
   }, []);
 
+  const onSaveDiagram = useCallback(async (svg: string, ty: string) => {
+    if (!initDir) return;
+    const rawSVG = decodeHTMLEntity(svg);
+    const dir = await saveDilog();
+    const defaultDir = `${initDir}/mindmap/${title.trim().replaceAll(' ', '-') || ty}.svg`;
+    const saveDir = normalizeSlash(dir || defaultDir); 
+    await writeFile(saveDir, rawSVG);
+  }, [initDir, title]);
+
   const noteContainerClassName =
     'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-black dark:text-gray-200';
   const errorContainerClassName = 
@@ -368,11 +377,17 @@ function Note(props: Props) {
                     onOpenLink={onOpenLink} 
                     attachFile={onAttachFile} 
                     onClickAttachment={onClickAttachment} 
+                    onSaveDiagram={onSaveDiagram} 
                     embeds={embeds}
                     disables={['sub']}
                   />
                 ) : rawMode === 'mindmap' ? (
-                  <Mindmap key={`mp-${noteId}`} title={title} mdValue={mdContent} initDir={initDir} />
+                  <Mindmap 
+                    key={`mp-${noteId}`} 
+                    title={title} 
+                    mdValue={mdContent} 
+                    initDir={initDir} 
+                  />
                 ) : (
                   <div className="grid grid-cols-2 gap-1 justify-between">
                     <div className="flex-1 mr-4 border-r-2 border-gray-200 dark:border-gray-600">
