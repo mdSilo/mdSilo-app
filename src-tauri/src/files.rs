@@ -500,7 +500,7 @@ pub async fn listen_dir(
   }
 }
 
-// opn url with default web browser
+// opn url with default application(like: web browser)
 #[tauri::command]
 pub fn open_url(url: String) -> bool {
   open::that(url).is_ok()

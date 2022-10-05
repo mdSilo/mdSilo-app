@@ -5,7 +5,7 @@ import { defaultNote, Note } from 'types/model';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processMds, processDirs } from './process';
-import { getParentDir, getBaseName } from './util';
+import { getParentDir, getBaseName, joinPaths } from './util';
 
 /* 
 Open files: 
@@ -46,7 +46,7 @@ export const openDirDilog = async () => {
  * @param dir 
  * @returns 
  */
- export const listDir = async (dir: string, toListen=true): Promise<void> => {
+export const listDir = async (dir: string, toListen=true): Promise<void> => {
   const dirInfo = new DirectoryAPI(dir);
   // console.log("dir api", dirInfo)
   if (!(await dirInfo.exists())) return;
@@ -226,7 +226,7 @@ export async function openFilePaths(filePaths: string[]) {
  * @param filePath
  * @returns Promise<Note | undefined>
  */
- export async function openFilePath(filePath: string, setCurrent: boolean) {
+export async function openFilePath(filePath: string, setCurrent: boolean) {
   const files = [];
   const dirs = [];
 
@@ -339,13 +339,17 @@ export async function openUrl(url: string): Promise<boolean> {
 
 /**
  * dialog to get dir path to save data
+ *  @param fname string, optional 
  * @returns 
  */
- export const saveDilog = async () => {
+export const saveDilog = async (fname?: string) => {
   const recentDirPath = getRecentDirPath();
+  const saveToPath = fname 
+    ? await joinPaths(recentDirPath, [fname]) 
+    : recentDirPath;
   const dirPath = await dialog.save({
     title: 'Select Folder to Save Data',
-    defaultPath: recentDirPath,
+    defaultPath: saveToPath,
   });
   return dirPath;
 };

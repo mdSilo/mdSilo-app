@@ -51,8 +51,10 @@ export function Mindmap(props: Props) {
     styleNode.setAttribute('type', 'text/css');
     styleNode.innerHTML = `svg#mindmap {width: 100%; height: 100%;} .markmap-node-circle {fill: #fff; stroke-width: 1.5px;} .markmap-node-text {fill: #000; font: 10px sans-serif;} .markmap-link {fill: none;}`;
     svgElement.appendChild(styleNode);
-    const dir = await saveDilog();
-    const defaultDir = `${initDir}/mindmap/${title.trim().replaceAll(' ', '-') || 'untitle'}.svg`;
+    // prepare to save
+    const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-mindmap.svg`;
+    const dir = await saveDilog(fname);
+    const defaultDir = `${initDir}/mindmap/${fname}`;
     const saveDir = normalizeSlash(dir || defaultDir); 
     await writeFile(saveDir, svgElement.outerHTML);
   }, [svgElement, initDir, title]);

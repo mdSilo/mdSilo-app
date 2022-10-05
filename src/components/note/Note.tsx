@@ -152,8 +152,9 @@ function Note(props: Props) {
         const dirPath = await getDirPath(oldPath);
         const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
         // 2- swap value on disk: delete then write
+        const swapContent = store.getState().notes[noteId]?.content || mdContent;
         await deleteFile(oldPath);
-        await writeFile(newPath, store.getState().notes[noteId]?.content || mdContent);
+        await writeFile(newPath, swapContent);
         // 3- delete the old redundant in store before upsert note
         deleteNote(oldPath);
         // 4- update note in store
@@ -295,8 +296,9 @@ function Note(props: Props) {
   const onSaveDiagram = useCallback(async (svg: string, ty: string) => {
     if (!initDir) return;
     const rawSVG = decodeHTMLEntity(svg);
-    const dir = await saveDilog();
-    const defaultDir = `${initDir}/mindmap/${title.trim().replaceAll(' ', '-') || ty}.svg`;
+    const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-${ty}.svg`
+    const dir = await saveDilog(fname);
+    const defaultDir = `${initDir}/mindmap/${fname}`;
     const saveDir = normalizeSlash(dir || defaultDir); 
     await writeFile(saveDir, rawSVG);
   }, [initDir, title]);

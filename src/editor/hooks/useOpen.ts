@@ -83,7 +83,7 @@ export const listDirPath = async (dirPath: string, noCache = true) => {
 };
 
 export const onSave = async () => {
-  const dir = await saveDilog();
+  const dir = await saveDilog('mdsiloFolder');
   const normalizedDir = normalizeSlash(dir);
   // console.log("save dir path", dir, normalizedDir);
   const notesObj = store.getState().notes;
