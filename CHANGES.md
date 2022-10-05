@@ -6,11 +6,17 @@
 
 ### Features 
 
-- [ ] Diagram: mermaid  
+- [X] Diagram: mermaid, echarts, abc music notation.     
 
 ### Bug Fixes 
 
+- [X] rename doc after edition 
+
 ### Improvements 
+
+- [X] Default file name for `saveDialog()`. 
+- [X] Include Hahtag in graph view.   
+- [X] Add `data:` to csp. 
 
 ## [app-v0.4.6] - 2022-09-28 
 

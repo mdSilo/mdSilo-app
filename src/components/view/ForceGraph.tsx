@@ -31,6 +31,7 @@ import { openFilePath } from 'file/open';
 
 export const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
 export const WIKILINK_REGEX = /\[\[(.+)\]\]/g;
+export const HASHTAG_REGEX = /\s#(.+)#\s/g;
 
 export type NodeDatum = {
   id: string;
@@ -103,6 +104,16 @@ export default function ForceGraph(props: Props) {
             linksByNoteId[note.id].add(existingNote.id);
             linksByNoteId[existingNote.id].add(note.id);
           }
+        }
+      }
+      // HashTag
+      const tag_array: RegExpMatchArray[] = [...note.content.matchAll(HASHTAG_REGEX)];
+      for (const match of tag_array) {
+        const tag = match[1]?.trim();
+        if (tag && !tag.includes('#')) {
+          tagNames.add(tag);
+          // Add the tag to each note set
+          linksByNoteId[note.id].add(tag);
         }
       }
     }
@@ -227,15 +238,15 @@ export default function ForceGraph(props: Props) {
       if (isTag) {
         context.fillStyle = colors.yellow[400];
       } else if (areNeighbors(hoveredNode.current?.id, node.id)) {
-        context.fillStyle = colors.emerald[400];
+        context.fillStyle = colors.red[400];
       } else {
-        context.fillStyle = colors.neutral[400];
+        context.fillStyle = colors.green[300];
       }
 
       if (isHovered) {
-        context.strokeStyle = colors.emerald[900];
+        context.strokeStyle = colors.red[600];
         context.stroke();
-        context.fillStyle = isTag ? colors.yellow[600] : colors.emerald[400];
+        context.fillStyle = isTag ? colors.yellow[600] : colors.red[400];
       }
 
       context.fill();
