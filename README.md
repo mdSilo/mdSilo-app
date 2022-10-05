@@ -11,11 +11,13 @@ built with React and [Tauri](https://github.com/tauri-apps).
 
 ## Features
 
+- All-In-One Editor: Markdown and extensions, Diagram, MindMap... 
 - WYSIWYG mode, Markdown mode, Mindmap mode; 
 - Markdown support: Table, Math, Code block(Highlight)...   
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
 - Chronicle view, Graph view, Task view... 
 - Full-text search; 
+- Dark and Light Mode
 - Available for Windows, macOS, Linux 
 
 ## Tech Stack
@@ -43,14 +45,14 @@ built with React and [Tauri](https://github.com/tauri-apps).
   - [X] Notice block: info, warning, tips 
   - [X] Wikilink: `[[]]` 
   - [X] Hashtag: `#tag#` 
-  - [ ] Diagram: mermaid... 
+  - [X] Diagram: mermaid, echarts, music notation... 
 
 - Writing and formatting 
   - [X] WYSIWYG, raw mode and mindmap mode 
   - [X] Slash commands  
   - [X] Hovering toolbar
   - [X] hotkeys 
-  - [X] Split view
+  - [X] Split view 
 
 - View
   - [X] Graph

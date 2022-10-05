@@ -57,8 +57,8 @@ This is an editable demo.
 :::
 
 ## Features
-  - 📝 WYSIWYG Markdown Editor: Table, Math, Code block, Hashtag...  
-  - 🔀 Seamless switch between WYSIWYG and raw Markdown 
+  - 📝 All-In-One Editor: Markdown and extensions, Diagram, MindMap...  
+  - 🔀 Seamlessly switch between multi-modes: WYSIWYG, Markdown and MindMap  
   - 🗄️ Build personal wiki with bidirectional links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...   
   - 🕸️ Graph view to visualize the networked writing  
