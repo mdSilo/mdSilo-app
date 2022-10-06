@@ -18,6 +18,7 @@
 - [X] Default file name for `saveDialog()`. 
 - [X] Include Hahtag in graph view.   
 - [X] Add `data:` to csp. 
+- [X] Relative local image path 
 
 ## [app-v0.4.6] - 2022-09-28 
 

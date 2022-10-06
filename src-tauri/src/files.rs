@@ -390,7 +390,7 @@ pub async fn copy_file_to_assets(
     .normalize_slash()
     .unwrap_or_default();
   
-  let relative_to_path = Path::new("$DIR$/assets")
+  let relative_to_path = Path::new("./assets")
     .join(&file_name)
     .normalize_slash()
     .unwrap_or_default();

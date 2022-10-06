@@ -2,6 +2,7 @@ import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from '
 import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import { invoke } from '@tauri-apps/api';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
+import { type as getOsType } from '@tauri-apps/api/os';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
@@ -19,11 +20,15 @@ import imageExtensions from 'utils/image-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
 import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
-import { joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir } from 'file/util';
+import { Log } from 'file/log';
+import { 
+  joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir 
+} from 'file/util';
 import { getFileExt } from 'file/process';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import updateBacklinks from './backlinks/updateBacklinks';
+
 
 
 type Props = {
@@ -43,7 +48,6 @@ function Note(props: Props) {
     // console.log(hdings); 
     setHeadings(hdings ?? []);
   };
-  useEffect(() => { getHeading(); }, [noteId]);
 
   const darkMode = useStore((state) => state.darkMode);
   const rawMode = useStore((state) => state.rawMode);
@@ -53,13 +57,33 @@ function Note(props: Props) {
   
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
-  // console.log("initDir", initDir);
+  const [protocol, setProtocol] = useState('');
+
+  useEffect(() => { 
+    getHeading(); 
+    getOsType().then(os => {
+      const protocol = os.includes('Windows') 
+        ? 'https://asset.localhost//' 
+        : 'asset://';
+      setProtocol(protocol);
+    }).catch((error) => {
+      Log('Error', `${error.name}: ${error.message}, ${error.cause}, ${error.stack}`);
+    });
+  }, [noteId]);
+
+  console.log("initDir", initDir, protocol);
   const storeNotes = useStore((state) => state.notes);
   // get note and properties: title,  content value.... 
   const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
   const isDaily = thisNote?.is_daily ?? false;
   const title = thisNote?.title || '';
-  const mdContent = thisNote?.content || ' '; // show ' ' if null  
+  const mdContent = thisNote?.content || ' '; // show ' ' if null 
+  
+  // const doc = parser.parse(mdContent);
+  // console.log(">> doc: ", doc);
+  // const json = getJSONContent(doc); 
+  // console.log(">>json: ", json);
+  
   const notePath = thisNote?.file_path;
   const shortNotePath = initDir && notePath 
     ? notePath.replace(initDir, normalizeSlash(initDir).split('/').pop() || '.')
@@ -257,6 +281,7 @@ function Note(props: Props) {
       const filePath = await openFileDilog(ext, false);
       if (filePath && typeof filePath === 'string') {
         let fullPath = filePath;
+        let fileUrl = filePath;
         // console.log("use asset", useAsset)
         if (initDir && useAsset) {
           const assetPath = await invoke<string[]>(
@@ -264,15 +289,24 @@ function Note(props: Props) {
           );
           // console.log("asset path", assetPath)
           fullPath = assetPath[0] || filePath;
+
+          if (accept === 'image/*') {
+            // now it is relative path
+            fileUrl = encodeURI(assetPath[1] || filePath);
+          } else {
+            fileUrl = encodeURI(assetPath[0] || filePath);
+          }
+        } else {
+          fileUrl = accept === 'image/*' 
+            ? convertFileSrc(filePath)
+            : encodeURI(filePath);
         }
+        console.log("file url", fileUrl)
         const fileInfo = new FileAPI(fullPath);
         if (await fileInfo.exists()) {
           const fileMeta = await fileInfo.getMetadata();
           const fname = fileMeta.file_name;
           const fileExt = getFileExt(fname);
-          const fileUrl = accept === 'image/*' 
-            ? convertFileSrc(fullPath)
-            : encodeURI(fullPath);
           const attach: Attach = {
             type: accept === 'image/*' ? `image/${fileExt}` : fileExt,
             name: fname,
@@ -382,6 +416,8 @@ function Note(props: Props) {
                     onSaveDiagram={onSaveDiagram} 
                     embeds={embeds}
                     disables={['sub']}
+                    rootPath={initDir}
+                    protocol={protocol}
                   />
                 ) : rawMode === 'mindmap' ? (
                   <Mindmap 
@@ -422,6 +458,8 @@ function Note(props: Props) {
                         onClickAttachment={onClickAttachment} 
                         embeds={embeds}
                         disables={['sub']}
+                        rootPath={initDir}
+                        protocol={protocol}
                         onFocus={() => switchFocus('wysiwyg')}
                       />
                     </div>

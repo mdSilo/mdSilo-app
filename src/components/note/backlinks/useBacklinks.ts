@@ -96,17 +96,6 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
         }
       }
     }
-    // case [[]]
-    // miss `[[]]` on compute backlink per type, the type is labeled as text
-    // due to parser w/o the WikiLink ext (to fix upstream)
-    if (node.text && node.text.includes(`[[${noteTitle}]]`)) {
-      out.push({
-        text: node.text,
-        from: node.from,
-        to: node.to,
-        context,
-      });
-    }
     // recursively
     if (node.content?.length > 0) {
       for (const n of node.content) {

@@ -219,6 +219,7 @@ export const store = createVanilla<Store>(
         noteSort: state.noteSort,
         recentDir: state.recentDir,
         pinnedDir: state.pinnedDir,
+        useAsset: state.useAsset,
         activities: state.activities,
       }),
     }

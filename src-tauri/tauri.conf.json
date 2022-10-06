@@ -65,7 +65,10 @@
 				"all": true,
 				"asset": true,
 				"assetScope": ["*"]
-			}
+			},
+      "os": {
+        "all": true
+      }
     },
     "windows": [
       {

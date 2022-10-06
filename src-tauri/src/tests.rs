@@ -238,7 +238,7 @@ mod tests {
     assert_eq!(is_dir(Path::new(work_dir.as_str())).unwrap(), true);
     assert_eq!(abs_path, format!("{}/assets/app.txt", work_dir.clone())); 
     assert_eq!(file_exist(&abs_path), true);
-    assert_eq!(rel_path, "$DIR$/assets/app.txt");
+    assert_eq!(rel_path, "./assets/app.txt");
     // override copy
     let asset_path_1 =
       copy_file_to_assets(to_path.clone(), format!("{}/", work_dir)).await;
@@ -246,7 +246,7 @@ mod tests {
     let rel_path_1 = asset_path_1.1;
     assert_eq!(abs_path_1, format!("{}/assets/app.txt", work_dir.clone())); 
     assert_eq!(file_exist(&abs_path_1), true);
-    assert_eq!(rel_path_1, "$DIR$/assets/app.txt");
+    assert_eq!(rel_path_1, "./assets/app.txt");
 
     // rename file
     let from_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -324,7 +324,7 @@ mod tests {
     let relative_path = asset_path.1;
     assert_eq!(to_path, "/home/uu/Documents/assets/temple.jpg");
     assert_eq!(file_exist("/home/uu/Documents/assets/temple.jpg"), true);
-    assert_eq!(relative_path, "$DIR$/assets/temple.jpg");
+    assert_eq!(relative_path, "./assets/temple.jpg");
 
     delete_files(vec![String::from("/home/uu/Documents/assets/beauty.jpg")]).await;
     let asset_path_1 = copy_file_to_assets(
@@ -336,7 +336,7 @@ mod tests {
     let relative_path_1 = asset_path_1.1;
     assert_eq!(to_path_1, "/home/uu/Documents/assets/beauty.jpg");
     assert_eq!(file_exist("/home/uu/Documents/assets/beauty.jpg"), true);
-    assert_eq!(relative_path_1, "$DIR$/assets/beauty.jpg");
+    assert_eq!(relative_path_1, "./assets/beauty.jpg");
   }
 
   #[test]
