@@ -145,7 +145,7 @@ export default function ForceGraph(props: Props) {
       data.nodes.push({
         id: tag,
         name: `#${tag}`,
-        radius: 3,
+        radius: 4,
         ty: 'tag',
       });
     }
@@ -206,7 +206,7 @@ export default function ForceGraph(props: Props) {
       if (isTag) {
         context.strokeStyle = 'transparent';
       } else if (isLinkHighlighted) {
-        context.strokeStyle = colors.emerald[300];
+        context.strokeStyle = colors.blue[400];
       } else if (darkMode) {
         context.strokeStyle = colors.neutral[700];
       } else {
@@ -238,15 +238,15 @@ export default function ForceGraph(props: Props) {
       if (isTag) {
         context.fillStyle = colors.yellow[400];
       } else if (areNeighbors(hoveredNode.current?.id, node.id)) {
-        context.fillStyle = colors.red[400];
+        context.fillStyle = colors.blue[400];
       } else {
         context.fillStyle = colors.green[300];
       }
 
       if (isHovered) {
-        context.strokeStyle = colors.red[600];
+        context.strokeStyle = colors.blue[600];
         context.stroke();
-        context.fillStyle = isTag ? colors.yellow[600] : colors.red[400];
+        context.fillStyle = isTag ? colors.yellow[600] : colors.blue[400];
       }
 
       context.fill();

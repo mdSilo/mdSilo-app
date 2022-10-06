@@ -15,7 +15,7 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
   const isLoaded = store.getState().isLoaded;
   const setIsLoaded = store.getState().setIsLoaded;
   const initDir = store.getState().initDir;
-  // console.log("loaded?", isLoaded);
+  // console.log("updateBackLinks loaded?", isLoaded);
   if (!isLoaded && initDir) {
     loadDir(initDir).then(() => setIsLoaded(true));
   }
@@ -23,10 +23,8 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
   const notes = store.getState().notes;
   const updateNote = store.getState().updateNote;
   const backlinks = computeLinkedBacklinks(notes, noteTitle);
-
   for (const backlink of backlinks) {
     const note = notes[backlink.id];
-
     if (!note) {
       continue;
     }
@@ -48,7 +46,6 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
       }
     }
     // CASE: [[]]
-    // FIXME: miss `[[]]` on compute backlink 
     const wiki_array: RegExpMatchArray[] = [...note.content.matchAll(WIKILINK_REGEX)];
     // console.log("wiki arr", wiki_array, noteTitle, newTitle)
     for (const match of wiki_array) {
@@ -58,8 +55,8 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
         if (noteTitle === title) {
           newTitle = newTitle?.trim();
           const replaceTo = newTitle
-            ? `[[newTitle]]` // rename
-            : match[1]       // delete
+            ? `[[${newTitle}]]` // rename
+            : match[1]          // delete
           content = content.replaceAll(match[0], replaceTo);
         }
       }

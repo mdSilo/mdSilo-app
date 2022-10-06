@@ -79,7 +79,6 @@ export const computeLinkedBacklinks = (
   return result;
 };
 
-// FIXME: miss `[[]]` on compute backlink, the type is labeled as text not wikilink
 const computeLinkedMatches = (content: string, noteTitle: string) => {
   const out: BacklinkMatch[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,6 +96,18 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
         }
       }
     }
+    // case [[]]
+    // miss `[[]]` on compute backlink per type, the type is labeled as text
+    // due to parser w/o the WikiLink ext (to fix upstream)
+    if (node.text && node.text.includes(`[[${noteTitle}]]`)) {
+      out.push({
+        text: node.text,
+        from: node.from,
+        to: node.to,
+        context,
+      });
+    }
+    // recursively
     if (node.content?.length > 0) {
       for (const n of node.content) {
         findMatch(n, node.content);

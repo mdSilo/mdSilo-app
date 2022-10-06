@@ -10,7 +10,8 @@
 
 ### Bug Fixes 
 
-- [X] rename doc after edition 
+- [X] rename doc after editing
+- [X] compute backlinks(`[[]]`)
 
 ### Improvements 
 
