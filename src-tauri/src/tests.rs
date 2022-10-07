@@ -276,7 +276,7 @@ mod tests {
     assert_eq!(file_exist(&to_dir), false);
     
     #[cfg(not(target_os = "macos"))]
-    assert_eq!(file_exist(&abs_path_1), true);
+    assert_eq!(file_exist(&abs_path_1), true); // ci test failed on win, but OK on Win10
     // on macOS: 
     #[cfg(target_os = "macos")]
     assert_eq!(file_exist(&abs_path_1), false);

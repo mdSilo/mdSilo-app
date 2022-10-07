@@ -277,13 +277,8 @@ function Note(props: Props) {
           );
           // console.log("asset path", assetPath)
           fullPath = assetPath[0] || filePath;
-
-          if (accept === 'image/*') {
-            // now it is relative path
-            fileUrl = encodeURI(assetPath[1] || filePath);
-          } else {
-            fileUrl = encodeURI(assetPath[0] || filePath);
-          }
+          // now it is relative path
+          fileUrl = encodeURI(assetPath[1] || filePath);
         } else {
           fileUrl = accept === 'image/*' 
             ? convertFileSrc(filePath)
@@ -311,9 +306,12 @@ function Note(props: Props) {
 
    // open Attachment file using defult application 
   const onClickAttachment = useCallback(async (href: string) => {
-    // console.log("file href", href, decodeURI(href))
-    await openUrl(decodeURI(href));
-  }, []);
+    const realHref = href.startsWith('./') && initDir
+      ? href.replace('.', initDir)
+      : href;
+    // console.log("file href", href, decodeURI(realHref), initDir);
+    await openUrl(decodeURI(realHref));
+  }, [initDir]);
 
   const onSaveDiagram = useCallback(async (svg: string, ty: string) => {
     if (!initDir) return;

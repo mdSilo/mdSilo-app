@@ -77,7 +77,7 @@ const userSettingsSlice = (
   setReadMode: setter(set, 'readMode'),
   rawMode: 'wysiwyg',
   setRawMode: setter(set, 'rawMode'),
-  useAsset: false,
+  useAsset: true,
   setUseAsset: setter(set, 'useAsset'),
   recentDir: [],
   setRecentDir: setter(set, 'recentDir'),

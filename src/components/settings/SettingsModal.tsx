@@ -32,8 +32,8 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           optionRight="Dark"
         />
         <SettingsToggle
-          name="Use Asset Folder" 
-          descript="Asset Folder to store images, attached files..."
+          name="Use Assets Folder" 
+          descript="To store images, files and support relative path"
           check={useAsset}
           handleCheck={setUseAsset}
           optionLeft="No" 
