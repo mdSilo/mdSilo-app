@@ -2,7 +2,6 @@ import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from '
 import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import { invoke } from '@tauri-apps/api';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
-import { type as getOsType } from '@tauri-apps/api/os';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
@@ -29,8 +28,6 @@ import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import updateBacklinks from './backlinks/updateBacklinks';
 
-
-
 type Props = {
   noteId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,6 +46,8 @@ function Note(props: Props) {
     setHeadings(hdings ?? []);
   };
 
+  useEffect(() => { getHeading(); }, [noteId]); // to trigger change on dep change
+
   const darkMode = useStore((state) => state.darkMode);
   const rawMode = useStore((state) => state.rawMode);
   const readMode = useStore((state) => state.readMode);
@@ -57,21 +56,11 @@ function Note(props: Props) {
   
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
-  const [protocol, setProtocol] = useState('');
 
-  useEffect(() => { 
-    getHeading(); 
-    getOsType().then(os => {
-      const protocol = os.includes('Windows') 
-        ? 'https://asset.localhost//' 
-        : 'asset://';
-      setProtocol(protocol);
-    }).catch((error) => {
-      Log('Error', `${error.name}: ${error.message}, ${error.cause}, ${error.stack}`);
-    });
-  }, [noteId]);
+  // need to update timely if possible
+  const protocol = navigator.platform.startsWith('Win') ? 'https://asset.localhost/' : 'asset://';
 
-  console.log("initDir", initDir, protocol);
+  // console.log("initDir", initDir, protocol, navigator.platform);
   const storeNotes = useStore((state) => state.notes);
   // get note and properties: title,  content value.... 
   const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
@@ -301,7 +290,7 @@ function Note(props: Props) {
             ? convertFileSrc(filePath)
             : encodeURI(filePath);
         }
-        console.log("file url", fileUrl)
+        // console.log("file url", fileUrl)
         const fileInfo = new FileAPI(fullPath);
         if (await fileInfo.exists()) {
           const fileMeta = await fileInfo.getMetadata();
