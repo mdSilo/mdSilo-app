@@ -27,7 +27,7 @@ const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
       className={containerClassName}
       onClick={() => onNoteLinkClick(noteId)}
     >
-      <MsEditor value={editorValue} dark={darkMode} readOnly={true} disables={['sub']} />
+      <MsEditor value={editorValue} dark={darkMode} disables={['sub']} />
     </button>
   );
 };

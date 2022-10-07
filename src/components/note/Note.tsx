@@ -19,7 +19,6 @@ import imageExtensions from 'utils/image-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
 import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
-import { Log } from 'file/log';
 import { 
   joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir 
 } from 'file/util';

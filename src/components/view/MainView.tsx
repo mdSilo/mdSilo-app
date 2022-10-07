@@ -41,7 +41,6 @@ function DefaultView() {
           dark={false} 
           value={defaultValue} 
           onClickHashtag={(text) => { console.info("Click Hahtag: ", text);}}
-          onShowToast={() => {/* nothing*/}} 
           disables={['sub']}
         />
       </div>
@@ -67,6 +66,6 @@ This is an editable demo.
   - 🔍 Full-text search 
   - ✨ Available for Windows, macOS, Linux and Web  
 
-For human brain, Reading and Writing is the I/O: the communication between the information processing system and the outside world. mdSilo is here to boost your daily I/O, it is tiny yet powerful, free and open source.
+For human brain, Reading and Writing is the I/O: the communication between the information processing system and the outside world. mdSilo is here to boost your daily I/O, it is tiny yet powerful, free for everyone.
 \\
 `;
