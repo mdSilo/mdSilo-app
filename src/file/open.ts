@@ -122,7 +122,8 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const dirs = files.filter(f => f.is_dir);
   const processedDirs = dirs.length ? processDirs(dirs) : [];
   const mds = files.filter(f => f.is_file);
-  const processedMds =  mds.length ? processFiles(mds)[0] : [];
+  const processeds =  mds.length ? processFiles(mds) : [[], []];
+  const processedMds = processeds[0];
 
   const upsertNote = store.getState().upsertNote;
   const upsertTree = store.getState().upsertTree;
@@ -143,7 +144,16 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
     treeItemList.push(md);
     upsertNote(md);
   }
-  // 4- upsertTree
+  // 4- push non-md to tree
+  const processedNons = processeds[1];
+  // console.log("non", processedNons)
+  for (const non of processedNons) {
+    if (non.id.toLowerCase().endsWith('.json')) {
+      continue;
+    }
+    treeItemList.push(non);
+  }
+  // 5- upsertTree
   upsertTree(dirPath, treeItemList);
 }
 
@@ -171,7 +181,7 @@ export const openFileDilog = async (ty: string[], multi = true) => {
 };
 
 /**
- * Open and process md files or dirs, upsert note and tree to store
+ * Open and process files or dirs, upsert note and tree to store
  * @param filePaths 
  * @returns Promise<boolean>
  */
@@ -193,12 +203,25 @@ export async function openFilePaths(filePaths: string[]) {
 
   const upsertNote = store.getState().upsertNote;
   const upsertTree = store.getState().upsertTree;
+  // The filePaths maybe not in same dir(even though it is same in most cases), 
+  // so need to upsertTree in the for-loop
   // process md files
-  const processedNotes = processFiles(files)[0];
+  const processeds = processFiles(files);
+  const processedNotes = processeds[0];
   for (const md of processedNotes) {
     upsertNote(md);
     const parentDir = await getParentDir(md.file_path);
     upsertTree(parentDir, [md]);
+    upsertTreeRecursively(parentDir);
+  }
+  // process non-md files
+  const processedNons = processeds[1];
+  for (const non of processedNons) {
+    if (non.id.toLowerCase().endsWith('.json')) {
+      continue;
+    }
+    const parentDir = await getParentDir(non.id);
+    upsertTree(parentDir, [non]);
     upsertTreeRecursively(parentDir);
   }
   // process dirs

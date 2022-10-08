@@ -156,11 +156,8 @@ class DirectoryAPI {
           const currentNoteId = store.getState().currentNoteId;
           // console.log("write: ", event, filePaths, currentNoteId)
           // any change on current note will not be loaded 
-          for (const filePath of filePaths) {
-            if (filePath !== currentNoteId) {
-              await openFilePaths([filePath]);
-            }
-          }
+          const wrotePaths = filePaths.filter(f => f !== currentNoteId);
+          if (wrotePaths.length > 0) await openFilePaths(wrotePaths);
         } else if (event === 'renameFrom') {
           // on Linux, del is renameFrom
           const currentNoteId = store.getState().currentNoteId;
