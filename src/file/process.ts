@@ -14,25 +14,27 @@ export function processJson(content: string): NotesData {
 }
 
 /**
- * on Process Mds: 
+ * on Process Files: 
  */
-export function processMds(fileList: FileMetaData[]) {
+export function processFiles(fileList: FileMetaData[]) {
   const newNotesData: Note[] = [];
+  const nonNotesData: Note[] = [];
 
   for (const file of fileList) {
     const fileName = file.file_name;
-    const checkMd = checkFileIsMd(fileName);
-    if (!fileName || !file.is_file || !checkMd) {
+    
+    if (!fileName || !file.is_file) {
       continue;
     }
     const fileContent = file.file_text;
     const filePath = file.file_path;
 
+    const checkMd = checkFileIsMd(fileName);
     // new note from file
-    const newNoteTitle = rmFileNameExt(fileName);
+    const newNoteTitle = checkMd ? rmFileNameExt(fileName) : fileName;
     const lastModDate = new Date(file.last_modified.secs_since_epoch * 1000).toISOString();
     const createdDate = new Date(file.created.secs_since_epoch * 1000).toISOString();
-    const isDaily = regDateStr.test(newNoteTitle);
+    const isDaily = checkMd ? regDateStr.test(newNoteTitle) : false;
     const newNoteObj = {
       id: filePath,
       title: newNoteTitle,
@@ -42,13 +44,13 @@ export function processMds(fileList: FileMetaData[]) {
       is_daily: isDaily,
       file_path: filePath,
     };
-    const newProcessedNote = {...defaultNote, ...newNoteObj};
+    const newProcessed = {...defaultNote, ...newNoteObj};
 
     // push to Array
-    newNotesData.push(newProcessedNote);
+    checkMd ? newNotesData.push(newProcessed) : nonNotesData.push(newProcessed);
   }
 
-  return newNotesData;
+  return [newNotesData, nonNotesData];
 }
 
 export function processDirs(fileList: FileMetaData[]) {
@@ -96,7 +98,7 @@ export const getFileExt = (fname: string) => {
   return fname.slice((fname.lastIndexOf(".") - 1 >>> 0) + 2);
 }
 
-const checkFileIsMd = (fname: string) => {
+export const checkFileIsMd = (fname: string) => {
   const check = /\.(text|txt|md|mkdn|mdwn|mdown|markdown){1}$/i.test(fname);
   return check;
 }

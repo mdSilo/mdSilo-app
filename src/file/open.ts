@@ -4,7 +4,7 @@ import { Notes, store } from 'lib/store';
 import { defaultNote, Note } from 'types/model';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
-import { processJson, processMds, processDirs } from './process';
+import { processJson, processFiles, processDirs } from './process';
 import { getParentDir, getBaseName, joinPaths } from './util';
 
 /* 
@@ -62,7 +62,8 @@ export const listDir = async (dir: string, toListen=true): Promise<void> => {
   const dirs = files.filter(f => f.is_dir).map(d => ({...d, file_text: ''}));
   const processedDirs = dirs.length ? processDirs(dirs) : [];
   const mds = files.filter(f => f.is_file).map(d => ({...d, file_text: ''}));
-  const processedMds =  mds.length ? processMds(mds) : [];
+  const processeds =  mds.length ? processFiles(mds) : [[], []];
+  const processedMds = processeds[0];
 
   const upsertNote = store.getState().upsertNote;
   const upsertTree = store.getState().upsertTree;
@@ -84,7 +85,18 @@ export const listDir = async (dir: string, toListen=true): Promise<void> => {
     treeItemList.push(md);
     upsertNote(md);
   }
-  // 4- upsertTree
+
+  // 4- push non-md to tree
+  const processedNons = processeds[1];
+  // console.log("non", processedNons)
+  for (const non of processedNons) {
+    if (non.id.toLowerCase().endsWith('.json')) {
+      continue;
+    }
+    treeItemList.push(non);
+  }
+ 
+  // 5- upsertTree
   upsertTree(dirPath, treeItemList);
 
   // console.log("dir path", dirPath, dir, store.getState().noteTree);
@@ -110,7 +122,7 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const dirs = files.filter(f => f.is_dir);
   const processedDirs = dirs.length ? processDirs(dirs) : [];
   const mds = files.filter(f => f.is_file);
-  const processedMds =  mds.length ? processMds(mds) : [];
+  const processedMds =  mds.length ? processFiles(mds)[0] : [];
 
   const upsertNote = store.getState().upsertNote;
   const upsertTree = store.getState().upsertTree;
@@ -166,7 +178,6 @@ export const openFileDilog = async (ty: string[], multi = true) => {
 export async function openFilePaths(filePaths: string[]) {
   const files = [];
   const dirs = [];
-  let res = false;
 
   for (const filePath of filePaths) {
     const fileInfo = new FileAPI(filePath);
@@ -179,37 +190,27 @@ export async function openFilePaths(filePaths: string[]) {
       }
     }
   }
-  // process files
-  const processedRes = processMds(files);
-  // sync store states to JSON
-  if (processedRes.length > 0) {
-    const upsertNote = store.getState().upsertNote;
-    const upsertTree = store.getState().upsertTree;
-    for (const md of processedRes) {
-      upsertNote(md);
-      const parentDir = await getParentDir(md.file_path);
-      upsertTree(parentDir, [md]);
-      upsertTreeRecursively(parentDir);
-    }
-    res = true;
-  }
 
+  const upsertNote = store.getState().upsertNote;
+  const upsertTree = store.getState().upsertTree;
+  // process md files
+  const processedNotes = processFiles(files)[0];
+  for (const md of processedNotes) {
+    upsertNote(md);
+    const parentDir = await getParentDir(md.file_path);
+    upsertTree(parentDir, [md]);
+    upsertTreeRecursively(parentDir);
+  }
   // process dirs
   const processedDirs = processDirs(dirs);
-  // sync store states to JSON
-  if (processedDirs.length > 0) {
-    const upsertNote = store.getState().upsertNote;
-    const upsertTree = store.getState().upsertTree;
-    for (const dir of processedDirs) {
-      upsertNote(dir);
-      const parentDir = await getParentDir(dir.file_path);
-      upsertTree(parentDir, [dir]);
-      upsertTreeRecursively(parentDir);
-    }
-    res = true;
+  for (const dir of processedDirs) {
+    upsertNote(dir);
+    const parentDir = await getParentDir(dir.file_path);
+    upsertTree(parentDir, [dir]);
+    upsertTreeRecursively(parentDir);
   }
-
-  return res;
+  
+  return processedNotes.length > 0 || processedDirs.length > 0;
 }
 
 // openFile, use case:
@@ -243,10 +244,10 @@ export async function openFilePath(filePath: string, setCurrent: boolean) {
   }
   
   // process files
-  const processedRes = processMds(files);
+  const processedNotes = processFiles(files)[0];
   // process dirs
   const processedDirs = processDirs(dirs);
-  const note = [...processedDirs, ...processedRes][0];
+  const note = [...processedDirs, ...processedNotes][0];
   if (note) {
     store.getState().upsertNote(note);
     const parentDir = await getParentDir(note.file_path);
@@ -267,7 +268,7 @@ export async function openFilePath(filePath: string, setCurrent: boolean) {
  * @param dirPath 
  * @returns 
  */
-export async function upsertTreeRecursively(dirPath: string) {
+async function upsertTreeRecursively(dirPath: string) {
   const initDir = store.getState().initDir;
   if (!initDir || !dirPath.startsWith(initDir) || dirPath === initDir) return;
 

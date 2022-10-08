@@ -6,12 +6,15 @@ import {
   useCallback,
   useMemo,
 } from 'react';
-import { IconCaretRight, IconNotes } from '@tabler/icons';
+import { IconCaretRight, IconMarkdown, IconNote, IconPhoto } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
+import imgExts from 'utils/image-extensions';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
 import { listDirPath } from 'editor/hooks/useOpen';
+import { checkFileIsMd, getFileExt } from 'file/process';
+import { openUrl } from 'file/open';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
 import { FlattenedNoteTreeItem } from './SidebarNotesTree';
@@ -30,19 +33,24 @@ const SidebarNoteLink = (
   const filePath = node.id;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   // console.log("isLoading", isLoading, node.id);
-  const { onClick: onNoteLinkClick } = useOnNoteLinkClick(); 
+  const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
+  const isDir = node.isDir; 
+  const isNonMd = !isDir && !checkFileIsMd(node.id);
+  const isImage = imgExts.includes(getFileExt(node.id).toLowerCase());
   const onClickFile = useCallback(async (e) => {
     e.preventDefault();
     // console.log("click, isLoading", isLoading, node.id);
-    if (node.isDir) {
+    if (isDir) {
       await listDirPath(node.id, false);
+    } else if (isNonMd) {
+      await openUrl(node.id)
     } else {
       await onNoteLinkClick(node.id);
     }
     if (isMobile()) {
       setIsSidebarOpen(false);
     }
-  }, [node, onNoteLinkClick, setIsSidebarOpen])
+  }, [isDir, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen])
   
   // add 16px for every level of nesting, plus 8px base padding
   const leftPadding = useMemo(() => node.depth * 16 + 8, [node.depth]);
@@ -65,14 +73,25 @@ const SidebarNoteLink = (
         <div
           className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
         >
-          {node.isDir ? (
+          {isDir ? (
             <IconCaretRight
               className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${!node.collapsed ? 'rotate-90' : ''}`}
               size={16}
               fill="currentColor"
             />
+          ) : isImage ? (
+            <IconPhoto 
+              className="flex-shrink-0 text-gray-500 dark:text-gray-100"
+              size={16} 
+              color="green"
+            />
+          ) : !isNonMd ? (
+            <IconMarkdown 
+              className="flex-shrink-0 text-gray-500 dark:text-gray-100"
+              size={16}
+            />
           ) : (
-            <IconNotes 
+            <IconNote 
               className="flex-shrink-0 text-gray-500 dark:text-gray-100"
               size={16}
             />
@@ -84,17 +103,17 @@ const SidebarNoteLink = (
           </span>
         </Tooltip>
       </div>
-      {node.isDir ? (
+      {isDir ? (
         <SidebarDirDropdown
           dirPath={node.id}
           className="opacity-0.1 group-hover:opacity-100"
         />
-      ) : (
+      ) : !isNonMd ? (
         <SidebarNoteDropdown
           noteId={node.id}
           className="opacity-0.1 group-hover:opacity-100"
         />
-      )}
+      ) : null}
     </SidebarItem>
   );
 };

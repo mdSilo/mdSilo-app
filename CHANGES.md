@@ -10,8 +10,8 @@
 
 ### Bug Fixes 
 
-- [X] rename doc after editing
-- [X] compute backlinks(`[[]]`)
+- [X] Rename doc after editing
+- [X] Compute backlinks(`[[]]`)
 
 ### Improvements 
 
@@ -19,6 +19,7 @@
 - [X] Include Hahtag in graph view.   
 - [X] Add `data:` to csp. 
 - [X] Relative local image path 
+- [X] Show non-markdown file and open with default application 
 
 ## [app-v0.4.6] - 2022-09-28 
 
