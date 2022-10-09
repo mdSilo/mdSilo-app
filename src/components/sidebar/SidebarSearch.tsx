@@ -17,39 +17,12 @@ type Props = {
 };
 
 export default function SidebarSearch(props: Props) {
-  const { className } = props;
+  const { className = '' } = props;
   const inputText = useStore((state) => state.sidebarSearchQuery);
   const setInputText = useStore((state) => state.setSidebarSearchQuery);
 
   const inputTxt = inputText.trim();
   const [searchQuery, setSearchQuery] = useDebounce(inputTxt, DEBOUNCE_MS);
-  const search = useNoteSearch({ searchContent: true, extendedSearch: true });
-
-  const searchResultsData = useMemo(() => {
-    const searchResults = search(searchQuery);
-    return searchResults.map((result) => ({
-      id: result.item.id,
-      labelNode: <SidebarSearchBranch text={result.item.title} />,
-      children: result.matches
-        ? [...result.matches].sort(matchSort).map((match, index) => ({
-            id: `${result.item.id}-${index}`,
-            labelNode: (
-              <SearchLeaf
-                noteId={result.item.id}
-                text={match.value ?? ''}
-                searchQuery={searchQuery}
-                block={
-                  result.item.blocks && match.refIndex !== undefined
-                    ? result.item.blocks[match.refIndex]
-                    : undefined
-                }
-              />
-            ),
-            showArrow: false,
-          }))
-        : undefined,
-    }));
-  }, [search, searchQuery]);
 
   return (
     <ErrorBoundary>
@@ -68,18 +41,60 @@ export default function SidebarSearch(props: Props) {
           }}
           autoFocus
         />
-        {!searchQuery || searchResultsData.length > 0 ? (
-          <VirtualTree
-            className="flex-1 px-1 overflow-y-auto"
-            data={searchResultsData}
-          />
-        ) : (
-          <p className="px-4 text-gray-600">No results found.</p>
-        )}
+        <SearchTree keyword={searchQuery} />
       </div>
     </ErrorBoundary>
   );
 }
+
+type SearchTreeProps = {
+  keyword: string;
+};
+
+export function SearchTree(props: SearchTreeProps) {
+  const { keyword } = props; 
+  const search = useNoteSearch({ searchContent: true, extendedSearch: true });
+
+  const searchResultsData = useMemo(() => {
+    const searchResults = search(keyword);
+    return searchResults.map((result) => ({
+      id: result.item.id,
+      labelNode: <SidebarSearchBranch text={result.item.title} />,
+      children: result.matches
+        ? [...result.matches].sort(matchSort).map((match, index) => ({
+            id: `${result.item.id}-${index}`,
+            labelNode: (
+              <SearchLeaf
+                noteId={result.item.id}
+                text={match.value ?? ''}
+                searchQuery={keyword}
+                block={
+                  result.item.blocks && match.refIndex !== undefined
+                    ? result.item.blocks[match.refIndex]
+                    : undefined
+                }
+              />
+            ),
+            showArrow: false,
+          }))
+        : undefined,
+    }));
+  }, [search, keyword]);
+
+  return (
+    <>
+      {!keyword || searchResultsData.length > 0 ? (
+        <VirtualTree
+          className="flex-1 px-1 overflow-y-auto"
+          data={searchResultsData}
+        />
+      ) : (
+        <p className="px-4 text-gray-600">No results found.</p>
+      )}
+    </>
+  );
+}
+
 
 type SidebarSearchBranchProps = {
   text: string;
@@ -90,7 +105,7 @@ const SidebarSearchBranch = memo(function SidebarSearchBranch(
 ) {
   const { text } = props;
   return (
-    <p className="py-1 overflow-hidden overflow-ellipsis whitespace-nowrap dark:text-gray-200">
+    <p className="py-1 overflow-hidden overflow-ellipsis text-lg font-semibol dark:text-gray-200">
       {text}
     </p>
   );

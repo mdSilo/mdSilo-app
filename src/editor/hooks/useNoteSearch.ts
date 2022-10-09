@@ -102,10 +102,10 @@ const getFuseData = (notes: Note[], searchContent: boolean): FuseDatum[] => {
 // TODO: def path to scroll to searched anchor
 const flattenContent = (content: string): NoteBlock[] => {
   const docAST = parser.parse(content);
-  // console.log("searcg doc ast: ", docAST);
+  // console.log("search doc ast: ", docAST);
   const result: NoteBlock[] = docAST.content.content
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    //.filter((node: any) => node.isBlock)
+    // .filter((node: any) => node.type.name == 'hashtag')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((node: any) => { 
       const block = { text: node.textContent, path: []};

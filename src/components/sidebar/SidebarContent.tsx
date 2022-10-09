@@ -1,9 +1,10 @@
-import { IconFolder, IconSearch } from '@tabler/icons';
+import { IconFolder, IconHash, IconSearch } from '@tabler/icons';
 import Tooltip from 'components/misc/Tooltip';
 import { SidebarTab as SidebarTabType, useStore } from 'lib/store';
 import SidebarNotes from './SidebarNotes';
 import SidebarSearch from './SidebarSearch';
 import SidebarTab from './SidebarTab';
+import SidebarTags from './SidebarTags';
 
 type Props = {
   className?: string;
@@ -18,10 +19,9 @@ export default function SidebarContent(props: Props) {
     <div className={`flex flex-col ${className}`}>
       <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="flex flex-col flex-1 overflow-x-hidden">
-        {activeTab === SidebarTabType.Silo ? (
-          <SidebarNotes />
-        ) : null}
+        {activeTab === SidebarTabType.Silo ? <SidebarNotes /> : null}
         {activeTab === SidebarTabType.Search ? <SidebarSearch /> : null}
+        {activeTab === SidebarTabType.Hashtag ? <SidebarTags /> : null}
       </div>
     </div>
   );
@@ -49,6 +49,13 @@ const Tabs = (props: TabsProps) => {
           isActive={activeTab === SidebarTabType.Search}
           setActive={() => setActiveTab(SidebarTabType.Search)}
           Icon={IconSearch}
+        />
+      </Tooltip>
+      <Tooltip content="HashTags (Ctrl+Shift+H)">
+        <SidebarTab
+          isActive={activeTab === SidebarTabType.Hashtag}
+          setActive={() => setActiveTab(SidebarTabType.Hashtag)}
+          Icon={IconHash}
         />
       </Tooltip>
     </div>

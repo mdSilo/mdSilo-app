@@ -75,7 +75,7 @@ export default function ForceGraph(props: Props) {
       linksByNoteId[note.id] = new Set();
     }
 
-    // initiate tag set, TODO
+    // initiate tag set
     const tagNames: Set<string> = new Set();
 
     // Search for links in each note 

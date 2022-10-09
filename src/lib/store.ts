@@ -59,6 +59,7 @@ export type NotesData = {
 export enum SidebarTab {
   Silo,
   Search,
+  Hashtag,
 }
 
 export type Store = {

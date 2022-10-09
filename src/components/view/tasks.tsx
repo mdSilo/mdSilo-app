@@ -56,9 +56,7 @@ export default function Tasks() {
     (ids: string[]) => setCollapseIds(ids), []
   );
 
-  const search = useNoteSearch(
-    { searchContent: true, extendedSearch: true }
-  );
+  const search = useNoteSearch({ searchContent: true, extendedSearch: true });
   const getTaskNotes = useCallback((searchQuery: string) => {
     const searchResults = search(searchQuery);
     // console.log("search res: ", searchQuery, searchResults);
@@ -125,50 +123,36 @@ export default function Tasks() {
   ], [getTaskNotes]);
 
   return (
-    <>
-      <ErrorBoundary>
-        <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
-          <div className="flex justify-center my-6">
-            {currentDir ? (
-              <FindOrCreateInput
-                className="w-full bg-white rounded shadow-popover dark:bg-gray-800"
-              />) : null
-            }
-          </div>
-          <div className="flex my-1 p-1 rounded">
-            <button className="text-red-500 text-xl mr-2" onClick={() => setPerNote(true)}>
-              PER NOTE
-            </button>  
-            <button className="text-blue-500 text-xl" onClick={() => setPerNote(false)}>
-              PER COMPLETION
-            </button>
-          </div>
-          <div className="my-2">
-            {perNote ? (
-              <>
-              {checkboxTasks.map((doc, idx) => (
-                <div key={idx}> 
-                  <button 
-                    className="block text-left text-xl rounded p-2 my-1 w-full break-words"
-                    onClick={() => onNoteLinkClick(doc.note.id)}
-                  >
-                    {`${getStrDate(doc.note.updated_at)} : ${doc.note.title}`}
-                  </button>
-                  <MsEditor 
-                    value={doc.tasks.reduce(
-                      (box, item) => box + '\n' + `- [${item.completed ? 'X' : ' '}] ${item.text}`, '')
-                    } 
-                    readOnly={true} 
-                    dark={darkMode} 
-                    disables={['sub']} 
-                  />
-                </div>
-              ))}
-              </>
-            ) : (
-              <div> 
+    <ErrorBoundary>
+      <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
+        <div className="flex justify-center my-6">
+          {currentDir ? (
+            <FindOrCreateInput
+              className="w-full bg-white rounded shadow-popover dark:bg-gray-800"
+            />) : null
+          }
+        </div>
+        <div className="flex my-1 p-1 rounded">
+          <button className="text-red-500 text-xl mr-2" onClick={() => setPerNote(true)}>
+            PER NOTE
+          </button>  
+          <button className="text-blue-500 text-xl" onClick={() => setPerNote(false)}>
+            PER COMPLETION
+          </button>
+        </div>
+        <div className="my-2">
+          {perNote ? (
+            <>
+            {checkboxTasks.map((doc, idx) => (
+              <div key={idx}> 
+                <button 
+                  className="block text-left text-xl rounded p-2 my-1 w-full break-words"
+                  onClick={() => onNoteLinkClick(doc.note.id)}
+                >
+                  {`${getStrDate(doc.note.updated_at)} : ${doc.note.title}`}
+                </button>
                 <MsEditor 
-                  value={allTasks.reduce(
+                  value={doc.tasks.reduce(
                     (box, item) => box + '\n' + `- [${item.completed ? 'X' : ' '}] ${item.text}`, '')
                   } 
                   readOnly={true} 
@@ -176,26 +160,38 @@ export default function Tasks() {
                   disables={['sub']} 
                 />
               </div>
-            )}
-          </div>
-          <div className="flex my-1 p-1 rounded">
-            <b className="mr-2">PER HASHTAG: </b>
-            <button className="text-red-500 text-xl mr-2" onClick={() => onClose(['done','todo'])}>
-              #doing
-            </button>  
-            <button className="text-blue-500 text-xl mr-2" onClick={() => onClose(['done','doing'])}>
-              #todo
-            </button>
-            <button className="text-green-500 text-xl" onClick={() => onClose(['doing','todo'])}>
-              #done
-            </button>
-          </div>
-          <div className="overlfow-y-auto">
-            <Tree data={tasks} className={""} collapseAll={false} collapseIds={collapseIds} />
-          </div>
+            ))}
+            </>
+          ) : (
+            <div> 
+              <MsEditor 
+                value={allTasks.reduce(
+                  (box, item) => box + '\n' + `- [${item.completed ? 'X' : ' '}] ${item.text}`, '')
+                } 
+                readOnly={true} 
+                dark={darkMode} 
+                disables={['sub']} 
+              />
+            </div>
+          )}
         </div>
-      </ErrorBoundary>
-    </>
+        <div className="flex my-1 p-1 rounded">
+          <b className="mr-2">PER HASHTAG: </b>
+          <button className="text-red-500 text-xl mr-2" onClick={() => onClose(['done','todo'])}>
+            #doing
+          </button>  
+          <button className="text-blue-500 text-xl mr-2" onClick={() => onClose(['done','doing'])}>
+            #todo
+          </button>
+          <button className="text-green-500 text-xl" onClick={() => onClose(['doing','todo'])}>
+            #done
+          </button>
+        </div>
+        <div className="overlfow-y-auto">
+          <Tree data={tasks} className={""} collapseAll={false} collapseIds={collapseIds} />
+        </div>
+      </div>
+    </ErrorBoundary>
   );
 }
 

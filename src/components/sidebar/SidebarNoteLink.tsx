@@ -50,7 +50,7 @@ const SidebarNoteLink = (
     if (isMobile()) {
       setIsSidebarOpen(false);
     }
-  }, [isDir, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen])
+  }, [isDir, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen]);
   
   // add 16px for every level of nesting, plus 8px base padding
   const leftPadding = useMemo(() => node.depth * 16 + 8, [node.depth]);

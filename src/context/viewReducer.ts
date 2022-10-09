@@ -8,6 +8,7 @@ type ViewParams = { noteId: string; stackIds?: string[], hash?: string };
 export interface ViewState {
   view: string;
   params?: ViewParams; 
+  tag?: string; 
 }
 
 export type ViewAction =
@@ -18,7 +19,11 @@ export type ViewAction =
   | {
       view: 'md';
       params: ViewParams;
-    };
+    }
+  | {
+    view: 'tag';
+    tag: string;
+  };
 
 export function viewReducer(state: ViewState, action: ViewAction): ViewState {
   const actionView = action.view;
@@ -40,6 +45,8 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return {...state, view: 'journal'};
     case 'md':
       return {view: 'md', params: action.params};
+    case 'tag':
+      return {view: 'tag', tag: action.tag};
     default:
       throw new Error();
   }
