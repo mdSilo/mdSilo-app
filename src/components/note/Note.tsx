@@ -193,9 +193,10 @@ function Note(props: Props) {
 
   // Search
   const onSearchText = useCallback(
-    async (text: string) => {
+    async (text: string, ty?: string) => {
       store.getState().setSidebarTab(SidebarTab.Search);
       store.getState().setSidebarSearchQuery(text);
+      store.getState().setSidebarSearchType(ty || 'content');
       store.getState().setIsSidebarOpen(true);
     },
     []
@@ -395,7 +396,7 @@ function Note(props: Props) {
                     onSearchLink={onSearchNote}
                     onCreateLink={onCreateNote}
                     onSearchSelectText={(txt) => onSearchText(txt)}
-                    onClickHashtag={(txt) => onSearchText(`${txt}`)}
+                    onClickHashtag={(txt) => onSearchText(txt, 'hashtag')}
                     onOpenLink={onOpenLink} 
                     attachFile={onAttachFile} 
                     onClickAttachment={onClickAttachment} 
@@ -438,7 +439,7 @@ function Note(props: Props) {
                         onSearchLink={onSearchNote}
                         onCreateLink={onCreateNote}
                         onSearchSelectText={(txt) => onSearchText(txt)}
-                        onClickHashtag={(txt) => onSearchText(`${txt}`)}
+                        onClickHashtag={(txt) => onSearchText(txt, 'hashtag')}
                         onOpenLink={onOpenLink} 
                         attachFile={onAttachFile} 
                         onClickAttachment={onClickAttachment} 

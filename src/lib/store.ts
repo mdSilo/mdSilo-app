@@ -83,6 +83,8 @@ export type Store = {
   setSidebarTab: Setter<SidebarTab>;
   sidebarSearchQuery: string;
   setSidebarSearchQuery: Setter<string>;
+  sidebarSearchType: string; // content or hashtag
+  setSidebarSearchType: Setter<string>;
   initDir: string | undefined;  // first open dir path
   setInitDir: Setter<string | undefined>;
   isLoading: boolean;  // is loading all?
@@ -197,6 +199,8 @@ export const store = createVanilla<Store>(
       // search note
       sidebarSearchQuery: '',
       setSidebarSearchQuery: setter(set, 'sidebarSearchQuery'),
+      sidebarSearchType: 'content',
+      setSidebarSearchType: setter(set, 'sidebarSearchType'),
       initDir: undefined,
       setInitDir: setter(set, 'initDir'),
       isLoading: false,

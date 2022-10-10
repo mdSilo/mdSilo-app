@@ -20,6 +20,8 @@ export default function SidebarSearch(props: Props) {
   const { className = '' } = props;
   const inputText = useStore((state) => state.sidebarSearchQuery);
   const setInputText = useStore((state) => state.setSidebarSearchQuery);
+  const setSearchType = useStore((state) => state.setSidebarSearchType);
+  const searchType = useStore((state) => state.sidebarSearchType);
 
   const inputTxt = inputText.trim();
   const [searchQuery, setSearchQuery] = useDebounce(inputTxt, DEBOUNCE_MS);
@@ -37,11 +39,12 @@ export default function SidebarSearch(props: Props) {
             if (e.key === 'Enter') {
               e.preventDefault();
               setSearchQuery(inputTxt);
+              setSearchType('content');
             }
           }}
           autoFocus
         />
-        <SearchTree keyword={searchQuery} />
+        <SearchTree keyword={searchQuery} ty={searchType} />
       </div>
     </ErrorBoundary>
   );
@@ -49,11 +52,14 @@ export default function SidebarSearch(props: Props) {
 
 type SearchTreeProps = {
   keyword: string;
+  ty: string;
 };
 
 export function SearchTree(props: SearchTreeProps) {
-  const { keyword } = props; 
-  const search = useNoteSearch({ searchContent: true, extendedSearch: true });
+  const { keyword, ty } = props; 
+  const search = useNoteSearch(
+    { searchContent: ty === 'content', searchHashTag: ty === 'hashtag', extendedSearch: true }
+  );
 
   const searchResultsData = useMemo(() => {
     const searchResults = search(keyword);

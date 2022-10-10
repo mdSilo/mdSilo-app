@@ -13,7 +13,7 @@ export default function HashTags() {
         <b className="text-3xl font-semibold border-none p-1 text-black dark:text-white">
           {`#${tag}`}
         </b>
-        <SearchTree keyword={`${tag}`} />
+        <SearchTree keyword={tag} ty="hashtag" />
       </div>
     </ErrorBoundary>
   );
