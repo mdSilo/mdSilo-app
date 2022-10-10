@@ -56,7 +56,7 @@ export default function Tasks() {
     (ids: string[]) => setCollapseIds(ids), []
   );
 
-  const search = useNoteSearch({ searchContent: true, extendedSearch: true });
+  const search = useNoteSearch({ searchHashTag: true, extendedSearch: true });
   const getTaskNotes = useCallback((searchQuery: string) => {
     const searchResults = search(searchQuery);
     // console.log("search res: ", searchQuery, searchResults);
@@ -100,7 +100,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">Doing</b>
         </div>
       ),
-      children: getTaskNotes('#doing#'),
+      children: getTaskNotes('doing'),
     },
     {
       id: 'todo',
@@ -109,7 +109,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">To Do</b>
         </div>
       ),
-      children: getTaskNotes('#todo#'),
+      children: getTaskNotes('todo'),
     },
     {
       id: 'done',
@@ -118,7 +118,7 @@ export default function Tasks() {
           <b className="py-1 text-xl">Done</b>
         </div>
       ),
-      children: getTaskNotes('#done#'),
+      children: getTaskNotes('done'),
     },
   ], [getTaskNotes]);
 

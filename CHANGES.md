@@ -2,6 +2,20 @@
 
 ## [app-v0.5.0] - 2022-XX-XX 
 
+## [app-v0.4.8] - 2022-XX-XX 
+
+### Features 
+
+- [ ] Support Chemical equation 
+- [X] Hashtag view      
+
+### Bug Fixes 
+
+- [X] search hashtag
+
+### Improvements 
+
+
 ## [app-v0.4.7] - 2022-09-07 
 
 ### Features 
