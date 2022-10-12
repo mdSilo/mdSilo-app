@@ -27,3 +27,11 @@ export const getLog = async (): Promise<LogItem[]> => {
   const log: { logs: LogItem[] } = await Storage.get('log');
   return log.logs;
 };
+
+/**
+ * clear the logs 
+ * @returns void
+ */
+ export const clearLog = async (): Promise<void> => {
+  return await Storage.remove('log');
+};

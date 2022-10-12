@@ -2,7 +2,7 @@ import { getVersion, getTauriVersion } from '@tauri-apps/api/app';
 import { writeText } from '@tauri-apps/api/clipboard';
 import { useState, useEffect } from 'react';
 import { openUrl } from 'file/open';
-import { getLog } from 'file/log';
+import { getLog, clearLog } from 'file/log';
 import { BaseModal } from './BaseModal';
 
 
@@ -30,7 +30,13 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
         <h1>mdSilo Desktop</h1>
         <p className="mt-4 font-bold">App Version: {appVersion}</p>
         <p className="mt-4 font-bold">Tauri Version: {tauriVersion}</p>
-        <div className="flex justify-center px-6">
+        <div className="flex justify-center px-2">
+          <button 
+            className="link m-2"
+            onClick={async () => { await clearLog(); }}
+          >
+            Clear Log
+          </button>
           <button 
             className="link m-2"
             onClick={async () => { 
