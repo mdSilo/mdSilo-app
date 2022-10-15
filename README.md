@@ -11,9 +11,8 @@ built with React and [Tauri](https://github.com/tauri-apps).
 
 ## Features
 
-- All-In-One Editor: Markdown and extensions, Diagram, MindMap... 
-- WYSIWYG mode, Markdown mode, Mindmap mode; 
-- Markdown support: Table, Math, Code block(Highlight)...   
+- All-In-One Editor: Markdown and extensions, Markdown, MindMap... 
+- Markdown support: Diagram, Table, Math/Chemical, Code block(Highlight)...   
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
 - Chronicle view, Graph view, Task view... 
 - Full-text search; 
@@ -41,7 +40,7 @@ built with React and [Tauri](https://github.com/tauri-apps).
 - Markdown extension
   - [X] more style: `==mark==`, `__underline__`, `1^sup^`
   - [X] Highlight code block  
-  - [X] Math: inline math `$\LaTeX$` and math block `$$\LaTeX$$` 
+  - [X] Math and Chemical Equation: inline `$\LaTeX$` and block `$$\LaTeX$$` 
   - [X] Notice block: info, warning, tips 
   - [X] Wikilink: `[[]]` 
   - [X] Hashtag: `#tag#` 
