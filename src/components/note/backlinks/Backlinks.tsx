@@ -93,7 +93,7 @@ const backlinkToTreeData = (isLinked: boolean) => (backlink: Backlink) => {
         <BacklinkMatchLeaf
           noteId={backlink.id}
           match={match}
-          className="text-gray-600 bg-gray-50 dark:text-gray-100 dark:bg-gray-800"
+          className="text-gray-600 dark:text-gray-100 bg-white dark:bg-black"
         />
       ),
       showArrow: false,

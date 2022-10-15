@@ -40,12 +40,7 @@ function DefaultView() {
         <p className="text-2xl py-3 text-center text-primary-500">
           Hello, welcome to mdSilo Desktop.
         </p>
-        <MsEditor 
-          dark={false} 
-          value={defaultValue} 
-          onClickHashtag={(text) => { console.info("Click Hahtag: ", text);}}
-          disables={['sub']}
-        />
+        <MsEditor value={defaultValue} dark={false} />
       </div>
     </ErrorBoundary>
   );

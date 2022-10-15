@@ -24,6 +24,7 @@ export default function Tasks() {
   }, [initDir, isLoaded, setIsLoaded]);
 
   const darkMode = useStore((state) => state.darkMode);
+  const isRTL = useStore((state) => state.isRTL);
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
 
   // per checkbox
@@ -34,20 +35,6 @@ export default function Tasks() {
     .flat()
     .sort((a, b) => Number(a.completed) - Number(b.completed));
   const [perNote, setPerNote] = useState(true);
-  
-  // console.log("check box tasks", checkboxTasks)
-  // const checkboxs = useMemo(() => checkboxTasks.reduce(
-  //   (txt, doc) => txt + (
-  //     `### ${getStrDate(doc.note.updated_at)} : ${doc.note.title}` + '\n' 
-  //     + 
-  //     doc.tasks.reduce(
-  //       (box, item) => box + '\n' + `- [${item.completed ? 'X' : ' '}] ${item.text}`, ''
-  //     )
-  //     +
-  //     '\n'
-  //   ), ''
-  // ), [checkboxTasks]);
-  // console.log("check box text", checkboxs)
 
   // per hashtag
   // 
@@ -133,10 +120,16 @@ export default function Tasks() {
           }
         </div>
         <div className="flex my-1 p-1 rounded">
-          <button className="text-red-500 text-xl mr-2" onClick={() => setPerNote(true)}>
+          <button 
+            className={`text-xl mr-2 ${perNote ? 'text-red-500' : ''}`} 
+            onClick={() => setPerNote(true)}
+          >
             PER NOTE
           </button>  
-          <button className="text-blue-500 text-xl" onClick={() => setPerNote(false)}>
+          <button 
+            className={`text-xl ml-2 ${perNote ? '' : 'text-red-500'}`}
+            onClick={() => setPerNote(false)}
+          >
             PER COMPLETION
           </button>
         </div>
@@ -157,7 +150,7 @@ export default function Tasks() {
                   } 
                   readOnly={true} 
                   dark={darkMode} 
-                  disables={['sub']} 
+                  dir={isRTL ? 'rtl' : 'ltr'} 
                 />
               </div>
             ))}
@@ -170,13 +163,13 @@ export default function Tasks() {
                 } 
                 readOnly={true} 
                 dark={darkMode} 
-                disables={['sub']} 
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
           )}
         </div>
         <div className="flex my-1 p-1 rounded">
-          <b className="mr-2">PER HASHTAG: </b>
+          <b className="text-xl mr-2">PER HASHTAG: </b>
           <button className="text-red-500 text-xl mr-2" onClick={() => onClose(['done','todo'])}>
             #doing
           </button>  

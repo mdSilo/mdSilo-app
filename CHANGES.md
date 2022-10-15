@@ -8,11 +8,13 @@
 
 - [X] Support Chemical equation  
 - [X] Live preview math block   
-- [X] Hashtag view        
+- [X] Hashtag view 
+- [X] DateTime slash commands: `/date`, `/time`, `/now`       
 
 ### Bug Fixes 
 
-- [X] search hashtag
+- [X] Search hashtag 
+- [X] Journals page: empty daily notes  
 
 ### Improvements 
 

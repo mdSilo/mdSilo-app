@@ -15,6 +15,8 @@ const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
   const { noteId, match, className } = props;
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
   const darkMode = useStore((state) => state.darkMode);
+  const isRTL = useStore((state) => state.isRTL);
+
   const leafValue: string = match.context 
     ? getContextString(match.context) || match.text  
     : match.text;
@@ -27,7 +29,7 @@ const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
       className={containerClassName}
       onClick={() => onNoteLinkClick(noteId)}
     >
-      <MsEditor value={editorValue} dark={darkMode} disables={['sub']} />
+      <MsEditor value={editorValue} dark={darkMode} dir={isRTL ? 'rtl' : 'ltr'} />
     </button>
   );
 };
