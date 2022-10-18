@@ -41,7 +41,7 @@ export type NoteTreeItem = {
   title: string;
   created_at: string;
   updated_at: string; 
-  isDir: boolean;
+  is_dir: boolean;
   children: NoteTreeItem[]; // to del
   collapsed: boolean;       // to del
 };
@@ -149,7 +149,7 @@ export const store = createVanilla<Store>(
             title: note.title,
             created_at: note.created_at,
             updated_at: note.updated_at,
-            isDir: note.is_dir ?? false,
+            is_dir: note.is_dir ?? false,
             children: [], 
             collapsed: true, 
           }));

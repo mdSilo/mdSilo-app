@@ -60,7 +60,7 @@ function SidebarNotes(props: SidebarNotesProps) {
 }
 
 /**
- * Sorts the tree recursively based on the information in notes with the given noteSort.
+ * Sorts the tree item with the given noteSort.
  */
 const sortNoteTree = (
   tree: NoteTreeItem[],
@@ -88,13 +88,10 @@ const sortNoteTree = (
           return ciStringCompare(n1.title, n2.title);
       }
     });
-    newTree.sort((n1, n2) => Number(Boolean(n2.isDir)) - Number(Boolean(n1.isDir)));
+    newTree.sort((n1, n2) => Number(Boolean(n2.is_dir)) - Number(Boolean(n1.is_dir)));
   }
-  // Sort each tree item's children
-  return newTree.map((item) => ({
-    ...item,
-    children: sortNoteTree(item.children, noteSort),
-  }));
+
+  return newTree;
 };
 
 export default memo(SidebarNotes);

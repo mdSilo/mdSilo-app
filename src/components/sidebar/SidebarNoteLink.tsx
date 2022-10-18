@@ -7,7 +7,7 @@ import {
   useMemo,
 } from 'react';
 import { IconCaretRight, IconMarkdown, IconNote, IconPhoto } from '@tabler/icons';
-import { useStore } from 'lib/store';
+import { NoteTreeItem, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import imgExts from 'utils/image-extensions';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
@@ -17,10 +17,9 @@ import { checkFileIsMd, getFileExt } from 'file/process';
 import { openUrl } from 'file/open';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
-import { FlattenedNoteTreeItem } from './SidebarNotesTree';
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
-  node: FlattenedNoteTreeItem;
+  node: NoteTreeItem;
   isHighlighted?: boolean;
 }
 
@@ -34,7 +33,7 @@ const SidebarNoteLink = (
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   // console.log("isLoading", isLoading, node.id);
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
-  const isDir = node.isDir; 
+  const isDir = node.is_dir; 
   const isNonMd = !isDir && !checkFileIsMd(node.id);
   const isImage = imgExts.includes(getFileExt(node.id).toLowerCase());
   const onClickFile = useCallback(async (e) => {
@@ -53,7 +52,7 @@ const SidebarNoteLink = (
   }, [isDir, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen]);
   
   // add 16px for every level of nesting, plus 8px base padding
-  const leftPadding = useMemo(() => node.depth * 16 + 8, [node.depth]);
+  const leftPadding = 8; // useMemo(() => node.depth * 16 + 8, [node.depth]);
 
   return (
     <SidebarItem

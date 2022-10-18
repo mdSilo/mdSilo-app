@@ -1,11 +1,6 @@
 import type { ReactNode } from 'react';
 import { useContext, createContext, useReducer, Dispatch } from 'react';
-import {
-  viewReducer,
-  initialState,
-  ViewAction,
-  ViewState,
-} from './viewReducer';
+import { viewReducer, initialState, ViewAction, ViewState } from './viewReducer';
 
 export type DispatchType = Dispatch<ViewAction>;
 

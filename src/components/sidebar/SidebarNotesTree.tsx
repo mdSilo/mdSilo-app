@@ -5,16 +5,6 @@ import { NoteTreeItem } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarNoteLink from './SidebarNoteLink';
 
-export type FlattenedNoteTreeItem = {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string; 
-  isDir: boolean;
-  depth: number;
-  collapsed: boolean;
-};
-
 type Props = {
   data: NoteTreeItem[];
   className?: string;
@@ -31,36 +21,10 @@ function SidebarNotesTree(props: Props) {
     const id = noteId;
     return id && typeof id === 'string' ? id : undefined;
   }, [noteId]);
-  
-  const flattenNode = useCallback(
-    (node: NoteTreeItem, depth: number, result: FlattenedNoteTreeItem[]) => {
-      const { id, title, created_at, updated_at, isDir, children, collapsed } = node;
-      result.push({ id, title, created_at, updated_at, isDir, depth, collapsed });
-      /**
-       * Only push in children if:
-       * 1. The node is not collapsed
-       * 2. The node has children
-       */
-      if (!collapsed && children.length > 0) {
-        for (const child of children) {
-          flattenNode(child, depth + 1, result);
-        }
-      }
-    },
-    []
-  );
-
-  const flattenedData = useMemo(() => {
-    const result: FlattenedNoteTreeItem[] = [];
-    for (const node of data) {
-      flattenNode(node, 0, result);
-    }
-    return result;
-  }, [data, flattenNode]);
 
   const Row = useCallback(
     ({ index, style }: {index: number; style: React.CSSProperties}) => {
-      const node = flattenedData[index];
+      const node = data[index];
       return (
         <SidebarNoteLink
           key={`${node.id}-${index}`}
@@ -70,7 +34,7 @@ function SidebarNotesTree(props: Props) {
         />
       );
     },
-    [currentNoteId, flattenedData]
+    [currentNoteId, data]
   );
 
   return (
@@ -80,7 +44,7 @@ function SidebarNotesTree(props: Props) {
           <List
             width={width}
             height={height}
-            rowCount={flattenedData.length}
+            rowCount={data.length}
             rowHeight={32}
             rowRenderer={Row}
           />

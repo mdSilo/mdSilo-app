@@ -49,12 +49,12 @@ built with React and [Tauri](https://github.com/tauri-apps).
   - [X] Embed web page: YouTube, Figma... 
   - [X] Attach local PDF file 
 
-- Writing and formatting 
-  - [X] WYSIWYG, Markdown and MindMap 
+- Writing, formatting and drawing 
+  - [X] WYSIWYG, Markdown, MindMap and Split view 
   - [X] Slash commands  
   - [X] Hovering toolbar
   - [X] hotkeys 
-  - [X] Split view 
+  - [ ] Drawing  
 
 - View
   - [X] Graph
@@ -65,9 +65,14 @@ built with React and [Tauri](https://github.com/tauri-apps).
   - [X] Folder management 
   - [X] Backlinks 
   - [X] Recent history 
+  - [ ] Flashcards 
   - [ ] Export as PDF,HTML, ... 
   - [ ] Version control: git integration 
 
+- Cross-Platform 
+  - [x] Windows, macOS, Linux. 
+  - [ ] Web(WIP)
+  - [ ] Mobile: iOS/iPadOS and Android(soon...)
 
 ## Live Demo
 

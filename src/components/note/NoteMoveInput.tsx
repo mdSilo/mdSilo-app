@@ -68,7 +68,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       });
       result.push(
         ...Object.values(noteTree).flat()
-          .filter((item) => item.isDir && item.id !== noteId)
+          .filter((item) => item.is_dir && item.id !== noteId)
           .map((item) => ({
             id: item.id,
             type: OptionType.DIR,
