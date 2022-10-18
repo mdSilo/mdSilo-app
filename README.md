@@ -1,7 +1,7 @@
 
 # mdSilo
 
-A mind silo for storing ideas, thought, knowledge with a powerful writing tool.
+A local-first mind silo for storing ideas, thought, knowledge with a powerful writing tool.
 built with React and [Tauri](https://github.com/tauri-apps). 
 
 [Demo](https://mdsilo.com/)    
@@ -11,13 +11,14 @@ built with React and [Tauri](https://github.com/tauri-apps).
 
 ## Features
 
-- All-In-One Editor: Markdown and extensions, Markdown, MindMap... 
+- All-In-One Editor: Markdown and extensions, WYSIWYG, MindMap... 
 - Markdown support: Diagram, Table, Math/Chemical, Code block(Highlight)...   
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
 - Chronicle view, Graph view, Task view... 
 - Full-text search; 
 - Dark and Light Mode
-- Available for Windows, macOS, Linux 
+- Available for Windows, macOS, Linux, 
+- On top of local plain-text files, no registration required, no privacy issue. 
 
 ## Tech Stack
 
@@ -30,7 +31,7 @@ built with React and [Tauri](https://github.com/tauri-apps).
 - Markdown
   - [X] Style: **Bold**, *Italic*, ~~Strikethrough~~, `Inline Code`
   - [X] Link: [mdSilo](https://mdsilo.com) and <https://mdsilo.com>, 
-  - [X] Image: `![]()` 
+  - [X] Image: `![]()` and local image 
   - [X] Headings and TOC, 
   - [X] List item: ordered list, bullet list, check list and nested list
   - [X] Table
@@ -45,9 +46,11 @@ built with React and [Tauri](https://github.com/tauri-apps).
   - [X] Wikilink: `[[]]` 
   - [X] Hashtag: `#tag#` 
   - [X] Diagram: mermaid, echarts, music notation... 
+  - [X] Embed web page: YouTube, Figma... 
+  - [X] Attach local PDF file 
 
 - Writing and formatting 
-  - [X] WYSIWYG, raw mode and mindmap mode 
+  - [X] WYSIWYG, Markdown and MindMap 
   - [X] Slash commands  
   - [X] Hovering toolbar
   - [X] hotkeys 
@@ -68,4 +71,4 @@ built with React and [Tauri](https://github.com/tauri-apps).
 
 ## Live Demo
 
-Here we go: [Live demo](https://mdsilo.com) 
+Here we go: [Live demo](https://mdsilo.com/playground/) 

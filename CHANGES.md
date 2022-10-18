@@ -2,7 +2,13 @@
 
 ## [app-v0.5.0] - 2022-XX-XX 
 
+### Features 
+
+- [ ] Input end 
+
 ## [app-v0.4.9] - 2022-XX-XX 
+
+### Bug Fixes 
 
 ## [app-v0.4.8] - 2022-10-15 
 
