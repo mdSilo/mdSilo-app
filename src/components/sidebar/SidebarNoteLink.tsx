@@ -4,7 +4,6 @@ import {
   HTMLAttributes,
   memo,
   useCallback,
-  useMemo,
 } from 'react';
 import { IconCaretRight, IconMarkdown, IconNote, IconPhoto } from '@tabler/icons';
 import { NoteTreeItem, useStore } from 'lib/store';
