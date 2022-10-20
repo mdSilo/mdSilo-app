@@ -48,6 +48,10 @@ const App = () => {
         hotkey: 'mod+shift+f',
         callback: () => setSidebarTab(SidebarTab.Search),
       },
+      {
+        hotkey: 'mod+shift+h',
+        callback: () => setSidebarTab(SidebarTab.Hashtag),
+      },
     ],
     [setIsFindOrCreateModalOpen, setIsSidebarOpen, setSidebarTab]
   );

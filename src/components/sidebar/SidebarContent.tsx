@@ -51,7 +51,7 @@ const Tabs = (props: TabsProps) => {
           Icon={IconSearch}
         />
       </Tooltip>
-      <Tooltip content="HashTags (Ctrl+Shift+H)">
+      <Tooltip content="Hashtags (Ctrl+Shift+H)">
         <SidebarTab
           isActive={activeTab === SidebarTabType.Hashtag}
           setActive={() => setActiveTab(SidebarTabType.Hashtag)}
