@@ -39,17 +39,6 @@ function traverseDummyNodes(node: any) {
   }
 }
 
-function traverseTruncateLabels(node: any, length: any) {
-  if (node.name.length > length) {
-    node.name = node.name.slice(0, length - 1) + '\u2026';
-  }
-  if (node.children) {
-    node.children.forEach((n: any) => {
-      traverseTruncateLabels(n, length);
-    });
-  }
-}
-
 function Markmap(svg: any, data: any, options: any) {
   // @ts-expect-error all
   if (!(this instanceof Markmap)) return new (Markmap as any)(svg, data, options);
@@ -64,7 +53,6 @@ const defaultPreset = {
   nodePadding: 12,
   spacingVertical: 5,
   spacingHorizontal: 60,
-  truncateLabels: 0,
   duration: 750,
   layout: 'tree',
   color: 'gray',
@@ -207,10 +195,6 @@ Object.assign(Markmap.prototype, {
   preprocessData(data: any, prev: any) {
     // @ts-expect-error all
     const state = this.state;
-
-    if (state.truncateLabels) {
-      traverseTruncateLabels(data, state.truncateLabels);
-    }
 
     if (data.children) {
       data.children.forEach((d: any, i: number) => {

@@ -10,6 +10,9 @@
 
 ### Bug Fixes 
 
+- [X] Cannot insert or override content on insert local image/file
+- [X] converts the lines above or below into block. close #283
+
 ## [app-v0.4.8] - 2022-10-15 
 
 ### Features 

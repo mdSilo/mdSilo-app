@@ -3008,10 +3008,10 @@ abab@^2.0.3, abab@^2.0.5:
   resolved "https://registry.npmjs.org/abab/-/abab-2.0.5.tgz"
   integrity sha512-9IK9EadsbHo6jLWIpxpR6pL0sazTXV6+SQv25ZB+F7Bj9mJNaOc4nCRabwd5M/JwmUa8idz6Eci6eKfJryPs6Q==
 
-abcjs@6.1.4:
-  version "6.1.4"
-  resolved "https://registry.yarnpkg.com/abcjs/-/abcjs-6.1.4.tgz#7383fa809ce95f19357a34266c6fc4375f5e7ab5"
-  integrity sha512-83vMuoD2flsUAxcDQFyFAR/pTUpoqBJyBkEVJdwpMYUETzbLJ/bLRhxd2XL3o1UVs8WXzfNCA6YrcTHV0ROy1w==
+abcjs@6.1.6:
+  version "6.1.6"
+  resolved "https://registry.yarnpkg.com/abcjs/-/abcjs-6.1.6.tgz#d1603029e504568bb37e1d3db38d7a3a4e5325ef"
+  integrity sha512-wLwYqFMLoObDOmgIUK+9PLg57t+PDisWbuBJNmlhrAO0tS3ot0h8b1jzgAOqUO1LkG3zrTnqMjKE+w830Jc/Ag==
 
 accepts@~1.3.4, accepts@~1.3.5, accepts@~1.3.8:
   version "1.3.8"
@@ -7792,14 +7792,14 @@ mdn-data@2.0.4:
   resolved "https://registry.npmjs.org/mdn-data/-/mdn-data-2.0.4.tgz"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
 
-mdsmirror@0.0.12:
-  version "0.0.12"
-  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.0.12.tgz#a8d599eb40cbc1df12209eaede7dd3b2811bfe6e"
-  integrity sha512-A7XAfUdjSYjo5WXQQydGhF2AVlaYt0IJyerl1JjGrbCC7WVKrmeSqfGwZ4hE0SCbFnsOynXDrRrXulmFLqAJVA==
+mdsmirror@0.0.15:
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.0.15.tgz#cfdf247c0a19d60159d400c1b9ac2b8898500316"
+  integrity sha512-88heGO38Dfn+E05n3eP1Fn2HiSbAp3owt93PatN2DyMuh5sDY7nzojhyiFBTg9sR1vxANFnOQINfrVg7uOOy9w==
   dependencies:
     "@juggle/resize-observer" "^3.3.1"
     "@tabler/icons" "^1.92.0"
-    abcjs "6.1.4"
+    abcjs "6.1.6"
     copy-to-clipboard "^3.3.2"
     echarts "5.4.0"
     katex "^0.15.6"

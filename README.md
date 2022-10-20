@@ -65,6 +65,7 @@ built with React and [Tauri](https://github.com/tauri-apps).
   - [X] Folder management 
   - [X] Backlinks 
   - [X] Recent history 
+  - [ ] Block reference  
   - [ ] Flashcards 
   - [ ] Export as PDF,HTML, ... 
   - [ ] Version control: git integration 
