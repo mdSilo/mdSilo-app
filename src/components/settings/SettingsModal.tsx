@@ -11,12 +11,13 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
 
   const darkMode = useStore((state) => state.darkMode);
   const setDarkMode = useStore((state) => state.setDarkMode);
-  const isRTL = useStore((state) => state.isRTL);
-  const setIsRTL = useStore((state) => state.setIsRTL);
-  const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
-  const setIsCheckSpellOn = useStore((state) => state.setIsCheckSpellOn);
   const useAsset = useStore((state) => state.useAsset);
   const setUseAsset = useStore((state) => state.setUseAsset);
+  const isRTL = useStore((state) => state.isRTL);
+  const setIsRTL = useStore((state) => state.setIsRTL);
+  
+  // const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
+  // const setIsCheckSpellOn = useStore((state) => state.setIsCheckSpellOn);
   // const readMode = useStore((state) => state.readMode);
   // const setReadMode = useStore((state) => state.setReadMode);
 
@@ -45,19 +46,19 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           handleCheck={setReadMode}
           optionLeft="Write" 
           optionRight="Read"
-        /> */}
+        /> 
         <SettingsToggle
           name="Spell Check" 
           descript="Spell checker works for English"
           check={isCheckSpellOn}
           handleCheck={setIsCheckSpellOn}
-        />
+        /> */}
         <SettingsToggle
           name="Text Direction" 
           check={isRTL}
           handleCheck={setIsRTL}
-          optionLeft="LTR" 
-          optionRight="RTL"
+          optionLeft="Left To Right" 
+          optionRight="Right To Left"
         />
       </div>
     </BaseModal>
