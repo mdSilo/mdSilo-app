@@ -8,7 +8,7 @@ import {
 import { IconCaretRight, IconMarkdown, IconNote, IconPhoto } from '@tabler/icons';
 import { NoteTreeItem, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
-import imgExts from 'utils/image-extensions';
+import { imageExtensions } from 'utils/file-extensions';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
 import { listDirPath } from 'editor/hooks/useOpen';
@@ -34,7 +34,7 @@ const SidebarNoteLink = (
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
   const isDir = node.is_dir; 
   const isNonMd = !isDir && !checkFileIsMd(node.id);
-  const isImage = imgExts.includes(getFileExt(node.id).toLowerCase());
+  const isImage = imageExtensions.includes(getFileExt(node.id).toLowerCase());
   const onClickFile = useCallback(async (e) => {
     e.preventDefault();
     // console.log("click, isLoading", isLoading, node.id);

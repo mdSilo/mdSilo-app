@@ -22,8 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// eslint-disable-next-line import/no-anonymous-default-export
-export default [
+export const imageExtensions = [
   'ase',
   'art',
   'bmp',
@@ -143,4 +142,22 @@ export default [
   'sid',
   'ras',
   'sun',
+];
+
+export const docExtensions = [
+  'pdf',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'odt',
+  'ods',
+  'odp',
+  'xps',
+  'pages',
+  'numbers',
+  'key',
+  'zip',
 ];

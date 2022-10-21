@@ -41,7 +41,7 @@ built with React and [Tauri](https://github.com/tauri-apps).
 - Markdown extension
   - [X] more style: `==mark==`, `__underline__`, `1^sup^`
   - [X] Highlight code block  
-  - [X] Math and Chemical Equation: inline `$\LaTeX$` and block `$$\LaTeX$$` 
+  - [X] Math and Chemical Equation: inline `$\KaTeX$` and block `$$\LaTeX$$` 
   - [X] Notice block: info, warning, tips 
   - [X] Wikilink: `[[]]` 
   - [X] Hashtag: `#tag#` 

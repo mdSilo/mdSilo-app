@@ -15,7 +15,7 @@ import { listDirPath } from 'editor/hooks/useOpen';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import { ciStringEqual, regDateStr, isUrl, decodeHTMLEntity } from 'utils/helper';
-import imageExtensions from 'utils/image-extensions';
+import { imageExtensions, docExtensions } from 'utils/file-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
 import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
@@ -266,7 +266,7 @@ function Note(props: Props) {
   // attach file 
   const onAttachFile = useCallback(
     async (accept: string) => {
-      const ext = accept === 'image/*' ? imageExtensions : ['pdf'];
+      const ext = accept === 'image/*' ? imageExtensions : docExtensions;
       const filePath = await openFileDilog(ext, false);
       if (filePath && typeof filePath === 'string') {
         let fullPath = filePath;
