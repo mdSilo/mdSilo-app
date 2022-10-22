@@ -2369,11 +2369,6 @@
     "@types/d3-interpolate" "*"
     "@types/d3-selection" "*"
 
-"@types/d3@3.5.47":
-  version "3.5.47"
-  resolved "https://registry.yarnpkg.com/@types/d3/-/d3-3.5.47.tgz#b81042fcb0195c583fc037bc857d161469a7d175"
-  integrity sha512-VkWIQoZXLFdcBGe5pdBKJmTU3fmpXvo/KV6ixvTzOMl1yJ2hbTXpfvsziag0kcaerPDwas2T0vxojwQG3YwivQ==
-
 "@types/eslint-scope@^3.7.3":
   version "3.7.3"
   resolved "https://registry.npmjs.org/@types/eslint-scope/-/eslint-scope-3.7.3.tgz"
@@ -2440,11 +2435,6 @@
   integrity sha512-wLEm0QvaoawEDoTRwzTXp4b4jpwiJDvR5KMnFnVodm3scufTlBOWRD6N1OBf9TZMhjlNsSfcO5V+7AF4+Vy+9g==
   dependencies:
     "@types/unist" "*"
-
-"@types/highlight.js@^9.7.0":
-  version "9.12.4"
-  resolved "https://registry.npmjs.org/@types/highlight.js/-/highlight.js-9.12.4.tgz"
-  integrity sha512-t2szdkwmg2JJyuCM20e8kR2X59WCE5Zkl4bzm1u1Oukjm79zpbiAv+QjnwLnuuV0WHEcX2NgUItu0pAMKuOPww==
 
 "@types/html-minifier-terser@^6.0.0":
   version "6.1.0"
@@ -2601,14 +2591,6 @@
     "@types/prop-types" "*"
     "@types/scheduler" "*"
     csstype "^3.0.2"
-
-"@types/remarkable@2.0.3":
-  version "2.0.3"
-  resolved "https://registry.npmjs.org/@types/remarkable/-/remarkable-2.0.3.tgz"
-  integrity sha512-QQUBeYApuHCNl9Br6ZoI3PlKmwZ69JHrlJktJXnjxobia9liZgsI70fm8PnCqVFAcefYK+9PGzR5L/hzCslNYQ==
-  dependencies:
-    "@types/highlight.js" "^9.7.0"
-    highlight.js "^9.7.0"
 
 "@types/resolve@1.17.1":
   version "1.17.1"
@@ -6343,11 +6325,6 @@ highlight-words-core@^1.2.0:
   resolved "https://registry.npmjs.org/highlight-words-core/-/highlight-words-core-1.2.2.tgz"
   integrity sha512-BXUKIkUuh6cmmxzi5OIbUJxrG8OAk2MqoL1DtO3Wo9D2faJg2ph5ntyuQeLqaHJmzER6H5tllCDA9ZnNe9BVGg==
 
-highlight.js@^9.7.0:
-  version "9.18.5"
-  resolved "https://registry.npmjs.org/highlight.js/-/highlight.js-9.18.5.tgz"
-  integrity sha512-a5bFyofd/BHCX52/8i8uJkjr9DYwXIPnM/plwI6W7ezItLGqzt7X2G2nXuYSfsIJdkwwj/g9DG1LkcGJI/dDoA==
-
 hoist-non-react-statics@^3.0.0:
   version "3.3.2"
   resolved "https://registry.npmjs.org/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz"
@@ -7791,6 +7768,16 @@ mdn-data@2.0.4:
   version "2.0.4"
   resolved "https://registry.npmjs.org/mdn-data/-/mdn-data-2.0.4.tgz"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
+
+mdsmap@0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/mdsmap/-/mdsmap-0.0.2.tgz#5b1c3c8b6da27949af8b90bf54d67359743054b9"
+  integrity sha512-WANAdPtDboqscfEqr5tEW91IXov9Ly05AR9+jBvw0NWUJaDg6JNQnRGMfUU0c6WGgTOIM1QSaCMhEdvU246hJQ==
+  dependencies:
+    d3 "3.5.6"
+    react "^17.0.2"
+    react-dom "^17.0.2"
+    remarkable "2.0.1"
 
 mdsmirror@0.0.16:
   version "0.0.16"
@@ -9375,9 +9362,9 @@ react-dev-utils@^12.0.1:
     strip-ansi "^6.0.1"
     text-table "^0.2.0"
 
-react-dom@17.0.2:
+react-dom@17.0.2, react-dom@^17.0.2:
   version "17.0.2"
-  resolved "https://registry.npmjs.org/react-dom/-/react-dom-17.0.2.tgz"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-17.0.2.tgz#ecffb6845e3ad8dbfcdc498f0d0a939736502c23"
   integrity sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
   dependencies:
     loose-envify "^1.1.0"
@@ -9522,9 +9509,9 @@ react-virtualized@^9.22.3:
     prop-types "^15.7.2"
     react-lifecycles-compat "^3.0.4"
 
-react@17.0.2:
+react@17.0.2, react@^17.0.2:
   version "17.0.2"
-  resolved "https://registry.npmjs.org/react/-/react-17.0.2.tgz"
+  resolved "https://registry.yarnpkg.com/react/-/react-17.0.2.tgz#d0b5cc516d29eb3eee383f75b62864cfb6800037"
   integrity sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==
   dependencies:
     loose-envify "^1.1.0"

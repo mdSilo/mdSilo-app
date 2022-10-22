@@ -22,9 +22,6 @@
     "@codemirror/state": "6.0.0",
     "@codemirror/view": "6.0.0",
 
-    "remarkable": "2.0.1",
-    "d3": "3.5.6",
-
     "@headlessui/react": "^1.7.3",
     "@popperjs/core": "^2.11.6",
     "@react-spring/web": "^9.5.5",
@@ -42,6 +39,7 @@
     "immer": "^9.0.15",
     "is-hotkey": "^0.2.0",
     "mdsmirror": "0.0.16",
+    "mdsmap": "0.0.2",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-highlight-words": "^0.18.0",
@@ -57,7 +55,6 @@
     "@tauri-apps/cli": "^1.1.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^12.1.4",
-    "@types/d3": "3.5.47",
     "@types/d3-drag": "^3.0.1",
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.3",
@@ -69,7 +66,6 @@
     "@types/react-dom": "^17.0.14",
     "@types/react-highlight-words": "^0.16.4",
     "@types/react-virtualized": "^9.21.21",
-    "@types/remarkable": "2.0.3",
     "@types/tailwindcss": "^3.1.0",
     "@typescript-eslint/eslint-plugin": "^5.40.0",
     "@typescript-eslint/parser": "^5.40.0",

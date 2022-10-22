@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { parse, transform, markmap } from 'mdsmap';
 import { writeFile } from 'file/write';
 import { normalizeSlash } from 'file/util';
 import { saveDilog } from 'file/open';
-import markmap  from './view';
-import { parse, transform } from './parser';
 import './mindmap.css';
 
 type Props = {
