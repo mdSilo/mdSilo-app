@@ -27,10 +27,7 @@ function SidebarTags(props: SidebarTagsProps) {
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
         {data.length > 0 ? (
-          <TagTree
-            data={data}
-            className="flex-1 overflow-y-auto"
-          />
+          <TagTree data={data} className="flex-1 overflow-y-auto" />
         ) : null}
       </div>
     </ErrorBoundary>
@@ -47,7 +44,7 @@ type TreeProps = {
 
 function SidebarTagTree(props: TreeProps) {
   const { data, className = '' } = props;
-  console.log("tag data", data)
+  // console.log("tag data", data)
 
   const Row = useCallback(
     ({ index, style }: {index: number; style: React.CSSProperties}) => {

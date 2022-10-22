@@ -9,7 +9,7 @@ export default function useDeleteNote(noteId: string, noteTitle: string) {
   const dispatch = currentView.dispatch;
 
   const onDeleteClick = useCallback(async () => {
-    dispatch({view: 'chronicle'});
+    dispatch({view: 'default'});
     doDeleteNote(noteId, noteTitle);
   }, [dispatch, noteId, noteTitle]);
 
