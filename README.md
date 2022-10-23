@@ -4,10 +4,11 @@
 A local-first mind silo for storing ideas, thought, knowledge with a powerful writing tool.
 built with React and [Tauri](https://github.com/tauri-apps). 
 
-[Demo](https://mdsilo.com/)    
+[Demo](https://mdsilo.com/app/demo)    
 [Discord](https://discord.gg/EXYSEHRTFt)  
 [Download](https://github.com/danloh/mdSilo-app/releases) 
 
+BTW, [Web app is here](https://mdsilo.com/app)
 
 ## Features
 
@@ -72,9 +73,10 @@ built with React and [Tauri](https://github.com/tauri-apps).
 
 - Cross-Platform 
   - [x] Windows, macOS, Linux. 
-  - [ ] Web(WIP)
+  - [X] Web: https://mdsilo.com/app/ 
   - [ ] Mobile: iOS/iPadOS and Android(soon...)
 
-## Live Demo
 
-Here we go: [Live demo](https://mdsilo.com/playground/) 
+## Any questions, feedback or suggestions?
+
+You can follow us on [Twitter](https://twitter.com/mdsiloapp) or go to our [Discord](https://discord.gg/EXYSEHRTFt). We are waiting there for you.
