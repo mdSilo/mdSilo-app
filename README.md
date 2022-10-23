@@ -1,8 +1,7 @@
 
 # mdSilo
 
-A local-first mind silo for storing ideas, thought, knowledge with a powerful writing tool.
-built with React and [Tauri](https://github.com/tauri-apps). 
+A local-first mind silo for storing ideas, thought, knowledge with a powerful all-in-one writing tool. built with React and [Tauri](https://github.com/tauri-apps). 
 
 [Demo](https://mdsilo.com/app/demo)    
 [Discord](https://discord.gg/EXYSEHRTFt)  

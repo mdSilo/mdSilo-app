@@ -47,16 +47,16 @@ function DefaultView() {
 }
 
 const defaultValue = `
-Lightweight **knowledge silo** and networked-writing tool equipped with ==WYSIWYG Markdown editor and reader==. Use it to organize writing, network thoughts and build a Second Brain on top of local plain text Markdown files.
+A lightweight, local-first personal wik and knowledge base for storing ideas, thought, knowledge with a powerful all-in-one writing tool. Use it to organize writing, network thoughts and build a Second Brain on top of local plain text Markdown files.
 
 :::info
 This is an editable demo.
 :::
 
 ## Features
-  - 📝 All-In-One Editor: Markdown and extensions, WYSIWYG, MindMap...  
-  - 🔀 Seamlessly switch between multi-modes: WYSIWYG, Markdown and MindMap  
-  - 🗄️ Build personal wiki with bidirectional links 
+  - 🔀 All-In-One Editor: Markdown, WYSIWYG, MindMap...  
+  - 📝 Markdown and extensions: Math/Chemical Equation, Diagram, Hashtag...   
+  - 🗄️ Build personal wiki with bidirectional wiki links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...   
   - 🕸️ Graph view to visualize the networked writing  
   - 📅 Chronicle view and Daily activities graph  
