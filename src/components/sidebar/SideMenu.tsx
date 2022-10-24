@@ -1,13 +1,13 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
-  IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
+  IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, IconFileImport, 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
-import { onOpenFile, onListDir, onSave } from 'editor/hooks/useOpen';
+import { onOpenFile, onListDir, onSave, openJsonFile } from 'editor/hooks/useOpen';
 import { store, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import { DropdownItem } from 'components/misc/Dropdown';
@@ -186,6 +186,7 @@ export function FileDrop() {
     store.getState().setCurrentDir(undefined);
     // store.getState().setInitDir(undefined);
   }, []);
+
   return (
     <>
       <DropdownItem onClick={onListDir}>
@@ -195,6 +196,10 @@ export function FileDrop() {
       <DropdownItem onClick={onOpenFile}>
         <IconFileText size={18} className="mr-1" />
         <Tooltip content="Open .md"><span>Open File</span></Tooltip>
+      </DropdownItem>
+      <DropdownItem onClick={openJsonFile}>
+        <IconFileImport size={18} className="mr-1" />
+        <Tooltip content="Open JSON"><span>Import JSON</span></Tooltip>
       </DropdownItem>
       <DropdownItem onClick={onClear}>
         <IconClearAll size={18} className="mr-1" />

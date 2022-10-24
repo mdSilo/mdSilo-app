@@ -8,7 +8,7 @@ export function processJson(content: string): NotesData {
     const notesData: NotesData = JSON.parse(content);
     return notesData;
   } catch (e) {
-    // console.log('Please Check the JSON file: ', e);
+    console.log('Please Check the JSON file: ', e);
     return {isloaded: false, notesobj: {}, notetree: {}};
   }
 }

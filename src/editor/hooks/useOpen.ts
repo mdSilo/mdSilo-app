@@ -1,9 +1,10 @@
 import { store } from 'lib/store';
 import { 
-  openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir 
+  openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir, openJSONFilePath 
 } from 'file/open';
-import { normalizeSlash, getDirPath } from 'file/util';
-import { writeAllFile } from 'file/write';
+import { normalizeSlash, getDirPath, getBaseName, joinPaths } from 'file/util';
+import { writeAllFile, writeFile } from 'file/write';
+import { rmFileNameExt } from 'file/process';
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);
@@ -78,6 +79,33 @@ export const listDirPath = async (dirPath: string, noCache = true) => {
     const itemList = store.getState().noteTree[normalizedDir];
     if (!itemList)  {
       await listDir(normalizedDir, false);
+    }
+  }
+};
+
+export const openJsonFile = async () => {
+  const onePath = await openFileDilog(['json'], false);
+  // console.log("json file path", onePath, typeof onePath);
+  if (onePath && typeof onePath === 'string') {
+    // workflow: 
+    // 0- open json file
+    const jsonData = await openJSONFilePath(onePath);
+    // console.log('json data: ', jsonData);
+    if (jsonData) {
+      // 1- build a folder to save markdown files 
+      const parentDir = await getDirPath(onePath);
+      const jsonName = (await getBaseName(onePath))[0];
+      const dirName = await joinPaths(parentDir, [rmFileNameExt(jsonName)]);
+      // 2- json to markdown files and save 
+      const notes = Object.values(jsonData.notesobj);
+      for (const note of notes) {
+        const title = note.title;
+        const content = note.content;
+        const filePath =  await joinPaths(dirName, [`${title}.md`]);
+        await writeFile(filePath, content);
+      }
+      // 3- open that folder 
+      await listInitDir(dirName);
     }
   }
 };

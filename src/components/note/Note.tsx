@@ -144,7 +144,7 @@ function Note(props: Props) {
     [updateNote, noteId, rawMode, focusOn, notePath, initDir]
   );
 
-  setWindowTitle(`/ ${title} - mdSilo`);
+  setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
   // update locally
   const onTitleChange = useCallback(
     async (newtitle: string) => {

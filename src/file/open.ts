@@ -324,7 +324,7 @@ async function upsertTreeRecursively(dirPath: string) {
  * @returns Promise<boolean>
  */
 export async function openJSONFilePath(filePath: string) {
-  if (filePath && filePath.endsWith('mdsilo.json')) {
+  if (filePath) {
     const jsonInfo = new FileAPI(filePath);
     if (await jsonInfo.exists()) {
       const fileContent = await jsonInfo.readFile();
