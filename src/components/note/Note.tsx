@@ -144,6 +144,11 @@ function Note(props: Props) {
     [updateNote, noteId, rawMode, focusOn, notePath, initDir]
   );
 
+  const onPrint = (): void => {
+    store.getState().setIsSidebarOpen(false);
+    window.print();
+  };
+
   setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
   // update locally
   const onTitleChange = useCallback(
@@ -349,7 +354,7 @@ function Note(props: Props) {
     >
       <ProvideCurrentMd value={currentNoteValue}>
         <div id={noteId} className={`${noteContainerClassName} ${className}`}>
-          <NoteHeader />
+          <NoteHeader onPrint={onPrint} />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col flex-1 w-full mx-auto px-8 md:px-12">
               <div

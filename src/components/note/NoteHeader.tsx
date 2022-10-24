@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconDots, IconFileText, IconLayout, IconMarkdown, IconTournament, IconTrash } from '@tabler/icons';
+import { IconDots, IconFileText, IconLayout, IconMarkdown, IconPrinter, IconTournament, IconTrash } from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { useStore } from 'lib/store';
@@ -11,8 +11,11 @@ import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';
 import NoteDelModal from 'components/note/NoteDelModal';
 
+type Props = {
+  onPrint?: () => void;
+};
 
-export default function NoteHeader() {
+export default function NoteHeader({ onPrint } : Props) {
   const currentNote = useCurrentMdContext();
   const note = useStore((state) => state.notes[currentNote.id]);
 
@@ -73,7 +76,7 @@ export default function NoteHeader() {
           {({ open }) => (
             <>
               <Menu.Button ref={menuButtonRef} className={buttonClassName}>
-                <Tooltip content="Options (Move, Delete...)">
+                <Tooltip content="Options (Delete...)">
                   <span className="flex items-center justify-center w-8 h-8">
                     <IconDots size={18} className={iconClass} />
                   </span>
@@ -102,6 +105,11 @@ export default function NoteHeader() {
             </>
           )}
         </Menu>
+        <Tooltip content="Print">
+          <button className={switchClass} onClick={onPrint}>
+            <IconPrinter size={15} className="ml-1" />
+          </button>
+        </Tooltip>
       </div>
       {isNoteDelModalOpen ? (
         <Portal>
