@@ -1,6 +1,6 @@
 [package]
 name = "mdsilo"
-version = "0.4.9"
+version = "0.5.0"
 description = "mdSilo Desktop"
 authors = ["dloh"]
 license = "AGPL-3.0-or-later"
