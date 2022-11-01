@@ -1197,13 +1197,13 @@
     "@codemirror/language" "^6.0.0"
     "@lezer/json" "^1.0.0"
 
-"@codemirror/lang-markdown@6.0.0", "@codemirror/lang-markdown@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.npmjs.org/@codemirror/lang-markdown/-/lang-markdown-6.0.0.tgz"
-  integrity sha512-ozJaO1W4WgGlwWOoYCSYzbVhhM0YM/4lAWLrNsBbmhh5Ztpl0qm4CgEQRl3t8/YcylTZYBIXiskui8sHNGd4dg==
+"@codemirror/lang-markdown@6.0.3", "@codemirror/lang-markdown@^6.0.0":
+  version "6.0.3"
+  resolved "https://registry.yarnpkg.com/@codemirror/lang-markdown/-/lang-markdown-6.0.3.tgz#c11ccf0af4db85d481ee7cae9cb16d08f213aee7"
+  integrity sha512-LFF5YlWHPV61udr3PEeiRAfn1TBfqVMakQi8NVSOKXco/GFzTtEqG5wTImY84Lie0sVrNZSwA0pNW8VQZDQq+A==
   dependencies:
     "@codemirror/lang-html" "^6.0.0"
-    "@codemirror/language" "^6.0.0"
+    "@codemirror/language" "^6.3.0"
     "@codemirror/state" "^6.0.0"
     "@codemirror/view" "^6.0.0"
     "@lezer/common" "^1.0.0"
@@ -1288,10 +1288,10 @@
     "@codemirror/language" "^6.0.0"
     "@codemirror/legacy-modes" "^6.0.0"
 
-"@codemirror/language@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.npmjs.org/@codemirror/language/-/language-6.0.0.tgz"
-  integrity sha512-rtjk5ifyMzOna1c7PBu7J1VCt0PvA5wy3o8eMVnxMKb7z8KA7JFecvD04dSn14vj/bBaAbqRsGed5OjtofEnLA==
+"@codemirror/language@^6.0.0", "@codemirror/language@^6.3.0":
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/@codemirror/language/-/language-6.3.0.tgz#141c715e1fce5f6dcca3b1b984ed8f03f583dd5c"
+  integrity sha512-6jOE5DEt6sKD46SXhn3xPbBehn+l48ACcA6Uxs2k+E2YNH9XGF5WdGMTYr2DlggfK4h0QZBK6zEb5S7lkTriWA==
   dependencies:
     "@codemirror/state" "^6.0.0"
     "@codemirror/view" "^6.0.0"
