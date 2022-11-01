@@ -4,9 +4,8 @@ import { ArticleType } from "./helpers/dataType";
 import { IconLink, IconStar } from "@tabler/icons";
 
 type ViewProps = {
-  article?: ArticleType;
+  article: ArticleType | null;
 };
-
 
 export const ArticleView = (props: ViewProps): JSX.Element => {
   const { article } = props;

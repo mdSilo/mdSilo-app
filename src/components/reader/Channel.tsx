@@ -3,7 +3,7 @@ import { IconCircleCheck, IconRefresh } from "@tabler/icons";
 import { ArticleType, ChannelType } from "./helpers/dataType";
 
 type Props = {
-  currentFeed: ChannelType;
+  currentFeed: ChannelType | null;
   handleRefresh: () => void;
   markAllRead: () => void;
   onClickArticle: (article: ArticleType) => void;
@@ -12,6 +12,15 @@ type Props = {
 
 export const Channel = (props: Props): JSX.Element => {
   const { currentFeed, handleRefresh, markAllRead, onClickArticle, syncing } = props;
+
+  if (!currentFeed) {
+    return (
+      <div className="">
+        no feed
+      </div>
+    );
+  }
+
   const title = currentFeed.title;
   // const feedUrl = currentFeed.link;
   const articleList = currentFeed.entries; 

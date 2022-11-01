@@ -3,6 +3,7 @@ import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { ChannelList } from 'components/reader/ChannelList';
 import { Channel } from 'components/reader/Channel';
 import { ArticleView } from 'components/reader/ArticleView';
+import { FeedManager } from 'components/reader/FeedManager';
 import { ArticleType, ChannelType } from 'components/reader/helpers/dataType';
 import * as dataAgent from 'components/reader/helpers/dataAgent';
 
@@ -12,6 +13,7 @@ export default function Feed() {
   const [channelList, setChannelList] = useState<ChannelType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<ChannelType | null>(null);
   const [currentArticle, setCurrentArticle] = useState<ArticleType | null>(null);
+  const [showManager, setShowManager] = useState(false);
 
   const getList = () => {
     Promise.all([
@@ -52,7 +54,7 @@ export default function Feed() {
   };
 
   const addFeed = () => {
-    // todo
+    // TODO
   };
 
   // currentChannel and it's article list
@@ -90,22 +92,26 @@ export default function Feed() {
             doneNum={doneNum}
           />
         </div>
-        <div className="w-96">
-          {currentChannel && (
-            <Channel 
-              currentFeed={currentChannel} 
-              handleRefresh={handleRefresh}
-              markAllRead={markAllRead}
-              onClickArticle={onClickArticle}
-              syncing={syncing}
-            />
-          )}
-        </div>
-        <div className="my-1 p-1 rounded text-center">
-          {currentArticle && (
-            <ArticleView article={currentArticle} />
-          )}
-        </div>
+        {showManager ? (
+          <FeedManager 
+            channelList={channelList} 
+          />
+        ) : (
+          <div className="flex">
+            <div className="w-96">
+              <Channel 
+                currentFeed={currentChannel} 
+                handleRefresh={handleRefresh}
+                markAllRead={markAllRead}
+                onClickArticle={onClickArticle}
+                syncing={syncing}
+              />
+            </div>
+            <div className="my-1 p-1 rounded text-center">
+              <ArticleView article={currentArticle} />
+            </div>
+          </div>
+        )}
       </div>
     </ErrorBoundary>
   );
