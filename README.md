@@ -63,6 +63,7 @@ BTW, [Web app is here](https://mdsilo.com/app)
 
 - Organize writings
   - [X] Folder management 
+  - [X] Hashtag 
   - [X] Backlinks 
   - [X] Recent history 
   - [ ] Block reference  

@@ -89,3 +89,6 @@ pub fn delete_data(key: String) -> bool {
 
   fs::remove_file(storage_dir.join(key)).is_ok()
 }
+
+
+// TODO: log

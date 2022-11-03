@@ -61,3 +61,6 @@ pub struct NewArticle {
   pub content: String,
   pub published: String,
 }
+
+
+// TODO: save daily activities to db

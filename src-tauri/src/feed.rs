@@ -6,24 +6,28 @@ use crate::db;
 use crate::models::{Channel, NewChannel, NewArticle};
 
 pub async fn fetch_rss_item(url: &str) -> Option<rss::Channel> {
-  let client = reqwest::Client::builder()
-    .proxy(reqwest::Proxy::all("socks5h://127.0.0.1:1800").unwrap())
-    .build().unwrap();
+  let client = reqwest::Client::builder().build();
 
-  let response = client.get(url).send().await;
+  let response = match client {
+    Ok(cl) => cl.get(url).send().await,
+    Err(_) => return None,
+  };
 
   match response {
     Ok(response) => match response.status() {
       reqwest::StatusCode::OK => {
-        let content = response.bytes().await.unwrap();
+        let content = match response.bytes().await {
+          Ok(ctn) => ctn,
+          Err(_) => return None,
+        };
 
         match rss::Channel::read_from(&content[..]).map(|channel| channel) {
           Ok(channel) => Some(channel),
           Err(_) => None,
         }
-      }
+      },
       _ => {
-        println!("{}", &response.status());
+        println!("{}", &response.status()); // TODO: log
         None
       }
     },
@@ -130,7 +134,10 @@ pub async fn add_articles_with_channel_link(link: String) -> usize {
   let channel = db::get_channel_by_link(link);
   match channel {
     Some(channel) => {
-      let res = fetch_rss_item(&channel.link).await.unwrap();
+      let res = match fetch_rss_item(&channel.link).await {
+        Some(r) => r,
+        None => return 0,
+      };
       let articles = new_article_list(&channel.link, &res);
 
       println!("{:?}", &articles.len());
