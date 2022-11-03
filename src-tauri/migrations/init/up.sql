@@ -7,7 +7,7 @@ CREATE TABLE channels (
   link VARCHAR NOT NULL UNIQUE,
   description VARCHAR NOT NULL,
   published DATETIME NOT NULL,
-  ty VARCHAR NOT NULL DEFAULT 'rss',
+  ty VARCHAR NOT NULL DEFAULT 'rss'
 );
 
 DROP TABLE IF EXISTS articles;

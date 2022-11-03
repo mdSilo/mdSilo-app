@@ -16,10 +16,9 @@ export default function Feed() {
   const [showManager, setShowManager] = useState(false);
 
   const getList = () => {
-    Promise.all([
-      dataAgent.getChannels(),
-      dataAgent.getUnreadNum(),
-    ]).then(([channels, unreadNum]) => {
+    Promise.all(
+      [dataAgent.getChannels(), dataAgent.getUnreadNum()]
+    ).then(([channels, unreadNum]) => {
       channels.forEach((item) => {
         item.unread = unreadNum[item.link] || 0;
       });
@@ -34,18 +33,15 @@ export default function Feed() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [doneNum, setDoneNum] = useState(0);
-  const loadAndUpdate = async (url: string) => {
-    const res = await dataAgent.addChannel(url);
+  const refreshChannel = async (link: string, title: string) => {
+    const res = await dataAgent.addChannel(link, title);
     setDoneNum((done) => done + 1);
     return res;
   };
 
   const refreshList = () => {
     setRefreshing(true);
-
-    const urlList = channelList.map(channel => channel.link);
-    // TODO, refresh 
-    urlList.forEach(async url => await loadAndUpdate(url));
+    channelList.forEach(async c => await refreshChannel(c.link, c.title));
   };
 
   const onClickFeed = (link: string) => {
@@ -53,8 +49,18 @@ export default function Feed() {
     if (clieckedChannel) setCurrentChannel(clieckedChannel);
   };
 
-  const addFeed = () => {
-    // TODO
+  const handleAddFeed = async (feedUrl: string, title: string) => {
+    const res = await dataAgent.addChannel(feedUrl, title)
+    if (res > 0) {
+      getList();
+    }
+  };
+
+  const handleDeleteFeed = async (channel: ChannelType) => {
+    if (channel && channel.link) {
+      await dataAgent.deleteChannel(channel.link)
+      getList()
+    }
   };
 
   // currentChannel and it's article list
@@ -95,6 +101,8 @@ export default function Feed() {
         {showManager ? (
           <FeedManager 
             channelList={channelList} 
+            handleAddFeed={handleAddFeed}
+            handleDelete={handleDeleteFeed}
           />
         ) : (
           <div className="flex">

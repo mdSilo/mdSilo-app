@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { IconPlus, IconRefresh } from "@tabler/icons";
 import { getFavicon } from "utils/helper";
-import defaultSiteIcon from "./default.png";
 import { ChannelType } from "./data/dataType";
 
 type Props = {
@@ -12,7 +11,7 @@ type Props = {
   onClickFeed: (link: string) => void;
 };
 
-const ChannelList = (props: Props): JSX.Element => {
+export function ChannelList(props: Props) {
   const { channelList, refreshList, onClickFeed, refreshing, doneNum } = props;
   
   const renderFeedList = (): JSX.Element => {
@@ -31,13 +30,6 @@ const ChannelList = (props: Props): JSX.Element => {
               <div>
                 <img
                   src={ico}
-                  onError={(e) => {
-                    // @ts-ignore
-                    e.target.onerror = null;
-
-                    // @ts-ignore
-                    e.target.src = defaultSiteIcon;
-                  }}
                   className="h-4 w-4"
                   alt={channel.title}
                 />
@@ -79,6 +71,4 @@ const ChannelList = (props: Props): JSX.Element => {
       )}
     </div>
   );
-};
-
-export { ChannelList };
+}

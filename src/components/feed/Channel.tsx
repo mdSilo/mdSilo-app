@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons";
 import { ArticleType, ChannelType } from "./data/dataType";
 
@@ -10,7 +10,7 @@ type Props = {
   syncing: boolean;
 };
 
-export const Channel = (props: Props): JSX.Element => {
+export function Channel(props: Props) {
   const { currentFeed, handleRefresh, markAllRead, onClickArticle, syncing } = props;
 
   if (!currentFeed) {
@@ -25,12 +25,9 @@ export const Channel = (props: Props): JSX.Element => {
   // const feedUrl = currentFeed.link;
   const articleList = currentFeed.entries; 
 
-  const listRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<HTMLDivElement>(null);
-
   return (
     <div className="">
-      <div className="" ref={listRef}>
+      <div className="">
         <div className={`sticky-header`}>
           <div className="title">{title}</div>
           <div className="menu">
@@ -50,45 +47,43 @@ export const Channel = (props: Props): JSX.Element => {
       </div>
     </div>
   );
-};
+}
 
 type ListProps = {
   articles: ArticleType[];
   onClickArticle: (article: ArticleType) => void;
 };
 
-const ArticleList = forwardRef((props: ListProps): JSX.Element => {
-    const { articles, onClickArticle } = props;
-    const [highlightItem, setHighlightItem] = useState<ArticleType>();
-    const articleListRef = useRef<HTMLDivElement>(null);
+function ArticleList(props: ListProps) {
+  const { articles, onClickArticle } = props;
+  const [highlightItem, setHighlightItem] = useState<ArticleType>();
 
-    const handleArticleSelect = (article: ArticleType) => {
-      setHighlightItem(article);
-      onClickArticle(article);
-    };
+  const handleArticleSelect = (article: ArticleType) => {
+    setHighlightItem(article);
+    onClickArticle(article);
+  };
 
-    const renderList = (): JSX.Element[] => {
-      return articles.map((article: any, idx: number) => {
-        return (
-          <ArticleItem
-            article={article}
-            highlight={highlightItem?.id === article.id}
-            key={article.id}
-            onSelect={handleArticleSelect}
-          />
-        );
-      });
-    };
+  const renderList = (): JSX.Element[] => {
+    return articles.map((article: any, idx: number) => {
+      return (
+        <ArticleItem
+          article={article}
+          highlight={highlightItem?.id === article.id}
+          key={article.id}
+          onSelect={handleArticleSelect}
+        />
+      );
+    });
+  };
 
-    return (
+  return (
+    <div className="">
       <div className="">
-        <div className="" ref={articleListRef}>
-          <ul className="">{renderList()}</ul>
-        </div>
+        <ul className="">{renderList()}</ul>
       </div>
-    );
-  }
-);
+    </div>
+  );
+}
 
 type ItemProps = {
   article: ArticleType;
@@ -96,7 +91,7 @@ type ItemProps = {
   highlight: boolean;
 };
 
-const ArticleItem = React.memo((props: ItemProps) => {
+const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   const { article, onSelect, highlight } = props;
   const [readStatus, setReadStatus] = useState(article.read_status);
 

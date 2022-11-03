@@ -41,13 +41,19 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
 }
 
 // 2- convert to channel, defined type
-pub fn new_channel(res: &rss::Channel) -> NewChannel {
+pub fn new_channel(res: &rss::Channel, title: Option<String>) -> NewChannel {
   let date = match &res.pub_date {
     Some(t) => String::from(t),
     None => String::from(""),
   };
+  let channel_title = match title {
+    Some(t) if t.trim().len() > 0 => {
+      String::from(t.trim())
+    },
+    _ =>  res.title.to_string(),
+  };
   let channel = NewChannel {
-    title: res.title.to_string(),
+    title: channel_title,
     link: res.link.to_string(),
     description: res.description.to_string(),
     published: date,
@@ -100,7 +106,7 @@ pub struct RssResult {
 pub async fn fetch_feed(url: String) -> Option<RssResult> { 
   match fetch_rss(&url).await {
     Some(res) => {
-      let channel = new_channel(&res);
+      let channel = new_channel(&res, None);
       let articles = new_article_list(&url, &res);
 
       Some(RssResult { channel, articles })
@@ -110,14 +116,14 @@ pub async fn fetch_feed(url: String) -> Option<RssResult> {
 }
 
 #[command]
-pub async fn add_channel(url: String) -> usize {
+pub async fn add_channel(url: String, title: Option<String>) -> usize {
   println!("request channel {}", &url);
 
   let res = fetch_rss(&url).await;
 
   match res {
     Some(res) => {
-      let channel = new_channel(&res);
+      let channel = new_channel(&res, title);
       let articles = new_article_list(&url, &res);
 
       db::add_channel(channel, articles)
@@ -130,7 +136,7 @@ pub async fn add_channel(url: String) -> usize {
 pub async fn import_channels(url_list: Vec<String>) -> usize {
   let mut import_num = 0;
   for url in &url_list {
-    let res = add_channel(url.to_string()).await;
+    let res = add_channel(url.to_string(), None).await;
     import_num += res;
   }
   

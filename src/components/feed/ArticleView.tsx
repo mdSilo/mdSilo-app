@@ -7,7 +7,7 @@ type ViewProps = {
   article: ArticleType | null;
 };
 
-export const ArticleView = (props: ViewProps): JSX.Element => {
+export function ArticleView(props: ViewProps) {
   const { article } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const [pageContent, setPageContent] = useState("");
@@ -93,4 +93,4 @@ export const ArticleView = (props: ViewProps): JSX.Element => {
       {article ? renderDetail() : renderPlaceholder()}
     </div>
   );
-};
+}
