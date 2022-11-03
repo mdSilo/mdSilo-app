@@ -1,11 +1,16 @@
 use std::collections::HashMap;
 use reqwest;
+use serde::{Serialize, Deserialize};
 use tauri::command;
 
 use crate::db;
 use crate::models::{Channel, NewChannel, NewArticle};
 
-pub async fn fetch_rss_item(url: &str) -> Option<rss::Channel> {
+// # process rss feed #
+// todo: podcast's audio link
+//
+// 1- fetch: rss typed
+pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
   let client = reqwest::Client::builder().build();
 
   let response = match client {
@@ -35,6 +40,7 @@ pub async fn fetch_rss_item(url: &str) -> Option<rss::Channel> {
   }
 }
 
+// 2- convert to channel, defined type
 pub fn new_channel(res: &rss::Channel) -> NewChannel {
   let date = match &res.pub_date {
     Some(t) => String::from(t),
@@ -50,6 +56,7 @@ pub fn new_channel(res: &rss::Channel) -> NewChannel {
   return channel;
 }
 
+// 3- convert to article, defined type
 pub fn new_article_list(
   feed_url: &String,
   res: &rss::Channel,
@@ -66,7 +73,7 @@ pub fn new_article_list(
       .unwrap_or(String::from("no description"));
     let date = String::from(item.pub_date().clone().unwrap_or(""));
 
-    let s = NewArticle {
+    let new_article = NewArticle {
       title,
       url: link,
       feed_link: feed_url.to_string(),
@@ -75,17 +82,59 @@ pub fn new_article_list(
       content,
     };
 
-    articles.push(s);
+    articles.push(new_article);
   }
 
-  articles
+  return articles;
+}
+
+// # end process rss feed #
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RssResult {
+  pub channel: NewChannel,
+  pub articles: Vec<NewArticle>,
 }
 
 #[command]
-pub async fn fetch_feed(url: String) -> Option<rss::Channel> {
-  let res = fetch_rss_item(&url).await;
+pub async fn fetch_feed(url: String) -> Option<RssResult> { 
+  match fetch_rss(&url).await {
+    Some(res) => {
+      let channel = new_channel(&res);
+      let articles = new_article_list(&url, &res);
 
-  res
+      Some(RssResult { channel, articles })
+    }
+    None => None,
+  }
+}
+
+#[command]
+pub async fn add_channel(url: String) -> usize {
+  println!("request channel {}", &url);
+
+  let res = fetch_rss(&url).await;
+
+  match res {
+    Some(res) => {
+      let channel = new_channel(&res);
+      let articles = new_article_list(&url, &res);
+
+      db::add_channel(channel, articles)
+    }
+    None => 0,
+  }
+}
+
+#[command]
+pub async fn import_channels(url_list: Vec<String>) -> usize {
+  let mut import_num = 0;
+  for url in &url_list {
+    let res = add_channel(url.to_string()).await;
+    import_num += res;
+  }
+  
+  return import_num;
 }
 
 #[command]
@@ -96,33 +145,6 @@ pub async fn get_channels() -> Vec<Channel> {
 }
 
 #[command]
-pub async fn add_channel(url: String) -> usize {
-  println!("request channel {}", &url);
-
-  let res = fetch_rss_item(&url).await;
-
-  match res {
-    Some(res) => {
-      let channel = new_channel(&res);
-      let articles = new_article_list(&url, &res);
-      let res = db::add_channel(channel, articles);
-
-      res
-    }
-    None => 0,
-  }
-}
-
-#[command]
-pub async fn import_channels(list: Vec<String>) -> usize {
-  println!("{:?}", &list);
-  for url in &list {
-    add_channel(url.to_string()).await;
-  }
-  1
-}
-
-#[command]
 pub fn delete_channel(link: String) -> usize {
   let result = db::delete_channel(link);
 
@@ -130,11 +152,11 @@ pub fn delete_channel(link: String) -> usize {
 }
 
 #[command]
-pub async fn add_articles_with_channel_link(link: String) -> usize {
+pub async fn add_articles_with_channel(link: String) -> usize {
   let channel = db::get_channel_by_link(link);
   match channel {
     Some(channel) => {
-      let res = match fetch_rss_item(&channel.link).await {
+      let res = match fetch_rss(&channel.link).await {
         Some(r) => r,
         None => return 0,
       };

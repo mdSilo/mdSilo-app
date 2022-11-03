@@ -1,57 +1,54 @@
 import { invoke } from "@tauri-apps/api";
 import { ChannelType, ArticleType } from "./dataType";
 
+type RssResult = {
+  channel: ChannelType;
+  articles: ArticleType[];
+};
+
+export const fetchFeed = async (url: string): Promise<RssResult> => {
+  return await invoke('fetch_feed', { url })
+}
+
+export const addChannel = async (url: string): Promise<number> => {
+  return await invoke('add_channel', { url })
+}
+
+export const importChannels = async (list: string[]) => {
+  return await invoke('import_channels', { list })
+}
+
 export const getChannels = async (): Promise<ChannelType[]> => {
-  return invoke('get_channels')
+  return await invoke('get_channels')
 }
 
 export const deleteChannel = async (feedUrl: string) => {
-  return invoke('delete_channel', { feedUrl })
+  return await invoke('delete_channel', { feedUrl })
 };
 
 export const updateCountWithChannel = async (feedUrl: string): Promise<any> => {
   return {};
 };
 
-export const importChannels = async (list: string[]) => {
-  return invoke('import_channels', { list })
+export const getArticleList = async (feedLink: string, filter: any) => {
+  return await invoke('get_articles', { feedLink, filter })
 }
 
-export const getArticleList = async (feedUrl: string, filter: any) => {
-  return invoke('get_articles', { feedUrl, filter })
+export const addArticlesWithChannel = async (feedLink: string): Promise<number> => {
+  return await invoke('add_articles_with_channel', { link: feedLink })
 }
 
-export const fetchFeed = async (url: string): Promise<ChannelType & { items: ArticleType[] }> => {
-  return invoke('fetch_feed', { url })
-}
-
-export const addChannel = async (url: string): Promise<number> => {
-  return invoke('add_channel', { url })
-}
-
-export const syncArticlesWithChannel = async (feedUrl: string): Promise<number> => {
-  return invoke('sync_articles_with_channel', { feedUrl })
-}
-
-export const getUnreadTotal = async (): Promise<{ [key: string]: number }> => {
-  return invoke('get_unread_total')
+export const getUnreadNum = async (): Promise<{ [key: string]: number }> => {
+  return await invoke('get_unread_num')
 }
 
 export const updateArticleReadStatus = async (articleUrl: string, read_status: number) => {
-  return invoke('update_article_read_status', {
+  return await invoke('update_article_read_status', {
     url: articleUrl,
     status: read_status,
   })
 }
 
-export const markAllRead = async (feedUrl: string) => {
-  return invoke('mark_all_read', {
-    channelUrl: feedUrl
-  })
-}
-
-export const updateUserConfig = async (cfg: { [key: string]: any }) => {
-  return invoke('update_user_config', {
-    cfg
-  })
+export const markAllRead = async (feedLink: string) => {
+  return await invoke('mark_all_read', { feedLink })
 }

@@ -1,5 +1,5 @@
 use super::schema::{articles, channels};
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use diesel::{sql_types::*, Queryable, QueryableByName, Insertable};
 
 #[derive(Debug, Queryable, Serialize, QueryableByName)]
@@ -42,7 +42,7 @@ pub struct Article {
   pub read_status: i32,
 }
 
-#[derive(Debug, Insertable)]
+#[derive(Debug, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = channels)]
 pub struct NewChannel {
   pub title: String,
@@ -51,7 +51,7 @@ pub struct NewChannel {
   pub published: String,
 }
 
-#[derive(Debug, Insertable, Clone)]
+#[derive(Debug, Insertable, Clone, Serialize, Deserialize)]
 #[diesel(table_name = articles)]
 pub struct NewArticle {
   pub title: String,

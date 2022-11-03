@@ -24,34 +24,28 @@ pub fn get_channels() -> Vec<Channel> {
   let mut connection = establish_connection();
   let results = schema::channels::dsl::channels
     .load::<Channel>(&mut connection)
-    .expect("Expect loading posts");
+    .unwrap_or(vec![]);
 
-  results
+  return results;
 }
 
 pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
   let mut connection = establish_connection();
   let result = diesel::insert_or_ignore_into(schema::channels::dsl::channels)
     .values(channel)
-    .execute(&mut connection);
-  let result = match result {
-    Ok(r) => r,
-    Err(_) => 0,
-  };
+    .execute(&mut connection)
+    .unwrap_or(0);
 
   println!(" new result {:?}", result);
 
   if result == 1 {
-    println!("start insert articles");
-
-    let articles = diesel::insert_or_ignore_into(schema::articles::dsl::articles)
+    diesel::insert_or_ignore_into(schema::articles::dsl::articles)
       .values(articles)
-      .execute(&mut connection);
-
-    println!("articles {:?}", articles);
+      .execute(&mut connection)
+      .unwrap_or(0);
   }
 
-  result
+  return result;
 }
 
 // per link
@@ -61,7 +55,7 @@ pub fn delete_channel(link: String) -> usize {
   let channel = schema::channels::dsl::channels
     .filter(schema::channels::link.eq(&link))
     .load::<Channel>(&mut connection)
-    .expect("Expect find channel");
+    .unwrap_or(vec![]);
 
   // del channel and it's articles
   if channel.len() == 1 {
@@ -70,13 +64,13 @@ pub fn delete_channel(link: String) -> usize {
         schema::channels::dsl::channels.filter(schema::channels::link.eq(&link))
       )
       .execute(&mut connection)
-      .expect("Expect delete channel");
+      .unwrap_or(0);
 
     diesel::delete(
       schema::articles::dsl::articles.filter(schema::articles::feed_link.eq(&link)),
     )
     .execute(&mut connection)
-    .expect("Expect delete channel");
+    .unwrap_or(0);
 
     return result;
   } else {
@@ -89,7 +83,7 @@ pub fn get_channel_by_link(link: String) -> Option<Channel> {
   let mut channel = schema::channels::dsl::channels
     .filter(schema::channels::link.eq(&link))
     .load::<Channel>(&mut connection)
-    .expect("Expect find channel");
+    .unwrap_or(vec![]);
 
   if channel.len() == 1 {
     return channel.pop();
@@ -124,13 +118,13 @@ pub fn add_articles(feed_link: String, articles: Vec<NewArticle>) -> usize {
   let channel = schema::channels::dsl::channels
     .filter(schema::channels::link.eq(&feed_link))
     .load::<Channel>(&mut connection)
-    .expect("Expect find channel");
+    .unwrap_or(vec![]);
 
   if channel.len() == 1 {
     let result = diesel::insert_or_ignore_into(schema::articles::dsl::articles)
       .values(articles)
       .execute(&mut connection)
-      .expect("Expect add articles");
+      .unwrap_or(0);
 
     return result;
   } else {
@@ -169,17 +163,14 @@ pub fn update_article_read_status(url: String, status: i32) -> usize {
   let article = get_article_by_url(String::from(&url));
 
   match article {
-    Some(_article) => {
-      let res =
-        diesel::update(schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)))
-          .set(schema::articles::read_status.eq(status))
-          .execute(&mut connection);
-
-      match res {
-        Ok(r) => r,
-        Err(_) => 0,
-      }
-    }
+    Some(_) => {
+      diesel::update(
+        schema::articles::dsl::articles.filter(schema::articles::url.eq(&url))
+      )
+      .set(schema::articles::read_status.eq(status))
+      .execute(&mut connection)
+      .unwrap_or(0)
+    },
     None => 0,
   }
 }
@@ -211,7 +202,7 @@ pub fn get_articles(filter: ArticleFilter) -> ArticleQueryResult {
 
   let result = query
     .load::<Article>(&mut connection)
-    .expect("Expect loading articles");
+    .unwrap_or(vec![]);
 
   ArticleQueryResult { list: result }
 }
@@ -224,12 +215,10 @@ pub fn update_articles_read_status_channel(feed_link: String) -> usize {
       .filter(schema::articles::read_status.eq(1)),
   )
   .set(schema::articles::read_status.eq(2))
-  .execute(&mut connection);
+  .execute(&mut connection)
+  .unwrap_or(0);
 
-  match result {
-    Ok(r) => r,
-    Err(_) => 0,
-  }
+  return result;
 }
 
 #[cfg(test)]

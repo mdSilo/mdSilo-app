@@ -49,7 +49,7 @@ fn main() {
       feed::import_channels,
       feed::get_channels,
       feed::delete_channel,
-      feed::add_articles_with_channel_link,
+      feed::add_articles_with_channel,
       feed::get_articles,
       feed::update_article_read_status,
       feed::get_unread_num,
