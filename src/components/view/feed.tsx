@@ -4,8 +4,8 @@ import { ChannelList } from 'components/reader/ChannelList';
 import { Channel } from 'components/reader/Channel';
 import { ArticleView } from 'components/reader/ArticleView';
 import { FeedManager } from 'components/reader/FeedManager';
-import { ArticleType, ChannelType } from 'components/reader/helpers/dataType';
-import * as dataAgent from 'components/reader/helpers/dataAgent';
+import { ArticleType, ChannelType } from 'components/reader/data/dataType';
+import * as dataAgent from 'components/reader/data/dataAgent';
 
 export default function Feed() {
   // add data and handle dispatched here

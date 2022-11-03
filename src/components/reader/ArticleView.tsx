@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getChannelFavicon } from "./helpers/parseXML";
-import { ArticleType } from "./helpers/dataType";
+import { getFavicon } from "utils/helper";
+import { ArticleType } from "./data/dataType";
 import { IconLink, IconStar } from "@tabler/icons";
 
 type ViewProps = {
@@ -23,7 +23,7 @@ export const ArticleView = (props: ViewProps): JSX.Element => {
     }
 
     const { title, url, author, published, image } = article;
-    const ico = getChannelFavicon(url);
+    const ico = getFavicon(url);
 
     return (
       <div className="" ref={containerRef}>

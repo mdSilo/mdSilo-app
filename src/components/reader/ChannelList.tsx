@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { IconPlus, IconRefresh } from "@tabler/icons";
-import { store } from "lib/store";
+import { getFavicon } from "utils/helper";
 import defaultSiteIcon from "./default.png";
-import { ChannelType } from "./helpers/dataType";
-import { getChannelFavicon } from "./helpers/parseXML";
+import { ChannelType } from "./data/dataType";
 
 type Props = {
   channelList: ChannelType[];
@@ -21,7 +20,7 @@ const ChannelList = (props: Props): JSX.Element => {
       <ul className="">
         {channelList.map((channel: ChannelType, i: number) => {
           const { unread = 0, link } = channel;
-          const ico = getChannelFavicon(link);
+          const ico = getFavicon(link);
 
           return (
             <li

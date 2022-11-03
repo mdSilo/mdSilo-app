@@ -1,6 +1,6 @@
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons";
-import { ArticleType, ChannelType } from "./helpers/dataType";
+import { ArticleType, ChannelType } from "./data/dataType";
 
 type Props = {
   currentFeed: ChannelType | null;

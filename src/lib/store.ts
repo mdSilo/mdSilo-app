@@ -93,6 +93,9 @@ export type Store = {
   setIsLoaded: Setter<boolean>;
   currentDir: string | undefined;  // dir path
   setCurrentDir: Setter<string | undefined>;
+  // for feed
+  currentChannel: string | undefined;  // feed channel
+  setCurrentChannel: Setter<string | undefined>;
 } & UserSettings;
 
 type FunctionPropertyNames<T> = {
@@ -209,6 +212,8 @@ export const store = createVanilla<Store>(
       setIsLoaded: setter(set, 'isLoaded'),
       currentDir: undefined,
       setCurrentDir: setter(set, 'currentDir'),
+      currentChannel: undefined,
+      setCurrentChannel: setter(set, 'currentChannel'),
       ...userSettingsSlice(set),
     })),
     {

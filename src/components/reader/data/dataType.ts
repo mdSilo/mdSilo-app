@@ -1,29 +1,26 @@
 export interface ChannelType {
   id?: number;
-  uuid: string;
   title: string;
   link: string;
   description: string;
-  generator: string;
-  language: string;
   published: string; // iso date string
+  ty?: string; // podcast | rss
   entries: ArticleType[];
   unread: number;
-  ty?: string; // podcast | rss
 }
 
 export interface ArticleType {
   id?: number;
-  uuid: string;
   title: string;
   url: string;
+  feed_link: string;
   description: string;
   published?: Date;
+  read_status: number;
+  content?: string;
   author?: string;
   image?: string;
-  content?: string;
   source?: string;
   links?: string[];
   ttr?: number;
-  read_status: number;
 }
