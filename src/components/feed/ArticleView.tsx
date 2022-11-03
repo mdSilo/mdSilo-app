@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
+import { IconLink, IconStar } from "@tabler/icons";
 import { getFavicon } from "utils/helper";
 import { ArticleType } from "./data/dataType";
-import { IconLink, IconStar } from "@tabler/icons";
 
 type ViewProps = {
   article: ArticleType | null;

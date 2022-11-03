@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ChannelType } from "./data/dataType";
 import { IconTrash } from "@tabler/icons";
+import { ChannelType } from "./data/dataType";
 
 type Props = {
   channelList: ChannelType[];

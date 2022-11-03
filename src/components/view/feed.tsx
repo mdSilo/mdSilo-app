@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { ChannelList } from 'components/reader/ChannelList';
-import { Channel } from 'components/reader/Channel';
-import { ArticleView } from 'components/reader/ArticleView';
-import { FeedManager } from 'components/reader/FeedManager';
-import { ArticleType, ChannelType } from 'components/reader/data/dataType';
-import * as dataAgent from 'components/reader/data/dataAgent';
+import { ChannelList } from 'components/feed/ChannelList';
+import { Channel } from 'components/feed/Channel';
+import { ArticleView } from 'components/feed/ArticleView';
+import { FeedManager } from 'components/feed/FeedManager';
+import { ArticleType, ChannelType } from 'components/feed/data/dataType';
+import * as dataAgent from 'components/feed/data/dataAgent';
 
 export default function Feed() {
   // add data and handle dispatched here
@@ -18,10 +18,10 @@ export default function Feed() {
   const getList = () => {
     Promise.all([
       dataAgent.getChannels(),
-      dataAgent.getUnreadTotal(),
-    ]).then(([channels, unreadTotal]) => {
+      dataAgent.getUnreadNum(),
+    ]).then(([channels, unreadNum]) => {
       channels.forEach((item) => {
-        item.unread = unreadTotal[item.link] || 0;
+        item.unread = unreadNum[item.link] || 0;
       });
 
       setChannelList(channels);
