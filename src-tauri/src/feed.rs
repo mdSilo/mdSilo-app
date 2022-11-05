@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use tauri::command;
 
 use crate::db;
-use crate::models::{Channel, NewChannel, NewArticle};
+use crate::models::{Channel, NewChannel, NewArticle, Article};
 
 // # process rss feed #
 // todo: podcast's audio link
@@ -179,11 +179,11 @@ pub async fn add_articles_with_channel(link: String) -> usize {
 }
 
 #[command]
-pub fn get_articles(feed_link: String, filter: db::ArticleFilter) -> db::ArticleQueryResult {
+pub fn get_articles(feed_link: String, read_status: Option<i32>) -> Vec<Article> {
   println!("get articles from rust");
   let res = db::get_articles(db::ArticleFilter {
     feed_link: Some(feed_link),
-    read_status: filter.read_status,
+    read_status,
   });
 
   res

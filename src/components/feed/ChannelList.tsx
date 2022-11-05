@@ -1,65 +1,67 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
-import { IconPlus, IconRefresh } from "@tabler/icons";
+import { IconRefresh, IconSettings } from "@tabler/icons";
 import { getFavicon } from "utils/helper";
+import Tooltip from "components/misc/Tooltip";
 import { ChannelType } from "./data/dataType";
 
 type Props = {
   channelList: ChannelType[];
   refreshList: () => void;
+  onShowManager: () => void;
   refreshing: boolean;
   doneNum: number;
-  onClickFeed: (link: string) => void;
+  onClickFeed: (link: string) => Promise<void>;
 };
 
 export function ChannelList(props: Props) {
-  const { channelList, refreshList, onClickFeed, refreshing, doneNum } = props;
+  const { channelList, refreshList, onShowManager, onClickFeed, refreshing, doneNum } = props;
   
   const renderFeedList = (): JSX.Element => {
     return (
-      <ul className="">
-        {channelList.map((channel: ChannelType, i: number) => {
+      <>
+        {channelList.map((channel: ChannelType, idx: number) => {
           const { unread = 0, link } = channel;
           const ico = getFavicon(link);
-
+          console.log("channel", channel);
           return (
-            <li
-              key={channel.title + i}
+            <div 
+              key={`${channel.title}-${idx}`}
+              className="flex flex-row items-center justify-between cursor-pointer"
               onClick={() => onClickFeed(channel.link)}
-              aria-hidden="true"
             >
-              <div>
+              <div className="flex flex-row items-center justify-start">
                 <img
                   src={ico}
-                  className="h-4 w-4"
-                  alt={channel.title}
+                  className="h-4 w-4 mx-1"
+                  alt=">"
                 />
                 <span className="">{channel.title}</span>
-                {unread > 0 && <span className="">{unread}</span>}
               </div>
-            </li>
+              <span className="">{unread}</span>
+            </div>
           );
         })}
-      </ul>
+      </>
     );
-  };
-
-  const goToSetting = () => {
-    // TODO
   };
 
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-end">
         <div className="flex flex-end">
-          <span className="" onClick={refreshList}>
-            <IconRefresh className={`h-4 w-4 ${refreshing ? "spinning" : ""}`} />
-          </span>
-          <span className="" onClick={goToSetting}>
-            <IconPlus className={"h-4 w-4"} />
-          </span>
+          <Tooltip content="Refresh All" placement="bottom">
+            <button className="cursor-pointer" onClick={refreshList}>
+              <IconRefresh size={24} className={`m-1 ${refreshing ? "spinning" : ""}`} />
+            </button>
+          </Tooltip>
+          <Tooltip content="Manage Channel" placement="bottom">
+            <button className="cursor-pointer" onClick={onShowManager}>
+              <IconSettings size={24} className="m-1" />
+            </button>
+          </Tooltip>
         </div>
       </div>
-      <div className="p-10">
+      <div className="p-1">
         {renderFeedList()}
       </div>
       {refreshing && (

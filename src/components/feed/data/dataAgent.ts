@@ -30,8 +30,11 @@ export const updateCountWithChannel = async (feedUrl: string): Promise<any> => {
   return {};
 };
 
-export const getArticleList = async (feedLink: string, filter: any) => {
-  return await invoke('get_articles', { feedLink, filter })
+export const getArticleList = async (
+  feedLink: string, 
+  read_status: number | null
+) : Promise<ArticleType[]> => {
+  return await invoke('get_articles', { feedLink, read_status })
 }
 
 export const addArticlesWithChannel = async (feedLink: string): Promise<number> => {

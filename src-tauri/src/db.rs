@@ -132,18 +132,6 @@ pub fn add_articles(feed_link: String, articles: Vec<NewArticle>) -> usize {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ArticleFilter {
-  pub feed_link: Option<String>,
-  pub read_status: Option<i32>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ArticleQueryResult {
-  list: Vec<Article>,
-  // pub count: i32,
-}
-
 pub fn get_article_by_url(url: String) -> Option<Article> {
   let mut connection = establish_connection();
   let mut result = schema::articles::dsl::articles
@@ -175,7 +163,13 @@ pub fn update_article_read_status(url: String, status: i32) -> usize {
   }
 }
 
-pub fn get_articles(filter: ArticleFilter) -> ArticleQueryResult {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ArticleFilter {
+  pub feed_link: Option<String>,
+  pub read_status: Option<i32>,
+}
+
+pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
   let mut connection = establish_connection();
   let mut query = schema::articles::dsl::articles.into_boxed();
 
@@ -188,23 +182,23 @@ pub fn get_articles(filter: ArticleFilter) -> ArticleQueryResult {
     }
   }
 
-  match filter.read_status {
-    Some(0) => {
-      1;
-    }
-    Some(status) => {
-      query = query.filter(schema::articles::read_status.eq(status));
-    }
-    None => {
-      1;
-    }
-  }
+  // match filter.read_status {
+  //   Some(0) => {
+  //     1;
+  //   }
+  //   Some(status) => {
+  //     query = query.filter(schema::articles::read_status.eq(status));
+  //   }
+  //   None => {
+  //     1;
+  //   }
+  // }
 
   let result = query
     .load::<Article>(&mut connection)
     .unwrap_or(vec![]);
 
-  ArticleQueryResult { list: result }
+  return result;
 }
 
 pub fn update_articles_read_status_channel(feed_link: String) -> usize {

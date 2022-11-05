@@ -1,9 +1,12 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons";
+import * as dataAgent from 'components/feed/data/dataAgent';
+import Tooltip from "components/misc/Tooltip";
 import { ArticleType, ChannelType } from "./data/dataType";
 
 type Props = {
-  currentFeed: ChannelType | null;
+  channel: ChannelType | null;
+  articles: ArticleType[] | null;
   handleRefresh: () => void;
   markAllRead: () => void;
   onClickArticle: (article: ArticleType) => void;
@@ -11,9 +14,11 @@ type Props = {
 };
 
 export function Channel(props: Props) {
-  const { currentFeed, handleRefresh, markAllRead, onClickArticle, syncing } = props;
+  const { channel, articles, handleRefresh, markAllRead, onClickArticle, syncing } = props;
 
-  if (!currentFeed) {
+  // const [articleList, setArticleList] = useState<ArticleType[]>([]);
+
+  if (!channel || !articles) {
     return (
       <div className="">
         no feed
@@ -21,30 +26,28 @@ export function Channel(props: Props) {
     );
   }
 
-  const title = currentFeed.title;
-  // const feedUrl = currentFeed.link;
-  const articleList = currentFeed.entries; 
-
   return (
-    <div className="">
-      <div className="">
-        <div className={`sticky-header`}>
-          <div className="title">{title}</div>
-          <div className="menu">
-            <span className="" onClick={markAllRead}>
-              <IconCircleCheck className={"h-4 w-4"} />
-            </span>
-            <span className="" onClick={handleRefresh}>
-              <IconRefresh className={`h-4 w-4 ${syncing ? "spinning" : ""}`} />
-            </span>
-          </div>
+    <div className="flex flex-col">
+      <div className="flex flex-row items-center justify-between">
+        <div className="font-bold">{channel.title}</div>
+        <div className="flex flex-row items-center justify-end">
+          <Tooltip content="Mark All Read" placement="bottom">
+            <button className="" onClick={markAllRead}>
+              <IconCircleCheck size={18} className="m-1 cursor-pointer" />
+            </button>
+          </Tooltip>
+          <Tooltip content="Refresh Channel" placement="bottom">
+            <button className="" onClick={handleRefresh}>
+              <IconRefresh size={18} className={`m-1 cursor-pointer ${syncing ? "spinning" : ""}`} />
+            </button>
+          </Tooltip>
         </div>
-        {syncing && <div className="">Sync...</div>}
-        <ArticleList
-          articles={articleList}
-          onClickArticle={onClickArticle}
-        />
       </div>
+      {syncing && <div className="">Sync...</div>}
+      <ArticleList
+        articles={articles}
+        onClickArticle={onClickArticle}
+      />
     </div>
   );
 }
@@ -64,12 +67,12 @@ function ArticleList(props: ListProps) {
   };
 
   const renderList = (): JSX.Element[] => {
-    return articles.map((article: any, idx: number) => {
+    return articles.map((article: ArticleType, idx: number) => {
       return (
         <ArticleItem
+          key={`${article.id}=${idx}`}
           article={article}
           highlight={highlightItem?.id === article.id}
-          key={article.id}
           onSelect={handleArticleSelect}
         />
       );

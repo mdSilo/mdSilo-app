@@ -12,6 +12,7 @@ export default function Feed() {
   // channel list
   const [channelList, setChannelList] = useState<ChannelType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<ChannelType | null>(null);
+  const [currentArticles, setCurrentArticles] = useState<ArticleType[] | null>(null);
   const [currentArticle, setCurrentArticle] = useState<ArticleType | null>(null);
   const [showManager, setShowManager] = useState(false);
 
@@ -44,9 +45,24 @@ export default function Feed() {
     channelList.forEach(async c => await refreshChannel(c.link, c.title));
   };
 
-  const onClickFeed = (link: string) => {
-    const clieckedChannel = channelList.find(c => c.link === link);
-    if (clieckedChannel) setCurrentChannel(clieckedChannel);
+  const onShowManager = () => {
+    setShowManager(!showManager);
+  };
+
+  const getArticleList = async (link: string) => {
+    
+    const articles = await dataAgent.getArticleList(link, null);
+    console.log("current articles", articles, currentArticles);
+    setCurrentArticles(articles);
+  };
+
+  const onClickFeed = async (link: string) => {
+    const clickedChannel = channelList.find(c => c.link === link);
+    if (clickedChannel) {
+      setCurrentChannel(clickedChannel);
+      setShowManager(false);
+      await getArticleList(clickedChannel.link);
+    } 
   };
 
   const handleAddFeed = async (feedUrl: string, title: string) => {
@@ -88,11 +104,12 @@ export default function Feed() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-1 flex-col flex-shrink-0">
-        <div className="w-64">
+      <div className="flex flex-row flex-shrink-0">
+        <div className="w-52 p-1 border-r-2 border-gray-500">
           <ChannelList 
             channelList={channelList} 
             refreshList={refreshList} 
+            onShowManager={onShowManager} 
             onClickFeed={onClickFeed}
             refreshing={refreshing}
             doneNum={doneNum}
@@ -106,9 +123,10 @@ export default function Feed() {
           />
         ) : (
           <div className="flex">
-            <div className="w-96">
+            <div className="w-64 p-1 border-r-2 border-gray-500">
               <Channel 
-                currentFeed={currentChannel} 
+                channel={currentChannel} 
+                articles={currentArticles}
                 handleRefresh={handleRefresh}
                 markAllRead={markAllRead}
                 onClickArticle={onClickArticle}
