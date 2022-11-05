@@ -60,6 +60,8 @@ pub struct NewArticle {
   pub description: String,
   pub content: String,
   pub published: String,
+  pub author: String,
+  pub image: String,
 }
 
 

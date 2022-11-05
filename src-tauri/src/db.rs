@@ -175,6 +175,7 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
 
   match filter.feed_link {
     Some(feed_link) => {
+      println!("feed_link: {:?}", feed_link);
       query = query.filter(schema::articles::feed_link.eq(feed_link));
     }
     None => {
@@ -194,9 +195,11 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
   //   }
   // }
 
-  let result = query
-    .load::<Article>(&mut connection)
+  let result = dbg!(query
+    .load::<Article>(&mut connection))
     .unwrap_or(vec![]);
+
+  println!("articles result: {:?}", result);
 
   return result;
 }

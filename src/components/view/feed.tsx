@@ -50,7 +50,6 @@ export default function Feed() {
   };
 
   const getArticleList = async (link: string) => {
-    
     const articles = await dataAgent.getArticleList(link, null);
     console.log("current articles", articles, currentArticles);
     setCurrentArticles(articles);
@@ -74,8 +73,8 @@ export default function Feed() {
 
   const handleDeleteFeed = async (channel: ChannelType) => {
     if (channel && channel.link) {
-      await dataAgent.deleteChannel(channel.link)
-      getList()
+      await dataAgent.deleteChannel(channel.link);
+      getList();
     }
   };
 
@@ -104,8 +103,8 @@ export default function Feed() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-row flex-shrink-0">
-        <div className="w-52 p-1 border-r-2 border-gray-500">
+      <div className="flex flex-row flex-shrink-0 h-screen">
+        <div className="w-48 p-1 border-r-2 border-gray-500 overflow-y-auto">
           <ChannelList 
             channelList={channelList} 
             refreshList={refreshList} 
@@ -116,14 +115,16 @@ export default function Feed() {
           />
         </div>
         {showManager ? (
-          <FeedManager 
-            channelList={channelList} 
-            handleAddFeed={handleAddFeed}
-            handleDelete={handleDeleteFeed}
-          />
+          <div className="flex-1 m-1 p-2 overflow-y-auto">
+            <FeedManager 
+              channelList={channelList} 
+              handleAddFeed={handleAddFeed}
+              handleDelete={handleDeleteFeed}
+            />
+          </div>
         ) : (
-          <div className="flex">
-            <div className="w-64 p-1 border-r-2 border-gray-500">
+          <>
+            <div className="w-72 p-1 overflow-y-auto">
               <Channel 
                 channel={currentChannel} 
                 articles={currentArticles}
@@ -133,10 +134,10 @@ export default function Feed() {
                 syncing={syncing}
               />
             </div>
-            <div className="my-1 p-1 rounded text-center">
+            <div className="flex-1 m-1 p-2 border-l-2 border-gray-500 overflow-y-auto">
               <ArticleView article={currentArticle} />
             </div>
-          </div>
+          </>
         )}
       </div>
     </ErrorBoundary>

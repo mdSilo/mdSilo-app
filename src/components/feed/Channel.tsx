@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
-import { IconCircleCheck, IconRefresh } from "@tabler/icons";
-import * as dataAgent from 'components/feed/data/dataAgent';
+import { IconCircle, IconCircleCheck, IconRefresh } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
+import { getReadableDatetime } from 'utils/helper';
 import { ArticleType, ChannelType } from "./data/dataType";
 
 type Props = {
@@ -20,7 +20,7 @@ export function Channel(props: Props) {
 
   if (!channel || !articles) {
     return (
-      <div className="">
+      <div className="text-center">
         no feed
       </div>
     );
@@ -82,7 +82,7 @@ function ArticleList(props: ListProps) {
   return (
     <div className="">
       <div className="">
-        <ul className="">{renderList()}</ul>
+        {renderList()}
       </div>
     </div>
   );
@@ -111,24 +111,21 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   }, [article.read_status])
 
   return (
-    <li
-      className={`${readStatus === 2 ? "" : ""} ${highlight ? "" : ""}`}
+    <div
+      className="cursor-pointer flex flex-col items-center justify-center my-1 hover:bg-gray-400"
       onClick={handleClick}
       aria-hidden="true"
     >
-      {(readStatus === 1) && <div className={""} />}
-      <div className="">
-        <div className="titleText">
-          {highlight} {article.title}
+      <div className="flex flex-row items-center justify-start">
+        {(readStatus === 1) && <IconCircle size={24} className="m-1 text-blue-500" />}
+        <div className="font-bold m-1">
+          {article.title}
         </div>
       </div>
-      
-      <div className={"meta"}>
-        <div>{article.author}</div>
-        <div className={"date"}>
-          {article.published}
-        </div>
+      <div className="flex flex-row items-center justify-start">
+        <span className="m-1">{article.author}</span>
+        <span className="m-1">{getReadableDatetime(article.published || '')}</span>
       </div>
-    </li>
+    </div>
   );
 });

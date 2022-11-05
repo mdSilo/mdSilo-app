@@ -77,15 +77,16 @@ pub fn new_article_list(
       .description
       .clone()
       .unwrap_or(String::from("no description"));
-    let date = String::from(item.pub_date().clone().unwrap_or(""));
 
     let new_article = NewArticle {
       title,
       url: link,
       feed_link: feed_url.to_string(),
       description,
-      published: date,
+      published: String::from(item.pub_date().clone().unwrap_or("")),
       content,
+      author: String::from(item.author().clone().unwrap_or("")),
+      image: String::from(""),
     };
 
     articles.push(new_article);
@@ -124,7 +125,8 @@ pub async fn add_channel(url: String, title: Option<String>) -> usize {
   match res {
     Some(res) => {
       let channel = new_channel(&res, title);
-      let articles = new_article_list(&url, &res);
+      // the input feed url may not be same as fetched feed link
+      let articles = new_article_list(&channel.link, &res);
 
       db::add_channel(channel, articles)
     }

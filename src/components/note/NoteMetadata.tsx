@@ -1,4 +1,5 @@
 import { useStore } from 'lib/store';
+import { getReadableDatetime } from 'utils/helper';
 
 type Props = {
   noteId: string;
@@ -16,21 +17,13 @@ export default function NoteMetadata(props: Props) {
   const wordCount = countWords(mdContent);
   const ctnLen = mdContent.length;
   return (
-    <div className="px-4 py-2 space-y-1 text-xs text-gray-600 border-t dark:border-gray-700 dark:text-gray-400">
+    <div className="p-2 text-xs text-gray-600 border-t dark:border-gray-700 dark:text-gray-400">
       {ctnLen > 0 ? (<p>~{wordCount} words, {ctnLen} characters </p>) : null}
       <p>Created: {getReadableDatetime(note.created_at)}</p>
       <p>Modified: {getReadableDatetime(note.updated_at)}</p>
     </div>
   );
 }
-
-const getReadableDatetime = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    hourCycle: 'h24',
-  });
-};
 
 const countWords = (str: string) => {
   // special characters such as middle-dot, etc.   

@@ -64,9 +64,9 @@ export function FeedManager(props: Props) {
   };
 
   return (
-    <div>
-      <div className="flex">
-        <Tooltip content="Toggle Add Feed" placement="right">
+    <div className="flex flex-col items-center justify-start p-2 w-full">
+      <div className="flex flex-row items-center justify-start">
+        <Tooltip content="Toggle Add Feed" placement="bottom">
           <button
             className=""
             onClick={() => setShowAdd(!showAdd)}
@@ -74,15 +74,30 @@ export function FeedManager(props: Props) {
             <IconPlus size={15} className="" />
           </button>
         </Tooltip>
+        <div className="flex-1">
+          <input
+            type="text"
+            className="py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+            placeholder="Search Feed "
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSearch(searchText);
+              }
+            }}
+          />
+        </div>
       </div>
       {showAdd && (
-        <div className="box">
-          <div className="">
+        <div className="flex flex-col">
+          <div className="flex flex-row items-center justify-start">
             <div className="">URL</div>
             <div className="">
               <input
                 type="text"
-                className="block py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+                className="w-full py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
                 placeholder="Feed URL"
                 value={feedUrl}
                 onChange={(e) => setFeedUrl(e.target.value)}
@@ -93,7 +108,7 @@ export function FeedManager(props: Props) {
               <button onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
             </div>
           </div>
-          <div className="">
+          <div className="flex flex-row items-center justify-start">
             <div className="">Title</div>
             <div className="">
               <input
@@ -107,37 +122,23 @@ export function FeedManager(props: Props) {
             </div>
           </div>
           <div className="">{description}</div>
-          <div className="flex">
-            <button onClick={handleCancel}>Cancel</button>
-            <button onClick={handleSave}>{confirming ? 'Saving..' : 'OK'}</button>
+          <div className="flex flex-row">
+            <button className="m-1" onClick={handleCancel}>Cancel</button>
+            <button className="m-1" onClick={handleSave}>{confirming ? 'Saving..' : 'OK'}</button>
           </div>
         </div>
       )}
-      <div className="feed list">
-        <div className="">
-          <input
-            type="text"
-            className="block py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
-            placeholder="Search Feed "
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSearch(searchText);
-              }
-            }}
-          />
-        </div>
-        <div className="feed list">
-          {realList.map((channel: ChannelType, idx: number) => {
-            return (
-              <div key={idx}>
-                {channel.title}
-              </div>
-            )
-          })}
-        </div>
+      <div className="flex flex-col items-center justify-start border-t-2 border-gray-500 mt-2">
+        {realList.map((channel: ChannelType, idx: number) => {
+          return (
+            <div key={idx} className="flex items-center justify-between">
+              <span>{channel.title}</span>
+              <button className="cursor-pointer" onClick={() => handleDelete(channel)}>
+                <IconTrash size={18} className="m-1" />
+              </button>
+            </div>
+          )
+        })}
       </div>
     </div>
   );

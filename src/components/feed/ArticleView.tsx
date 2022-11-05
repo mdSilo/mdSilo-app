@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { IconLink, IconStar } from "@tabler/icons";
-import { getFavicon } from "utils/helper";
+import { getFavicon, getReadableDatetime } from "utils/helper";
 import { ArticleType } from "./data/dataType";
 
 type ViewProps = {
@@ -9,7 +9,6 @@ type ViewProps = {
 
 export function ArticleView(props: ViewProps) {
   const { article } = props;
-  const containerRef = useRef<HTMLDivElement>(null);
   const [pageContent, setPageContent] = useState("");
   const [showBanner, setShowBanner] = useState(false);
 
@@ -26,39 +25,35 @@ export function ArticleView(props: ViewProps) {
     const ico = getFavicon(url);
 
     return (
-      <div className="" ref={containerRef}>
+      <div className="">
         <div className="">
-          <div className="">
-            <div className="">{title}</div>
-            <div className="meta">
-              <span className="">
-                <img src={ico} alt=""/>
-              </span>
-              <span className="">
-                {published}
-              </span>
-              <span className="">{author}</span>
-              <a
-                className=""
-                target="_blank"
-                rel="noreferrer"
-                href={url}
-              >
-                <IconLink className={"h-4 w-4"} />
-              </a>
-              <span className="">
-                <IconStar className={"h-4 w-4"} />
-              </span>
-            </div>
+          <div className="text-2xl font-bold">{title}</div>
+          <div className="flex items-center justify-start">
+            <span className="h-4 w-4 m-1"><img src={ico} alt="#"/></span>
+            <span className="m-1">
+              {getReadableDatetime(published || '')}
+            </span>
+            <span className="m-1">{author}</span>
+            <a
+              className="m-1"
+              target="_blank"
+              rel="noreferrer"
+              href={url}
+            >
+              <IconLink size={18} />
+            </a>
+            <span className="m-1 cursor-pointer">
+              <IconStar size={18} className="text-orange-500" />
+            </span>
           </div>
-          <div className="">
-            {showBanner && image &&  <div className=""><img src={image} alt=""/></div>}
-            <div
-              className=""
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{__html: pageContent}}
-            />
-          </div>
+        </div>
+        <div className="">
+          {showBanner && image &&  <div className=""><img src={image} alt=""/></div>}
+          <div
+            className="text-lg px-2"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{__html: pageContent}}
+          />
         </div>
       </div>
     );

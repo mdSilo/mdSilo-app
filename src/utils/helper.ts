@@ -27,6 +27,17 @@ export function realDateCompare(d1: Date, d2: Date) {
   return d1.getTime() - d2.getTime();
 }
 
+export function getReadableDatetime(dateStr: string | Date) {
+  return new Date(dateStr).toLocaleString(undefined, {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export function decodeHTMLEntity(text: string) {
   const dummy = document.createElement("div");
   const txt = text.replace(
