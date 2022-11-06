@@ -134,7 +134,7 @@ export default function Feed() {
                 syncing={syncing}
               />
             </div>
-            <div className="flex-1 m-1 p-2 border-l-2 border-gray-500 overflow-y-auto">
+            <div className="flex-1 border-l-2 border-gray-500 overflow-y-auto">
               <ArticleView article={currentArticle} />
             </div>
           </>

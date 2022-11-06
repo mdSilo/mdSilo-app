@@ -26,8 +26,8 @@ export function ArticleView(props: ViewProps) {
 
     return (
       <div className="">
-        <div className="">
-          <div className="text-2xl font-bold">{title}</div>
+        <div className="sticky top-0 px-2 mb-2 bg-gray-200">
+          <div className="text-3xl font-bold">{title}</div>
           <div className="flex items-center justify-start">
             <span className="h-4 w-4 m-1"><img src={ico} alt="#"/></span>
             <span className="m-1">
@@ -47,10 +47,10 @@ export function ArticleView(props: ViewProps) {
             </span>
           </div>
         </div>
-        <div className="">
+        <div className="p-2">
           {showBanner && image &&  <div className=""><img src={image} alt=""/></div>}
           <div
-            className="text-lg px-2"
+            className="text-lg px-2 content"
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{__html: pageContent}}
           />
