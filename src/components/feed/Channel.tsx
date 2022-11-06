@@ -1,8 +1,10 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { IconCircle, IconCircleCheck, IconRefresh } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
+import Spinner from "components/misc/Spinner";
 import { getReadableDatetime } from 'utils/helper';
 import { ArticleType, ChannelType } from "./data/dataType";
+
 
 type Props = {
   channel: ChannelType | null;
@@ -19,16 +21,12 @@ export function Channel(props: Props) {
   // const [articleList, setArticleList] = useState<ArticleType[]>([]);
 
   if (!channel || !articles) {
-    return (
-      <div className="text-center">
-        no feed
-      </div>
-    );
+    return (<Spinner />);
   }
 
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-row items-center justify-between">
+    <div className="flex flex-col items-between justify-center">
+      <div className="flex flex-row items-center justify-between px-2">
         <div className="font-bold">{channel.title}</div>
         <div className="flex flex-row items-center justify-end">
           <Tooltip content="Mark All Read" placement="bottom">
@@ -81,9 +79,7 @@ function ArticleList(props: ListProps) {
 
   return (
     <div className="">
-      <div className="">
-        {renderList()}
-      </div>
+      {renderList()}
     </div>
   );
 }
@@ -110,21 +106,21 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
     setReadStatus(article.read_status)
   }, [article.read_status])
 
+  const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-400 ${highlight ? 'bg-blue-400' : ''}`;
+
   return (
     <div
-      className="cursor-pointer flex flex-col items-center justify-center my-1 hover:bg-gray-400"
+      className={itemClass}
       onClick={handleClick}
       aria-hidden="true"
     >
       <div className="flex flex-row items-center justify-start">
-        {(readStatus === 1) && <IconCircle size={24} className="m-1 text-blue-500" />}
-        <div className="font-bold m-1">
-          {article.title}
-        </div>
+        {(readStatus === 1) && <IconCircle className="w-2 h-2 m-1 text-blue-500 fill-blue-500" />}
+        <div className="flex-1 font-bold m-1">{article.title}</div>
       </div>
       <div className="flex flex-row items-center justify-start">
-        <span className="m-1">{article.author}</span>
-        <span className="m-1">{getReadableDatetime(article.published || '')}</span>
+        <span className="m-1 text-sm">{article.author}</span>
+        <span className="m-1 text-sm">{getReadableDatetime(article.published || '')}</span>
       </div>
     </div>
   );

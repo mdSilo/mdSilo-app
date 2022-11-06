@@ -45,6 +45,8 @@ export function FeedManager(props: Props) {
     setConfirming(false);
     setFeedTitle("");
     setFeedUrl("");
+    setDescription("");
+    setShowAdd(false);
   };
 
   const handleSave = async () => {
@@ -64,21 +66,57 @@ export function FeedManager(props: Props) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-start p-2 w-full">
-      <div className="flex flex-row items-center justify-start">
+    <div className="flex flex-col items-start justify-center p-2">
+      {showAdd && (
+        <div className="flex flex-col w-full p-4 outline outline-2 outline-offset-2 outline-green-500">
+          <div className="flex flex-row items-center justify-start w-full">
+            <div className="">URL</div>
+            <div className="w-full">
+              <input
+                type="text"
+                className="w-full p-1 mx-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+                placeholder="Feed URL"
+                value={feedUrl}
+                onChange={(e) => setFeedUrl(e.target.value)}
+                autoFocus
+              />
+            </div>
+          </div>
+          <div className="flex flex-row items-center justify-start w-full">
+            <div className="">Title</div>
+            <div className="w-full">
+              <input
+                type="text"
+                className="w-full p-1 mx-2 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+                placeholder="Feed Title"
+                value={feedTitle}
+                onChange={(e) => setFeedTitle(e.target.value)}
+                autoFocus
+              />
+            </div>
+          </div>
+          <div className="w-full">{description}</div>
+          <div className="flex flex-row">
+            <button className="m-1 m-btn0" onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
+            <button className="m-1 m-btn1" onClick={handleCancel}>Cancel</button>
+            <button className="m-1 m-btn2" onClick={handleSave}>{confirming ? 'Saving..' : 'OK'}</button>
+          </div>
+        </div>
+      )}
+      <div className="flex flex-row items-between justify-between w-full mt-2">
         <Tooltip content="Toggle Add Feed" placement="bottom">
           <button
-            className=""
+            className="w-4"
             onClick={() => setShowAdd(!showAdd)}
           >
             <IconPlus size={15} className="" />
           </button>
         </Tooltip>
-        <div className="flex-1">
+        <div className="">
           <input
             type="text"
-            className="py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
-            placeholder="Search Feed "
+            className="p-2 m-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+            placeholder="Search Feed"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onKeyDown={(e) => {
@@ -90,49 +128,12 @@ export function FeedManager(props: Props) {
           />
         </div>
       </div>
-      {showAdd && (
-        <div className="flex flex-col">
-          <div className="flex flex-row items-center justify-start">
-            <div className="">URL</div>
-            <div className="">
-              <input
-                type="text"
-                className="w-full py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
-                placeholder="Feed URL"
-                value={feedUrl}
-                onChange={(e) => setFeedUrl(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="">
-              <button onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
-            </div>
-          </div>
-          <div className="flex flex-row items-center justify-start">
-            <div className="">Title</div>
-            <div className="">
-              <input
-                type="text"
-                className="block py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
-                placeholder="Feed Title"
-                value={feedTitle}
-                onChange={(e) => setFeedTitle(e.target.value)}
-                autoFocus
-              />
-            </div>
-          </div>
-          <div className="">{description}</div>
-          <div className="flex flex-row">
-            <button className="m-1" onClick={handleCancel}>Cancel</button>
-            <button className="m-1" onClick={handleSave}>{confirming ? 'Saving..' : 'OK'}</button>
-          </div>
-        </div>
-      )}
-      <div className="flex flex-col items-center justify-start border-t-2 border-gray-500 mt-2">
+      <div className="w-full flex flex-col items-between justify-center border-t-2 border-gray-500 my-4">
         {realList.map((channel: ChannelType, idx: number) => {
           return (
-            <div key={idx} className="flex items-center justify-between">
+            <div key={idx} className="flex items-center justify-between m-1">
               <span>{channel.title}</span>
+              <span>{channel.link}</span>
               <button className="cursor-pointer" onClick={() => handleDelete(channel)}>
                 <IconTrash size={18} className="m-1" />
               </button>
