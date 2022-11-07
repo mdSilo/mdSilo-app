@@ -89,7 +89,7 @@ export default function Feed() {
   const handleRefresh = async () => {
     setSyncing(true);
     if (currentChannel) {
-      // TODO: re-fetch channel 
+      await dataAgent.addChannel(currentChannel.link, currentChannel.title);
       await getArticleList(currentChannel.link);
     }
     setSyncing(false);

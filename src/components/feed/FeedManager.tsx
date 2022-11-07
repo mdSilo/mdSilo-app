@@ -104,10 +104,10 @@ export function FeedManager(props: Props) {
           </div>
         </div>
       )}
-      <div className="flex flex-row items-between justify-between w-full mt-2">
+      <div className="flex flex-row items-center justify-between w-full mt-2">
         <Tooltip content="Toggle Add Feed" placement="bottom">
           <button
-            className="w-4"
+            className="px-2 py-1 text-sm text-black rounded bg-primary-200 hover:bg-primary-100"
             onClick={() => setShowAdd(!showAdd)}
           >
             <IconPlus size={15} className="" />

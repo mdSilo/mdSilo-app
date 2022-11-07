@@ -5,8 +5,8 @@ CREATE TABLE channels (
   id INTEGER NOT NULL PRIMARY KEY,
   title VARCHAR NOT NULL,
   link VARCHAR NOT NULL UNIQUE,
-  description VARCHAR NOT NULL,
-  published DATETIME NOT NULL,
+  description VARCHAR,
+  published DATETIME,
   ty VARCHAR NOT NULL DEFAULT 'rss'
 );
 

@@ -31,20 +31,21 @@ pub fn get_channels() -> Vec<Channel> {
 
 pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
   let mut connection = establish_connection();
+  // insert channel
   let result = diesel::insert_or_ignore_into(schema::channels::dsl::channels)
     .values(channel)
     .execute(&mut connection)
     .unwrap_or(0);
 
-  println!(" new result {:?}", result);
+  println!("new channel result {:?}", result);
 
-  if result == 1 {
-    diesel::insert_or_ignore_into(schema::articles::dsl::articles)
-      .values(articles)
-      .execute(&mut connection)
-      .unwrap_or(0);
-  }
-
+  // TODO: check if add channel failed
+  // insert articles
+  diesel::insert_or_ignore_into(schema::articles::dsl::articles)
+    .values(articles)
+    .execute(&mut connection)
+    .unwrap_or(0);
+  
   return result;
 }
 
@@ -183,11 +184,11 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
     query = query.filter(schema::articles::read_status.eq(status));
   }
 
-  let result = dbg!(query
-    .load::<Article>(&mut connection))
+  let result = query
+    .load::<Article>(&mut connection)
     .unwrap_or(vec![]);
 
-  println!("articles result: {:?}", result);
+  // println!("articles result: {:?}", result);
 
   return result;
 }
