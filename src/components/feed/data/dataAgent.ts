@@ -26,15 +26,12 @@ export const deleteChannel = async (link: string) => {
   return await invoke('delete_channel', { link })
 };
 
-export const updateCountWithChannel = async (feedUrl: string): Promise<any> => {
-  return {};
-};
-
 export const getArticleList = async (
-  feedLink: string, 
-  read_status: number | null
+  feedLink: string | null, 
+  readStatus: number | null,
+  starStatus: number | null,
 ) : Promise<ArticleType[]> => {
-  return await invoke('get_articles', { feedLink, read_status })
+  return await invoke('get_articles', { feedLink, readStatus, starStatus })
 }
 
 export const addArticlesWithChannel = async (feedLink: string): Promise<number> => {
@@ -43,6 +40,16 @@ export const addArticlesWithChannel = async (feedLink: string): Promise<number> 
 
 export const getUnreadNum = async (): Promise<{ [key: string]: number }> => {
   return await invoke('get_unread_num')
+}
+
+export const updateArticleStarStatus = async (
+  articleUrl: string, 
+  star_status: number, // 0 || 1
+): Promise<number> => {
+  return await invoke('update_article_star_status', {
+    url: articleUrl,
+    status: star_status,
+  })
 }
 
 export const updateArticleReadStatus = async (

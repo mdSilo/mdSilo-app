@@ -12,6 +12,7 @@ diesel::table! {
     author -> Text,
     image -> Text,
     read_status -> Integer,
+    star_status -> Integer,
   }
 }
 

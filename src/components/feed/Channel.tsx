@@ -8,6 +8,7 @@ import { ArticleType, ChannelType } from "./data/dataType";
 
 type Props = {
   channel: ChannelType | null;
+  starChannel?: boolean;
   articles: ArticleType[] | null;
   handleRefresh: () => void;
   updateAllReadStatus: (feedLink: string, status: number) => Promise<void>;
@@ -18,7 +19,7 @@ type Props = {
 
 export function Channel(props: Props) {
   const { 
-    channel, articles, handleRefresh, updateAllReadStatus, onClickArticle, loading, syncing 
+    channel, starChannel, articles, handleRefresh, updateAllReadStatus, onClickArticle, loading, syncing 
   } = props;
 
   // const [articleList, setArticleList] = useState<ArticleType[]>([]);
@@ -27,26 +28,28 @@ export function Channel(props: Props) {
     return (
       <div className="flex items-center justify-center"><Spinner className="w-8 h-8" /></div>
     );
-  } else if ((!channel || !articles)) {
+  } else if (!articles) {
     return (<></>);
   }
 
   return (
     <div className="flex flex-col items-between justify-center">
-      <div className="flex flex-row items-center justify-between px-2">
-        <div className="font-bold">{channel.title}</div>
-        <div className="flex flex-row items-center justify-end">
-          <Tooltip content="Mark All Read" placement="bottom">
-            <button className="" onClick={async () => await updateAllReadStatus(channel.link, 2)}>
-              <IconCircleCheck size={18} className="m-1 cursor-pointer" />
-            </button>
-          </Tooltip>
-          <Tooltip content="Refresh Channel" placement="bottom">
-            <button className="" onClick={handleRefresh}>
-              <IconRefresh size={18} className={`m-1 cursor-pointer ${syncing ? "spinning" : ""}`} />
-            </button>
-          </Tooltip>
-        </div>
+      <div className="flex flex-row items-center justify-between px-2 bg-gray-300">
+        <div className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</div>
+        {(channel) && (
+          <div className="flex flex-row items-center justify-end">
+            <Tooltip content="Mark All Read" placement="bottom">
+              <button className="" onClick={async () => await updateAllReadStatus(channel.link, 1)}>
+                <IconCircleCheck size={18} className="m-1 cursor-pointer" />
+              </button>
+            </Tooltip>
+            <Tooltip content="Refresh Channel" placement="bottom">
+              <button className="" onClick={handleRefresh}>
+                <IconRefresh size={18} className={`m-1 cursor-pointer ${syncing ? "spinning" : ""}`} />
+              </button>
+            </Tooltip>
+          </div>
+        )}
       </div>
       {syncing && <div className="flex items-center justify-center"><Spinner className="w-4 h-4" /></div>}
       <ArticleList
@@ -64,10 +67,10 @@ type ListProps = {
 
 function ArticleList(props: ListProps) {
   const { articles, onClickArticle } = props;
-  const [highlightItem, setHighlightItem] = useState<ArticleType>();
+  const [highlighted, setHighlighted] = useState<ArticleType>();
 
   const handleArticleSelect = (article: ArticleType) => {
-    setHighlightItem(article);
+    setHighlighted(article);
     onClickArticle(article);
   };
 
@@ -77,7 +80,7 @@ function ArticleList(props: ListProps) {
         <ArticleItem
           key={`${article.id}=${idx}`}
           article={article}
-          highlight={highlightItem?.id === article.id}
+          highlight={highlighted?.id === article.id}
           onSelect={handleArticleSelect}
         />
       );
@@ -122,7 +125,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
       aria-hidden="true"
     >
       <div className="flex flex-row items-center justify-start">
-        {(readStatus === 1) && <IconCircle className="w-2 h-2 m-1 text-blue-500 fill-blue-500" />}
+        {(readStatus === 0) && <IconCircle className="w-2 h-2 m-1 text-blue-500 fill-blue-500" />}
         <div className="flex-1 font-bold m-1">{article.title}</div>
       </div>
       <div className="flex flex-row items-center justify-start">

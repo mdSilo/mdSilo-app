@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { store, useStore } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { ChannelList } from 'components/feed/ChannelList';
 import { Channel } from 'components/feed/Channel';
@@ -7,14 +8,19 @@ import { FeedManager } from 'components/feed/FeedManager';
 import { ArticleType, ChannelType } from 'components/feed/data/dataType';
 import * as dataAgent from 'components/feed/data/dataAgent';
 
+
 export default function Feed() {
-  // add data and handle dispatched here
   // channel list
   const [channelList, setChannelList] = useState<ChannelType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<ChannelType | null>(null);
   const [currentArticles, setCurrentArticles] = useState<ArticleType[] | null>(null);
   const [currentArticle, setCurrentArticle] = useState<ArticleType | null>(null);
+  const [starChannel, setStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
+
+  const storeChannel = useStore(state => state.currentChannel);
+  const storeArticles = useStore(state => state.currentArticles);
+  const storeArticle = useStore(state => state.currentArticle);
 
   const getList = () => {
     Promise.all(
@@ -53,11 +59,12 @@ export default function Feed() {
     setShowManager(!showManager);
   };
 
-  const getArticleList = async (link: string) => {
-    const articles = await dataAgent.getArticleList(link, null);
+  const loadArticleList = async (link: string) => {
+    const articles = await dataAgent.getArticleList(link, null, null);
     console.log("current articles", articles, currentArticles);
     setCurrentArticles(articles);
   };
+
   const [loading, setLoading] = useState(false);
   const onClickFeed = async (link: string) => {
     setLoading(true);
@@ -65,9 +72,24 @@ export default function Feed() {
     if (clickedChannel) {
       setCurrentChannel(clickedChannel);
       setShowManager(false);
-      await getArticleList(clickedChannel.link);
+      await loadArticleList(clickedChannel.link);
+      store.getState().setCurrentChannel(clickedChannel);
     } 
     setLoading(false);
+  };
+
+  const onClickStar = async () => {
+    setLoading(true);
+    setCurrentChannel(null);
+    setCurrentArticles(null);
+    setStarChannel(true);
+    setShowManager(false);
+    const starArticles = await dataAgent.getArticleList(null, null, 1);
+    console.log("star articles: ", starArticles)
+    setCurrentArticles(starArticles);
+    setLoading(false);
+    store.getState().setCurrentChannel(null);
+    store.getState().setCurrentArticles(starArticles);
   };
 
   const handleAddFeed = async (feedUrl: string, title: string) => {
@@ -90,7 +112,7 @@ export default function Feed() {
     setSyncing(true);
     if (currentChannel) {
       await dataAgent.addChannel(currentChannel.link, currentChannel.title);
-      await getArticleList(currentChannel.link);
+      await loadArticleList(currentChannel.link);
     }
     setSyncing(false);
   };
@@ -115,16 +137,17 @@ export default function Feed() {
 
   const onClickArticle = async (article: ArticleType) => {
     setCurrentArticle(article);
-    if (article.read_status !== 1) return;
+    store.getState().setCurrentArticle(article);
+    if (article.read_status !== 0) return;
     // update read_status to db
-    const res = await dataAgent.updateArticleReadStatus(article.url, 2);
+    const res = await dataAgent.updateArticleReadStatus(article.url, 1);
     if (res === 0) return;
     // set read_status to read and update unread
     const articles = currentArticles;
     if (articles) {
       articles.forEach((item) => {
         if (item.url === article.url) {
-          item.read_status = 2;
+          item.read_status = 1;
         }
       });
       setCurrentArticles(articles);
@@ -136,6 +159,10 @@ export default function Feed() {
       }
     });
     setChannelList(channels);
+  };
+
+  const updateStarStatus = async (url: string, status: number) => {
+    await dataAgent.updateArticleStarStatus(url, status);
   };
 
   // handle minimize sub-window
@@ -150,6 +177,7 @@ export default function Feed() {
             refreshList={refreshList} 
             onShowManager={onShowManager} 
             onClickFeed={onClickFeed}
+            onClickStar={onClickStar} 
             refreshing={refreshing}
             doneNum={doneNum}
           />
@@ -166,8 +194,9 @@ export default function Feed() {
           <>
             <div className="w-72 p-1 overflow-y-auto">
               <Channel 
-                channel={currentChannel} 
-                articles={currentArticles}
+                channel={currentChannel || storeChannel} 
+                starChannel={starChannel} 
+                articles={currentArticles || storeArticles}
                 handleRefresh={handleRefresh}
                 updateAllReadStatus={updateAllReadStatus}
                 onClickArticle={onClickArticle}
@@ -176,7 +205,10 @@ export default function Feed() {
               />
             </div>
             <div className="flex-1 overflow-y-auto">
-              <ArticleView article={currentArticle} />
+              <ArticleView 
+                article={currentArticle || storeArticle} 
+                starArticle={updateStarStatus} 
+              />
             </div>
           </>
         )}

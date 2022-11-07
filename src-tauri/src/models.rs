@@ -40,6 +40,8 @@ pub struct Article {
   pub image: String,
   #[diesel(sql_type = Integer)]
   pub read_status: i32,
+  #[diesel(sql_type = Integer)]
+  pub star_status: i32,
 }
 
 #[derive(Debug, Insertable, Serialize, Deserialize)]

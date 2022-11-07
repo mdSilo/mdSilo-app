@@ -36,7 +36,7 @@ export function FeedManager(props: Props) {
     }
     const { channel } = res;
     setFeedTitle(channel.title);
-    setDescription(channel.description);
+    setDescription(channel.description || '');
     setLoading(false);
   };
 

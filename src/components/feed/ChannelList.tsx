@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
-import { IconRefresh, IconSettings } from "@tabler/icons";
+import { IconRefresh, IconSettings, IconStar } from "@tabler/icons";
 import { getFavicon } from "utils/helper";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
@@ -12,23 +12,30 @@ type Props = {
   refreshing: boolean;
   doneNum: number;
   onClickFeed: (link: string) => Promise<void>;
+  onClickStar: () => Promise<void>;
 };
 
 export function ChannelList(props: Props) {
-  const { channelList, refreshList, onShowManager, onClickFeed, refreshing, doneNum } = props;
+  const { channelList, refreshList, onShowManager, onClickFeed, onClickStar, refreshing, doneNum } = props;
+
+  const [highlighted, setHighlighted] = useState<ChannelType>();
   
   const renderFeedList = (): JSX.Element => {
     return (
       <>
         {channelList.map((channel: ChannelType, idx: number) => {
-          const { unread = 0, link } = channel;
+          const { unread = 0, title, link } = channel;
           const ico = getFavicon(link);
-          console.log("channel", channel);
+          const activeClass = `${highlighted?.link === link ? 'border-l-2 border-green-500' : ''}`;
+          
           return (
             <div 
-              key={`${channel.title}-${idx}`}
-              className="flex flex-row items-center justify-between cursor-pointer"
-              onClick={() => onClickFeed(channel.link)}
+              key={`${title}-${idx}`}
+              className={`m-1 flex flex-row items-center justify-between cursor-pointer ${activeClass}`}
+              onClick={() => {
+                onClickFeed(link);
+                setHighlighted(channel);
+              }}
             >
               <div className="flex flex-row items-center justify-start">
                 <img
@@ -36,7 +43,7 @@ export function ChannelList(props: Props) {
                   className="h-4 w-4 mx-1"
                   alt=">"
                 />
-                <span className="">{channel.title}</span>
+                <span className="">{title}</span>
               </div>
               <span className="">{unread}</span>
             </div>
@@ -69,6 +76,15 @@ export function ChannelList(props: Props) {
         </div>
       )}
       <div className="p-1">
+        <div 
+          className="flex flex-row items-center justify-between cursor-pointer"
+          onClick={onClickStar}
+        >
+          <div className="flex flex-row items-center justify-start">
+            <IconStar size={18} className="m-1 fill-yellow-500 text-yellow-500" />
+            <span className="m-1">Starred</span>
+          </div>
+        </div>
         {renderFeedList()}
       </div>
     </div>

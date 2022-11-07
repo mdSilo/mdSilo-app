@@ -2,10 +2,9 @@ export interface ChannelType {
   id?: number;
   title: string;
   link: string;
-  description: string;
-  published: string; // iso date string
+  description?: string;
+  published?: string; // iso date string
   ty?: string; // podcast | rss
-  entries: ArticleType[];
   unread: number;
 }
 
@@ -17,6 +16,7 @@ export interface ArticleType {
   description: string;
   published?: Date;
   read_status: number;
+  star_status: number;
   content?: string;
   author?: string;
   image?: string;

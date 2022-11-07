@@ -180,14 +180,16 @@ pub async fn add_articles_with_channel(link: String) -> usize {
 }
 
 #[command]
-pub fn get_articles(feed_link: String, read_status: Option<i32>) -> Vec<Article> {
-  println!("get articles from rust");
-  let res = db::get_articles(db::ArticleFilter {
-    feed_link: Some(feed_link),
+pub fn get_articles(
+  feed_link: Option<String>, 
+  read_status: Option<i32>, 
+  star_status: Option<i32>,
+) -> Vec<Article> {
+  db::get_articles(db::ArticleFilter {
+    feed_link,
     read_status,
-  });
-
-  res
+    star_status,
+  })
 }
 
 #[command]
@@ -204,6 +206,11 @@ pub fn get_unread_num() -> HashMap<String, i32> {
 #[command]
 pub fn update_article_read_status(url: String, status: i32) -> usize {
   db::update_article_read_status(url, status)
+}
+
+#[command]
+pub fn update_article_star_status(url: String, status: i32) -> usize {
+  db::update_article_star_status(url, status)
 }
 
 #[command]

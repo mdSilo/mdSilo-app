@@ -22,5 +22,6 @@ CREATE TABLE articles (
   content VARCHAR,
   author VARCHAR,
   image VARCHAR,
-  read_status INTEGER NOT NULL DEFAULT 1 -- 1: unread 2: read
+  read_status INTEGER NOT NULL DEFAULT 0, -- 0: unread 1: read
+  star_status INTEGER NOT NULL DEFAULT 0  -- 0: unstar 1: star-ed
 );
