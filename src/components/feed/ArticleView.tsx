@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { IconLink, IconStar } from "@tabler/icons";
+import { useStore } from "lib/store";
 import { getFavicon, getReadableDatetime } from "utils/helper";
 import { ArticleType } from "./data/dataType";
 
@@ -13,6 +14,8 @@ export function ArticleView(props: ViewProps) {
   const [isStar, setIsStar] = useState(article?.star_status === 1);
   const [pageContent, setPageContent] = useState("");
   const [showBanner, setShowBanner] = useState(false);
+
+  const setCurrentPod = useStore(state => state.setCurrentPod);
 
   useEffect(() => {
     if (article) {
@@ -79,7 +82,13 @@ export function ArticleView(props: ViewProps) {
       </div>
       <div className="p-2">
         {showBanner && image &&  <div className=""><img src={image} alt=""/></div>}
-        {article.audio_url.trim() && (<audio controls src={article.audio_url}></audio>)}
+        {article.audio_url.trim() && (
+          <audio 
+            controls 
+            src={article.audio_url} 
+            onPlay={() => setCurrentPod({title, url: article.audio_url})}
+          />
+        )}
         <div
           className="text-lg px-2 content"
           // eslint-disable-next-line react/no-danger

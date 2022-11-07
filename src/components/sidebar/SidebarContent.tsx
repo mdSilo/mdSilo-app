@@ -1,7 +1,8 @@
-import { IconFolder, IconHash, IconSearch } from '@tabler/icons';
+import { IconFolder, IconHash, IconPlaylist, IconSearch } from '@tabler/icons';
 import Tooltip from 'components/misc/Tooltip';
 import { SidebarTab as SidebarTabType, useStore } from 'lib/store';
 import SidebarNotes from './SidebarNotes';
+import SidebarPlaylist from './SidebarPlaylist';
 import SidebarSearch from './SidebarSearch';
 import SidebarTab from './SidebarTab';
 import SidebarTags from './SidebarTags';
@@ -22,6 +23,7 @@ export default function SidebarContent(props: Props) {
         {activeTab === SidebarTabType.Silo ? <SidebarNotes /> : null}
         {activeTab === SidebarTabType.Search ? <SidebarSearch /> : null}
         {activeTab === SidebarTabType.Hashtag ? <SidebarTags /> : null}
+        {activeTab === SidebarTabType.Playlist ? <SidebarPlaylist /> : null}
       </div>
     </div>
   );
@@ -56,6 +58,13 @@ const Tabs = (props: TabsProps) => {
           isActive={activeTab === SidebarTabType.Hashtag}
           setActive={() => setActiveTab(SidebarTabType.Hashtag)}
           Icon={IconHash}
+        />
+      </Tooltip>
+      <Tooltip content="Playlist (Ctrl+Shift+P)">
+        <SidebarTab
+          isActive={activeTab === SidebarTabType.Playlist}
+          setActive={() => setActiveTab(SidebarTabType.Playlist)}
+          Icon={IconPlaylist}
         />
       </Tooltip>
     </div>

@@ -4,11 +4,10 @@ import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
-import { ChannelType, ArticleType } from 'components/feed/data/dataType';
+import { ChannelType, ArticleType, CurrentPod } from 'components/feed/data/dataType';
 import type { ActivityRecord } from 'components/view/HeatMap';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
-
 
 export { default as shallowEqual } from 'zustand/shallow';
 
@@ -62,6 +61,7 @@ export enum SidebarTab {
   Silo,
   Search,
   Hashtag,
+  Playlist,
 }
 
 export type Store = {
@@ -102,6 +102,8 @@ export type Store = {
   setCurrentArticle: Setter<ArticleType | null>;
   currentArticles: ArticleType[] | null;  
   setCurrentArticles: Setter<ArticleType[] | null>;
+  currentPod: CurrentPod | null; 
+  setCurrentPod: Setter<CurrentPod | null>;
 } & UserSettings;
 
 type FunctionPropertyNames<T> = {
@@ -225,6 +227,8 @@ export const store = createVanilla<Store>(
       setCurrentArticle: setter(set, 'currentArticle'),
       currentArticles: null,
       setCurrentArticles: setter(set, 'currentArticles'),
+      currentPod: null,
+      setCurrentPod: setter(set, 'currentPod'),
       ...userSettingsSlice(set),
     })),
     {

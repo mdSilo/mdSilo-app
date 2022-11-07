@@ -25,3 +25,8 @@ export interface ArticleType {
   links?: string[];
   ttr?: number;
 }
+
+export interface CurrentPod {
+  title: string;
+  url: string;
+}
