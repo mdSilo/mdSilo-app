@@ -59,12 +59,11 @@ pub fn delete_channel(link: String) -> usize {
 
   // del channel and it's articles
   if channel.len() == 1 {
-    let result =
-      diesel::delete(
-        schema::channels::dsl::channels.filter(schema::channels::link.eq(&link))
-      )
-      .execute(&mut connection)
-      .unwrap_or(0);
+    let result = diesel::delete(
+      schema::channels::dsl::channels.filter(schema::channels::link.eq(&link))
+    )
+    .execute(&mut connection)
+    .unwrap_or(0);
 
     diesel::delete(
       schema::articles::dsl::articles.filter(schema::articles::feed_link.eq(&link)),
@@ -173,27 +172,16 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
   let mut connection = establish_connection();
   let mut query = schema::articles::dsl::articles.into_boxed();
 
-  match filter.feed_link {
-    Some(feed_link) => {
-      println!("feed_link: {:?}", feed_link);
-      query = query.filter(schema::articles::feed_link.eq(feed_link));
-    }
-    None => {
-      1;
-    }
+  if let Some(feed_link) = filter.feed_link {
+    println!("feed_link: {:?}", feed_link);
+    query = query.filter(schema::articles::feed_link.eq(feed_link));
+  } else {
+    return vec![];
   }
 
-  // match filter.read_status {
-  //   Some(0) => {
-  //     1;
-  //   }
-  //   Some(status) => {
-  //     query = query.filter(schema::articles::read_status.eq(status));
-  //   }
-  //   None => {
-  //     1;
-  //   }
-  // }
+  if let Some(status) = filter.read_status {
+    query = query.filter(schema::articles::read_status.eq(status));
+  }
 
   let result = dbg!(query
     .load::<Article>(&mut connection))
@@ -204,14 +192,13 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
   return result;
 }
 
-pub fn update_articles_read_status_channel(feed_link: String) -> usize {
+pub fn update_articles_read_status(feed_link: String, read_status: i32) -> usize {
   let mut connection = establish_connection();
   let result = diesel::update(
     schema::articles::dsl::articles
       .filter(schema::articles::feed_link.eq(feed_link))
-      .filter(schema::articles::read_status.eq(1)),
   )
-  .set(schema::articles::read_status.eq(2))
+  .set(schema::articles::read_status.eq(read_status))
   .execute(&mut connection)
   .unwrap_or(0);
 

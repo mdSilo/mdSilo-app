@@ -11,6 +11,7 @@ BTW, [Web app is here](https://mdsilo.com/app)
 
 ## Features
 
+- I/O: Input and output, reading and writing in one place;    
 - All-In-One Editor: Markdown, WYSIWYG, MindMap... 
 - Markdown and extensions: Diagram, Table, Math/Chemical, Code block(Highlight)...   
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
@@ -27,6 +28,14 @@ BTW, [Web app is here](https://mdsilo.com/app)
 - Cross-platform:  [Tauri](https://tauri.studio/) 
 
 ## Road map 
+
+### Input end
+
+- [ ] RSS reader  
+- [ ] Podcast client  
+- [ ] View and annotate PDF and epub  
+
+### Output end
 
 - Markdown
   - [X] Style: **Bold**, *Italic*, ~~Strikethrough~~, `Inline Code`

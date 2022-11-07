@@ -53,7 +53,7 @@ fn main() {
       feed::get_articles,
       feed::update_article_read_status,
       feed::get_unread_num,
-      feed::mark_all_read,
+      feed::update_all_read_status,
       files::read_directory,
       files::is_dir,
       files::is_file,

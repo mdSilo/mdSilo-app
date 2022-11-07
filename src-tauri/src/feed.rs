@@ -41,7 +41,7 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
 }
 
 // 2- convert to channel, defined type
-pub fn new_channel(res: &rss::Channel, title: Option<String>) -> NewChannel {
+pub fn new_channel(url: &str, res: &rss::Channel, title: Option<String>) -> NewChannel {
   let date = match &res.pub_date {
     Some(t) => String::from(t),
     None => String::from(""),
@@ -54,7 +54,7 @@ pub fn new_channel(res: &rss::Channel, title: Option<String>) -> NewChannel {
   };
   let channel = NewChannel {
     title: channel_title,
-    link: res.link.to_string(),
+    link: url.to_string(),
     description: res.description.to_string(),
     published: date,
   };
@@ -107,7 +107,7 @@ pub struct RssResult {
 pub async fn fetch_feed(url: String) -> Option<RssResult> { 
   match fetch_rss(&url).await {
     Some(res) => {
-      let channel = new_channel(&res, None);
+      let channel = new_channel(&url, &res, None);
       let articles = new_article_list(&url, &res);
 
       Some(RssResult { channel, articles })
@@ -124,9 +124,10 @@ pub async fn add_channel(url: String, title: Option<String>) -> usize {
 
   match res {
     Some(res) => {
-      let channel = new_channel(&res, title);
+      let channel = new_channel(&url, &res, title);
       // the input feed url may not be same as fetched feed link
-      let articles = new_article_list(&channel.link, &res);
+      // input feed url as the real rss url
+      let articles = new_article_list(&url, &res);
 
       db::add_channel(channel, articles)
     }
@@ -154,25 +155,23 @@ pub async fn get_channels() -> Vec<Channel> {
 
 #[command]
 pub fn delete_channel(link: String) -> usize {
-  let result = db::delete_channel(link);
-
-  result
+  db::delete_channel(link)
 }
 
 #[command]
 pub async fn add_articles_with_channel(link: String) -> usize {
-  let channel = db::get_channel_by_link(link);
+  let channel = db::get_channel_by_link(link.clone());
   match channel {
     Some(channel) => {
       let res = match fetch_rss(&channel.link).await {
         Some(r) => r,
         None => return 0,
       };
-      let articles = new_article_list(&channel.link, &res);
+      let articles = new_article_list(&link, &res);
 
       println!("{:?}", &articles.len());
 
-      let result = db::add_articles(String::from(&channel.link), articles);
+      let result = db::add_articles(String::from(&link), articles);
 
       result
     }
@@ -204,16 +203,12 @@ pub fn get_unread_num() -> HashMap<String, i32> {
 
 #[command]
 pub fn update_article_read_status(url: String, status: i32) -> usize {
-  let res = db::update_article_read_status(url, status);
-
-  res
+  db::update_article_read_status(url, status)
 }
 
 #[command]
-pub fn mark_all_read(feed_link: String) -> usize {
-  let res = db::update_articles_read_status_channel(feed_link);
-
-  res
+pub fn update_all_read_status(feed_link: String, read_status: i32) -> usize {
+  db::update_articles_read_status(feed_link, read_status)
 }
 
 #[cfg(test)]

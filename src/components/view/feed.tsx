@@ -36,13 +36,17 @@ export default function Feed() {
   const [doneNum, setDoneNum] = useState(0);
   const refreshChannel = async (link: string, title: string) => {
     const res = await dataAgent.addChannel(link, title);
-    setDoneNum((done) => done + 1);
     return res;
   };
 
-  const refreshList = () => {
+  const refreshList = async () => {
     setRefreshing(true);
-    channelList.forEach(async c => await refreshChannel(c.link, c.title));
+    setDoneNum(0);
+    for (const channel of channelList) {
+      await refreshChannel(channel.link, channel.title);
+      setDoneNum(doneNum + 1);
+    }
+    setRefreshing(false);
   };
 
   const onShowManager = () => {
@@ -54,14 +58,16 @@ export default function Feed() {
     console.log("current articles", articles, currentArticles);
     setCurrentArticles(articles);
   };
-
+  const [loading, setLoading] = useState(false);
   const onClickFeed = async (link: string) => {
+    setLoading(true);
     const clickedChannel = channelList.find(c => c.link === link);
     if (clickedChannel) {
       setCurrentChannel(clickedChannel);
       setShowManager(false);
       await getArticleList(clickedChannel.link);
     } 
+    setLoading(false);
   };
 
   const handleAddFeed = async (feedUrl: string, title: string) => {
@@ -80,24 +86,58 @@ export default function Feed() {
 
   // currentChannel and it's article list
   const [syncing, setSyncing] = useState(false);
-  const handleRefresh = () => {
-    // TODO
+  const handleRefresh = async () => {
     setSyncing(true);
+    if (currentChannel) {
+      // TODO: re-fetch channel 
+      await getArticleList(currentChannel.link);
+    }
+    setSyncing(false);
   };
 
-  const markAllRead = () => {
-    // TODO
+  const updateAllReadStatus = async (feedLink: string, status: number) => {
+    const res = await dataAgent.updateAllReadStatus(feedLink, status);
+    if (res === 0) return;
+    // set read_status to read and update unread
+    const articles = currentArticles;
+    if (articles && articles.length > 1 && articles[0].feed_link === feedLink) {
+      articles.forEach((item) => item.read_status = status);
+      setCurrentArticles(articles);
+    }
+    const channels = channelList;
+    channels.forEach((item) => {
+      if (item.link === feedLink) {
+        item.unread = status === 2 ? 0 : (articles?.length || 0);
+      }
+    });
+    setChannelList(channels);
   };
 
-  const onClickArticle = (article: ArticleType) => {
+  const onClickArticle = async (article: ArticleType) => {
     setCurrentArticle(article);
+    if (article.read_status !== 1) return;
+    // update read_status to db
+    const res = await dataAgent.updateArticleReadStatus(article.url, 2);
+    if (res === 0) return;
+    // set read_status to read and update unread
+    const articles = currentArticles;
+    if (articles) {
+      articles.forEach((item) => {
+        if (item.url === article.url) {
+          item.read_status = 2;
+        }
+      });
+      setCurrentArticles(articles);
+    }
+    const channels = channelList;
+    channels.forEach((item) => {
+      if (item.link === article.feed_link) {
+        item.unread = Math.max(0, item.unread - 1);
+      }
+    });
+    setChannelList(channels);
   };
 
-  // cuurent article
-  
-  // handle add channel and refresh all channel
-  // handle refresh channel and update read_status and unread_num 
-  // view article and update read-status and unread_num 
   // handle minimize sub-window
   // handle star article 
 
@@ -129,12 +169,13 @@ export default function Feed() {
                 channel={currentChannel} 
                 articles={currentArticles}
                 handleRefresh={handleRefresh}
-                markAllRead={markAllRead}
+                updateAllReadStatus={updateAllReadStatus}
                 onClickArticle={onClickArticle}
+                loading={loading}
                 syncing={syncing}
               />
             </div>
-            <div className="flex-1 border-l-2 border-gray-500 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto">
               <ArticleView article={currentArticle} />
             </div>
           </>

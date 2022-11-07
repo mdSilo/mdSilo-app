@@ -10,18 +10,25 @@ type Props = {
   channel: ChannelType | null;
   articles: ArticleType[] | null;
   handleRefresh: () => void;
-  markAllRead: () => void;
+  updateAllReadStatus: (feedLink: string, status: number) => Promise<void>;
   onClickArticle: (article: ArticleType) => void;
+  loading: boolean;
   syncing: boolean;
 };
 
 export function Channel(props: Props) {
-  const { channel, articles, handleRefresh, markAllRead, onClickArticle, syncing } = props;
+  const { 
+    channel, articles, handleRefresh, updateAllReadStatus, onClickArticle, loading, syncing 
+  } = props;
 
   // const [articleList, setArticleList] = useState<ArticleType[]>([]);
 
-  if (!channel || !articles) {
-    return (<Spinner />);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center"><Spinner className="w-8 h-8" /></div>
+    );
+  } else if ((!channel || !articles)) {
+    return (<></>);
   }
 
   return (
@@ -30,7 +37,7 @@ export function Channel(props: Props) {
         <div className="font-bold">{channel.title}</div>
         <div className="flex flex-row items-center justify-end">
           <Tooltip content="Mark All Read" placement="bottom">
-            <button className="" onClick={markAllRead}>
+            <button className="" onClick={async () => await updateAllReadStatus(channel.link, 2)}>
               <IconCircleCheck size={18} className="m-1 cursor-pointer" />
             </button>
           </Tooltip>
@@ -41,7 +48,7 @@ export function Channel(props: Props) {
           </Tooltip>
         </div>
       </div>
-      {syncing && <div className="">Sync...</div>}
+      {syncing && <div className="flex items-center justify-center"><Spinner className="w-4 h-4" /></div>}
       <ArticleList
         articles={articles}
         onClickArticle={onClickArticle}

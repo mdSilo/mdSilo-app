@@ -52,6 +52,7 @@ export function FeedManager(props: Props) {
   const handleSave = async () => {
     await handleAddFeed(feedUrl, feedTitle);
     setConfirming(false);
+    setShowAdd(false);
   };
 
   const handleSearch = (txt: string) => {
@@ -118,7 +119,10 @@ export function FeedManager(props: Props) {
             className="p-2 m-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
             placeholder="Search Feed"
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+              handleSearch(e.target.value);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -134,7 +138,7 @@ export function FeedManager(props: Props) {
             <div key={idx} className="flex items-center justify-between m-1">
               <span>{channel.title}</span>
               <span>{channel.link}</span>
-              <button className="cursor-pointer" onClick={() => handleDelete(channel)}>
+              <button className="cursor-pointer" onClick={async () => await handleDelete(channel)}>
                 <IconTrash size={18} className="m-1" />
               </button>
             </div>

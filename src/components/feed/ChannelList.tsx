@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { IconRefresh, IconSettings } from "@tabler/icons";
 import { getFavicon } from "utils/helper";
 import Tooltip from "components/misc/Tooltip";
+import Spinner from "components/misc/Spinner";
 import { ChannelType } from "./data/dataType";
 
 type Props = {
   channelList: ChannelType[];
-  refreshList: () => void;
+  refreshList: () => Promise<void>;
   onShowManager: () => void;
   refreshing: boolean;
   doneNum: number;
@@ -61,16 +62,15 @@ export function ChannelList(props: Props) {
           </Tooltip>
         </div>
       </div>
+      {refreshing && (
+        <div className="flex flex-col items-center justify-center">
+          <Spinner className="w-4 h-4" />
+          <span className="">{doneNum}/{channelList.length}</span>
+        </div>
+      )}
       <div className="p-1">
         {renderFeedList()}
       </div>
-      {refreshing && (
-        <div className="">
-          <span className="">
-            {doneNum}/{channelList.length}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
