@@ -40,8 +40,8 @@ export default function Feed() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [doneNum, setDoneNum] = useState(0);
-  const refreshChannel = async (link: string, title: string) => {
-    const res = await dataAgent.addChannel(link, title);
+  const refreshChannel = async (link: string, ty: string, title: string) => {
+    const res = await dataAgent.addChannel(link, ty, title);
     return res;
   };
 
@@ -49,7 +49,7 @@ export default function Feed() {
     setRefreshing(true);
     setDoneNum(0);
     for (const channel of channelList) {
-      await refreshChannel(channel.link, channel.title);
+      await refreshChannel(channel.link, channel.ty, channel.title);
       setDoneNum(doneNum + 1);
     }
     setRefreshing(false);
@@ -92,8 +92,8 @@ export default function Feed() {
     store.getState().setCurrentArticles(starArticles);
   };
 
-  const handleAddFeed = async (feedUrl: string, title: string) => {
-    const res = await dataAgent.addChannel(feedUrl, title)
+  const handleAddFeed = async (feedUrl: string, ty: string, title: string) => {
+    const res = await dataAgent.addChannel(feedUrl, ty, title)
     if (res > 0) {
       getList();
     }
@@ -111,7 +111,7 @@ export default function Feed() {
   const handleRefresh = async () => {
     setSyncing(true);
     if (currentChannel) {
-      await dataAgent.addChannel(currentChannel.link, currentChannel.title);
+      await dataAgent.addChannel(currentChannel.link, currentChannel.ty, currentChannel.title);
       await loadArticleList(currentChannel.link);
     }
     setSyncing(false);

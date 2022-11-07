@@ -29,6 +29,8 @@ pub struct Article {
   #[diesel(sql_type = Text)]
   pub feed_link: String,
   #[diesel(sql_type = Text)]
+  pub audio_url: String,
+  #[diesel(sql_type = Text)]
   pub description: String,
   #[diesel(sql_type = Text)]
   pub published: String,
@@ -51,6 +53,7 @@ pub struct NewChannel {
   pub link: String,
   pub description: String,
   pub published: String,
+  pub ty: String,
 }
 
 #[derive(Debug, Insertable, Clone, Serialize, Deserialize)]
@@ -59,6 +62,7 @@ pub struct NewArticle {
   pub title: String,
   pub url: String,
   pub feed_link: String,
+  pub audio_url: String,
   pub description: String,
   pub content: String,
   pub published: String,

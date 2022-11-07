@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { IconCircle, IconCircleCheck, IconRefresh } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
@@ -104,7 +104,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   const { article, onSelect, highlight } = props;
   const [readStatus, setReadStatus] = useState(article.read_status);
 
-  const handleClick = async (e: any) => {
+  const handleClick = async () => {
     if (onSelect) {
       onSelect(article);
     }

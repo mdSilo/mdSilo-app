@@ -6,6 +6,7 @@ diesel::table! {
     title -> Text,
     url -> Text,
     feed_link -> Text,
+    audio_url -> Text,
     description -> Text,
     published -> Timestamp,
     content -> Text,

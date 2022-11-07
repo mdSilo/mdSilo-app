@@ -41,7 +41,7 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
 }
 
 // 2- convert to channel, defined type
-pub fn new_channel(url: &str, res: &rss::Channel, title: Option<String>) -> NewChannel {
+pub fn new_channel(url: &str, res: &rss::Channel, ty: &str, title: Option<String>) -> NewChannel {
   let date = match &res.pub_date {
     Some(t) => String::from(t),
     None => String::from(""),
@@ -57,6 +57,7 @@ pub fn new_channel(url: &str, res: &rss::Channel, title: Option<String>) -> NewC
     link: url.to_string(),
     description: res.description.to_string(),
     published: date,
+    ty: ty.to_string(),
   };
 
   return channel;
@@ -77,11 +78,19 @@ pub fn new_article_list(
       .description
       .clone()
       .unwrap_or(String::from("no description"));
+    // get audio 
+    let enclosure = item.enclosure.clone().unwrap_or_default();
+    let audio_url = if enclosure.mime_type.starts_with("audio/") {
+      enclosure.url
+    } else {
+      String::new()
+    };
 
     let new_article = NewArticle {
       title,
       url: link,
       feed_link: feed_url.to_string(),
+      audio_url,
       description,
       published: String::from(item.pub_date().clone().unwrap_or("")),
       content,
@@ -107,7 +116,7 @@ pub struct RssResult {
 pub async fn fetch_feed(url: String) -> Option<RssResult> { 
   match fetch_rss(&url).await {
     Some(res) => {
-      let channel = new_channel(&url, &res, None);
+      let channel = new_channel(&url, &res, "rss", None);
       let articles = new_article_list(&url, &res);
 
       Some(RssResult { channel, articles })
@@ -117,14 +126,14 @@ pub async fn fetch_feed(url: String) -> Option<RssResult> {
 }
 
 #[command]
-pub async fn add_channel(url: String, title: Option<String>) -> usize {
+pub async fn add_channel(url: String, ty: String, title: Option<String>) -> usize {
   println!("request channel {}", &url);
 
   let res = fetch_rss(&url).await;
 
   match res {
     Some(res) => {
-      let channel = new_channel(&url, &res, title);
+      let channel = new_channel(&url, &res, &ty, title);
       // the input feed url may not be same as fetched feed link
       // input feed url as the real rss url
       let articles = new_article_list(&url, &res);
@@ -139,7 +148,7 @@ pub async fn add_channel(url: String, title: Option<String>) -> usize {
 pub async fn import_channels(url_list: Vec<String>) -> usize {
   let mut import_num = 0;
   for url in &url_list {
-    let res = add_channel(url.to_string(), None).await;
+    let res = add_channel(url.to_string(), "rss".to_string(), None).await;
     import_num += res;
   }
   

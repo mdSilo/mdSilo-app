@@ -60,11 +60,11 @@ export default function SideMenu() {
     <div className="flex flex-col h-full">
       <Logo />
       <OpenButton />
-      <NewButton />
       <FeedButton 
         viewTy={viewTy} 
         onDispatch={dispatchFeed} 
       />
+      <NewButton />
       <ChronButton 
         viewTy={viewTy} 
         onDispatch={dispatchChron} 
@@ -144,7 +144,7 @@ const FeedButton = (props: ButtonProps) => {
   const onViewFeed = useCallback(() => {
     setIsSidebarOpen(false);
     onDispatch();
-  }, [setIsSidebarOpen]);
+  }, [setIsSidebarOpen, onDispatch]);
 
   return (
     <SidebarItem isHighlighted={viewTy === 'feed'} onClick={onClick}>

@@ -17,6 +17,7 @@ CREATE TABLE articles (
   title VARCHAR NOT NULL,
   url VARCHAR NOT NULL UNIQUE,
   feed_link VARCHAR NOT NULL,
+  audio_url VARCHAR NOT NULL DEFAULT '',
   description VARCHAR NOT NULL,
   published DATETIME,
   content VARCHAR,

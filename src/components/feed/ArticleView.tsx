@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IconLink, IconStar } from "@tabler/icons";
 import { getFavicon, getReadableDatetime } from "utils/helper";
 import { ArticleType } from "./data/dataType";
@@ -79,6 +79,7 @@ export function ArticleView(props: ViewProps) {
       </div>
       <div className="p-2">
         {showBanner && image &&  <div className=""><img src={image} alt=""/></div>}
+        {article.audio_url.trim() && (<audio controls src={article.audio_url}></audio>)}
         <div
           className="text-lg px-2 content"
           // eslint-disable-next-line react/no-danger

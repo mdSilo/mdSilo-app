@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { IconPlus, IconTrash } from "@tabler/icons";
+import React, { useState } from "react";
+import { IconHeadphones, IconPlus, IconRss, IconTrash } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
 import * as dataAgent from "./data/dataAgent";
 import { ChannelType } from "./data/dataType";
@@ -7,7 +7,7 @@ import { ChannelType } from "./data/dataType";
 
 type Props = {
   channelList: ChannelType[];
-  handleAddFeed: (url: string, title: string) => Promise<void>;
+  handleAddFeed: (url: string, ty: string, title: string) => Promise<void>;
   handleDelete: (channel: ChannelType) => Promise<void>;
   handleImport?: () => void;
   handleExport?: () => void;
@@ -21,6 +21,7 @@ export function FeedManager(props: Props) {
   const [searchText, setSearchText] = useState<string>("");
 
   const [feedUrl, setFeedUrl] = useState("https://www.propublica.org/feeds/propublica/main");
+  const [feedType, setFeedType] = useState("rss");
   const [feedTitle, setFeedTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,7 +51,8 @@ export function FeedManager(props: Props) {
   };
 
   const handleSave = async () => {
-    await handleAddFeed(feedUrl, feedTitle);
+    await handleAddFeed(feedUrl, feedType, feedTitle);
+    console.log("feed type", feedType)
     setConfirming(false);
     setShowAdd(false);
   };
@@ -88,7 +90,7 @@ export function FeedManager(props: Props) {
             <div className="w-full">
               <input
                 type="text"
-                className="w-full p-1 mx-2 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+                className="w-full p-1 m-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
                 placeholder="Feed Title"
                 value={feedTitle}
                 onChange={(e) => setFeedTitle(e.target.value)}
@@ -96,11 +98,34 @@ export function FeedManager(props: Props) {
               />
             </div>
           </div>
-          <div className="w-full">{description}</div>
-          <div className="flex flex-row">
-            <button className="m-1 m-btn0" onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
-            <button className="m-1 m-btn1" onClick={handleCancel}>Cancel</button>
-            <button className="m-1 m-btn2" onClick={handleSave}>{confirming ? 'Saving..' : 'OK'}</button>
+          <div className="flex flex-row items-center justify-start w-full">
+            <div className="mr-2">Type</div>
+            <div className="w-full flex flex-row items-center justify-start">
+              <input 
+                type="radio" 
+                className="m-1 text-sm"
+                id="feedType1" 
+                name="feedType" 
+                value="RSS" 
+                onChange={() => setFeedType('rss')} 
+              />
+              <label className="mr-4 text-sm" htmlFor="feedType1">RSS</label>
+              <input 
+                type="radio" 
+                className="m-1 text-sm"
+                id="feedType2" 
+                name="feedType" 
+                value="Podcast" 
+                onChange={() => setFeedType('podcast')} 
+              />
+              <label className="text-sm" htmlFor="feedType2">Podcast</label>
+            </div>
+          </div>
+          <div className="w-full my-1">{description}</div>
+          <div className="my-1 flex flex-row items-center justify-start">
+            <button className="mr-2 m-btn0" onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
+            <button className="mx-2 m-btn1" onClick={handleCancel}>Cancel</button>
+            <button className="mx-2 m-btn2" onClick={handleSave}>{confirming ? 'Saving..' : 'OK'}</button>
           </div>
         </div>
       )}
@@ -136,7 +161,13 @@ export function FeedManager(props: Props) {
         {realList.map((channel: ChannelType, idx: number) => {
           return (
             <div key={idx} className="flex items-center justify-between m-1">
-              <span>{channel.title}</span>
+              <span className="flex items-center justify-between">
+                {channel.ty === 'rss' 
+                  ? <IconRss size={12} className="mr-1 text-orange-500" /> 
+                  : <IconHeadphones size={12} className="mr-1 text-purple-500" />
+                }
+                {channel.title}
+              </span>
               <span>{channel.link}</span>
               <button className="cursor-pointer" onClick={async () => await handleDelete(channel)}>
                 <IconTrash size={18} className="m-1" />

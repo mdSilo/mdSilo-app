@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
-import { IconRefresh, IconSettings, IconStar } from "@tabler/icons";
+import React, { useState } from "react";
+import { IconHeadphones, IconRefresh, IconRss, IconSettings, IconStar } from "@tabler/icons";
 import { getFavicon } from "utils/helper";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
@@ -24,7 +24,7 @@ export function ChannelList(props: Props) {
     return (
       <>
         {channelList.map((channel: ChannelType, idx: number) => {
-          const { unread = 0, title, link } = channel;
+          const { unread = 0, title, ty, link } = channel;
           const ico = getFavicon(link);
           const activeClass = `${highlighted?.link === link ? 'border-l-2 border-green-500' : ''}`;
           
@@ -37,15 +37,21 @@ export function ChannelList(props: Props) {
                 setHighlighted(channel);
               }}
             >
-              <div className="flex flex-row items-center justify-start">
+              <div className="flex flex-row items-center justify-start mr-1">
                 <img
                   src={ico}
                   className="h-4 w-4 mx-1"
                   alt=">"
                 />
-                <span className="">{title}</span>
+                <span className="text-sm">{title}</span>
               </div>
-              <span className="">{unread}</span>
+              <span className="flex items-center justify-between">
+                {unread}
+                {ty === 'rss' 
+                  ? <IconRss size={12} className="ml-1 text-orange-500" /> 
+                  : <IconHeadphones size={12} className="ml-1 text-purple-500" />
+                }
+              </span>
             </div>
           );
         })}
