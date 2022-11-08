@@ -8,7 +8,6 @@ import { FeedManager } from 'components/feed/FeedManager';
 import { ArticleType, ChannelType } from 'components/feed/data/dataType';
 import * as dataAgent from 'components/feed/data/dataAgent';
 
-
 export default function Feed() {
   // channel list
   const [channelList, setChannelList] = useState<ChannelType[]>([]);
@@ -120,19 +119,8 @@ export default function Feed() {
   const updateAllReadStatus = async (feedLink: string, status: number) => {
     const res = await dataAgent.updateAllReadStatus(feedLink, status);
     if (res === 0) return;
-    // set read_status to read and update unread
-    const articles = currentArticles;
-    if (articles && articles.length > 1 && articles[0].feed_link === feedLink) {
-      articles.forEach((item) => item.read_status = status);
-      setCurrentArticles(articles);
-    }
-    const channels = channelList;
-    channels.forEach((item) => {
-      if (item.link === feedLink) {
-        item.unread = status === 2 ? 0 : (articles?.length || 0);
-      }
-    });
-    setChannelList(channels);
+    getList();
+    await handleRefresh();
   };
 
   const onClickArticle = async (article: ArticleType) => {
@@ -142,35 +130,18 @@ export default function Feed() {
     // update read_status to db
     const res = await dataAgent.updateArticleReadStatus(article.url, 1);
     if (res === 0) return;
-    // set read_status to read and update unread
-    const articles = currentArticles;
-    if (articles) {
-      articles.forEach((item) => {
-        if (item.url === article.url) {
-          item.read_status = 1; // read only property??
-        }
-      });
-      setCurrentArticles(articles);
-    }
-    const channels = channelList;
-    channels.forEach((item) => {
-      if (item.link === article.feed_link) {
-        item.unread = Math.max(0, item.unread - 1);
-      }
-    });
-    setChannelList(channels);
+    getList();
   };
 
   const updateStarStatus = async (url: string, status: number) => {
     await dataAgent.updateArticleStarStatus(url, status);
   };
 
-  // handle minimize sub-window
-  // handle star article 
+  // TODO: handle minimize sub-window
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-row flex-shrink-0 h-full">
+      <div className="flex flex-row flex-shrink-0 h-screen">
         <div className="w-48 p-1 border-r-2 border-gray-500 overflow-y-auto">
           <ChannelList 
             channelList={channelList} 

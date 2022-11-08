@@ -52,7 +52,7 @@ export function ArticleView(props: ViewProps) {
   const ico = getFavicon(url);
 
   return (
-    <div className="border-l-2 border-gray-500 ">
+    <div className="border-l-2 border-gray-500">
       <div className="sticky top-0 px-2 mb-2 bg-gray-200">
         <div className="text-3xl font-bold">{title}</div>
         <div className="flex items-center justify-start">

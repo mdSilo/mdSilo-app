@@ -10,9 +10,9 @@ type Props = {
   channel: ChannelType | null;
   starChannel?: boolean;
   articles: ArticleType[] | null;
-  handleRefresh: () => void;
+  handleRefresh: () => Promise<void>;
   updateAllReadStatus: (feedLink: string, status: number) => Promise<void>;
-  onClickArticle: (article: ArticleType) => void;
+  onClickArticle: (article: ArticleType) => Promise<void>;
   loading: boolean;
   syncing: boolean;
 };
@@ -21,8 +21,6 @@ export function Channel(props: Props) {
   const { 
     channel, starChannel, articles, handleRefresh, updateAllReadStatus, onClickArticle, loading, syncing 
   } = props;
-
-  // const [articleList, setArticleList] = useState<ArticleType[]>([]);
 
   if (loading) {
     return (
@@ -62,58 +60,53 @@ export function Channel(props: Props) {
 
 type ListProps = {
   articles: ArticleType[];
-  onClickArticle: (article: ArticleType) => void;
+  onClickArticle: (article: ArticleType) => Promise<void>;
 };
 
 function ArticleList(props: ListProps) {
   const { articles, onClickArticle } = props;
   const [highlighted, setHighlighted] = useState<ArticleType>();
 
-  const handleArticleSelect = (article: ArticleType) => {
+  const onArticleSelect = async (article: ArticleType) => {
     setHighlighted(article);
-    onClickArticle(article);
-  };
-
-  const renderList = (): JSX.Element[] => {
-    return articles.map((article: ArticleType, idx: number) => {
-      return (
-        <ArticleItem
-          key={`${article.id}=${idx}`}
-          article={article}
-          highlight={highlighted?.id === article.id}
-          onSelect={handleArticleSelect}
-        />
-      );
-    });
+    await onClickArticle(article);
   };
 
   return (
     <div className="">
-      {renderList()}
+      {articles.map((article: ArticleType, idx: number) => {
+        return (
+          <ArticleItem
+            key={`${article.id}=${idx}`}
+            article={article}
+            highlight={highlighted?.id === article.id}
+            onArticleSelect={onArticleSelect}
+          />
+        )}
+      )}
     </div>
   );
 }
 
 type ItemProps = {
   article: ArticleType;
-  onSelect: (article: ArticleType) => void;
+  onArticleSelect: (article: ArticleType) => Promise<void>;
   highlight: boolean;
 };
 
 const ArticleItem = memo(function ArticleItm(props: ItemProps) {
-  const { article, onSelect, highlight } = props;
+  const { article, onArticleSelect, highlight } = props;
   const [readStatus, setReadStatus] = useState(article.read_status);
 
   const handleClick = async () => {
-    if (onSelect) {
-      onSelect(article);
+    if (onArticleSelect) {
+      await onArticleSelect(article);
+      setReadStatus(1);
     }
-
-    // need to: nav to article view, set read status, update unread_num
   };
 
   useEffect(() => {
-    setReadStatus(article.read_status)
+    setReadStatus(article.read_status);
   }, [article.read_status])
 
   const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-400 ${highlight ? 'bg-blue-400' : ''}`;

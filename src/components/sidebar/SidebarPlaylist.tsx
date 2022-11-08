@@ -1,16 +1,14 @@
-import React, { useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes, useState, useEffect } from 'react';
+import React, { 
+  useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes, useState, useEffect 
+} from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import { store, useStore } from 'lib/store';
 import * as dataAgent from 'components/feed/data/dataAgent';
+import { CurrentPod as PodTreeItem } from 'components/feed/data/dataType';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import Tooltip from 'components/misc/Tooltip';
 import SidebarItem from './SidebarItem';
-
-export type TreeItem = {
-  title: string;
-  url: string;
-};
 
 type SidebarPlaylistProps = {
   className?: string;
@@ -19,7 +17,7 @@ type SidebarPlaylistProps = {
 function SidebarPlaylist(props: SidebarPlaylistProps) {
   const { className = '' } = props;
 
-  const [data, setData] = useState<TreeItem[]>([]);
+  const [data, setData] = useState<PodTreeItem[]>([]);
   
   const loadData = useCallback(async () => {
     const data = await computePlaylist();
@@ -33,12 +31,8 @@ function SidebarPlaylist(props: SidebarPlaylistProps) {
   return (
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
-        <div className="py-1 flex flex-col items-center justify-center">
-          <span className="text-xs break-words">{currentPod?.title || ''}</span>
-          <audio className="w-56" controls src={currentPod?.url} />
-        </div>
         {data.length > 0 ? (
-          <PlayList data={data} className="flex-1 overflow-y-auto" />
+          <PlayList data={data} currentPod={currentPod} className="flex-1 overflow-y-auto" />
         ) : null}
       </div>
     </ErrorBoundary>
@@ -49,12 +43,13 @@ export default memo(SidebarPlaylist);
 
 
 type TreeProps = {
-  data: TreeItem[];
+  data: PodTreeItem[];
+  currentPod: PodTreeItem | null; 
   className?: string;
 };
 
 function Playlist(props: TreeProps) {
-  const { data, className = '' } = props;
+  const { data, currentPod, className = '' } = props;
 
   const Row = useCallback(
     ({ index, style }: {index: number; style: React.CSSProperties}) => {
@@ -63,11 +58,12 @@ function Playlist(props: TreeProps) {
         <PlayItem
           key={`${node.title}-${index}`}
           node={node}
+          isHighlighted={node.url === currentPod?.url}
           style={style}
         />
       );
     },
-    [data]
+    [data, currentPod]
   );
 
   return (
@@ -95,7 +91,7 @@ const PlayList =  memo(Playlist);
 
 
 interface ItemProps extends HTMLAttributes<HTMLDivElement> {
-  node: TreeItem;
+  node: PodTreeItem;
   isHighlighted?: boolean;
 }
 
@@ -104,11 +100,12 @@ const Playitem = (
   forwardedRef: ForwardedRef<HTMLDivElement>
 ) => {
   const { node, isHighlighted, className = '', style, ...otherProps } = props;
+  const setCurrentPod = useStore((state) => state.setCurrentPod);
 
-  const onClickItem = useCallback(async (e) => {
+  const onClickItem = useCallback((e) => {
     e.preventDefault();
-    store.getState().setCurrentPod(node);
-  }, [node]);
+    setCurrentPod(node);
+  }, [node, setCurrentPod]);
   
   return (
     <SidebarItem
@@ -137,10 +134,9 @@ const Playitem = (
 
 const PlayItem = memo(forwardRef(Playitem));
 
-
 const computePlaylist = async () => {
   const articles = await dataAgent.getArticleList(null, null, null);
-  const res: TreeItem[] = articles
+  const res: PodTreeItem[] = articles
     .filter(a => !!(a.audio_url.trim()))
     .map(a => { return {title: a.title, url: a.audio_url}});
 
