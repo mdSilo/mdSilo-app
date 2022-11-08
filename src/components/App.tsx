@@ -8,6 +8,7 @@ import useHotkeys from 'editor/hooks/useHotkeys';
 import { useStore, SidebarTab } from 'lib/store';
 import SideMenu from './sidebar/SideMenu';
 import Sidebar from './sidebar/Sidebar';
+import StatusBar from './sidebar/StatusBar';
 import MainView from './view/MainView';
 import FindOrCreateModal from './note/NoteNewModal';
 import SettingsModal from './settings/SettingsModal';
@@ -77,7 +78,7 @@ const App = () => {
     };
   }, []);
 
-  const appContainerClassName = classNames('h-screen', { dark: darkMode });
+  const appContainerClassName = classNames('h-screen flex flex-col', { dark: darkMode });
 
   return (
     <ProvideCurrentView>
@@ -86,6 +87,7 @@ const App = () => {
           <SideMenu />
           <Sidebar />
           <div className="relative flex flex-col flex-1 overflow-y-auto">
+            <div className="flex items-center justify-center"><StatusBar /></div>
             <MainView />
           </div>
           {isFindOrCreateModalOpen ? (
@@ -100,6 +102,7 @@ const App = () => {
             handleClose={() => setIsAboutOpen(false)} 
           />
         </div>
+        
       </div>
     </ProvideCurrentView>
   )

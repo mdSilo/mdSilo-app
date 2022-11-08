@@ -61,7 +61,7 @@ export default function Feed() {
 
   const loadArticleList = async (link: string) => {
     const articles = await dataAgent.getArticleList(link, null, null);
-    console.log("current articles", articles, currentArticles);
+    // console.log("current articles", articles, currentArticles);
     setCurrentArticles(articles);
   };
 
@@ -147,7 +147,7 @@ export default function Feed() {
     if (articles) {
       articles.forEach((item) => {
         if (item.url === article.url) {
-          item.read_status = 1;
+          item.read_status = 1; // read only property??
         }
       });
       setCurrentArticles(articles);
@@ -170,7 +170,7 @@ export default function Feed() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-row flex-shrink-0 h-screen">
+      <div className="flex flex-row flex-shrink-0 h-full">
         <div className="w-48 p-1 border-r-2 border-gray-500 overflow-y-auto">
           <ChannelList 
             channelList={channelList} 

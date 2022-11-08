@@ -26,7 +26,7 @@ function SidebarPlaylist(props: SidebarPlaylistProps) {
     setData(data);
   }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const currentPod = useStore((state) => state.currentPod);
 
@@ -34,7 +34,7 @@ function SidebarPlaylist(props: SidebarPlaylistProps) {
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
         <div className="py-1 flex flex-col items-center justify-center">
-          <span className="text-xs">{currentPod?.title || ''}</span>
+          <span className="text-xs break-words">{currentPod?.title || ''}</span>
           <audio className="w-56" controls src={currentPod?.url} />
         </div>
         {data.length > 0 ? (
@@ -55,7 +55,6 @@ type TreeProps = {
 
 function Playlist(props: TreeProps) {
   const { data, className = '' } = props;
-  console.log("play data", data)
 
   const Row = useCallback(
     ({ index, style }: {index: number; style: React.CSSProperties}) => {
@@ -144,8 +143,6 @@ const computePlaylist = async () => {
   const res: TreeItem[] = articles
     .filter(a => !!(a.audio_url.trim()))
     .map(a => { return {title: a.title, url: a.audio_url}});
-
-  console.log("playlist articles", res, articles)
 
   return res;
 };
