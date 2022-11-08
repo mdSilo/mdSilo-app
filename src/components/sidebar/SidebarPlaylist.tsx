@@ -5,7 +5,7 @@ import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import { useStore } from 'lib/store';
 import * as dataAgent from 'components/feed/data/dataAgent';
-import { CurrentPod as PodTreeItem } from 'components/feed/data/dataType';
+import { PodType as PodTreeItem } from 'components/feed/data/dataType';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import Tooltip from 'components/misc/Tooltip';
 import SidebarItem from './SidebarItem';
@@ -87,7 +87,7 @@ function Playlist(props: TreeProps) {
   );
 }
 
-const PlayList =  memo(Playlist);
+const PlayList = memo(Playlist);
 
 
 interface ItemProps extends HTMLAttributes<HTMLDivElement> {
@@ -138,7 +138,7 @@ const computePlaylist = async () => {
   const articles = await dataAgent.getArticleList(null, null, null);
   const res: PodTreeItem[] = articles
     .filter(a => !!(a.audio_url.trim()))
-    .map(a => { return {title: a.title, url: a.audio_url}});
+    .map(a => { return {title: a.title, url: a.audio_url, published: a.published}});
 
   return res;
 };

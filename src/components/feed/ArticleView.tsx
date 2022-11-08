@@ -13,7 +13,6 @@ export function ArticleView(props: ViewProps) {
   const { article, starArticle } = props;
   const [isStar, setIsStar] = useState(article?.star_status === 1);
   const [pageContent, setPageContent] = useState("");
-  const [showBanner, setShowBanner] = useState(false);
 
   const setCurrentPod = useStore(state => state.setCurrentPod);
 
@@ -26,14 +25,7 @@ export function ArticleView(props: ViewProps) {
         }
       );
 
-      if (article.image && content.includes(article.image.split('/').slice(-1)[0])){
-        setShowBanner(false)
-      } else {
-        setShowBanner(true)
-      }
-
       setPageContent(content);
-
       setIsStar(article.star_status === 1);
     }
   }, [article]);
@@ -44,7 +36,7 @@ export function ArticleView(props: ViewProps) {
     );
   }
 
-  const { title, url, author, published, image } = article;
+  const { title, url, author, published } = article;
   const ico = getFavicon(url);
 
   return (
@@ -75,12 +67,11 @@ export function ArticleView(props: ViewProps) {
         </div>
       </div>
       <div className="p-2">
-        {showBanner && image &&  <div className=""><img src={image} alt=""/></div>}
         {article.audio_url.trim() && (
           <audio 
             controls 
             src={article.audio_url} 
-            onPlay={() => setCurrentPod({title, url: article.audio_url})}
+            onPlay={() => setCurrentPod({title, url: article.audio_url, published: article.published})}
           />
         )}
         <div

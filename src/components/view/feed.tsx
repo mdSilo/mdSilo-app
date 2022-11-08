@@ -84,7 +84,6 @@ export default function Feed() {
     setStarChannel(true);
     setShowManager(false);
     const starArticles = await dataAgent.getArticleList(null, null, 1);
-    console.log("star articles: ", starArticles)
     setCurrentArticles(starArticles);
     setLoading(false);
     store.getState().setCurrentChannel(null);

@@ -26,7 +26,8 @@ export interface ArticleType {
   ttr?: number;
 }
 
-export interface CurrentPod {
+export interface PodType {
   title: string;
   url: string;
+  published?: Date;
 }

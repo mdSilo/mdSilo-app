@@ -14,7 +14,6 @@ mod models;
 mod schema;
 // mod pdf;
 
-#[macro_use]
 extern crate diesel;
 extern crate diesel_migrations;
 

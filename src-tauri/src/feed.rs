@@ -7,7 +7,7 @@ use crate::db;
 use crate::models::{Channel, NewChannel, NewArticle, Article};
 
 // # process rss feed #
-// todo: podcast's audio link
+// TODO: atom, json
 //
 // 1- fetch: rss typed
 pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
@@ -31,10 +31,7 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
           Err(_) => None,
         }
       },
-      _ => {
-        println!("{}", &response.status()); // TODO: log
-        None
-      }
+      _ => None,
     },
     Err(_) => None,
   }
@@ -127,8 +124,6 @@ pub async fn fetch_feed(url: String) -> Option<RssResult> {
 
 #[command]
 pub async fn add_channel(url: String, ty: String, title: Option<String>) -> usize {
-  println!("request channel {}", &url);
-
   let res = fetch_rss(&url).await;
 
   match res {
@@ -177,8 +172,6 @@ pub async fn add_articles_with_channel(link: String) -> usize {
         None => return 0,
       };
       let articles = new_article_list(&link, &res);
-
-      println!("{:?}", &articles.len());
 
       let result = db::add_articles(String::from(&link), articles);
 

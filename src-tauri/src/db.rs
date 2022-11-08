@@ -37,7 +37,7 @@ pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
     .execute(&mut connection)
     .unwrap_or(0);
 
-  println!("new channel result {:?}", result);
+  // println!("new channel result {:?}", result);
 
   // TODO: check if add channel failed
   // insert articles
@@ -101,16 +101,16 @@ pub struct UnreadNum {
 }
 
 pub fn get_unread_num() -> Vec<UnreadNum> {
-  const SQL_QUERY_UNREAD_TOTAL: &str = "
+  const SQL_QUERY_UNREAD_NUM: &str = "
     SELECT id, feed_link, count(read_status) as unread_count 
     FROM articles WHERE read_status = 0 group by feed_link;
     ";
   let mut connection = establish_connection();
-  let record = diesel::sql_query(SQL_QUERY_UNREAD_TOTAL)
+  let record = diesel::sql_query(SQL_QUERY_UNREAD_NUM)
     .load::<UnreadNum>(&mut connection)
     .unwrap_or(vec![]);
 
-  record
+  return record;
 }
 
 pub fn add_articles(feed_link: String, articles: Vec<NewArticle>) -> usize {
@@ -191,20 +191,20 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
   let mut connection = establish_connection();
   let mut query = schema::articles::dsl::articles.into_boxed();
 
-  println!("filter to get articles: {:?}", filter);
+  // println!("filter to get articles: {:?}", filter);
 
   if let Some(feed_link) = filter.feed_link {
-    println!("feed_link: {:?}", feed_link);
+    // println!("feed_link: {:?}", feed_link);
     query = query.filter(schema::articles::feed_link.eq(feed_link));
   }
 
   if let Some(read_status) = filter.read_status {
-    println!("read status: {:?}", read_status);
+    // println!("read status: {:?}", read_status);
     query = query.filter(schema::articles::read_status.eq(read_status));
   }
 
   if let Some(star_status) = filter.star_status {
-    println!("star status: {:?}", star_status);
+    // println!("star status: {:?}", star_status);
     query = query.filter(schema::articles::star_status.eq(star_status));
   }
 
@@ -212,7 +212,7 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
     .load::<Article>(&mut connection)
     .unwrap_or(vec![]);
 
-  //println!("get articles result: {:?}", result);
+  // println!("get articles result: {:?}", result);
 
   return result;
 }

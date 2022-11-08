@@ -9,7 +9,7 @@ function Statusbar(props: Props) {
   const { className = '' } = props; 
 
   const currentPod = useStore((state) => state.currentPod);
-  console.log("current pod: ", currentPod)
+  // console.log("current pod: ", currentPod)
   return (
     <div className={`w-full bg-gray-50 dark:bg-gray-800 dark:text-white ${className}`}>
       {currentPod && (

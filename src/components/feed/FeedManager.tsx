@@ -30,7 +30,7 @@ export function FeedManager(props: Props) {
   const handleLoad = async () => {
     setLoading(true);
     const res = await dataAgent.fetchFeed(feedUrl);
-    console.log("res from rust", res);
+    // console.log("res from rust", res);
     if (!res) {
       setDescription('Cant find any feed, please check url');
       return;
@@ -52,7 +52,6 @@ export function FeedManager(props: Props) {
 
   const handleSave = async () => {
     await handleAddFeed(feedUrl, feedType, feedTitle);
-    console.log("feed type", feedType)
     setConfirming(false);
     setShowAdd(false);
   };
