@@ -11,28 +11,29 @@ BTW, [Web app is here](https://mdsilo.com/app)
 
 ## Features
 
-- I/O: Input and output, reading and writing in one place;    
+- I/O: Input and output in one place;    
 - All-In-One Editor: Markdown, WYSIWYG, MindMap... 
 - Markdown and extensions: Diagram, Table, Math/Chemical, Code block(Highlight)...   
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
 - Chronicle view, Graph view, Task view... 
-- Full-text search; 
-- Dark and Light Mode
-- Available for Windows, macOS, Linux, 
+- Full-text search;  
+- Dark and Light Mode;  
+- Available for Windows, macOS, Linux;   
 - On top of local plain-text files, no registration required, no privacy issue. 
 
 ## Tech Stack
 
 - Editor Framework: [ProseMirror](https://prosemirror.net/)      
 - Frontend Framework: [React](https://reactjs.org/)  
-- Cross-platform:  [Tauri](https://tauri.studio/) 
+- Cross-platform: [Tauri](https://tauri.studio/) 
 
 ## Road map 
 
 ### Input end
 
-- [ ] RSS reader  
-- [ ] Podcast client  
+- [X] RSS reader  
+- [X] Podcast client  
+- [ ] Support Atom, JSON feed  
 - [ ] View and annotate PDF and epub  
 
 ### Output end

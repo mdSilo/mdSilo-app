@@ -2,7 +2,7 @@ import React, { memo, useEffect, useState } from "react";
 import { IconCircle, IconCircleCheck, IconRefresh } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
-import { getReadableDatetime } from 'utils/helper';
+import { fmtDatetime } from 'utils/helper';
 import { ArticleType, ChannelType } from "./data/dataType";
 
 
@@ -32,18 +32,18 @@ export function Channel(props: Props) {
 
   return (
     <div className="flex flex-col items-between justify-center">
-      <div className="flex flex-row items-center justify-between px-2 bg-gray-300">
+      <div className="flex flex-row items-center justify-between px-2 bg-gray-500">
         <div className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</div>
         {(channel) && (
           <div className="flex flex-row items-center justify-end">
             <Tooltip content="Mark All Read" placement="bottom">
               <button className="" onClick={async () => await updateAllReadStatus(channel.link, 1)}>
-                <IconCircleCheck size={18} className="m-1 cursor-pointer" />
+                <IconCircleCheck size={18} className="m-1 dark:text-white" />
               </button>
             </Tooltip>
             <Tooltip content="Refresh Channel" placement="bottom">
               <button className="" onClick={handleRefresh}>
-                <IconRefresh size={18} className={`m-1 cursor-pointer ${syncing ? "spinning" : ""}`} />
+                <IconRefresh size={18} className="m-1 dark:text-white" />
               </button>
             </Tooltip>
           </div>
@@ -119,11 +119,11 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
     >
       <div className="flex flex-row items-center justify-start">
         {(readStatus === 0) && <IconCircle className="w-2 h-2 m-1 text-blue-500 fill-blue-500" />}
-        <div className="flex-1 font-bold m-1">{article.title}</div>
+        <div className="flex-1 font-bold m-1 dark:text-white">{article.title}</div>
       </div>
       <div className="flex flex-row items-center justify-start">
-        <span className="m-1 text-sm">{article.author}</span>
-        <span className="m-1 text-sm">{getReadableDatetime(article.published || '')}</span>
+        <span className="m-1 text-sm dark:text-slate-400">{article.author}</span>
+        <span className="m-1 text-sm dark:text-slate-400">{fmtDatetime(article.published || '')}</span>
       </div>
     </div>
   );

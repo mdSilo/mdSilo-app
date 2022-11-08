@@ -1,5 +1,5 @@
 import { useStore } from 'lib/store';
-import { getReadableDatetime } from 'utils/helper';
+import { fmtDatetime } from 'utils/helper';
 
 type Props = {
   noteId: string;
@@ -19,8 +19,8 @@ export default function NoteMetadata(props: Props) {
   return (
     <div className="p-2 text-xs text-gray-600 border-t dark:border-gray-700 dark:text-gray-400">
       {ctnLen > 0 ? (<p>~{wordCount} words, {ctnLen} characters </p>) : null}
-      <p>Created: {getReadableDatetime(note.created_at)}</p>
-      <p>Modified: {getReadableDatetime(note.updated_at)}</p>
+      <p>Created: {fmtDatetime(note.created_at)}</p>
+      <p>Modified: {fmtDatetime(note.updated_at)}</p>
     </div>
   );
 }

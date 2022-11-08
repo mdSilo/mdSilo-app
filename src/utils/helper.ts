@@ -27,7 +27,7 @@ export function realDateCompare(d1: Date, d2: Date) {
   return d1.getTime() - d2.getTime();
 }
 
-export function getReadableDatetime(dateStr: string | Date) {
+export function fmtDatetime(dateStr: string | Date) {
   return new Date(dateStr).toLocaleString(undefined, {
     weekday: 'short',
     year: 'numeric',

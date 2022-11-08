@@ -38,15 +38,11 @@ export function ChannelList(props: Props) {
               }}
             >
               <div className="flex flex-row items-center justify-start mr-1">
-                <img
-                  src={ico}
-                  className="h-4 w-4 mx-1"
-                  alt=">"
-                />
-                <span className="text-sm">{title}</span>
+                <img src={ico} className="h-4 w-4 mx-1" alt=">" />
+                <span className="text-sm text-black dark:text-white">{title}</span>
               </div>
               <span className="flex items-center justify-between">
-                {unread}
+                <span className="text-sm dark:text-white">{unread}</span>
                 {ty === 'rss' 
                   ? <IconRss size={12} className="ml-1 text-orange-500" /> 
                   : <IconHeadphones size={12} className="ml-1 text-purple-500" />
@@ -65,12 +61,12 @@ export function ChannelList(props: Props) {
         <div className="flex flex-end">
           <Tooltip content="Refresh All" placement="bottom">
             <button className="cursor-pointer" onClick={refreshList}>
-              <IconRefresh size={24} className={`m-1 ${refreshing ? "spinning" : ""}`} />
+              <IconRefresh size={24} className="m-1 dark:text-white" />
             </button>
           </Tooltip>
           <Tooltip content="Manage Channel" placement="bottom">
             <button className="cursor-pointer" onClick={onShowManager}>
-              <IconSettings size={24} className="m-1" />
+              <IconSettings size={24} className="m-1 dark:text-white" />
             </button>
           </Tooltip>
         </div>
@@ -78,7 +74,7 @@ export function ChannelList(props: Props) {
       {refreshing && (
         <div className="flex flex-col items-center justify-center">
           <Spinner className="w-4 h-4" />
-          <span className="">{doneNum}/{channelList.length}</span>
+          <span className="dark:text-white">{doneNum}/{channelList.length}</span>
         </div>
       )}
       <div className="p-1">
@@ -88,7 +84,7 @@ export function ChannelList(props: Props) {
         >
           <div className="flex flex-row items-center justify-start">
             <IconStar size={18} className="m-1 fill-yellow-500 text-yellow-500" />
-            <span className="m-1">Starred</span>
+            <span className="m-1 dark:text-white">Starred</span>
           </div>
         </div>
         {renderFeedList()}

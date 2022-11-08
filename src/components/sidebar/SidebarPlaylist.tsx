@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
-import { store, useStore } from 'lib/store';
+import { useStore } from 'lib/store';
 import * as dataAgent from 'components/feed/data/dataAgent';
 import { CurrentPod as PodTreeItem } from 'components/feed/data/dataType';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -119,7 +119,7 @@ const Playitem = (
         role="button"
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={onClickItem}
-        style={{ paddingLeft: `8px` }}
+        style={{ paddingLeft: `12px` }}
         draggable={false}
       >
         <Tooltip content={node.title} placement="top">

@@ -73,7 +73,7 @@ export function FeedManager(props: Props) {
       {showAdd && (
         <div className="flex flex-col w-full p-4 outline outline-2 outline-offset-2 outline-green-500">
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="">URL</div>
+            <div className="mr-2 dark:text-white">URL</div>
             <div className="w-full">
               <input
                 type="text"
@@ -86,7 +86,7 @@ export function FeedManager(props: Props) {
             </div>
           </div>
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="">Title</div>
+            <div className="mr-2 dark:text-white">Title</div>
             <div className="w-full">
               <input
                 type="text"
@@ -99,7 +99,7 @@ export function FeedManager(props: Props) {
             </div>
           </div>
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="mr-2">Type</div>
+            <div className="mr-2 dark:text-white">Type</div>
             <div className="w-full flex flex-row items-center justify-start">
               <input 
                 type="radio" 
@@ -109,7 +109,7 @@ export function FeedManager(props: Props) {
                 value="RSS" 
                 onChange={() => setFeedType('rss')} 
               />
-              <label className="mr-4 text-sm" htmlFor="feedType1">RSS</label>
+              <label className="mr-4 text-sm dark:text-white" htmlFor="feedType1">RSS</label>
               <input 
                 type="radio" 
                 className="m-1 text-sm"
@@ -118,19 +118,19 @@ export function FeedManager(props: Props) {
                 value="Podcast" 
                 onChange={() => setFeedType('podcast')} 
               />
-              <label className="text-sm" htmlFor="feedType2">Podcast</label>
+              <label className="text-sm dark:text-white" htmlFor="feedType2">Podcast</label>
             </div>
           </div>
           <div className="w-full my-1">{description}</div>
-          <div className="my-1 flex flex-row items-center justify-start">
-            <button className="mr-2 m-btn0" onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
-            <button className="mx-2 m-btn1" onClick={handleCancel}>Cancel</button>
-            <button className="mx-2 m-btn2" onClick={handleSave}>{confirming ? 'Saving..' : 'OK'}</button>
+          <div className="my-1 flex flex-row items-center justify-center">
+            <button className="mr-3 m-btn0" onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
+            <button className="mx-3 m-btn1" onClick={handleCancel}>Cancel</button>
+            <button className="mx-3 m-btn2" onClick={handleSave}>{confirming ? 'Saving..' : 'OK'}</button>
           </div>
         </div>
       )}
       <div className="flex flex-row items-center justify-between w-full mt-2">
-        <Tooltip content="Toggle Add Feed" placement="bottom">
+        <Tooltip content="Add Feed" placement="bottom">
           <button
             className="px-2 py-1 text-sm text-black rounded bg-primary-200 hover:bg-primary-100"
             onClick={() => setShowAdd(!showAdd)}
@@ -166,11 +166,11 @@ export function FeedManager(props: Props) {
                   ? <IconRss size={12} className="mr-1 text-orange-500" /> 
                   : <IconHeadphones size={12} className="mr-1 text-purple-500" />
                 }
-                {channel.title}
+                <span className="text-sm dark:text-white">{channel.title}</span>
               </span>
-              <span>{channel.link}</span>
+              <span className="text-sm dark:text-white">{channel.link}</span>
               <button className="cursor-pointer" onClick={async () => await handleDelete(channel)}>
-                <IconTrash size={18} className="m-1" />
+                <IconTrash size={18} className="m-1 dark:text-white" />
               </button>
             </div>
           )
