@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import { useMemo, useEffect } from 'react';
-import classNames from 'classnames';
 import 'styles/styles.css';
 import 'tippy.js/dist/tippy.css';
 import { ProvideCurrentView } from 'context/useCurrentView';
@@ -82,7 +81,7 @@ const App = () => {
     };
   }, []);
 
-  const appContainerClassName = classNames('h-screen flex flex-col', { dark: darkMode });
+  const appContainerClassName = `h-screen flex flex-col ${darkMode ? 'dark' : ''}`;
 
   return (
     <ProvideCurrentView>

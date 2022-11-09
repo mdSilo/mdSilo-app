@@ -19,12 +19,8 @@ export function strToDate(str: string) {
   return date;
 }
 
-export function dateCompare(d1: string, d2: string) {
+export function dateCompare(d1: string | Date, d2: string | Date) {
   return new Date(d1).getTime() - new Date(d2).getTime();
-}
-
-export function realDateCompare(d1: Date, d2: Date) {
-  return d1.getTime() - d2.getTime();
 }
 
 export function fmtDatetime(dateStr: string | Date) {

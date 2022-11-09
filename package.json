@@ -28,9 +28,8 @@
     "@tabler/icons": "^1.101.0",
     "@tailwindcss/forms": "^0.5.3",
     "@tailwindcss/typography": "^0.5.7",
-    "@tauri-apps/api": "^1.1.0",
+    "@tauri-apps/api": "^1.2.0",
     "@tippyjs/react": "^4.2.6",
-    "classnames": "^2.3.2",
     "d3-drag": "^3.0.0",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
@@ -52,7 +51,7 @@
     "zustand": "^3.7.2"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.1.1",
+    "@tauri-apps/cli": "^1.2.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^12.1.4",
     "@types/d3-drag": "^3.0.1",

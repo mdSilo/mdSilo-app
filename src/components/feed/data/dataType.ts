@@ -1,5 +1,5 @@
 export interface ChannelType {
-  id?: number;
+  id: number;
   title: string;
   link: string;
   description?: string;
@@ -9,7 +9,7 @@ export interface ChannelType {
 }
 
 export interface ArticleType {
-  id?: number;
+  id: number;
   title: string;
   url: string;
   feed_link: string;

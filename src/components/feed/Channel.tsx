@@ -2,7 +2,7 @@ import React, { memo, useEffect, useState } from "react";
 import { IconCircle, IconCircleCheck, IconRefresh } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
-import { fmtDatetime } from 'utils/helper';
+import { fmtDatetime, dateCompare } from 'utils/helper';
 import { ArticleType, ChannelType } from "./data/dataType";
 
 
@@ -32,7 +32,7 @@ export function Channel(props: Props) {
 
   return (
     <div className="flex flex-col items-between justify-center">
-      <div className="flex flex-row items-center justify-between px-2 bg-gray-500">
+      <div className="flex flex-row items-center justify-between p-2 bg-slate-500 rounded">
         <div className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</div>
         {(channel) && (
           <div className="flex flex-row items-center justify-end">
@@ -72,9 +72,20 @@ function ArticleList(props: ListProps) {
     await onClickArticle(article);
   };
 
+  const sortedArticles = articles.length >= 2 
+    ? articles.sort((n1, n2) => {
+        return n2.published && n1.published 
+          ? dateCompare(n2.published, n1.published)
+          : 0;
+      })
+      .sort((n1, n2) => n1.read_status - n2.read_status)
+    : articles;
+
+  // console.log("sorted: ", sortedArticles)
+
   return (
     <div className="">
-      {articles.map((article: ArticleType, idx: number) => {
+      {sortedArticles.map((article: ArticleType, idx: number) => {
         return (
           <ArticleItem
             key={`${article.id}=${idx}`}
@@ -109,7 +120,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
     setReadStatus(article.read_status);
   }, [article.read_status])
 
-  const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-400 ${highlight ? 'bg-blue-400' : ''}`;
+  const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-200 dark:hover:bg-gray-800 ${highlight ? 'bg-blue-200 dark:bg-blue-800' : ''}`;
 
   return (
     <div

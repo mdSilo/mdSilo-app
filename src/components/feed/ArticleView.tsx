@@ -75,7 +75,7 @@ export function ArticleView(props: ViewProps) {
           />
         )}
         <div
-          className="text-lg px-2 content text-black dark:text-slate-400"
+          className="text-lg p-2 mt-2 content text-black dark:text-slate-400"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{__html: pageContent}}
         />

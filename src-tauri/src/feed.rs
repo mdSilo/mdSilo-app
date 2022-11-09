@@ -26,6 +26,8 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
           Err(_) => return None,
         };
 
+        // println!("reqwest conten: {:?}", content);
+
         match rss::Channel::read_from(&content[..]).map(|channel| channel) {
           Ok(channel) => Some(channel),
           Err(_) => None,
@@ -125,6 +127,7 @@ pub async fn fetch_feed(url: String) -> Option<RssResult> {
 #[command]
 pub async fn add_channel(url: String, ty: String, title: Option<String>) -> usize {
   let res = fetch_rss(&url).await;
+  // println!("add channel res: {:?}", res);
 
   match res {
     Some(res) => {
@@ -132,6 +135,7 @@ pub async fn add_channel(url: String, ty: String, title: Option<String>) -> usiz
       // the input feed url may not be same as fetched feed link
       // input feed url as the real rss url
       let articles = new_article_list(&url, &res);
+      // println!("add articles: {:?}", articles.first());
 
       db::add_channel(channel, articles)
     }

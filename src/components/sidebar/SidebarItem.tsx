@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import { ForwardedRef, forwardRef, HTMLAttributes, memo } from 'react';
 
 interface SidebarItemProps extends HTMLAttributes<HTMLDivElement> {

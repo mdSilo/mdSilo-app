@@ -4,6 +4,7 @@ import React, {
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import { useStore } from 'lib/store';
+import { dateCompare } from 'utils/helper';
 import * as dataAgent from 'components/feed/data/dataAgent';
 import { PodType as PodTreeItem } from 'components/feed/data/dataType';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -51,9 +52,17 @@ type TreeProps = {
 function Playlist(props: TreeProps) {
   const { data, currentPod, className = '' } = props;
 
+  const sortedData = data.length >= 2 
+    ? data.sort((n1, n2) => {
+        return n2.published && n1.published 
+          ? dateCompare(n2.published, n1.published)
+          : 0;
+      })
+    : data;
+
   const Row = useCallback(
     ({ index, style }: {index: number; style: React.CSSProperties}) => {
-      const node = data[index];
+      const node = sortedData[index];
       return (
         <PlayItem
           key={`${node.title}-${index}`}
