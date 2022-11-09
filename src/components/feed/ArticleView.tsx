@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { IconChevronLeft, IconLink, IconStar } from "@tabler/icons";
+import { IconChevronLeft, IconHeadphones, IconLink, IconStar } from "@tabler/icons";
 import { useStore } from "lib/store";
 import { getFavicon, fmtDatetime } from "utils/helper";
 import { ArticleType } from "./data/dataType";
@@ -42,8 +42,8 @@ export function ArticleView(props: ViewProps) {
 
   return (
     <div className="border-l-2 border-gray-500">
-      <div className="sticky top-0 px-2 mb-2 bg-gray-200 dark:bg-gray-600">
-        <div className="text-3xl font-bold">{title}</div>
+      <div className="px-2 mb-1">
+        <div className="text-3xl font-bold dark:text-white">{title}</div>
         <div className="flex items-center justify-start">
           <span className="mr-2 my-1 cursor-pointer" onClick={hideChannelCol}>
             <IconChevronLeft size={20} className="dark:text-slate-400" />
@@ -57,7 +57,7 @@ export function ArticleView(props: ViewProps) {
             rel="noreferrer"
             href={url}
           >
-            <IconLink size={18} />
+            <IconLink size={20} />
           </a>
           <span 
             className="m-1 cursor-pointer" 
@@ -66,18 +66,19 @@ export function ArticleView(props: ViewProps) {
               setIsStar(!isStar);
             }}
           >
-            <IconStar size={18} className={`text-red-500 ${isStar ? 'fill-red-500' : ''}`} />
+            <IconStar size={20} className={`text-red-500 ${isStar ? 'fill-red-500' : ''}`} />
           </span>
+          {article.audio_url.trim() && (
+            <span 
+              className="m-1 cursor-pointer" 
+              onClick={() => setCurrentPod({title, url: article.audio_url, published: article.published})}
+            >
+              <IconHeadphones size={20} color="purple" />
+            </span>
+          )}
         </div>
       </div>
       <div className="p-2">
-        {article.audio_url.trim() && (
-          <audio 
-            controls 
-            src={article.audio_url} 
-            onPlay={() => setCurrentPod({title, url: article.audio_url, published: article.published})}
-          />
-        )}
         <div
           className="text-lg p-2 mt-2 content text-black dark:text-slate-400"
           // eslint-disable-next-line react/no-danger

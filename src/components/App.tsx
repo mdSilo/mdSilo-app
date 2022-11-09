@@ -89,9 +89,11 @@ const App = () => {
         <div className="flex w-full h-full dark:bg-gray-900">
           <SideMenu />
           <Sidebar />
-          <div className="relative flex flex-col flex-1 overflow-y-auto">
+          <div className="flex flex-col">
             <div className="flex items-center justify-center"><StatusBar /></div>
-            <MainView />
+            <div className="relative flex flex-col flex-1 overflow-y-auto">
+              <MainView />
+            </div>
           </div>
           {isFindOrCreateModalOpen ? (
             <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />
