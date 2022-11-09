@@ -72,7 +72,7 @@ function Playlist(props: TreeProps) {
         />
       );
     },
-    [data, currentPod]
+    [sortedData, currentPod]
   );
 
   return (
