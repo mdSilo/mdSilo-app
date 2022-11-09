@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { IconLink, IconStar } from "@tabler/icons";
+import { IconChevronLeft, IconLink, IconStar } from "@tabler/icons";
 import { useStore } from "lib/store";
 import { getFavicon, fmtDatetime } from "utils/helper";
 import { ArticleType } from "./data/dataType";
@@ -7,10 +7,11 @@ import { ArticleType } from "./data/dataType";
 type ViewProps = {
   article: ArticleType | null;
   starArticle: (url: string, status: number) => Promise<void>;
+  hideChannelCol: () => void;
 };
 
 export function ArticleView(props: ViewProps) {
-  const { article, starArticle } = props;
+  const { article, starArticle, hideChannelCol } = props;
   const [isStar, setIsStar] = useState(article?.star_status === 1);
   const [pageContent, setPageContent] = useState("");
 
@@ -44,6 +45,9 @@ export function ArticleView(props: ViewProps) {
       <div className="sticky top-0 px-2 mb-2 bg-gray-200 dark:bg-gray-600">
         <div className="text-3xl font-bold">{title}</div>
         <div className="flex items-center justify-start">
+          <span className="mr-2 my-1 cursor-pointer" onClick={hideChannelCol}>
+            <IconChevronLeft size={20} className="dark:text-slate-400" />
+          </span>
           <span className="h-4 w-4 m-1"><img src={ico} alt="#"/></span>
           <span className="m-1 dark:text-slate-400">{fmtDatetime(published || '')}</span>
           <span className="m-1 dark:text-slate-400">{author}</span>

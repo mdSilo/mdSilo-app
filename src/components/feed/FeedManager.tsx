@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IconHeadphones, IconPlus, IconRss, IconTrash } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
 import * as dataAgent from "./data/dataAgent";
@@ -26,6 +26,10 @@ export function FeedManager(props: Props) {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+   setRealList(channelList);
+  }, [channelList]);
 
   const handleLoad = async () => {
     setLoading(true);
@@ -120,7 +124,7 @@ export function FeedManager(props: Props) {
               <label className="text-sm dark:text-white" htmlFor="feedType2">Podcast</label>
             </div>
           </div>
-          <div className="w-full my-1">{description}</div>
+          <div className="w-full m-1 dark:text-white">{description}</div>
           <div className="my-1 flex flex-row items-center justify-center">
             <button className="mr-3 m-btn0" onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
             <button className="mx-3 m-btn1" onClick={handleCancel}>Cancel</button>

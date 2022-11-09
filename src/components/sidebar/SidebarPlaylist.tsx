@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
+import { IconHeadphones } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import { dateCompare } from 'utils/helper';
 import * as dataAgent from 'components/feed/data/dataAgent';
@@ -128,9 +129,12 @@ const Playitem = (
         role="button"
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
         onClick={onClickItem}
-        style={{ paddingLeft: `12px` }}
+        style={{ paddingLeft: `8px` }}
         draggable={false}
       >
+        <div className="p-1 mr-1 rounded">
+          <IconHeadphones size={16} color="red" />
+        </div>
         <Tooltip content={node.title} placement="top">
           <span className="overflow-hidden overflow-ellipsis whitespace-nowrap text-sm">
             {node.title}

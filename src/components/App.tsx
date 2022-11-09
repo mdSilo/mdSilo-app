@@ -105,7 +105,6 @@ const App = () => {
             handleClose={() => setIsAboutOpen(false)} 
           />
         </div>
-        
       </div>
     </ProvideCurrentView>
   )

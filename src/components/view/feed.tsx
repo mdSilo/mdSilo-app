@@ -137,12 +137,15 @@ export default function Feed() {
     await dataAgent.updateArticleStarStatus(url, status);
   };
 
-  // TODO: handle minimize sub-window
+  const [hideCol, setHideCol] = useState(false);
+  const hideChannelCol = () => {
+    setHideCol(!hideCol);
+  };
 
   return (
     <ErrorBoundary>
       <div className="flex flex-row flex-shrink-0 h-screen">
-        <div className="w-48 p-1 border-r-2 border-gray-500 overflow-y-auto">
+        <div className={`w-48 p-1 border-r-2 border-gray-500 overflow-y-auto ${hideCol ? 'hidden' : ''}`}>
           <ChannelList 
             channelList={channelList} 
             refreshList={refreshList} 
@@ -163,7 +166,7 @@ export default function Feed() {
           </div>
         ) : (
           <>
-            <div className="w-72 p-1 overflow-y-auto">
+            <div className={`w-72 p-1 overflow-y-auto ${hideCol ? 'hidden' : ''}`}>
               <Channel 
                 channel={currentChannel || storeChannel} 
                 starChannel={starChannel} 
@@ -179,6 +182,7 @@ export default function Feed() {
               <ArticleView 
                 article={currentArticle || storeArticle} 
                 starArticle={updateStarStatus} 
+                hideChannelCol={hideChannelCol}
               />
             </div>
           </>
