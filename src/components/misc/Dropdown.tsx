@@ -122,16 +122,7 @@ export function DropdownItem(props: DropdownItemProps) {
   return (
     <Menu.Item>
       {({ active }) =>
-        props.as === 'a' ? (
-          <a
-            className={itemClassName(active)}
-            href={props.href}
-            target={target}
-            rel="noopener noreferrer"
-          >
-            {children}
-          </a>
-        ) : props.as === 'link' ? (
+        (props.as === 'a' || props.as === 'link') ? (
           <a
             className={itemClassName(active)}
             href={props.href}
