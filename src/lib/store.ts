@@ -4,10 +4,10 @@ import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
-import { ChannelType, ArticleType, PodType } from 'components/feed/data/dataType';
+import { ChannelType, ArticleType, PodType } from 'types/model';
 import type { ActivityRecord } from 'components/view/HeatMap';
 import * as Storage from 'file/storage';
-import userSettingsSlice, { UserSettings } from './userSettingsSlice';
+import userSettingsSlice, { UserSettings } from './userSettings';
 
 export { default as shallowEqual } from 'zustand/shallow';
 

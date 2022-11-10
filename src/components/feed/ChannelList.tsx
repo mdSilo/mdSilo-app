@@ -3,7 +3,7 @@ import { IconHeadphones, IconRefresh, IconRss, IconSettings, IconStar } from "@t
 import { getFavicon } from "utils/helper";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
-import { ChannelType } from "./data/dataType";
+import { ChannelType } from "types/model";
 
 type Props = {
   channelList: ChannelType[];

@@ -1,11 +1,41 @@
-import { NoteTreeItem } from 'lib/store';
+// READING
+//
+export interface ChannelType {
+  id: number;
+  title: string;
+  link: string;
+  description?: string;
+  published?: string; // iso date string
+  ty: string; // podcast | rss
+  unread: number;
+}
 
-export type User = {
-  id: string;
-  subscription_id: string | null;
-  note_tree: NoteTreeItem[];
-};
+export interface ArticleType {
+  id: number;
+  title: string;
+  url: string;
+  feed_link: string;
+  audio_url: string;
+  description: string;
+  published?: Date;
+  read_status: number;
+  star_status: number;
+  content?: string;
+  author?: string;
+  image?: string;
+  source?: string;
+  links?: string[];
+  ttr?: number;
+}
 
+export interface PodType {
+  title: string;
+  url: string;
+  published?: Date;
+}
+
+// WRITING
+// 
 export type Note = {
   id: string;  // !!Important!! id === file_path
   title: string;
@@ -18,7 +48,6 @@ export type Note = {
   is_dir?: boolean;
 };
 
-export const defaultUserId = '00000000-0000-0000-0000-000000000000';
 export const defaultNote =  {
   title: 'untitled',
   content: ' ',

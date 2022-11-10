@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { store, useStore } from 'lib/store';
+import { ArticleType, ChannelType } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { ChannelList } from 'components/feed/ChannelList';
 import { Channel } from 'components/feed/Channel';
 import { ArticleView } from 'components/feed/ArticleView';
 import { FeedManager } from 'components/feed/FeedManager';
-import { ArticleType, ChannelType } from 'components/feed/data/dataType';
-import * as dataAgent from 'components/feed/data/dataAgent';
+import * as dataAgent from 'components/feed/dataAgent';
 
 export default function Feed() {
   // channel list

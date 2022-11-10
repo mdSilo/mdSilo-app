@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api";
-import { ChannelType, ArticleType } from "./dataType";
+import { ChannelType, ArticleType } from "types/model";
 
 type RssResult = {
   channel: ChannelType;

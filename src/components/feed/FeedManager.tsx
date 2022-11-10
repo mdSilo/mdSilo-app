@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { IconHeadphones, IconPlus, IconRss, IconTrash } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
-import * as dataAgent from "./data/dataAgent";
-import { ChannelType } from "./data/dataType";
+import { ChannelType } from "types/model";
+import * as dataAgent from "./dataAgent";
 
 
 type Props = {

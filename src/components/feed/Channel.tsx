@@ -3,7 +3,7 @@ import { IconCircle, IconCircleCheck, IconRefresh } from "@tabler/icons";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
 import { fmtDatetime, dateCompare } from 'utils/helper';
-import { ArticleType, ChannelType } from "./data/dataType";
+import { ArticleType, ChannelType } from "types/model";
 
 
 type Props = {

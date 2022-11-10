@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { NoteTreeItem, useStore } from 'lib/store';
-import { Sort } from 'lib/userSettingsSlice';
+import { Sort } from 'lib/userSettings';
 import { ciStringCompare, dateCompare } from 'utils/helper';
 import { onOpenFile, onListDir } from 'editor/hooks/useOpen';
 import ErrorBoundary from '../misc/ErrorBoundary';

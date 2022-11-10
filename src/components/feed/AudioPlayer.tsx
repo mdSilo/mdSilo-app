@@ -1,6 +1,6 @@
 import { IconPlaylist } from '@tabler/icons';
 import { SidebarTab, store } from 'lib/store';
-import { PodType } from './data/dataType';
+import { PodType } from 'types/model';
 
 type Props = {
   currentPod: PodType | null;

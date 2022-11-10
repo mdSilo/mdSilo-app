@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { IconArrowBarToUp } from '@tabler/icons';
 import { useStore } from 'lib/store';
-import { Sort } from 'lib/userSettingsSlice';
+import { Sort } from 'lib/userSettings';
 import Tooltip from 'components/misc/Tooltip';
 import { normalizeSlash, getParentDir } from 'file/util';
 import { listDirPath } from 'editor/hooks/useOpen';
