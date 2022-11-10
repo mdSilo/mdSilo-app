@@ -330,7 +330,7 @@ function Note(props: Props) {
   }, [initDir, title]);
 
   const noteContainerClassName =
-    'flex flex-col flex-shrink-0 md:flex-shrink w-full bg-white dark:bg-black dark:text-gray-200';
+    'flex flex-col w-full bg-white dark:bg-black dark:text-gray-200';
   const errorContainerClassName = 
     `${noteContainerClassName} items-center justify-center h-full p-4`;
 
@@ -339,7 +339,7 @@ function Note(props: Props) {
   if (!isNoteExists) {
     return (
       <div className={errorContainerClassName}>
-        <p>It does not look like this note exists: {noteId}</p>
+        <p>The note does not exist: {noteId}</p>
       </div>
     );
   }

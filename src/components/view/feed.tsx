@@ -144,8 +144,8 @@ export default function Feed() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-row flex-shrink-0 h-screen">
-        <div className={`w-48 p-1 border-r-2 border-gray-500 overflow-y-auto ${hideCol ? 'hidden' : ''}`}>
+      <div className="flex flex-row overflow-y-auto h-full">
+        <div className={`w-48 p-1 border-r-2 border-gray-200 dark:border-gray-800 overflow-y-auto ${hideCol ? 'hidden' : ''}`}>
           <ChannelList 
             channelList={channelList} 
             refreshList={refreshList} 
@@ -178,7 +178,7 @@ export default function Feed() {
                 syncing={syncing}
               />
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto border-l-2 border-gray-200 dark:border-gray-800">
               <ArticleView 
                 article={currentArticle || storeArticle} 
                 starArticle={updateStarStatus} 

@@ -50,14 +50,11 @@ function DefaultView() {
 }
 
 const defaultValue = `
-A lightweight, local-first personal wik and knowledge base for storing ideas, thought, knowledge with a powerful all-in-one writing tool. Use it to organize writing, network thoughts and build a Second Brain on top of local plain text Markdown files.
+A lightweight, local-first personal Wiki and knowledge base for storing ideas, thought, knowledge with the powerful all-in-one reading/writing tool. Use it to organize writing, network thoughts and build a Second Brain on top of local plain text Markdown files.
 
-:::info
-This is an editable demo.
-:::
-
-## Features
-  - 🔀 All-In-One Editor: Markdown, WYSIWYG, MindMap...  
+## Features  
+  - ➰ I/O: Feed & Podcast client(Input) and Personal Wiki(Output); 
+  - 🔀 All-In-One Editor: Markdown, WYSIWYG, Mind Map...  
   - 📝 Markdown and extensions: Math/Chemical Equation, Diagram, Hashtag...   
   - 🗄️ Build personal wiki with bidirectional wiki links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...   
