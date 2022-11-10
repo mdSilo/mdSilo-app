@@ -45,7 +45,7 @@ pub struct FileMetaData {
   pub is_hidden: bool,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Default)]
 pub struct FolderData {
   pub number_of_files: u16,
   pub files: Vec<FileMetaData>,

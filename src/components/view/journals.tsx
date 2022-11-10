@@ -4,7 +4,7 @@ import { useStore } from 'lib/store';
 import { Note } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import FindOrCreateInput from 'components/note/NoteNewInput';
-import { realDateCompare, regDateStr, strToDate } from 'utils/helper';
+import { dateCompare, regDateStr, strToDate } from 'utils/helper';
 import { openFilePath } from "file/open";
 
 export default function Journals() {
@@ -13,7 +13,7 @@ export default function Journals() {
   const notesArr = Object.values(notes);
   const dailyNotes = notesArr.filter(n => regDateStr.test(n.title));
   dailyNotes.sort(
-    (n1, n2) => realDateCompare(strToDate(n2.title), strToDate(n1.title))
+    (n1, n2) => dateCompare(strToDate(n2.title), strToDate(n1.title))
   );
 
   return (

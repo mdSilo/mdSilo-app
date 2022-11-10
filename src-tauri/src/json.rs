@@ -56,7 +56,7 @@ pub async fn load_dir_recursively(
   tree: &mut NoteTree
 ) {
   // get files
-  let dir_data = read_directory(dir).await.unwrap();
+  let dir_data = read_directory(dir).await.unwrap_or_default();
   let files = dir_data.files.iter().filter(|f| !f.is_hidden);
   // loop 
   let mut tree_items = Vec::new();

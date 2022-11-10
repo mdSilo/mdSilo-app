@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
-  IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, IconFileImport, 
+  IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, IconFileImport, IconRss, 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
@@ -20,6 +20,9 @@ export default function SideMenu() {
   const currentView = useCurrentViewContext();
   const viewTy = currentView.state.view;
   const dispatch = currentView.dispatch;
+  const dispatchFeed = useCallback(
+    () => dispatch({view: 'feed'}), [dispatch]
+  );
   const dispatchChron = useCallback(
     () => dispatch({view: 'chronicle'}), [dispatch]
   );
@@ -33,6 +36,10 @@ export default function SideMenu() {
   const hotkeys = useMemo(
     () => [
       {
+        hotkey: 'mod+shift+r',
+        callback: dispatchFeed,
+      },
+      {
         hotkey: 'mod+shift+g',
         callback: dispatchGraph,
       },
@@ -45,7 +52,7 @@ export default function SideMenu() {
         callback: dispatchTask,
       },
     ],
-    [dispatchGraph, dispatchChron, dispatchTask]
+    [dispatchFeed, dispatchGraph, dispatchChron, dispatchTask]
   );
   useHotkeys(hotkeys);
 
@@ -53,6 +60,10 @@ export default function SideMenu() {
     <div className="flex flex-col h-full">
       <Logo />
       <OpenButton />
+      <FeedButton 
+        viewTy={viewTy} 
+        onDispatch={dispatchFeed} 
+      />
       <NewButton />
       <ChronButton 
         viewTy={viewTy} 
@@ -125,6 +136,30 @@ type ButtonProps = {
   onDispatch: () => void;
 };
 
+const FeedButton = (props: ButtonProps) => {
+  const { viewTy, onClick, onDispatch } = props;
+
+  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+
+  const onViewFeed = useCallback(() => {
+    setIsSidebarOpen(false);
+    onDispatch();
+  }, [setIsSidebarOpen, onDispatch]);
+
+  return (
+    <SidebarItem isHighlighted={viewTy === 'feed'} onClick={onClick}>
+      <Tooltip
+        content="Feed (Ctrl+Shift+R)"
+        placement="right"
+      >
+        <button className={btnClass} onClick={onViewFeed}>
+          <IconRss size={24} className="flex-shrink-0 mx-1 text-orange-600" />
+        </button>
+      </Tooltip>
+    </SidebarItem>
+  );
+}
+
 const GraphButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
@@ -133,7 +168,6 @@ const GraphButton = (props: ButtonProps) => {
       <Tooltip
         content="Visualization of networked writing (Ctrl+Shift+G)"
         placement="right"
-        touch={true}
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconDna size={24} className={btnIconClass} />
@@ -151,7 +185,6 @@ const ChronButton = (props: ButtonProps) => {
       <Tooltip
         content="Chronicle View (Ctrl+Shift+C)"
         placement="right"
-        touch={true}
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconCalendar size={24} className={btnIconClass} />
@@ -169,7 +202,6 @@ const TaskButton = (props: ButtonProps) => {
       <Tooltip
         content="Tasks View (Ctrl+Shift+T)"
         placement="right"
-        touch={true}
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconCheckbox size={24} className={btnIconClass} />
@@ -229,7 +261,7 @@ const FileButton = () => {
       {({ open }) => (
         <>
           <Menu.Button ref={btnRef} className="hover:bg-gray-200 dark:hover:bg-gray-700">
-            <Tooltip content="File Menu" placement="right" touch={true}>
+            <Tooltip content="File Menu" placement="right">
               <span className={btnClass}>
                 <IconFile size={24} className={btnIconClass} />
               </span>

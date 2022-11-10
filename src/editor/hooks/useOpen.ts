@@ -112,6 +112,7 @@ export const openJsonFile = async () => {
 
 export const onSave = async () => {
   const dir = await saveDilog('mdsiloFolder');
+  if (!dir) return;
   const normalizedDir = normalizeSlash(dir);
   // console.log("save dir path", dir, normalizedDir);
   const notesObj = store.getState().notes;

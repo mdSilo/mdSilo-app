@@ -68,9 +68,7 @@ const SidebarNoteLink = (
         style={{ paddingLeft: `${leftPadding}px` }}
         draggable={false}
       >
-        <div
-          className="p-1 mr-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
-        >
+        <div className="p-1 mr-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
           {isDir ? (
             <IconCaretRight
               className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${!node.collapsed ? 'rotate-90' : ''}`}

@@ -4,6 +4,7 @@ import { persist, StateStorage } from 'zustand/middleware';
 import produce, { Draft } from 'immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
+import { ChannelType, ArticleType, PodType } from 'components/feed/data/dataType';
 import type { ActivityRecord } from 'components/view/HeatMap';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettingsSlice';
@@ -60,6 +61,7 @@ export enum SidebarTab {
   Silo,
   Search,
   Hashtag,
+  Playlist,
 }
 
 export type Store = {
@@ -93,6 +95,15 @@ export type Store = {
   setIsLoaded: Setter<boolean>;
   currentDir: string | undefined;  // dir path
   setCurrentDir: Setter<string | undefined>;
+  // input end
+  currentChannel: ChannelType | null;  // feed channel
+  setCurrentChannel: Setter<ChannelType | null>;
+  currentArticle: ArticleType | null;  
+  setCurrentArticle: Setter<ArticleType | null>;
+  currentArticles: ArticleType[] | null;  
+  setCurrentArticles: Setter<ArticleType[] | null>;
+  currentPod: PodType | null; 
+  setCurrentPod: Setter<PodType | null>;
 } & UserSettings;
 
 type FunctionPropertyNames<T> = {
@@ -209,6 +220,15 @@ export const store = createVanilla<Store>(
       setIsLoaded: setter(set, 'isLoaded'),
       currentDir: undefined,
       setCurrentDir: setter(set, 'currentDir'),
+      // input end
+      currentChannel: null,
+      setCurrentChannel: setter(set, 'currentChannel'),
+      currentArticle: null,
+      setCurrentArticle: setter(set, 'currentArticle'),
+      currentArticles: null,
+      setCurrentArticles: setter(set, 'currentArticles'),
+      currentPod: null,
+      setCurrentPod: setter(set, 'currentPod'),
       ...userSettingsSlice(set),
     })),
     {

@@ -26,6 +26,18 @@
     @apply px-2 py-2 text-sm text-black rounded shadow bg-green-200 hover:bg-green-100;
   }
 
+  .m-btn0 {
+    @apply px-2 py-1 text-xs text-black rounded shadow bg-green-200 hover:bg-green-100;
+  }
+
+  .m-btn1 {
+    @apply px-2 py-1 text-xs text-black rounded shadow bg-blue-200 hover:bg-blue-100;
+  }
+
+  .m-btn2 {
+    @apply px-2 py-1 text-xs text-black rounded shadow bg-orange-200 hover:bg-orange-100;
+  }
+
   .card {
     @apply max-w-md p-8 overflow-hidden bg-white rounded shadow-md;
   }
@@ -46,6 +58,49 @@
       radial-gradient(circle farthest-side at left,#000 99%,#0000) 100% 0/46% 92% no-repeat;
     -webkit-mask: var(--m);
             mask: var(--m);
+  }
+
+  .content {
+    line-height: 1.8;
+  }
+  .content a {
+    color: green;
+  }
+  .content h1, .content h2, .content h3, .content h4, .content h5 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  .content pre {
+    white-space: break-spaces;
+  }
+  .content img, .content video {
+    display: block;
+    max-width: 100% !important;
+    height: auto;
+    margin: 10px auto;
+  }
+  .content blockquote {
+    font-weight: 400;
+    margin: 2rem 0;
+    padding-left: 1rem;
+    border-left: 6px solid greenyellow;
+  }
+  .content p {
+    line-height: 1.6;
+    font-weight: 400;
+    font-size: 18px;
+    margin: 1.2rem 0;
+  }
+  .content table, .content th, .content td {
+    border: 1px solid;
+    padding: 6px;
+  }
+  .content hr {
+    margin: 2.4rem 0;
+  }
+  .content figcaption {
+    text-align: center;
+    color: #f4f4f5;
   }
 }
 

@@ -19,12 +19,19 @@ export function strToDate(str: string) {
   return date;
 }
 
-export function dateCompare(d1: string, d2: string) {
+export function dateCompare(d1: string | Date, d2: string | Date) {
   return new Date(d1).getTime() - new Date(d2).getTime();
 }
 
-export function realDateCompare(d1: Date, d2: Date) {
-  return d1.getTime() - d2.getTime();
+export function fmtDatetime(dateStr: string | Date) {
+  return new Date(dateStr).toLocaleString(undefined, {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export function decodeHTMLEntity(text: string) {
@@ -101,6 +108,11 @@ export const isUrl = (str: string) => {
   }
 
   return url.protocol === 'http:' || url.protocol === 'https:';
+};
+
+export const getFavicon = (url: string) => {
+  const hostname = url ? new URL(url).hostname : "";
+  return "https://icons.duckduckgo.com/ip3/" + hostname + ".ico";
 };
 
 export const queryParamToArray = (
