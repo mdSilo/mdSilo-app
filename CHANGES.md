@@ -4,7 +4,9 @@
 
 ### Features 
 
-- [ ] Input end 
+#### Input end 
+- [X] RSS reader  
+- [X] Podcast client 
 
 ## [app-v0.4.9] - 2022-XX-XX 
 

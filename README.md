@@ -34,7 +34,7 @@ BTW, [Web app is here](https://mdsilo.com/app)
 - [X] RSS reader  
 - [X] Podcast client  
 - [ ] Support Atom, JSON feed  
-- [ ] View and annotate PDF and epub  
+- [ ] View and annotate PDF/epub  
 
 ### Output end
 
@@ -80,6 +80,11 @@ BTW, [Web app is here](https://mdsilo.com/app)
   - [ ] Flashcards 
   - [ ] Export as PDF,HTML, ... 
   - [ ] Version control: git integration 
+
+### Cross
+
+- Input --flow--> Output
+  - [ ] ... 
 
 - Cross-Platform 
   - [x] Windows, macOS, Linux. 
