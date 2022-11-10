@@ -2,7 +2,7 @@ import { getVersion, getTauriVersion } from '@tauri-apps/api/app';
 import { writeText } from '@tauri-apps/api/clipboard';
 import { useState, useEffect } from 'react';
 import { openUrl } from 'file/open';
-import { getLog, clearLog } from 'file/log';
+import { getLog, clearLog } from 'file/storage';
 import { BaseModal } from './BaseModal';
 
 

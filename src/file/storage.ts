@@ -7,10 +7,6 @@ interface StorageData {
   data: JSON;
 }
 
-export interface LocalData {
-  [key: string]: any;
-}
-
 /**
  * Set data to local storage
  * @param {string} key 
@@ -55,3 +51,39 @@ export const remove = async (key: string): Promise<void> => {
 
 // eslint-disable-next-line import/no-anonymous-default-export
 export default { set, get, remove };
+
+
+// for Log 
+//
+type LogItem = {
+  ty: string;
+  info: string;
+  timestamp: string; // Date 
+};
+
+/**
+ * Write a log
+ * @param {string} ty - log type: info, error, warning, ..
+ * @param {string} info - log information
+ * @returns {Promise<void>}
+ */
+export const setLog = async (ty: string, info: string): Promise<boolean> => {
+  const logData: LogItem[] = [{ ty, info, timestamp: new Date().toLocaleString() }];
+  return await invoke('set_log', { logData });
+};
+
+/**
+ * Get the logs 
+ * @returns {Promise<LogItem[]>}
+ */
+export const getLog = async (): Promise<LogItem[]> => {
+  return await invoke('get_log');
+};
+
+/**
+ * clear the logs 
+ * @returns void
+ */
+export const clearLog = async (): Promise<void> => {
+  return await invoke('del_log');
+};

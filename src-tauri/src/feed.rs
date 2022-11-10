@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use reqwest;
 use serde::{Serialize, Deserialize};
+use chrono::offset::Local;
 use tauri::command;
 
 use crate::db;
 use crate::models::{Channel, NewChannel, NewArticle, Article};
+use crate::storage::do_log;
 
 // # process rss feed #
 // TODO: atom, json
@@ -15,7 +17,14 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
 
   let response = match client {
     Ok(cl) => cl.get(url).send().await,
-    Err(_) => return None,
+    Err(e) => {
+      do_log(
+        "Error".to_string(), 
+        format!("Err on fecth feed, reqwest client: {:?}", e), 
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+      );
+      return None;
+    },
   };
 
   match response {
@@ -23,19 +32,50 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
       reqwest::StatusCode::OK => {
         let content = match response.bytes().await {
           Ok(ctn) => ctn,
-          Err(_) => return None,
+          Err(e) => {
+            do_log(
+              "Error".to_string(), 
+              format!("Err on fecth feed, process response bytes: {:?}", e), 
+              format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+            );
+            return None;
+          },
         };
 
         // println!("reqwest conten: {:?}", content);
 
         match rss::Channel::read_from(&content[..]).map(|channel| channel) {
           Ok(channel) => Some(channel),
-          Err(_) => None,
+          Err(e) => {
+            do_log(
+              "Error".to_string(), 
+              format!("Err on fecth feed, get channel from content: {:?}", e), 
+              format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+            );
+
+            None
+          },
         }
       },
-      _ => None,
+      _status => {
+        do_log(
+          "Error".to_string(), 
+          format!("Err on fecth feed, response status: {}", _status), 
+          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+        );
+
+        None
+      },
     },
-    Err(_) => None,
+    Err(e) => {
+      do_log(
+        "Error".to_string(), 
+        format!("Err on fecth feed, get response: {:?}", e), 
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+      );
+
+      None
+    },
   }
 }
 

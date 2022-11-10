@@ -38,7 +38,7 @@ fn main() {
   let mut connection = db::establish_connection();
   connection
     .run_pending_migrations(MIGRATIONS)
-    .expect("Error migrating");
+    .expect("Error on migrating");
 
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
@@ -77,6 +77,9 @@ fn main() {
       storage::set_data,
       storage::get_data,
       storage::delete_data,
+      storage::set_log,
+      storage::get_log,
+      storage::del_log,
       json::write_json,
       // pdf::write_to_pdf, 
     ])
