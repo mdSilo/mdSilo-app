@@ -12,7 +12,7 @@ use crate::storage::do_log;
 // TODO: atom, json
 //
 // 1- fetch: rss typed
-pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
+pub async fn process_feed(url: &str) -> Option<rss::Channel> {
   let client = reqwest::Client::builder().build();
 
   let response = match client {
@@ -20,7 +20,7 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Err on fecth feed, reqwest client: {:?}", e), 
+        format!("Err on [process_feed: reqwest {}]: {:?}", url, e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return None;
@@ -35,7 +35,7 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
           Err(e) => {
             do_log(
               "Error".to_string(), 
-              format!("Err on fecth feed, process response bytes: {:?}", e), 
+              format!("Err on [process_feed: process response bytes]: {:?}", e), 
               format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
             );
             return None;
@@ -49,7 +49,7 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
           Err(e) => {
             do_log(
               "Error".to_string(), 
-              format!("Err on fecth feed, get channel from content: {:?}", e), 
+              format!("Err on [process_feed: get channel from content] : {:?}", e), 
               format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
             );
 
@@ -60,7 +60,7 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
       _status => {
         do_log(
           "Error".to_string(), 
-          format!("Err on fecth feed, response status: {}", _status), 
+          format!("Err on [process_feed], response status: {}", _status), 
           format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
         );
 
@@ -70,7 +70,7 @@ pub async fn fetch_rss(url: &str) -> Option<rss::Channel> {
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Err on fecth feed, get response: {:?}", e), 
+        format!("Err on [process_feed: get response]: {:?}", e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
 
@@ -146,19 +146,19 @@ pub fn new_article_list(
 // # end process rss feed #
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RssResult {
+pub struct FeedResult {
   pub channel: NewChannel,
   pub articles: Vec<NewArticle>,
 }
 
 #[command]
-pub async fn fetch_feed(url: String) -> Option<RssResult> { 
-  match fetch_rss(&url).await {
+pub async fn fetch_feed(url: String) -> Option<FeedResult> { 
+  match process_feed(&url).await {
     Some(res) => {
       let channel = new_channel(&url, &res, "rss", None);
       let articles = new_article_list(&url, &res);
 
-      Some(RssResult { channel, articles })
+      Some(FeedResult { channel, articles })
     }
     None => None,
   }
@@ -166,7 +166,7 @@ pub async fn fetch_feed(url: String) -> Option<RssResult> {
 
 #[command]
 pub async fn add_channel(url: String, ty: String, title: Option<String>) -> usize {
-  let res = fetch_rss(&url).await;
+  let res = process_feed(&url).await;
   // println!("add channel res: {:?}", res);
 
   match res {
@@ -211,7 +211,7 @@ pub async fn add_articles_with_channel(link: String) -> usize {
   let channel = db::get_channel_by_link(link.clone());
   match channel {
     Some(channel) => {
-      let res = match fetch_rss(&channel.link).await {
+      let res = match process_feed(&channel.link).await {
         Some(r) => r,
         None => return 0,
       };

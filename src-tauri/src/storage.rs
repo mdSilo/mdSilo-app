@@ -35,7 +35,7 @@ pub fn set_data(key: String, value: Value) -> bool {
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Err on set storage data, serde_json::to_vec: {:?}", e), 
+        format!("Err on [set_data: serde_json::to_ve]: {:?}", e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return false;
@@ -46,7 +46,7 @@ pub fn set_data(key: String, value: Value) -> bool {
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Err on set storage data, bincode::serialize: {:?}", e), 
+        format!("Err on [set_data: bincode::serialize]: {:?}", e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return false;
@@ -70,21 +70,9 @@ pub fn get_data(key: String) -> Result<StorageData, String> {
   match fs::read(storage_dir.join(key)) {
     Ok(result) => match bincode::deserialize(&result) {
       Ok(deser_bincode) => data = deser_bincode,
-      Err(e) => {
-        do_log(
-          "Error".to_string(), 
-          format!("Err on get storage data, bincode::deserialize: {:?}", e), 
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-        );
-        data = str::from_utf8(&result).unwrap_or("").to_string();
-      },
+      Err(_e) => data = str::from_utf8(&result).unwrap_or("").to_string(),
     },
-    Err(e) => {
-      do_log(
-        "Error".to_string(), 
-        format!("Err on get storage data: read file: {:?}", e), 
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-      );
+    Err(_e) => {
       return Ok(StorageData {
         status: false,
         data: Value::Null,
@@ -94,13 +82,7 @@ pub fn get_data(key: String) -> Result<StorageData, String> {
 
   let value = match serde_json::from_str(&data) {
     Ok(result) => result,
-    Err(e) => {
-      do_log(
-        "Error".to_string(), 
-        format!("Err on get storage data, serde_json::from_str: {:?}", e), 
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-      );
-
+    Err(_e) => {
       {
         status = false;
         Value::Null

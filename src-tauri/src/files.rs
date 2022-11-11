@@ -94,7 +94,7 @@ pub fn get_basename(file_path: &str) -> (String, bool) {
       None => {
         do_log(
           "Error".to_string(), 
-          format!("Err on convert basename OsStr to str"), 
+          format!("Err on [get_basename: convert basename OsStr to str]"), 
           format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
         );
       
@@ -160,7 +160,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Err on read meatadata: {:?}", e), 
+        format!("Err on [get_simple_meta: read meatadata]: {:?}", e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return Err(format!("Err on read meatadata: {:?}", e));
@@ -172,7 +172,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
     None => {
       do_log(
         "Error".to_string(), 
-        format!("Err on normalize Path: {}", file_path), 
+        format!("Err on [get_simple_meta: normalized_path]: {}", file_path), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return Err(format!("Err on normalize Path: {}", file_path));
@@ -195,7 +195,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
       let datetime: DateTime<Local> = now.into();
       do_log(
         "Error".to_string(), 
-        format!("Error on get file modified: {:?}", e),
+        format!("Error on [get_simple_meta: get file modified]: {:?}", e),
         format!("{}", datetime.format("%m/%d/%Y %H:%M:%S"))
       );
       now
@@ -209,7 +209,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
       let datetime: DateTime<Local> = now.into();
       do_log(
         "Error".to_string(), 
-        format!("Error on get file last accessed: {:?}", e),
+        format!("Error on [get_simple_meta: get file last accessed]: {:?}", e),
         format!("{}", datetime.format("%m/%d/%Y %H:%M:%S"))
       );
       now
@@ -223,7 +223,7 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
       let datetime: DateTime<Local> = now.into();
       do_log(
         "Error".to_string(), 
-        format!("Error on get file created: {:?}", e),
+        format!("Error on [get_simple_meta: get file created]: {:?}", e),
         format!("{}", datetime.format("%m/%d/%Y %H:%M:%S"))
       );
       now
@@ -248,28 +248,33 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
 // Get meatdata of a file
 #[tauri::command]
 pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
-  let file_text = match fs::read_to_string(file_path) {
-    Ok(text) => text,
-    Err(e) => {
-      do_log(
-        "Error".to_string(), 
-        format!("Error on read file to string: {:?}", e), 
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-      );
-      String::new()
-    },
-  };
-
   let meta_data = match get_simple_meta(file_path) {
     Ok(data) => data,
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Error on get file simple meta: {:?}", e), 
+        format!("Error on [get_file_meta: get_simple_meta, {}]: {:?}", file_path, e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return Err(e);
     },
+  };
+
+  // TODO, get text if md file
+  let file_text = if meta_data.is_file {
+    match fs::read_to_string(file_path) {
+      Ok(text) => text,
+      Err(e) => {
+        do_log(
+          "Error".to_string(), 
+          format!("Error on [get_file_meta: read_to_string, {}]: {:?}", file_path, e), 
+          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+        );
+        String::new()
+      },
+    } 
+  } else {
+    String::new()
   };
 
   Ok(FileMetaData {
@@ -301,7 +306,7 @@ pub fn is_dir(path: &Path) -> Result<bool, String> {
       Err(e) => {
         do_log(
           "Error".to_string(), 
-          format!("Error on check is dir: read file metadata: {:?}", e), 
+          format!("Error on [is_dir: fs::metadata]: {:?}", e), 
           format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
         );
         Ok(false)
@@ -323,7 +328,7 @@ pub fn is_file(path: &Path) -> Result<bool, String> {
       Err(e) => {
         do_log(
           "Error".to_string(), 
-          format!("Error on check is file: read file to string: {:?}", e), 
+          format!("Error on [is_file: fs::metadata]: {:?}", e), 
           format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
         );
         Ok(false)
@@ -340,7 +345,7 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Error on read dir: {:?}", e), 
+        format!("Error on [read_directory: dir {}]: {:?}", dir, e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return Ok(FolderData::default());
@@ -356,7 +361,7 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
       Err(e) => {
         do_log(
           "Error".to_string(), 
-          format!("Error on read dir, check path: {:?}", e), 
+          format!("Error on [read_directory: check path]: {:?}", e), 
           format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
         );
         continue
@@ -388,7 +393,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Error on read dir: {:?}", e), 
+        format!("Error on [list_directory, {}]: {:?}", dir, e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return Ok(vec![]);
@@ -404,7 +409,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
       Err(e) => {
         do_log(
           "Error".to_string(), 
-          format!("Error on list dir, check path: {:?}", e), 
+          format!("Error on [list_directory: check path]: {:?}", e), 
           format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
         );
         continue
@@ -416,7 +421,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
       Err(e) => {
         do_log(
           "Error".to_string(), 
-          format!("Error on get file simple mata: {:?}", e), 
+          format!("Error on [list_directory: get_simple_mata]: {:?}", e), 
           format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
         );
         continue
@@ -461,10 +466,10 @@ pub async fn create_file(file_path: String) -> bool {
 // read file to string
 #[tauri::command]
 pub async fn read_file(file_path: String) -> String {
-  fs::read_to_string(file_path)
+  fs::read_to_string(&file_path)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("Error on read file to string: {:?}", e), 
+      format!("Error on [read_file: read_to_string, {}]: {:?}", file_path, e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(String::from(""))  // nothing
@@ -558,7 +563,7 @@ pub async fn listen_dir(
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("Err on listen dir: new watcher : {}", e), 
+        format!("Err on [listen_dir: new watcher] : {}", e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return Err(format!("new watcher err: {}", e));
@@ -575,7 +580,7 @@ pub async fn listen_dir(
     Err(e) => {
       do_log(
         "Error".to_string(), 
-        format!("lock watcher on listen err: {}", e), 
+        format!("Err on [listen_dir: lock watcher]: {}", e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       );
       return Err(format!("lock watcher on listen err: {}", e));
@@ -635,7 +640,7 @@ pub async fn listen_dir(
           Err(e) => {
             do_log(
               "Error".to_string(), 
-              format!("error on revieve event: {}", e), 
+              format!("error on [listen_dir: revieve event]: {}", e), 
               format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
             );
             return Err(format!("error on revieve event: {}", e));
@@ -645,7 +650,7 @@ pub async fn listen_dir(
       Err(e) => {
         do_log(
           "Error".to_string(), 
-          format!("error on revieve: {}", e), 
+          format!("error on [listen_dir: revieve]: {}", e), 
           format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
         );
         break Err(e.to_string());

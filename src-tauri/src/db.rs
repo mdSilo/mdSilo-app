@@ -29,7 +29,7 @@ pub fn get_channels() -> Vec<Channel> {
     .load::<Channel>(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on get channels: {:?}", e), 
+      format!("db Error on [get_channels]: {:?}", e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(vec![]);
@@ -45,7 +45,7 @@ pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
     .execute(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on add channels: {:?}", e), 
+      format!("db Error on [add_channels: insert channel]: {:?}", e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(0);
@@ -59,7 +59,7 @@ pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
     .execute(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on add articles: {:?}", e), 
+      format!("db Error on [add_channels: insert articles]: {:?}", e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(0);
@@ -76,7 +76,7 @@ pub fn delete_channel(link: String) -> usize {
     .load::<Channel>(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on load channel to del: {:?}", e), 
+      format!("db Error on [delete_channel: query channel, {}]: {:?}", link, e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(vec![]);
@@ -89,7 +89,7 @@ pub fn delete_channel(link: String) -> usize {
     .execute(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on del channel: {:?}", e), 
+      format!("db Error on [delete_channel: del channel]: {:?}", e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(0);
@@ -100,7 +100,7 @@ pub fn delete_channel(link: String) -> usize {
     .execute(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on del articles: {:?}", e), 
+      format!("db Error on [delete_channel: del articles]: {:?}", e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(0);
@@ -118,7 +118,7 @@ pub fn get_channel_by_link(link: String) -> Option<Channel> {
     .load::<Channel>(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on get channel, {}: {:?}", link, e), 
+      format!("db Error on [get_channel_by_link: {}]: {:?}", link, e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(vec![]);
@@ -148,7 +148,7 @@ pub fn get_unread_num() -> Vec<UnreadNum> {
     .load::<UnreadNum>(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on get unread num: {:?}", e), 
+      format!("db Error on [get_unread_num]: {:?}", e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(vec![]);
@@ -163,7 +163,7 @@ pub fn add_articles(feed_link: String, articles: Vec<NewArticle>) -> usize {
     .load::<Channel>(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on get channel to add articles: {:?}", e), 
+      format!("db Error on [add_articles: get channel, {}]: {:?}", feed_link, e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(vec![]);
@@ -174,7 +174,7 @@ pub fn add_articles(feed_link: String, articles: Vec<NewArticle>) -> usize {
       .execute(&mut connection)
       .map_err(|e| do_log(
         "Error".to_string(), 
-        format!("db Error on add articles to channel, {}: {:?}", feed_link, e), 
+        format!("db Error on [add_articles: to channel, {}]: {:?}", feed_link, e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       ))
       .unwrap_or(0);
@@ -192,7 +192,7 @@ pub fn get_article_by_url(url: String) -> Option<Article> {
     .load::<Article>(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on get article, {}: {:?}", url, e), 
+      format!("db Error on [get_article_by_url, {}]: {:?}", url, e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(vec![]);
@@ -217,7 +217,7 @@ pub fn update_article_read_status(url: String, status: i32) -> usize {
       .execute(&mut connection)
       .map_err(|e| do_log(
         "Error".to_string(), 
-        format!("db Error on update read status: {:?}", e), 
+        format!("db Error on [update_article_read_status: {}]: {:?}", url, e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       ))
       .unwrap_or(0)
@@ -239,7 +239,7 @@ pub fn update_article_star_status(url: String, status: i32) -> usize {
       .execute(&mut connection)
       .map_err(|e| do_log(
         "Error".to_string(), 
-        format!("db Error on update star status: {:?}", e), 
+        format!("db Error on [update_article_star_status, {}]: {:?}", url, e), 
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
       ))
       .unwrap_or(0)
@@ -258,20 +258,19 @@ pub struct ArticleFilter {
 pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
   let mut connection = establish_connection();
   let mut query = schema::articles::dsl::articles.into_boxed();
-
   // println!("filter to get articles: {:?}", filter);
 
-  if let Some(feed_link) = filter.feed_link {
+  if let Some(feed_link) = filter.feed_link.clone() {
     // println!("feed_link: {:?}", feed_link);
     query = query.filter(schema::articles::feed_link.eq(feed_link));
   }
 
-  if let Some(read_status) = filter.read_status {
+  if let Some(read_status) = filter.read_status.clone() {
     // println!("read status: {:?}", read_status);
     query = query.filter(schema::articles::read_status.eq(read_status));
   }
 
-  if let Some(star_status) = filter.star_status {
+  if let Some(star_status) = filter.star_status.clone() {
     // println!("star status: {:?}", star_status);
     query = query.filter(schema::articles::star_status.eq(star_status));
   }
@@ -280,7 +279,7 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
     .load::<Article>(&mut connection)
     .map_err(|e| do_log(
       "Error".to_string(), 
-      format!("db Error on query articles: {:?}", e), 
+      format!("db Error on [get_articles, per fileter: {:?}]: {:?}", filter, e), 
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(vec![]);
@@ -300,7 +299,7 @@ pub fn update_articles_read_status(feed_link: String, read_status: i32) -> usize
   .execute(&mut connection)
   .map_err(|e| do_log(
     "Error".to_string(), 
-    format!("db Error on update articles read status: {:?}", e), 
+    format!("db Error on [update_articles_read_status]: {:?}", e), 
     format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
   ))
   .unwrap_or(0);
