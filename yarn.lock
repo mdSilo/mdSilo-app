@@ -7782,10 +7782,10 @@ mdn-data@2.0.4:
   resolved "https://registry.npmjs.org/mdn-data/-/mdn-data-2.0.4.tgz"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
 
-mdsmap@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/mdsmap/-/mdsmap-0.0.2.tgz#5b1c3c8b6da27949af8b90bf54d67359743054b9"
-  integrity sha512-WANAdPtDboqscfEqr5tEW91IXov9Ly05AR9+jBvw0NWUJaDg6JNQnRGMfUU0c6WGgTOIM1QSaCMhEdvU246hJQ==
+mdsmap@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/mdsmap/-/mdsmap-0.0.3.tgz#1b1b6716baebd5cd284f672f97c4588d55589a2a"
+  integrity sha512-WHQ2mVP8s/t7xc/FxJUqRrGeAXg0QdZr6tpeUU2GZ8A2T/PphQj5+BTBFXhcS3uCyaw5sC5RlYOCc6/EjbKNvA==
   dependencies:
     d3 "3.5.6"
     react "^17.0.2"
