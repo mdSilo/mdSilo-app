@@ -50,6 +50,7 @@ fn main() {
       feed::delete_channel,
       feed::add_articles_with_channel,
       feed::get_articles,
+      feed::get_article_by_url,
       feed::update_article_read_status,
       feed::update_article_star_status,
       feed::get_unread_num,

@@ -250,6 +250,11 @@ pub fn get_unread_num() -> HashMap<String, i32> {
 }
 
 #[command]
+pub fn get_article_by_url(url: String) -> Option<Article> {
+  db::get_article_by_url(url)
+}
+
+#[command]
 pub fn update_article_read_status(url: String, status: i32) -> usize {
   db::update_article_read_status(url, status)
 }

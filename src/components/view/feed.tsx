@@ -141,6 +141,11 @@ export default function Feed() {
   const hideChannelCol = () => {
     setHideCol(!hideCol);
   };
+  const [isHideChannel, setIsHideChannel] = useState(false);
+  useEffect(() => {
+    const curArticles = currentArticles || storeArticles;
+    setIsHideChannel(hideCol || !(currentChannel || storeChannel) || !(curArticles && curArticles.length > 0));
+  }, [currentArticles, currentChannel, hideCol, storeArticles, storeChannel]);
 
   return (
     <ErrorBoundary>
@@ -166,7 +171,7 @@ export default function Feed() {
           </div>
         ) : (
           <>
-            <div className={`w-72 p-1 overflow-y-auto ${hideCol ? 'hidden' : ''}`}>
+            <div className={`w-72 p-1 overflow-y-auto ${isHideChannel ? 'hidden' : ''}`}>
               <Channel 
                 channel={currentChannel || storeChannel} 
                 starChannel={starChannel} 

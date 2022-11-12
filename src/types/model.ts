@@ -32,6 +32,8 @@ export interface PodType {
   title: string;
   url: string;
   published?: Date;
+  article_url: string;
+  feed_link: string;
 }
 
 // WRITING

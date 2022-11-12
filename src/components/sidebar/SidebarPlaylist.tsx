@@ -151,7 +151,13 @@ const computePlaylist = async () => {
   const articles = await dataAgent.getArticleList(null, null, null);
   const res: PodTreeItem[] = articles
     .filter(a => !!(a.audio_url.trim()))
-    .map(a => { return {title: a.title, url: a.audio_url, published: a.published}});
+    .map(a => { return {
+      title: a.title, 
+      url: a.audio_url, 
+      published: a.published, 
+      article_url: a.url, 
+      feed_link: a.feed_link
+    }});
 
   return res;
 };

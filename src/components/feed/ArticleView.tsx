@@ -71,7 +71,9 @@ export function ArticleView(props: ViewProps) {
           {article.audio_url.trim() && (
             <span 
               className="m-1 cursor-pointer" 
-              onClick={() => setCurrentPod({title, url: article.audio_url, published: article.published})}
+              onClick={() => setCurrentPod(
+                {title, url: article.audio_url, published: article.published, article_url: article.url, feed_link: article.feed_link}
+              )}
             >
               <IconHeadphones size={20} color="purple" />
             </span>

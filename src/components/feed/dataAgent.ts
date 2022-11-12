@@ -34,8 +34,8 @@ export const getArticleList = async (
   return await invoke('get_articles', { feedLink, readStatus, starStatus })
 }
 
-export const addArticlesWithChannel = async (feedLink: string): Promise<number> => {
-  return await invoke('add_articles_with_channel', { link: feedLink })
+export const getArticleByUrl = async (url: string): Promise<ArticleType | null> => {
+  return await invoke('get_article_by_url', { url })
 }
 
 export const getUnreadNum = async (): Promise<{ [key: string]: number }> => {
