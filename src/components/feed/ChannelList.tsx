@@ -37,10 +37,12 @@ export function ChannelList(props: Props) {
                 setHighlighted(channel);
               }}
             >
-              <div className="flex flex-row items-center justify-start mr-1">
-                <img src={ico} className="h-4 w-4 mx-1" alt=">" />
-                <span className="text-sm text-black dark:text-white">{title}</span>
-              </div>
+              <Tooltip content={channel.link} placement="top">
+                <div className="flex flex-row items-center justify-start mr-1">
+                  <img src={ico} className="h-4 w-4 mx-1" alt=">" />
+                  <span className="text-sm text-black dark:text-white">{title}</span>
+                </div>
+              </Tooltip>
               <span className="flex items-center justify-between">
                 <span className="text-sm dark:text-white">{unread}</span>
                 {ty === 'rss' 

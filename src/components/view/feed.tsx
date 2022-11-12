@@ -17,8 +17,6 @@ export default function Feed() {
   const [starChannel, setStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
 
-  const storeChannel = useStore(state => state.currentChannel);
-  const storeArticles = useStore(state => state.currentArticles);
   const storeArticle = useStore(state => state.currentArticle);
 
   const getList = () => {
@@ -72,7 +70,6 @@ export default function Feed() {
       setCurrentChannel(clickedChannel);
       setShowManager(false);
       await loadArticleList(clickedChannel.link);
-      store.getState().setCurrentChannel(clickedChannel);
     } 
     setLoading(false);
   };
@@ -86,8 +83,6 @@ export default function Feed() {
     const starArticles = await dataAgent.getArticleList(null, null, 1);
     setCurrentArticles(starArticles);
     setLoading(false);
-    store.getState().setCurrentChannel(null);
-    store.getState().setCurrentArticles(starArticles);
   };
 
   const handleAddFeed = async (feedUrl: string, ty: string, title: string) => {
@@ -143,9 +138,8 @@ export default function Feed() {
   };
   const [isHideChannel, setIsHideChannel] = useState(false);
   useEffect(() => {
-    const curArticles = currentArticles || storeArticles;
-    setIsHideChannel(hideCol || !(currentChannel || storeChannel) || !(curArticles && curArticles.length > 0));
-  }, [currentArticles, currentChannel, hideCol, storeArticles, storeChannel]);
+    setIsHideChannel(hideCol || !(currentArticles && currentArticles.length > 0));
+  }, [currentArticles, hideCol]);
 
   return (
     <ErrorBoundary>
@@ -173,9 +167,9 @@ export default function Feed() {
           <>
             <div className={`w-72 p-1 overflow-y-auto ${isHideChannel ? 'hidden' : ''}`}>
               <Channel 
-                channel={currentChannel || storeChannel} 
+                channel={currentChannel} 
                 starChannel={starChannel} 
-                articles={currentArticles || storeArticles}
+                articles={currentArticles}
                 handleRefresh={handleRefresh}
                 updateAllReadStatus={updateAllReadStatus}
                 onClickArticle={onClickArticle}

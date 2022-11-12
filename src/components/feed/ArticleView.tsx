@@ -3,6 +3,7 @@ import { IconChevronLeft, IconHeadphones, IconLink, IconStar } from "@tabler/ico
 import { useStore } from "lib/store";
 import { getFavicon, fmtDatetime } from "utils/helper";
 import { ArticleType } from "types/model";
+import Tooltip from "components/misc/Tooltip";
 
 type ViewProps = {
   article: ArticleType | null;
@@ -37,7 +38,7 @@ export function ArticleView(props: ViewProps) {
     );
   }
 
-  const { title, url, author, published } = article;
+  const { title, url, feed_link, author, published } = article;
   const ico = getFavicon(url);
 
   return (
@@ -48,7 +49,9 @@ export function ArticleView(props: ViewProps) {
           <span className="mr-2 my-1 cursor-pointer" onClick={hideChannelCol}>
             <IconChevronLeft size={20} className="dark:text-slate-400" />
           </span>
-          <span className="h-4 w-4 m-1"><img src={ico} alt="#"/></span>
+          <Tooltip content={feed_link} placement="top">
+            <span className="h-4 w-4 m-1"><img src={ico} alt="#"/></span>
+          </Tooltip>
           <span className="m-1 dark:text-slate-400">{fmtDatetime(published || '')}</span>
           <span className="m-1 dark:text-slate-400">{author}</span>
           <a
