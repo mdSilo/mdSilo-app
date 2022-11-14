@@ -66,6 +66,9 @@
   .content a {
     color: green;
   }
+  .content a:hover {
+    text-decoration: underline;
+  }
   .content h1, .content h2, .content h3, .content h4, .content h5 {
     padding: 12px 0;
     line-height: 1.2em;

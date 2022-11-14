@@ -44,7 +44,7 @@ export function ArticleView(props: ViewProps) {
   return (
     <div className="h-full ">
       <div className="px-2 mb-1">
-        <div className="text-3xl font-bold dark:text-white">{title}</div>
+        <div className="m-1 text-3xl font-bold dark:text-white">{title}</div>
         <div className="flex items-center justify-start">
           <span className="mr-2 my-1 cursor-pointer" onClick={hideChannelCol}>
             <IconChevronLeft size={20} className="dark:text-slate-400" />
