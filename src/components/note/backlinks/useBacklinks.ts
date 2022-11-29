@@ -8,7 +8,7 @@ import { loadDir } from 'file/open';
 const DEBOUNCE_MS = 1000;
 
 export type BacklinkMatch = {
-  text: string;
+  text: string; // matched text
   from: number;
   to: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

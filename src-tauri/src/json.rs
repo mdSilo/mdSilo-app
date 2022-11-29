@@ -79,7 +79,9 @@ pub async fn load_dir_recursively(
       .unwrap_or_default()
       .as_millis();
     let last_mod_date = Utc
-      .timestamp_millis(mod_since_the_epoch as i64)
+      .timestamp_millis_opt(mod_since_the_epoch as i64)
+      .earliest()
+      .unwrap_or(Utc::now())
       .to_rfc3339_opts(SecondsFormat::Millis, true);
 
     let create_since_the_epoch = file.created
@@ -87,7 +89,9 @@ pub async fn load_dir_recursively(
       .unwrap_or_default()
       .as_millis();
     let created_date = Utc
-      .timestamp_millis(create_since_the_epoch as i64)
+      .timestamp_millis_opt(create_since_the_epoch as i64)
+      .earliest()
+      .unwrap_or(Utc::now())
       .to_rfc3339_opts(SecondsFormat::Millis, true);
 
     let new_note = NoteData {

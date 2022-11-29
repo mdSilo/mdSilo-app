@@ -1,6 +1,8 @@
 # Changelog 
 
-## [app-v0.5.0] - 2022-XX-XX 
+## [app-v0.5.1] - 2022-XX-XX 
+
+## [app-v0.5.0] - 2022-11-14 
 
 ### Features 
 
@@ -8,7 +10,7 @@
 - [X] RSS reader  
 - [X] Podcast client 
 
-## [app-v0.4.9] - 2022-XX-XX 
+## [app-v0.4.9] - 2022-10-22 
 
 ### Bug Fixes 
 
