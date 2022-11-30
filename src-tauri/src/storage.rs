@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str;
 use chrono::offset::Local;
 use tauri::api::path::local_data_dir;
@@ -12,22 +12,41 @@ pub struct StorageData {
   pub status: bool,
 }
 
-#[tauri::command]
-pub fn set_data(key: String, value: Value) -> bool {
+pub fn create_mdsilo_dir() -> Option<PathBuf> {
   // println!("local data dir: {:?}", local_data_dir());
 
   // Linux: $HOME/.local/share/mdsilo
   // macOS: $HOME/Library/Application
   // Windows: $HOME/AppData/Local/mdsilo
-  let storage_dir = match local_data_dir() {
-    Some(dir) => Path::new(&dir).join("mdsilo"),
-    None => {
-      return false;
+  if let Some(local_dir) = local_data_dir() {
+    let data_path = Path::new(&local_dir).join("mdsilo");
+    // make sure the mdsilo dir is created
+    match fs::create_dir_all(data_path.clone()) {
+      Ok(_) => Some(data_path),
+      Err(e) => {
+        do_log(
+          "Error".to_string(), 
+          format!("Error on creating local_data_dir: {:?}", e),
+          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+        );
+        None
+      },
     }
-  };
+  } else {
+    do_log(
+      "Error".to_string(), 
+      format!("Error on getting local_data_dir"),
+      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+    );
+    None
+  }
+}
 
-  if fs::create_dir_all(storage_dir.clone()).is_err() {
-    return false;
+#[tauri::command]
+pub fn set_data(key: String, value: Value) -> bool {
+  let storage_dir = match create_mdsilo_dir() {
+    Some(dir) => dir,
+    None => { return false; }
   };
 
   let vec_value = match serde_json::to_vec(&value) {

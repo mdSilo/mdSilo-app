@@ -1,26 +1,29 @@
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
-use std::path;
-use tauri::api::path::local_data_dir;
 use chrono::offset::Local;
-use crate::storage::do_log;
+use crate::storage::{do_log, create_mdsilo_dir};
 use crate::models::{Channel, NewChannel, Article, NewArticle};
 use crate::schema;
 
 pub fn establish_connection() -> SqliteConnection {
-  let db_path = path::Path::new(&local_data_dir().unwrap())
-    .join("mdsilo")
-    .join("mdsilo.db");
+  let data_path = create_mdsilo_dir()
+    .expect("Error on creating data dir");
+
+  let db_path = data_path.join("mdsilo.db");
 
   let database_url = db_path
     .to_str()
     .clone()
-    .expect(&format!("Error convert path {:?} to url", db_path));
+    .expect("Error on converting db path to url");
 
   SqliteConnection::establish(&database_url)
-    .expect(&format!("Error connecting to {}", database_url))
-  
+    .map_err(|e| do_log(
+      "Error".to_string(), 
+      format!("Error on connecting to db: {:?}", e),
+      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+    ))
+    .expect("Error on connecting to database")
 }
 
 pub fn get_channels() -> Vec<Channel> {
