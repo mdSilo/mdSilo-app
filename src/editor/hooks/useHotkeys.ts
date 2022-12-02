@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import isHotkey from 'is-hotkey';
 
 /**
- Ctrl+N, mod+n: new note
- Ctrl+P, mod+p: new page(item)  // reserve
- Ctrl+S, mod+s: save note  // reserve
+ mod+n: new note
+ mod+p: new page(item)  // reserve
+ mod+s: save note  // reserve
  Esc, esc  quite
  ...
 **/

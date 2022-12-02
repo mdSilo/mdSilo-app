@@ -39,28 +39,28 @@ const Tabs = (props: TabsProps) => {
 
   return (
     <div className="flex">
-      <Tooltip content="Silo (Ctrl+Shift+D)">
+      <Tooltip content="Silo (Ctrl/⌘+Shift+D)">
         <SidebarTab
           isActive={activeTab === SidebarTabType.Silo}
           setActive={() => setActiveTab(SidebarTabType.Silo)}
           Icon={IconFolder}
         />
       </Tooltip>
-      <Tooltip content="Search (Ctrl+Shift+F)">
+      <Tooltip content="Search (Ctrl/⌘+Shift+F)">
         <SidebarTab
           isActive={activeTab === SidebarTabType.Search}
           setActive={() => setActiveTab(SidebarTabType.Search)}
           Icon={IconSearch}
         />
       </Tooltip>
-      <Tooltip content="Hashtags (Ctrl+Shift+H)">
+      <Tooltip content="Hashtags (Ctrl/⌘+Shift+H)">
         <SidebarTab
           isActive={activeTab === SidebarTabType.Hashtag}
           setActive={() => setActiveTab(SidebarTabType.Hashtag)}
           Icon={IconHash}
         />
       </Tooltip>
-      <Tooltip content="Playlist (Ctrl+Shift+P)">
+      <Tooltip content="Playlist (Ctrl/⌘+Shift+P)">
         <SidebarTab
           isActive={activeTab === SidebarTabType.Playlist}
           setActive={() => setActiveTab(SidebarTabType.Playlist)}

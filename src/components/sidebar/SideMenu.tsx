@@ -91,7 +91,7 @@ const OpenButton = () => {
 
   return (
     <SidebarItem isHighlighted={isSidebarOpen}>
-      <Tooltip content="Toggle Sidebar (Alt+X)" placement="right">
+      <Tooltip content="Toggle Sidebar (Ctrl/⌘+X)" placement="right">
         <button
           aria-label="Toggle Sidebar"
           className={btnClass}
@@ -118,7 +118,7 @@ const NewButton = () => {
 
   return (
     <SidebarItem isHighlighted={isFindOrCreateModalOpen}>
-      <Tooltip content="New Writing (Alt+N)" placement="right">
+      <Tooltip content="New Writing" placement="right">
         <button
           className={btnClass}
           onClick={onCreateNoteClick}
@@ -149,7 +149,7 @@ const FeedButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'feed'} onClick={onClick}>
       <Tooltip
-        content="Feed (Ctrl+Shift+R)"
+        content="Feed (Ctrl/⌘+Shift+R)"
         placement="right"
       >
         <button className={btnClass} onClick={onViewFeed}>
@@ -166,7 +166,7 @@ const GraphButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
       <Tooltip
-        content="Visualization of networked writing (Ctrl+Shift+G)"
+        content="Visualization of networked writing (Ctrl/⌘+Shift+G)"
         placement="right"
       >
         <button className={btnClass} onClick={onDispatch}>
@@ -183,7 +183,7 @@ const ChronButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'chronicle'} onClick={onClick}>
       <Tooltip
-        content="Chronicle View (Ctrl+Shift+C)"
+        content="Chronicle View (Ctrl/⌘+Shift+C)"
         placement="right"
       >
         <button className={btnClass} onClick={onDispatch}>
@@ -200,7 +200,7 @@ const TaskButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'task'} onClick={onClick}>
       <Tooltip
-        content="Tasks View (Ctrl+Shift+T)"
+        content="Tasks View (Ctrl/⌘+Shift+T)"
         placement="right"
       >
         <button className={btnClass} onClick={onDispatch}>
