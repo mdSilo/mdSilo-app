@@ -1,6 +1,10 @@
 # Changelog 
 
-## [app-v0.5.1] - 2022-XX-XX 
+## [app-v0.5.2] - 2022-XX-XX 
+
+## [app-v0.5.1] - 2022-11-30 
+
+Fixed a bug: failed to create db file on launch
 
 ## [app-v0.5.0] - 2022-11-14 
 
