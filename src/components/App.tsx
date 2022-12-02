@@ -29,11 +29,11 @@ const App = () => {
   const hotkeys = useMemo(
     () => [
       {
-        hotkey: 'alt+n',
+        hotkey: 'mod+n',
         callback: () => setIsFindOrCreateModalOpen((isOpen) => !isOpen),
       },
       {
-        hotkey: 'alt+x',
+        hotkey: 'mod+x',
         callback: () => setIsSidebarOpen((isOpen) => !isOpen),
       },
       {
