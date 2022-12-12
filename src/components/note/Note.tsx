@@ -2,6 +2,7 @@ import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from '
 import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import { invoke } from '@tauri-apps/api';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
+import copy from "copy-to-clipboard";
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
@@ -329,6 +330,11 @@ function Note(props: Props) {
     await writeFile(saveDir, rawSVG);
   }, [initDir, title]);
 
+  // copy heading hash or hashtag hash
+  const onCopyHash = useCallback(
+    (hash: string) => { copy(`${title}${hash}`); }, [title]
+  );
+
   const noteContainerClassName =
     'flex flex-col w-full bg-white dark:bg-black dark:text-gray-200';
   const errorContainerClassName = 
@@ -406,6 +412,7 @@ function Note(props: Props) {
                     attachFile={onAttachFile} 
                     onClickAttachment={onClickAttachment} 
                     onSaveDiagram={onSaveDiagram} 
+                    onCopyHash={onCopyHash}
                     embeds={embeds}
                     disables={['sub']}
                     rootPath={initDir}
@@ -448,6 +455,7 @@ function Note(props: Props) {
                         onOpenLink={onOpenLink} 
                         attachFile={onAttachFile} 
                         onClickAttachment={onClickAttachment} 
+                        onCopyHash={onCopyHash}
                         embeds={embeds}
                         disables={['sub']}
                         rootPath={initDir}
