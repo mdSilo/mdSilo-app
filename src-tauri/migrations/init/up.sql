@@ -26,3 +26,11 @@ CREATE TABLE articles (
   read_status INTEGER NOT NULL DEFAULT 0, -- 0: unread 1: read
   star_status INTEGER NOT NULL DEFAULT 0  -- 0: unstar 1: star-ed
 );
+
+DROP TABLE IF EXISTS notes;
+
+CREATE TABLE notes (
+  id VARCHAR NOT NULL PRIMARY KEY, -- root dir
+  content TEXT NOT NULL,
+  saved DATETIME,
+);

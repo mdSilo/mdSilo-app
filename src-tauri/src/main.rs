@@ -82,6 +82,8 @@ fn main() {
       storage::get_log,
       storage::del_log,
       json::write_json,
+      json::save_notes,
+      json::get_notes,
       // pdf::write_to_pdf, 
     ])
     .run(tauri::generate_context!())

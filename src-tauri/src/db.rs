@@ -3,7 +3,7 @@ use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
 use chrono::offset::Local;
 use crate::storage::{do_log, create_mdsilo_dir};
-use crate::models::{Channel, NewChannel, Article, NewArticle};
+use crate::models::{Channel, NewChannel, Article, NewArticle, Note};
 use crate::schema;
 
 pub fn establish_connection() -> SqliteConnection {
@@ -308,6 +308,41 @@ pub fn update_articles_read_status(feed_link: String, read_status: i32) -> usize
   .unwrap_or(0);
 
   return result;
+}
+
+pub fn save_notes(notes: Note) -> usize {
+  let mut connection = establish_connection();
+  
+  let result = diesel::insert_or_ignore_into(schema::notes::dsl::notes)
+    .values(notes)
+    .execute(&mut connection)
+    .map_err(|e| do_log(
+      "Error".to_string(), 
+      format!("db Error on [save_notes]: {:?}", e), 
+      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+    ))
+    .unwrap_or(0);
+
+  return result;
+}
+
+pub fn get_notes_by_id(id: String) -> Option<Note> {
+  let mut connection = establish_connection();
+  let mut result = schema::notes::dsl::notes
+    .filter(schema::notes::id.eq(&id))
+    .load::<Note>(&mut connection)
+    .map_err(|e| do_log(
+      "Error".to_string(), 
+      format!("db Error on [get_notes_by_id, {}]: {:?}", id, e), 
+      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+    ))
+    .unwrap_or(vec![]);
+
+  if result.len() == 1 {
+    return result.pop();
+  } else {
+    return None;
+  }
 }
 
 #[cfg(test)]

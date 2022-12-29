@@ -28,6 +28,14 @@ diesel::table! {
   }
 }
 
+diesel::table! {
+  notes (id) {
+    id -> Text,
+    content -> Text,
+    saved -> Timestamp,
+  }
+}
+
 diesel::allow_tables_to_appear_in_same_query!(
     articles,
     channels,
