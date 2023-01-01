@@ -2353,15 +2353,10 @@
   dependencies:
     "@types/d3-color" "*"
 
-"@types/d3-selection@*":
-  version "3.0.2"
-  resolved "https://registry.npmjs.org/@types/d3-selection/-/d3-selection-3.0.2.tgz"
-  integrity sha512-d29EDd0iUBrRoKhPndhDY6U/PYxOWqgIZwKTooy2UkBfU7TNZNpRho0yLWPxlatQrFWk2mnTu71IZQ4+LRgKlQ==
-
-"@types/d3-selection@^3.0.3":
-  version "3.0.3"
-  resolved "https://registry.npmjs.org/@types/d3-selection/-/d3-selection-3.0.3.tgz"
-  integrity sha512-Mw5cf6nlW1MlefpD9zrshZ+DAWL4IQ5LnWfRheW6xwsdaWOb6IRRu2H7XPAQcyXEx1D7XQWgdoKR83ui1/HlEA==
+"@types/d3-selection@*", "@types/d3-selection@^3.0.4":
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/@types/d3-selection/-/d3-selection-3.0.4.tgz#923d7f8985718116de56f55307d26e5f00728dc5"
+  integrity sha512-ZeykX7286BCyMg9sH5fIAORyCB6hcATPSRQpN47jwBA2bMbAT0s+EvtDP5r1FZYJ95R8QoEE1CKJX+n0/M5Vhg==
 
 "@types/d3-zoom@^3.0.1":
   version "3.0.1"

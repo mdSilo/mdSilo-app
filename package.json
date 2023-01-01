@@ -56,7 +56,7 @@
     "@testing-library/react": "^12.1.4",
     "@types/d3-drag": "^3.0.1",
     "@types/d3-force": "^3.0.3",
-    "@types/d3-selection": "^3.0.3",
+    "@types/d3-selection": "^3.0.4",
     "@types/d3-zoom": "^3.0.1",
     "@types/is-hotkey": "^0.1.7",
     "@types/jest": "^29.2.4",
