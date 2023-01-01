@@ -2341,10 +2341,10 @@
   dependencies:
     "@types/d3-selection" "*"
 
-"@types/d3-force@^3.0.3":
-  version "3.0.3"
-  resolved "https://registry.npmjs.org/@types/d3-force/-/d3-force-3.0.3.tgz"
-  integrity sha512-z8GteGVfkWJMKsx6hwC3SiTSLspL98VNpmvLpEFJQpZPq6xpA1I8HNBDNSpukfK0Vb0l64zGFhzunLgEAcBWSA==
+"@types/d3-force@^3.0.4":
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/@types/d3-force/-/d3-force-3.0.4.tgz#2d50bd2b695f709797e1745644f6bc123e6e5f5a"
+  integrity sha512-q7xbVLrWcXvSBBEoadowIUJ7sRpS1yvgMWnzHJggFy5cUZBq2HZL5k/pBSm0GdYWS1vs5/EDwMjSKF55PDY4Aw==
 
 "@types/d3-interpolate@*":
   version "3.0.1"
