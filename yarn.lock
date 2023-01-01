@@ -2334,10 +2334,10 @@
   resolved "https://registry.npmjs.org/@types/d3-color/-/d3-color-3.0.2.tgz"
   integrity sha512-WVx6zBiz4sWlboCy7TCgjeyHpNjMsoF36yaagny1uXfbadc9f+5BeBf7U+lRmQqY3EHbGQpP8UdW8AC+cywSwQ==
 
-"@types/d3-drag@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.npmjs.org/@types/d3-drag/-/d3-drag-3.0.1.tgz"
-  integrity sha512-o1Va7bLwwk6h03+nSM8dpaGEYnoIG19P0lKqlic8Un36ymh9NSkNFX1yiXMKNMx8rJ0Kfnn2eovuFaL6Jvj0zA==
+"@types/d3-drag@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@types/d3-drag/-/d3-drag-3.0.2.tgz#5562da3e7b33d782c2c1f9e65c5e91bb01ee82cf"
+  integrity sha512-qmODKEDvyKWVHcWWCOVcuVcOwikLVsyc4q4EBJMREsoQnR2Qoc2cZQUyFUPgO9q4S3qdSqJKBsuefv+h0Qy+tw==
   dependencies:
     "@types/d3-selection" "*"
 
@@ -2353,12 +2353,7 @@
   dependencies:
     "@types/d3-color" "*"
 
-"@types/d3-selection@*":
-  version "3.0.2"
-  resolved "https://registry.npmjs.org/@types/d3-selection/-/d3-selection-3.0.2.tgz"
-  integrity sha512-d29EDd0iUBrRoKhPndhDY6U/PYxOWqgIZwKTooy2UkBfU7TNZNpRho0yLWPxlatQrFWk2mnTu71IZQ4+LRgKlQ==
-
-"@types/d3-selection@^3.0.3":
+"@types/d3-selection@*", "@types/d3-selection@^3.0.3":
   version "3.0.3"
   resolved "https://registry.npmjs.org/@types/d3-selection/-/d3-selection-3.0.3.tgz"
   integrity sha512-Mw5cf6nlW1MlefpD9zrshZ+DAWL4IQ5LnWfRheW6xwsdaWOb6IRRu2H7XPAQcyXEx1D7XQWgdoKR83ui1/HlEA==
