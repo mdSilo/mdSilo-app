@@ -3,7 +3,6 @@ mod tests {
   use crate::files::*;
   use crate::paths::{PathBufExt, PathExt};
   use crate::storage::*;
-  // use crate::pdf::*;
   use std::path::{Path, PathBuf};
 
   #[test]
@@ -362,15 +361,4 @@ mod tests {
     assert_eq!(serde_json::Value::Null, store_data_0.data);
     assert_eq!(false, store_data_0.status);
   }
-
-  // #[tokio::test]
-  // #[ignore = "on my computer only"]
-  // async fn test_pdf_operation() {
-  //   let md_path = String::from("/home/uu/Documents/Welcome_to_mdSilo.md");
-  //   let pdf_path = String::from("/home/uu/Documents/Welcome_to_mdSilo.pdf");
-    
-  //   let res = write_to_pdf(md_path, pdf_path.clone());
-  //   assert_eq!(res, true);
-  //   assert_eq!(file_exist(&pdf_path), true);
-  // }
 }

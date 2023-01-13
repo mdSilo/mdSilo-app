@@ -12,7 +12,6 @@ mod feed;
 mod db;
 mod models;
 mod schema;
-// mod pdf;
 
 extern crate diesel;
 extern crate diesel_migrations;
@@ -84,7 +83,6 @@ fn main() {
       json::write_json,
       json::save_notes,
       json::get_notes,
-      // pdf::write_to_pdf, 
     ])
     .run(tauri::generate_context!())
     .expect("error while running");

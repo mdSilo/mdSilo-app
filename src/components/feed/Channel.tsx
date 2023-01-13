@@ -116,9 +116,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
     }
   };
 
-  useEffect(() => {
-    setReadStatus(article.read_status);
-  }, [article.read_status])
+  useEffect(() => { setReadStatus(article.read_status); }, [article.read_status])
 
   const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-200 dark:hover:bg-gray-800 ${highlight ? 'bg-blue-200 dark:bg-blue-800' : ''}`;
 
@@ -132,9 +130,10 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
         {(readStatus === 0) && <IconCircle className="w-2 h-2 m-1 text-blue-500 fill-blue-500" />}
         <div className="flex-1 font-bold m-1 dark:text-white">{article.title}</div>
       </div>
-      <div className="flex flex-row items-center justify-start">
-        <span className="m-1 text-sm dark:text-slate-400">{article.author}</span>
-        <span className="m-1 text-sm dark:text-slate-400">{fmtDatetime(article.published || '')}</span>
+      <div className="flex flex-row items-center justify-center">
+        <span className="m-1 pl-2 text-sm dark:text-slate-400">
+          {fmtDatetime(article.published || '')}
+        </span>
       </div>
     </div>
   );
