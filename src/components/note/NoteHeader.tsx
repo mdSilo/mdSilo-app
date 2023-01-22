@@ -105,8 +105,8 @@ export default function NoteHeader({ onPrint } : Props) {
             </>
           )}
         </Menu>
-        <Tooltip content="Print">
-          <button className={switchClass} onClick={onPrint}>
+        <Tooltip content="Print(alpha)" className="hidden">
+          <button className={`hidden ${switchClass}`} onClick={onPrint}>
             <IconPrinter size={15} className="ml-1" />
           </button>
         </Tooltip>

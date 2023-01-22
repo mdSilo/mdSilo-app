@@ -33,7 +33,7 @@ const App = () => {
         callback: () => setIsFindOrCreateModalOpen((isOpen) => !isOpen),
       },
       {
-        hotkey: 'mod+x',
+        hotkey: 'alt+x',
         callback: () => setIsSidebarOpen((isOpen) => !isOpen),
       },
       {

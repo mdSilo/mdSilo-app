@@ -65,6 +65,7 @@ BTW, [Web app is here](https://mdsilo.com/app)
   - [X] Hovering toolbar
   - [X] hotkeys 
   - [ ] Drawing  
+  - [ ] Kanban board
 
 - View
   - [X] Graph
