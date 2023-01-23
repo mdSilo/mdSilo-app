@@ -7,6 +7,7 @@ import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { ciStringEqual, regDateStr } from 'utils/helper';
 import { joinPaths } from 'file/util';
 import { openFilePath } from 'file/open';
+import { writeFile } from 'file/write';
 import { Notes, store, useStore } from 'lib/store';
 import { defaultNote } from 'types/model';
 
@@ -82,6 +83,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           file_path: notePath,
           is_daily: regDateStr.test(inputTxt),
         };
+        await writeFile(notePath, ' ');
         store.getState().upsertNote(note);
         store.getState().upsertTree(currentDir, [note]);
         // navigate to md view

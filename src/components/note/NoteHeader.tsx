@@ -65,7 +65,7 @@ export default function NoteHeader({ onPrint } : Props) {
             <IconMarkdown className={`${rawMode === 'raw' ? 'text-green-500' : iconClass}`} />
           </button>
         </Tooltip>
-        <Tooltip content="Mindmap">
+        <Tooltip content="MindMap">
           <button className={switchClass} onClick={() => setRaw('mindmap')}>
             <IconTournament className={`rotate-180 ${rawMode === 'mindmap' ? 'text-green-500' : iconClass}`} />
           </button>

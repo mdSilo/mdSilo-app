@@ -56,6 +56,8 @@ export default function SideMenu() {
   );
   useHotkeys(hotkeys);
 
+  const currentDir = useStore((state) => state.currentDir);
+
   return (    
     <div className="flex flex-col h-full">
       <Logo />
@@ -64,19 +66,13 @@ export default function SideMenu() {
         viewTy={viewTy} 
         onDispatch={dispatchFeed} 
       />
-      <NewButton />
-      <ChronButton 
-        viewTy={viewTy} 
-        onDispatch={dispatchChron} 
-      />
-      <GraphButton 
-        viewTy={viewTy} 
-        onDispatch={dispatchGraph} 
-      />
-      <TaskButton 
-        viewTy={viewTy} 
-        onDispatch={dispatchTask} 
-      />
+      {currentDir ? (
+      <>
+        <NewButton />
+        <ChronButton viewTy={viewTy} onDispatch={dispatchChron} />
+        <GraphButton viewTy={viewTy} onDispatch={dispatchGraph} />
+        <TaskButton viewTy={viewTy} onDispatch={dispatchTask} />
+      </>) : null}
       <FileButton />
     </div>
   );
