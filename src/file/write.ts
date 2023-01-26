@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api';
+// import { invoke } from '@tauri-apps/api';
 import { Notes } from 'lib/store';
 import { buildNotesJson, joinPaths } from './util';
 import FileAPI from './files';
@@ -22,7 +22,7 @@ export async function writeJsonFile(parentDir: string, json = '') {
   const jsonFile = new FileAPI('mdsilo.json', parentDir);
   const notesJson = json || buildNotesJson();
   await jsonFile.writeFile(notesJson);
-  await invoke('save_notes', { dir: parentDir, content: notesJson });
+  // await invoke('save_notes', { dir: parentDir, content: notesJson });
 }
 
 /**

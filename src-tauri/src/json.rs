@@ -3,10 +3,10 @@ use std::path::Path;
 use std::time::UNIX_EPOCH;
 use chrono::{Utc, TimeZone, SecondsFormat};
 use async_recursion::async_recursion;
-use crate::db;
+// use crate::db;
 use crate::files::{read_directory, write_file, EventPayload}; 
 use crate::storage::get_data;
-use crate::models::Note;
+// use crate::models::Note;
 
 #[derive(serde::Serialize, Clone, Debug, Default)]
 pub struct NoteData {
@@ -177,19 +177,19 @@ pub async fn write_json(dir: String, window: tauri::Window) -> bool {
   return res;
 }
 
-#[tauri::command]
-pub async fn save_notes(dir: String, content: String) -> usize {
+// #[tauri::command]
+// pub async fn save_notes(dir: String, content: String) -> usize {
   
-  let data = Note {
-    id: dir,
-    content,
-    saved: Utc::now().to_string(),
-  };
+//   let data = Note {
+//     id: dir,
+//     content,
+//     saved: Utc::now().to_string(),
+//   };
 
-  db::save_notes(data)
-}
+//   db::save_notes(data)
+// }
 
-#[tauri::command]
-pub async fn get_notes(dir: String) -> Option<Note> {
-  db::get_notes_by_id(dir)
-}
+// #[tauri::command]
+// pub async fn get_notes(dir: String) -> Option<Note> {
+//   db::get_notes_by_id(dir)
+// }

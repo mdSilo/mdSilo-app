@@ -3,7 +3,7 @@ use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
 use chrono::offset::Local;
 use crate::storage::{do_log, create_mdsilo_dir};
-use crate::models::{Channel, NewChannel, Article, NewArticle, Note};
+use crate::models::{Channel, NewChannel, Article, NewArticle};
 use crate::schema;
 
 pub fn establish_connection() -> SqliteConnection {
@@ -310,7 +310,7 @@ pub fn update_articles_read_status(feed_link: String, read_status: i32) -> usize
   return result;
 }
 
-pub fn save_notes(notes: Note) -> usize {
+/* pub fn save_notes(notes: Note) -> usize {
   let mut connection = establish_connection();
   
   let result = diesel::insert_or_ignore_into(schema::notes::dsl::notes)
@@ -343,7 +343,7 @@ pub fn get_notes_by_id(id: String) -> Option<Note> {
   } else {
     return None;
   }
-}
+} */
 
 #[cfg(test)]
 mod tests {

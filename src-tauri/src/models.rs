@@ -1,4 +1,4 @@
-use super::schema::{articles, channels, notes};
+use super::schema::{articles, channels};
 use serde::{Serialize, Deserialize};
 use diesel::{sql_types::*, Queryable, QueryableByName, Insertable};
 
@@ -70,16 +70,16 @@ pub struct NewArticle {
   pub image: String,
 }
 
-#[derive(Debug, Insertable, Queryable, Serialize, QueryableByName)]
-#[diesel(table_name = notes)]
-pub struct Note {
-  #[diesel(sql_type = Text)]
-  pub id: String,
-  #[diesel(sql_type = Text)]
-  pub content: String,
-  #[diesel(sql_type = Text)]
-  pub saved: String,
-}
+// #[derive(Debug, Insertable, Queryable, Serialize, QueryableByName)]
+// #[diesel(table_name = notes)]
+// pub struct Note {
+//   #[diesel(sql_type = Text)]
+//   pub id: String,
+//   #[diesel(sql_type = Text)]
+//   pub content: String,
+//   #[diesel(sql_type = Text)]
+//   pub saved: String,
+// }
 
 
 // TODO: save daily activities to db
