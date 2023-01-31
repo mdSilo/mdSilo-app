@@ -10,7 +10,9 @@ export const fetchFeed = async (url: string): Promise<RssResult> => {
   return await invoke('fetch_feed', { url })
 }
 
-export const addChannel = async (url: string, ty: string, title: string | null): Promise<number> => {
+export const addChannel = async (
+  url: string, ty: string, title: string | null
+): Promise<number> => {
   return await invoke('add_channel', { url, ty, title })
 }
 

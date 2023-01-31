@@ -87,7 +87,7 @@ const OpenButton = () => {
 
   return (
     <SidebarItem isHighlighted={isSidebarOpen}>
-      <Tooltip content="Toggle Sidebar (Ctrl/⌘+X)" placement="right">
+      <Tooltip content="Toggle Sidebar (Alt+X)" placement="right">
         <button
           aria-label="Toggle Sidebar"
           className={btnClass}
