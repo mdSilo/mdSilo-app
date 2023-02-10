@@ -176,11 +176,6 @@ async fn process_atom(
           } else {
             String::new()
           };
-          let published = if let Some(tm) = item.published {
-            tm.to_string()
-          } else {
-            String::from("")
-          };
 
           let description = item.summary.unwrap_or_default().to_string();
 
@@ -190,7 +185,7 @@ async fn process_atom(
             feed_link: url.to_string(),
             audio_url: String::from(""),
             description: description.clone(),
-            published,
+            published: item.updated.to_rfc2822(),
             content: item.content.unwrap_or_default().value.unwrap_or(description),
             author: String::from(""),
             image: String::from(""),
