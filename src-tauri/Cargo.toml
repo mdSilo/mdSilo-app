@@ -26,7 +26,9 @@ chrono = "0.4.23"
 async-recursion = "1.0.2" 
 ## rss reader
 reqwest = { version = "0.11.14", features = ["json", "socks"] }
+bytes = "1.4.0"
 rss = { version = "2.0.2", features = ["serde"] }
+atom_syndication = { version = "0.12.0", default-features = false }
 diesel = { version = "2.0.3", features = ["sqlite", "chrono"] }
 diesel_migrations = { version = "2.0.0", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.25.2", features = ["bundled"] }

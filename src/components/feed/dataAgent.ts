@@ -1,12 +1,12 @@
 import { invoke } from "@tauri-apps/api";
 import { ChannelType, ArticleType } from "types/model";
 
-type RssResult = {
+type FeedResult = {
   channel: ChannelType;
   articles: ArticleType[];
 };
 
-export const fetchFeed = async (url: string): Promise<RssResult> => {
+export const fetchFeed = async (url: string): Promise<FeedResult> => {
   return await invoke('fetch_feed', { url })
 }
 

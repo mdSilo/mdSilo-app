@@ -31,9 +31,9 @@ BTW, [Web app is here](https://mdsilo.com/app)
 
 ### Input end
 
-- [X] RSS reader  
+- [X] Support RSS feed  
 - [X] Podcast client  
-- [ ] Support Atom, JSON feed  
+- [X] Support Atom feed  
 - [ ] View and annotate PDF/epub  
 
 ### Output end
