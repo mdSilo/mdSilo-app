@@ -114,15 +114,3 @@ export const getFavicon = (url: string) => {
   const hostname = url ? new URL(url).hostname : "";
   return "https://icons.duckduckgo.com/ip3/" + hostname + ".ico";
 };
-
-export const queryParamToArray = (
-  queryParam: string | string[] | undefined
-) => {
-  if (!queryParam) {
-    return [];
-  } else if (typeof queryParam === 'string') {
-    return [queryParam];
-  } else {
-    return queryParam;
-  }
-};
