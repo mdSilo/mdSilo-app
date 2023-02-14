@@ -27,7 +27,7 @@
     "@react-spring/web": "^9.5.5",
     "@tabler/icons": "^1.101.0",
     "@tailwindcss/forms": "^0.5.3",
-    "@tailwindcss/typography": "^0.5.8",
+    "@tailwindcss/typography": "^0.5.9",
     "@tauri-apps/api": "^1.2.0",
     "@tippyjs/react": "^4.2.6",
     "d3-drag": "^3.0.0",
