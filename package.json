@@ -35,7 +35,7 @@
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
     "fuse.js": "^6.6.2",
-    "immer": "^9.0.16",
+    "immer": "^9.0.19",
     "is-hotkey": "^0.2.0",
     "mdsmirror": "0.0.21",
     "mdsmap": "0.0.3",
