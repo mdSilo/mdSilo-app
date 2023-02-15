@@ -1,6 +1,13 @@
 # Changelog 
 
-## [app-v0.5.4] - 2023-XX-XX
+## [app-v0.5.5] - 2023-XX-XX
+
+## [app-v0.5.4] - 2023-02-14
+
+### Features 
+
+- [X] Support Atom feed
+
 
 ## [app-v0.5.3] - 2023-01-31
 
