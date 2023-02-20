@@ -59,7 +59,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
         <button
           className="mt-4 font-bold pop-btn" 
           onClick={async () => {
-            await openUrl("https://github.com/mdSilo/mdSilo/releases");
+            await openUrl("https://github.com/mdSilo/mdSilo-app/releases");
           }}
         >
           Check for Updates
