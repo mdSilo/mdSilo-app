@@ -2,6 +2,10 @@
 
 ## [app-v0.5.5] - 2023-XX-XX
 
+### Features 
+
+- [ ] Kanban board
+
 ## [app-v0.5.4] - 2023-02-14
 
 ### Features 

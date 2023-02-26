@@ -44,6 +44,7 @@
     "react-highlight-words": "^0.18.0",
     "react-popper": "^2.3.0",
     "react-scripts": "^5.0.1",
+    "react-trello": "2.2.11",
     "react-virtual": "^2.10.4",
     "react-virtualized": "^9.22.3",
     "styled-components": "5.3.6",

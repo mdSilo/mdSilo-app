@@ -5,9 +5,10 @@ A local-first mind silo for storing ideas, thought, knowledge with a powerful al
 
 [Demo](https://mdsilo.com/app/demo)    
 [Discord](https://discord.gg/EXYSEHRTFt)  
-[Download](https://github.com/danloh/mdSilo-app/releases) 
 
-BTW, [Web app is here](https://mdsilo.com/app)
+BTW, [Web app is here](https://mdsilo.com/app) 
+
+You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/releases) or build from the source code for your platform. 
 
 ## Features
 
