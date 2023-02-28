@@ -8,7 +8,15 @@ A local-first mind silo for storing ideas, thought, knowledge with a powerful al
 
 BTW, [Web app is here](https://mdsilo.com/app) 
 
-You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/releases) or build from the source code for your platform. 
+You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/releases) or build from the source code: 
+
+- install Rust: https://www.rust-lang.org/tools/install 
+- install Node js: https://nodejs.org
+- `git clone https://github.com/mdSilo/mdSilo-app.git`
+- `cd mdSilo-app`
+- `yarn && yarn build` or `npm install && npm run build` 
+
+Then you can find the app in `./target/release` folder.
 
 ## Features
 

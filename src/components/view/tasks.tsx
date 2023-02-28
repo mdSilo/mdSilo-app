@@ -133,11 +133,25 @@ export default function Tasks() {
 
   return (
     <ErrorBoundary>
-      <div>
-        <div></div>
+      <div className="h-full">
+        <div className="flex p-1 rounded">
+          <button 
+            className={`text-md mx-2 ${tab === "kanban" ? 'text-red-500' : 'text-blue-500'}`} 
+            onClick={() => setTab("kanban")}
+          >
+            Kanban
+          </button>  
+          <button 
+            className={`text-md mx-2 ${tab != "kanban" ? 'text-red-500' : 'text-blue-500'}`}
+            onClick={() => setTab("list")}
+          >
+            List
+          </button>
+        </div>
         {tab === "kanban" ? (
-        <div>
+        <div className="p-1">
           <Board
+            // style={{backgroundColor: "rgb(138, 146, 153)"}}
             data={kanbanData}
             draggable
             editable
