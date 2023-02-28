@@ -14,7 +14,7 @@ You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/relea
 - install Node js: https://nodejs.org
 - `git clone https://github.com/mdSilo/mdSilo-app.git`
 - `cd mdSilo-app`
-- `yarn && yarn build` or `npm install && npm run build` 
+- `yarn && yarn tauri build` or `npm install && npm run tauri build` 
 
 Then you can find the app in `./target/release` folder.
 
