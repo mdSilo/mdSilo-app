@@ -12,6 +12,7 @@ mod feed;
 mod db;
 mod models;
 mod schema;
+mod window;
 
 extern crate diesel;
 extern crate diesel_migrations;
@@ -42,6 +43,7 @@ fn main() {
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
+      window::web_window,
       feed::fetch_feed,
       feed::add_channel,
       feed::import_channels,

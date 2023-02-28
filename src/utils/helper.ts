@@ -110,6 +110,8 @@ export const isUrl = (str: string) => {
   return url.protocol === 'http:' || url.protocol === 'https:';
 };
 
+export const isSVG = (s: string) => /<\s*svg[^>]*>(.*?)<\/\s*svg>/g.test(s);
+
 export const getFavicon = (url: string) => {
   const hostname = url ? new URL(url).hostname : "";
   return "https://icons.duckduckgo.com/ip3/" + hostname + ".ico";

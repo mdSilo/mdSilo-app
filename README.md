@@ -16,7 +16,7 @@ You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/relea
 - `cd mdSilo-app`
 - `yarn && yarn tauri build` or `npm install && npm run tauri build` 
 
-Then you can find the app in `./target/release` folder.
+Then you can find the app in `./src-tauri/target/release` folder.
 
 ## Features
 

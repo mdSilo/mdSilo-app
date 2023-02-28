@@ -8,6 +8,7 @@ import Graph from './graph';
 import NotePage from './md';
 import HashTags from "./hashtags";
 import Feed from "./feed";
+import Wrap from "./wrap";
 
 export default function MainView() {
   const currentView = useCurrentViewContext();
@@ -29,6 +30,8 @@ export default function MainView() {
         <Journals />
       ) : viewTy === 'tag' ? (
         <HashTags />
+      ) : viewTy === 'wrap' ? (
+        <Wrap />
       ) : (
         <NotePage />
       )}

@@ -1,7 +1,8 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
-  IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, IconFileImport, IconRss, 
+  IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
+  IconFileImport, IconRss, IconBox, 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
@@ -31,6 +32,9 @@ export default function SideMenu() {
   );
   const dispatchGraph = useCallback(
     () => dispatch({view: 'graph'}), [dispatch]
+  );
+  const dispatchWrap = useCallback(
+    () => dispatch({view: 'wrap'}), [dispatch]
   );
 
   const hotkeys = useMemo(
@@ -73,6 +77,7 @@ export default function SideMenu() {
         <GraphButton viewTy={viewTy} onDispatch={dispatchGraph} />
         <TaskButton viewTy={viewTy} onDispatch={dispatchTask} />
       </>) : null}
+      <WrapButton viewTy={viewTy} onDispatch={dispatchWrap} />
       <FileButton />
     </div>
   );
@@ -201,6 +206,23 @@ const TaskButton = (props: ButtonProps) => {
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconCheckbox size={24} className={btnIconClass} />
+        </button>
+      </Tooltip>
+    </SidebarItem>
+  );
+};
+
+const WrapButton = (props: ButtonProps) => {
+  const { viewTy, onClick, onDispatch } = props;
+
+  return (
+    <SidebarItem isHighlighted={viewTy === 'wrap'} onClick={onClick}>
+      <Tooltip
+        content="Wrap App"
+        placement="right"
+      >
+        <button className={btnClass} onClick={onDispatch}>
+          <IconBox size={24} className="flex-shrink-0 mx-1 text-blue-600" />
         </button>
       </Tooltip>
     </SidebarItem>
