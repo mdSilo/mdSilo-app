@@ -23,7 +23,7 @@
     "@codemirror/state": "6.0.0",
     "@codemirror/view": "6.0.0",
 
-    "@headlessui/react": "^1.7.11",
+    "@headlessui/react": "^1.7.12",
     "@popperjs/core": "^2.11.6",
     "@react-spring/web": "^9.5.5",
     "@tabler/icons": "^1.101.0",
