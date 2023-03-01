@@ -1,6 +1,8 @@
+import { invoke } from '@tauri-apps/api';
 import { Menu } from '@headlessui/react';
 import { 
-  IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, IconPizza, IconInfoCircle, IconSteam 
+  IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, 
+  IconPizza, IconInfoCircle, IconArtboard, IconCurrentLocation 
 } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
@@ -50,7 +52,7 @@ export default function SidebarHeader() {
             as='link'
             href='https://pad.mdsilo.com'
           >
-            <IconSteam size={18} className="mr-1" />
+            <IconArtboard size={18} className="mr-1" />
             <span>Collaboration</span>
           </DropdownItem>
           <DropdownItem
@@ -72,6 +74,15 @@ export default function SidebarHeader() {
           <DropdownItem onClick={() => setIsAboutOpen(true)}>
             <IconInfoCircle size={18} className="mr-1" />
             <span>About</span>
+          </DropdownItem>
+          <DropdownItem
+            onClick={async () => {
+              const dir_path = await invoke("create_mdsilo_dir");
+              await invoke("open_url", {url: dir_path});
+            }}
+          >
+            <IconCurrentLocation size={18} className="mr-1" />
+            <span>Open Local mdsilo</span>
           </DropdownItem>
         </Menu.Items>
       </Menu>

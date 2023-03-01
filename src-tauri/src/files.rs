@@ -4,6 +4,7 @@ use std::sync::mpsc::channel;
 use std::time::SystemTime;
 use chrono::offset::Local;
 use chrono::DateTime;
+use tauri::{api, AppHandle, Manager};
 extern crate notify;
 extern crate open;
 extern crate trash;
@@ -663,4 +664,9 @@ pub async fn listen_dir(
 #[tauri::command]
 pub fn open_url(url: String) -> bool {
   open::that(url).is_ok()
+}
+
+#[tauri::command]
+pub fn open_link(app: AppHandle, url: String) {
+  api::shell::open(&app.shell_scope(), url, None).unwrap_or(());
 }

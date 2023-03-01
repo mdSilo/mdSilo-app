@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from 'react';
-import { IconPlus } from '@tabler/icons';
+import { IconTerminal2 } from '@tabler/icons';
 import { invoke } from '@tauri-apps/api/tauri';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import Tooltip from 'components/misc/Tooltip';
@@ -16,6 +16,7 @@ type AppMeta = {
   icon?: string;
   domain?: string;
   script?: string;
+  disabled?: boolean;
 }
 
 type AppEntry = {
@@ -31,12 +32,12 @@ type WrapEntry = {
 type AppItemProps = {
   ty: string;
   meta: AppMeta;
-  size?: 'lg' | 'sm';
   disabled?: boolean;
+  classname?: string;
 }
 
 function AppItem (props: AppItemProps) {
-  const { ty, meta, size = 'lg', disabled = false } = props;
+  const { ty, meta, disabled = false, classname = 'lg' } = props;
   const handleWebWindow = async () => {
     if (disabled) return;
     if (!meta.url) return;
@@ -48,9 +49,12 @@ function AppItem (props: AppItemProps) {
     });
   };
 
+  const itemClass = 
+    `flex flex-col items-center justify-center my-2 mx-4 cursor-pointer ${classname}`;
+
   return (
     <div 
-      className={`flex flex-col items-center justify-center my-2 mx-4 cursor-pointer ${size}`} 
+      className={itemClass} 
       onClick={handleWebWindow} 
       title={meta.name}
     >
@@ -71,7 +75,7 @@ function AppItem (props: AppItemProps) {
 
 export default function Wrap() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [content, setContent] = useState(defaultApps);
+  const [content, setContent] = useState<WrapEntry | null>(null);
   const [wrapConfigPath, setWrapConfigPath] = useState('');
   useEffect(() => {
     if (!isLoaded) {
@@ -81,7 +85,11 @@ export default function Wrap() {
           setWrapConfigPath(configPath);
           const jsonFile = new FileAPI(configPath);
           jsonFile.readFile().then(json => {
-            if (json.trim()) setContent(JSON.parse(json));
+            if (json.trim()) {
+              setContent(JSON.parse(json));
+            } else {
+              setContent(defaultApps);
+            }
           });
         })
       })
@@ -97,6 +105,7 @@ export default function Wrap() {
       if (wrapConfigPath) {
         const jsonFile = new FileAPI(wrapConfigPath);
         await jsonFile.writeFile(text);
+        setContent(JSON.parse(text));
         setIsLoaded(false);
       }
     },
@@ -107,10 +116,10 @@ export default function Wrap() {
     <ErrorBoundary>
       <Tooltip content="Config Wrap" placement="bottom">
         <button
-          className="p-2 mx-2 text-sm text-black rounded bg-primary-200 hover:bg-primary-100"
+          className="p-2 mx-2 mt-1 text-sm text-black rounded bg-purple-100 dark:bg-purple-900 hover:bg-primary-100"
           onClick={() => setShowAdd(!showAdd)}
         >
-          <IconPlus size={15} className="" />
+          <IconTerminal2 size={16} className="" />
         </button>
       </Tooltip>
       {showAdd ? (
@@ -123,16 +132,17 @@ export default function Wrap() {
           className={"text-xl m-2"}
         />
       ) : (
-        (content as any)?.app?.map((group: any, idx: number) => {
+        content?.app?.map((group: any, idx: number) => {
           return (
-            <div className="p-4 m-4 bg-slate-400" key={`${group.ty}_${idx}`}>
+            <div className="p-4 m-4 bg-slate-300 dark:bg-slate-600" key={`${group.ty}_${idx}`}>
               {group.ty && <h3 className="text-black dark:text-white">{group.ty}</h3>}
               <div className="flex flex-wrap p-2">
                 {group?.items?.map((app: AppMeta) => (
                   <AppItem
                     key={app.name}
-                    meta={app}
                     ty={group.ty}
+                    meta={app}
+                    disabled={app.disabled}
                   />
                 ))}
               </div>
