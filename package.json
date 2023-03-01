@@ -18,6 +18,7 @@
     "codemirror": "6.0.0",
     "@codemirror/commands": "6.0.0",
     "@codemirror/lang-markdown": "6.0.0",
+    "@codemirror/lang-json": "6.0.0",
     "@codemirror/language-data": "6.0.0",
     "@codemirror/state": "6.0.0",
     "@codemirror/view": "6.0.0",

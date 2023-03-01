@@ -7,11 +7,12 @@ type Props = {
   dark: boolean;
   initialContent?: string;
   onChange?: (content?: string) => void;
+  onFocus?: () => void;
   className?: string;
 }
 
 export default function Editor(props: Props) {
-  const {lang, dark, initialContent = '', onChange} = props;
+  const {lang, dark, initialContent = '', onChange, onFocus} = props;
   const [content, setContent] = useState('');
   useEffect(() => {
     setContent(initialContent);
@@ -24,12 +25,17 @@ export default function Editor(props: Props) {
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full" onFocus={onFocus}>
       <MonacoEditor
         theme={dark ? "vs-dark" : "vs"}
         defaultLanguage={lang}
         value={content}
         onChange={handleChange} 
+        options={{
+          automaticLayout: true,
+          fontSize: 14,
+          wordWrap: "on",
+        }}
       />
     </div>
   );

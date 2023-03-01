@@ -30,8 +30,7 @@ export default function Tasks() {
     if (kanbanJsonPath) {
       //
       const jsonFile = new FileAPI(kanbanJsonPath);
-      jsonFile.readJSONFile()
-        .then(json => setKanbanData(json));
+      jsonFile.readJSONFile().then(json => setKanbanData(json));
     }
   }, [initDir, isLoaded, kanbanJsonPath, setIsLoaded]);
 

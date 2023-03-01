@@ -76,6 +76,7 @@ fn main() {
       files::list_directory,
       files::listen_dir,
       files::open_url,
+      storage::create_mdsilo_dir,
       storage::set_data,
       storage::get_data,
       storage::delete_data,

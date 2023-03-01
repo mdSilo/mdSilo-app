@@ -12,6 +12,7 @@ pub struct StorageData {
   pub status: bool,
 }
 
+#[tauri::command]
 pub fn create_mdsilo_dir() -> Option<PathBuf> {
   // println!("local data dir: {:?}", local_data_dir());
 

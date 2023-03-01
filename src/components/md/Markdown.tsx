@@ -1,9 +1,11 @@
 import { memo } from 'react';
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { json } from "@codemirror/lang-json";
 import { languages } from "@codemirror/language-data";
 import CodeMirror from "./ReactCodeMirror";
 
 type Props = {
+  lang?: string;
   initialContent: string;
   onChange: (value: string) => void;
   onFocus?: () => void;
@@ -14,6 +16,7 @@ type Props = {
 
 function Markdown(props: Props) {
   const { 
+    lang = "markdown",
     initialContent, 
     onChange, 
     onFocus,
@@ -35,7 +38,10 @@ function Markdown(props: Props) {
       value={initialContent}
       onChange={onValueChange}
       onFocus={onFocus}
-      extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
+      extensions={lang === "markdown" 
+        ? [markdown({ base: markdownLanguage, codeLanguages: languages })]
+        : [json()]
+      }
       className={`border-none focus:outline-none p-0 break-words ${className}`}
       theme={dark ? 'dark' : 'light'}
       editable={!readMode}

@@ -1196,9 +1196,9 @@
     "@lezer/common" "^1.0.0"
     "@lezer/javascript" "^1.0.0"
 
-"@codemirror/lang-json@^6.0.0":
+"@codemirror/lang-json@6.0.0", "@codemirror/lang-json@^6.0.0":
   version "6.0.0"
-  resolved "https://registry.npmjs.org/@codemirror/lang-json/-/lang-json-6.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/@codemirror/lang-json/-/lang-json-6.0.0.tgz#6ac373248c2d44ceab6d5d58879cc543095e503e"
   integrity sha512-DvTcYTKLmg2viADXlTdufrT334M9jowe1qO02W28nvm+nejcvhM5vot5mE8/kPrxYw/HJHhwu1z2PyBpnMLCNQ==
   dependencies:
     "@codemirror/language" "^6.0.0"

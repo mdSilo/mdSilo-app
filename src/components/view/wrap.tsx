@@ -1,14 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useCallback, useEffect, useState } from 'react';
+import { IconPlus } from '@tabler/icons';
 import { invoke } from '@tauri-apps/api/tauri';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
+import Tooltip from 'components/misc/Tooltip';
+import RawMarkdown from 'components/md/Markdown';
 import { getFavicon, isSVG } from 'utils/helper';
+import { useStore } from 'lib/store';
+import { joinPaths } from 'file/util';
+import FileAPI from 'file/files';
 
 type AppMeta = {
   name: string;
-  icon: string;
   url: string;
+  icon?: string;
   domain?: string;
   script?: string;
+}
+
+type AppEntry = {
+  ty: string;
+  items: AppMeta[];
+}
+
+type WrapEntry = {
+  title: string;
+  app: AppEntry[];
 }
 
 type AppItemProps = {
@@ -37,7 +54,7 @@ function AppItem (props: AppItemProps) {
       onClick={handleWebWindow} 
       title={meta.name}
     >
-      {isSVG(meta?.icon)
+      {meta?.icon && isSVG(meta?.icon)
         ? <i 
             className="w-16 h-16" 
             dangerouslySetInnerHTML={{ __html: meta.icon }} 
@@ -53,10 +70,60 @@ function AppItem (props: AppItemProps) {
 }
 
 export default function Wrap() {
-  // TODO: customize and load apps 
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [content, setContent] = useState(defaultApps);
+  const [wrapConfigPath, setWrapConfigPath] = useState('');
+  useEffect(() => {
+    if (!isLoaded) {
+      invoke("create_mdsilo_dir").then((path) => {
+        // console.log("mdsilo dir", path);
+        joinPaths((path as string), ["wrap.json"]).then((configPath) => {
+          setWrapConfigPath(configPath);
+          const jsonFile = new FileAPI(configPath);
+          jsonFile.readFile().then(json => {
+            if (json.trim()) setContent(JSON.parse(json));
+          });
+        })
+      })
+    }
+    return () => { setIsLoaded(true); };
+  }, [isLoaded]);
+
+  const [showAdd, setShowAdd] = useState(false);
+  const darkMode = useStore((state) => state.darkMode);
+
+  const onContentChange = useCallback(
+    async (text: string) => {
+      if (wrapConfigPath) {
+        const jsonFile = new FileAPI(wrapConfigPath);
+        await jsonFile.writeFile(text);
+        setIsLoaded(false);
+      }
+    },
+    [wrapConfigPath]
+  );
+  
   return (
     <ErrorBoundary>
-      {defaultApps?.app?.map((group: any, idx: number) => {
+      <Tooltip content="Config Wrap" placement="bottom">
+        <button
+          className="p-2 mx-2 text-sm text-black rounded bg-primary-200 hover:bg-primary-100"
+          onClick={() => setShowAdd(!showAdd)}
+        >
+          <IconPlus size={15} className="" />
+        </button>
+      </Tooltip>
+      {showAdd ? (
+        <RawMarkdown
+          key="app-json"
+          initialContent={JSON.stringify(content)}
+          onChange={onContentChange}
+          dark={darkMode}
+          lang={"json"}
+          className={"text-xl m-2"}
+        />
+      ) : (
+        (content as any)?.app?.map((group: any, idx: number) => {
           return (
             <div className="p-4 m-4 bg-slate-400" key={`${group.ty}_${idx}`}>
               {group.ty && <h3 className="text-black dark:text-white">{group.ty}</h3>}
@@ -72,12 +139,13 @@ export default function Wrap() {
             </div>
           )
         })
-      }
+      )}
     </ErrorBoundary>
   )
 }
 
-const defaultApps = {
+
+const defaultApps: WrapEntry = {
 	"title": "Assistant for mdsilo",
   "app": [
     {
@@ -100,8 +168,8 @@ const defaultApps = {
 			"ty": "Bookmark",
 			"items": [
         {
-					"name": "Rust",
-					"url": "https://www.rust-lang.org/",
+					"name": "PlayGround",
+					"url": "https://play.rust-lang.org/",
           "domain": "https://rust-lang.org/", 
 					"icon": "https://www.rust-lang.org/static/images/rust-logo-blk.svg"
 				},
