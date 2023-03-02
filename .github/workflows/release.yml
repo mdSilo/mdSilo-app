@@ -42,7 +42,7 @@ jobs:
           
   updater:
     runs-on: ubuntu-latest
-    needs: [create-release, build-tauri]
+    needs: [publish-mdsilo]
 
     steps:
       - uses: actions/checkout@v2

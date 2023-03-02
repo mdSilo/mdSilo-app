@@ -1,6 +1,6 @@
 # Changelog 
 
-## [app-v0.5.5] - 2023-XX-XX
+## v0.5.5 - 2023-XX-XX
 
 ### Features 
 
@@ -14,7 +14,7 @@
 
 and a few tiny fixes.
 
-## [app-v0.5.4] - 2023-02-14
+## v0.5.4 - 2023-02-14
 
 ### Features 
 
