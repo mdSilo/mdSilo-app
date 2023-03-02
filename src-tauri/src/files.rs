@@ -486,6 +486,14 @@ pub async fn write_file(file_path: String, text: String) -> bool {
   fs::write(file_path, text).is_ok()
 }
 
+#[tauri::command]
+pub async fn download_file(file_path: String, blob: Vec<u8>) -> bool {
+  if let Some(p) = Path::new(&file_path).parent() {
+    create_dir_recursive(p.display().to_string()).await;
+  }
+  fs::write(&file_path, blob).is_ok()
+}
+
 // rename the file
 #[tauri::command]
 pub async fn rename_file(from_path: String, to_path: String) -> bool {

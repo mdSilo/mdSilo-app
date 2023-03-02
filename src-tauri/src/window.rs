@@ -54,3 +54,13 @@ pub async fn web_window(
     .unwrap();
   });
 }
+
+#[tauri::command]
+pub fn msg_dialog(app: tauri::AppHandle, title: &str, msg: &str) {
+  let win = app.app_handle().get_window("main");
+  tauri::api::dialog::message(
+    win.as_ref(),
+    title,
+    msg,
+  );
+}

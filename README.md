@@ -73,8 +73,8 @@ Then you can find the app in `./src-tauri/target/release` folder.
   - [X] Slash commands  
   - [X] Hovering toolbar
   - [X] hotkeys 
+  - [X] Kanban board
   - [ ] Drawing  
-  - [ ] Kanban board
 
 - View
   - [X] Graph
@@ -86,10 +86,16 @@ Then you can find the app in `./src-tauri/target/release` folder.
   - [X] Hashtag 
   - [X] Backlinks 
   - [X] Recent history 
+  - [X] Export as PDF, Image, ... 
   - [ ] Block reference  
   - [ ] Flashcards 
-  - [ ] Export as PDF,HTML, ... 
   - [ ] Version control: git integration 
+
+### Extension
+
+- [ ] Wrap web app and Javascript injection
+- [ ] Plugin
+- [ ] Customize theme 
 
 ### Cross
 

@@ -43,6 +43,7 @@ fn main() {
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
+      window::msg_dialog,
       window::web_window,
       feed::fetch_feed,
       feed::add_channel,
@@ -69,6 +70,7 @@ fn main() {
       files::create_file,
       files::read_file,
       files::write_file,
+      files::download_file,
       files::rename_file,
       files::copy_file,
       files::copy_file_to_assets,

@@ -1,8 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconDots, IconFileText, IconLayout, IconMarkdown, IconPrinter, IconTournament, IconTrash } from '@tabler/icons';
+import { 
+  IconDots, IconFile, IconFileText, IconLayout, IconMarkdown, 
+  IconPhoto, IconTournament, IconTrash 
+} from '@tabler/icons';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
+import { ExportAs } from 'editor/hooks/useExport';
 import { useStore } from 'lib/store';
 import { openFilePath } from 'file/open';
 import Tooltip from 'components/misc/Tooltip';
@@ -11,11 +15,7 @@ import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';
 import NoteDelModal from 'components/note/NoteDelModal';
 
-type Props = {
-  onPrint?: () => void;
-};
-
-export default function NoteHeader({ onPrint } : Props) {
+export default function NoteHeader() {
   const currentNote = useCurrentMdContext();
   const note = useStore((state) => state.notes[currentNote.id]);
 
@@ -98,6 +98,20 @@ export default function NoteHeader({ onPrint } : Props) {
                       <IconTrash className="mr-1" />
                       <span>Delete Permanently</span>
                     </DropdownItem>
+                    <DropdownItem
+                      onClick={() => ExportAs('pdf', `${note.id}.pdf`)}
+                      className="border-t dark:border-gray-700"
+                    >
+                      <IconFile className="mr-1" />
+                      <span>Export PDF</span>
+                    </DropdownItem>
+                    <DropdownItem
+                      onClick={() => ExportAs('png', `${note.id}.png`)}
+                      className="border-t dark:border-gray-700"
+                    >
+                      <IconPhoto className="mr-1" />
+                      <span>Export PNG</span>
+                    </DropdownItem>
                     <NoteMetadata noteId={note.id} />
                   </Menu.Items>
                 </Portal>
@@ -105,11 +119,6 @@ export default function NoteHeader({ onPrint } : Props) {
             </>
           )}
         </Menu>
-        <Tooltip content="Print(alpha)" className="hidden">
-          <button className={`hidden ${switchClass}`} onClick={onPrint}>
-            <IconPrinter size={15} className="ml-1" />
-          </button>
-        </Tooltip>
       </div>
       {isNoteDelModalOpen ? (
         <Portal>

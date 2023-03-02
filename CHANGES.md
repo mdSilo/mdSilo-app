@@ -4,7 +4,15 @@
 
 ### Features 
 
-- [ ] Kanban board
+- [X] Kanban board 
+- [X] Wrap web app and inject your JS script 
+- [X] Export as PDF or Image(png)
+
+### Bug Fixes 
+
+- [X] Close #404 : backslash issue
+
+and a few tiny fixes.
 
 ## [app-v0.5.4] - 2023-02-14
 

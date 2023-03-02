@@ -145,11 +145,6 @@ function Note(props: Props) {
     [updateNote, noteId, rawMode, focusOn, notePath, initDir]
   );
 
-  const onPrint = (): void => {
-    store.getState().setIsSidebarOpen(false);
-    window.print();
-  };
-
   setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
   // update locally
   const onTitleChange = useCallback(
@@ -360,7 +355,7 @@ function Note(props: Props) {
     >
       <ProvideCurrentMd value={currentNoteValue}>
         <div id={noteId} className={`${noteContainerClassName} ${className}`}>
-          <NoteHeader onPrint={onPrint} />
+          <NoteHeader />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col flex-1 w-full mx-auto px-8 md:px-12">
               <div
@@ -384,7 +379,7 @@ function Note(props: Props) {
                 ? (<Toc headings={headings} />) 
                 : null
               }
-              <div className="flex-1 px-2 pt-2 pb-8">
+              <div className="flex-1 px-2 pt-2 pb-8" id="note-content">
                 {rawMode === 'raw' ? (
                   <RawMarkdown
                     key={`raw-${title}`}
