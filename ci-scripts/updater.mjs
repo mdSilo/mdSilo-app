@@ -23,7 +23,7 @@ async function updater() {
   });
 
   const tag = tags.find((t) => t.name.startsWith('app-v'));
-  console.log(`${JSON.stringify(tag, null, 2)}`);
+  console.log(`>> late tag: ${JSON.stringify(tag, null, 2)}`);
 
   if (!tag) return;
 
