@@ -1,12 +1,7 @@
 
 # mdSilo
 
-A local-first mind silo for storing ideas, thought, knowledge with a powerful all-in-one writing tool. built with React and [Tauri](https://github.com/tauri-apps). 
-
-[Demo](https://mdsilo.com/app/demo)    
-[Discord](https://discord.gg/EXYSEHRTFt)  
-
-BTW, [Web app is here](https://mdsilo.com/app) 
+A local-first mind silo for storing ideas, thought, knowledge with a powerful all-in-one writing tool. built with React and [Tauri](https://github.com/tauri-apps). see [Demo](https://mdsilo.com/app/demo) or discuss on [Discord](https://discord.gg/EXYSEHRTFt)  
 
 You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/releases) or build from the source code: 
 
@@ -29,6 +24,33 @@ Then you can find the app in `./src-tauri/target/release` folder.
 - Dark and Light Mode;  
 - Available for Windows, macOS, Linux;   
 - On top of local plain-text files, no registration required, no privacy issue. 
+
+## Screenshots
+
+- Powerful Editor: WYSIWYG(Markdown, mindmap, mermaid, Latex...), support TOC and Export(PDF/PNG) 
+
+![editor](https://user-images.githubusercontent.com/1472485/222804255-f2c4a22b-d7b2-4621-b508-20e1b8545e45.png)
+
+- Fedd reader, support RSS/Atom and podcast
+
+![reader](https://user-images.githubusercontent.com/1472485/222804686-e2ea28d8-a772-4a27-a3c0-2759d73c5fdc.png) 
+
+- Can wrap any web app and inject JS to make your own assistant, like ChatGPT
+
+![wrap](https://user-images.githubusercontent.com/1472485/222805232-395fae7e-926b-421c-94ea-3a78f2bde1a4.png)
+
+- Timeline view, and github-like activities tracker
+
+![chron](https://user-images.githubusercontent.com/1472485/222804883-d7014fca-ec0d-4cf5-88bc-d331350c1f17.png)
+
+- Kanban or list to track tasks
+
+![kanban](https://user-images.githubusercontent.com/1472485/222807652-604f3635-5d68-4772-a0b5-1c1da550d223.png)
+
+- Graph view
+
+![graph](https://user-images.githubusercontent.com/1472485/222804768-f0ad36b8-69d2-4658-b5c9-20ab7e05c3f3.png)
+
 
 ## Tech Stack
 
