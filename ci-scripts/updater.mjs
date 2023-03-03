@@ -15,14 +15,14 @@ async function updater() {
   const options = { owner: context.repo.owner, repo: context.repo.repo };
   const github = getOctokit(token);
 
-  // 获取 tag
+  // get tag
   const { data: tags } = await github.rest.repos.listTags({
     ...options,
     per_page: 10,
     page: 1,
   });
 
-  const tag = tags.find((t) => t.name.startsWith('v'));
+  const tag = tags.find((t) => t.name.startsWith('app-v'));
   console.log(`${JSON.stringify(tag, null, 2)}`);
 
   if (!tag) return;
@@ -32,6 +32,7 @@ async function updater() {
     tag: tag.name,
   });
 
+  // template: updater install.json
   const updateData = {
     version: tag.name,
     notes: updatelog(tag.name),
@@ -66,6 +67,7 @@ async function updater() {
   };
 
   const promises = latestRelease.assets.map(async (asset) => {
+    console.log('>> release asset: ', asset);
     // windows
     await setAsset(asset, /.msi.zip/, ['win64', 'windows-x86_64']);
 

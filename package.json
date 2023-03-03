@@ -11,7 +11,7 @@
     "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!@tauri-apps)/\"",
     "lint": "eslint . --ext .tsx,.ts",
     "fix": "prettier --write src",
-    "updater": "node scripts/updater.mjs",
+    "updater": "node ./ci-scripts/updater.mjs",
     "tc": "tsc",
     "tauri": "tauri"
   },
@@ -84,6 +84,7 @@
     "eslint-plugin-testing-library": "^5.7.2",
     "postcss": "8.4.19",
     "prettier": "2.7.1",
+    "@actions/github": "5.1.1",
     "typescript": "^4.9.5"
   },
   "browserslist": {
