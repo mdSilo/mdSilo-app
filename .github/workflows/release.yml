@@ -63,11 +63,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: yarn
-      - run: yarn updater --token=${{ secrets.GH_TOKEN }}
+      - run: yarn updater 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Deploy install.json
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GH_TOKEN }}
           publish_dir: ./updater
-          #force_orphan: true
+          force_orphan: true
