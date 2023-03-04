@@ -1,6 +1,8 @@
 # Changelog 
 
-## v0.5.5 - 2023-XX-XX
+## app-v0.5.5 
+
+2023-03-05
 
 ### Features 
 
@@ -14,26 +16,36 @@
 
 and a few tiny fixes.
 
-## v0.5.4 - 2023-02-14
+## app-v0.5.4 
+
+2023-02-14
 
 ### Features 
 
 - [X] Support Atom feed
 
 
-## [app-v0.5.3] - 2023-01-31
+## app-v0.5.3 
+
+2023-01-31
 
 Fix bugs
 
-## [app-v0.5.2] - 2022-12-31
+## app-v0.5.2 
+
+2022-12-31
 
 Fix bugs
 
-## [app-v0.5.1] - 2022-11-30 
+## app-v0.5.1 
+
+2022-11-30 
 
 Fixed a bug: failed to create db file on launch
 
-## [app-v0.5.0] - 2022-11-14 
+## app-v0.5.0 
+
+2022-11-14 
 
 ### Features 
 
@@ -41,7 +53,9 @@ Fixed a bug: failed to create db file on launch
 - [X] RSS reader  
 - [X] Podcast client 
 
-## [app-v0.4.9] - 2022-10-22 
+## app-v0.4.9 
+
+2022-10-22 
 
 ### Bug Fixes 
 
@@ -52,7 +66,9 @@ Fixed a bug: failed to create db file on launch
 
 - [X] Can attach file: zip, docx, xlsx, pptx, ... 
 
-## [app-v0.4.8] - 2022-10-15 
+## app-v0.4.8 
+
+2022-10-15 
 
 ### Features 
 

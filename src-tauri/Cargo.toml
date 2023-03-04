@@ -17,7 +17,7 @@ tauri-build = { version = "1.2.1", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.2.1", features = ["clipboard-all", "dialog-all", "protocol-all", "shell-all", "window-all", "updater"] }
+tauri = { version = "1.2.1", features = ["clipboard-all", "dialog-all", "protocol-all", "shell-all", "updater", "window-all"] }
 trash = "3.0.1"
 notify = "5.1.0"
 open = "3.2.0"
