@@ -1,11 +1,12 @@
 import React, { 
-  useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes, useState, useEffect 
+  useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes, useState, useEffect, useMemo 
 } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import { IconHeadphones } from '@tabler/icons';
 import { useStore } from 'lib/store';
-import { dateCompare } from 'utils/helper';
+import { Sort } from 'lib/userSettings';
+import { ciStringCompare, dateCompare } from 'utils/helper';
 import { PodType as PodTreeItem } from 'types/model';
 import * as dataAgent from 'components/feed/dataAgent';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -52,14 +53,25 @@ type TreeProps = {
 
 function Playlist(props: TreeProps) {
   const { data, currentPod, className = '' } = props;
-
-  const sortedData = data.length >= 2 
+  const [podSort, setPodSort] = useState(Sort.DateCreatedDescending); 
+  const sortedData = useMemo(() => { return data.length >= 2 
     ? data.sort((n1, n2) => {
-        return n2.published && n1.published 
-          ? dateCompare(n2.published, n1.published)
-          : 0;
-      })
+      switch (podSort) {
+        case Sort.DateCreatedAscending:
+          return n2.published && n1.published 
+            ? dateCompare(n1.published, n2.published)
+            : 0;
+        case Sort.TitleAscending:
+          return ciStringCompare(n1.title, n2.title);
+        case Sort.TitleDescending:
+          return ciStringCompare(n2.title, n1.title);
+        default:  // case Sort.DateCreatedDescending:
+          return n2.published && n1.published 
+            ? dateCompare(n2.published, n1.published)
+            : 0;
+      }})
     : data;
+  }, [data, podSort])
 
   const Row = useCallback(
     ({ index, style }: {index: number; style: React.CSSProperties}) => {
@@ -79,6 +91,40 @@ function Playlist(props: TreeProps) {
   return (
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
+        <div className="flex items-center justify-between border-t dark:border-gray-700">
+          <Tooltip content="Title: A-Z">
+            <button
+              className="p-1 mx-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+              onClick={() => setPodSort(Sort.TitleAscending)}
+            >
+              <span className={podSort === Sort.TitleAscending ? 'text-primary-600 dark:text-primary-400' : ''}>A-Z</span>
+            </button>
+          </Tooltip>
+          <Tooltip content="Title: Z-A">
+            <button
+              className="p-1 mx-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+              onClick={() => setPodSort(Sort.TitleDescending)}
+            >
+              <span className={podSort === Sort.TitleDescending ? 'text-primary-600 dark:text-primary-400' : ''}>Z-A</span>
+            </button>
+          </Tooltip>
+          <Tooltip content="Publish: Old-New">
+            <button
+              className="p-1 mx-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+              onClick={() => setPodSort(Sort.DateCreatedAscending)}
+            >
+              <span className={podSort === Sort.DateCreatedAscending ? 'text-primary-600 dark:text-primary-400' : ''}>Old</span>
+            </button>
+          </Tooltip>
+          <Tooltip content="Publish: New-Old">
+            <button
+              className="p-1 mx-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+              onClick={() => setPodSort(Sort.DateCreatedDescending)}
+            >
+              <span className={podSort === Sort.DateCreatedDescending ? 'text-primary-600 dark:text-primary-400' : ''}>New</span>
+            </button>
+          </Tooltip>
+        </div>
         <div className={className}>
           <AutoSizer>
             {({ width, height }) => (
