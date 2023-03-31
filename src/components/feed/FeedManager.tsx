@@ -36,7 +36,7 @@ export function FeedManager(props: Props) {
     const res = await dataAgent.fetchFeed(feedUrl);
     // console.log("res from rust", res);
     if (!res) {
-      setDescription('Cant find any feed, please check url');
+      setDescription('Cannot find any feed, please check the URL');
       return;
     }
     const { channel } = res;
