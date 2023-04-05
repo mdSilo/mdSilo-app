@@ -12,6 +12,7 @@ mod paths;
 mod schema;
 mod storage;
 mod tests;
+mod tree;
 mod window;
 
 extern crate diesel;

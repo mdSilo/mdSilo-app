@@ -10,6 +10,7 @@ extern crate open;
 extern crate trash;
 use crate::paths::{PathBufExt, PathExt};
 use crate::storage::do_log;
+use crate::tree::Tree;
 use notify::{
   event::{EventKind, ModifyKind, RenameMode},
   Config, Event as RawEvent, RecommendedWatcher, RecursiveMode, Watcher,
@@ -438,6 +439,9 @@ pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
 
     filemetas.push(simple_meta);
   }
+
+  let tree = Tree::init(dir);
+  println!(">> dir tree: {:?}", tree);
 
   Ok(filemetas)
 }
