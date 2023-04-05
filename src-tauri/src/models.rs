@@ -1,6 +1,6 @@
 use super::schema::{articles, channels};
-use serde::{Serialize, Deserialize};
-use diesel::{sql_types::*, Queryable, QueryableByName, Insertable};
+use diesel::{sql_types::*, Insertable, Queryable, QueryableByName};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Queryable, Serialize, QueryableByName)]
 pub struct Channel {
@@ -15,7 +15,7 @@ pub struct Channel {
   #[diesel(sql_type = Text)]
   pub published: String,
   #[diesel(sql_type = Text)]
-  pub ty: String,  // podcast || rss 
+  pub ty: String, // podcast || rss
 }
 
 #[derive(Debug, Queryable, Serialize, QueryableByName)]
@@ -80,6 +80,5 @@ pub struct NewArticle {
 //   #[diesel(sql_type = Text)]
 //   pub saved: String,
 // }
-
 
 // TODO: save daily activities to db

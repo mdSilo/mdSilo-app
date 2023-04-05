@@ -1,9 +1,9 @@
+use chrono::offset::Local;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::str;
-use chrono::offset::Local;
 use tauri::api::path::local_data_dir;
 
 #[derive(Serialize, Debug, Default)]
@@ -26,18 +26,18 @@ pub fn create_mdsilo_dir() -> Option<PathBuf> {
       Ok(_) => Some(data_path),
       Err(e) => {
         do_log(
-          "Error".to_string(), 
+          "Error".to_string(),
           format!("Error on creating local_data_dir: {:?}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
         );
         None
-      },
+      }
     }
   } else {
     do_log(
-      "Error".to_string(), 
+      "Error".to_string(),
       format!("Error on getting local_data_dir"),
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
     );
     None
   }
@@ -47,30 +47,32 @@ pub fn create_mdsilo_dir() -> Option<PathBuf> {
 pub fn set_data(key: String, value: Value) -> bool {
   let storage_dir = match create_mdsilo_dir() {
     Some(dir) => dir,
-    None => { return false; }
+    None => {
+      return false;
+    }
   };
 
   let vec_value = match serde_json::to_vec(&value) {
     Ok(val) => val,
     Err(e) => {
       do_log(
-        "Error".to_string(), 
-        format!("Err on [set_data: serde_json::to_ve]: {:?}", e), 
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+        "Error".to_string(),
+        format!("Err on [set_data: serde_json::to_ve]: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       );
       return false;
-    },
+    }
   };
   let bin_value = match bincode::serialize(&vec_value) {
     Ok(val) => val,
     Err(e) => {
       do_log(
-        "Error".to_string(), 
-        format!("Err on [set_data: bincode::serialize]: {:?}", e), 
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
+        "Error".to_string(),
+        format!("Err on [set_data: bincode::serialize]: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       );
       return false;
-    },
+    }
   };
 
   fs::write(storage_dir.join(key), bin_value).is_ok()
@@ -97,19 +99,20 @@ pub fn get_data(key: String) -> Result<StorageData, String> {
         status: false,
         data: Value::Null,
       });
-    },
+    }
   }
 
   let value = match serde_json::from_str(&data) {
     Ok(result) => result,
     Err(_e) => {
-      {
-        status = false;
-        Value::Null
-      }
-    },
+      status = false;
+      Value::Null
+    }
   };
-  Ok(StorageData { data: value, status })
+  Ok(StorageData {
+    data: value,
+    status,
+  })
 }
 
 #[tauri::command]
@@ -123,7 +126,6 @@ pub fn delete_data(key: String) -> bool {
 
   fs::remove_file(storage_dir.join(key)).is_ok()
 }
-
 
 // log case
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -147,7 +149,7 @@ pub fn set_log(log_data: Vec<LogItem>) -> bool {
   let log_value = serde_json::to_value(logs);
   match log_value {
     Ok(value) => set_data("log".to_string(), value),
-    Err(_) => false
+    Err(_) => false,
   }
 }
 
@@ -170,6 +172,10 @@ pub fn del_log() -> bool {
 }
 
 pub fn do_log(ty: String, info: String, timestamp: String) -> bool {
-  let log_item = LogItem { ty, info, timestamp};
+  let log_item = LogItem {
+    ty,
+    info,
+    timestamp,
+  };
   set_log(vec![log_item])
 }

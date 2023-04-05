@@ -1,14 +1,13 @@
+use crate::models::{Article, Channel, NewArticle, NewChannel};
+use crate::schema;
+use crate::storage::{create_mdsilo_dir, do_log};
+use chrono::offset::Local;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
-use chrono::offset::Local;
-use crate::storage::{do_log, create_mdsilo_dir};
-use crate::models::{Channel, NewChannel, Article, NewArticle};
-use crate::schema;
 
 pub fn establish_connection() -> SqliteConnection {
-  let data_path = create_mdsilo_dir()
-    .expect("Error on creating data dir");
+  let data_path = create_mdsilo_dir().expect("Error on creating data dir");
 
   let db_path = data_path.join("mdsilo.db");
 
@@ -18,11 +17,13 @@ pub fn establish_connection() -> SqliteConnection {
     .expect("Error on converting db path to url");
 
   SqliteConnection::establish(&database_url)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("Error on connecting to db: {:?}", e),
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("Error on connecting to db: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .expect("Error on connecting to database")
 }
 
@@ -30,11 +31,13 @@ pub fn get_channels() -> Vec<Channel> {
   let mut connection = establish_connection();
   let results = schema::channels::dsl::channels
     .load::<Channel>(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [get_channels]: {:?}", e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [get_channels]: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(vec![]);
 
   return results;
@@ -46,11 +49,13 @@ pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
   let result = diesel::insert_or_ignore_into(schema::channels::dsl::channels)
     .values(channel)
     .execute(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [add_channels: insert channel]: {:?}", e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [add_channels: insert channel]: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(0);
 
   // println!("new channel result {:?}", result);
@@ -60,13 +65,15 @@ pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
   diesel::insert_or_ignore_into(schema::articles::dsl::articles)
     .values(articles)
     .execute(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [add_channels: insert articles]: {:?}", e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [add_channels: insert articles]: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(0);
-  
+
   return result;
 }
 
@@ -77,35 +84,44 @@ pub fn delete_channel(link: String) -> usize {
   let channel = schema::channels::dsl::channels
     .filter(schema::channels::link.eq(&link))
     .load::<Channel>(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [delete_channel: query channel, {}]: {:?}", link, e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!(
+          "db Error on [delete_channel: query channel, {}]: {:?}",
+          link, e
+        ),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(vec![]);
 
   // del channel and it's articles
   if channel.len() == 1 {
     let result = diesel::delete(
-      schema::channels::dsl::channels.filter(schema::channels::link.eq(&link))
+      schema::channels::dsl::channels.filter(schema::channels::link.eq(&link)),
     )
     .execute(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [delete_channel: del channel]: {:?}", e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [delete_channel: del channel]: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(0);
 
     diesel::delete(
       schema::articles::dsl::articles.filter(schema::articles::feed_link.eq(&link)),
     )
     .execute(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [delete_channel: del articles]: {:?}", e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [delete_channel: del articles]: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(0);
 
     return result;
@@ -119,11 +135,13 @@ pub fn get_channel_by_link(link: String) -> Option<Channel> {
   let mut channel = schema::channels::dsl::channels
     .filter(schema::channels::link.eq(&link))
     .load::<Channel>(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [get_channel_by_link: {}]: {:?}", link, e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [get_channel_by_link: {}]: {:?}", link, e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(vec![]);
 
   if channel.len() == 1 {
@@ -149,11 +167,13 @@ pub fn get_unread_num() -> Vec<UnreadNum> {
   let mut connection = establish_connection();
   let record = diesel::sql_query(SQL_QUERY_UNREAD_NUM)
     .load::<UnreadNum>(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [get_unread_num]: {:?}", e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [get_unread_num]: {:?}", e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(vec![]);
 
   return record;
@@ -164,22 +184,32 @@ pub fn add_articles(feed_link: String, articles: Vec<NewArticle>) -> usize {
   let channel = schema::channels::dsl::channels
     .filter(schema::channels::link.eq(&feed_link))
     .load::<Channel>(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [add_articles: get channel, {}]: {:?}", feed_link, e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!(
+          "db Error on [add_articles: get channel, {}]: {:?}",
+          feed_link, e
+        ),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(vec![]);
 
   if channel.len() == 1 {
     let result = diesel::insert_or_ignore_into(schema::articles::dsl::articles)
       .values(articles)
       .execute(&mut connection)
-      .map_err(|e| do_log(
-        "Error".to_string(), 
-        format!("db Error on [add_articles: to channel, {}]: {:?}", feed_link, e), 
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-      ))
+      .map_err(|e| {
+        do_log(
+          "Error".to_string(),
+          format!(
+            "db Error on [add_articles: to channel, {}]: {:?}",
+            feed_link, e
+          ),
+          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+        )
+      })
       .unwrap_or(0);
 
     return result;
@@ -193,11 +223,13 @@ pub fn get_article_by_url(url: String) -> Option<Article> {
   let mut result = schema::articles::dsl::articles
     .filter(schema::articles::url.eq(&url))
     .load::<Article>(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [get_article_by_url, {}]: {:?}", url, e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [get_article_by_url, {}]: {:?}", url, e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(vec![]);
 
   if result.len() == 1 {
@@ -212,19 +244,19 @@ pub fn update_article_read_status(url: String, status: i32) -> usize {
   let article = get_article_by_url(String::from(&url));
 
   match article {
-    Some(_) => {
-      diesel::update(
-        schema::articles::dsl::articles.filter(schema::articles::url.eq(&url))
+    Some(_) => diesel::update(
+      schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)),
+    )
+    .set(schema::articles::read_status.eq(status))
+    .execute(&mut connection)
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [update_article_read_status: {}]: {:?}", url, e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
-      .set(schema::articles::read_status.eq(status))
-      .execute(&mut connection)
-      .map_err(|e| do_log(
-        "Error".to_string(), 
-        format!("db Error on [update_article_read_status: {}]: {:?}", url, e), 
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-      ))
-      .unwrap_or(0)
-    },
+    })
+    .unwrap_or(0),
     None => 0,
   }
 }
@@ -234,19 +266,19 @@ pub fn update_article_star_status(url: String, status: i32) -> usize {
   let article = get_article_by_url(String::from(&url));
 
   match article {
-    Some(_) => {
-      diesel::update(
-        schema::articles::dsl::articles.filter(schema::articles::url.eq(&url))
+    Some(_) => diesel::update(
+      schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)),
+    )
+    .set(schema::articles::star_status.eq(status))
+    .execute(&mut connection)
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!("db Error on [update_article_star_status, {}]: {:?}", url, e),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
-      .set(schema::articles::star_status.eq(status))
-      .execute(&mut connection)
-      .map_err(|e| do_log(
-        "Error".to_string(), 
-        format!("db Error on [update_article_star_status, {}]: {:?}", url, e), 
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-      ))
-      .unwrap_or(0)
-    },
+    })
+    .unwrap_or(0),
     None => 0,
   }
 }
@@ -280,11 +312,16 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
 
   let result = query
     .load::<Article>(&mut connection)
-    .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [get_articles, per fileter: {:?}]: {:?}", filter, e), 
-      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-    ))
+    .map_err(|e| {
+      do_log(
+        "Error".to_string(),
+        format!(
+          "db Error on [get_articles, per fileter: {:?}]: {:?}",
+          filter, e
+        ),
+        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+      )
+    })
     .unwrap_or(vec![]);
 
   // println!("get articles result: {:?}", result);
@@ -296,15 +333,17 @@ pub fn update_articles_read_status(feed_link: String, read_status: i32) -> usize
   let mut connection = establish_connection();
   let result = diesel::update(
     schema::articles::dsl::articles
-      .filter(schema::articles::feed_link.eq(feed_link))
+      .filter(schema::articles::feed_link.eq(feed_link)),
   )
   .set(schema::articles::read_status.eq(read_status))
   .execute(&mut connection)
-  .map_err(|e| do_log(
-    "Error".to_string(), 
-    format!("db Error on [update_articles_read_status]: {:?}", e), 
-    format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-  ))
+  .map_err(|e| {
+    do_log(
+      "Error".to_string(),
+      format!("db Error on [update_articles_read_status]: {:?}", e),
+      format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+    )
+  })
   .unwrap_or(0);
 
   return result;
@@ -312,13 +351,13 @@ pub fn update_articles_read_status(feed_link: String, read_status: i32) -> usize
 
 /* pub fn save_notes(notes: Note) -> usize {
   let mut connection = establish_connection();
-  
+
   let result = diesel::insert_or_ignore_into(schema::notes::dsl::notes)
     .values(notes)
     .execute(&mut connection)
     .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [save_notes]: {:?}", e), 
+      "Error".to_string(),
+      format!("db Error on [save_notes]: {:?}", e),
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(0);
@@ -332,8 +371,8 @@ pub fn get_notes_by_id(id: String) -> Option<Note> {
     .filter(schema::notes::id.eq(&id))
     .load::<Note>(&mut connection)
     .map_err(|e| do_log(
-      "Error".to_string(), 
-      format!("db Error on [get_notes_by_id, {}]: {:?}", id, e), 
+      "Error".to_string(),
+      format!("db Error on [get_notes_by_id, {}]: {:?}", id, e),
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
     .unwrap_or(vec![]);

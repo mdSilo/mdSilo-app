@@ -34,14 +34,17 @@ mod tests {
   fn test_join_paths() {
     assert_eq!(join_paths("/home", vec![]), "/home");
     assert_eq!(join_paths("/home/", vec!["md/", "/silo/"]), "/home/md/silo");
-    assert_eq!(join_paths("/home\\", vec!["\\md/", "/silo/\\"]), "/home/md/silo");
     assert_eq!(
-      join_paths("/home\\", vec!["\\md/", "/silo.app/\\"]), 
+      join_paths("/home\\", vec!["\\md/", "/silo/\\"]),
+      "/home/md/silo"
+    );
+    assert_eq!(
+      join_paths("/home\\", vec!["\\md/", "/silo.app/\\"]),
       "/home/md/silo.app"
     );
     #[cfg(target_os = "windows")]
     assert_eq!(
-      join_paths("C:\\home\\", vec!["\\md\\", "\\silo.app/\\"]), 
+      join_paths("C:\\home\\", vec!["\\md\\", "\\silo.app/\\"]),
       "C:/home/md/silo.app"
     );
   }
@@ -55,7 +58,7 @@ mod tests {
       .to_string();
     // create file
     create_file(file.clone()).await;
-    
+
     #[cfg(not(target_os = "windows"))]
     let dir_of_file = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp/mdsilo")
@@ -93,13 +96,13 @@ mod tests {
     assert_eq!(get_dirpath(&dir), dir);
     #[cfg(not(target_os = "windows"))]
     assert_eq!(get_dirpath(&format!("{}//", dir)), dir);
-    
+
     let temp_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp")
       .to_str()
       .unwrap()
       .to_string();
-    
+
     #[cfg(not(target_os = "windows"))]
     assert_eq!(get_parent_dir(&dir), temp_dir);
     #[cfg(not(target_os = "windows"))]
@@ -235,7 +238,7 @@ mod tests {
     let abs_path = asset_path.0;
     let rel_path = asset_path.1;
     assert_eq!(is_dir(Path::new(work_dir.as_str())).unwrap(), true);
-    assert_eq!(abs_path, format!("{}/assets/app.txt", work_dir.clone())); 
+    assert_eq!(abs_path, format!("{}/assets/app.txt", work_dir.clone()));
     assert_eq!(file_exist(&abs_path), true);
     assert_eq!(rel_path, "./assets/app.txt");
     // override copy
@@ -243,7 +246,7 @@ mod tests {
       copy_file_to_assets(to_path.clone(), format!("{}/", work_dir)).await;
     let abs_path_1 = asset_path_1.0;
     let rel_path_1 = asset_path_1.1;
-    assert_eq!(abs_path_1, format!("{}/assets/app.txt", work_dir.clone())); 
+    assert_eq!(abs_path_1, format!("{}/assets/app.txt", work_dir.clone()));
     assert_eq!(file_exist(&abs_path_1), true);
     assert_eq!(rel_path_1, "./assets/app.txt");
 
@@ -273,10 +276,10 @@ mod tests {
     assert_eq!(file_exist(&file), false);
     assert_eq!(file_exist(&to_path), false);
     assert_eq!(file_exist(&to_dir), false);
-    
+
     #[cfg(not(target_os = "macos"))]
     assert_eq!(file_exist(&abs_path_1), true); // ci test failed on win, but OK on Win10
-    // on macOS: 
+                                               // on macOS:
     #[cfg(target_os = "macos")]
     assert_eq!(file_exist(&abs_path_1), false);
 

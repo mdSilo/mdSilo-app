@@ -1,5 +1,5 @@
-use tauri::{Manager, api::dialog};
 use std::path::Path;
+use tauri::{api::dialog, Manager};
 
 use crate::files::read_directory;
 
@@ -14,9 +14,7 @@ pub async fn web_window(
   script: Option<String>, // script path: can be file or dir
 ) {
   // inject js script
-  let mut inject_script = format!(
-    "// ## [{title}] Script Injection ## \n\n"
-  );
+  let mut inject_script = format!("// ## [{title}] Script Injection ## \n\n");
   let script_path = script.unwrap_or_default();
   if !script_path.is_empty() {
     // check is dir or file and read all files
@@ -31,12 +29,13 @@ pub async fn web_window(
         }
       }
     } else if file_path.is_file() {
-      let script_content = std::fs::read_to_string(&script_path).unwrap_or_else(|msg| {
-        let main_window = app.get_window("main").unwrap();
-        let err_msg = format!("[app.items.script] {}\n{}", script_path, msg);
-        dialog::message(Some(&main_window), &title, err_msg);
-        "".to_string()
-      });
+      let script_content =
+        std::fs::read_to_string(&script_path).unwrap_or_else(|msg| {
+          let main_window = app.get_window("main").unwrap();
+          let err_msg = format!("[app.items.script] {}\n{}", script_path, msg);
+          dialog::message(Some(&main_window), &title, err_msg);
+          "".to_string()
+        });
       inject_script += &format!("{script_content}\n");
     }
   }
@@ -58,9 +57,5 @@ pub async fn web_window(
 #[tauri::command]
 pub fn msg_dialog(app: tauri::AppHandle, title: &str, msg: &str) {
   let win = app.app_handle().get_window("main");
-  tauri::api::dialog::message(
-    win.as_ref(),
-    title,
-    msg,
-  );
+  tauri::api::dialog::message(win.as_ref(), title, msg);
 }

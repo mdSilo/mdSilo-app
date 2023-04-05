@@ -1,16 +1,16 @@
+use async_recursion::async_recursion;
+use chrono::{SecondsFormat, TimeZone, Utc};
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
-use chrono::{Utc, TimeZone, SecondsFormat};
-use async_recursion::async_recursion;
 // use crate::db;
-use crate::files::{read_directory, write_file, EventPayload}; 
+use crate::files::{read_directory, write_file, EventPayload};
 use crate::storage::get_data;
 // use crate::models::Note;
 
 #[derive(serde::Serialize, Clone, Debug, Default)]
 pub struct NoteData {
-  id: String,  // !!Important!! id === file_path
+  id: String, // !!Important!! id === file_path
   title: String,
   content: String,
   file_path: String,
@@ -25,7 +25,7 @@ pub type NotesData = HashMap<String, NoteData>;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct NoteTreeItem {
-  id: String,  
+  id: String,
   title: String,
   created_at: String,
   updated_at: String,
@@ -36,12 +36,12 @@ pub type NoteTree = HashMap<String, Vec<NoteTreeItem>>;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct ActivityData {
-  activity_num: u32, 
+  activity_num: u32,
   create_num: u32,
   update_num: u32,
 }
 
-pub type ActivityRecord = HashMap<String, ActivityData>; 
+pub type ActivityRecord = HashMap<String, ActivityData>;
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct JsonData {
@@ -53,20 +53,22 @@ pub struct JsonData {
 
 #[async_recursion]
 pub async fn load_dir_recursively(
-  dir: &str, 
-  notes: &mut NotesData, 
-  tree: &mut NoteTree
+  dir: &str,
+  notes: &mut NotesData,
+  tree: &mut NoteTree,
 ) {
   // get files
   let dir_data = read_directory(dir).await.unwrap_or_default();
   let files = dir_data.files.iter().filter(|f| !f.is_hidden);
-  // loop 
+  // loop
   let mut tree_items = Vec::new();
   for file in files {
     let fname = file.file_name.clone();
     let is_dir = file.is_dir;
     let check_md = !is_dir && (fname.ends_with(".md") || fname.ends_with(".txt"));
-    if !is_dir && !check_md { continue; }
+    if !is_dir && !check_md {
+      continue;
+    }
 
     let file_title = Path::new(&fname)
       .file_stem()
@@ -76,7 +78,8 @@ pub async fn load_dir_recursively(
       .unwrap_or_default();
     let file_path = file.file_path.clone();
 
-    let mod_since_the_epoch = file.last_modified
+    let mod_since_the_epoch = file
+      .last_modified
       .duration_since(UNIX_EPOCH)
       .unwrap_or_default()
       .as_millis();
@@ -86,7 +89,8 @@ pub async fn load_dir_recursively(
       .unwrap_or(Utc::now())
       .to_rfc3339_opts(SecondsFormat::Millis, true);
 
-    let create_since_the_epoch = file.created
+    let create_since_the_epoch = file
+      .created
       .duration_since(UNIX_EPOCH)
       .unwrap_or_default()
       .as_millis();
@@ -99,7 +103,11 @@ pub async fn load_dir_recursively(
     let new_note = NoteData {
       id: file_path.clone(),
       title: file_title.clone(),
-      content: if is_dir { String::new() } else { file.file_text.clone() },
+      content: if is_dir {
+        String::new()
+      } else {
+        file.file_text.clone()
+      },
       created_at: created_date.clone(),
       updated_at: last_mod_date.clone(),
       file_path: file_path.clone(),
@@ -115,20 +123,19 @@ pub async fn load_dir_recursively(
       updated_at: last_mod_date,
       is_dir,
     };
-    
+
     tree_items.push(new_tree);
 
     if file.is_dir {
       load_dir_recursively(&file_path, notes, tree).await;
     }
   }
-  
+
   tree_items.sort_by(|a, b| (a.id).cmp(&b.id));
   tree_items.dedup_by(|a, b| a.id == b.id);
 
   tree.insert(dir.to_string(), tree_items);
 }
-
 
 pub async fn load_dir(dir: &str) -> (NotesData, NoteTree) {
   // init data and tree
@@ -161,25 +168,30 @@ pub async fn write_json(dir: String, window: tauri::Window) -> bool {
 
   let json = serde_json::to_string(&data).unwrap_or_default();
   let to_dir = format!("{}/mdsilo.json", dir);
-  let res = write_file(to_dir, json).await; 
+  let res = write_file(to_dir, json).await;
 
   // println!("loaded dir: {} ? -> {}", dir, res);
 
-  window.emit(
-    "changes", 
-    EventPayload {
-      paths: vec![dir],
-      event: if res { String::from("loaded") } else { String::from("unloaded") },
-    },
-  )
-  .unwrap_or(());
+  window
+    .emit(
+      "changes",
+      EventPayload {
+        paths: vec![dir],
+        event: if res {
+          String::from("loaded")
+        } else {
+          String::from("unloaded")
+        },
+      },
+    )
+    .unwrap_or(());
 
   return res;
 }
 
 // #[tauri::command]
 // pub async fn save_notes(dir: String, content: String) -> usize {
-  
+
 //   let data = Note {
 //     id: dir,
 //     content,

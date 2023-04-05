@@ -3,15 +3,15 @@
   windows_subsystem = "windows"
 )]
 
+mod db;
+mod feed;
 mod files;
+mod json;
+mod models;
 mod paths;
+mod schema;
 mod storage;
 mod tests;
-mod json;
-mod feed;
-mod db;
-mod models;
-mod schema;
 mod window;
 
 extern crate diesel;
