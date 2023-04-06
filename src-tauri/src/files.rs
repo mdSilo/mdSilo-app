@@ -11,6 +11,7 @@ extern crate trash;
 use crate::paths::{PathBufExt, PathExt};
 use crate::storage::do_log;
 use crate::tree::Tree;
+use crate::tree::node::from_node;
 use notify::{
   event::{EventKind, ModifyKind, RenameMode},
   Config, Event as RawEvent, RecommendedWatcher, RecursiveMode, Watcher,
@@ -21,17 +22,17 @@ use std::os::windows::fs::MetadataExt;
 
 #[derive(serde::Serialize, Clone, Debug)]
 pub struct SimpleFileMeta {
-  file_path: String,
-  file_name: String,
-  // file_type: fs::FileType,
-  created: SystemTime,
-  last_modified: SystemTime, // locale
-  last_accessed: SystemTime,
-  size: u64,
-  readonly: bool,
-  is_dir: bool,
-  is_file: bool,
-  is_hidden: bool,
+  pub file_path: String,
+  pub file_name: String,
+  // pub file_type: fs::FileType,
+  pub created: SystemTime,
+  pub last_modified: SystemTime, // locale
+  pub last_accessed: SystemTime,
+  pub size: u64,
+  pub readonly: bool,
+  pub is_dir: bool,
+  pub is_file: bool,
+  pub is_hidden: bool,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]
@@ -397,53 +398,56 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
 // Get array of files of a directory
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
-  let paths = match fs::read_dir(dir) {
-    Ok(res) => res,
-    Err(e) => {
-      do_log(
-        "Error".to_string(),
-        format!("Error on [list_directory, {}]: {:?}", dir, e),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
-      return Ok(vec![]);
-    }
-  };
-  // println!("files in dir: {:?}", paths);
+  // let paths = match fs::read_dir(dir) {
+  //   Ok(res) => res,
+  //   Err(e) => {
+  //     do_log(
+  //       "Error".to_string(),
+  //       format!("Error on [list_directory, {}]: {:?}", dir, e),
+  //       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+  //     );
+  //     return Ok(vec![]);
+  //   }
+  // };
+  // // println!("files in dir: {:?}", paths);
 
-  let mut filemetas = Vec::new();
-  for path in paths {
-    // raw path, not normalized yet
-    let file_path = match path {
-      Ok(p) => p.path().display().to_string(),
-      Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!("Error on [list_directory: check path]: {:?}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
-        continue;
-      }
-    };
+  // let mut filemetas = Vec::new();
+  // for path in paths {
+  //   // raw path, not normalized yet
+  //   let file_path = match path {
+  //     Ok(p) => p.path().display().to_string(),
+  //     Err(e) => {
+  //       do_log(
+  //         "Error".to_string(),
+  //         format!("Error on [list_directory: check path]: {:?}", e),
+  //         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+  //       );
+  //       continue;
+  //     }
+  //   };
 
-    let simple_meta = match get_simple_meta(&file_path) {
-      Ok(data) => data,
-      Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!("Error on [list_directory: get_simple_mata]: {:?}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
-        continue;
-      }
-    };
+  //   let simple_meta = match get_simple_meta(&file_path) {
+  //     Ok(data) => data,
+  //     Err(e) => {
+  //       do_log(
+  //         "Error".to_string(),
+  //         format!("Error on [list_directory: get_simple_mata]: {:?}", e),
+  //         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+  //       );
+  //       continue;
+  //     }
+  //   };
 
-    filemetas.push(simple_meta);
-  }
+  //   filemetas.push(simple_meta);
+  // }
 
   let tree = Tree::init(dir);
-  println!(">> dir tree: {:?}", tree);
+  // println!(">> dir tree: {:?}", tree);
+  let nodes = tree.map(|t|t.children_vec()).unwrap_or_default();
+  let metas: Vec<SimpleFileMeta> = 
+    nodes.iter().filter_map(|n|from_node(n)).collect();
 
-  Ok(filemetas)
+  Ok(metas)
 }
 
 // Check if path given exists

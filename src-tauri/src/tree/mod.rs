@@ -38,6 +38,11 @@ impl Tree {
     Ok(Self::new(inner, root))
   }
 
+  /// Grabs a reference to `inner`.
+  fn inner(&self) -> &Arena<Node> {
+      &self.inner
+  }
+
   /// Parallel traversal of the directory 
   fn traverse(dir: &str) -> TreeResult<(Arena<Node>, NodeId)> {
     let walker = new_walker(PathBuf::from(dir))?;
@@ -103,7 +108,7 @@ impl Tree {
   ) {
     let current_node = tree[current_node_id].get_mut();
 
-    let children = branches.remove(current_node.path()).unwrap();
+    let children = branches.remove(current_node.path()).unwrap_or_default();
     for child_id in children.iter() {
       let index = *child_id;
 
@@ -121,6 +126,21 @@ impl Tree {
     for child_id in children {
       current_node_id.append(child_id, tree);
     }
+  }
+
+  pub fn children_vec(&self) -> Vec<Node> {
+    let root = self.root;
+    let inner = self.inner();
+
+    let mut children = root.children(inner);
+    let mut res: Vec<Node> = Vec::new();
+
+    while let Some(current_node_id) = children.next() {
+      let node = inner[current_node_id].get().clone();
+      res.push(node);
+    }
+
+    res
   }
 }
 

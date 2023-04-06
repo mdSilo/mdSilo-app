@@ -2,23 +2,21 @@ use ignore::DirEntry;
 use indextree::{Arena, Node as NodeWrapper, NodeId};
 use std::{
   borrow::Cow,
-  convert::From,
+  convert::{From, Into},
   ffi::{OsStr, OsString},
   fs::{FileType, Metadata},
   path::{Path, PathBuf}, 
-  // time::SystemTime,
+  time::SystemTime,
 };
+use crate::{paths::PathExt, files::check_hidden};
+use crate::files::SimpleFileMeta;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
   pub depth: usize,
   file_name: OsString,
   file_type: Option<FileType>,
   pub file_meta: Option<Metadata>,
-  // pub file_size: u64,
-  // pub created: SystemTime,
-  // pub last_modified: SystemTime,
-  // pub last_accessed: SystemTime,
   path: PathBuf,
 }
 
@@ -29,10 +27,6 @@ impl Node {
     file_name: OsString,
     file_type: Option<FileType>,
     file_meta: Option<Metadata>,
-    // file_size: u64,
-    // created: SystemTime,
-    // last_modified: SystemTime,
-    // last_accessed: SystemTime,
     path: PathBuf,
   ) -> Self {
     Self {
@@ -40,10 +34,6 @@ impl Node {
       file_name,
       file_type,
       file_meta,
-      // file_size,
-      // created,
-      // last_modified,
-      // last_accessed,
       path,
     }
   }
@@ -93,29 +83,11 @@ impl From<&DirEntry> for Node {
 
     let metadata = dir_entry.metadata().ok();
     
-    // let file_size = metadata.clone().map(|md|md.len()).unwrap_or(0);
-    // let now = SystemTime::now();
-    // let created = metadata.clone()
-    //   .map(|md|md.created().unwrap_or(now))
-    //   .unwrap_or(now);
-    // let last_modified = metadata.clone()
-    //   .map(|md|md.modified().unwrap_or(now))
-    //   .unwrap_or(now);
-    // let last_accessed = metadata.clone()
-    //   .map(|md|md.accessed().unwrap_or(now))
-    //   .unwrap_or(now);
-
-    // let inode = metadata.clone().map(Inode::try_from).transpose().ok().flatten();
-
     Self::new(
       depth, 
       file_name, 
       file_type, 
       metadata,
-      // file_size, 
-      // created, 
-      // last_modified, 
-      // last_accessed, 
       path.into()
     )
   }
@@ -125,4 +97,39 @@ impl From<(NodeId, &mut Arena<Self>)> for &Node {
   fn from((node_id, tree): (NodeId, &mut Arena<Self>)) -> Self {
     tree.get(node_id).map(NodeWrapper::get).unwrap()
   }
+}
+
+
+pub fn from_node(node: &Node) -> Option<SimpleFileMeta> {
+  let metadata =  match node.file_meta.clone() {
+    Some(meta) => meta,
+    None => return None,
+  };
+  
+  let now = SystemTime::now();
+  let created = metadata.created().unwrap_or(now);
+  let last_modified = metadata.modified().unwrap_or(now);
+  let last_accessed = metadata.accessed().unwrap_or(now);
+
+  let normalized_path = match node.path().normalize_slash() {
+    Some(normalized) => normalized,
+    None => return None,
+  };
+  let is_hidden = check_hidden(&normalized_path);
+  
+  let data = SimpleFileMeta {
+    file_path: normalized_path,
+    file_name: node.file_name_lossy().to_string(),
+    // file_type,
+    created,
+    last_modified,
+    last_accessed,
+    size: metadata.len(),
+    readonly: metadata.permissions().readonly(),
+    is_dir: metadata.is_dir(),
+    is_file: metadata.is_file(),
+    is_hidden,
+  };
+
+  Some(data)
 }
