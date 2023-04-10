@@ -84,6 +84,18 @@ pub fn check_hidden(file_path: &str) -> bool {
   basename.starts_with(".")
 }
 
+#[inline]
+pub fn check_md(file_path: &str) -> bool {
+  let extension = Path::new(file_path).extension().and_then(|ext|ext.to_str());
+  match extension {
+    Some(et) => {
+      let ext = et.to_lowercase();
+      ext == "md" || ext == "markdown" || ext == "text" || ext == "txt"
+    },
+    None => false
+  }
+}
+
 // Get file_name or dir_name of the path given: (name, is_file)
 #[tauri::command]
 pub fn get_basename(file_path: &str) -> (String, bool) {
@@ -267,8 +279,8 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     }
   };
 
-  // TODO, get text if md file
-  let file_text = if meta_data.is_file {
+  // get text if md file
+  let file_text = if meta_data.is_file && check_md(file_path) {
     match fs::read_to_string(file_path) {
       Ok(text) => text,
       Err(e) => {
@@ -397,7 +409,7 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
 
 // Get array of files of a directory
 #[tauri::command]
-pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
+pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
   // let paths = match fs::read_dir(dir) {
   //   Ok(res) => res,
   //   Err(e) => {
@@ -441,11 +453,11 @@ pub async fn list_directory(dir: &str) -> Result<Vec<SimpleFileMeta>, String> {
   //   filemetas.push(simple_meta);
   // }
 
-  let tree = Tree::init(dir);
+  let tree = Tree::init(dir, Some(1), false);
   // println!(">> dir tree: {:?}", tree);
   let nodes = tree.map(|t|t.children_vec()).unwrap_or_default();
-  let metas: Vec<SimpleFileMeta> = 
-    nodes.iter().filter_map(|n|from_node(n)).collect();
+  let metas: Vec<FileMetaData> = 
+    nodes.iter().filter_map(|n| from_node(n)).collect();
 
   Ok(metas)
 }

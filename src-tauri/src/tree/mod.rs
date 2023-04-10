@@ -32,20 +32,24 @@ impl Tree {
   }
 
   /// Initiates file-system traversal and [Tree construction].
-  pub fn init(dir: &str) -> TreeResult<Self> {
-    let (inner, root) = Self::traverse(dir)?;
+  pub fn init(dir: &str, depth: Option<usize>, read_ctn: bool) -> TreeResult<Self> {
+    let (inner, root) = Self::traverse(dir, depth, read_ctn)?;
 
     Ok(Self::new(inner, root))
   }
 
   /// Grabs a reference to `inner`.
   fn inner(&self) -> &Arena<Node> {
-      &self.inner
+    &self.inner
   }
 
   /// Parallel traversal of the directory 
-  fn traverse(dir: &str) -> TreeResult<(Arena<Node>, NodeId)> {
-    let walker = new_walker(PathBuf::from(dir))?;
+  fn traverse(
+    dir: &str, 
+    depth: Option<usize>,
+    read_ctn: bool,
+  ) -> TreeResult<(Arena<Node>, NodeId)> {
+    let walker = new_walker(PathBuf::from(dir), depth)?;
     let (tx, rx) = channel::unbounded::<TraversalState>();
 
     thread::scope(|s| {
@@ -90,7 +94,7 @@ impl Tree {
         Ok::<(Arena<Node>, NodeId), String>((tree, root))
       });
 
-      let mut visitor_builder = BranchVisitorBuilder::new(Sender::clone(&tx));
+      let mut visitor_builder = BranchVisitorBuilder::new(Sender::clone(&tx), read_ctn);
 
       walker.visit(&mut visitor_builder);
 
@@ -145,15 +149,15 @@ impl Tree {
 }
 
 /// Build a new Parallel walker
-fn new_walker(dir: PathBuf) -> Result<WalkParallel, String> {
+fn new_walker(dir: PathBuf, depth: Option<usize>) -> Result<WalkParallel, String> {
   let root = fs::canonicalize(dir).map_err(|e| (format!("{e}")))?;
 
   fs::metadata(&root)
-    .map_err(|e| (format!("{}: {e}", root.display())))?;
+    .map_err(|e| (format!("Not Found {}: {e}", root.display())))?;
 
   Ok(
     WalkBuilder::new(root)
-      .max_depth(Some(1))
+      .max_depth(depth)
       .follow_links(false)
       .git_ignore(false)
       .hidden(true)

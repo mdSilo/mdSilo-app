@@ -4,12 +4,11 @@ use std::{
   borrow::Cow,
   convert::{From, Into},
   ffi::{OsStr, OsString},
-  fs::{FileType, Metadata},
+  fs::{self, FileType, Metadata},
   path::{Path, PathBuf}, 
   time::SystemTime,
 };
-use crate::{paths::PathExt, files::check_hidden};
-use crate::files::SimpleFileMeta;
+use crate::{paths::PathExt, files::{check_hidden, FileMetaData, check_md}};
 
 #[derive(Debug, Clone)]
 pub struct Node {
@@ -17,6 +16,7 @@ pub struct Node {
   file_name: OsString,
   file_type: Option<FileType>,
   pub file_meta: Option<Metadata>,
+  pub file_text: Option<String>,
   path: PathBuf,
 }
 
@@ -27,6 +27,7 @@ impl Node {
     file_name: OsString,
     file_type: Option<FileType>,
     file_meta: Option<Metadata>,
+    file_text: Option<String>,
     path: PathBuf,
   ) -> Self {
     Self {
@@ -34,6 +35,7 @@ impl Node {
       file_name,
       file_type,
       file_meta,
+      file_text,
       path,
     }
   }
@@ -67,8 +69,8 @@ impl Node {
   }
 }
 
-impl From<&DirEntry> for Node {
-  fn from(dir_entry: &DirEntry) -> Self {
+impl From<(&DirEntry, bool)> for Node {
+  fn from((dir_entry, ctn): (&DirEntry, bool)) -> Self {
 
     let depth = dir_entry.depth();
 
@@ -82,12 +84,30 @@ impl From<&DirEntry> for Node {
     );
 
     let metadata = dir_entry.metadata().ok();
+    let text = if ctn {
+      match metadata.clone() {
+        Some(meta) => {
+          if meta.is_file() && check_md(&path.display().to_string()) {
+            match fs::read_to_string(path) {
+              Ok(text) => Some(text),
+              Err(_e) => None,
+            }
+          } else {
+            None
+          }
+        },
+        _ => None,
+      } 
+    } else {
+      None
+    };
     
     Self::new(
       depth, 
       file_name, 
       file_type, 
       metadata,
+      text,
       path.into()
     )
   }
@@ -100,7 +120,7 @@ impl From<(NodeId, &mut Arena<Self>)> for &Node {
 }
 
 
-pub fn from_node(node: &Node) -> Option<SimpleFileMeta> {
+pub fn from_node(node: &Node) -> Option<FileMetaData> {
   let metadata =  match node.file_meta.clone() {
     Some(meta) => meta,
     None => return None,
@@ -117,10 +137,10 @@ pub fn from_node(node: &Node) -> Option<SimpleFileMeta> {
   };
   let is_hidden = check_hidden(&normalized_path);
   
-  let data = SimpleFileMeta {
+  let data = FileMetaData {
     file_path: normalized_path,
     file_name: node.file_name_lossy().to_string(),
-    // file_type,
+    file_text: node.file_text.clone().unwrap_or_default(),
     created,
     last_modified,
     last_accessed,
