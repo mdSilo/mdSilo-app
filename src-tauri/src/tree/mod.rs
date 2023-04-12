@@ -1,10 +1,12 @@
 use crossbeam::channel::{self, Sender};
 use ignore::{WalkBuilder, WalkParallel};
 use indextree::{Arena, NodeId};
+use chrono::{SecondsFormat, TimeZone, Utc};
 use std::{
   collections::HashMap,
   fs,
-  path::PathBuf,
+  path::{Path, PathBuf},
+  time::UNIX_EPOCH,
   thread::{self, available_parallelism}, 
   num::NonZeroUsize,
   convert::From,
@@ -13,6 +15,10 @@ use std::{
 use node::Node;
 use visitor::{BranchVisitorBuilder, TraversalState};
 
+use crate::json::{NotesData, NoteTree, NoteData, NoteTreeItem};
+
+use self::node::from_node;
+
 pub mod node;
 pub mod visitor;
 
@@ -20,7 +26,7 @@ pub mod visitor;
 #[derive(Debug)]
 pub struct Tree {
   inner: Arena<Node>,
-  root: NodeId,
+  pub root: NodeId,
 }
 
 pub type TreeResult<T> = Result<T, String>;
@@ -39,7 +45,7 @@ impl Tree {
   }
 
   /// Grabs a reference to `inner`.
-  fn inner(&self) -> &Arena<Node> {
+  pub fn inner(&self) -> &Arena<Node> {
     &self.inner
   }
 
@@ -171,4 +177,93 @@ fn default_threads_num() -> usize {
   available_parallelism()
     .unwrap_or_else(|_| NonZeroUsize::new(1).unwrap())
     .get()
+}
+
+pub fn assemble_note_tree(
+  root: NodeId,
+  inner: &Arena<Node>,
+  notes: &mut NotesData,
+  note_tree: &mut NoteTree,
+) {
+  println!("now is the dir: {:?}, node is {:?}", root, inner[root].get());
+  let mut children = root.children(inner);
+  let mut tree_items = Vec::new();
+  while let Some(current_node_id) = children.next() {
+    let node = inner[current_node_id].get().clone();
+    if node.is_dir() {
+      assemble_note_tree(current_node_id, inner, notes, note_tree);
+    }
+
+    if let Some(file) = from_node(&node) {
+      let fname = file.file_name.clone();
+      let is_dir = file.is_dir;
+      let check_md = !is_dir && (fname.ends_with(".md") || fname.ends_with(".txt"));
+      if !is_dir && !check_md {
+        continue;
+      }
+
+      let file_title = Path::new(&fname)
+        .file_stem()
+        .unwrap_or_default()
+        .to_owned()
+        .into_string()
+        .unwrap_or_default();
+      let file_path = file.file_path.clone();
+
+      let mod_since_the_epoch = file
+        .last_modified
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+      let last_mod_date = Utc
+        .timestamp_millis_opt(mod_since_the_epoch as i64)
+        .earliest()
+        .unwrap_or(Utc::now())
+        .to_rfc3339_opts(SecondsFormat::Millis, true);
+
+      let create_since_the_epoch = file
+        .created
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+      let created_date = Utc
+        .timestamp_millis_opt(create_since_the_epoch as i64)
+        .earliest()
+        .unwrap_or(Utc::now())
+        .to_rfc3339_opts(SecondsFormat::Millis, true);
+
+      let new_note = NoteData {
+        id: file_path.clone(),
+        title: file_title.clone(),
+        content: if is_dir {
+          String::new()
+        } else {
+          file.file_text.clone()
+        },
+        created_at: created_date.clone(),
+        updated_at: last_mod_date.clone(),
+        file_path: file_path.clone(),
+        is_dir,
+        ..NoteData::default()
+      };
+      notes.insert(file_path.clone(), new_note);
+
+      let new_tree = NoteTreeItem {
+        id: file_path.clone(),
+        title: file_title,
+        created_at: created_date,
+        updated_at: last_mod_date,
+        is_dir,
+      };
+
+      tree_items.push(new_tree);
+    }
+  }
+  
+  let root_node = inner[root].get().clone();
+  if let Some(root_file) = from_node(&root_node) {
+    tree_items.sort_by(|a, b| (a.id).cmp(&b.id));
+    tree_items.dedup_by(|a, b| a.id == b.id);
+    note_tree.insert(root_file.file_path, tree_items);
+  }
 }

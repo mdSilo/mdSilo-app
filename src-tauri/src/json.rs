@@ -4,32 +4,33 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 // use crate::db;
-use crate::files::{read_directory, write_file, EventPayload};
+use crate::files::{read_directory, write_file, EventPayload, read_dir};
 use crate::storage::get_data;
+use crate::tree::assemble_note_tree;
 // use crate::models::Note;
 
 #[derive(serde::Serialize, Clone, Debug, Default)]
 pub struct NoteData {
-  id: String, // !!Important!! id === file_path
-  title: String,
-  content: String,
-  file_path: String,
-  cover: String,
-  created_at: String,
-  updated_at: String,
-  is_daily: bool,
-  is_dir: bool,
+  pub id: String, // !!Important!! id === file_path
+  pub title: String,
+  pub content: String,
+  pub file_path: String,
+  pub cover: String,
+  pub created_at: String,
+  pub updated_at: String,
+  pub is_daily: bool,
+  pub is_dir: bool,
 }
 
 pub type NotesData = HashMap<String, NoteData>;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct NoteTreeItem {
-  id: String,
-  title: String,
-  created_at: String,
-  updated_at: String,
-  is_dir: bool,
+  pub id: String,
+  pub title: String,
+  pub created_at: String,
+  pub updated_at: String,
+  pub is_dir: bool,
 }
 
 pub type NoteTree = HashMap<String, Vec<NoteTreeItem>>;
@@ -141,7 +142,12 @@ pub async fn load_dir(dir: &str) -> (NotesData, NoteTree) {
   // init data and tree
   let mut notes_data: NotesData = HashMap::new();
   let mut notes_tree: NoteTree = HashMap::new();
-  load_dir_recursively(dir, &mut notes_data, &mut notes_tree).await;
+  // load_dir_recursively(dir, &mut notes_data, &mut notes_tree).await;
+  if let Ok(tree) = read_dir(dir) {
+    let root = tree.root;
+    let inner = tree.inner();
+    assemble_note_tree(root, inner, &mut notes_data, &mut notes_tree);
+  }
 
   return (notes_data, notes_tree);
 }

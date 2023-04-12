@@ -407,6 +407,11 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
   })
 }
 
+// Read files and its information of a directory resursively
+pub fn read_dir(dir: &str) -> Result<Tree, String> {
+  Tree::init(dir, None, true)
+}
+
 // Get array of files of a directory
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
