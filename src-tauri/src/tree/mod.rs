@@ -37,7 +37,10 @@ impl Tree {
     Self { inner, root }
   }
 
-  /// Initiates file-system traversal and [Tree construction].
+  /// Initiates file system traversal and Tree construction.
+  ///　dir: root dir;  
+  /// depth: maximum depth to recurse, None as no restriction;  
+  /// read_ctn: if read the content of file
   pub fn init(dir: &str, depth: Option<usize>, read_ctn: bool) -> TreeResult<Self> {
     let (inner, root) = Self::traverse(dir, depth, read_ctn)?;
 
@@ -104,7 +107,7 @@ impl Tree {
 
       walker.visit(&mut visitor_builder);
 
-      tx.send(TraversalState::Done).unwrap();
+      tx.send(TraversalState::Done).unwrap_or(());
 
       res.join().unwrap()
     })
@@ -188,19 +191,13 @@ pub fn assemble_note_tree(
   println!("now is the dir: {:?}, node is {:?}", root, inner[root].get());
   let mut children = root.children(inner);
   let mut tree_items = Vec::new();
-  while let Some(current_node_id) = children.next() {
-    let node = inner[current_node_id].get().clone();
-    if node.is_dir() {
-      assemble_note_tree(current_node_id, inner, notes, note_tree);
-    }
-
-    if let Some(file) = from_node(&node) {
+  while let Some(child_node_id) = children.next() {
+    let child = inner[child_node_id].get().clone();
+    
+    if let Some(file) = from_node(&child) {
       let fname = file.file_name.clone();
       let is_dir = file.is_dir;
-      let check_md = !is_dir && (fname.ends_with(".md") || fname.ends_with(".txt"));
-      if !is_dir && !check_md {
-        continue;
-      }
+      let file_path = file.file_path.clone();
 
       let file_title = Path::new(&fname)
         .file_stem()
@@ -208,7 +205,6 @@ pub fn assemble_note_tree(
         .to_owned()
         .into_string()
         .unwrap_or_default();
-      let file_path = file.file_path.clone();
 
       let mod_since_the_epoch = file
         .last_modified
@@ -238,7 +234,7 @@ pub fn assemble_note_tree(
         content: if is_dir {
           String::new()
         } else {
-          file.file_text.clone()
+          file.file_text
         },
         created_at: created_date.clone(),
         updated_at: last_mod_date.clone(),
@@ -249,7 +245,7 @@ pub fn assemble_note_tree(
       notes.insert(file_path.clone(), new_note);
 
       let new_tree = NoteTreeItem {
-        id: file_path.clone(),
+        id: file_path,
         title: file_title,
         created_at: created_date,
         updated_at: last_mod_date,
@@ -257,6 +253,10 @@ pub fn assemble_note_tree(
       };
 
       tree_items.push(new_tree);
+    }
+
+    if child.is_dir() {
+      assemble_note_tree(child_node_id, inner, notes, note_tree);
     }
   }
   

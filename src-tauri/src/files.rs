@@ -415,49 +415,6 @@ pub fn read_dir(dir: &str) -> Result<Tree, String> {
 // Get array of files of a directory
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
-  // let paths = match fs::read_dir(dir) {
-  //   Ok(res) => res,
-  //   Err(e) => {
-  //     do_log(
-  //       "Error".to_string(),
-  //       format!("Error on [list_directory, {}]: {:?}", dir, e),
-  //       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-  //     );
-  //     return Ok(vec![]);
-  //   }
-  // };
-  // // println!("files in dir: {:?}", paths);
-
-  // let mut filemetas = Vec::new();
-  // for path in paths {
-  //   // raw path, not normalized yet
-  //   let file_path = match path {
-  //     Ok(p) => p.path().display().to_string(),
-  //     Err(e) => {
-  //       do_log(
-  //         "Error".to_string(),
-  //         format!("Error on [list_directory: check path]: {:?}", e),
-  //         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-  //       );
-  //       continue;
-  //     }
-  //   };
-
-  //   let simple_meta = match get_simple_meta(&file_path) {
-  //     Ok(data) => data,
-  //     Err(e) => {
-  //       do_log(
-  //         "Error".to_string(),
-  //         format!("Error on [list_directory: get_simple_mata]: {:?}", e),
-  //         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-  //       );
-  //       continue;
-  //     }
-  //   };
-
-  //   filemetas.push(simple_meta);
-  // }
-
   let tree = Tree::init(dir, Some(1), false);
   // println!(">> dir tree: {:?}", tree);
   let nodes = tree.map(|t|t.children_vec()).unwrap_or_default();

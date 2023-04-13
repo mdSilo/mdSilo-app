@@ -1,10 +1,6 @@
-use async_recursion::async_recursion;
-use chrono::{SecondsFormat, TimeZone, Utc};
 use std::collections::HashMap;
-use std::path::Path;
-use std::time::UNIX_EPOCH;
 // use crate::db;
-use crate::files::{read_directory, write_file, EventPayload, read_dir};
+use crate::files::{write_file, EventPayload, read_dir};
 use crate::storage::get_data;
 use crate::tree::assemble_note_tree;
 // use crate::models::Note;
@@ -50,92 +46,6 @@ pub struct JsonData {
   notesobj: NotesData,
   notetree: NoteTree,
   activities: ActivityRecord,
-}
-
-#[async_recursion]
-pub async fn load_dir_recursively(
-  dir: &str,
-  notes: &mut NotesData,
-  tree: &mut NoteTree,
-) {
-  // get files
-  let dir_data = read_directory(dir).await.unwrap_or_default();
-  let files = dir_data.files.iter().filter(|f| !f.is_hidden);
-  // loop
-  let mut tree_items = Vec::new();
-  for file in files {
-    let fname = file.file_name.clone();
-    let is_dir = file.is_dir;
-    let check_md = !is_dir && (fname.ends_with(".md") || fname.ends_with(".txt"));
-    if !is_dir && !check_md {
-      continue;
-    }
-
-    let file_title = Path::new(&fname)
-      .file_stem()
-      .unwrap_or_default()
-      .to_owned()
-      .into_string()
-      .unwrap_or_default();
-    let file_path = file.file_path.clone();
-
-    let mod_since_the_epoch = file
-      .last_modified
-      .duration_since(UNIX_EPOCH)
-      .unwrap_or_default()
-      .as_millis();
-    let last_mod_date = Utc
-      .timestamp_millis_opt(mod_since_the_epoch as i64)
-      .earliest()
-      .unwrap_or(Utc::now())
-      .to_rfc3339_opts(SecondsFormat::Millis, true);
-
-    let create_since_the_epoch = file
-      .created
-      .duration_since(UNIX_EPOCH)
-      .unwrap_or_default()
-      .as_millis();
-    let created_date = Utc
-      .timestamp_millis_opt(create_since_the_epoch as i64)
-      .earliest()
-      .unwrap_or(Utc::now())
-      .to_rfc3339_opts(SecondsFormat::Millis, true);
-
-    let new_note = NoteData {
-      id: file_path.clone(),
-      title: file_title.clone(),
-      content: if is_dir {
-        String::new()
-      } else {
-        file.file_text.clone()
-      },
-      created_at: created_date.clone(),
-      updated_at: last_mod_date.clone(),
-      file_path: file_path.clone(),
-      is_dir,
-      ..NoteData::default()
-    };
-    notes.insert(file_path.clone(), new_note);
-
-    let new_tree = NoteTreeItem {
-      id: file_path.clone(),
-      title: file_title,
-      created_at: created_date,
-      updated_at: last_mod_date,
-      is_dir,
-    };
-
-    tree_items.push(new_tree);
-
-    if file.is_dir {
-      load_dir_recursively(&file_path, notes, tree).await;
-    }
-  }
-
-  tree_items.sort_by(|a, b| (a.id).cmp(&b.id));
-  tree_items.dedup_by(|a, b| a.id == b.id);
-
-  tree.insert(dir.to_string(), tree_items);
 }
 
 pub async fn load_dir(dir: &str) -> (NotesData, NoteTree) {
