@@ -13,6 +13,7 @@ mod schema;
 mod storage;
 mod tests;
 mod tree;
+mod tray;
 mod window;
 
 extern crate diesel;
@@ -91,6 +92,8 @@ fn main() {
       // json::save_notes,
       // json::get_notes,
     ])
+    .system_tray(tray::menu())
+    .on_system_tray_event(tray::handler)
     .run(tauri::generate_context!())
     .expect("error while running");
 }

@@ -1,5 +1,20 @@
 # Changelog 
 
+## app-v0.5.6 
+
+2023-XX-XX
+
+### Features 
+
+- [X] Sort playlist
+- [X] System tray
+- [ ] AI integration
+
+### Improvement
+
+- [X] walk dir multi-threadedly
+
+
 ## app-v0.5.5 
 
 2023-03-05

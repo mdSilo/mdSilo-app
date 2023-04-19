@@ -94,6 +94,10 @@
         "https://mdSilo.github.io/mdSilo-app/install.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVBRkUxMUMwNTU0QjcyM0MKUldROGNrdFZ3QkgrNm1xWFpmb3FpK3ExV1NWWjk0TFRmSm42UHVqQk9PZmdYa0JhZlpsRzFHZm8K"
+    },
+    "systemTray": {
+      "iconPath": "icons/icon.ico",
+      "iconAsTemplate": true
     }
   }
 }
