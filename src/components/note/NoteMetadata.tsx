@@ -1,5 +1,5 @@
 import { useStore } from 'lib/store';
-import { fmtDatetime } from 'utils/helper';
+import { fmtDatetime, countWords } from 'utils/helper';
 
 type Props = {
   noteId: string;
@@ -23,22 +23,4 @@ export default function NoteMetadata(props: Props) {
       <p>Modified: {fmtDatetime(note.updated_at)}</p>
     </div>
   );
-}
-
-const countWords = (str: string) => {
-  // special characters such as middle-dot, etc.   
-  const str0 = str.replace(/[\u007F-\u00FE]/g,' ');
-  // remove all not ASCII
-  // https://en.wikipedia.org/wiki/List_of_Unicode_characters
-  const str1 = str0.replace(/[^!-~\d\s]+/gi,' ')
-  // remove characters, number
-  const str2 = str0.replace(/[!-~\d\s]+/gi, '')
-
-  const matches1 = str1.match(/[\u00FF-\uFFFF]|\S+/g);
-  const matches2 = str2.match(/[\u00FF-\uFFFF]|\S+/g);
-  const count1 = matches1 ? matches1.length : 0;
-  const count2 = matches2 ? matches2.length : 0;
-
-  const count = count1 + count2;
-  return count;
 }

@@ -1,5 +1,5 @@
 // helper 
-
+import GPT3Tokenizer from 'gpt3-tokenizer';
 // date
 //
 // string: yyyy-mm-dd  or yyyy-m-d
@@ -85,6 +85,30 @@ export function shortenString(txt: string, centre: string, len = 128) {
   const end = Math.min(txtLen, span2 - Math.min(span1, 0));
 
   return txt.substring(start, end).replaceAll(centre, `==${centre}==`);
+}
+
+export const countWords = (str: string) => {
+  // special characters such as middle-dot, etc.   
+  const str0 = str.replace(/[\u007F-\u00FE]/g, ' ');
+  // remove all not ASCII
+  // https://en.wikipedia.org/wiki/List_of_Unicode_characters
+  const str1 = str0.replace(/[^!-~\d\s]+/gi, ' ')
+  // remove characters, number
+  const str2 = str0.replace(/[!-~\d\s]+/gi, '')
+
+  const matches1 = str1.match(/[\u00FF-\uFFFF]|\S+/g);
+  const matches2 = str2.match(/[\u00FF-\uFFFF]|\S+/g);
+  const count1 = matches1 ? matches1.length : 0;
+  const count2 = matches2 ? matches2.length : 0;
+
+  const count = count1 + count2;
+  return count;
+}
+
+const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
+export function estimateTokens(str: string): number {
+  const encoded: { bpe: number[]; text: string[] } = tokenizer.encode(str);
+  return encoded.bpe.length;
 }
 
 const ymdNums = (date: string) => {

@@ -2,7 +2,7 @@ import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
   IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
-  IconFileImport, IconRss, IconBox, 
+  IconFileImport, IconRss, IconBox, IconMessageChatbot, 
 } from '@tabler/icons';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
@@ -35,6 +35,9 @@ export default function SideMenu() {
   );
   const dispatchWrap = useCallback(
     () => dispatch({view: 'wrap'}), [dispatch]
+  );
+  const dispatchAI = useCallback(
+    () => dispatch({view: 'ai'}), [dispatch]
   );
 
   const hotkeys = useMemo(
@@ -70,6 +73,7 @@ export default function SideMenu() {
         viewTy={viewTy} 
         onDispatch={dispatchFeed} 
       />
+      <AIButton viewTy={viewTy} onDispatch={dispatchAI} />
       {currentDir ? (
       <>
         <NewButton />
@@ -223,6 +227,23 @@ const WrapButton = (props: ButtonProps) => {
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconBox size={24} className="flex-shrink-0 mx-1 text-blue-600" />
+        </button>
+      </Tooltip>
+    </SidebarItem>
+  );
+};
+
+const AIButton = (props: ButtonProps) => {
+  const { viewTy, onClick, onDispatch } = props;
+
+  return (
+    <SidebarItem isHighlighted={viewTy === 'ai'} onClick={onClick}>
+      <Tooltip
+        content="AI Assistant"
+        placement="right"
+      >
+        <button className={btnClass} onClick={onDispatch}>
+          <IconMessageChatbot size={24} className="flex-shrink-0 mx-1 text-purple-600" />
         </button>
       </Tooltip>
     </SidebarItem>

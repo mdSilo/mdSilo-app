@@ -19,6 +19,7 @@ export type ViewAction =
   | { view: 'graph' }
   | { view: 'journal' }
   | { view: 'wrap' }
+  | { view: 'ai' }
   | {
       view: 'md';
       params: ViewParams;
@@ -50,6 +51,8 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return {...state, view: 'graph'};
     case 'wrap':
       return {...state, view: 'wrap'};
+    case 'ai':
+      return {...state, view: 'ai'};
     case 'journal':
       return {...state, view: 'journal'};
     case 'md':

@@ -1,6 +1,7 @@
 import MsEditor from "mdsmirror";
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { useCurrentViewContext } from 'context/useCurrentView';
+import AI from './ai';
 import Chronicle from './chronicle';
 import Journals from './journals';
 import Tasks from './tasks';
@@ -32,6 +33,8 @@ export default function MainView() {
         <HashTags />
       ) : viewTy === 'wrap' ? (
         <Wrap />
+      ) : viewTy === 'ai' ? (
+        <AI />
       ) : (
         <NotePage />
       )}
