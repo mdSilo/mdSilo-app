@@ -5,17 +5,14 @@ use std::path::Path;
 use std::sync::mpsc::channel;
 use std::time::SystemTime;
 use tauri::{api, AppHandle, Manager};
-extern crate notify;
-extern crate open;
-extern crate trash;
-use crate::paths::{PathBufExt, PathExt};
-use crate::storage::do_log;
-use crate::tree::Tree;
-use crate::tree::node::from_node;
 use notify::{
   event::{EventKind, ModifyKind, RenameMode},
   Config, Event as RawEvent, RecommendedWatcher, RecursiveMode, Watcher,
 };
+use crate::paths::{PathBufExt, PathExt};
+use crate::storage::do_log;
+use crate::tree::Tree;
+use crate::tree::node::from_node;
 
 #[cfg(windows)]
 use std::os::windows::fs::MetadataExt;
@@ -549,6 +546,14 @@ pub async fn copy_file_to_assets(
 #[tauri::command]
 pub async fn delete_files(paths: Vec<String>) -> bool {
   trash::delete_all(paths).is_ok()
+}
+
+#[tauri::command]
+pub fn detect_lang(text: String) -> String {
+  match whatlang::detect(&text) {
+    Some(info) => info.lang().to_string(),
+    None => "".to_string(),
+  }
 }
 
 // Listen to change events in a directory
