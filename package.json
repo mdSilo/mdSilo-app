@@ -85,7 +85,7 @@
     "eslint-plugin-jest-dom": "^4.0.2",
     "eslint-plugin-react": "^7.27.1",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-testing-library": "^5.7.2",
+    "eslint-plugin-testing-library": "^5.10.3",
     "postcss": "8.4.22",
     "prettier": "2.7.1",
     "@actions/github": "5.1.1",
