@@ -75,7 +75,7 @@
     "@types/react-highlight-words": "^0.16.4",
     "@types/react-virtualized": "^9.21.21",
     "@types/tailwindcss": "^3.1.0",
-    "@typescript-eslint/eslint-plugin": "^5.40.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
     "@typescript-eslint/parser": "^5.40.0",
     "autoprefixer": "^10.4.14",
     "eslint": "8.25.0",
