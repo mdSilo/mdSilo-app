@@ -68,7 +68,7 @@
     "@types/d3-zoom": "^3.0.2",
     "@types/is-hotkey": "^0.1.7",
     "@types/jest": "^29.1.2",
-    "@types/node": "^18.15.11",
+    "@types/node": "^18.16.3",
     "@types/uuid": "^9.0.1",
     "@types/react": "^17.0.43",
     "@types/react-dom": "^17.0.14",
