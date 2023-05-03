@@ -87,7 +87,6 @@ function Note(props: Props) {
   ), [dispatch, noteId, state]);
 
   // note action
-  const updateNote = useStore((state) => state.updateNote);
   const deleteNote = useStore((state) => state.deleteNote);
   const upsertNote = useStore((state) => state.upsertNote);
   const upsertTree = useStore((state) => state.upsertTree);
@@ -113,36 +112,36 @@ function Note(props: Props) {
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
       // write to local file and store
-      updateNote({ id: noteId, content: text });
+      // updateNote({ id: noteId, content: text });
       if (rawMode === 'split' && focusOn === 'wysiwyg') { 
         setMdCtn(null);
         setRawCtn(text); 
       }
       await writeFile(notePath, text);
-      if (initDir) { 
-        await writeJsonFile(initDir); 
-      }
+      // if (initDir) { 
+      //   await writeJsonFile(initDir); 
+      // }
       // update TOC if any 
       getHeading();
     },
-    [focusOn, initDir, noteId, notePath, rawMode, updateNote]
+    [focusOn, notePath, rawMode]
   );
 
   const onMarkdownChange = useCallback(
     async (text: string) => {
       // console.log("on markdown content change", text);
       // write to local file and store
-      updateNote({ id: noteId, content: text });
+      // updateNote({ id: noteId, content: text });
       if (rawMode === 'split' && focusOn === 'raw') { 
         setRawCtn(null); 
         setMdCtn(text); 
       }
       await writeFile(notePath, text);
-      if (initDir) { 
-        await writeJsonFile(initDir); 
-      }
+      // if (initDir) { 
+      //   await writeJsonFile(initDir); 
+      // }
     },
-    [updateNote, noteId, rawMode, focusOn, notePath, initDir]
+    [rawMode, focusOn, notePath]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
