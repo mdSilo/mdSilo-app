@@ -233,6 +233,7 @@ export const store = createVanilla<Store>(
         darkMode: state.darkMode,
         isRTL: state.isRTL,
         isCheckSpellOn: state.isCheckSpellOn,
+        isOpenPreOn: state.isOpenPreOn,
         noteSort: state.noteSort,
         recentDir: state.recentDir,
         pinnedDir: state.pinnedDir,

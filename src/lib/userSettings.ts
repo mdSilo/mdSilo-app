@@ -38,6 +38,10 @@ export type UserSettings = {
   setNoteSort: Setter<Sort>;
   isCheckSpellOn: boolean;
   setIsCheckSpellOn: Setter<boolean>;
+  isOpenPreOn: boolean;
+  setIsOpenPreOn: Setter<boolean>;
+  showHistory: boolean,
+  setShowHistory: Setter<boolean>;
   readMode: boolean;
   setReadMode: Setter<boolean>;
   rawMode: string; // 'raw' | 'wysiwyg' | 'mindmap'; 
@@ -73,6 +77,10 @@ const userSettingsSlice = (
   setNoteSort: setter(set, 'noteSort'),
   isCheckSpellOn: true,
   setIsCheckSpellOn: setter(set, 'isCheckSpellOn'),
+  isOpenPreOn: true,
+  setIsOpenPreOn: setter(set, 'isOpenPreOn'),
+  showHistory: false,
+  setShowHistory:setter(set, 'showHistory'),
   readMode: false,
   setReadMode: setter(set, 'readMode'),
   rawMode: 'wysiwyg',

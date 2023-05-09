@@ -7,8 +7,8 @@
 ### Features 
 
 - [X] Sort playlist
-- [X] System tray
-- [ ] AI integration
+- [X] System tray 
+- [X] Setting: if open previous folder on startup
 
 ### Improvement
 

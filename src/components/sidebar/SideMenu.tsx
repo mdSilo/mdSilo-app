@@ -254,6 +254,7 @@ const AIButton = (props: ButtonProps) => {
 export function FileDrop() {
   const onClear = useCallback(() => {
     // to see recent history
+    store.getState().setShowHistory(true);
     store.getState().setCurrentDir(undefined);
     // store.getState().setInitDir(undefined);
   }, []);

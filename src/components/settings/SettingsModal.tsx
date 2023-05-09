@@ -15,6 +15,8 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   const setUseAsset = useStore((state) => state.setUseAsset);
   const isRTL = useStore((state) => state.isRTL);
   const setIsRTL = useStore((state) => state.setIsRTL);
+  const isOpenPreOn = useStore((state) => state.isOpenPreOn);
+  const setIsOpenPreOn = useStore((state) => state.setIsOpenPreOn);
   
   // const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
   // const setIsCheckSpellOn = useStore((state) => state.setIsCheckSpellOn);
@@ -40,6 +42,13 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           optionLeft="No" 
           optionRight="Yes"
         />
+        <SettingsToggle
+          name="Open Previous Folder on Startup" 
+          check={isOpenPreOn}
+          handleCheck={setIsOpenPreOn}
+          optionLeft="No" 
+          optionRight="Yes"
+        /> 
         {/* <SettingsToggle
           name="Write or Read Only" 
           check={readMode}

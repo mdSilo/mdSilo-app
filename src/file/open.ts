@@ -14,12 +14,12 @@ Open json:
   import to store, when edit any file, a .md will be created and saved 
 */
 
-function getRecentDirPath() {
+export function getRecentDirPath() {
   const recentDir = store.getState().recentDir;
   if (recentDir && Array.isArray(recentDir) && recentDir.length > 0) {
-    return recentDir[recentDir.length - 1] || '.';
+    return recentDir[recentDir.length - 1] || '';
   } else {
-    return '.';
+    return '';
   }
 }
 
