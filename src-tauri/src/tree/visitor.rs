@@ -20,13 +20,13 @@ pub struct BranchVisitorBuilder {
 }
 
 impl BranchVisitorBuilder {
-  pub fn new(tx: Sender<TraversalState>, ctn: bool,) -> Self {
+  pub fn new(tx: Sender<TraversalState>, ctn: bool) -> Self {
     Self { tx, ctn }
   }
 }
 
 impl BranchVisitor {
-  pub fn new(tx: Sender<TraversalState>, ctn: bool,) -> Self {
+  pub fn new(tx: Sender<TraversalState>, ctn: bool) -> Self {
     Self { tx, ctn }
   }
 }

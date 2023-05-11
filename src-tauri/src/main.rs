@@ -12,8 +12,8 @@ mod paths;
 mod schema;
 mod storage;
 mod tests;
-mod tree;
 mod tray;
+mod tree;
 mod window;
 
 extern crate diesel;
@@ -95,6 +95,7 @@ fn main() {
     ])
     .system_tray(tray::menu())
     .on_system_tray_event(tray::handler)
+    // .plugin(tauri_plugin_store::Builder::default().build())
     .run(tauri::generate_context!())
     .expect("error while running");
 }

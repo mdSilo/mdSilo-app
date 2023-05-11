@@ -1,21 +1,21 @@
+use chrono::{SecondsFormat, TimeZone, Utc};
 use crossbeam::channel::{self, Sender};
 use ignore::{WalkBuilder, WalkParallel};
 use indextree::{Arena, NodeId};
-use chrono::{SecondsFormat, TimeZone, Utc};
 use std::{
   collections::HashMap,
-  fs,
-  path::{Path, PathBuf},
-  time::UNIX_EPOCH,
-  thread::{self, available_parallelism}, 
-  num::NonZeroUsize,
   convert::From,
+  fs,
+  num::NonZeroUsize,
+  path::{Path, PathBuf},
+  thread::{self, available_parallelism},
+  time::UNIX_EPOCH,
 };
 
 use node::Node;
 use visitor::{BranchVisitorBuilder, TraversalState};
 
-use crate::json::{NotesData, NoteTree, NoteData, NoteTreeItem};
+use crate::json::{NoteData, NoteTree, NoteTreeItem, NotesData};
 
 use self::node::from_node;
 
@@ -37,24 +37,24 @@ impl Tree {
     Self { inner, root }
   }
 
-  /// Initiates file system traversal and Tree construction.
-  ///　dir: root dir;  
-  /// depth: maximum depth to recurse, None as no restriction;  
-  /// read_ctn: if read the content of file
+  // Initiates file system traversal and Tree construction.
+  //　dir: root dir;
+  // depth: maximum depth to recurse, None as no restriction;
+  // read_ctn: if read the content of file
   pub fn init(dir: &str, depth: Option<usize>, read_ctn: bool) -> TreeResult<Self> {
     let (inner, root) = Self::traverse(dir, depth, read_ctn)?;
 
     Ok(Self::new(inner, root))
   }
 
-  /// Grabs a reference to `inner`.
+  // Grabs a reference to `inner`.
   pub fn inner(&self) -> &Arena<Node> {
     &self.inner
   }
 
-  /// Parallel traversal of the directory 
+  // Parallel traversal of the directory
   fn traverse(
-    dir: &str, 
+    dir: &str,
     depth: Option<usize>,
     read_ctn: bool,
   ) -> TreeResult<(Arena<Node>, NodeId)> {
@@ -67,7 +67,6 @@ impl Tree {
       let res = s.spawn(|| {
         // Key represents path of parent directory and values represent children.
         let mut branches: HashMap<PathBuf, Vec<NodeId>> = HashMap::new();
-        
         let mut root_id = None;
 
         while let Ok(TraversalState::Ongoing(node)) = rx.recv() {
@@ -84,8 +83,10 @@ impl Tree {
             }
           }
 
-          let parent = node.parent_path().ok_or(String::from("ExpectedParent"))?.to_owned();
-
+          let parent = node
+            .parent_path()
+            .ok_or(String::from("ExpectedParent"))?
+            .to_owned();
           let node_id = tree.new_node(node);
 
           if let None = branches
@@ -103,7 +104,8 @@ impl Tree {
         Ok::<(Arena<Node>, NodeId), String>((tree, root))
       });
 
-      let mut visitor_builder = BranchVisitorBuilder::new(Sender::clone(&tx), read_ctn);
+      let mut visitor_builder =
+        BranchVisitorBuilder::new(Sender::clone(&tx), read_ctn);
 
       walker.visit(&mut visitor_builder);
 
@@ -113,7 +115,7 @@ impl Tree {
     })
   }
 
-  /// Takes the results of the parallel traversal and uses it to construct the tree
+  // Takes the results of the parallel traversal and uses it to construct the tree
   fn assemble_tree(
     tree: &mut Arena<Node>,
     current_node_id: NodeId,
@@ -132,7 +134,7 @@ impl Tree {
 
       if is_dir {
         Self::assemble_tree(tree, index, branches);
-      } 
+      }
     }
 
     // Append children to current node.
@@ -157,12 +159,11 @@ impl Tree {
   }
 }
 
-/// Build a new Parallel walker
+// Build a new Parallel walker
 fn new_walker(dir: PathBuf, depth: Option<usize>) -> Result<WalkParallel, String> {
   let root = fs::canonicalize(dir).map_err(|e| (format!("{e}")))?;
 
-  fs::metadata(&root)
-    .map_err(|e| (format!("Not Found {}: {e}", root.display())))?;
+  fs::metadata(&root).map_err(|e| (format!("Not Found {}: {e}", root.display())))?;
 
   Ok(
     WalkBuilder::new(root)
@@ -175,7 +176,7 @@ fn new_walker(dir: PathBuf, depth: Option<usize>) -> Result<WalkParallel, String
   )
 }
 
-/// default amount of parallelism 
+// default amount of parallelism
 fn default_threads_num() -> usize {
   available_parallelism()
     .unwrap_or_else(|_| NonZeroUsize::new(1).unwrap())
@@ -188,12 +189,12 @@ pub fn assemble_note_tree(
   notes: &mut NotesData,
   note_tree: &mut NoteTree,
 ) {
-  println!("now is the dir: {:?}, node is {:?}", root, inner[root].get());
+  // println!("now is the dir: {:?}, node is {:?}", root, inner[root].get());
   let mut children = root.children(inner);
   let mut tree_items = Vec::new();
   while let Some(child_node_id) = children.next() {
     let child = inner[child_node_id].get().clone();
-    
+
     if let Some(file) = from_node(&child) {
       let fname = file.file_name.clone();
       let is_dir = file.is_dir;
@@ -259,7 +260,7 @@ pub fn assemble_note_tree(
       assemble_note_tree(child_node_id, inner, notes, note_tree);
     }
   }
-  
+
   let root_node = inner[root].get().clone();
   if let Some(root_file) = from_node(&root_node) {
     tree_items.sort_by(|a, b| (a.id).cmp(&b.id));

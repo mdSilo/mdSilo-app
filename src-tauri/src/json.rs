@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 // use crate::db;
-use crate::files::{write_file, EventPayload, read_dir};
+use crate::files::{read_dir, write_file, EventPayload};
 use crate::storage::get_data;
 use crate::tree::assemble_note_tree;
 // use crate::models::Note;

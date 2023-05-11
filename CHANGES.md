@@ -1,5 +1,13 @@
 # Changelog 
 
+## app-v0.5.7 
+
+2023-XX-XX
+
+### Features 
+
+- [ ] AI integration
+
 ## app-v0.5.6 
 
 2023-XX-XX
@@ -8,11 +16,12 @@
 
 - [X] Sort playlist
 - [X] System tray 
-- [X] Setting: if open previous folder on startup
+- [X] Setting: if open previous folder on startup 
 
 ### Improvement
 
-- [X] walk dir multi-threadedly
+- [X] walk dir multi-threadedly 
+- [X] Improve performance on open/switch/edit large file
 
 
 ## app-v0.5.5 

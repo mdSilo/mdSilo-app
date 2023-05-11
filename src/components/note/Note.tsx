@@ -109,21 +109,16 @@ function Note(props: Props) {
     }, [noteId, storeNotes]
   );
 
-  // update locally
+  // write to local file
   const onContentChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
-      // write to local file and store
-      // updateNote({ id: noteId, content: text });
       if (rawMode === 'split' && focusOn === 'wysiwyg') { 
         setMdCtn(null);
         setRawCtn(text); 
       }
       await writeFile(notePath, text);
-      // if (initDir) { 
-      //   await writeJsonFile(initDir); 
-      // }
       // update TOC if any 
       getHeading();
     },
@@ -133,16 +128,11 @@ function Note(props: Props) {
   const onMarkdownChange = useCallback(
     async (text: string) => {
       // console.log("on markdown content change", text);
-      // write to local file and store
-      // updateNote({ id: noteId, content: text });
       if (rawMode === 'split' && focusOn === 'raw') { 
         setRawCtn(null); 
         setMdCtn(text); 
       }
       await writeFile(notePath, text);
-      // if (initDir) { 
-      //   await writeJsonFile(initDir); 
-      // }
     },
     [rawMode, focusOn, notePath]
   );

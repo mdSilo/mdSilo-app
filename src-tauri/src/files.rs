@@ -1,18 +1,18 @@
+use crate::paths::{PathBufExt, PathExt};
+use crate::storage::do_log;
+use crate::tree::node::from_node;
+use crate::tree::Tree;
 use chrono::offset::Local;
 use chrono::DateTime;
+use notify::{
+  event::{EventKind, ModifyKind, RenameMode},
+  Config, Event as RawEvent, RecommendedWatcher, RecursiveMode, Watcher,
+};
 use std::fs;
 use std::path::Path;
 use std::sync::mpsc::channel;
 use std::time::SystemTime;
 use tauri::{api, AppHandle, Manager};
-use notify::{
-  event::{EventKind, ModifyKind, RenameMode},
-  Config, Event as RawEvent, RecommendedWatcher, RecursiveMode, Watcher,
-};
-use crate::paths::{PathBufExt, PathExt};
-use crate::storage::do_log;
-use crate::tree::Tree;
-use crate::tree::node::from_node;
 
 #[cfg(windows)]
 use std::os::windows::fs::MetadataExt;
@@ -83,13 +83,15 @@ pub fn check_hidden(file_path: &str) -> bool {
 
 #[inline]
 pub fn check_md(file_path: &str) -> bool {
-  let extension = Path::new(file_path).extension().and_then(|ext|ext.to_str());
+  let extension = Path::new(file_path)
+    .extension()
+    .and_then(|ext| ext.to_str());
   match extension {
     Some(et) => {
       let ext = et.to_lowercase();
       ext == "md" || ext == "markdown" || ext == "text" || ext == "txt"
-    },
-    None => false
+    }
+    None => false,
   }
 }
 
@@ -414,9 +416,8 @@ pub fn read_dir(dir: &str) -> Result<Tree, String> {
 pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
   let tree = Tree::init(dir, Some(1), false);
   // println!(">> dir tree: {:?}", tree);
-  let nodes = tree.map(|t|t.children_vec()).unwrap_or_default();
-  let metas: Vec<FileMetaData> = 
-    nodes.iter().filter_map(|n| from_node(n)).collect();
+  let nodes = tree.map(|t| t.children_vec()).unwrap_or_default();
+  let metas: Vec<FileMetaData> = nodes.iter().filter_map(|n| from_node(n)).collect();
 
   Ok(metas)
 }
@@ -630,7 +631,7 @@ pub async fn listen_dir(
               EventKind::Remove(_) => "remove",
               _ => "unknown", 
             };
-            
+
             if event_kind != "unknown" {
               window.emit(
                 "changes", // then Frontend listen the event changes.

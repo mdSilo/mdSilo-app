@@ -1,3 +1,7 @@
+use crate::{
+  files::{check_hidden, check_md, FileMetaData},
+  paths::PathExt,
+};
 use ignore::DirEntry;
 use indextree::{Arena, Node as NodeWrapper, NodeId};
 use std::{
@@ -5,10 +9,9 @@ use std::{
   convert::{From, Into},
   ffi::{OsStr, OsString},
   fs::{self, FileType, Metadata},
-  path::{Path, PathBuf}, 
+  path::{Path, PathBuf},
   time::SystemTime,
 };
-use crate::{paths::PathExt, files::{check_hidden, FileMetaData, check_md}};
 
 #[derive(Debug, Clone)]
 pub struct Node {
@@ -21,7 +24,7 @@ pub struct Node {
 }
 
 impl Node {
-  /// Initializes a new [Node].
+  // Initializes a new Node.
   pub fn new(
     depth: usize,
     file_name: OsString,
@@ -44,7 +47,7 @@ impl Node {
     &self.file_name
   }
 
-  /// Converts `OsStr` to `String`; if fails does a lossy conversion 
+  // Converts `OsStr` to `String`; if fails does a lossy conversion
   pub fn file_name_lossy(&self) -> Cow<'_, str> {
     self
       .file_name()
@@ -71,11 +74,8 @@ impl Node {
 
 impl From<(&DirEntry, bool)> for Node {
   fn from((dir_entry, ctn): (&DirEntry, bool)) -> Self {
-
     let depth = dir_entry.depth();
-
     let file_type = dir_entry.file_type();
-
     let path = dir_entry.path();
 
     let file_name = path.file_name().map_or_else(
@@ -95,21 +95,14 @@ impl From<(&DirEntry, bool)> for Node {
           } else {
             None
           }
-        },
+        }
         _ => None,
-      } 
+      }
     } else {
       None
     };
-    
-    Self::new(
-      depth, 
-      file_name, 
-      file_type, 
-      metadata,
-      text,
-      path.into()
-    )
+
+    Self::new(depth, file_name, file_type, metadata, text, path.into())
   }
 }
 
@@ -119,13 +112,12 @@ impl From<(NodeId, &mut Arena<Self>)> for &Node {
   }
 }
 
-
 pub fn from_node(node: &Node) -> Option<FileMetaData> {
-  let metadata =  match node.file_meta.clone() {
+  let metadata = match node.file_meta.clone() {
     Some(meta) => meta,
     None => return None,
   };
-  
+
   let now = SystemTime::now();
   let created = metadata.created().unwrap_or(now);
   let last_modified = metadata.modified().unwrap_or(now);
@@ -136,7 +128,7 @@ pub fn from_node(node: &Node) -> Option<FileMetaData> {
     None => return None,
   };
   let is_hidden = check_hidden(&normalized_path);
-  
+
   let data = FileMetaData {
     file_path: normalized_path,
     file_name: node.file_name_lossy().to_string(),
