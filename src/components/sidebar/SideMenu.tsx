@@ -237,7 +237,7 @@ const AIButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem isHighlighted={viewTy === 'ai'} onClick={onClick}>
+    <SidebarItem isHighlighted={viewTy === 'ai'} onClick={onClick} className="hidden">
       <Tooltip
         content="AI Assistant"
         placement="right"

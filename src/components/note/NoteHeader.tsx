@@ -15,7 +15,9 @@ import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';
 import NoteDelModal from 'components/note/NoteDelModal';
 
-export default function NoteHeader() {
+export default function NoteHeader(
+  {setShowBacklink} : {setShowBacklink : (show: boolean) => void}
+) {
   const currentNote = useCurrentMdContext();
   const note = useStore((state) => state.notes[currentNote.id]);
 
@@ -35,6 +37,7 @@ export default function NoteHeader() {
     async (mode: string) => {
       await openFilePath(note.id, true);
       setRawMode(mode);
+      setShowBacklink(false);
     }, 
     [note, setRawMode]
   );

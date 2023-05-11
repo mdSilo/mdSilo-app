@@ -3,6 +3,7 @@ import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import { invoke } from '@tauri-apps/api';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import copy from "copy-to-clipboard";
+import { IconCaretRight } from '@tabler/icons';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
@@ -28,6 +29,7 @@ import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import updateBacklinks from './backlinks/updateBacklinks';
 
+
 type Props = {
   noteId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +40,7 @@ type Props = {
 function Note(props: Props) {
   const { noteId, className } = props;
   // console.log("loading",noteId)
+  const [showBacklink, setShowBacklink] = useState(false);
   const [headings, setHeadings] = useState<Heading[]>([]);
   const editorInstance = useRef<MsEditor>(null);
   const getHeading = () => {
@@ -354,7 +357,7 @@ function Note(props: Props) {
     >
       <ProvideCurrentMd value={currentNoteValue}>
         <div id={noteId} className={`${noteContainerClassName} ${className}`}>
-          <NoteHeader />
+          <NoteHeader setShowBacklink={setShowBacklink} />
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col flex-1 w-full mx-auto px-8 md:px-12">
               <div
@@ -460,11 +463,22 @@ function Note(props: Props) {
                   </div>
                 )}
               </div>
+              <button
+                className="inline-flex items-center p-1 mt-2 group"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowBacklink(!showBacklink);
+                }}
+              >
+                <IconCaretRight
+                  className={`mr-1 text-gray-500 dark:text-gray-200 ${showBacklink ? 'rotate-90' : ''}`}
+                  size={16}
+                  fill="currentColor"
+                />
+                  BackLinks
+              </button>
               <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
-                {rawMode !== 'wysiwyg' 
-                  ? null 
-                  : (<Backlinks className="mx-4 mb-8" isCollapse={true} />)
-                }
+                {showBacklink ? (<Backlinks className="mx-4 mb-8" isCollapse={false} />) : null}
               </div>
             </div>
           </div>
