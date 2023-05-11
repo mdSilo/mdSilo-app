@@ -32,7 +32,11 @@ function SidebarHistory(props: Props) {
     if (!isOpenPreOn || showHistory || isOpened) return;
     const recentDirPath = history.length > 0 ? history[history.length - 1] : '';
     if (!recentDirPath) return;
-    listInitDir(recentDirPath).then(() => {isOpened = true; console.log("open previous folder")}); 
+    listInitDir(recentDirPath).then(() => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      isOpened = true; 
+      console.log("open previous folder")}
+    ); 
   }, [history]);
 
   return (

@@ -29,16 +29,16 @@ crossbeam = "0.8.2"
 ignore = "0.4.20"
 indextree = "4.6.0"
 ## rss reader
-reqwest = { version = "0.11.16", features = ["json", "socks"] }
-rss = { version="2.0.3", features = ["serde"] }
+reqwest = { version = "0.11.17", features = ["json", "socks"] }
+rss = { version = "2.0.3", features = ["serde"] }
 atom_syndication = "0.12.1"
 bytes = "1.4.0"
-diesel = { version = "2.0.3", features = ["sqlite", "chrono"] }
+diesel = { version = "2.0.4", features = ["sqlite", "chrono"] }
 diesel_migrations = { version = "2.0.0", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.25.2", features = ["bundled"] }
 
 [dev-dependencies]
-tokio = {version="1.27.0", features = ["full"] }
+tokio = { version = "1.27.0", features = ["full"] }
 
 [features]
 # by default Tauri runs in production mode

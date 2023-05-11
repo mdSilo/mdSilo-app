@@ -39,7 +39,7 @@ export default function NoteHeader(
       setRawMode(mode);
       setShowBacklink(false);
     }, 
-    [note, setRawMode]
+    [note.id, setRawMode, setShowBacklink]
   );
 
   const [isNoteDelModalOpen, setIsNoteDelModalOpen] = useState(false);

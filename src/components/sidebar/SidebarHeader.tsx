@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api';
 import { Menu } from '@headlessui/react';
 import { 
   IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, 
-  IconPizza, IconInfoCircle, IconArtboard, IconCurrentLocation 
+  IconPizza, IconInfoCircle, IconCurrentLocation 
 } from '@tabler/icons';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
@@ -47,14 +47,6 @@ export default function SidebarHeader() {
             <IconSettings size={18} className="mr-1" />
             <span>Settings</span>
           </DropdownItem>
-          {/* <DropdownItem
-            className="border-t dark:border-gray-700"
-            as='link'
-            href='https://pad.mdsilo.com'
-          >
-            <IconArtboard size={18} className="mr-1" />
-            <span>Collaboration</span>
-          </DropdownItem> */}
           <DropdownItem
             className="border-t dark:border-gray-700"
             as='link'

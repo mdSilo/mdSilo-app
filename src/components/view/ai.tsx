@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+// import { useEffect } from 'react';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import ChatBox from 'ai/ChatBox';
 
