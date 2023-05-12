@@ -269,17 +269,20 @@ export function FileDrop() {
         <IconFileText size={18} className="mr-1" />
         <Tooltip content="Open .md"><span>Open File</span></Tooltip>
       </DropdownItem>
-      <DropdownItem onClick={openJsonFile}>
+      <DropdownItem onClick={openJsonFile} className="hidden">
         <IconFileImport size={18} className="mr-1" />
         <Tooltip content="Open JSON"><span>Import JSON</span></Tooltip>
       </DropdownItem>
-      <DropdownItem onClick={onClear}>
+      <DropdownItem 
+        onClick={onClear} 
+        className="border-t-2 border-gray-200 dark:border-gray-600"
+      >
         <IconClearAll size={18} className="mr-1" />
         <Tooltip content="Open Recent History"><span>Recent</span></Tooltip>
       </DropdownItem>
       <DropdownItem 
         onClick={onSave} 
-        className="border-t-2 border-gray-200 dark:border-gray-600"
+        className="border-t-2 border-gray-200 dark:border-gray-600 hidden"
       >
         <IconDeviceFloppy size={18} className="mr-1" />
         <Tooltip content="Save All Data"><span>Save</span></Tooltip>
