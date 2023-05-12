@@ -41,7 +41,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y webkit2gtk-4.0
+          sudo apt-get install -y webkit2gtk-4.0 
+          sudo apt-get install -y libayatana-appindicator3-dev 
       - name: install app dependencies and build it
         run: yarn && yarn build
       - uses: tauri-apps/tauri-action@v0.3
@@ -55,21 +56,3 @@ jobs:
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
-          
-  updater:
-    runs-on: ubuntu-latest
-    needs: [publish-mdsilo]
-
-    steps:
-      - uses: actions/checkout@v3
-      - run: yarn
-      - run: yarn updater 
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: Deploy install.json
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GH_TOKEN }}
-          publish_dir: ./updater
-          force_orphan: true
