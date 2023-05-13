@@ -1,7 +1,7 @@
 // code modified from  https://github.com/rhysd/path-slash
 // MIT License Copyright (c) 2018 rhysd
 
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 #[cfg(windows)]
 use std::path::{Component, Prefix};
 
@@ -122,13 +122,11 @@ impl PathBufExt for PathBuf {
 
   #[cfg(target_os = "windows")]
   fn from_slash<S: AsRef<str>>(s: S) -> Self {
-    use std::path;
-
     let s = s
       .as_ref()
       .chars()
       .map(|c| match c {
-        '/' => path::MAIN_SEPARATOR,
+        '/' => MAIN_SEPARATOR,
         c => c,
       })
       .collect::<String>();
@@ -142,13 +140,11 @@ impl PathBufExt for PathBuf {
   //
   #[cfg(not(target_os = "windows"))]
   fn from_backslash<S: AsRef<str>>(s: S) -> Self {
-    use std::path;
-
     let s = s
       .as_ref()
       .chars()
       .map(|c| match c {
-        '\\' => path::MAIN_SEPARATOR,
+        '\\' => MAIN_SEPARATOR,
         c => c,
       })
       .collect::<String>();
