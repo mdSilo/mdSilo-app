@@ -87,7 +87,9 @@ pub async fn write_json(dir: String, window: tauri::Window) -> bool {
   let res = write_file(to_dir, json).await;
 
   // println!("loaded dir: {} ? -> {}", dir, res);
-
+  
+  // read files and write to json on rust end, emit event;
+  // listen loaded event on ts end, then load to store
   window
     .emit(
       "changes",

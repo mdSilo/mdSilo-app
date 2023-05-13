@@ -1,7 +1,9 @@
 // code modified from  https://github.com/rhysd/path-slash
 // MIT License Copyright (c) 2018 rhysd
 
-use std::path::{Path, PathBuf, Component, Prefix};
+use std::path::{Path, PathBuf};
+#[cfg(windows)]
+use std::path::{Component, Prefix};
 
 pub trait PathExt {
   fn normalize_slash(&self) -> Option<String>;
