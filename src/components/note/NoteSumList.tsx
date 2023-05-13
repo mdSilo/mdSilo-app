@@ -1,11 +1,10 @@
 import { IconPencil } from '@tabler/icons';
-import MsEditor, { parser, serializer } from "mdsmirror";
+import { parser, serializer } from "mdsmirror";
 import { useCurrentViewContext, DispatchType } from 'context/useCurrentView';
 import { Note } from 'types/model';
 import Tree from 'components/misc/Tree';
 import Tooltip from 'components/misc/Tooltip';
 import { openFilePath } from 'file/open';
-import { useStore } from 'lib/store';
 
 type Props = {
   anchor: string;
@@ -19,9 +18,6 @@ export default function NoteSumList(props: Props) {
   const { anchor, notes, className, isDate, onClick } = props;
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
-
-  const darkMode = useStore((state) => state.darkMode);
-  const isRTL = useStore((state) => state.isRTL);
 
   const nodeData = [
     {
@@ -38,7 +34,7 @@ export default function NoteSumList(props: Props) {
           ) : null}
         </div>
       ),
-      children: notes.filter(n => !n.is_dir).map(noteToTreeData(dispatch, darkMode, isRTL)),
+      children: notes.map(noteToTreeData(dispatch)),
     }
   ];
 
@@ -50,8 +46,7 @@ export default function NoteSumList(props: Props) {
 }
 
 // eslint-disable-next-line react/display-name
-const noteToTreeData = 
-(dispatch: DispatchType, darkMode: boolean, isRTL: boolean) => (note: Note) => {
+const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
   const doc = parser.parse(note.content);
   const value = doc.content.content
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,9 +69,7 @@ const noteToTreeData =
             {note.title}
           </span>
         </button>
-        <div>
-          <MsEditor key={note.id} value={sum} dark={darkMode} dir={isRTL ? 'rtl' : 'ltr'} />
-        </div>
+        <div>{sum}</div>
       </div>
     ),
     showArrow: false,

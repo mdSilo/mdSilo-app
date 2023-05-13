@@ -9,6 +9,7 @@ import { dateCompare, getStrDate, regDateStr } from 'utils/helper';
 import { joinPaths } from 'file/util';
 import { defaultNote, Note } from 'types/model';
 import { loadDir, openFilePath } from 'file/open';
+import { checkFileIsMd } from 'file/process';
 
 export default function Chronicle() {
   const isLoaded = useStore((state) => state.isLoaded);
@@ -97,7 +98,7 @@ function HeatMapAndList(props: Props) {
   }, [notes]);
   
   const sortedNotes = useMemo(() => {
-    const myNotes = noteList.filter(n => !n.is_daily && !n.is_dir);
+    const myNotes = noteList.filter(n => !n.is_daily && !n.is_dir && checkFileIsMd(n.id));
     myNotes.sort((n1, n2) => dateCompare(n2.created_at, n1.created_at));
     return myNotes;
   }, [noteList])
