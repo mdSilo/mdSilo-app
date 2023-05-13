@@ -418,7 +418,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
   // println!(">> dir tree: {:?}", tree);
   let nodes = tree.map(|t| t.children_vec()).unwrap_or_default();
   let metas: Vec<FileMetaData> = nodes.iter().filter_map(|n| from_node(n)).collect();
-
+  // println!(">> dir files: {:?}", metas);
   Ok(metas)
 }
 

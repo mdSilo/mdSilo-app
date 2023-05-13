@@ -1,7 +1,7 @@
 // code modified from  https://github.com/rhysd/path-slash
 // MIT License Copyright (c) 2018 rhysd
 
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, Component, Prefix};
 
 pub trait PathExt {
   fn normalize_slash(&self) -> Option<String>;
@@ -22,16 +22,15 @@ impl PathExt for Path {
 
   #[cfg(target_os = "windows")]
   fn normalize_slash(&self) -> Option<String> {
-    use std::path;
-
+    let is_safe_to_strip = is_safe_to_strip_prefix(self);
     let mut buf = String::new();
     let mut has_trailing_slash = false;
     for c in self.components() {
       match c {
-        path::Component::RootDir => { /* empty */ }
-        path::Component::CurDir => buf.push('.'),
-        path::Component::ParentDir => buf.push_str(".."),
-        path::Component::Prefix(ref prefix) => {
+        Component::RootDir => { /* empty */ }
+        Component::CurDir => buf.push('.'),
+        Component::ParentDir => buf.push_str(".."),
+        Component::Prefix(ref prefix) => {
           if let Some(s) = prefix.as_os_str().to_str() {
             buf.push_str(s);
             // C:\foo is [Prefix, RootDir, Normal]. Avoid C://
@@ -40,7 +39,7 @@ impl PathExt for Path {
             return None;
           }
         }
-        path::Component::Normal(ref s) => {
+        Component::Normal(ref s) => {
           if let Some(s) = s.to_str() {
             buf.push_str(s);
           } else {
@@ -56,8 +55,36 @@ impl PathExt for Path {
       buf.pop(); // Pop last '/'
     }
 
-    Some(buf)
+    // strip "\\?\"
+    let final_buf = if buf.starts_with(r#"\\?\"#) && is_safe_to_strip {
+      buf.strip_prefix(r#"\\?\"#).unwrap_or(&buf).to_string()
+    } else {
+      buf
+    };
+
+    Some(final_buf)
   }
+}
+
+#[cfg(windows)]
+fn is_safe_to_strip_prefix(path: &Path) -> bool {
+  let mut components = path.components();
+  match components.next() {
+    Some(Component::Prefix(p)) => match p.kind() {
+      Prefix::VerbatimDisk(..) => {},
+      _ => return false, // Other kinds of UNC paths
+    },
+    _ => return false, // relative or empty
+  }
+
+  for component in components {
+    match component {
+      Component::RootDir | Component::Normal(_) => {},
+      _ => return false, // UNC paths take things like ".." literally
+    };
+  }
+
+  true
 }
 
 pub trait PathBufExt {

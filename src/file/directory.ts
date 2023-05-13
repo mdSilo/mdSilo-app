@@ -77,7 +77,7 @@ class DirectoryAPI {
    * Get files with simple metadata, w/o content
    * @returns {Promise<DirectoryData>}
   */
-   listDirectory(): Promise<SimpleFileMeta[]> {
+  listDirectory(): Promise<SimpleFileMeta[]> {
     return new Promise((resolve) => {
       if (isTauri) {
         invoke<SimpleFileMeta[]>(

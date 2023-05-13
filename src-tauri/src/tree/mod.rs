@@ -60,7 +60,7 @@ impl Tree {
   ) -> TreeResult<(Arena<Node>, NodeId)> {
     let walker = new_walker(PathBuf::from(dir), depth)?;
     let (tx, rx) = channel::unbounded::<TraversalState>();
-
+    
     thread::scope(|s| {
       let mut tree = Arena::new();
 
@@ -189,7 +189,7 @@ pub fn assemble_note_tree(
   notes: &mut NotesData,
   note_tree: &mut NoteTree,
 ) {
-  // println!("now is the dir: {:?}, node is {:?}", root, inner[root].get());
+  // println!(">> now is the dir: {:?}, node is {:?}", root, inner[root].get());
   let mut children = root.children(inner);
   let mut tree_items = Vec::new();
   while let Some(child_node_id) = children.next() {
