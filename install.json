@@ -1,23 +1,23 @@
 {
-  "version": "v0.5.6",
+  "version": "app-v0.5.6",
   "notes": "updater",
-  "pub_date": " ",
+  "pub_date": "2023-05-16",
   "platforms": {
     "darwin-x86_64": {
-      "signature": "",
-      "url": ""
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVROGNrdFZ3QkgrNmw4ZTIwdXM2TTR6cFFud3RwZm91UCtzWEJHNkNNa3MybjJmYmNRNUFLN1VkMVZNUVdhL2hVU0VnSzVGSGdNTGYrVGdWWkdscXlWcTNON1FyQVFaQ3c4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjg0MDE5Mzg4CWZpbGU6bWRzaWxvLmFwcC50YXIuZ3oKcEsrV0hMVkJaaSt5SFN2Z1VOa3dOamdlZHo0a0t1czJiQlRtK1U5cW4wLzVwd2w2WWFwL1V2VEgraVZya3RYZFBCdGRFazdTekI5Ri8reThROURlQkE9PQo=",
+      "url": "https://github.com/mdSilo/mdSilo-app/releases/download/app-v0.5.6/mdsilo.app.tar.gz"
     },
     "darwin-aarch64": {
-      "signature": "",
-      "url": ""
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVROGNrdFZ3QkgrNmw4ZTIwdXM2TTR6cFFud3RwZm91UCtzWEJHNkNNa3MybjJmYmNRNUFLN1VkMVZNUVdhL2hVU0VnSzVGSGdNTGYrVGdWWkdscXlWcTNON1FyQVFaQ3c4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjg0MDE5Mzg4CWZpbGU6bWRzaWxvLmFwcC50YXIuZ3oKcEsrV0hMVkJaaSt5SFN2Z1VOa3dOamdlZHo0a0t1czJiQlRtK1U5cW4wLzVwd2w2WWFwL1V2VEgraVZya3RYZFBCdGRFazdTekI5Ri8reThROURlQkE9PQo=",
+      "url": "https://github.com/mdSilo/mdSilo-app/releases/download/app-v0.5.6/mdsilo.app.tar.gz"
     },
     "linux-x86_64": {
-      "signature": "",
-      "url": ""
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVROGNrdFZ3QkgrNnVBZDFOdVA3cnQzSkZTNGxuazZUYjF0eFBZUng2V2xYUW9iVi8wMzRGeUVUMnd6U2RXVS9YM2tQaEtFRVdEMUdZa3FRRmdJdW81b1RWTWZTQm1SandZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjg0MDE4NTY2CWZpbGU6bWRzaWxvXzAuNS42X2FtZDY0LkFwcEltYWdlLnRhci5negp4em1LRFhrVmpFekNxRWZySEFXTGx1Y090d2U3VklkUWgxblFzSzlUZE5KWCtMTWZrb2Q3QW9mRWtUV1pCNWVVSFR1NGlWMUVjMTBGL1NTOE5UNUNCdz09Cg==",
+      "url": "https://github.com/mdSilo/mdSilo-app/releases/download/app-v0.5.6/mdsilo_0.5.6_amd64.AppImage.tar.gz"
     },
     "windows-x86_64": {
-      "signature": "",
-      "url": ""
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVROGNrdFZ3QkgrNm9ONldNY1dkQVpPOUJOMnh1WXVaZW1FWUp6NzlCVitLN0M4K2tPUkN3UFNXS3VDbWw5bFd6alRWSXp4aTJkZVhhcnNUOHhJMGxocStaMTVSdElXQ0FZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjg0MDE4NjQ3CWZpbGU6bWRzaWxvXzAuNS42X3g2NF9lbi1VUy5tc2kuemlwCkZNSmFCNUVmK1drNXQ1OC9sNGFkN2w2elhhZ2Nva0pWY2pEVFRURFRvcnE5NDFrUUlYVmVMS2EwNEp0M0d5cHNuQ3llQzU1NTZaZFNQYzVHZFBkdENBPT0K",
+      "url": "https://github.com/mdSilo/mdSilo-app/releases/download/app-v0.5.6/mdsilo_0.5.6_x64_en-US.msi.zip"
     }
   }
 }
