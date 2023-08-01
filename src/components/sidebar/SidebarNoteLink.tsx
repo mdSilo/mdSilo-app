@@ -5,7 +5,7 @@ import {
   memo,
   useCallback,
 } from 'react';
-import { IconCaretRight, IconMarkdown, IconNote, IconPhoto } from '@tabler/icons';
+import { IconCaretRight, IconMarkdown, IconNote, IconPhoto } from '@tabler/icons-react';
 import { NoteTreeItem, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import { imageExtensions } from 'utils/file-extensions';

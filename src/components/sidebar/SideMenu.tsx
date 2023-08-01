@@ -3,7 +3,7 @@ import {
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
   IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
   IconFileImport, IconRss, IconBox, IconMessageChatbot, 
-} from '@tabler/icons';
+} from '@tabler/icons-react';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';

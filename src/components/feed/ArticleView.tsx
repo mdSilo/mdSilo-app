@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { IconChevronLeft, IconHeadphones, IconLink, IconStar } from "@tabler/icons";
+import { IconChevronLeft, IconHeadphones, IconLink, IconStar } from "@tabler/icons-react";
 import { useStore } from "lib/store";
 import { getFavicon, fmtDatetime } from "utils/helper";
 import { ArticleType } from "types/model";

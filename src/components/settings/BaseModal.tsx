@@ -7,7 +7,7 @@ MIT License Copyright (c) 2022 Hannah Park
 
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { IconX } from '@tabler/icons';
+import { IconX } from '@tabler/icons-react';
 
 type Props = {
   title: string;

@@ -1,7 +1,7 @@
 import React, { useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
-import { IconHash } from '@tabler/icons';
+import { IconHash } from '@tabler/icons-react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { Notes, useStore } from 'lib/store';
 import { HASHTAG_REGEX } from 'components/view/ForceGraph';

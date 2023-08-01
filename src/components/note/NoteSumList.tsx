@@ -1,4 +1,4 @@
-import { IconPencil } from '@tabler/icons';
+import { IconPencil } from '@tabler/icons-react';
 import { parser, serializer } from "mdsmirror";
 import { useCurrentViewContext, DispatchType } from 'context/useCurrentView';
 import { Note } from 'types/model';

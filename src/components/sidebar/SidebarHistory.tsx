@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect } from 'react';
-import { IconPin, IconTrash } from '@tabler/icons';
+import { IconPin, IconTrash } from '@tabler/icons-react';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import { listInitDir } from 'editor/hooks/useOpen';

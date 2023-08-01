@@ -1,5 +1,5 @@
 import { memo, useMemo, CSSProperties, forwardRef, ForwardedRef } from 'react';
-import { IconCaretRight } from '@tabler/icons';
+import { IconCaretRight } from '@tabler/icons-react';
 import { FlattenedTreeNode } from './Tree';
 
 type Props = {

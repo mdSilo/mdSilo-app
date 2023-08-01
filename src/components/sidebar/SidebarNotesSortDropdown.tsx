@@ -1,6 +1,6 @@
 import { useRef, useState, memo } from 'react';
 import { Menu } from '@headlessui/react';
-import { IconSortDescending, IconCheck } from '@tabler/icons';
+import { IconSortDescending, IconCheck } from '@tabler/icons-react';
 import { usePopper } from 'react-popper';
 import { ReadableNameBySort, Sort } from 'lib/userSettings';
 import Tooltip from 'components/misc/Tooltip';

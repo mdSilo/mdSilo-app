@@ -1,5 +1,5 @@
 import { memo, useCallback, useState } from 'react';
-import { IconHeadphones } from '@tabler/icons';
+import { IconHeadphones } from '@tabler/icons-react';
 import { store, useStore } from 'lib/store';
 import AudioPlayer from 'components/feed/AudioPlayer';
 import * as dataAgent from 'components/feed/dataAgent';

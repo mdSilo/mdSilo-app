@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from 'react';
-import { IconTerminal2 } from '@tabler/icons';
+import { IconTerminal2 } from '@tabler/icons-react';
 import { invoke } from '@tauri-apps/api/tauri';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import Tooltip from 'components/misc/Tooltip';

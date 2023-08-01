@@ -3,7 +3,7 @@ import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import { invoke } from '@tauri-apps/api';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import copy from "copy-to-clipboard";
-import { IconCaretRight } from '@tabler/icons';
+import { IconCaretRight } from '@tabler/icons-react';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';

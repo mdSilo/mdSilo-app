@@ -1,7 +1,7 @@
 import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
-import type { TablerIcon } from '@tabler/icons';
-import { IconFilePlus, IconSearch } from '@tabler/icons';
+import type { TablerIcon } from '@tabler/icons-react';
+import { IconFilePlus, IconSearch } from '@tabler/icons-react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { ciStringEqual, regDateStr } from 'utils/helper';

@@ -1,4 +1,4 @@
-import { IconFolder, IconHash, IconPlaylist, IconSearch } from '@tabler/icons';
+import { IconFolder, IconHash, IconPlaylist, IconSearch } from '@tabler/icons-react';
 import Tooltip from 'components/misc/Tooltip';
 import { SidebarTab as SidebarTabType, useStore } from 'lib/store';
 import SidebarNotes from './SidebarNotes';

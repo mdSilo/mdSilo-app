@@ -2,7 +2,7 @@ import { memo, useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
 import { 
   IconCornerDownRight, IconDots, IconDotsDiagonal, IconId, IconPlus, IconTrash 
-} from '@tabler/icons';
+} from '@tabler/icons-react';
 import { usePopper } from 'react-popper';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Portal from 'components/misc/Portal';

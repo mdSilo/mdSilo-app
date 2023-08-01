@@ -1,4 +1,4 @@
-import { IconPlaylist } from '@tabler/icons';
+import { IconPlaylist } from '@tabler/icons-react';
 import { SidebarTab, store } from 'lib/store';
 import { PodType } from 'types/model';
 

@@ -3,7 +3,7 @@ import { Menu } from '@headlessui/react';
 import { 
   IconDots, IconFile, IconFileText, IconLayout, IconMarkdown, 
   IconPhoto, IconTournament, IconTrash 
-} from '@tabler/icons';
+} from '@tabler/icons-react';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { ExportAs } from 'editor/hooks/useExport';

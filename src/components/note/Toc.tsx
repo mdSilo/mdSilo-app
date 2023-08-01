@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconCaretRight, IconPoint } from '@tabler/icons';
+import { IconCaretRight, IconPoint } from '@tabler/icons-react';
 
 export type Heading = {
   title: string;

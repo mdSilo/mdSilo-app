@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
-import { IconHeadphones } from '@tabler/icons';
+import { IconHeadphones } from '@tabler/icons-react';
 import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettings';
 import { ciStringCompare, dateCompare } from 'utils/helper';

@@ -3,7 +3,7 @@ import { Menu } from '@headlessui/react';
 import { 
   IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, 
   IconPizza, IconInfoCircle, IconCurrentLocation 
-} from '@tabler/icons';
+} from '@tabler/icons-react';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import { DropdownItem } from 'components/misc/Dropdown';

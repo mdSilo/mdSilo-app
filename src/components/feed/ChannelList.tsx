@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { IconHeadphones, IconRefresh, IconRss, IconSettings, IconStar } from "@tabler/icons";
+import { IconHeadphones, IconRefresh, IconRss, IconSettings, IconStar } from "@tabler/icons-react";
 import { getFavicon } from "utils/helper";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
