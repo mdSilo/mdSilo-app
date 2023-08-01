@@ -1,10 +1,10 @@
 import { ForwardedRef, forwardRef, memo } from 'react';
-import { TablerIcon } from '@tabler/icons-react';
+import { Icon } from '@tabler/icons-react';
 
 type Props = {
   isActive: boolean;
   setActive: () => void;
-  Icon: TablerIcon;
+  Icon: Icon;
   className?: string;
 };
 

@@ -1,6 +1,6 @@
 import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
-import type { TablerIcon } from '@tabler/icons-react';
+import type { Icon } from '@tabler/icons-react';
 import { IconFilePlus, IconSearch } from '@tabler/icons-react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
@@ -20,7 +20,7 @@ type Option = {
   id: string;
   type: OptionType;
   text: string;
-  icon?: TablerIcon;
+  icon?: Icon;
 };
 
 type Props = {
