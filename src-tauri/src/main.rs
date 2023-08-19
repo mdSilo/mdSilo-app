@@ -95,7 +95,6 @@ fn main() {
     ])
     .system_tray(tray::menu())
     .on_system_tray_event(tray::handler)
-    // .plugin(tauri_plugin_store::Builder::default().build())
     .run(tauri::generate_context!())
     .expect("error while running");
 }

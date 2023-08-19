@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import MsEditor from 'mdsmirror';
-import Board from 'react-trello';
 import { useStore } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { matchSort, SearchLeaf } from 'components/sidebar/SidebarSearch';
@@ -19,34 +18,16 @@ export default function Tasks() {
   const setIsLoaded = useStore((state) => state.setIsLoaded);
   const initDir = useStore((state) => state.initDir);
 
-  const [tab, setTab] = useState<string>("kanban");
-  const [kanbanData, setKanbanData] = useState<any>({lanes: []});
-  const kanbanJsonPath = initDir ? joinPath(initDir, `kanban.json`) : '';
   // console.log("t loaded?", isLoaded);
   useEffect(() => {
     if (!isLoaded && initDir) {
       loadDir(initDir).then(() => setIsLoaded(true));
     }
-    if (kanbanJsonPath) {
-      //
-      const jsonFile = new FileAPI(kanbanJsonPath);
-      jsonFile.readJSONFile().then(json => setKanbanData(json));
-    }
-  }, [initDir, isLoaded, kanbanJsonPath, setIsLoaded]);
+  }, [initDir, isLoaded, setIsLoaded]);
 
   const darkMode = useStore((state) => state.darkMode);
   const isRTL = useStore((state) => state.isRTL);
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
-
-  const onKanbanChange = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (newData: any) => {
-      const saveFile = new FileAPI('kanban.json', initDir);
-      await saveFile.writeFile(JSON.stringify(newData));
-      setKanbanData(newData);
-    },
-    [initDir]
-  );
 
   // per checkbox
   // 
@@ -133,37 +114,6 @@ export default function Tasks() {
   return (
     <ErrorBoundary>
       <div className="h-full">
-        <div className="flex p-1 rounded">
-          <button 
-            className={`text-md mx-2 ${tab === "kanban" ? 'text-red-500' : 'text-blue-500'}`} 
-            onClick={() => setTab("kanban")}
-          >
-            Kanban
-          </button>  
-          <button 
-            className={`text-md mx-2 ${tab != "kanban" ? 'text-red-500' : 'text-blue-500'}`}
-            onClick={() => setTab("list")}
-          >
-            List
-          </button>
-        </div>
-        {tab === "kanban" ? (
-        <div className="p-1">
-          <Board
-            // style={{backgroundColor: "rgb(138, 146, 153)"}}
-            data={kanbanData}
-            draggable
-            editable
-            canAddLanes
-            editLaneTitle 
-            collapsibleLanes
-            id="kanban"
-            onDataChange={onKanbanChange}
-            onCardDelete={() => {/**/}}
-            onCardAdd={() => {/**/}}
-          />
-        </div>
-        ) : (
         <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
           <div className="flex my-1 p-1 rounded">
             <button 
@@ -229,7 +179,7 @@ export default function Tasks() {
           <div className="overlfow-y-auto">
             <Tree data={tasks} className={""} collapseAll={false} collapseIds={collapseIds} />
           </div>
-        </div>)}
+        </div>
       </div>
     </ErrorBoundary>
   );

@@ -2,7 +2,7 @@ import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
   IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
-  IconFileImport, IconRss, IconBox, IconMessageChatbot, 
+  IconFileImport, IconRss,  
 } from '@tabler/icons-react';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
@@ -32,12 +32,6 @@ export default function SideMenu() {
   );
   const dispatchGraph = useCallback(
     () => dispatch({view: 'graph'}), [dispatch]
-  );
-  const dispatchWrap = useCallback(
-    () => dispatch({view: 'wrap'}), [dispatch]
-  );
-  const dispatchAI = useCallback(
-    () => dispatch({view: 'ai'}), [dispatch]
   );
 
   const hotkeys = useMemo(
@@ -73,7 +67,6 @@ export default function SideMenu() {
         viewTy={viewTy} 
         onDispatch={dispatchFeed} 
       />
-      <AIButton viewTy={viewTy} onDispatch={dispatchAI} />
       {currentDir ? (
       <>
         <NewButton />
@@ -81,7 +74,6 @@ export default function SideMenu() {
         <GraphButton viewTy={viewTy} onDispatch={dispatchGraph} />
         <TaskButton viewTy={viewTy} onDispatch={dispatchTask} />
       </>) : null}
-      <WrapButton viewTy={viewTy} onDispatch={dispatchWrap} />
       <FileButton />
     </div>
   );
@@ -215,41 +207,6 @@ const TaskButton = (props: ButtonProps) => {
     </SidebarItem>
   );
 };
-
-const WrapButton = (props: ButtonProps) => {
-  const { viewTy, onClick, onDispatch } = props;
-
-  return (
-    <SidebarItem isHighlighted={viewTy === 'wrap'} onClick={onClick}>
-      <Tooltip
-        content="Wrap App"
-        placement="right"
-      >
-        <button className={btnClass} onClick={onDispatch}>
-          <IconBox size={24} className="flex-shrink-0 mx-1 text-blue-600" />
-        </button>
-      </Tooltip>
-    </SidebarItem>
-  );
-};
-
-const AIButton = (props: ButtonProps) => {
-  const { viewTy, onClick, onDispatch } = props;
-
-  return (
-    <SidebarItem isHighlighted={viewTy === 'ai'} onClick={onClick} className="hidden">
-      <Tooltip
-        content="AI Assistant"
-        placement="right"
-      >
-        <button className={btnClass} onClick={onDispatch}>
-          <IconMessageChatbot size={24} className="flex-shrink-0 mx-1 text-purple-600" />
-        </button>
-      </Tooltip>
-    </SidebarItem>
-  );
-};
-
 
 export function FileDrop() {
   const onClear = useCallback(() => {
