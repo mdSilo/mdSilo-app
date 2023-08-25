@@ -10,8 +10,6 @@ import useTasks from 'editor/hooks/useTasks';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import { getStrDate } from 'utils/helper';
 import { loadDir } from 'file/open';
-import { joinPath } from 'file/util';
-import FileAPI from 'file/files';
 
 export default function Tasks() {
   const isLoaded = useStore((state) => state.isLoaded);

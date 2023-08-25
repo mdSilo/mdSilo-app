@@ -125,7 +125,9 @@ function HeatMapAndList(props: Props) {
   
   return (
     <>
-      <HeatMap noteList={noteList} onClickCell={showDailyNote} />
+      <div className="flex items-center justify-center overlfow-auto">
+        <HeatMap noteList={noteList} onClickCell={showDailyNote} />
+      </div>
       <div className="overlfow-auto">
         {dateArr.slice(0,42).map((d, idx) => (
           <NoteSumList
