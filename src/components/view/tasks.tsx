@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import MsEditor from 'mdsmirror';
-import { useStore } from 'lib/store';
+import { store, useStore } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { matchSort, SearchLeaf } from 'components/sidebar/SidebarSearch';
 import Tree, { TreeNode } from 'components/misc/Tree';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import useTasks from 'editor/hooks/useTasks';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { getStrDate } from 'utils/helper';
+import { getStrDate, isUrl } from 'utils/helper';
 import { loadDir } from 'file/open';
 
 export default function Tasks() {
@@ -109,6 +109,20 @@ export default function Tasks() {
     },
   ], [getTaskNotes]);
 
+  const onOpenLink = useCallback(
+    async (href: string) => {
+      if (!isUrl(href)) {
+        // find the note per title
+        const title = decodeURI(href.trim());
+        const storeNotes = store.getState().notes;
+        const toNote = Object.values(storeNotes).find((n) => (n.title === title));
+        if (!toNote) { return; }
+        onNoteLinkClick(toNote.id);
+      }
+    },
+    []
+  );
+
   return (
     <ErrorBoundary>
       <div className="h-full">
@@ -139,9 +153,9 @@ export default function Tasks() {
                     {`${getStrDate(doc.note.updated_at)} : ${doc.note.title}`}
                   </button>
                   <MsEditor 
-                    value={doc.tasks.reduce(
-                      (box, item) => box + '\n' + `- [${item.completed ? 'X' : ' '}] ${item.text}`, '')
-                    } 
+                    value={doc.tasks.reduce((box, item) => 
+                      box + '\n' + `- [${item.completed ? 'X' : ' '}] ${item.text}`, ''
+                    )} 
                     readOnly={true} 
                     dark={darkMode} 
                     dir={isRTL ? 'rtl' : 'ltr'} 
@@ -152,10 +166,13 @@ export default function Tasks() {
             ) : (
               <div> 
                 <MsEditor 
-                  value={allTasks.reduce(
-                    (box, item) => box + '\n' + `- [${item.completed ? 'X' : ' '}] ${item.text}`, '')
-                  } 
-                  readOnly={true} 
+                  value={allTasks.reduce((box, item) => 
+                    box + '\n' 
+                    + `- [${item.completed ? 'X' : ' '}] ${item.text}  [[${item.title} | ...]]`
+                    , ''
+                  )} 
+                  onOpenLink={onOpenLink}
+                  readOnly={false} 
                   dark={darkMode} 
                   dir={isRTL ? 'rtl' : 'ltr'}
                 />

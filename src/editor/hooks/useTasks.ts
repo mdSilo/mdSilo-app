@@ -4,9 +4,11 @@ import { Notes, useStore } from 'lib/store';
 import { loadDir } from 'file/open';
 import { Note } from 'types/model';
 
+type TaskWithID = { title: string} & Task;
+
 export type DocTask = {
   note: Note;
-  tasks: Task[];
+  tasks: TaskWithID[];
 };
 
 export default function useTasks() {
@@ -35,8 +37,12 @@ export const computeTasks = (notes: Notes): DocTask[] => {
   const myNotes = Object.values(notes);
   for (const note of myNotes) {
     const tasks = computeNoteTasks(note.content);
+
     if (tasks.length > 0) {
-      result.push({ note, tasks });
+      const newTasks: TaskWithID[] = tasks.map(
+        t => {return {title: note.title, text: t.text, completed: t.completed}}
+      );
+      result.push({ note, tasks: newTasks });
     }
   }
   return result;
