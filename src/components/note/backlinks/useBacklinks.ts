@@ -88,7 +88,7 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
         if ((mark.type === "link" || mark.type === 'wikilink') && mark.attrs) {
           const href = mark.attrs.href;
           if (href && !isUrl(href)) {
-            const title = href.replaceAll('_', ' ');
+            const title = href; //.replaceAll('_', ' ');
             if (noteTitle === title) {
               out.push({ text: node.text, from: node.from, to: node.to, context })
             }

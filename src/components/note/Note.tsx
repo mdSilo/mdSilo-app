@@ -204,7 +204,7 @@ function Note(props: Props) {
         const itemTitle = res.item.title.trim();
         const search = {
           title: itemTitle,
-          url: itemTitle.replaceAll(/\s/g, '_'),
+          url: itemTitle, //.replaceAll(/\s/g, '_'),
         };
         return search;
       });
@@ -219,12 +219,12 @@ function Note(props: Props) {
       title = title.trim();
       const existingNote = Object.values(storeNotes).find((n) => (n.title === title));
       if (existingNote) {
-        return existingNote.title.trim().replaceAll(/\s/g, '_');
+        return existingNote.title.trim();
       }
       const parentDir = await getDirPath(notePath);
       await createNewNote(parentDir, title);
       
-      return title.replaceAll(/\s/g, '_');
+      return title; //.replaceAll(/\s/g, '_');
     },
     [notePath, storeNotes]
   );
@@ -236,7 +236,7 @@ function Note(props: Props) {
         await openUrl(href);
       } else {
         // find the note per title
-        const title = href.replaceAll('_', ' ').trim();
+        const title = decodeURI(href.trim()); //.replaceAll('_', ' ')
         // ISSUE ALERT: 
         // maybe more than one notes with same title(ci), 
         // but only link to first searched one 

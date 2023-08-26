@@ -85,7 +85,7 @@ export default function ForceGraph(props: Props) {
       for (const match of link_array) {
         const href = match[2];
         if (!isUrl(href)) {
-          const title = href.replaceAll('_', ' ');
+          const title = href; // .replaceAll('_', ' ');
           const existingNote = notesArr.find(n => (n.title === title));
           if (existingNote) {
             linksByNoteId[note.id].add(existingNote.id);
