@@ -35,17 +35,9 @@ Then you can find the app in `./src-tauri/target/release` folder.
 
 ![reader](https://user-images.githubusercontent.com/1472485/222804686-e2ea28d8-a772-4a27-a3c0-2759d73c5fdc.png) 
 
-- Can wrap any web app and inject JS to make your own assistant, like ChatGPT
-
-![wrap](https://user-images.githubusercontent.com/1472485/222805232-395fae7e-926b-421c-94ea-3a78f2bde1a4.png)
-
 - Timeline view, and github-like activities tracker
 
 ![chron](https://user-images.githubusercontent.com/1472485/222804883-d7014fca-ec0d-4cf5-88bc-d331350c1f17.png)
-
-- Kanban or list to track tasks
-
-![kanban](https://user-images.githubusercontent.com/1472485/222807652-604f3635-5d68-4772-a0b5-1c1da550d223.png)
 
 - Graph view
 
@@ -95,7 +87,6 @@ Then you can find the app in `./src-tauri/target/release` folder.
   - [X] Slash commands  
   - [X] Hovering toolbar
   - [X] hotkeys 
-  - [X] Kanban board
   - [ ] Drawing  
 
 - View
@@ -115,7 +106,7 @@ Then you can find the app in `./src-tauri/target/release` folder.
 
 ### Extension
 
-- [ ] Wrap web app and Javascript injection
+- [ ] Javascript injection
 - [ ] Plugin
 - [ ] Customize theme 
 

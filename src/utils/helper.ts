@@ -1,5 +1,6 @@
 // helper 
-//import GPT3Tokenizer from 'gpt3-tokenizer';
+
+
 // date
 //
 // string: yyyy-mm-dd  or yyyy-m-d
@@ -23,8 +24,9 @@ export function dateCompare(d1: string | Date, d2: string | Date) {
   return new Date(d1).getTime() - new Date(d2).getTime();
 }
 
-export function fmtDatetime(dateStr: string | Date) {
-  return new Date(dateStr).toLocaleString(undefined, {
+export function fmtDatetime(date: string | number | Date) {
+  const dt = typeof date === "number" ? date * 1000 : date;
+  return new Date(dt).toLocaleString(undefined, {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -55,7 +57,7 @@ export const isMobile = (breakpoint: number = SM_BREAKPOINT) => {
   return winWidth <= breakpoint && winWidth !== 0;
 };
 
-// str
+// string
 // 
 // case Insensitive
 export function ciStringCompare(str1: string, str2: string) {
@@ -103,21 +105,6 @@ export const countWords = (str: string) => {
 
   const count = count1 + count2;
   return count;
-}
-
-// const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
-// export function estimateTokens(str: string): number {
-//   const encoded: { bpe: number[]; text: string[] } = tokenizer.encode(str);
-//   return encoded.bpe.length;
-// }
-
-const ymdNums = (date: string) => {
-  const nums =  date.split('-').map(n => Number(n));
-  return nums;
-};
-export function dailyTitleEqual(str1: string, str2: string) {
-  if (!regDateStr.test(str1) || !regDateStr.test(str2)) return false;
-  return ymdNums(str1).join('') === ymdNums(str2).join('');
 }
 
 // url 

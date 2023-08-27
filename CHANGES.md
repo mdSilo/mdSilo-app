@@ -4,13 +4,17 @@
 
 2023-XX-XX
 
-### Features 
+To focus on the core features of note-taking and improve the performance continuously. 
+We clean up some features, such as kanban, etc. In the future, such features can be added as plugins.
 
-- [ ] AI integration
+### Bug Fixes and breaking change 
+
+Now will not replace the blank space with `_` on title as link due to the side effect. but this is a breaking change which breaks the backlinks and graph view (stopgaps: delete the `_` in `[title](title_as_link)` manually, sorry for the inconvenience). 
+
 
 ## app-v0.5.6 
 
-2023-XX-XX
+2023-05-12
 
 ### Features 
 
