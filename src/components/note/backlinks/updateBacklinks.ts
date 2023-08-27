@@ -35,12 +35,12 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
     for (const match of link_array) {
       const href = match[2];
       if (!isUrl(href)) {
-        const title = href; //.replaceAll('_', ' ');
+        const title = decodeURI(href);
         if (noteTitle === title) {
           newTitle = newTitle?.trim();
           const replaceTo = newTitle
-            ? `[${match[1]}](${newTitle})` // rename
-            : match[1]                     // delete
+            ? `[${match[1]}](${encodeURI(newTitle)})` // rename
+            : match[1]                                // delete
           content = content.replaceAll(match[0], replaceTo);
         }
       }

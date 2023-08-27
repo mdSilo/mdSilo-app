@@ -204,7 +204,7 @@ function Note(props: Props) {
         const itemTitle = res.item.title.trim();
         const search = {
           title: itemTitle,
-          url: itemTitle, //.replaceAll(/\s/g, '_'),
+          url: encodeURI(itemTitle), // used as [title](encodedTitle)
         };
         return search;
       });
@@ -213,18 +213,18 @@ function Note(props: Props) {
     [search]
   );
 
-  // Create new note 
+  // Create new note, return encoded title as url: [title](encoded title as url)
   const onCreateNote = useCallback(
     async (title: string) => {
       title = title.trim();
       const existingNote = Object.values(storeNotes).find((n) => (n.title === title));
       if (existingNote) {
-        return existingNote.title.trim();
+        return encodeURI(existingNote.title.trim());
       }
       const parentDir = await getDirPath(notePath);
       await createNewNote(parentDir, title);
       
-      return title; //.replaceAll(/\s/g, '_');
+      return encodeURI(title);
     },
     [notePath, storeNotes]
   );
@@ -236,7 +236,7 @@ function Note(props: Props) {
         await openUrl(href);
       } else {
         // find the note per title
-        const title = decodeURI(href.trim()); //.replaceAll('_', ' ')
+        const title = decodeURI(href.trim()); 
         // ISSUE ALERT: 
         // maybe more than one notes with same title(ci), 
         // but only link to first searched one 

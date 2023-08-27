@@ -4,6 +4,7 @@ import Fuse from 'fuse.js';
 import { store } from 'lib/store';
 import { Note } from 'types/model';
 import { loadDir } from 'file/open';
+import { checkFileIsMd } from 'file/process';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type NoteBlock = { text: string; path?: any };
@@ -46,7 +47,7 @@ export default function useNoteSearch({
     const notesArr = Object.values(notes);
     const allNotes = searchDir 
       ? notesArr.filter(n => n.is_dir) 
-      : notesArr.filter(n => !n.is_dir);
+      : notesArr.filter(n => !n.is_dir && checkFileIsMd(n.id));
     
     return allNotes;
   }, [searchDir]);
