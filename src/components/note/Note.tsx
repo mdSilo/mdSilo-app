@@ -9,7 +9,7 @@ import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
 import { Mindmap } from 'components/mindmap/mindmap';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { Notes, SidebarTab, store, useStore } from 'lib/store';
+import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
@@ -94,47 +94,24 @@ function Note(props: Props) {
   const upsertNote = useStore((state) => state.upsertNote);
   const upsertTree = useStore((state) => state.upsertTree);
 
-  // for split view
-  const [rawCtn, setRawCtn] = useState<string | null>(null);
-  const [mdCtn, setMdCtn] = useState<string | null>(null);
-  const [focusOn, setFocusOn] = useState<string | null>(null);
-  const switchFocus = useCallback(
-    (on: string) => {
-      // refresh current note
-      const cNote: Notes = {};
-      cNote[noteId] = storeNotes[noteId];
-      store.getState().setCurrentNote(cNote);
-      // switch focus 
-      setFocusOn(on);
-    }, [noteId, storeNotes]
-  );
-
   // write to local file
   const onContentChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
-      if (rawMode === 'split' && focusOn === 'wysiwyg') { 
-        setMdCtn(null);
-        setRawCtn(text); 
-      }
       await writeFile(notePath, text);
       // update TOC if any 
       getHeading();
     },
-    [focusOn, notePath, rawMode]
+    [notePath, rawMode]
   );
 
   const onMarkdownChange = useCallback(
     async (text: string) => {
       // console.log("on markdown content change", text);
-      if (rawMode === 'split' && focusOn === 'raw') { 
-        setRawCtn(null); 
-        setMdCtn(text); 
-      }
       await writeFile(notePath, text);
     },
-    [rawMode, focusOn, notePath]
+    [rawMode, notePath]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
@@ -381,7 +358,14 @@ function Note(props: Props) {
                     readMode={readMode}
                     className={"text-xl"}
                   />
-                ) : rawMode === 'wysiwyg' ? (
+                ) : rawMode === 'mindmap' ? (
+                  <Mindmap 
+                    key={`mp-${noteId}`} 
+                    title={title} 
+                    mdValue={mdContent} 
+                    initDir={initDir} 
+                  />
+                ) : (
                   <MsEditor 
                     key={`wys-${noteId}`}
                     ref={editorInstance}
@@ -405,52 +389,6 @@ function Note(props: Props) {
                     rootPath={initDir}
                     protocol={protocol}
                   />
-                ) : rawMode === 'mindmap' ? (
-                  <Mindmap 
-                    key={`mp-${noteId}`} 
-                    title={title} 
-                    mdValue={mdContent} 
-                    initDir={initDir} 
-                  />
-                ) : (
-                  <div className="grid grid-cols-2 gap-1 justify-between">
-                    <div className="flex-1 mr-4 border-r-2 border-gray-200 dark:border-gray-600">
-                      <RawMarkdown
-                        key={`raws-${title}`}
-                        initialContent={focusOn === 'wysiwyg' ? rawCtn || mdContent : mdContent}
-                        onChange={onMarkdownChange}
-                        dark={darkMode}
-                        readMode={readMode}
-                        className={"text-xl"}
-                        onFocus={() => switchFocus('raw')}
-                      />
-                    </div>
-                    <div className="flex-1 ml-4">
-                      <MsEditor 
-                        key={`wyss-${title}`}
-                        ref={editorInstance}
-                        value={focusOn === 'raw' ? mdCtn || mdContent : mdContent}
-                        dark={darkMode}
-                        readOnly={readMode}
-                        readOnlyWriteCheckboxes={readMode}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        onChange={onContentChange}
-                        onSearchLink={onSearchNote}
-                        onCreateLink={onCreateNote}
-                        onSearchSelectText={(txt) => onSearchText(txt)}
-                        onClickHashtag={(txt) => onSearchText(txt, 'hashtag')}
-                        onOpenLink={onOpenLink} 
-                        attachFile={onAttachFile} 
-                        onClickAttachment={onClickAttachment} 
-                        onCopyHash={onCopyHash}
-                        embeds={embeds}
-                        disables={['sub']}
-                        rootPath={initDir}
-                        protocol={protocol}
-                        onFocus={() => switchFocus('wysiwyg')}
-                      />
-                    </div>
-                  </div>
                 )}
               </div>
               <button

@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
 import { 
-  IconDots, IconFile, IconFileText, IconLayout, IconMarkdown, 
+  IconDots, IconFile, IconFileText, IconMarkdown, 
   IconPhoto, IconTournament, IconTrash 
 } from '@tabler/icons-react';
 import { usePopper } from 'react-popper';
@@ -53,11 +53,6 @@ export default function NoteHeader(
   return (
     <div className={`flex items-center justify-between w-full px-2 py-1 mb-2 text-right`}>
       <div className="flex items-center">
-        <Tooltip content="Split View(beta)">
-          <button className={switchClass} onClick={() => setRaw('split')}>
-            <IconLayout className={`${rawMode === 'split' ? 'text-green-500' :iconClass}`} />
-          </button>
-        </Tooltip>
         <Tooltip content="WYSIWYG">
           <button className={switchClass} onClick={() => setRaw('wysiwyg')}>
             <IconFileText className={`${rawMode === 'wysiwyg' ? 'text-green-500' :iconClass}`} />
