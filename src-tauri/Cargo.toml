@@ -30,7 +30,7 @@ ignore = "0.4.20"
 indextree = "4.6.0"
 ## rss reader
 reqwest = { version = "0.11.18", features = ["json", "socks"] }
-rss = { version = "2.0.5", features = ["serde"] }
+rss = { version = "2.0.6", features = ["serde"] }
 atom_syndication = "0.12.2"
 bytes = "1.4.0"
 diesel = { version = "2.1.0", features = ["sqlite", "chrono"] }
