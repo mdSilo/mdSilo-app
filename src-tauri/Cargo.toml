@@ -33,7 +33,7 @@ reqwest = { version = "0.11.18", features = ["json", "socks"] }
 rss = { version = "2.0.5", features = ["serde"] }
 atom_syndication = "0.12.2"
 bytes = "1.4.0"
-diesel = { version = "2.1.0", features = ["sqlite", "chrono"] }
+diesel = { version = "2.1.1", features = ["sqlite", "chrono"] }
 diesel_migrations = { version = "2.1.0", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.25.2", features = ["bundled"] }
 
