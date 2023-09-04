@@ -24,6 +24,8 @@ export type UserSettings = {
   setUserId: Setter<string>;
   darkMode: boolean;
   setDarkMode: Setter<boolean>;
+  font: string,
+  setFont: Setter<string>;
   isSidebarOpen: boolean;
   setIsSidebarOpen: Setter<boolean>;
   isSettingsOpen: boolean;
@@ -63,6 +65,8 @@ const userSettingsSlice = (
   setUserId: setter(set, 'userId'),
   darkMode: true,
   setDarkMode: setter(set, 'darkMode'),
+  font: '',
+  setFont: setter(set, 'font'),
   isSidebarOpen: true,
   setIsSidebarOpen: setter(set, 'isSidebarOpen'),
   isSettingsOpen: false,

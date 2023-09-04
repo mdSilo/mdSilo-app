@@ -7969,10 +7969,10 @@ mdsmap@0.0.3:
     react-dom "^17.0.2"
     remarkable "2.0.1"
 
-mdsmirror@0.0.27:
-  version "0.0.27"
-  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.0.27.tgz#ca2e01d663a0470dfac03b0871c3aa7d39a6ed5c"
-  integrity sha512-6gGUHPDR+sU/ROpDmOxyeZFPzq8RiFFtRV6ObENgfi0AYq0IUyC703wdgueCbxgK21LIVPkjH5kKbiRKIQeWYw==
+mdsmirror@0.0.30:
+  version "0.0.30"
+  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.0.30.tgz#baf2048cc215b95860f2614016604e402ac2a251"
+  integrity sha512-xFWSAVQyEvZcjbnWuvi3YE2LTo5/oPqH2nv4Ujh9QssLBFb+b4TVqVQFtkrI0qYKa+LIkveygfCJAd84xRwwDg==
   dependencies:
     "@juggle/resize-observer" "^3.3.1"
     "@tabler/icons-react" "^2.30.0"

@@ -52,6 +52,7 @@ function Note(props: Props) {
   useEffect(() => { getHeading(); }, [noteId]); // to trigger change on dep change
 
   const darkMode = useStore((state) => state.darkMode);
+  const font = useStore((state) => state.font);
   const rawMode = useStore((state) => state.rawMode);
   const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
@@ -103,7 +104,7 @@ function Note(props: Props) {
       // update TOC if any 
       getHeading();
     },
-    [notePath, rawMode]
+    [notePath]
   );
 
   const onMarkdownChange = useCallback(
@@ -111,7 +112,7 @@ function Note(props: Props) {
       // console.log("on markdown content change", text);
       await writeFile(notePath, text);
     },
-    [rawMode, notePath]
+    [notePath]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
@@ -299,6 +300,10 @@ function Note(props: Props) {
     (hash: string) => { copy(`${title}${hash}`); }, [title]
   );
 
+  const customTheme = {
+    fontFamily: `${font}`,
+  };
+
   const noteContainerClassName =
     'flex flex-col w-full bg-white dark:bg-black dark:text-gray-200';
   const errorContainerClassName = 
@@ -374,6 +379,7 @@ function Note(props: Props) {
                     readOnly={readMode}
                     readOnlyWriteCheckboxes={readMode}
                     dir={isRTL ? 'rtl' : 'ltr'}
+                    theme={customTheme}
                     onChange={onContentChange}
                     onSearchLink={onSearchNote}
                     onCreateLink={onCreateNote}

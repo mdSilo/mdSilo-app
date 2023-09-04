@@ -23,6 +23,16 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   // const readMode = useStore((state) => state.readMode);
   // const setReadMode = useStore((state) => state.setReadMode);
 
+  const font = useStore((state) => state.font);
+  const setFont = useStore((state) => state.setFont);
+  const fonts = [
+    {name: 'Default', font: ''}, 
+    {name: 'Sniglet', font: 'Sniglet'}, 
+    {name: 'RobotoMono', font: 'RobotoMono'}, 
+    {name: 'Serif', font: 'IBMPlexSerif'},
+    {name: 'SansSerif', font: 'KaTeX_SansSerif'}
+  ];
+
   return (
     <BaseModal title="Settings" isOpen={isOpen} handleClose={handleClose}>
       <div className="flex-1 p-4 bg-gray-100">
@@ -69,6 +79,29 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           optionLeft="Left To Right" 
           optionRight="Right To Left"
         />
+        <div className="flex flex-col items-center mb-4">
+          <div className="mb-2">
+            <h1 className="text-xl font-semibold">Set Editor Font</h1>
+          </div>
+          <div className="flex flex-row items-center">
+            <select 
+              name="select-font" 
+              className="w-full p-2 rounded text-primary-500 border-none"
+              value={font || 'Default'}
+              onChange={(ev) => {
+                const ft = ev.target.value;
+                setFont(ft);
+                console.log("select font: ", ft)
+              }}
+            >
+              {fonts.map((font, index) => (
+                <option key={`font-${index}`} value={font.font}>
+                  {font.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
     </BaseModal>
   );

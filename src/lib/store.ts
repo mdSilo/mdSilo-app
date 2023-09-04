@@ -231,6 +231,7 @@ export const store = createVanilla<Store>(
         // user setting related
         userId: state.userId,
         darkMode: state.darkMode,
+        font: state.font,
         isRTL: state.isRTL,
         isCheckSpellOn: state.isCheckSpellOn,
         isOpenPreOn: state.isOpenPreOn,
