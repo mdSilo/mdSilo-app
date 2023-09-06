@@ -2,7 +2,7 @@ import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
   IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
-  IconFileImport, IconRss,  
+  IconFileImport, IconRss, IconSettings,  
 } from '@tabler/icons-react';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
@@ -21,6 +21,8 @@ export default function SideMenu() {
   const currentView = useCurrentViewContext();
   const viewTy = currentView.state.view;
   const dispatch = currentView.dispatch;
+
+  // TODO: Refactor repeating code into array
   const dispatchFeed = useCallback(
     () => dispatch({view: 'feed'}), [dispatch]
   );
@@ -58,23 +60,26 @@ export default function SideMenu() {
   useHotkeys(hotkeys);
 
   const currentDir = useStore((state) => state.currentDir);
-
+  // TODO: Add Preferences button
   return (    
-    <div className="flex flex-col h-full">
-      <Logo />
-      <OpenButton />
-      <FeedButton 
-        viewTy={viewTy} 
-        onDispatch={dispatchFeed} 
-      />
-      {currentDir ? (
-      <>
-        <NewButton />
-        <ChronButton viewTy={viewTy} onDispatch={dispatchChron} />
-        <GraphButton viewTy={viewTy} onDispatch={dispatchGraph} />
-        <TaskButton viewTy={viewTy} onDispatch={dispatchTask} />
-      </>) : null}
-      <FileButton />
+    <div className='flex flex-col h-full pb-3'>
+      <div className="flex flex-col h-full">
+        <Logo />
+        <OpenButton />
+        <FeedButton 
+          viewTy={viewTy} 
+          onDispatch={dispatchFeed} 
+        />
+        {currentDir ? (
+        <>
+          <NewButton />
+          <ChronButton viewTy={viewTy} onDispatch={dispatchChron} />
+          <GraphButton viewTy={viewTy} onDispatch={dispatchGraph} />
+          <TaskButton viewTy={viewTy} onDispatch={dispatchTask} />
+        </>) : null}
+        <FileButton />
+      </div>
+      <BottomSection />
     </div>
   );
 }
@@ -285,3 +290,27 @@ const FileButton = () => {
     </Menu>
   );
 };
+
+
+const BottomSection = () => {
+  return (
+    <div>
+      <SettingsButton />
+    </div>
+  )
+}
+
+
+const SettingsButton = () => {
+  const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
+  
+  return (
+    <>
+      <Tooltip content="Preferences" placement='right'>
+        <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
+          <IconSettings size={24} className={btnIconClass} />
+          </button>
+      </Tooltip>
+    </>
+  )
+}
