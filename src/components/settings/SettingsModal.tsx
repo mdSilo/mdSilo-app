@@ -18,10 +18,12 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   const isOpenPreOn = useStore((state) => state.isOpenPreOn);
   const setIsOpenPreOn = useStore((state) => state.setIsOpenPreOn);
   
-  // const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
-  // const setIsCheckSpellOn = useStore((state) => state.setIsCheckSpellOn);
-  // const readMode = useStore((state) => state.readMode);
-  // const setReadMode = useStore((state) => state.setReadMode);
+  const fontSize = useStore((state) => state.fontSize);
+  const setSize = useStore((state) => state.setFontSize);
+  const fontWt = useStore((state) => state.fontWt);
+  const setWt = useStore((state) => state.setFontWt);
+  const lineHeight = useStore((state) => state.lineHeight);
+  const setHeight = useStore((state) => state.setLineHeight);
 
   const font = useStore((state) => state.font);
   const setFont = useStore((state) => state.setFont);
@@ -59,19 +61,6 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           optionLeft="No" 
           optionRight="Yes"
         /> 
-        {/* <SettingsToggle
-          name="Write or Read Only" 
-          check={readMode}
-          handleCheck={setReadMode}
-          optionLeft="Write" 
-          optionRight="Read"
-        /> 
-        <SettingsToggle
-          name="Spell Check" 
-          descript="Spell checker works for English"
-          check={isCheckSpellOn}
-          handleCheck={setIsCheckSpellOn}
-        /> */}
         <SettingsToggle
           name="Text Direction" 
           check={isRTL}
@@ -100,6 +89,25 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
                 </option>
               ))}
             </select>
+          </div>
+        </div>
+        <div className="flex flex-col items-center mb-4">
+          <div className="mb-2">
+            <h1 className="text-xl font-semibold">Set Font Scale</h1>
+          </div>
+          <div className="flex flex-row items-center justify-center m-1">
+            <span className="text-sm text-gray-600 mr-2">Font Size: </span>
+            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={fontSize.toFixed(1)} step="0.1" onChange={e => setSize(Number(e.target.value) || 1.1)} />
+            <span className="text-sm text-gray-600">em</span>
+          </div>
+          <div className="flex flex-row items-center justify-center m-1">
+            <span className="text-sm text-gray-600 mr-2">Line Height: </span>
+            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={lineHeight.toFixed(1)} step="0.1" onChange={e => setHeight(Number(e.target.value) || 1.6)} />
+            <span className="text-sm text-gray-600">em</span>
+          </div>
+          <div className="flex flex-row items-center justify-center m-1">
+            <span className="text-sm text-gray-600 mr-2">Font Weight: </span>
+            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={fontWt.toFixed()} step="100" onChange={e => setWt(Number(e.target.value) || 400)} />
           </div>
         </div>
       </div>

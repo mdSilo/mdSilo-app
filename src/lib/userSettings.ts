@@ -24,8 +24,14 @@ export type UserSettings = {
   setUserId: Setter<string>;
   darkMode: boolean;
   setDarkMode: Setter<boolean>;
-  font: string,
+  font: string;
   setFont: Setter<string>;
+  fontSize: number;
+  setFontSize: Setter<number>;
+  fontWt: number;
+  setFontWt: Setter<number>;
+  lineHeight: number;
+  setLineHeight: Setter<number>;
   isSidebarOpen: boolean;
   setIsSidebarOpen: Setter<boolean>;
   isSettingsOpen: boolean;
@@ -67,6 +73,12 @@ const userSettingsSlice = (
   setDarkMode: setter(set, 'darkMode'),
   font: '',
   setFont: setter(set, 'font'),
+  fontSize: 1.1,
+  setFontSize: setter(set, 'fontSize'),
+  fontWt: 400,
+  setFontWt: setter(set, 'fontWt'),
+  lineHeight: 1.6,
+  setLineHeight: setter(set, 'lineHeight'),
   isSidebarOpen: true,
   setIsSidebarOpen: setter(set, 'isSidebarOpen'),
   isSettingsOpen: false,

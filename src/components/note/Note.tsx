@@ -53,6 +53,9 @@ function Note(props: Props) {
 
   const darkMode = useStore((state) => state.darkMode);
   const font = useStore((state) => state.font);
+  const fontSize = useStore((state) => state.fontSize);
+  const fontWt = useStore((state) => state.fontWt);
+  const lineHt = useStore((state) => state.lineHeight);
   const rawMode = useStore((state) => state.rawMode);
   const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
@@ -302,6 +305,7 @@ function Note(props: Props) {
 
   const customTheme = {
     fontFamily: `${font}`,
+    fontScale: [fontSize / 1.1, lineHt / 1.6, fontWt / 400],
   };
 
   const noteContainerClassName =

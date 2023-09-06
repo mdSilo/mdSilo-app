@@ -135,6 +135,7 @@
 
 body {
   margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, 'Arial', 'Helvetica Neue', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
