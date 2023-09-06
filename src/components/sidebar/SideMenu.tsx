@@ -78,7 +78,7 @@ export default function SideMenu() {
           <TaskButton viewTy={viewTy} onDispatch={dispatchTask} />
         </>) : null}
         <FileButton />
-        </div>
+      </div>
       <BottomSection />
     </div>
   );
@@ -293,7 +293,6 @@ const FileButton = () => {
 
 
 const BottomSection = () => {
-
   return (
     <div>
       <SettingsButton />
@@ -304,18 +303,14 @@ const BottomSection = () => {
 
 const SettingsButton = () => {
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
-
-
+  
   return (
     <>
-      <Tooltip
-        content="Edit Preferences (Ctrl/⌘+Shift+`)"
-        placement='right'
-      >
+      <Tooltip content="Preferences" placement='right'>
         <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
           <IconSettings size={24} className={btnIconClass} />
           </button>
       </Tooltip>
     </>
-    )
+  )
 }
