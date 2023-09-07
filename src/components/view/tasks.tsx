@@ -120,7 +120,7 @@ export default function Tasks() {
         onNoteLinkClick(toNote.id);
       }
     },
-    []
+    [onNoteLinkClick]
   );
 
   return (
