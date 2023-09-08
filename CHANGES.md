@@ -5,16 +5,16 @@
 2023-09-08
 
 To focus on the core features of note-taking and improve the performance continuously. 
-We clean up some features, such as kanban, etc. In the future, such features can be added as plugins.
+We clean up some features, such as web wrap, split view, etc. In the future, such features can be added as plugins.
 
 ## Features
 
-- Add Setting button on sidemenu (#535)
-- Set font family, size, weight and line height for editor  
+- Add Setting button on sidemenu;
+- Set font family, size, weight and line height for editor;    
 
 ### Bug Fixes and breaking change 
 
-Now will not replace the blank space with `_` on title as link due to the side effect. but this is a breaking change which breaks the backlinks and graph view (stopgaps: delete the `_` in `[title](title_as_link)` manually, sorry for the inconvenience). 
+Now will not replace the blank space with `_` on title as link due to the side effect. but this is a breaking change which breaks the backlinks and graph view (stopgaps:  change `[wikilink title](wikilink_title)` to `[wikilink title](wikilink%20title)`  or change to `[[wikilink title]]` or `[[wikilink title | my alt text]]` manually, sorry for the inconvenience). 
 
 
 ## app-v0.5.6 

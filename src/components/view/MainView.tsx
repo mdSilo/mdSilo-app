@@ -4,6 +4,7 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import Chronicle from './chronicle';
 import Journals from './journals';
 import Tasks from './tasks';
+import Kanban from './kanban';
 import Graph from './graph';
 import NotePage from './md';
 import HashTags from "./hashtags";
@@ -23,6 +24,8 @@ export default function MainView() {
         <Chronicle />
       ) : viewTy === 'task' ? (
         <Tasks />
+      ) : viewTy === 'kanban' ? (
+        <Kanban />
       ) : viewTy === 'graph' ? (
         <Graph />
       ) : viewTy === 'journal' ? (

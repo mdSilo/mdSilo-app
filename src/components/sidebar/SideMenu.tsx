@@ -2,7 +2,7 @@ import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
   IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
-  IconFileImport, IconRss, IconSettings,  
+  IconFileImport, IconRss, IconSettings, IconLayoutKanban 
 } from '@tabler/icons-react';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
@@ -11,6 +11,7 @@ import useHotkeys from 'editor/hooks/useHotkeys';
 import { onOpenFile, onListDir, onSave, openJsonFile } from 'editor/hooks/useOpen';
 import { store, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
+import { ViewAction } from 'context/viewReducer';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
@@ -22,60 +23,51 @@ export default function SideMenu() {
   const viewTy = currentView.state.view;
   const dispatch = currentView.dispatch;
 
-  // TODO: Refactor repeating code into array
-  const dispatchFeed = useCallback(
-    () => dispatch({view: 'feed'}), [dispatch]
-  );
-  const dispatchChron = useCallback(
-    () => dispatch({view: 'chronicle'}), [dispatch]
-  );
-  const dispatchTask = useCallback(
-    () => dispatch({view: 'task'}), [dispatch]
-  );
-  const dispatchGraph = useCallback(
-    () => dispatch({view: 'graph'}), [dispatch]
+  const dispatchView = useCallback(
+    (view: ViewAction) => dispatch(view), [dispatch]
   );
 
   const hotkeys = useMemo(
     () => [
       {
         hotkey: 'mod+shift+r',
-        callback: dispatchFeed,
+        callback: () => dispatchView({view: 'feed'}),
       },
       {
         hotkey: 'mod+shift+g',
-        callback: dispatchGraph,
+        callback: () => dispatchView({view: 'graph'}),
       },
       {
         hotkey: 'mod+shift+c',
-        callback: dispatchChron,
+        callback: () => dispatchView({view: 'chronicle'}),
       },
       {
         hotkey: 'mod+shift+t',
-        callback: dispatchTask,
+        callback: () => dispatchView({view: 'task'}),
+      },
+      {
+        hotkey: 'mod+shift+k',
+        callback: () => dispatchView({view: 'kanban'}),
       },
     ],
-    [dispatchFeed, dispatchGraph, dispatchChron, dispatchTask]
+    [dispatchView]
   );
   useHotkeys(hotkeys);
 
   const currentDir = useStore((state) => state.currentDir);
-  // TODO: Add Preferences button
   return (    
     <div className='flex flex-col h-full pb-3'>
       <div className="flex flex-col h-full">
         <Logo />
         <OpenButton />
-        <FeedButton 
-          viewTy={viewTy} 
-          onDispatch={dispatchFeed} 
-        />
+        <FeedButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'feed'})} />
         {currentDir ? (
         <>
           <NewButton />
-          <ChronButton viewTy={viewTy} onDispatch={dispatchChron} />
-          <GraphButton viewTy={viewTy} onDispatch={dispatchGraph} />
-          <TaskButton viewTy={viewTy} onDispatch={dispatchTask} />
+          <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
+          <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
+          <TaskButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'task'})} />
+          <KanbanButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'kanban'})} />
         </>) : null}
         <FileButton />
       </div>
@@ -207,6 +199,23 @@ const TaskButton = (props: ButtonProps) => {
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconCheckbox size={24} className={btnIconClass} />
+        </button>
+      </Tooltip>
+    </SidebarItem>
+  );
+};
+
+const KanbanButton = (props: ButtonProps) => {
+  const { viewTy, onClick, onDispatch } = props;
+
+  return (
+    <SidebarItem isHighlighted={viewTy === 'kanban'} onClick={onClick}>
+      <Tooltip
+        content="Kanban (Ctrl/⌘+Shift+K)"
+        placement="right"
+      >
+        <button className={btnClass} onClick={onDispatch}>
+          <IconLayoutKanban size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>
