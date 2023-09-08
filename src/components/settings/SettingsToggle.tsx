@@ -20,12 +20,10 @@ export const SettingsToggle = (props: Props) => {
   } = props;
   
   return (
-    <div className="flex flex-col items-center mb-4">
+    <div className="flex flex-col items-center mb-2">
       <div className="mb-2">
-        <h1 className="text-xl font-semibold">{name}</h1>
-        <p className="mt-1 text-sm text-gray-700">
-          {descript}
-        </p>
+        <h1 className="text-base font-semibold">{name}</h1>
+        <p className="mt-1 text-sm text-gray-700">{descript}</p>
       </div>
       <div className="flex flex-row items-center">
         <span className="text-sm text-gray-600">{optionLeft}</span>

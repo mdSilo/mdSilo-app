@@ -37,14 +37,13 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
 
   return (
     <BaseModal title="Settings" isOpen={isOpen} handleClose={handleClose}>
-      <div className="flex-1 p-4 bg-gray-100">
+      <div className="flex-1 p-2 bg-gray-100">
         <SettingsToggle
           name="Theme" 
-          descript="Dark Mode or Light Mode"
           check={darkMode}
           handleCheck={setDarkMode}
-          optionLeft="Light" 
-          optionRight="Dark"
+          optionLeft="Light Mode" 
+          optionRight="Dark Mode"
         />
         <SettingsToggle
           name="Use Assets Folder" 
@@ -68,14 +67,15 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           optionLeft="Left To Right" 
           optionRight="Right To Left"
         />
-        <div className="flex flex-col items-center mb-4">
+        <div className="flex flex-col items-center mb-2">
           <div className="mb-2">
-            <h1 className="text-xl font-semibold">Set Editor Font</h1>
+            <h1 className="text-base font-semibold">Editor Font Family</h1>
           </div>
           <div className="flex flex-row items-center">
             <select 
               name="select-font" 
-              className="w-full p-2 rounded text-primary-500 border-none"
+              className="w-full p-1 rounded text-primary-500 border-none"
+              style={{width: '8em'}}
               value={font || 'Default'}
               onChange={(ev) => {
                 const ft = ev.target.value;
@@ -91,10 +91,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             </select>
           </div>
         </div>
-        <div className="flex flex-col items-center mb-4">
-          <div className="mb-2">
-            <h1 className="text-xl font-semibold">Set Font Scale</h1>
-          </div>
+        <div className="flex flex-col items-center">
           <div className="flex flex-row items-center justify-center m-1">
             <span className="text-sm text-gray-600 mr-2">Font Size: </span>
             <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={fontSize.toFixed(1)} step="0.1" onChange={e => setSize(Number(e.target.value) || 1.1)} />

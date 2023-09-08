@@ -314,12 +314,10 @@ const SettingsButton = () => {
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   
   return (
-    <>
-      <Tooltip content="Preferences" placement='right'>
-        <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
-          <IconSettings size={24} className={btnIconClass} />
-          </button>
-      </Tooltip>
-    </>
+    <Tooltip content="Preferences" placement='right'>
+      <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
+        <IconSettings size={24} className={btnIconClass} />
+        </button>
+    </Tooltip>
   )
 }
