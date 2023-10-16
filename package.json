@@ -1,6 +1,6 @@
 {
   "name": "mdsilo-app",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "homepage": "https://mdsilo.com",
@@ -30,7 +30,7 @@
     "@tabler/icons-react": "^2.32.0",
     "@tailwindcss/forms": "^0.5.5",
     "@tailwindcss/typography": "^0.5.9",
-    "@tauri-apps/api": "^1.4.0",
+    "@tauri-apps/api": "^1.5.0",
     "@tippyjs/react": "^4.2.6",
     "d3-drag": "^3.0.0",
     "d3-force": "^3.0.0",
@@ -55,7 +55,7 @@
     "zustand": "^3.7.2"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.4.0",
+    "@tauri-apps/cli": "^1.5.2",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^12.1.4",
     "@types/d3-drag": "^3.0.3",
