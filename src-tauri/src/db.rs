@@ -38,7 +38,7 @@ pub fn get_channels() -> Vec<Channel> {
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
     })
-    .unwrap_or(vec![]);
+    .unwrap_or_else(|_| vec![]);
 
   return results;
 }
@@ -94,7 +94,7 @@ pub fn delete_channel(link: String) -> usize {
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
     })
-    .unwrap_or(vec![]);
+    .unwrap_or_else(|_| vec![]);
 
   // del channel and it's articles
   if channel.len() == 1 {
@@ -142,7 +142,7 @@ pub fn get_channel_by_link(link: String) -> Option<Channel> {
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
     })
-    .unwrap_or(vec![]);
+    .unwrap_or_else(|_| vec![]);
 
   if channel.len() == 1 {
     return channel.pop();
@@ -174,7 +174,7 @@ pub fn get_unread_num() -> Vec<UnreadNum> {
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
     })
-    .unwrap_or(vec![]);
+    .unwrap_or_else(|_| vec![]);
 
   return record;
 }
@@ -194,7 +194,7 @@ pub fn add_articles(feed_link: String, articles: Vec<NewArticle>) -> usize {
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
     })
-    .unwrap_or(vec![]);
+    .unwrap_or_else(|_| vec![]);
 
   if channel.len() == 1 {
     let result = diesel::insert_or_ignore_into(schema::articles::dsl::articles)
@@ -230,7 +230,7 @@ pub fn get_article_by_url(url: String) -> Option<Article> {
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
     })
-    .unwrap_or(vec![]);
+    .unwrap_or_else(|_| vec![]);
 
   if result.len() == 1 {
     return result.pop();
@@ -322,7 +322,7 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
     })
-    .unwrap_or(vec![]);
+    .unwrap_or_else(|_| vec![]);
 
   // println!("get articles result: {:?}", result);
 
@@ -375,7 +375,7 @@ pub fn get_notes_by_id(id: String) -> Option<Note> {
       format!("db Error on [get_notes_by_id, {}]: {:?}", id, e),
       format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
     ))
-    .unwrap_or(vec![]);
+    .unwrap_or_else(|_| vec![]);
 
   if result.len() == 1 {
     return result.pop();

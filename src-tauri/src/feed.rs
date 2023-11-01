@@ -105,10 +105,10 @@ async fn process_rss(
 
         let mut articles: Vec<NewArticle> = Vec::new();
         for item in channel.items() {
-          let title = item.title.clone().unwrap_or(String::from(""));
-          let link = item.link.clone().unwrap_or(String::from(""));
+          let title = item.title.clone().unwrap_or_else(|| String::from(""));
+          let link = item.link.clone().unwrap_or_else(|| String::from(""));
           let description = item.description.clone().unwrap_or_default();
-          let content = item.content.clone().unwrap_or(description.clone());
+          let content = item.content.clone().unwrap_or_else(|| description.clone());
           // get audio
           let enclosure = item.enclosure.clone().unwrap_or_default();
           let audio_url = if enclosure.mime_type.starts_with("audio/") {

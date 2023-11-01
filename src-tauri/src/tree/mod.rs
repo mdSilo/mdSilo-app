@@ -215,7 +215,7 @@ pub fn assemble_note_tree(
       let last_mod_date = Utc
         .timestamp_millis_opt(mod_since_the_epoch as i64)
         .earliest()
-        .unwrap_or(Utc::now())
+        .unwrap_or_else(|| Utc::now())
         .to_rfc3339_opts(SecondsFormat::Millis, true);
 
       let create_since_the_epoch = file
@@ -226,7 +226,7 @@ pub fn assemble_note_tree(
       let created_date = Utc
         .timestamp_millis_opt(create_since_the_epoch as i64)
         .earliest()
-        .unwrap_or(Utc::now())
+        .unwrap_or_else(|| Utc::now())
         .to_rfc3339_opts(SecondsFormat::Millis, true);
 
       let new_note = NoteData {

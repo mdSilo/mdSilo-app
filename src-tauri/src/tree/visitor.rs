@@ -43,7 +43,7 @@ impl ParallelVisitor for BranchVisitor {
       .map(|e| TraversalState::from(Node::from((&e, self.ctn))))
       .map(|n| self.tx.send(n).unwrap())
       .map(|_| WalkState::Continue)
-      .unwrap_or(WalkState::Skip)
+      .unwrap_or_else(|_| WalkState::Skip)
   }
 }
 

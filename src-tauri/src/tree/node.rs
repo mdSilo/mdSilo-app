@@ -118,10 +118,9 @@ pub fn from_node(node: &Node) -> Option<FileMetaData> {
     None => return None,
   };
 
-  let now = SystemTime::now();
-  let created = metadata.created().unwrap_or(now);
-  let last_modified = metadata.modified().unwrap_or(now);
-  let last_accessed = metadata.accessed().unwrap_or(now);
+  let created = metadata.created().unwrap_or_else(|_| SystemTime::now());
+  let last_modified = metadata.modified().unwrap_or_else(|_| SystemTime::now());
+  let last_accessed = metadata.accessed().unwrap_or_else(|_| SystemTime::now());
 
   let normalized_path = match node.path().normalize_slash() {
     Some(normalized) => normalized,

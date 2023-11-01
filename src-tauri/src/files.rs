@@ -465,7 +465,7 @@ pub async fn read_file(file_path: String) -> String {
         format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
       )
     })
-    .unwrap_or(String::from("")) // nothing
+    .unwrap_or_else(|_| String::from("")) // nothing
 }
 
 // write to a file
