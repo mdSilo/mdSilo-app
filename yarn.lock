@@ -3389,10 +3389,10 @@
   dependencies:
     "@types/d3-selection" "*"
 
-"@types/d3-force@^3.0.5":
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/@types/d3-force/-/d3-force-3.0.5.tgz#835bbe01e084195175ddf71b7900bd44a9a23e8e"
-  integrity sha512-EGG+IWx93ESSXBwfh/5uPuR9Hp8M6o6qEGU7bBQslxCvrdUBQZha/EFpu/VMdLU4B0y4Oe4h175nSm7p9uqFug==
+"@types/d3-force@^3.0.7":
+  version "3.0.7"
+  resolved "https://registry.yarnpkg.com/@types/d3-force/-/d3-force-3.0.7.tgz#8b7e0cb02351e29382e53430bc3ccd5202da337c"
+  integrity sha512-rsok4CEvPLyVWRPsFiBhanJc3up03H/EARVz4d8soPh8drv82YMuAckYy4yv8g4/81JwCng5U5/o9aj9d0T6bQ==
 
 "@types/d3-interpolate@*":
   version "3.0.1"
