@@ -309,7 +309,6 @@ const BottomSection = () => {
   )
 }
 
-
 const SettingsButton = () => {
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   
