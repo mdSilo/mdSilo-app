@@ -61,7 +61,7 @@
     "@types/d3-drag": "^3.0.3",
     "@types/d3-force": "^3.0.5",
     "@types/d3-selection": "^3.0.6",
-    "@types/d3-zoom": "^3.0.4",
+    "@types/d3-zoom": "^3.0.8",
     "@types/is-hotkey": "^0.1.7",
     "@types/jest": "^29.1.2",
     "@types/node": "^20.4.5",
