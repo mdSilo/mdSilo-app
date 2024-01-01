@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "codemirror": "6.0.0",
-    "@codemirror/commands": "6.0.0",
+    "@codemirror/commands": "6.3.3",
     "@codemirror/lang-markdown": "6.0.0",
     "@codemirror/lang-json": "6.0.0",
     "@codemirror/language-data": "6.0.0",
