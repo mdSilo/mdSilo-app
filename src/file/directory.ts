@@ -134,7 +134,9 @@ class DirectoryAPI {
   }
 
   /**
-   * Listen to changes in a directory
+   * Listen to changes event in a directory emited from backend
+   * backend -1: src-tauir/src/files.rs/listen_dir 
+   * backend -2: src-tauir/src/json.rs/write_json 
    * @param {() => void} callbackFn - callback
    * @returns {any}
    */

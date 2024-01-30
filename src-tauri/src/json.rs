@@ -90,6 +90,7 @@ pub async fn write_json(dir: String, window: tauri::Window) -> bool {
   
   // read files and write to json on rust end, emit event;
   // listen loaded event on ts end, then load to store
+  // frontend: src/file/directory.ts/DirectoryAPI/listen
   window
     .emit(
       "changes",

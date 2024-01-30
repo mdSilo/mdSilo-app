@@ -564,9 +564,6 @@ pub async fn listen_dir(
   window: tauri::Window,
 ) -> Result<String, String> {
   let (tx, rx) = channel();
-
-  //let mut watcher = RecommendedWatcher::new(tx, Config::default())?;
-
   let raw_watch = match RecommendedWatcher::new(tx, Config::default()) {
     Ok(watch) => watch,
     Err(e) => {
@@ -607,12 +604,11 @@ pub async fn listen_dir(
       Ok(event) => {
         match event {
           Ok(RawEvent {
-            paths,  // Vec<PthBuff>
+            paths,  // Vec<PathBuff>
             kind,   // EventKind: Access,Create,Modify,Remove
             ..      // attrs,  // EventAttributes: tracker, flag... 
           }) => {
             // println!("event, paths: {:?}, kind: {:?}, attrs: {:?}", paths, kind, attrs);
-
             let event_kind = match kind {
               // EventKind::Access(_) => "access",
               EventKind::Create(_) => "create",
@@ -632,9 +628,11 @@ pub async fn listen_dir(
               _ => "unknown", 
             };
 
+            // emit event here, then Frontend will listen the event.
+            // frontend: src/file/directory.ts/DirectoryAPI/listen
             if event_kind != "unknown" {
               window.emit(
-                "changes", // then Frontend listen the event changes.
+                "changes", 
                 EventPayload {
                   paths: paths
                     .iter()
