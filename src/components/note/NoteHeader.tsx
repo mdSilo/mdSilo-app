@@ -52,7 +52,7 @@ export default function NoteHeader(
 
   return (
     <div className={`flex items-center justify-between w-full px-2 py-1 mb-2 text-right`}>
-      <div className="flex items-center">
+      <div className="flex items-center" id="note-header-btns">
         <Tooltip content="WYSIWYG">
           <button className={switchClass} onClick={() => setRaw('wysiwyg')}>
             <IconFileText className={`${rawMode === 'wysiwyg' ? 'text-green-500' :iconClass}`} />

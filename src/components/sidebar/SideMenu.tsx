@@ -57,7 +57,7 @@ export default function SideMenu() {
   const currentDir = useStore((state) => state.currentDir);
   return (    
     <div className='flex flex-col h-full pb-3'>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full" id="side-menu-btns">
         <Logo />
         <OpenButton />
         <FeedButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'feed'})} />

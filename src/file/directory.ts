@@ -186,6 +186,7 @@ class DirectoryAPI {
           // }
         } else if (event === 'create') {
           // console.log("create: ", filePaths)
+          // files and dir moved into a watch folder on Linux will now be reported as rename to events instead of create events
           // open, upsert 
           await openFilePaths(filePaths);
         } else if (event === 'remove') {

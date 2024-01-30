@@ -11,11 +11,11 @@ pub async fn web_window(
   label: String,
   title: String,
   url: String,
-  script: Option<String>, // script path: can be file or dir
+  script_path: Option<String>, // script path: can be file or dir
 ) {
   // inject js script
   let mut inject_script = format!("// ## [{title}] Script Injection ## \n\n");
-  let script_path = script.unwrap_or_default();
+  let script_path = script_path.unwrap_or_default();
   if !script_path.is_empty() {
     // check is dir or file and read all files
     let file_path = Path::new(&script_path);

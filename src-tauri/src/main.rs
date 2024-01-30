@@ -15,6 +15,7 @@ mod tests;
 mod tray;
 mod tree;
 mod window;
+mod plugins;
 
 extern crate diesel;
 extern crate diesel_migrations;
@@ -43,6 +44,7 @@ fn main() {
     .expect("Error on migrating");
 
   tauri::Builder::default()
+    .plugin(plugins::inject_plugin())
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
       window::msg_dialog,
