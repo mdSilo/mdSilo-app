@@ -23,7 +23,7 @@
     "@codemirror/state": "6.0.0",
     "@codemirror/view": "6.0.0",
 
-    "@headlessui/react": "^1.7.17",
+    "@headlessui/react": "^1.7.18",
     "@popperjs/core": "^2.11.8",
     "@react-spring/web": "^9.7.3",
     "react-trello": "2.2.11",
