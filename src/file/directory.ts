@@ -191,6 +191,7 @@ class DirectoryAPI {
           // open, upsert 
           await openFilePaths(filePaths);
         } else if (event === 'remove') {
+          // on Linux, remove event is renameFrom
           for (const filePath of filePaths) {
             store.getState().deleteNote(filePath);
             // console.log("delete file", filePath, event);
@@ -211,7 +212,7 @@ class DirectoryAPI {
         } else if (event === 'unloaded') {
           store.getState().setIsLoaded(false);
         } else {
-          // FIXME: CANNOT LISTEN
+          // CANNOT LISTEN on load
           console.log("custom event: ", filePaths, event);
           // TODO: to handle some event 
           emitCustomEvent(event, filePaths.pop() || "");
