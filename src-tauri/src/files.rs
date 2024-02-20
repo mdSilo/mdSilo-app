@@ -676,3 +676,25 @@ pub fn open_url(url: String) -> bool {
 pub fn open_link(app: AppHandle, url: String) {
   api::shell::open(&app.shell_scope(), url, None).unwrap_or(());
 }
+
+/// watch event as a bridge from injected script to frontend via invoke()
+// workflow: 
+// - can invoke() in inject scripts 
+// - listen emited event and handle on frontend: 
+//   src/file/directory.ts/DirectoryAPI/listen
+#[tauri::command]
+pub async fn watch_event(
+  id: String, 
+  ev: String,
+  window: tauri::Window,
+) {
+  println!("watch: {ev}, {id}");
+  window.emit(
+    "changes",
+    EventPayload {
+      paths: vec![id],
+      event: ev,
+    },
+  )
+  .unwrap_or_else(|_| println!("watch event"));
+}

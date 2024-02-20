@@ -6,6 +6,8 @@ use tauri::{
 
 use std::path::Path;
 
+pub const INIT_SCRIPT: &str = include_str!("./scripts/init.js");
+
 pub fn inject_plugin<R: Runtime>() -> TauriPlugin<R> {
   Builder::new("inject")
     .invoke_handler(generate_handler![])
@@ -48,19 +50,3 @@ pub fn inject_script(script_path: Option<String>) -> String {
 
   script
 }
-
-const INIT_SCRIPT: &str = r#"
-  console.log("init hello world");
-
-  async function init() {
-    console.log("inject init js");
-    console.log(">> ", window.location.href);
-    
-    const sidemenu = document.getElementById("side-menu-btns");
-    console.log(">> sideMenu", sidemenu);
-    const noteheader = document.getElementById("note-header-btns");
-    console.log(">> noteHeader", noteheader);
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-"#;

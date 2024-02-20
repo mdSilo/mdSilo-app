@@ -84,6 +84,7 @@ fn main() {
       files::open_url,
       files::open_link,
       files::detect_lang,
+      files::watch_event,
       storage::create_mdsilo_dir,
       storage::set_data,
       storage::get_data,

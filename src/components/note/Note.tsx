@@ -16,7 +16,7 @@ import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { listDirPath } from 'editor/hooks/useOpen';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
-import { ciStringEqual, regDateStr, isUrl, decodeHTMLEntity } from 'utils/helper';
+import { ciStringEqual, regDateStr, isUrl, decodeHTMLEntity, emitCustomEvent } from 'utils/helper';
 import { imageExtensions, docExtensions } from 'utils/file-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
@@ -49,7 +49,12 @@ function Note(props: Props) {
     setHeadings(hdings ?? []);
   };
 
-  useEffect(() => { getHeading(); }, [noteId]); // to trigger change on dep change
+  useEffect(() => { getHeading(); }, [noteId]); // to trigger change on dep change 
+
+  useEffect(() => {
+    emitCustomEvent("PageLoaded", noteId);
+    console.log('completely loaded!', noteId);
+  }, [noteId]);
 
   const darkMode = useStore((state) => state.darkMode);
   const font = useStore((state) => state.font);

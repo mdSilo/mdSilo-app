@@ -2,6 +2,7 @@ import type { UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri'
 import { doDeleteNote } from 'editor/hooks/useDeleteNote';
 import { store } from 'lib/store';
+import { emitCustomEvent } from 'utils/helper';
 import { openFilePaths, openJSONFilePath } from './open';
 import { rmFileNameExt } from './process';
 import { isTauri, normalizeSlash, joinPath, getBaseName, joinPaths } from './util';
@@ -147,7 +148,7 @@ class DirectoryAPI {
       // listen
       const { getCurrent } = await import('@tauri-apps/api/window');
       listener = await getCurrent().listen('changes', async (e: Event) => {
-        // console.log("listen event: ", e);
+        console.log("listen event: ", e);
         // sync the change on listen
         const payload: EventPayload = e.payload;
         const filePaths = payload.paths; // FULL PATH
@@ -195,7 +196,7 @@ class DirectoryAPI {
             // console.log("delete file", filePath, event);
           }
         } else if (event === 'loaded') {
-          // console.log("load: ", filePaths, event);
+          console.log("load: ", filePaths, event);
           if (!filePaths || filePaths.length < 1) return;
           // json to store 
           const dir = filePaths[0];
@@ -209,6 +210,11 @@ class DirectoryAPI {
           }
         } else if (event === 'unloaded') {
           store.getState().setIsLoaded(false);
+        } else {
+          // FIXME: CANNOT LISTEN
+          console.log("custom event: ", filePaths, event);
+          // TODO: to handle some event 
+          emitCustomEvent(event, filePaths.pop() || "");
         }
         callbackFn();
       });

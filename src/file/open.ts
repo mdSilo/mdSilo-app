@@ -51,7 +51,7 @@ export const listDir = async (dir: string, toListen=true): Promise<void> => {
   // console.log("dir api", dirInfo)
   if (!(await dirInfo.exists())) return;
 
-  // attach listener to monitor changes in dir // TODO
+  // attach listener to monitor changes in dir 
   if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
 
   // 1- get files and dirs

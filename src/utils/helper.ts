@@ -127,3 +127,12 @@ export const getFavicon = (url: string) => {
   const hostname = url ? new URL(url).hostname : "";
   return "https://icons.duckduckgo.com/ip3/" + hostname + ".ico";
 };
+
+// bridge from frontend(emit) to injected script(listen on)
+export const emitCustomEvent = (ev: string, id: string) => {
+  const evt = new CustomEvent(ev, {
+    bubbles: true,
+    detail: { id },
+  });
+  document.dispatchEvent(evt);
+}
