@@ -1,5 +1,11 @@
 # Changelog 
 
+## app-v0.5.8 
+
+2024-02-22
+
+bug fixes and samll improvements.
+
 ## app-v0.5.7 
 
 2023-09-08
@@ -7,7 +13,7 @@
 To focus on the core features of note-taking and improve the performance continuously. 
 We clean up some features, such as web wrap, split view, etc. In the future, such features can be added as plugins.
 
-## Features
+### Features
 
 - Add Setting button on sidemenu;
 - Set font family, size, weight and line height for editor;    

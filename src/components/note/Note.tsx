@@ -53,7 +53,6 @@ function Note(props: Props) {
 
   useEffect(() => {
     emitCustomEvent("PageLoaded", noteId);
-    console.log('completely loaded!', noteId);
   }, [noteId]);
 
   const darkMode = useStore((state) => state.darkMode);

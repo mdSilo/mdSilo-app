@@ -80,7 +80,6 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
               onChange={(ev) => {
                 const ft = ev.target.value;
                 setFont(ft);
-                console.log("select font: ", ft)
               }}
             >
               {fonts.map((font, index) => (

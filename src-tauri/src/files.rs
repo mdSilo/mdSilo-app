@@ -688,7 +688,7 @@ pub async fn watch_event(
   ev: String,
   window: tauri::Window,
 ) {
-  println!("watch: {ev}, {id}");
+  // println!("watch: {ev}, {id}");
   window.emit(
     "changes",
     EventPayload {
@@ -696,5 +696,5 @@ pub async fn watch_event(
       event: ev,
     },
   )
-  .unwrap_or_else(|_| println!("watch event"));
+  .unwrap_or(());
 }

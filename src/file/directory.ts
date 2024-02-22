@@ -148,7 +148,7 @@ class DirectoryAPI {
       // listen
       const { getCurrent } = await import('@tauri-apps/api/window');
       listener = await getCurrent().listen('changes', async (e: Event) => {
-        console.log("listen event: ", e);
+        // console.log("listen event: ", e);
         // sync the change on listen
         const payload: EventPayload = e.payload;
         const filePaths = payload.paths; // FULL PATH
@@ -197,7 +197,7 @@ class DirectoryAPI {
             // console.log("delete file", filePath, event);
           }
         } else if (event === 'loaded') {
-          console.log("load: ", filePaths, event);
+          // console.log("load: ", filePaths, event);
           if (!filePaths || filePaths.length < 1) return;
           // json to store 
           const dir = filePaths[0];
@@ -213,7 +213,7 @@ class DirectoryAPI {
           store.getState().setIsLoaded(false);
         } else {
           // CANNOT LISTEN on load
-          console.log("custom event: ", filePaths, event);
+          // console.log("custom event: ", filePaths, event);
           // TODO: to handle some event 
           emitCustomEvent(event, filePaths.pop() || "");
         }

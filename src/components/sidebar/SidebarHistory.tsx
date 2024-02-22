@@ -28,15 +28,13 @@ function SidebarHistory(props: Props) {
   const showHistory = useStore((state) => state.showHistory);
   let isOpened = false;
   useEffect(() => { 
-    console.log("open on", isOpenPreOn, "show history", showHistory, history)
     if (!isOpenPreOn || showHistory || isOpened) return;
     const recentDirPath = history.length > 0 ? history[history.length - 1] : '';
     if (!recentDirPath) return;
     listInitDir(recentDirPath).then(() => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      isOpened = true; 
-      console.log("open previous folder")}
-    ); 
+      isOpened = true;
+    }); 
   }, [history]);
 
   return (
