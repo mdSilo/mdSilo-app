@@ -1,10 +1,16 @@
 # Changelog 
 
+## app-v0.5.9 
+
+2024-XX-XX
+
+- [ ] Organize notes using Kanban
+
 ## app-v0.5.8 
 
 2024-02-22
 
-bug fixes and samll improvements.
+bug fixes and small improvements.
 
 ## app-v0.5.7 
 

@@ -1,6 +1,5 @@
 // helper 
 
-
 // date
 //
 // string: yyyy-mm-dd  or yyyy-m-d
@@ -127,6 +126,21 @@ export const getFavicon = (url: string) => {
   const hostname = url ? new URL(url).hostname : "";
   return "https://icons.duckduckgo.com/ip3/" + hostname + ".ico";
 };
+
+// generate id 
+const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+export function genId(num = true) {
+  if (num) {
+    return Date.now();
+  }
+
+  let id = "";
+  for (let i = 0; i < 8; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return id;
+}
 
 // bridge from frontend(emit) to injected script(listen on)
 export const emitCustomEvent = (ev: string, id: string) => {

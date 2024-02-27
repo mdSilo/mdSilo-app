@@ -6,6 +6,11 @@ module.exports = {
   mode: 'jit',
   content: ['./src/**/*.{html,js,ts,jsx,tsx}', './public/**/*.{html,js,ts,jsx,tsx}'],
   darkMode: 'class',
+  plugins: [
+    require('daisyui'),
+    require('@tailwindcss/typography'), 
+    require('@tailwindcss/forms'),
+  ],
   theme: {
     container: {
       center: true,
@@ -104,10 +109,4 @@ module.exports = {
       },
     },
   },
-  // variants: {
-  //   backgroundColor: ['responsive', 'hover', 'focus', 'active'],
-  //   display: ['responsive', 'group-hover'],
-  //   extend: {},
-  // },
-  plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
 };
