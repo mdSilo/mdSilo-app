@@ -18,7 +18,7 @@ export type Card = {
 
 export type CardItem = {
   name: string;
-  uri: string[];
+  uri: string;
   category: string; // note, book, podcast, video, ... 
 };
 

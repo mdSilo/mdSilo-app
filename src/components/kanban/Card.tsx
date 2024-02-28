@@ -1,19 +1,31 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconFeather, IconTool, IconTrash } from "@tabler/icons-react";
+import { IconFeather, IconPaperclip } from "@tabler/icons-react";
+import { useStore } from "lib/store";
+import { isMobile } from "utils/helper";
 import { Id, Card } from "./types";
 
 interface Props {
   task: Card;
-  deleteTask: (id: Id) => void;
   updateTask: (id: Id, content: string) => void;
+  deleteTask?: (id: Id) => void;
   openSetCard?: (id: Id) => void;
 }
 
-export default function TaskCard({ task, deleteTask, updateTask, openSetCard }: Props) {
+export default function TaskCard({ task, updateTask, openSetCard }: Props) {
   const [mouseIsOver, setMouseIsOver] = useState(false);
   const [editMode, setEditMode] = useState(true);
+
+  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
+  const setCurrentCard = useStore((state) => state.setCurrentCard);
+
+  const onCreateNoteClick = useCallback((id: Id) => {
+    if (isMobile()) { setIsSidebarOpen(false);}
+    setIsFindOrCreateModalOpen((isOpen) => !isOpen);
+    setCurrentCard(id);
+  }, [setIsFindOrCreateModalOpen, setCurrentCard, setIsSidebarOpen]);
 
   const {
     setNodeRef,
@@ -99,7 +111,7 @@ export default function TaskCard({ task, deleteTask, updateTask, openSetCard }: 
       {mouseIsOver && (
         <div>
           <button
-            onClick={() => {deleteTask(task.id);}}
+            onClick={() => {onCreateNoteClick(task.id);}}
             className="stroke-gray-500 hover:stroke-white hover:bg-primary-500 rounded px-1 py-2 w-8"
           >
             <IconFeather />
@@ -108,7 +120,7 @@ export default function TaskCard({ task, deleteTask, updateTask, openSetCard }: 
               onClick={() => { openSetCard && openSetCard(task.id);}}
               className="stroke-gray-500 hover:stroke-white hover:bg-green-500 rounded px-1 py-2 w-8"
             >
-              <IconTool />
+              <IconPaperclip />
             </button>
         </div>
       )}

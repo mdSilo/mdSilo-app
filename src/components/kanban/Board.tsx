@@ -15,7 +15,9 @@ import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { IconPlus } from "@tabler/icons-react";
 import { genId } from "utils/helper";
+import { openFilePath } from "file/open";
 import { BaseModal } from "components/settings/BaseModal";
+import { useCurrentViewContext } from "context/useCurrentView";
 import { Column, Id, Card, KanbanData } from "./types";
 import ColumnContainer from "./Column";
 import TaskCard from "./Card";
@@ -33,6 +35,9 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
 
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
   const [activeTask, setActiveTask] = useState<Card | null>(null);
+
+  const currentView = useCurrentViewContext();
+  const dispatch = currentView.dispatch;
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -336,11 +341,24 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
         </div>
       </BaseModal>
       <BaseModal 
-        title={`Card: ${cardSetting?.content.substring(0, 64) || ""}`} 
+        title={`Card: ${cardSetting?.content.substring(0, 24) || ""}`} 
         isOpen={isCardSetting} 
         handleClose={() => setIsCardSetting(false)}
       >
-        <div className="flex-1 p-2 bg-gray-100 flex flex-wrap">
+        <div className="flex-1 p-2 bg-gray-100 flex flex-col">
+          <div className="flex flex-col items-start justify-start mb-4">
+            {cardSetting?.items?.map(itm => (
+              <button 
+                key={itm.uri} 
+                className="link py-2" 
+                onClick={async () => {
+                  await openFilePath(itm.uri, true);
+                  dispatch({view: 'md', params: { noteId: itm.uri }});
+                }}
+              >{itm.name}</button>
+            ))}
+          </div>
+          <div className="font-bold text-center">Set Color</div>
           <div className="flex flex-row items-center justify-center m-1">
             <span className="text-sm text-gray-600 mr-2">Background Color</span>
             <input 

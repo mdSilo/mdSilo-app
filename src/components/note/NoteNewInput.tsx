@@ -10,6 +10,7 @@ import { openFilePath } from 'file/open';
 import { writeFile } from 'file/write';
 import { Notes, store, useStore } from 'lib/store';
 import { defaultNote } from 'types/model';
+import updateCard from 'components/kanban/updateCard';
 
 enum OptionType {
   NOTE,
@@ -35,6 +36,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const dispatch = currentView.dispatch;
 
   const currentDir = useStore((state) => state.currentDir);
+  const currentCard = useStore((state) => state.currentCard);
 
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
@@ -76,6 +78,9 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       if (option.type === OptionType.NEW_NOTE) {
         if (!currentDir) return;
         const notePath = await joinPaths(currentDir, [`${inputTxt}.md`]);
+        if (currentCard) {
+          await updateCard(currentCard, notePath);
+        }
         const note = { 
           ...defaultNote, 
           id: notePath, 
@@ -93,10 +98,13 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         dispatch({view: 'md', params: {noteId: note.id}});
       } else if (option.type === OptionType.NOTE) {
         await openFilePath(option.id, true);
+        if (currentCard) {
+          await updateCard(currentCard, option.id);
+        }
         dispatch({view: 'md', params: {noteId: option.id}});
       }
     },
-    [dispatch, inputTxt, onOptionClickCallback, currentDir]
+    [onOptionClickCallback, currentDir, inputTxt, currentCard, dispatch]
   );
 
   const onKeyDown = useCallback(
