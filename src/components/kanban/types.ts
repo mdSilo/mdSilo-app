@@ -3,6 +3,7 @@ export type Id = string | number;
 export type Column = {
   id: Id;
   title: string;
+  hdColor?: string;
   bgColor?: string;
   ftColor?: string;
 };

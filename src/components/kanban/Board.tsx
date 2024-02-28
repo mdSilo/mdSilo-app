@@ -13,7 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
-import { IconPlus } from "@tabler/icons-react";
+import { IconCircle, IconPlus } from "@tabler/icons-react";
 import { genId } from "utils/helper";
 import { openFilePath } from "file/open";
 import { BaseModal } from "components/settings/BaseModal";
@@ -100,14 +100,22 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     onKanbanChange(newColumns, tasks);
   }
 
-  function deleteColumn(id: Id) {
-    const filteredColumns = columns.filter((col) => col.id !== id);
+  const [showDelColumn, setShowDelColumn] = useState(false);
+  const [toDelColumn, setToDelColumn] = useState<Id | null>(null);
+  function openDelColumn(id: Id) {
+    setToDelColumn(id);
+    setShowDelColumn(true);
+  }
+
+  function deleteColumn() {
+    const filteredColumns = columns.filter((col) => col.id !== toDelColumn);
     setColumns(filteredColumns);
 
-    const newTasks = tasks.filter((t) => t.columnId !== id);
+    const newTasks = tasks.filter((t) => t.columnId !== toDelColumn);
     setTasks(newTasks);
     // save to file
     onKanbanChange(filteredColumns, newTasks);
+    setShowDelColumn(false);
   }
 
   function updateColumn(id: Id, title: string) {
@@ -228,6 +236,8 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
       if (col.id !== id) return col;
       if (ty === "bg") {
         return { ...col, bgColor: color };
+      } else if (ty === "head") {
+        return { ...col, hdColor: color };
       } else {
         return { ...col, ftColor: color };
       }
@@ -277,7 +287,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
                 <ColumnContainer
                   key={col.id}
                   column={col}
-                  deleteColumn={deleteColumn}
+                  toDelColumn={openDelColumn}
                   updateColumn={updateColumn}
                   createTask={createTask}
                   deleteTask={deleteTask}
@@ -299,7 +309,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
             {activeColumn && (
               <ColumnContainer
                 column={activeColumn}
-                deleteColumn={deleteColumn}
+                toDelColumn={openDelColumn}
                 updateColumn={updateColumn}
                 createTask={createTask}
                 deleteTask={deleteTask}
@@ -324,20 +334,8 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
         handleClose={() => setIsColSetting(false)}
       >
         <div className="flex-1 p-2 bg-gray-100">
-          <div className="flex flex-col items-center justify-center m-1">
-            <span className="text-sm text-gray-600 mr-2">Background Color</span>
-            <input 
-              type="text" className="p-1 border-none outline-none"
-              onChange={e => {setColumnColor(colSetting?.id || "", "bg", e.target.value)} } 
-            />
-          </div>
-          <div className="flex flex-col items-center justify-center m-1">
-            <span className="text-sm text-gray-600 mr-2">Font Color</span>
-            <input 
-              type="text" className="p-1 border-none outline-none"
-              onChange={e => {setColumnColor(colSetting?.id || "", "ft", e.target.value)} } 
-            />
-          </div>
+          <div className="font-bold text-center">Set Color</div>
+          <SetColor id={colSetting?.id || ""} setColor={setColumnColor} />
         </div>
       </BaseModal>
       <BaseModal 
@@ -359,22 +357,65 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
             ))}
           </div>
           <div className="font-bold text-center">Set Color</div>
-          <div className="flex flex-row items-center justify-center m-1">
-            <span className="text-sm text-gray-600 mr-2">Background Color</span>
-            <input 
-              type="text" className="p-1 border-none outline-none"
-              onChange={e => {setCardColor(cardSetting?.id || "", "bg", e.target.value)} } 
-            />
-          </div>
-          <div className="flex flex-row items-center justify-center m-1">
-            <span className="text-sm text-gray-600 mr-2">Font Color</span>
-            <input 
-              type="text" className="p-1 border-none outline-none"
-              onChange={e => {setCardColor(cardSetting?.id || "", "ft", e.target.value)} } 
-            />
-          </div>
+          <SetColor id={cardSetting?.id || ""} setColor={setCardColor} />
         </div>
       </BaseModal>
+      <BaseModal 
+        title="Delete This Column?" 
+        isOpen={showDelColumn} 
+        handleClose={() => setShowDelColumn(false)}
+      >
+        <div className="flex flex-col justify-center px-6">
+          <button className="mt-2 font-bold text-red-600 pop-btn" onClick={deleteColumn}>
+            Confirm Delete
+          </button>
+          <button className="mt-4 font-bold pop-btn" onClick={() => setShowDelColumn(false)}>
+            Cancel Delete
+          </button>
+        </div>
+      </BaseModal>
+    </div>
+  );
+}
+
+type SetProps = {
+  id: Id;
+  setColor: (id: Id, ty: string, color: string) => void;
+}
+
+function SetColor({id, setColor} : SetProps) {
+  const colors = [
+    "rgb(220 38 38)", "rgb(245 158 11)", "rgb(21 128 61)",
+    "rgb(14 165 233)", "rgb(79 70 229)", "rgb(124 58 237)", 
+  ];
+  const [selectedTy, setSelectedTy] = useState("bg");
+
+  return (
+    <div className="flex flex-row items-center justify-between m-1">
+      <select 
+        name="select-ty" 
+        className="w-full px-1 rounded text-primary-500 border-none"
+        style={{width: '4em'}}
+        value={selectedTy || 'bg'}
+        onChange={(ev) => {setSelectedTy(ev.target.value);}}
+      >
+        {["bg", "head", "font"].map((t, index) => (
+          <option key={`t-${index}`} value={t}>{t}</option>
+        ))}
+      </select>
+      {colors.map((color, index) => (
+        <button 
+          key={`c-${index}`} 
+          className="rounded-full m-1 hover:opacity-75"
+          onClick={() => {setColor(id, selectedTy, color);}}
+        ><IconCircle size={24} fill={color} /></button>
+      ))}
+      <input 
+        type="text" 
+        className="px-1 border-none outline-none" 
+        style={{width: '5em'}}
+        onChange={e => {setColor(id, selectedTy, e.target.value);}} 
+      />
     </div>
   );
 }

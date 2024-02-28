@@ -64,10 +64,10 @@ export default function SideMenu() {
         {currentDir ? (
         <>
           <NewButton />
+          <KanbanButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'kanban'})} />
           <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
           <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
           <TaskButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'task'})} />
-          <KanbanButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'kanban'})} />
         </>) : null}
         <FileButton />
       </div>

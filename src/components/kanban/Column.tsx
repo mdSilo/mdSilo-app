@@ -5,10 +5,9 @@ import { IconPlus, IconTool, IconTrash } from "@tabler/icons-react";
 import { Column, Id, Card } from "./types";
 import TaskCard from "./Card";
 
-
 interface Props {
   column: Column;
-  deleteColumn: (id: Id) => void;
+  toDelColumn: (id: Id) => void;
   updateColumn: (id: Id, title: string) => void;
   createTask: (columnId: Id) => void;
   updateTask: (id: Id, content: string) => void;
@@ -20,7 +19,7 @@ interface Props {
 
 export default function ColumnContainer({
   column,
-  deleteColumn,
+  toDelColumn,
   updateColumn,
   createTask,
   tasks,
@@ -82,7 +81,7 @@ export default function ColumnContainer({
         onMouseEnter={() => {setMouseIsOver(true);}}
         onMouseLeave={() => {setMouseIsOver(false);}}
         className="p-2 mb-2 text-lg h-[60px] cursor-grab rounded-md font-bold flex items-center justify-between" 
-        style={{color: column.ftColor || "white"}}
+        style={{color: column.ftColor || "white", backgroundColor: column.hdColor || ""}}
       >
         <div className="flex gap-2 flex-1">
           {!editMode && column.title}
@@ -103,7 +102,7 @@ export default function ColumnContainer({
         {mouseIsOver && (
           <div>
             <button
-              onClick={() => { deleteColumn(column.id);}}
+              onClick={() => { toDelColumn(column.id);}}
               className="stroke-gray-500 hover:stroke-white hover:bg-red-500 rounded px-1 py-2 w-8"
             >
               <IconTrash />
