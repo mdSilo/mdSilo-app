@@ -117,7 +117,7 @@ export default function ColumnContainer({
         )}
       </div>
       {/* Column cards container */}
-      <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto no-scrollbar">
+      <div className="flex flex-grow flex-col gap-2 p-2 overflow-x-hidden overflow-y-auto no-scrollbar">
         <SortableContext items={tasksIds}>
           {tasks.map((task) => (
             <TaskCard

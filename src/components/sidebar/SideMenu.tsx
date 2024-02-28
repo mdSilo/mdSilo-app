@@ -143,7 +143,7 @@ const FeedButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'feed'} onClick={onClick}>
       <Tooltip
-        content="Feed (Ctrl/⌘+Shift+R)"
+        content="Feed Reader (Ctrl/⌘+Shift+R)"
         placement="right"
       >
         <button className={btnClass} onClick={onViewFeed}>
@@ -160,7 +160,7 @@ const GraphButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
       <Tooltip
-        content="Visualization of networked writing (Ctrl/⌘+Shift+G)"
+        content="Graph View (Ctrl/⌘+Shift+G)"
         placement="right"
       >
         <button className={btnClass} onClick={onDispatch}>
@@ -211,7 +211,7 @@ const KanbanButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'kanban'} onClick={onClick}>
       <Tooltip
-        content="Kanban (Ctrl/⌘+Shift+K)"
+        content="Kanban Board (Ctrl/⌘+Shift+K)"
         placement="right"
       >
         <button className={btnClass} onClick={onDispatch}>

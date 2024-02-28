@@ -97,7 +97,7 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
       {...attributes}
       {...listeners}
       onClick={toggleEditMode}
-      className="p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative rounded-xl"
+      className="p-2 h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative rounded-xl"
       onMouseEnter={() => {setMouseIsOver(true);}}
       onMouseLeave={() => {setMouseIsOver(false);}}
     >
