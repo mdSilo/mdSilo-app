@@ -27,3 +27,5 @@ export type KanbanData = {
   columns: Column[];
   cards: Card[];
 };
+
+export type Kanbans = Record<string, KanbanData>;

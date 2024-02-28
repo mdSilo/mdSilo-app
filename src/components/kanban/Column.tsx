@@ -71,7 +71,7 @@ export default function ColumnContainer({
     <div
       ref={setNodeRef}
       style={style}
-      className="w-[350px] h-full max-h-[calc(100vh-4rem)] pb-4 my-6 rounded-md flex flex-col"
+      className="w-[350px] h-full max-h-[calc(100vh-5rem)] pb-4 my-6 rounded-md flex flex-col"
     >
       {/* Column title */}
       <div
@@ -132,7 +132,7 @@ export default function ColumnContainer({
       </div>
       {/* Column footer */}
       <button 
-        className="border border-dashed border-green-400 rounded hover:bg-gray-600 min-w-full mt-2" 
+        className="border border-dashed border-green-400 text-white rounded hover:bg-sky-600 min-w-full my-2" 
         onClick={() => {createTask(column.id);}}
       >
         <IconPlus />
