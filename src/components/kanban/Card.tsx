@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconTrash } from "@tabler/icons-react";
+import { IconFeather, IconTool, IconTrash } from "@tabler/icons-react";
 import { Id, Card } from "./types";
 
 interface Props {
   task: Card;
   deleteTask: (id: Id) => void;
   updateTask: (id: Id, content: string) => void;
+  openSetCard?: (id: Id) => void;
 }
 
-export default function TaskCard({ task, deleteTask, updateTask }: Props) {
+export default function TaskCard({ task, deleteTask, updateTask, openSetCard }: Props) {
   const [mouseIsOver, setMouseIsOver] = useState(false);
   const [editMode, setEditMode] = useState(true);
 
@@ -33,6 +34,7 @@ export default function TaskCard({ task, deleteTask, updateTask }: Props) {
   const style = {
     transition,
     transform: CSS.Transform.toString(transform),
+    backgroundColor: task.bgColor || "rgb(64 64 64)",
   };
 
   const toggleEditMode = () => {
@@ -45,7 +47,7 @@ export default function TaskCard({ task, deleteTask, updateTask }: Props) {
       <div
         ref={setNodeRef}
         style={style}
-        className="p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl border-2 border-green-500 cursor-grab relative bg-slate-500"
+        className="p-2.5 h-[100px] items-center flex text-left rounded-xl border-2 border-green-500 cursor-grab relative"
       />
     );
   }
@@ -60,7 +62,7 @@ export default function TaskCard({ task, deleteTask, updateTask }: Props) {
         className="p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative"
       >
         <textarea
-          className=" h-[90%] w-full resize-none border-none rounded bg-transparent text-white focus:outline-none"
+          className="h-[90%] w-full resize-none border-none rounded bg-transparent text-white focus:outline-none"
           value={task.content}
           autoFocus
           placeholder="Task content here"
@@ -83,21 +85,32 @@ export default function TaskCard({ task, deleteTask, updateTask }: Props) {
       {...attributes}
       {...listeners}
       onClick={toggleEditMode}
-      className="p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative bg-slate-500 rounded-xl"
+      className="p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative rounded-xl"
       onMouseEnter={() => {setMouseIsOver(true);}}
       onMouseLeave={() => {setMouseIsOver(false);}}
     >
-      <p className="my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap no-scollbar">
+      <p 
+        className="my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap no-scollbar"
+        style={{color: task.ftColor || "white"}}
+      >
         {task.content}
       </p>
 
       {mouseIsOver && (
-        <button
-          onClick={() => {deleteTask(task.id);}}
-          className="stroke-white absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded opacity-60 hover:opacity-100 hover:bg-red-600"
-        >
-          <IconTrash />
-        </button>
+        <div>
+          <button
+            onClick={() => {deleteTask(task.id);}}
+            className="stroke-gray-500 hover:stroke-white hover:bg-primary-500 rounded px-1 py-2 w-8"
+          >
+            <IconFeather />
+          </button>
+          <button
+              onClick={() => { openSetCard && openSetCard(task.id);}}
+              className="stroke-gray-500 hover:stroke-white hover:bg-green-500 rounded px-1 py-2 w-8"
+            >
+              <IconTool />
+            </button>
+        </div>
       )}
     </div>
   );

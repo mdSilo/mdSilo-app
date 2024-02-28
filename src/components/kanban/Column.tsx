@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconPlus, IconTool, IconTrash } from "@tabler/icons-react";
 import { Column, Id, Card } from "./types";
 import TaskCard from "./Card";
 
@@ -10,11 +10,12 @@ interface Props {
   column: Column;
   deleteColumn: (id: Id) => void;
   updateColumn: (id: Id, title: string) => void;
-
   createTask: (columnId: Id) => void;
   updateTask: (id: Id, content: string) => void;
   deleteTask: (id: Id) => void;
   tasks: Card[];
+  openSetCol?: (id: Id) => void;
+  openSetCard?: (id: Id) => void;
 }
 
 export default function ColumnContainer({
@@ -25,6 +26,8 @@ export default function ColumnContainer({
   tasks,
   deleteTask,
   updateTask,
+  openSetCol,
+  openSetCard,
 }: Props) {
   const [editMode, setEditMode] = useState(false);
   const [mouseIsOver, setMouseIsOver] = useState(false);
@@ -52,6 +55,7 @@ export default function ColumnContainer({
   const style = {
     transition,
     transform: CSS.Transform.toString(transform),
+    backgroundColor: column.bgColor || "rgb(38 38 38)",
   };
 
   if (isDragging) {
@@ -59,7 +63,7 @@ export default function ColumnContainer({
       <div
         ref={setNodeRef}
         style={style}
-        className="bg-active opacity-40 border-2 border-pink-500 w-[350px] h-[500px] max-h-[500px] rounded-md flex flex-col"
+        className="bg-active opacity-40 border-2 border-pink-500 w-[350px] h-[500px] rounded-md flex flex-col"
       ></div>
     );
   }
@@ -68,7 +72,7 @@ export default function ColumnContainer({
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-gray-700 w-[350px] h-full max-h-[calc(100vh-4rem)] pb-4 my-6 rounded-md flex flex-col"
+      className="w-[350px] h-full max-h-[calc(100vh-4rem)] pb-4 my-6 rounded-md flex flex-col"
     >
       {/* Column title */}
       <div
@@ -77,7 +81,8 @@ export default function ColumnContainer({
         onClick={() => {setEditMode(true);}}
         onMouseEnter={() => {setMouseIsOver(true);}}
         onMouseLeave={() => {setMouseIsOver(false);}}
-        className="bg-gray-800 p-2 mb-2 text-md h-[60px] cursor-grab rounded-md font-bold flex items-center justify-between"
+        className="p-2 mb-2 text-lg h-[60px] cursor-grab rounded-md font-bold flex items-center justify-between" 
+        style={{color: column.ftColor || "white"}}
       >
         <div className="flex gap-2 flex-1">
           {!editMode && column.title}
@@ -87,9 +92,7 @@ export default function ColumnContainer({
               value={column.title}
               onChange={(e) => updateColumn(column.id, e.target.value)}
               autoFocus
-              onBlur={() => {
-                setEditMode(false);
-              }}
+              onBlur={() => { setEditMode(false); }}
               onKeyDown={(e) => {
                 if (e.key !== "Enter") return;
                 setEditMode(false);
@@ -97,12 +100,22 @@ export default function ColumnContainer({
             />
           )}
         </div>
-        {mouseIsOver && (<button
-          onClick={() => { deleteColumn(column.id);}}
-          className="stroke-gray-500 hover:stroke-white hover:bg-red-500 rounded px-1 py-2 w-8"
-        >
-          <IconTrash />
-        </button>)}
+        {mouseIsOver && (
+          <div>
+            <button
+              onClick={() => { deleteColumn(column.id);}}
+              className="stroke-gray-500 hover:stroke-white hover:bg-red-500 rounded px-1 py-2 w-8"
+            >
+              <IconTrash />
+            </button>
+            <button
+              onClick={() => { openSetCol && openSetCol(column.id);}}
+              className="stroke-gray-500 hover:stroke-white hover:bg-green-500 rounded px-1 py-2 w-8"
+            >
+              <IconTool />
+            </button>
+        </div>
+        )}
       </div>
       {/* Column cards container */}
       <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto no-scrollbar">
@@ -113,6 +126,7 @@ export default function ColumnContainer({
               task={task}
               deleteTask={deleteTask}
               updateTask={updateTask}
+              openSetCard={openSetCard}
             />
           ))}
         </SortableContext>

@@ -56,7 +56,7 @@ export default function SideMenu() {
 
   const currentDir = useStore((state) => state.currentDir);
   return (    
-    <div className='flex flex-col h-full pb-3'>
+    <div className='flex flex-col h-full pb-3 bg-gray-100 dark:bg-gray-800'>
       <div className="flex flex-col h-full" id="side-menu-btns">
         <Logo />
         <OpenButton />

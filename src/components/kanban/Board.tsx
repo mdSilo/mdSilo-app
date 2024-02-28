@@ -15,6 +15,7 @@ import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { IconPlus } from "@tabler/icons-react";
 import { genId } from "utils/helper";
+import { BaseModal } from "components/settings/BaseModal";
 import { Column, Id, Card, KanbanData } from "./types";
 import ColumnContainer from "./Column";
 import TaskCard from "./Card";
@@ -177,7 +178,6 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
 
         let newTasks = [];
         if (tasks[activeIndex].columnId != tasks[overIndex].columnId) {
-          // Fix introduced after video recording
           tasks[activeIndex].columnId = tasks[overIndex].columnId;
           newTasks = arrayMove(tasks, activeIndex, overIndex - 1);
         } else {
@@ -209,6 +209,54 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     }
   }
 
+  const [isColSetting, setIsColSetting] = useState(false);
+  const [colSetting, setColSetting] = useState<Column | null>(null);
+  function openSetCol(id: Id) {
+    const checkColumn = columns.find((col) => col.id === id);
+    if (!checkColumn) return;
+    setColSetting(checkColumn);
+    setIsColSetting(true);
+  }
+
+  function setColumnColor(id: Id, ty: string, color: string) {
+    const newColumns = columns.map((col) => {
+      if (col.id !== id) return col;
+      if (ty === "bg") {
+        return { ...col, bgColor: color };
+      } else {
+        return { ...col, ftColor: color };
+      }
+    });
+
+    setColumns(newColumns);
+    // save to file
+    onKanbanChange(newColumns, tasks);
+  }
+
+  const [isCardSetting, setIsCardSetting] = useState(false);
+  const [cardSetting, setCardSetting] = useState<Card | null>(null);
+  function openSetCard(id: Id) {
+    const check = tasks.find((card) => card.id === id);
+    if (!check) return;
+    setCardSetting(check);
+    setIsCardSetting(true);
+  }
+
+  function setCardColor(id: Id, ty: string, color: string) {
+    const newTasks = tasks.map((task) => {
+      if (task.id !== id) return task;
+      if (ty === "bg") {
+        return { ...task, bgColor: color };
+      } else {
+        return { ...task, ftColor: color };
+      }
+    });
+
+    setTasks(newTasks);
+    // save to file
+    onKanbanChange(columns, newTasks);
+  }
+
   return (
     <div className="flex h-full w-full items-center overflow-x-auto overflow-y-hidden px-4">
       <DndContext
@@ -229,6 +277,8 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
                   createTask={createTask}
                   deleteTask={deleteTask}
                   updateTask={updateTask}
+                  openSetCol={openSetCol}
+                  openSetCard={openSetCard}
                   tasks={tasks.filter((task) => task.columnId === col.id)}
                 />
               ))}
@@ -249,9 +299,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
                 createTask={createTask}
                 deleteTask={deleteTask}
                 updateTask={updateTask}
-                tasks={tasks.filter(
-                  (task) => task.columnId === activeColumn.id
-                )}
+                tasks={tasks.filter((task) => task.columnId === activeColumn.id)}
               />
             )}
             {activeTask && (
@@ -265,6 +313,50 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
           document.body
         )}
       </DndContext>
+      <BaseModal 
+        title={`Column: ${colSetting?.title || ""}`} 
+        isOpen={isColSetting} 
+        handleClose={() => setIsColSetting(false)}
+      >
+        <div className="flex-1 p-2 bg-gray-100">
+          <div className="flex flex-col items-center justify-center m-1">
+            <span className="text-sm text-gray-600 mr-2">Background Color</span>
+            <input 
+              type="text" className="p-1 border-none outline-none"
+              onChange={e => {setColumnColor(colSetting?.id || "", "bg", e.target.value)} } 
+            />
+          </div>
+          <div className="flex flex-col items-center justify-center m-1">
+            <span className="text-sm text-gray-600 mr-2">Font Color</span>
+            <input 
+              type="text" className="p-1 border-none outline-none"
+              onChange={e => {setColumnColor(colSetting?.id || "", "ft", e.target.value)} } 
+            />
+          </div>
+        </div>
+      </BaseModal>
+      <BaseModal 
+        title={`Card: ${cardSetting?.content.substring(0, 64) || ""}`} 
+        isOpen={isCardSetting} 
+        handleClose={() => setIsCardSetting(false)}
+      >
+        <div className="flex-1 p-2 bg-gray-100 flex flex-wrap">
+          <div className="flex flex-row items-center justify-center m-1">
+            <span className="text-sm text-gray-600 mr-2">Background Color</span>
+            <input 
+              type="text" className="p-1 border-none outline-none"
+              onChange={e => {setCardColor(cardSetting?.id || "", "bg", e.target.value)} } 
+            />
+          </div>
+          <div className="flex flex-row items-center justify-center m-1">
+            <span className="text-sm text-gray-600 mr-2">Font Color</span>
+            <input 
+              type="text" className="p-1 border-none outline-none"
+              onChange={e => {setCardColor(cardSetting?.id || "", "ft", e.target.value)} } 
+            />
+          </div>
+        </div>
+      </BaseModal>
     </div>
   );
 }
