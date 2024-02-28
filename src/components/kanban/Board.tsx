@@ -13,7 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
-import { IconCircle, IconPlus } from "@tabler/icons-react";
+import { IconCircle, IconCircleX } from "@tabler/icons-react";
 import { genId } from "utils/helper";
 import { openFilePath } from "file/open";
 import { BaseModal } from "components/settings/BaseModal";
@@ -272,6 +272,22 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     onKanbanChange(columns, newTasks);
   }
 
+  function delTaskItem(id: Id, itemUri: string) {
+    const newTasks = tasks.map((task) => {
+      if (task.id !== id) return task;
+      const items = task.items || [];
+      const newItems = items.filter(itm => itm.uri !== itemUri);
+      const newTask = { ...task, items: newItems };
+      setCardSetting(newTask);
+
+      return newTask;
+    });
+  
+    setTasks(newTasks);
+    // save to file
+    onKanbanChange(columns, newTasks);
+  }
+
   return (
     <div className="flex h-full w-full items-center overflow-x-auto overflow-y-hidden px-4">
       <DndContext
@@ -299,8 +315,11 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
               ))}
             </SortableContext>
           </div>
-          <button className="btn btn-neutral mt-[3rem]" onClick={createNewColumn} >
-            <IconPlus />Add Column
+          <button 
+            className="flex-none btn h-8 min-w-24 flex items-center mt-[4rem]" 
+            onClick={createNewColumn}
+          >
+            + Add Column
           </button>
         </div>
 
@@ -346,14 +365,19 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
         <div className="flex-1 p-2 bg-gray-100 flex flex-col">
           <div className="flex flex-col items-start justify-start mb-4">
             {cardSetting?.items?.map(itm => (
-              <button 
-                key={itm.uri} 
-                className="link py-2" 
-                onClick={async () => {
-                  await openFilePath(itm.uri, true);
-                  dispatch({view: 'md', params: { noteId: itm.uri }});
-                }}
-              >{itm.name}</button>
+              <div key={itm.uri} className="flex items-center justify-start w-full py-1">
+                <button 
+                  className="link flex-1 text-left mr-4" 
+                  onClick={async () => {
+                    await openFilePath(itm.uri, true);
+                    dispatch({view: 'md', params: { noteId: itm.uri }});
+                  }}
+                >{itm.name}</button>
+                <button 
+                  className="w-6 opacity-10 hover:opacity-100 hover:text-red-600" 
+                  onClick={() => {delTaskItem(cardSetting.id, itm.uri);}}
+                ><IconCircleX size={18} /></button>
+              </div>
             ))}
           </div>
           <div className="font-bold text-center">Set Color</div>
@@ -395,7 +419,7 @@ function SetColor({id, setColor} : SetProps) {
       <select 
         name="select-ty" 
         className="w-full px-1 rounded text-primary-500 border-none"
-        style={{width: '4em'}}
+        style={{width: '5em'}}
         value={selectedTy || 'bg'}
         onChange={(ev) => {setSelectedTy(ev.target.value);}}
       >
@@ -411,9 +435,9 @@ function SetColor({id, setColor} : SetProps) {
         ><IconCircle size={24} fill={color} /></button>
       ))}
       <input 
-        type="text" 
-        className="px-1 border-none outline-none" 
-        style={{width: '5em'}}
+        type="color" 
+        className="border-none outline-none" 
+        style={{width: '3em'}}
         onChange={e => {setColor(id, selectedTy, e.target.value);}} 
       />
     </div>

@@ -7,7 +7,6 @@ module.exports = {
   content: ['./src/**/*.{html,js,ts,jsx,tsx}', './public/**/*.{html,js,ts,jsx,tsx}'],
   darkMode: 'class',
   plugins: [
-    require('daisyui'),
     require('@tailwindcss/typography'), 
     require('@tailwindcss/forms'),
   ],
