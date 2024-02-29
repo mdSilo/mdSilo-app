@@ -8,8 +8,11 @@ import FileAPI from 'file/files';
 
 export default function Kanban() {
   const initDir = useStore((state) => state.initDir);
+  const currentKanban = useStore((state) => state.currentBoard);
+  const setCurrentKanban = useStore((state) => state.setCurrentBoard);
   const [kanbans, setKanbans] = useState<Kanbans>({});
-  const [currentKanban, setCurrentKanban] = useState<string>("");
+
+  console.log("currentKanban", currentKanban, kanbans);
 
   useEffect(() => {
     const kanbanJsonPath = initDir ? joinPath(initDir, `kanban.json`) : '';
@@ -17,6 +20,8 @@ export default function Kanban() {
       const jsonFile = new FileAPI(kanbanJsonPath);
       jsonFile.readFile().then(json => {
         const kanbans: Kanbans = JSON.parse(json || "{}");
+        console.log("effect Kanbans", kanbans);
+
         setKanbans(kanbans);
       });
     }
@@ -37,8 +42,10 @@ export default function Kanban() {
 
   const kanbanData = useMemo(() => {
     const name = currentKanban || "default";
-    return kanbans[name] || {columns: [], cards: []};
+    return kanbans[name] ?? {columns: [], cards: []};
   }, [currentKanban, kanbans]);
+
+  console.log("KanbanData", kanbanData);
 
   return (
     <ErrorBoundary>
@@ -70,7 +77,7 @@ export default function Kanban() {
         </div>
         {kanbanData && (
           <KanbanBoard 
-            key={currentKanban} 
+            key={`${currentKanban}-${kanbanData.cards.length}`} 
             initData={kanbanData} 
             onKanbanChange={onKanbanChange} 
           />

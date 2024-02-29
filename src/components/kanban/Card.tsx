@@ -76,8 +76,6 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
         <textarea
           className="h-[90%] w-full resize-none border-none rounded bg-transparent text-white focus:outline-none"
           value={task.content}
-          autoFocus
-          placeholder="Task content here"
           onBlur={toggleEditMode}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.shiftKey) {

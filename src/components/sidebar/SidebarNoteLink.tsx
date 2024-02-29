@@ -79,17 +79,19 @@ const SidebarNoteLink = (
             <IconPhoto 
               className="flex-shrink-0 text-gray-500 dark:text-gray-100"
               size={16} 
-              color="green"
+              color="orange"
             />
           ) : !isNonMd ? (
             <IconMarkdown 
               className="flex-shrink-0 text-gray-500 dark:text-gray-100"
               size={16}
+              color="green"
             />
           ) : (
             <IconNote 
               className="flex-shrink-0 text-gray-500 dark:text-gray-100"
               size={16}
+              color="purple"
             />
           )}
         </div>

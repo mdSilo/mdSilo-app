@@ -95,6 +95,8 @@ export type Store = {
   setIsLoaded: Setter<boolean>;
   currentDir: string | undefined;  // dir path
   setCurrentDir: Setter<string | undefined>;
+  currentBoard: string;  // kanban's name
+  setCurrentBoard: Setter<string>;
   currentCard: string | number | undefined;  // kanban card
   setCurrentCard: Setter<string | number | undefined>;
   // input end
@@ -218,6 +220,8 @@ export const store = createVanilla<Store>(
       setIsLoaded: setter(set, 'isLoaded'),
       currentDir: undefined,
       setCurrentDir: setter(set, 'currentDir'),
+      currentBoard: '', 
+      setCurrentBoard: setter(set, 'currentBoard'),
       currentCard: undefined,
       setCurrentCard: setter(set, 'currentCard'),
       // input end

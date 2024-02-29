@@ -2,7 +2,7 @@ import { store } from 'lib/store';
 import { joinPath } from 'file/util';
 import FileAPI from 'file/files';
 import { rmFileNameExt } from 'file/process';
-import { Id, KanbanData, CardItem } from './types';
+import { Id, KanbanData, CardItem, Kanbans } from './types';
 
 /**
  * Upsert the note in kanban card
@@ -12,13 +12,16 @@ import { Id, KanbanData, CardItem } from './types';
  */
 const updateCard = async (id: Id, noteId: string, oldTitle?: string) => {
   const initDir = store.getState().initDir;
-  if (!initDir) return;
+  const currentKb = store.getState().currentBoard;
+  console.log("currentKb", currentKb);
+  if (!initDir || !currentKb.trim()) return;
 
   const title = noteId.split("/").pop() || noteId;
   const kanbanJsonPath = joinPath(initDir, `kanban.json`);
   const jsonFile = new FileAPI(kanbanJsonPath);
   const json = await jsonFile.readFile();
-  const data: KanbanData = JSON.parse(json);
+  const kanbans: Kanbans = JSON.parse(json);
+  const data: KanbanData = kanbans[currentKb];
 
   const cards = data.cards;
   const newTasks = cards.map((task) => {
@@ -46,8 +49,10 @@ const updateCard = async (id: Id, noteId: string, oldTitle?: string) => {
     }
   });
 
+  // update and save to file
   data.cards = newTasks;
-  await jsonFile.writeFile(JSON.stringify(data));
+  kanbans[currentKb] = data;
+  await jsonFile.writeFile(JSON.stringify(kanbans));
 };
 
 export default updateCard;
