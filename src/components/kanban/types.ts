@@ -26,6 +26,8 @@ export type CardItem = {
 export type KanbanData = {
   columns: Column[];
   cards: Card[];
+  bgColor?: string;
+  bgImg?: string;
 };
 
-export type Kanbans = Record<string, KanbanData>;
+export type Kanbans = Record<string, KanbanData>; // {name: data}

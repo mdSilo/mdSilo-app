@@ -74,7 +74,7 @@ export default function SidebarHeader() {
             }}
           >
             <IconCurrentLocation size={18} className="mr-1" />
-            <span>Open Local mdsilo</span>
+            <span>Local mdsilo</span>
           </DropdownItem>
         </Menu.Items>
       </Menu>

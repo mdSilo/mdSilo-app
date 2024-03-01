@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -14,8 +14,10 @@ import {
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { IconCircle, IconCircleX } from "@tabler/icons-react";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { genId } from "utils/helper";
-import { openFilePath } from "file/open";
+import { imageExtensions } from "utils/file-extensions";
+import { openFileDilog, openFilePath } from "file/open";
 import { BaseModal } from "components/settings/BaseModal";
 import { useCurrentViewContext } from "context/useCurrentView";
 import { Column, Id, Card, KanbanData } from "./types";
@@ -24,7 +26,7 @@ import TaskCard from "./Card";
 
 interface Props {
   initData: KanbanData, 
-  onKanbanChange: (columns: Column[], cards: Card[]) => void;
+  onKanbanChange: (columns: Column[], cards: Card[], color?: string, img?: string) => void;
 }
 
 export default function KanbanBoard({initData, onKanbanChange}: Props) {
@@ -32,6 +34,8 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
   const [tasks, setTasks] = useState<Card[]>(initData.cards);
+  const [bgColor, setBgColor] = useState(initData.bgColor);
+  const [bgImg, setBgImg] = useState(initData.bgImg);
 
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
   const [activeTask, setActiveTask] = useState<Card | null>(null);
@@ -288,8 +292,35 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     onKanbanChange(columns, newTasks);
   }
 
+  function setBoardBgColor(color?: string) {
+    setBgColor(color);
+    onKanbanChange(columns, tasks, color, bgImg);
+  }
+
+  const setBoardBgImg = useCallback(
+    async () => {
+      const ext = imageExtensions;
+      const filePath = await openFileDilog(ext, false);
+      const img = filePath && typeof filePath === 'string'
+        ? convertFileSrc(filePath)
+        : "";
+      setBgImg(img);
+      onKanbanChange(columns, tasks, bgColor, img);
+    },
+    [bgColor, columns, onKanbanChange, tasks]
+  );
+
   return (
-    <div className="flex h-full w-full items-center overflow-x-auto overflow-y-hidden px-4">
+    <div 
+      className="flex h-full min-h-[calc(100vh-5rem)] w-full items-center overflow-x-auto overflow-y-hidden px-4"
+      style={{
+        backgroundColor: bgColor, 
+        backgroundImage: `url(${bgImg})`,
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center center',
+      }}
+    >
       <DndContext
         sensors={sensors}
         onDragStart={onDragStart}
@@ -315,12 +346,23 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
               ))}
             </SortableContext>
           </div>
-          <button 
-            className="flex-none btn h-8 min-w-24 flex items-center mt-[4rem]" 
-            onClick={createNewColumn}
-          >
-            + Add Column
-          </button>
+          <div className="flex flex-col items-start justify-start mt-[4rem]">
+            <button 
+              className="flex-none pop-btn h-8 min-w-24" 
+              onClick={createNewColumn}
+            >
+              + Add Column
+            </button>
+            <button className="mt-2 flex-none pop-btn h-8 min-w-24" onClick={setBoardBgImg}>
+              + Board Image
+            </button>
+            <input 
+              type="color" 
+              className="mt-2 border-none outline-none rounded" 
+              style={{width: '7em'}}
+              onChange={e => {setBoardBgColor(e.target.value);}} 
+            />
+          </div>
         </div>
 
         {createPortal(
@@ -348,21 +390,23 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
         )}
       </DndContext>
       <BaseModal 
-        title={`Column: ${colSetting?.title || ""}`} 
+        title="Column"
         isOpen={isColSetting} 
         handleClose={() => setIsColSetting(false)}
       >
-        <div className="flex-1 p-2 bg-gray-100">
+        <div className="flex-1 p-1 bg-gray-100">
+          <div className="bg-gray-200 text-black rounded mb-2">{colSetting?.title || ""}</div>
           <div className="font-bold text-center">Set Color</div>
           <SetColor id={colSetting?.id || ""} setColor={setColumnColor} />
         </div>
       </BaseModal>
       <BaseModal 
-        title={`Card: ${cardSetting?.content.substring(0, 24) || ""}`} 
+        title="Card"
         isOpen={isCardSetting} 
         handleClose={() => setIsCardSetting(false)}
       >
-        <div className="flex-1 p-2 bg-gray-100 flex flex-col">
+        <div className="flex-1 p-1 bg-gray-100 flex flex-col">
+          <div className="bg-gray-200 text-black rounded">{cardSetting?.content || ""}</div>
           <div className="flex flex-col items-start justify-start mb-4">
             {cardSetting?.items?.map(itm => (
               <div key={itm.uri} className="flex items-center justify-start w-full py-1">

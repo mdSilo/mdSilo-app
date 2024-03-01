@@ -62,7 +62,7 @@ export default function ColumnContainer({
       <div
         ref={setNodeRef}
         style={style}
-        className="bg-active opacity-40 border-2 border-pink-500 w-[350px] h-[500px] rounded-md flex flex-col"
+        className="opacity-40 border-2 border-pink-500 w-[350px] h-[500px] flex flex-col"
       ></div>
     );
   }
@@ -71,7 +71,7 @@ export default function ColumnContainer({
     <div
       ref={setNodeRef}
       style={style}
-      className="w-[350px] h-full h-[calc(100vh-5rem)] pb-4 my-6 rounded-md flex flex-col"
+      className="w-[350px] max-h-[calc(100vh-5rem)] pb-4 my-6 rounded-md flex flex-col"
     >
       {/* Column title */}
       <div
@@ -80,7 +80,7 @@ export default function ColumnContainer({
         onClick={() => {setEditMode(true);}}
         onMouseEnter={() => {setMouseIsOver(true);}}
         onMouseLeave={() => {setMouseIsOver(false);}}
-        className="p-2 mb-2 text-lg h-[60px] cursor-grab rounded-md font-bold flex items-center justify-between" 
+        className="p-2 mb-2 text-xl h-[60px] cursor-grab rounded-md rounded-b-none font-bold flex items-center justify-between" 
         style={{color: column.ftColor || "white", backgroundColor: column.hdColor || "#40A3BF"}}
       >
         <div className="flex gap-2 flex-1">

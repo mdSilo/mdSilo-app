@@ -59,7 +59,7 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
       <div
         ref={setNodeRef}
         style={style}
-        className="p-2.5 h-[100px] items-center flex text-left rounded-xl border-2 border-green-500 cursor-grab relative"
+        className="p-2 h-[100px] flex text-left border-2 border-green-500 cursor-grab relative"
       />
     );
   }
@@ -71,7 +71,7 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
         style={style}
         {...attributes}
         {...listeners}
-        className="p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative"
+        className="p-2 h-[100px] items-center flex text-left hover:ring-2 hover:ring-inset hover:ring-purple-500 relative"
       >
         <textarea
           className="h-[90%] w-full resize-none border-none rounded bg-transparent text-white focus:outline-none"
@@ -95,7 +95,7 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
       {...attributes}
       {...listeners}
       onClick={toggleEditMode}
-      className="p-2 h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative rounded-xl"
+      className="p-2 h-[100px] items-center flex text-left rounded hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative"
       onMouseEnter={() => {setMouseIsOver(true);}}
       onMouseLeave={() => {setMouseIsOver(false);}}
     >

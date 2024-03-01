@@ -20,6 +20,7 @@ Then you can find the app in `./src-tauri/target/release` folder.
 - Markdown and extensions: Diagram, Table, Math/Chemical, Code block(Highlight)...   
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
 - Chronicle view, Graph view, Task view... 
+- Kanban to make personal knowledge base a serious project;  
 - Full-text search;  
 - Dark and Light Mode;  
 - Available for Windows, macOS, Linux;   
@@ -48,7 +49,7 @@ Then you can find the app in `./src-tauri/target/release` folder.
 
 - Editor Framework: [ProseMirror](https://prosemirror.net/)      
 - Frontend Framework: [React](https://reactjs.org/)  
-- Cross-platform: [Tauri](https://tauri.studio/) 
+- Cross-platform: [Tauri](https://tauri.app/) 
 
 ## Road map 
 
@@ -96,6 +97,7 @@ Then you can find the app in `./src-tauri/target/release` folder.
 
 - Organize writings
   - [X] Folder management 
+  - [X] Kanban board  
   - [X] Hashtag 
   - [X] Backlinks 
   - [X] Recent history 

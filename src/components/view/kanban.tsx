@@ -28,10 +28,16 @@ export default function Kanban() {
   }, [initDir]);
 
   const onKanbanChange = useCallback(
-    async (columns: Column[], cards: Card[]) => {
+    async (columns: Column[], cards: Card[], bgColor?: string, bgImg?: string) => {
       const saveFile = new FileAPI('kanban.json', initDir);
-      const newData = {columns, cards};
       const name = currentKanban || "default";
+      const oldData = kanbans[name];
+      const newData = {
+        columns, 
+        cards, 
+        bgColor: bgColor || oldData.bgColor,
+        bgImg: bgImg || oldData.bgImg,
+      };
       kanbans[name] = newData;
       await saveFile.writeFile(JSON.stringify(kanbans));
     },

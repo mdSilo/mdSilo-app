@@ -61,7 +61,7 @@ A lightweight, local-first personal Wiki and knowledge base for storing ideas, t
   - 📝 Markdown and extensions: Math/Chemical Equation, Diagram, Hashtag...   
   - 🗄️ Build personal wiki with bidirectional wiki links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...  
-  - 📋 Kanban board to make the knowledge growing a project   
+  - 📋 Kanban board to manage the process of knowledge growing   
   - 🕸️ Graph view to visualize the networked writing  
   - 📅 Chronicle view and Daily activities graph  
   - ✔️ Task view to track todo/doing/done  
