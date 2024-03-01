@@ -1337,10 +1337,10 @@
     "@codemirror/view" "^6.0.0"
     crelt "^1.0.5"
 
-"@codemirror/state@6.0.0", "@codemirror/state@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.npmjs.org/@codemirror/state/-/state-6.0.0.tgz"
-  integrity sha512-UjP/jB2dz7B+1L+eiCm8YWhM1zBkFM2zUyp8hhtpvgmuOFmoWjwqHnICQmM34HNPBqMPcVY9ZcqJcOhDrB+dBQ==
+"@codemirror/state@6.4.1", "@codemirror/state@^6.0.0":
+  version "6.4.1"
+  resolved "https://registry.yarnpkg.com/@codemirror/state/-/state-6.4.1.tgz#da57143695c056d9a3c38705ed34136e2b68171b"
+  integrity sha512-QkEyUiLhsJoZkbumGZlswmAhA7CBU02Wrz7zvH4SrcifbsqwlXShVXg65f3v/ts57W3dqyamEriMhij1Z3Zz4A==
 
 "@codemirror/view@6.0.0", "@codemirror/view@^6.0.0":
   version "6.0.0"
