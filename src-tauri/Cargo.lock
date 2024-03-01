@@ -2052,7 +2052,7 @@ dependencies = [
  "indextree",
  "libsqlite3-sys",
  "notify",
- "open 5.0.1",
+ "open 5.1.0",
  "reqwest",
  "rss",
  "serde",
@@ -2392,9 +2392,9 @@ dependencies = [
 
 [[package]]
 name = "open"
-version = "5.0.1"
+version = "5.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90878fb664448b54c4e592455ad02831e23a3f7e157374a8b95654731aac7349"
+checksum = "1f2588edf622de56e7a1fed57bf203344f63c03f3d43472ba0434a92373c8f27"
 dependencies = [
  "is-wsl",
  "libc",
