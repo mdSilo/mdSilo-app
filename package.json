@@ -41,7 +41,7 @@
     "fuse.js": "^6.6.2",
     "immer": "^9.0.19",
     "is-hotkey": "^0.2.0",
-    "mdsmirror": "0.0.31",
+    "mdsmirror": "0.0.36",
     "mdsmap": "0.0.3",
     "html2canvas": "1.4.1",
     "jspdf": "2.5.1",

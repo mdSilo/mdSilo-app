@@ -2183,26 +2183,13 @@
     "@svgr/plugin-svgo" "^5.5.0"
     loader-utils "^2.0.0"
 
-"@tabler/icons-react@^2.30.0":
-  version "2.30.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons-react/-/icons-react-2.30.0.tgz#e7ece4b83d6cd66b3a4ec043b89bf18e5341c03e"
-  integrity sha512-aYggXusHW133L4KujJkVf4GIIrjg7tIRHgNf/n37mnoHqMjwNP+PjmVdrBM1Z8Ywx9PKFRlrwM0eUMDcG+I4HA==
-  dependencies:
-    "@tabler/icons" "2.30.0"
-    prop-types "^15.7.2"
-
-"@tabler/icons-react@^2.42.0":
+"@tabler/icons-react@^2.30.0", "@tabler/icons-react@^2.42.0":
   version "2.42.0"
   resolved "https://registry.yarnpkg.com/@tabler/icons-react/-/icons-react-2.42.0.tgz#139a57cddcd756892c47f4c2040a5d24b34848dd"
   integrity sha512-2APr++u24P2mx9vJymJQJORRpu2Qej0rPrtAvgXu8YomHjLXVP+O1VtToSGyoSPH1ysA569XbxrwzOau9Ne12A==
   dependencies:
     "@tabler/icons" "2.42.0"
     prop-types "^15.7.2"
-
-"@tabler/icons@2.30.0":
-  version "2.30.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-2.30.0.tgz#4ea3c4da56fd5653bb9d0be0dc7feaa33602555c"
-  integrity sha512-tvtmkI4ALjKThVVORh++sB9JnkFY7eGInKxNy+Df7WVQiF7T85tlvGADzlgX4Ic+CK5MIUzZ0jhOlQ/RRlgXpg==
 
 "@tabler/icons@2.42.0":
   version "2.42.0"
@@ -8011,10 +7998,10 @@ mdsmap@0.0.3:
     react-dom "^17.0.2"
     remarkable "2.0.1"
 
-mdsmirror@0.0.31:
-  version "0.0.31"
-  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.0.31.tgz#a10a51b2432bde6e76aaf78b9c1e8b6b78e74caf"
-  integrity sha512-M4HbdvMth0t1nZCjUS7Drw9KW8iLG9dEGnCZDp/2r4hiYRDtxw/H1LT9CNAvrt2gcewy4X3kpxCHNl3ru0pLPA==
+mdsmirror@0.0.36:
+  version "0.0.36"
+  resolved "https://registry.yarnpkg.com/mdsmirror/-/mdsmirror-0.0.36.tgz#9e6e4a45d8695b0bc5f1dd08305b5f63692b6362"
+  integrity sha512-o+QS9e1mlcMomgQai32rHetafQ9NPUlvwy2wdHulc0pH47daLdoG1t7Hg0+qya8ZydclqYuTPyDraULWuZnuuQ==
   dependencies:
     "@juggle/resize-observer" "^3.3.1"
     "@tabler/icons-react" "^2.30.0"
