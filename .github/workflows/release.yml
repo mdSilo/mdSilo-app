@@ -45,7 +45,7 @@ jobs:
           sudo apt-get install -y libayatana-appindicator3-dev 
       - name: install app dependencies and build it
         run: yarn install --network-timeout 1000000 && yarn build
-      - uses: tauri-apps/tauri-action@v0.3
+      - uses: tauri-apps/tauri-action@v0.5
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
