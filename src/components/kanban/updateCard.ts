@@ -24,10 +24,10 @@ const updateCard = async (id: Id, noteId: string, oldTitle?: string) => {
   const data: KanbanData = kanbans[currentKb];
 
   const cards = data.cards;
-  const newTasks = cards.map((task) => {
-    if (task.id !== id) return task;
+  const newCards = cards.map((card) => {
+    if (card.id !== id) return card;
 
-    const items = task.items || [];
+    const items = card.items || [];
     const newItem: CardItem = {
       name: title,
       uri: noteId,
@@ -40,17 +40,17 @@ const updateCard = async (id: Id, noteId: string, oldTitle?: string) => {
       // console.log("items in card: ", newItems);
       newItems.push(newItem);
 
-      return { ...task, items: newItems };
+      return { ...card, items: newItems };
     } else {
       // push new item
       items.push(newItem);
       
-      return { ...task, items };
+      return { ...card, items };
     }
   });
 
   // update and save to file
-  data.cards = newTasks;
+  data.cards = newCards;
   kanbans[currentKb] = data;
   await jsonFile.writeFile(JSON.stringify(kanbans));
 };

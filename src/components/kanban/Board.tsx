@@ -33,12 +33,12 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
   const [columns, setColumns] = useState<Column[]>(initData.columns);
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
-  const [tasks, setTasks] = useState<Card[]>(initData.cards);
+  const [cards, setCards] = useState<Card[]>(initData.cards);
   const [bgColor, setBgColor] = useState(initData.bgColor);
   const [bgImg, setBgImg] = useState(initData.bgImg);
 
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
-  const [activeTask, setActiveTask] = useState<Card | null>(null);
+  const [activeCard, setActiveCard] = useState<Card | null>(null);
 
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
@@ -62,35 +62,35 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     })
   );
 
-  function createTask(columnId: Id) {
-    const newTask: Card = {
+  function createCard(columnId: Id) {
+    const newCard: Card = {
       id: genId(),
       columnId,
-      content: `Task ${tasks.length + 1}`,
+      content: `Card ${cards.length + 1}`,
     };
-    const newTasks = [...tasks, newTask];
+    const newCards = [...cards, newCard];
 
-    setTasks(newTasks);
+    setCards(newCards);
     // save to file
-    onKanbanChange(columns, newTasks);
+    onKanbanChange(columns, newCards);
   }
 
-  function deleteTask(id: Id) {
-    const newTasks = tasks.filter((task) => task.id !== id);
-    setTasks(newTasks);
+  function deleteCard(id: Id) {
+    const newCards = cards.filter((card) => card.id !== id);
+    setCards(newCards);
     // save to file
-    onKanbanChange(columns, newTasks);
+    onKanbanChange(columns, newCards);
   }
 
-  function updateTask(id: Id, content: string) {
-    const newTasks = tasks.map((task) => {
-      if (task.id !== id) return task;
-      return { ...task, content };
+  function updateCard(id: Id, content: string) {
+    const newCards = cards.map((card) => {
+      if (card.id !== id) return card;
+      return { ...card, content };
     });
   
-    setTasks(newTasks);
+    setCards(newCards);
     // save to file
-    onKanbanChange(columns, newTasks);
+    onKanbanChange(columns, newCards);
   }
 
   function createNewColumn() {
@@ -101,7 +101,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     const newColumns = [...columns, columnToAdd];
     setColumns(newColumns);
     // save to file
-    onKanbanChange(newColumns, tasks);
+    onKanbanChange(newColumns, cards);
   }
 
   const [showDelColumn, setShowDelColumn] = useState(false);
@@ -115,10 +115,10 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     const filteredColumns = columns.filter((col) => col.id !== toDelColumn);
     setColumns(filteredColumns);
 
-    const newTasks = tasks.filter((t) => t.columnId !== toDelColumn);
-    setTasks(newTasks);
+    const newCards = cards.filter((t) => t.columnId !== toDelColumn);
+    setCards(newCards);
     // save to file
-    onKanbanChange(filteredColumns, newTasks);
+    onKanbanChange(filteredColumns, newCards);
     setShowDelColumn(false);
   }
 
@@ -130,7 +130,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
 
     setColumns(newColumns);
     // save to file
-    onKanbanChange(newColumns, tasks);
+    onKanbanChange(newColumns, cards);
   }
 
   function onDragStart(event: DragStartEvent) {
@@ -139,15 +139,15 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
       return;
     }
 
-    if (event.active.data.current?.type === "Task") {
-      setActiveTask(event.active.data.current.task);
+    if (event.active.data.current?.type === "Card") {
+      setActiveCard(event.active.data.current.card);
       return;
     }
   }
 
   function onDragEnd(event: DragEndEvent) {
     setActiveColumn(null);
-    setActiveTask(null);
+    setActiveCard(null);
 
     const { active, over } = event;
     if (!over) return;
@@ -167,7 +167,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
       const overColumnIndex = columns.findIndex((col) => col.id === overId);
       const newColumns = arrayMove(columns, activeColumnIndex, overColumnIndex);
       // save to file
-      onKanbanChange(newColumns, tasks);
+      onKanbanChange(newColumns, cards);
 
       return newColumns;
     });
@@ -182,46 +182,46 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
 
     if (activeId === overId) return;
 
-    const isActiveATask = active.data.current?.type === "Task";
-    const isOverATask = over.data.current?.type === "Task";
+    const isActiveACard = active.data.current?.type === "Card";
+    const isOverACard = over.data.current?.type === "Card";
 
-    if (!isActiveATask) return;
+    if (!isActiveACard) return;
 
-    // Im dropping a Task over another Task
-    if (isActiveATask && isOverATask) {
-      setTasks((tasks) => {
-        const activeIndex = tasks.findIndex((t) => t.id === activeId);
-        const overIndex = tasks.findIndex((t) => t.id === overId);
+    // Im dropping a Card over another Card
+    if (isActiveACard && isOverACard) {
+      setCards((cards) => {
+        const activeIndex = cards.findIndex((t) => t.id === activeId);
+        const overIndex = cards.findIndex((t) => t.id === overId);
 
-        let newTasks = [];
-        if (tasks[activeIndex].columnId != tasks[overIndex].columnId) {
-          tasks[activeIndex].columnId = tasks[overIndex].columnId;
-          newTasks = arrayMove(tasks, activeIndex, overIndex - 1);
+        let newCards = [];
+        if (cards[activeIndex].columnId != cards[overIndex].columnId) {
+          cards[activeIndex].columnId = cards[overIndex].columnId;
+          newCards = arrayMove(cards, activeIndex, overIndex - 1);
         } else {
-          newTasks = arrayMove(tasks, activeIndex, overIndex);
+          newCards = arrayMove(cards, activeIndex, overIndex);
         }
 
         // save to file
-        onKanbanChange(columns, newTasks);
+        onKanbanChange(columns, newCards);
 
-        return newTasks;
+        return newCards;
       });
     }
 
     const isOverAColumn = over.data.current?.type === "Column";
 
-    // Im dropping a Task over a column
-    if (isActiveATask && isOverAColumn) {
-      setTasks((tasks) => {
-        const activeIndex = tasks.findIndex((t) => t.id === activeId);
+    // Im dropping a Card over a column
+    if (isActiveACard && isOverAColumn) {
+      setCards((cards) => {
+        const activeIndex = cards.findIndex((t) => t.id === activeId);
 
-        tasks[activeIndex].columnId = overId;
-        console.log("DROPPING TASK OVER COLUMN", { activeIndex });
-        const newTasks = arrayMove(tasks, activeIndex, activeIndex);
+        cards[activeIndex].columnId = overId;
+        console.log("DROPPING CARD OVER COLUMN", { activeIndex });
+        const newCards = arrayMove(cards, activeIndex, activeIndex);
         // save to file
-        onKanbanChange(columns, newTasks);
+        onKanbanChange(columns, newCards);
 
-        return newTasks;
+        return newCards;
       });
     }
   }
@@ -249,52 +249,52 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
 
     setColumns(newColumns);
     // save to file
-    onKanbanChange(newColumns, tasks);
+    onKanbanChange(newColumns, cards);
   }
 
   const [isCardSetting, setIsCardSetting] = useState(false);
   const [cardSetting, setCardSetting] = useState<Card | null>(null);
   function openSetCard(id: Id) {
-    const check = tasks.find((card) => card.id === id);
+    const check = cards.find((card) => card.id === id);
     if (!check) return;
     setCardSetting(check);
     setIsCardSetting(true);
   }
 
   function setCardColor(id: Id, ty: string, color: string) {
-    const newTasks = tasks.map((task) => {
-      if (task.id !== id) return task;
+    const newCards = cards.map((card) => {
+      if (card.id !== id) return card;
       if (ty === "bg") {
-        return { ...task, bgColor: color };
+        return { ...card, bgColor: color };
       } else {
-        return { ...task, ftColor: color };
+        return { ...card, ftColor: color };
       }
     });
 
-    setTasks(newTasks);
+    setCards(newCards);
     // save to file
-    onKanbanChange(columns, newTasks);
+    onKanbanChange(columns, newCards);
   }
 
-  function delTaskItem(id: Id, itemUri: string) {
-    const newTasks = tasks.map((task) => {
-      if (task.id !== id) return task;
-      const items = task.items || [];
+  function delCardItem(id: Id, itemUri: string) {
+    const newCards = cards.map((card) => {
+      if (card.id !== id) return card;
+      const items = card.items || [];
       const newItems = items.filter(itm => itm.uri !== itemUri);
-      const newTask = { ...task, items: newItems };
-      setCardSetting(newTask);
+      const newCard = { ...card, items: newItems };
+      setCardSetting(newCard);
 
-      return newTask;
+      return newCard;
     });
   
-    setTasks(newTasks);
+    setCards(newCards);
     // save to file
-    onKanbanChange(columns, newTasks);
+    onKanbanChange(columns, newCards);
   }
 
   function setBoardBgColor(color?: string) {
     setBgColor(color);
-    onKanbanChange(columns, tasks, color, bgImg);
+    onKanbanChange(columns, cards, color, bgImg);
   }
 
   const setBoardBgImg = useCallback(
@@ -305,9 +305,9 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
         ? convertFileSrc(filePath)
         : "";
       setBgImg(img);
-      onKanbanChange(columns, tasks, bgColor, img);
+      onKanbanChange(columns, cards, bgColor, img);
     },
-    [bgColor, columns, onKanbanChange, tasks]
+    [bgColor, columns, onKanbanChange, cards]
   );
 
   return (
@@ -327,25 +327,23 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
         onDragEnd={onDragEnd}
         onDragOver={onDragOver}
       >
-        <div className="m-auto flex gap-4">
-          <div className="flex gap-4">
-            <SortableContext items={columnsId}>
-              {columns.map((col) => (
-                <ColumnContainer
-                  key={col.id}
-                  column={col}
-                  toDelColumn={openDelColumn}
-                  updateColumn={updateColumn}
-                  createTask={createTask}
-                  deleteTask={deleteTask}
-                  updateTask={updateTask}
-                  openSetCol={openSetCol}
-                  openSetCard={openSetCard}
-                  tasks={tasks.filter((task) => task.columnId === col.id)}
-                />
-              ))}
-            </SortableContext>
-          </div>
+        <div className="mx-auto flex gap-2">
+          <SortableContext items={columnsId}>
+            {columns.map((col) => (
+              <ColumnContainer
+                key={col.id}
+                column={col}
+                toDelColumn={openDelColumn}
+                updateColumn={updateColumn}
+                createCard={createCard}
+                deleteCard={deleteCard}
+                updateCard={updateCard}
+                openSetCol={openSetCol}
+                openSetCard={openSetCard}
+                cards={cards.filter((card) => card.columnId === col.id)}
+              />
+            ))}
+          </SortableContext>
           <div className="flex flex-col items-start justify-start mt-[4rem]">
             <button 
               className="flex-none pop-btn h-8 min-w-24" 
@@ -372,17 +370,17 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
                 column={activeColumn}
                 toDelColumn={openDelColumn}
                 updateColumn={updateColumn}
-                createTask={createTask}
-                deleteTask={deleteTask}
-                updateTask={updateTask}
-                tasks={tasks.filter((task) => task.columnId === activeColumn.id)}
+                createCard={createCard}
+                deleteCard={deleteCard}
+                updateCard={updateCard}
+                cards={cards.filter((card) => card.columnId === activeColumn.id)}
               />
             )}
-            {activeTask && (
+            {activeCard && (
               <TaskCard
-                task={activeTask}
-                deleteTask={deleteTask}
-                updateTask={updateTask}
+                card={activeCard}
+                deleteCard={deleteCard}
+                updateCard={updateCard}
               />
             )}
           </DragOverlay>,
@@ -419,7 +417,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
                 >{itm.name}</button>
                 <button 
                   className="w-6 opacity-10 hover:opacity-100 hover:text-red-600" 
-                  onClick={() => {delTaskItem(cardSetting.id, itm.uri);}}
+                  onClick={() => {delCardItem(cardSetting.id, itm.uri);}}
                 ><IconCircleX size={18} /></button>
               </div>
             ))}

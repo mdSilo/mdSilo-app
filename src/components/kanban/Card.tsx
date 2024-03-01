@@ -7,13 +7,13 @@ import { isMobile } from "utils/helper";
 import { Id, Card } from "./types";
 
 interface Props {
-  task: Card;
-  updateTask: (id: Id, content: string) => void;
-  deleteTask?: (id: Id) => void;
+  card: Card;
+  updateCard: (id: Id, content: string) => void;
+  deleteCard?: (id: Id) => void;
   openSetCard?: (id: Id) => void;
 }
 
-export default function TaskCard({ task, updateTask, openSetCard }: Props) {
+export default function TaskCard({ card, updateCard, openSetCard }: Props) {
   const [mouseIsOver, setMouseIsOver] = useState(false);
   const [editMode, setEditMode] = useState(true);
 
@@ -35,10 +35,10 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
     transition,
     isDragging,
   } = useSortable({
-    id: task.id,
+    id: card.id,
     data: {
-      type: "Task",
-      task,
+      type: "Card",
+      card,
     },
     disabled: editMode,
   });
@@ -46,7 +46,7 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
   const style = {
     transition,
     transform: CSS.Transform.toString(transform),
-    backgroundColor: task.bgColor || "rgb(64 64 64)",
+    backgroundColor: card.bgColor || "rgb(64 64 64)",
   };
 
   const toggleEditMode = () => {
@@ -75,14 +75,14 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
       >
         <textarea
           className="h-[90%] w-full resize-none border-none rounded bg-transparent text-white focus:outline-none"
-          value={task.content}
+          value={card.content}
           onBlur={toggleEditMode}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.shiftKey) {
               toggleEditMode();
             }
           }}
-          onChange={(e) => updateTask(task.id, e.target.value)}
+          onChange={(e) => updateCard(card.id, e.target.value)}
         />
       </div>
     );
@@ -101,21 +101,21 @@ export default function TaskCard({ task, updateTask, openSetCard }: Props) {
     >
       <p 
         className="my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap no-scollbar"
-        style={{color: task.ftColor || "white"}}
+        style={{color: card.ftColor || "white"}}
       >
-        {task.content}
+        {card.content}
       </p>
 
       {mouseIsOver && (
         <div>
           <button
-            onClick={() => {onCreateNoteClick(task.id);}}
+            onClick={() => {onCreateNoteClick(card.id);}}
             className="stroke-gray-500 hover:stroke-white hover:bg-primary-500 rounded px-1 py-2 w-8"
           >
             <IconFeather />
           </button>
           <button
-              onClick={() => { openSetCard && openSetCard(task.id);}}
+              onClick={() => { openSetCard && openSetCard(card.id);}}
               className="stroke-gray-500 hover:stroke-white hover:bg-green-500 rounded px-1 py-2 w-8"
             >
               <IconPaperclip />

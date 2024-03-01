@@ -9,10 +9,10 @@ interface Props {
   column: Column;
   toDelColumn: (id: Id) => void;
   updateColumn: (id: Id, title: string) => void;
-  createTask: (columnId: Id) => void;
-  updateTask: (id: Id, content: string) => void;
-  deleteTask: (id: Id) => void;
-  tasks: Card[];
+  createCard: (columnId: Id) => void;
+  updateCard: (id: Id, content: string) => void;
+  deleteCard: (id: Id) => void;
+  cards: Card[];
   openSetCol?: (id: Id) => void;
   openSetCard?: (id: Id) => void;
 }
@@ -21,19 +21,19 @@ export default function ColumnContainer({
   column,
   toDelColumn,
   updateColumn,
-  createTask,
-  tasks,
-  deleteTask,
-  updateTask,
+  createCard,
+  cards,
+  deleteCard,
+  updateCard,
   openSetCol,
   openSetCard,
 }: Props) {
   const [editMode, setEditMode] = useState(false);
   const [mouseIsOver, setMouseIsOver] = useState(false);
 
-  const tasksIds = useMemo(() => {
-    return tasks.map((task) => task.id);
-  }, [tasks]);
+  const cardsIds = useMemo(() => {
+    return cards.map((card) => card.id);
+  }, [cards]);
 
   const {
     setNodeRef,
@@ -71,7 +71,7 @@ export default function ColumnContainer({
     <div
       ref={setNodeRef}
       style={style}
-      className="w-[350px] max-h-[calc(100vh-5rem)] pb-4 my-6 rounded-md flex flex-col"
+      className="w-[350px] max-h-[calc(100vh-5rem)] pb-2 my-2 rounded-md flex flex-col h-full"
     >
       {/* Column title */}
       <div
@@ -117,14 +117,14 @@ export default function ColumnContainer({
         )}
       </div>
       {/* Column cards container */}
-      <div className="flex flex-grow flex-col gap-2 p-2 overflow-x-hidden overflow-y-auto no-scrollbar">
-        <SortableContext items={tasksIds}>
-          {tasks.map((task) => (
+      <div className="flex flex-grow flex-col gap-2 p-1 overflow-x-hidden overflow-y-auto">
+        <SortableContext items={cardsIds}>
+          {cards.map((card) => (
             <TaskCard
-              key={task.id}
-              task={task}
-              deleteTask={deleteTask}
-              updateTask={updateTask}
+              key={card.id}
+              card={card}
+              deleteCard={deleteCard}
+              updateCard={updateCard}
               openSetCard={openSetCard}
             />
           ))}
@@ -132,8 +132,8 @@ export default function ColumnContainer({
       </div>
       {/* Column footer */}
       <button 
-        className="border border-dashed border-green-400 text-white rounded hover:bg-sky-600 min-w-full my-2" 
-        onClick={() => {createTask(column.id);}}
+        className="border border-dashed border-green-400 text-white rounded hover:bg-sky-600 min-w-full my-2 px-2" 
+        onClick={() => {createCard(column.id);}}
       >
         <IconPlus />
       </button>
