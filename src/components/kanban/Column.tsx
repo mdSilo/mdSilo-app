@@ -100,16 +100,16 @@ export default function ColumnContainer({
           )}
         </div>
         {mouseIsOver && (
-          <div>
+          <div className="flex flex-row">
             <button
               onClick={() => { toDelColumn(column.id);}}
-              className="stroke-gray-500 hover:stroke-white hover:bg-red-500 rounded px-1 py-2 w-8"
+              className="hover:bg-red-500 rounded p-1 w-8"
             >
               <IconTrash />
             </button>
             <button
               onClick={() => { openSetCol && openSetCol(column.id);}}
-              className="stroke-gray-500 hover:stroke-white hover:bg-green-500 rounded px-1 py-2 w-8"
+              className="hover:bg-green-500 rounded p-1 w-8"
             >
               <IconTool />
             </button>
@@ -132,10 +132,10 @@ export default function ColumnContainer({
       </div>
       {/* Column footer */}
       <button 
-        className="border border-dashed border-green-400 text-white rounded hover:bg-sky-600 min-w-full my-2 px-2" 
+        className="border border-dashed border-green-400 text-white rounded hover:bg-sky-600 min-w-full my-2 px-2 flex items-center justify-center" 
         onClick={() => {createCard(column.id);}}
       >
-        <IconPlus />
+        <IconPlus /> Add Card
       </button>
     </div>
   );

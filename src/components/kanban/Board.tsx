@@ -358,6 +358,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
               type="color" 
               className="mt-2 border-none outline-none rounded" 
               style={{width: '7em'}}
+              value={bgColor}
               onChange={e => {setBoardBgColor(e.target.value);}} 
             />
           </div>

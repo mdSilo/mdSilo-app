@@ -47,6 +47,7 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
     transition,
     transform: CSS.Transform.toString(transform),
     backgroundColor: card.bgColor || "rgb(64 64 64)",
+    color: card.ftColor || "white",
   };
 
   const toggleEditMode = () => {
@@ -59,7 +60,7 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
       <div
         ref={setNodeRef}
         style={style}
-        className="p-2 h-[100px] flex text-left border-2 border-green-500 cursor-grab relative"
+        className="p-2 h-[80px] flex text-left border-2 border-green-500 cursor-grab relative"
       />
     );
   }
@@ -74,7 +75,7 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
         className="p-2 h-[100px] items-center flex text-left hover:ring-2 hover:ring-inset hover:ring-purple-500 relative"
       >
         <textarea
-          className="h-[90%] w-full resize-none border-none rounded bg-transparent text-white focus:outline-none"
+          className="h-[90%] w-full resize-none border-none rounded bg-transparent"
           value={card.content}
           onBlur={toggleEditMode}
           onKeyDown={(e) => {
@@ -99,24 +100,21 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
       onMouseEnter={() => {setMouseIsOver(true);}}
       onMouseLeave={() => {setMouseIsOver(false);}}
     >
-      <p 
-        className="my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap no-scollbar"
-        style={{color: card.ftColor || "white"}}
-      >
+      <p className="my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap">
         {card.content}
       </p>
 
       {mouseIsOver && (
-        <div>
+        <div className="flex flex-col">
           <button
             onClick={() => {onCreateNoteClick(card.id);}}
-            className="stroke-gray-500 hover:stroke-white hover:bg-primary-500 rounded px-1 py-2 w-8"
+            className="hover:bg-primary-500 rounded p-1 w-8"
           >
             <IconFeather />
           </button>
           <button
               onClick={() => { openSetCard && openSetCard(card.id);}}
-              className="stroke-gray-500 hover:stroke-white hover:bg-green-500 rounded px-1 py-2 w-8"
+              className="hover:bg-green-500 rounded p-1 w-8"
             >
               <IconPaperclip />
             </button>
