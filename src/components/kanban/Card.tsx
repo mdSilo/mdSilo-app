@@ -1,9 +1,14 @@
 import { useCallback, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconFeather, IconPaperclip } from "@tabler/icons-react";
+import { IconFeather, IconPaperclip, IconStack } from "@tabler/icons-react";
+import { invoke } from '@tauri-apps/api';
 import { useStore } from "lib/store";
 import { isMobile } from "utils/helper";
+import { openFileDilog } from "file/open";
+import { docExtensions } from "utils/file-extensions";
+import FileAPI from "file/files";
+import updateCardItem from './updateCard';
 import { Id, Card } from "./types";
 
 interface Props {
@@ -15,8 +20,9 @@ interface Props {
 
 export default function TaskCard({ card, updateCard, openSetCard }: Props) {
   const [mouseIsOver, setMouseIsOver] = useState(false);
-  const [editMode, setEditMode] = useState(true);
+  const [editMode, setEditMode] = useState(false);
 
+  const initDir = useStore((state) => state.initDir);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
   const setCurrentCard = useStore((state) => state.setCurrentCard);
@@ -26,6 +32,32 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
     setIsFindOrCreateModalOpen((isOpen) => !isOpen);
     setCurrentCard(id);
   }, [setIsFindOrCreateModalOpen, setCurrentCard, setIsSidebarOpen]);
+
+  const onAttachClick = useCallback(
+    async () => {
+      const ext = docExtensions;
+      const filePath = await openFileDilog(ext, false);
+      if (filePath && typeof filePath === 'string') {
+        let fileUrl = filePath;
+        // console.log("use asset", useAsset)
+        if (initDir) {
+          const assetPath = await invoke<string[]>(
+            'copy_file_to_assets', { srcPath: filePath, workDir: initDir }
+          );
+          // console.log("asset path", assetPath)
+          fileUrl = assetPath[0] || filePath;
+        }
+
+        const fileInfo = new FileAPI(fileUrl);
+        if (await fileInfo.exists()) {
+          const fileMeta = await fileInfo.getMetadata();
+          const fname = fileMeta.file_name;
+          updateCardItem(card.id, [fname, fileUrl]);
+        }
+      }
+    },
+    [card.id, initDir]
+  );
 
   const {
     setNodeRef,
@@ -75,7 +107,8 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
         className="p-2 h-[100px] items-center flex text-left hover:ring-2 hover:ring-inset hover:ring-purple-500 relative"
       >
         <textarea
-          className="h-[90%] w-full resize-none border-none rounded bg-transparent"
+          className="h-[90%] w-full resize-none border-none rounded bg-transparent" 
+          autoFocus 
           value={card.content}
           onBlur={toggleEditMode}
           onKeyDown={(e) => {
@@ -105,7 +138,7 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
       </p>
 
       {mouseIsOver && (
-        <div className="flex flex-col">
+        <div className="flex flex-row">
           <button
             onClick={() => {onCreateNoteClick(card.id);}}
             className="hover:bg-primary-500 rounded p-1 w-8"
@@ -113,11 +146,17 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
             <IconFeather />
           </button>
           <button
+              onClick={onAttachClick}
+              className="hover:bg-blue-500 rounded p-1 w-8"
+            >
+              <IconPaperclip />
+          </button>
+          <button
               onClick={() => { openSetCard && openSetCard(card.id);}}
               className="hover:bg-green-500 rounded p-1 w-8"
             >
-              <IconPaperclip />
-            </button>
+              <IconStack />
+          </button>
         </div>
       )}
     </div>

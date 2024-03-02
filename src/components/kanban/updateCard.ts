@@ -10,13 +10,15 @@ import { Id, KanbanData, CardItem, Kanbans } from './types';
  * @param noteId of current note, aka filePath
  * @param oldTitle of current note, to rename
  */
-const updateCard = async (id: Id, noteId: string, oldTitle?: string) => {
+const updateCard = async (id: Id, noteId: string | string[], oldTitle?: string) => {
   const initDir = store.getState().initDir;
   const currentKb = store.getState().currentBoard;
   console.log("currentKb", currentKb);
   if (!initDir || !currentKb.trim()) return;
 
-  const title = noteId.split("/").pop() || noteId;
+  const [title, itemUri, category] = typeof noteId === "string" 
+    ? [noteId.split("/").pop() || noteId, noteId, "note"]
+    : [...noteId, "attach"];
   const kanbanJsonPath = joinPath(initDir, `kanban.json`);
   const jsonFile = new FileAPI(kanbanJsonPath);
   const json = await jsonFile.readFile();
@@ -30,8 +32,8 @@ const updateCard = async (id: Id, noteId: string, oldTitle?: string) => {
     const items = card.items || [];
     const newItem: CardItem = {
       name: title,
-      uri: noteId,
-      category: "note",
+      uri: itemUri,
+      category,
     };
     console.log("old title in card: ", oldTitle)
     if (oldTitle) {

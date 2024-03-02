@@ -9,7 +9,7 @@ interface Props {
   column: Column;
   toDelColumn: (id: Id) => void;
   updateColumn: (id: Id, title: string) => void;
-  createCard: (columnId: Id) => void;
+  createCard: (columnId: Id, content: string) => void;
   updateCard: (id: Id, content: string) => void;
   deleteCard: (id: Id) => void;
   cards: Card[];
@@ -30,6 +30,8 @@ export default function ColumnContainer({
 }: Props) {
   const [editMode, setEditMode] = useState(false);
   const [mouseIsOver, setMouseIsOver] = useState(false);
+  const [toAddCard, setToAddCard] = useState(false);
+  const [cardContent, setCardContent] = useState("");
 
   const cardsIds = useMemo(() => {
     return cards.map((card) => card.id);
@@ -131,12 +133,26 @@ export default function ColumnContainer({
         </SortableContext>
       </div>
       {/* Column footer */}
-      <button 
-        className="border border-dashed border-green-400 text-white rounded hover:bg-sky-600 min-w-full my-2 px-2 flex items-center justify-center" 
-        onClick={() => {createCard(column.id);}}
-      >
-        <IconPlus /> Add Card
-      </button>
+      <div className="flex flex-col">
+        {toAddCard && (<textarea
+          className="w-[95%] resize-none border-none rounded mx-auto my-1"
+          placeholder="Type then Press Enter" 
+          autoFocus 
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              createCard(column.id, cardContent);
+              setToAddCard(false);
+            }
+          }}
+          onChange={(e) => setCardContent(e.target.value)}
+        />)}
+        <button 
+          className="border border-dashed border-green-400 text-white rounded hover:bg-sky-600 min-w-full my-2 px-2 flex items-center justify-center" 
+          onClick={() => {setToAddCard(!toAddCard)}}
+        >
+          <IconPlus /> Add Card
+        </button>
+      </div>
     </div>
   );
 }

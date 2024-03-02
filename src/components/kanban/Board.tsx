@@ -17,7 +17,7 @@ import { IconCircle, IconCircleX } from "@tabler/icons-react";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { genId } from "utils/helper";
 import { imageExtensions } from "utils/file-extensions";
-import { openFileDilog, openFilePath } from "file/open";
+import { openFileDilog, openFilePath, openUrl } from "file/open";
 import { BaseModal } from "components/settings/BaseModal";
 import { useCurrentViewContext } from "context/useCurrentView";
 import { Column, Id, Card, KanbanData } from "./types";
@@ -62,11 +62,11 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     })
   );
 
-  function createCard(columnId: Id) {
+  function createCard(columnId: Id, content?: string) {
     const newCard: Card = {
       id: genId(),
       columnId,
-      content: `Card ${cards.length + 1}`,
+      content: content || `Card ${cards.length + 1}`,
     };
     const newCards = [...cards, newCard];
 
@@ -412,8 +412,12 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
                 <button 
                   className="link flex-1 text-left mr-4" 
                   onClick={async () => {
-                    await openFilePath(itm.uri, true);
-                    dispatch({view: 'md', params: { noteId: itm.uri }});
+                    if (itm.category === "note") {
+                      await openFilePath(itm.uri, true);
+                      dispatch({view: 'md', params: { noteId: itm.uri }});
+                    } else {
+                      await openUrl(itm.uri);
+                    }
                   }}
                 >{itm.name}</button>
                 <button 

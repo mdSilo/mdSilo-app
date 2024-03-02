@@ -220,7 +220,7 @@ export const store = createVanilla<Store>(
       setIsLoaded: setter(set, 'isLoaded'),
       currentDir: undefined,
       setCurrentDir: setter(set, 'currentDir'),
-      currentBoard: '', 
+      currentBoard: 'default', 
       setCurrentBoard: setter(set, 'currentBoard'),
       currentCard: undefined,
       setCurrentCard: setter(set, 'currentCard'),
