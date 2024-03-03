@@ -13,7 +13,7 @@ import { Id, KanbanData, CardItem, Kanbans } from './types';
 const updateCard = async (id: Id, noteId: string | string[], oldTitle?: string) => {
   const initDir = store.getState().initDir;
   const currentKb = store.getState().currentBoard;
-  console.log("currentKb", currentKb);
+  // console.log("currentKb", currentKb);
   if (!initDir || !currentKb.trim()) return;
 
   const [title, itemUri, category] = typeof noteId === "string" 
@@ -35,7 +35,7 @@ const updateCard = async (id: Id, noteId: string | string[], oldTitle?: string) 
       uri: itemUri,
       category,
     };
-    console.log("old title in card: ", oldTitle)
+    // console.log("old title in card: ", oldTitle)
     if (oldTitle) {
       // filter out old one
       const newItems = items.filter(itm => rmFileNameExt(itm.name) !== oldTitle);

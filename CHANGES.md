@@ -4,7 +4,7 @@
 
 2024-XX-XX
 
-- [ ] Organize notes using Kanban
+- Organize notes using Kanban
 
 ## app-v0.5.8 
 

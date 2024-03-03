@@ -12,7 +12,7 @@ export default function Kanban() {
   const setCurrentKanban = useStore((state) => state.setCurrentBoard);
   const [kanbans, setKanbans] = useState<Kanbans>({});
 
-  console.log("currentKanban", currentKanban, kanbans);
+  // console.log("currentKanban", currentKanban, kanbans);
 
   useEffect(() => {
     const kanbanJsonPath = initDir ? joinPath(initDir, `kanban.json`) : '';
@@ -20,8 +20,7 @@ export default function Kanban() {
       const jsonFile = new FileAPI(kanbanJsonPath);
       jsonFile.readFile().then(json => {
         const kanbans: Kanbans = JSON.parse(json || "{}");
-        console.log("effect Kanbans", kanbans);
-
+        // console.log("effect Kanbans", kanbans);
         setKanbans(kanbans);
       });
     }
@@ -50,8 +49,6 @@ export default function Kanban() {
     const name = currentKanban || "default";
     return kanbans[name] ?? {columns: [], cards: []};
   }, [currentKanban, kanbans]);
-
-  console.log("KanbanData", kanbanData);
 
   return (
     <ErrorBoundary>
