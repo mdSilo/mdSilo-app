@@ -32,6 +32,10 @@ Then you can find the app in `./src-tauri/target/release` folder.
 
 ![editor](https://user-images.githubusercontent.com/1472485/222804255-f2c4a22b-d7b2-4621-b508-20e1b8545e45.png)
 
+- Kanban board: to manage the process of knowledge base growing
+
+![kanban](https://github.com/mdSilo/mdSilo-app/assets/1472485/e5293e4e-ddf7-4510-81c2-8ed358ca8a09)
+
 - Feed reader, support RSS/Atom and podcast
 
 ![reader](https://user-images.githubusercontent.com/1472485/222804686-e2ea28d8-a772-4a27-a3c0-2759d73c5fdc.png) 
