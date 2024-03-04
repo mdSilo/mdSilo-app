@@ -39,7 +39,7 @@
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
     "fuse.js": "^6.6.2",
-    "immer": "^9.0.19",
+    "immer": "^9.0.21",
     "is-hotkey": "^0.2.0",
     "mdsmirror": "0.0.31",
     "mdsmap": "0.0.3",
@@ -54,7 +54,7 @@
     "react-virtualized": "^9.22.5",
     "styled-components": "5.3.6",
     "tailwindcss": "^3.4.1",
-    "zustand": "^3.7.2"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.10",
@@ -66,7 +66,7 @@
     "@types/d3-zoom": "^3.0.8",
     "@types/is-hotkey": "^0.1.10",
     "@types/jest": "^29.1.2",
-    "@types/node": "^20.11.19",
+    "@types/node": "^20.11.24",
     "@types/react": "^17.0.43",
     "@types/react-dom": "^17.0.14",
     "@types/react-highlight-words": "^0.16.7",
@@ -83,9 +83,9 @@
     "eslint-plugin-react": "^7.27.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-testing-library": "^5.7.2",
-    "postcss": "8.4.22",
+    "postcss": "8.4.35",
     "prettier": "2.7.1",
-    "typescript": "^5.1.6"
+    "typescript": "^5.3.3"
   },
   "browserslist": {
     "production": [

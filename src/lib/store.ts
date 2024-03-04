@@ -1,7 +1,8 @@
-import create, { State, StateCreator } from 'zustand';
-import createVanilla from 'zustand/vanilla';
-import { persist, StateStorage } from 'zustand/middleware';
-import produce, { Draft } from 'immer';
+import { useStore as useZuStore } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+import { createJSONStorage, persist, StateStorage } from 'zustand/middleware';
+import type { Draft } from 'immer';
+import { immer } from 'zustand/middleware/immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
 import { ArticleType, PodType } from 'types/model';
@@ -16,12 +17,6 @@ type NoteUpdate = PickPartial<
   'title' | 'content' | 'file_path' | 'cover' | 'created_at' | 'updated_at' | 'is_daily'
 >;
 
-const immer =
-  <T extends State>(
-    config: StateCreator<T, (fn: (draft: Draft<T>) => void) => void>
-  ): StateCreator<T> =>
-  (set, get, api) => config((fn) => set(produce<T>(fn)), get, api);
-
 // storage in LOCAL_DATA_DIR
 const storage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
@@ -33,6 +28,30 @@ const storage: StateStorage = {
   removeItem: async (name: string): Promise<void> => {
     await Storage.remove(name);
   },
+};
+
+type FunctionPropertyNames<T> = {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  [K in keyof T]: T[K] extends Function ? K : never;
+}[keyof T];
+type StoreWithoutFunctions = Omit<Store, FunctionPropertyNames<Store>>;
+
+export type Setter<T> = (value: T | ((value: T) => T)) => void;
+export type CreateSetter = <K extends keyof StoreWithoutFunctions>(
+  set: (fn: (draft: Draft<Store>) => void) => void,
+  key: K
+) => (value: Store[K] | ((value: Store[K]) => Store[K])) => void;
+
+export const createSetter: CreateSetter = (set, key) => (value) => {
+  if (typeof value === 'function') {
+    set((state) => {
+      state[key] = value(state[key]);
+    });
+  } else {
+    set((state) => {
+      state[key] = value;
+    });
+  }
 };
 
 export type Notes = Record<Note['id'], Note>;
@@ -106,37 +125,13 @@ export type Store = {
   setCurrentPod: Setter<PodType | null>;
 } & UserSettings;
 
-type FunctionPropertyNames<T> = {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  [K in keyof T]: T[K] extends Function ? K : never;
-}[keyof T];
 
-type StoreWithoutFunctions = Omit<Store, FunctionPropertyNames<Store>>;
-
-export type Setter<T> = (value: T | ((value: T) => T)) => void;
-export const setter =
-  <K extends keyof StoreWithoutFunctions>(
-    set: (fn: (draft: Draft<Store>) => void) => void,
-    key: K
-  ) =>
-  (value: Store[K] | ((value: Store[K]) => Store[K])) => {
-    if (typeof value === 'function') {
-      set((state) => {
-        state[key] = value(state[key]);
-      });
-    } else {
-      set((state) => {
-        state[key] = value;
-      });
-    }
-  };
-
-export const store = createVanilla<Store>(
+export const store = createStore<Store>()(
   persist(
     immer((set) => ({
       //  Map of note id to notes
       notes: {},  // all private notes
-      setNotes: setter(set, 'notes'),
+      setNotes: createSetter(set, 'notes'),
       /**
        * update or insert the note
        * @param {Note} note the note to upsert
@@ -195,46 +190,46 @@ export const store = createVanilla<Store>(
         });
       },
       currentNoteId: '',
-      setCurrentNoteId: setter(set, 'currentNoteId'),
+      setCurrentNoteId: createSetter(set, 'currentNoteId'),
       currentNote: {},
-      setCurrentNote: setter(set, 'currentNote'),
+      setCurrentNote: createSetter(set, 'currentNote'),
       // The tree of notes visible in the sidebar
       noteTree: {},
-      setNoteTree: setter(set, 'noteTree'),
+      setNoteTree: createSetter(set, 'noteTree'),
       // daily activities 
       activities: {},
-      setActivities: setter(set, 'activities'),
+      setActivities: createSetter(set, 'activities'),
 
       sidebarTab: SidebarTab.Silo,
-      setSidebarTab: setter(set, 'sidebarTab'), 
+      setSidebarTab: createSetter(set, 'sidebarTab'), 
       // search note
       sidebarSearchQuery: '',
-      setSidebarSearchQuery: setter(set, 'sidebarSearchQuery'),
+      setSidebarSearchQuery: createSetter(set, 'sidebarSearchQuery'),
       sidebarSearchType: 'content',
-      setSidebarSearchType: setter(set, 'sidebarSearchType'),
+      setSidebarSearchType: createSetter(set, 'sidebarSearchType'),
       initDir: undefined,
-      setInitDir: setter(set, 'initDir'),
+      setInitDir: createSetter(set, 'initDir'),
       isLoading: false,
-      setIsLoading: setter(set, 'isLoading'),
+      setIsLoading: createSetter(set, 'isLoading'),
       isLoaded: false,
-      setIsLoaded: setter(set, 'isLoaded'),
+      setIsLoaded: createSetter(set, 'isLoaded'),
       currentDir: undefined,
-      setCurrentDir: setter(set, 'currentDir'),
+      setCurrentDir: createSetter(set, 'currentDir'),
       currentBoard: 'default', 
-      setCurrentBoard: setter(set, 'currentBoard'),
+      setCurrentBoard: createSetter(set, 'currentBoard'),
       currentCard: undefined,
-      setCurrentCard: setter(set, 'currentCard'),
+      setCurrentCard: createSetter(set, 'currentCard'),
       // input end
       currentArticle: null,
-      setCurrentArticle: setter(set, 'currentArticle'),
+      setCurrentArticle: createSetter(set, 'currentArticle'),
       currentPod: null,
-      setCurrentPod: setter(set, 'currentPod'),
+      setCurrentPod: createSetter(set, 'currentPod'),
       ...userSettingsSlice(set),
     })),
     {
       name: 'mdsilo-storage',
       version: 1,
-      getStorage: () => storage,
+      storage: createJSONStorage(() => storage),
       partialize: (state) => ({
         // user setting related
         userId: state.userId,
@@ -256,7 +251,10 @@ export const store = createVanilla<Store>(
   )
 );
 
-export const useStore = create<Store>(store);
+export const useStore = <T>(
+  selector: (state: Store) => T,
+  equals?: (a: T, b: T) => boolean
+) => useZuStore(store, selector, equals);
 
 
 /**
