@@ -1,5 +1,5 @@
 import { Draft } from 'immer';
-import { createSetter, Setter, Store } from './store';
+import { setter, Setter, Store } from './store';
 
 export enum Sort {
   TitleAscending = 'TITLE_ASCENDING',
@@ -68,43 +68,43 @@ const userSettingsSlice = (
   set: (fn: (draft: Draft<Store>) => void) => void
 ) => ({
   userId: '',
-  setUserId: createSetter(set, 'userId'),
+  setUserId: setter(set, 'userId'),
   darkMode: true,
-  setDarkMode: createSetter(set, 'darkMode'),
+  setDarkMode: setter(set, 'darkMode'),
   font: '',
-  setFont: createSetter(set, 'font'),
+  setFont: setter(set, 'font'),
   fontSize: 1.1,
-  setFontSize: createSetter(set, 'fontSize'),
+  setFontSize: setter(set, 'fontSize'),
   fontWt: 400,
-  setFontWt: createSetter(set, 'fontWt'),
+  setFontWt: setter(set, 'fontWt'),
   lineHeight: 1.6,
-  setLineHeight: createSetter(set, 'lineHeight'),
+  setLineHeight: setter(set, 'lineHeight'),
   isSidebarOpen: true,
-  setIsSidebarOpen: createSetter(set, 'isSidebarOpen'),
+  setIsSidebarOpen: setter(set, 'isSidebarOpen'),
   isSettingsOpen: false,
-  setIsSettingsOpen: createSetter(set, 'isSettingsOpen'),
+  setIsSettingsOpen: setter(set, 'isSettingsOpen'),
   isAboutOpen: false,
-  setIsAboutOpen: createSetter(set, 'isAboutOpen'),
+  setIsAboutOpen: setter(set, 'isAboutOpen'),
   isFindOrCreateModalOpen: false,
-  setIsFindOrCreateModalOpen: createSetter(set, 'isFindOrCreateModalOpen'),
+  setIsFindOrCreateModalOpen: setter(set, 'isFindOrCreateModalOpen'),
   isRTL: false,
-  setIsRTL: createSetter(set, 'isRTL'),
+  setIsRTL: setter(set, 'isRTL'),
   noteSort: Sort.TitleAscending,
-  setNoteSort: createSetter(set, 'noteSort'),
+  setNoteSort: setter(set, 'noteSort'),
   isCheckSpellOn: true,
-  setIsCheckSpellOn: createSetter(set, 'isCheckSpellOn'),
+  setIsCheckSpellOn: setter(set, 'isCheckSpellOn'),
   isOpenPreOn: true,
-  setIsOpenPreOn: createSetter(set, 'isOpenPreOn'),
+  setIsOpenPreOn: setter(set, 'isOpenPreOn'),
   showHistory: false,
-  setShowHistory:createSetter(set, 'showHistory'),
+  setShowHistory:setter(set, 'showHistory'),
   readMode: false,
-  setReadMode: createSetter(set, 'readMode'),
+  setReadMode: setter(set, 'readMode'),
   rawMode: 'wysiwyg',
-  setRawMode: createSetter(set, 'rawMode'),
+  setRawMode: setter(set, 'rawMode'),
   useAsset: true,
-  setUseAsset: createSetter(set, 'useAsset'),
+  setUseAsset: setter(set, 'useAsset'),
   recentDir: [],
-  setRecentDir: createSetter(set, 'recentDir'),
+  setRecentDir: setter(set, 'recentDir'),
   upsertRecentDir: (dir: string) => {
     set((state) => {
       const history = state.recentDir || [];
@@ -127,7 +127,7 @@ const userSettingsSlice = (
     });
   },
   pinnedDir: '',
-  setPinnedDir: createSetter(set, 'pinnedDir'),
+  setPinnedDir: setter(set, 'pinnedDir'),
 });
 
 export default userSettingsSlice;
