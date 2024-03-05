@@ -129,7 +129,7 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
       {...attributes}
       {...listeners}
       onClick={toggleEditMode}
-      className="p-2 h-[100px] items-center flex text-left rounded hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative"
+      className="p-2 h-[100px] min-h-[100px] items-center flex text-left rounded hover:ring-2 hover:ring-inset hover:ring-green-500 cursor-grab relative"
       onMouseEnter={() => {setMouseIsOver(true);}}
       onMouseLeave={() => {setMouseIsOver(false);}}
     >
@@ -142,18 +142,21 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
           <button
             onClick={() => {onCreateNoteClick(card.id);}}
             className="hover:bg-primary-500 rounded p-1 w-8"
+            title="Link Note"
           >
             <IconFeather />
           </button>
           <button
               onClick={onAttachClick}
               className="hover:bg-blue-500 rounded p-1 w-8"
+              title="Attach"
             >
               <IconPaperclip />
           </button>
           <button
               onClick={() => { openSetCard && openSetCard(card.id);}}
-              className="hover:bg-green-500 rounded p-1 w-8"
+              className="hover:bg-green-500 rounded p-1 w-8" 
+              title="Card Modal"
             >
               <IconStack />
           </button>
