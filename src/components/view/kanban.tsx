@@ -34,10 +34,11 @@ export default function Kanban() {
       const newData = {
         columns, 
         cards, 
-        bgColor: bgColor || oldData.bgColor,
-        bgImg: bgImg || oldData.bgImg,
+        bgColor: bgColor || oldData?.bgColor,
+        bgImg: bgImg || oldData?.bgImg,
       };
       kanbans[name] = newData;
+      console.log("to save kanba", kanbans);
       await saveFile.writeFile(JSON.stringify(kanbans));
     },
     [currentKanban, initDir, kanbans]
