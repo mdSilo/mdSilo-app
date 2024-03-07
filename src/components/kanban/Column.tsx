@@ -111,7 +111,8 @@ export default function ColumnContainer({
             </button>
             <button
               onClick={() => { openSetCol && openSetCol(column.id);}}
-              className="hover:bg-green-500 rounded p-1 w-8"
+              className="hover:bg-green-500 rounded p-1 w-8" 
+              title="Column Setting"
             >
               <IconTool />
             </button>
