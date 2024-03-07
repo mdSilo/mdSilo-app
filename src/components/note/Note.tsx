@@ -9,7 +9,7 @@ import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
 import { Mindmap } from 'components/mindmap/mindmap';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import updateCard from 'components/kanban/updateCard';
+import { updateCardLinks } from 'components/kanban/updateCard';
 import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
@@ -68,7 +68,6 @@ function Note(props: Props) {
   
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
-  const currentCard = useStore((state) => state.currentCard);
 
   // need to update timely if possible
   const protocol = navigator.platform.startsWith('Win') ? 'https://asset.localhost/' : 'asset://';
@@ -159,11 +158,9 @@ function Note(props: Props) {
         };
         upsertNote(newNote);
         upsertTree(dirPath, [newNote]);
+        await updateCardLinks(newPath, oldPath);
         // 5- nav to renamed note
         await openFilePath(newPath, true);
-        if (currentCard) {
-          await updateCard(currentCard, newPath, oldNote.title);
-        }
         dispatch({view: 'md', params: {noteId: newPath}});
         
         if (initDir) { 
@@ -171,7 +168,7 @@ function Note(props: Props) {
         }
       }
     },
-    [noteId, storeNotes, title, currentCard, mdContent, deleteNote, upsertNote, upsertTree, dispatch, initDir]
+    [noteId, storeNotes, title, mdContent, deleteNote, upsertNote, upsertTree, dispatch, initDir]
   );
 
   // Search

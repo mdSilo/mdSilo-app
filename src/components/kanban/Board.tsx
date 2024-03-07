@@ -160,7 +160,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
     const isActiveAColumn = active.data.current?.type === "Column";
     if (!isActiveAColumn) return;
 
-    console.log("DRAG END");
+    // console.log("DRAG END");
 
     setColumns((columns) => {
       const activeColumnIndex = columns.findIndex((col) => col.id === activeId);
@@ -216,7 +216,7 @@ export default function KanbanBoard({initData, onKanbanChange}: Props) {
         const activeIndex = cards.findIndex((t) => t.id === activeId);
 
         cards[activeIndex].columnId = overId;
-        console.log("DROPPING CARD OVER COLUMN", { activeIndex });
+        // console.log("DROPPING CARD OVER COLUMN", { activeIndex });
         const newCards = arrayMove(cards, activeIndex, activeIndex);
         // save to file
         onKanbanChange(columns, newCards);

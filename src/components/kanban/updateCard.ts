@@ -7,18 +7,22 @@ import { Id, KanbanData, CardItem, Kanbans } from './types';
 /**
  * Upsert the note in kanban card
  * 
- * @param noteId of current note, aka filePath
+ * @param noteId of current note, aka filePath or [title, filePath]
  * @param oldTitle of current note, to rename
  */
-const updateCard = async (id: Id, noteId: string | string[], oldTitle?: string) => {
+export const updateCardItems = async (
+  id: Id, noteId: string | string[], oldTitle?: string
+) => {
   const initDir = store.getState().initDir;
   const currentKb = store.getState().currentBoard;
   // console.log("currentKb", currentKb);
   if (!initDir || !currentKb.trim()) return;
 
   const [title, itemUri, category] = typeof noteId === "string" 
-    ? [noteId.split("/").pop() || noteId, noteId, "note"]
+    ? [noteId.split("/").pop(), noteId, "note"]
     : [...noteId, "attach"];
+  if (!title) return;
+
   const kanbanJsonPath = joinPath(initDir, `kanban.json`);
   const jsonFile = new FileAPI(kanbanJsonPath);
   const json = await jsonFile.readFile();
@@ -55,6 +59,28 @@ const updateCard = async (id: Id, noteId: string | string[], oldTitle?: string) 
   data.cards = newCards;
   kanbans[currentKb] = data;
   await jsonFile.writeFile(JSON.stringify(kanbans));
+  // reset current card
+  store.getState().setCurrentCard(undefined);
 };
 
-export default updateCard;
+
+export const updateCardLinks = async (newPath: string, oldPath: string) => {
+  const initDir = store.getState().initDir;
+  if (!initDir) return;
+
+  const oldTitle = oldPath.split("/").pop();
+  const newTitle = newPath.split("/").pop();
+  if (!oldTitle || !newTitle) return;
+
+  const kanbanJsonPath = joinPath(initDir, `kanban.json`);
+  const jsonFile = new FileAPI(kanbanJsonPath);
+  const json0 = await jsonFile.readFile();
+  // just replace
+  //const oldItem = String.raw`{\"name\":\"${oldTitle}\",\"uri\":\"${oldPath}\",\"category\":\"note\"}`;
+  //const newItem = String.raw`{\"name\":\"${newTitle}\",\"uri\":\"${newPath}\",\"category\":\"note\"}`;
+  //const json = json0.replaceAll(oldItem, newItem);
+  const json1 = json0.replaceAll(oldTitle, newTitle);
+  const json = json1.replaceAll(oldPath, newPath);
+
+  await jsonFile.writeFile(json);
+};

@@ -38,7 +38,7 @@ export default function Kanban() {
         bgImg: bgImg || oldData?.bgImg,
       };
       kanbans[name] = newData;
-      console.log("to save kanba", kanbans);
+      // console.log("to save kanba", kanbans);
       await saveFile.writeFile(JSON.stringify(kanbans));
     },
     [currentKanban, initDir, kanbans]

@@ -8,7 +8,7 @@ import { isMobile } from "utils/helper";
 import { openFileDilog } from "file/open";
 import { docExtensions } from "utils/file-extensions";
 import FileAPI from "file/files";
-import updateCardItem from './updateCard';
+import { updateCardItems } from './updateCard';
 import { Id, Card } from "./types";
 
 interface Props {
@@ -52,7 +52,8 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
         if (await fileInfo.exists()) {
           const fileMeta = await fileInfo.getMetadata();
           const fname = fileMeta.file_name;
-          updateCardItem(card.id, [fname, fileUrl]);
+          updateCardItems(card.id, [fname, fileUrl]);
+          // FIXME: update the items state 
         }
       }
     },
@@ -147,7 +148,7 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
           </button>
           <button
               onClick={onAttachClick}
-              className="hover:bg-blue-500 rounded p-1 w-8"
+              className="hover:bg-blue-500 rounded p-1 w-8 hidden"
             >
               <IconPaperclip />
           </button>

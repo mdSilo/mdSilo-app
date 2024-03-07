@@ -10,7 +10,7 @@ import { openFilePath } from 'file/open';
 import { writeFile } from 'file/write';
 import { Notes, store, useStore } from 'lib/store';
 import { defaultNote } from 'types/model';
-import updateCard from 'components/kanban/updateCard';
+import { updateCardItems } from 'components/kanban/updateCard';
 
 enum OptionType {
   NOTE,
@@ -79,7 +79,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         if (!currentDir) return;
         const notePath = await joinPaths(currentDir, [`${inputTxt}.md`]);
         if (currentCard) {
-          await updateCard(currentCard, notePath);
+          await updateCardItems(currentCard, notePath);
         }
         const note = { 
           ...defaultNote, 
@@ -99,7 +99,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       } else if (option.type === OptionType.NOTE) {
         await openFilePath(option.id, true);
         if (currentCard) {
-          await updateCard(currentCard, option.id);
+          await updateCardItems(currentCard, option.id);
         }
         dispatch({view: 'md', params: {noteId: option.id}});
       }

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import useHotkeys from 'editor/hooks/useHotkeys';
+import { store } from 'lib/store';
 import FindOrCreateInput from './NoteNewInput';
 
 type Props = {
@@ -9,11 +10,16 @@ type Props = {
 export default function FindOrCreateModal(props: Props) {
   const { setIsOpen } = props;
 
+  const handleClose = () => {
+    store.getState().setCurrentCard(undefined);
+    setIsOpen(false)
+  }
+
   const hotkeys = useMemo(
     () => [
       {
         hotkey: 'esc',
-        callback: () => setIsOpen(false),
+        callback: () => handleClose(),
       },
     ],
     [setIsOpen]
@@ -24,7 +30,7 @@ export default function FindOrCreateModal(props: Props) {
     <div className="fixed inset-0 z-20 overflow-y-auto">
       <div
         className="fixed inset-0 bg-black opacity-30"
-        onClick={() => setIsOpen(false)}
+        onClick={handleClose}
       />
       <div className="flex justify-center px-6 max-h-screen-80 my-screen-10">
         <FindOrCreateInput
