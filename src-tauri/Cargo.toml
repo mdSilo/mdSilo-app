@@ -29,7 +29,7 @@ crossbeam = "0.8.4"
 ignore = "0.4.20"
 indextree = "4.6.0"
 ## rss reader
-reqwest = { version = "0.11.24", features = ["json", "socks"] }
+reqwest = { version = "0.12.2", features = ["json", "socks"] }
 rss = { version = "2.0.7", features = ["serde"] }
 atom_syndication = "0.12.2"
 bytes = "1.5.0"
