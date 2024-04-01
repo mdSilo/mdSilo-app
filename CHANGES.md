@@ -1,8 +1,12 @@
 # Changelog 
 
-## app-v0.5.9 
+## app-v0.5.10 
 
 2024-XX-XX
+
+## app-v0.5.9 
+
+2024-03-06
 
 - Organize notes using Kanban
 

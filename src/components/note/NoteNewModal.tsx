@@ -12,7 +12,7 @@ export default function FindOrCreateModal(props: Props) {
 
   const handleClose = useCallback(() => {
     store.getState().setCurrentCard(undefined);
-    setIsOpen(false)
+    setIsOpen(false);
   }, [setIsOpen])
 
   const hotkeys = useMemo(

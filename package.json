@@ -1,6 +1,6 @@
 {
   "name": "mdsilo-app",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "homepage": "https://mdsilo.com",
@@ -53,7 +53,7 @@
     "react-virtual": "^2.10.4",
     "react-virtualized": "^9.22.5",
     "styled-components": "5.3.6",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.3",
     "zustand": "^3.7.2"
   },
   "devDependencies": {
