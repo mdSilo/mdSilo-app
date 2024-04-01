@@ -32,7 +32,7 @@ indextree = "4.6.0"
 reqwest = { version = "0.11.24", features = ["json", "socks"] }
 rss = { version = "2.0.7", features = ["serde"] }
 atom_syndication = "0.12.2"
-bytes = "1.5.0"
+bytes = "1.6.0"
 diesel = { version = "2.1.4", features = ["sqlite", "chrono"] }
 diesel_migrations = { version = "2.1.0", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.25.2", features = ["bundled"] }
