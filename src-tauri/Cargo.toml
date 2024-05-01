@@ -22,7 +22,7 @@ trash = "4.1.0"
 notify = "6.1.1"
 open = "5.1.1"
 bincode = "1.3.3"
-chrono = "0.4.34"
+chrono = "0.4.38"
 whatlang = "0.16.4"
 # walk dir
 crossbeam = "0.8.4"
