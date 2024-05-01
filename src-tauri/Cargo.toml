@@ -27,7 +27,7 @@ whatlang = "0.16.4"
 # walk dir
 crossbeam = "0.8.4"
 ignore = "0.4.20"
-indextree = "4.6.0"
+indextree = "4.6.1"
 ## rss reader
 reqwest = { version = "0.12.2", features = ["json", "socks"] }
 rss = { version = "2.0.7", features = ["serde"] }
