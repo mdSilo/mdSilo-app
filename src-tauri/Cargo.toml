@@ -20,7 +20,7 @@ serde = { version = "1.0.201", features = ["derive"] }
 tauri = { version = "1.6.5", features = ["clipboard-all", "dialog-all", "protocol-all", "shell-all", "system-tray", "updater", "window-all"] }
 trash = "4.1.1"
 notify = "6.1.1"
-open = "5.1.2"
+open = "5.1.3"
 bincode = "1.3.3"
 chrono = "0.4.38"
 whatlang = "0.16.4"
