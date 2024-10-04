@@ -1,6 +1,6 @@
 [package]
 name = "mdsilo"
-version = "0.5.10"
+version = "0.6.0"
 description = "mdSilo Desktop"
 authors = ["dloh"]
 license = "AGPL-3.0-or-later"
@@ -9,15 +9,19 @@ default-run = "mdsilo"
 edition = "2021"
 rust-version = "1.78.0"
 
+[lib]
+name = "mdsilo_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5.3", features = [] }
+tauri-build = { version = "2.0.1", features = [] }
 
 [dependencies]
-serde_json = "1.0.117"
-serde = { version = "1.0.203", features = ["derive"] }
-tauri = { version = "1.7.1", features = ["clipboard-all", "dialog-all", "protocol-all", "shell-all", "system-tray", "updater", "window-all"] }
+serde_json = "1.0.128"
+serde = { version = "1.0.210", features = ["derive"] }
+tauri = { version = "2.0.1", features = [] }
 trash = "5.0.0"
 notify = "6.1.1"
 open = "5.3.0"
@@ -26,14 +30,14 @@ chrono = "0.4.38"
 whatlang = "0.16.4"
 # walk dir
 crossbeam = "0.8.4"
-ignore = "0.4.22"
+ignore = "0.4.23"
 indextree = "4.6.1"
 ## rss reader
-reqwest = { version = "0.12.5", features = ["json", "socks"] }
-rss = { version = "2.0.8", features = ["serde"] }
-atom_syndication = "0.12.3"
+reqwest = { version = "0.12.8", features = ["json", "socks"] }
+rss = { version = "2.0.9", features = ["serde"] }
+atom_syndication = "0.12.4"
 bytes = "1.6.0"
-diesel = { version = "2.2.2", features = ["sqlite", "chrono"] }
+diesel = { version = "2.2.4", features = ["sqlite", "chrono"] }
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.29.0", features = ["bundled"] }
 
