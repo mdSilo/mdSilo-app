@@ -53,7 +53,7 @@
     "react-virtual": "^2.10.4",
     "react-virtualized": "^9.22.5",
     "styled-components": "5.3.6",
-    "tailwindcss": "^3.4.3",
+    "tailwindcss": "^3.4.15",
     "zustand": "^3.7.2"
   },
   "devDependencies": {
