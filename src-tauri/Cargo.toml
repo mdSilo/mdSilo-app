@@ -31,7 +31,7 @@ indextree = "4.7.3"
 ## rss reader
 reqwest = { version = "0.12.9", features = ["json", "socks"] }
 rss = { version = "2.0.9", features = ["serde"] }
-atom_syndication = "0.12.4"
+atom_syndication = "0.12.5"
 bytes = "1.8.0"
 diesel = { version = "2.2.4", features = ["sqlite", "chrono"] }
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
