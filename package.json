@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "1.6.3",
-    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^12.1.4",
     "@types/d3-drag": "^3.0.7",
     "@types/d3-force": "^3.0.10",
