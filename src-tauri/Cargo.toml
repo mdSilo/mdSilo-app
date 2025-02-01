@@ -38,7 +38,7 @@ diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.30.1", features = ["bundled"] }
 
 [dev-dependencies]
-tokio = { version = "1.42.0", features = ["full"] }
+tokio = { version = "1.43.0", features = ["full"] }
 
 [features]
 # by default Tauri runs in production mode
