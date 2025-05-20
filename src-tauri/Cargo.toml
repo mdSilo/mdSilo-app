@@ -7,38 +7,38 @@ license = "AGPL-3.0-or-later"
 repository = ""
 default-run = "mdsilo"
 edition = "2021"
-rust-version = "1.78.0"
+rust-version = "1.85.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5.5", features = [] }
+tauri-build = { version = "1.5.6", features = [] }
 
 [dependencies]
-serde_json = "1"
-serde = { version = "1", features = ["derive"] }
-tauri = { version = "1.8.1", features = ["clipboard-all", "dialog-all", "protocol-all", "shell-all", "system-tray", "updater", "window-all"] }
-trash = "5.2.1"
+serde_json = "1.0.140"
+serde = { version = "1.0.219", features = ["derive"] }
+tauri = { version = "1.8.3", features = ["clipboard-all", "dialog-all", "protocol-all", "shell-all", "system-tray", "updater", "window-all"] }
+trash = "5.2.2"
 notify = "6.1.1"
-open = "5.3.1"
-bincode = "1.3.3"
-chrono = "0.4.39"
+open = "5.3.2"
+bincode = { version = "2.0", features = ["serde"] }
+chrono = "0.4.41"
 whatlang = "0.16.4"
 # walk dir
 crossbeam = "0.8.4"
 ignore = "0.4.23"
-indextree = "4.7.3"
+indextree = "4.7.4"
 ## rss reader
-reqwest = { version = "0.12", features = ["json", "socks"] }
-rss = { version = "2.0.11", features = ["serde"] }
-atom_syndication = "0.12.6"
-bytes = "1.9.0"
-diesel = { version = "2.2.6", features = ["sqlite", "chrono"] }
+reqwest = { version = "0.12.15", features = ["json", "socks"] }
+rss = { version = "2.0.12", features = ["serde"] }
+atom_syndication = "0.12.7"
+bytes = "1.10.1"
+diesel = { version = "2.2.10", features = ["sqlite", "chrono"] }
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.30.1", features = ["bundled"] }
 
 [dev-dependencies]
-tokio = { version = "1.42.0", features = ["full"] }
+tokio = { version = "1.45.0", features = ["full"] }
 
 [features]
 # by default Tauri runs in production mode

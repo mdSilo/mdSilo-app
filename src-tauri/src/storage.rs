@@ -63,7 +63,7 @@ pub fn set_data(key: String, value: Value) -> bool {
       return false;
     }
   };
-  let bin_value = match bincode::serialize(&vec_value) {
+  let bin_value = match bincode::serde::encode_to_vec(&vec_value, bincode::config::legacy()) {
     Ok(val) => val,
     Err(e) => {
       do_log(
@@ -90,8 +90,8 @@ pub fn get_data(key: String) -> Result<StorageData, String> {
   let mut status = true;
   let data: String;
   match fs::read(storage_dir.join(key)) {
-    Ok(result) => match bincode::deserialize(&result) {
-      Ok(deser_bincode) => data = deser_bincode,
+    Ok(result) => match bincode::serde::decode_from_slice(&result, bincode::config::legacy()) {
+      Ok(deser_bincode) => data = deser_bincode.0,
       Err(_e) => data = str::from_utf8(&result).unwrap_or("").to_string(),
     },
     Err(_e) => {
