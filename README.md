@@ -124,9 +124,9 @@ Then you can find the app in `./src-tauri/target/release` folder.
 - Cross-Platform 
   - [x] Windows, macOS, Linux. 
   - [X] Web: https://mdsilo.com/app/ 
-  - [ ] Mobile: iOS/iPadOS and Android(soon...)
+  - [ ] Mobile: iOS/iPadOS and Android
 
 
 ## Any questions, feedback or suggestions?
 
-You can follow us on [Twitter](https://twitter.com/mdsiloapp) or go to our [Discord](https://discord.gg/EXYSEHRTFt). We are waiting there for you.
+You can follow us on [Bluesky](https://bsky.app/profile/mdsilo.com) or go to our [Discord](https://discord.gg/EXYSEHRTFt). We are waiting there for you.
