@@ -193,7 +193,7 @@ const Playitem = (
 
 const PlayItem = memo(forwardRef(Playitem));
 
-const computePlaylist = async () => {
+export const computePlaylist = async () => {
   const articles = await dataAgent.getArticleList(null, null, null);
   const res: PodTreeItem[] = articles
     .filter(a => !!(a.audio_url.trim()))
