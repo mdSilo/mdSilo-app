@@ -66,7 +66,7 @@
     "@types/d3-zoom": "^3.0.8",
     "@types/is-hotkey": "^0.1.10",
     "@types/jest": "^29.1.2",
-    "@types/node": "^20.11.19",
+    "@types/node": "^22.13.0",
     "@types/react": "^17.0.43",
     "@types/react-dom": "^17.0.14",
     "@types/react-highlight-words": "^0.16.7",
