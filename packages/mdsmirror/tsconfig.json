@@ -21,6 +21,7 @@
     "removeComments": true,
     "declarationMap": true,
     "declaration": true,
+    "skipLibCheck": true,
   },
   "include": [
     "src/**/*"

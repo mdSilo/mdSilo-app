@@ -133,7 +133,7 @@ export function getCellAttrs(dom: HTMLElement | string): Attrs {
         : dom.style.textAlign === "right"
         ? "right"
         : null,
-  // prettier-ignore
+    // prettier-ignore
   } satisfies CellAttrs;
 }
 
