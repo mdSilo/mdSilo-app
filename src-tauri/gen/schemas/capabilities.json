@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"Default desktop permissions for mdSilo","local":true,"windows":["main","splashscreen"],"permissions":["core:default","dialog:default","updater:default"]}}
+{"default":{"identifier":"default","description":"Default desktop permissions for mdSilo","local":true,"windows":["main","splashscreen"],"permissions":["core:default","core:window:allow-set-title","dialog:default","updater:default"]}}

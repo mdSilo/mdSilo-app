@@ -21,28 +21,11 @@ function transformCallback(callback = () => {}, once = false) {
 }
 
 async function invoke(cmd, args) {
-  return new Promise((resolve, reject) => {
-    if (!window.__TAURI_POST_MESSAGE__) {
-      reject('__TAURI_POST_MESSAGE__ does not exist!');
-    }
-
-    const callback = transformCallback((e) => {
-      resolve(e);
-      Reflect.deleteProperty(window, `_${error}`);
-    }, true)
-
-    const error = transformCallback((e) => {
-      reject(e);
-      Reflect.deleteProperty(window, `_${callback}`);
-    }, true)
-
-    window.__TAURI_POST_MESSAGE__({
-      cmd,
-      callback,
-      error,
-      ...args
-    });
-  });
+  const tauriInvoke = window.__TAURI__?.core?.invoke;
+  if (typeof tauriInvoke !== 'function') {
+    throw new Error('Tauri invoke is unavailable');
+  }
+  return tauriInvoke(cmd, args);
 }
 
 async function message(message) {

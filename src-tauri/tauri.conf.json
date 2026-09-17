@@ -3,7 +3,7 @@
   "version": "0.5.10",
   "identifier": "mdsilo",
   "build": {
-    "frontendDist": "../build",
+    "frontendDist": "../dist",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "yarn start",
     "beforeBuildCommand": "yarn build"

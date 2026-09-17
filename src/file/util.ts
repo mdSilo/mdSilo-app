@@ -14,7 +14,9 @@ export const isTauri = Boolean(
 export const setWindowTitle = (title: string, inLoading?: boolean): void => {
 	if (isTauri) {
     const isLoading = inLoading ?? store.getState().isLoading;
-    getCurrentWindow().setTitle(`${title} ${isLoading ? ' --- Loading ---' : ''}`);
+    void getCurrentWindow()
+      .setTitle(`${title} ${isLoading ? ' --- Loading ---' : ''}`)
+      .catch(() => undefined);
 	}
 };
 

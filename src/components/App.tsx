@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useEffect } from 'react';
-import 'styles/styles.css';
+import '../styles/styles.css';
 import 'tippy.js/dist/tippy.css';
 import { ProvideCurrentView } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
@@ -62,12 +62,7 @@ const App = () => {
   useHotkeys(hotkeys);
 
   useEffect(() => {
-    const closeSplash = () => { invoke('close_splashscreen'); };
-    document.addEventListener('DOMContentLoaded', closeSplash);
-  
-    return () => {
-      document.removeEventListener('DOMContentLoaded', closeSplash, true);
-    };
+    void invoke('close_splashscreen');
   }, []);
 
   const appContainerClassName = `h-screen flex flex-col ${darkMode ? 'dark' : ''}`;

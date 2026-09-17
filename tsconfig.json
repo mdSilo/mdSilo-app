@@ -14,9 +14,10 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    "baseUrl": "src",
     "paths": {
-      "*": ["./src/*"],
-      "@lezer/highlight": ["./node_modules/@lezer/highlight/dist/highlight.d.ts"]
+      "*": ["*"],
+      "@lezer/highlight": ["../node_modules/@lezer/highlight/dist/highlight.d.ts"]
     },
     "resolveJsonModule": true,
     "isolatedModules": true,

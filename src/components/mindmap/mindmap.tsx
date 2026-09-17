@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { parse, transform, markmap } from 'mdsmap';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { Transformer } from 'markmap-lib';
+import { Markmap } from 'markmap-view';
 import { writeFile } from 'file/write';
 import { normalizeSlash } from 'file/util';
 import { saveDilog } from 'file/open';
@@ -15,48 +16,49 @@ type Props = {
 export function Mindmap(props: Props) {
   const { title, mdValue, initDir, className = '' } = props;
 
-  const [svgElement, setSvgElement] = useState<SVGAElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const markmapRef = useRef<Markmap | null>(null);
 
   const renderSVG = useCallback(() => {
     if (!svgRef.current || !mdValue.trim()) {
       return;
     }
 
-    const data = transform(parse(mdValue, {}), title);
-    const svg: SVGAElement = markmap(svgRef.current, data, {
-      preset: 'colorful', // or default
-      linkShape: 'diagonal' // or bracket
-    });
-    setSvgElement(svg);
+    const transformer = new Transformer();
+    const { root } = transformer.transform(mdValue);
+    markmapRef.current?.destroy();
+    markmapRef.current = Markmap.create(svgRef.current, {
+      id: title,
+      embedGlobalCSS: true,
+    }, root);
   }, [mdValue, title]);
 
   useEffect(() => {
     if (!svgRef.current) { return; }
 
     renderSVG();
+    return () => {
+      markmapRef.current?.destroy();
+      markmapRef.current = null;
+    };
   }, [renderSVG]);
 
   const saveSVG = useCallback(async () => {
+    const svgElement = svgRef.current;
     if (!svgElement || !initDir) return;
     const w = svgElement.clientWidth;
     const h = svgElement.clientHeight;
     if (w && h) {
       svgElement.setAttribute("viewBox", `0 0 ${w} ${h}`);
     }
-    svgElement.setAttribute("style", "background-color:white");
-    // console.log("w/h", w, h, svgElement);
-    const styleNode = document.createElement('style');
-    styleNode.setAttribute('type', 'text/css');
-    styleNode.innerHTML = `svg#mindmap {width: 100%; height: 100%;} .markmap-node-circle {fill: #fff; stroke-width: 1.5px;} .markmap-node-text {fill: #000; font: 10px sans-serif;} .markmap-link {fill: none;}`;
-    svgElement.appendChild(styleNode);
+    svgElement.setAttribute('style', 'background-color:white');
     // prepare to save
     const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-mindmap.svg`;
     const dir = await saveDilog(fname);
     const defaultDir = `${initDir}/mindmap/${fname}`;
     const saveDir = normalizeSlash(dir || defaultDir); 
     await writeFile(saveDir, svgElement.outerHTML);
-  }, [svgElement, initDir, title]);
+  }, [initDir, title]);
 
   return (
     <div className={`w-full h-full bg-slate-100 ${className}`}>

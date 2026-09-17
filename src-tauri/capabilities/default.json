@@ -5,6 +5,7 @@
   "windows": ["main", "splashscreen"],
   "permissions": [
     "core:default",
+    "core:window:allow-set-title",
     "dialog:default",
     "updater:default"
   ]

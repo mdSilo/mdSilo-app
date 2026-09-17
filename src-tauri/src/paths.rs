@@ -89,6 +89,7 @@ fn is_safe_to_strip_prefix(path: &Path) -> bool {
   true
 }
 
+#[allow(dead_code)]
 pub trait PathBufExt {
   fn normalize_slash(&self) -> Option<String>;
   fn from_slash<S: AsRef<str>>(s: S) -> Self;
