@@ -7,7 +7,8 @@ import Extension from "../core/Extension";
 
 const MAX_MATCH = 500;
 const OPEN_REGEX = /^[\/\\](\w+)?$/;
-const CLOSE_REGEX = /(^(?![\/\\](\w+)?)(.*)$|^[\/\\](([\w\W]+)\s.*|\s)$|^[\/\\]((\W)+)$)/;
+const CLOSE_REGEX =
+  /(^(?![\/\\](\w+)?)(.*)$|^[\/\\](([\w\W]+)\s.*|\s)$|^[\/\\]((\W)+)$)/;
 
 // based on the input rules code in Prosemirror, here:
 // https://github.com/ProseMirror/prosemirror-inputrules/blob/master/src/inputrules.js
@@ -109,8 +110,10 @@ export default class SlashMenuTrigger extends Extension {
 
             const decorations: Decoration[] = [];
             const isEmpty = parent && parent.node.content.size === 0;
-            const isSlash = parent && 
-              (parent.node.textContent === "/" || parent.node.textContent === "\\");
+            const isSlash =
+              parent &&
+              (parent.node.textContent === "/" ||
+                parent.node.textContent === "\\");
             const isTopLevel = state.selection.$from.depth === 1;
 
             if (isTopLevel) {

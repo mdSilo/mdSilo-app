@@ -28,9 +28,9 @@ const defaultRules = [
   noticesRule,
   mathRule,
   mathTexRule(undefined),
-  wikiLinkRule, 
+  wikiLinkRule,
   attachmentRule,
-  itemcardRule, 
+  itemcardRule,
   itemLinkRule,
 ];
 

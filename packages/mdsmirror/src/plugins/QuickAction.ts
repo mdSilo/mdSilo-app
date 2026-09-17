@@ -87,7 +87,7 @@ export function getCurrentTimeAsString() {
  */
 export function getCurrentDateTimeAsString() {
   return new Date().toLocaleString(undefined, {
-    weekday: 'long',
+    weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",

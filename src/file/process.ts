@@ -47,7 +47,11 @@ export function processFiles(fileList: FileMetaData[]) {
     const newProcessed = {...defaultNote, ...newNoteObj};
 
     // push to Array
-    checkMd ? newNotesData.push(newProcessed) : nonNotesData.push(newProcessed);
+    if (checkMd) {
+      newNotesData.push(newProcessed);
+    } else {
+      nonNotesData.push(newProcessed);
+    }
   }
 
   return [newNotesData, nonNotesData];

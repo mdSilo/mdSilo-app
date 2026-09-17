@@ -2,7 +2,7 @@ import { NodeSelection } from "prosemirror-state";
 import { CellSelection } from "prosemirror-tables";
 import { EditorView } from "prosemirror-view";
 import * as React from "react";
-import { createPortal } from 'react-dom';
+import { createPortal } from "react-dom";
 import styled from "styled-components";
 import useComponentSize from "./hooks/useComponentSize";
 import useMediaQuery from "./hooks/useMediaQuery";
@@ -183,21 +183,19 @@ const FloatingToolbar = React.forwardRef(
       };
     }, [props.active]);
 
-    return (
-      createPortal(
-        <Wrapper
-          active={props.active && position.visible ? 1 : 0}
-          ref={menuRef}
-          offset={position.offset}
-          style={{
-            top: `${position.top}px`,
-            left: `${position.left}px`,
-          }}
-        >
-          {props.children}
-        </Wrapper>,
-        document.body  // FIXME? https://github.com/tajo/react-portal/blob/master/src/Portal.js
-      )
+    return createPortal(
+      <Wrapper
+        active={props.active && position.visible ? 1 : 0}
+        ref={menuRef}
+        offset={position.offset}
+        style={{
+          top: `${position.top}px`,
+          left: `${position.left}px`,
+        }}
+      >
+        {props.children}
+      </Wrapper>,
+      document.body // FIXME? https://github.com/tajo/react-portal/blob/master/src/Portal.js
     );
   }
 );

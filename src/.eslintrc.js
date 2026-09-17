@@ -25,7 +25,12 @@ module.exports = {
   plugins: ['react', '@typescript-eslint', 'import'],
   rules: {
     'react/react-in-jsx-scope': 'off',
+    'react-hooks/immutability': 'off',
+    'react-hooks/refs': 'off',
+    'react-hooks/set-state-in-effect': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/ban-types': 'off',
     'import/no-named-as-default': 'off',
     'import/order': [
       'error',

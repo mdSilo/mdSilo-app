@@ -1,6 +1,11 @@
 import { GapCursor } from "prosemirror-gapcursor";
 import { Node, NodeType, Slice } from "prosemirror-model";
-import { Command, EditorState, TextSelection, Transaction } from "prosemirror-state";
+import {
+  Command,
+  EditorState,
+  TextSelection,
+  Transaction,
+} from "prosemirror-state";
 import {
   CellSelection,
   addRow,
@@ -17,7 +22,10 @@ import {
 } from "prosemirror-tables";
 import { sanitizeValue, toPlainText } from "../queries/textBetween";
 import {
-  getCellsInColumn, getCellsInRow, isHeaderEnabled, isTableSelected
+  getCellsInColumn,
+  getCellsInRow,
+  isHeaderEnabled,
+  isTableSelected,
 } from "../queries/table";
 import { chainTransactions, collapseSelection } from "../helper";
 import { TableLayout } from "../rules/tables";

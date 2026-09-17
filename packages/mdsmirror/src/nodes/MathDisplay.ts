@@ -40,7 +40,6 @@ export default class MathDisplay extends Node {
     return [makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, type)];
   }
 
-
   toMarkdown(state: MarkdownSerializerState, node: ProsemirrorNode) {
     state.write("$$\n");
     state.text(node.textContent, false);

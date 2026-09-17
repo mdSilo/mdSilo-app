@@ -3,7 +3,10 @@ import { AiOutlineMergeCells, AiOutlineSplitCells } from "react-icons/ai";
 import { FaTableColumns } from "react-icons/fa6";
 import { EditorState } from "prosemirror-state";
 import { CellSelection } from "prosemirror-tables";
-import { isMergedCellSelection, isMultipleCellSelection } from "../../core/queries/table";
+import {
+  isMergedCellSelection,
+  isMultipleCellSelection,
+} from "../../core/queries/table";
 import { MenuItem } from "../types";
 import { baseDictionary } from "../../dictionary";
 
@@ -16,7 +19,7 @@ export default function tableRowMenuItems(
   if (!(selection instanceof CellSelection)) {
     return [];
   }
-  
+
   return [
     {
       name: "toggleHeaderRow",

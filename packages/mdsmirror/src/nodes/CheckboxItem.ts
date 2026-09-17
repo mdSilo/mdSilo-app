@@ -1,6 +1,10 @@
 import { Token } from "markdown-it";
 import { NodeSpec, Node as ProsemirrorNode, NodeType } from "prosemirror-model";
-import { splitListItem, sinkListItem, liftListItem } from "prosemirror-schema-list";
+import {
+  splitListItem,
+  sinkListItem,
+  liftListItem,
+} from "prosemirror-schema-list";
 import { Command } from "prosemirror-state";
 import { MarkdownSerializerState } from "../core/mdSerializer";
 import checkboxRule from "../core/rules/checkboxes";
@@ -37,7 +41,9 @@ export default class CheckboxItem extends Node {
         input.setAttribute("role", "checkbox");
         input.setAttribute(
           "aria-label",
-          node.attrs.checked ? "Mark task as incomplete" : "Mark task as complete"
+          node.attrs.checked
+            ? "Mark task as incomplete"
+            : "Mark task as complete"
         );
         input.addEventListener("change", this.handleChange);
 

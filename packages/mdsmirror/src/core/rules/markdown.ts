@@ -15,7 +15,7 @@ export default function rules({
   });
   // linkify rule `[[` or others not work on Tauri webview
   // try: https://github.com/markdown-it/markdown-it/issues/612#issuecomment-806288841
-  markdownIt.enable(['linkify']);
-  plugins.forEach(plugin => markdownIt.use(plugin));
+  markdownIt.enable(["linkify"]);
+  plugins.forEach((plugin) => markdownIt.use(plugin));
   return markdownIt;
 }

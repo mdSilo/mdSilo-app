@@ -60,7 +60,7 @@ export const baseDictionary = {
   quote: "Quote",
   removeLink: "Remove link",
   searchOrPasteLink: "Search or paste a link…",
-  searchText: 'Search Text',
+  searchText: "Search Text",
   strikethrough: "Strikethrough",
   strong: "Bold",
   table: "Table",

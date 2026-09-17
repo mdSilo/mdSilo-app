@@ -2,7 +2,7 @@ import { capitalize } from "lodash";
 import { findDomRefAtPos, findParentNode } from "prosemirror-utils";
 import { EditorView } from "prosemirror-view";
 import * as React from "react";
-import { createPortal } from 'react-dom';
+import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { CommandFactory } from "../core/Extension";
 import getDataTransferFiles from "../core/queries/getDataTransferFiles";
@@ -62,7 +62,10 @@ type State = {
   selectedindex: number;
 };
 
-class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T>, State> {
+class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<
+  Props<T>,
+  State
+> {
   menuRef = React.createRef<HTMLDivElement>();
   inputRef = React.createRef<HTMLInputElement>();
 
@@ -269,9 +272,9 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
     if (this.props.attachFile) {
       const { view, attachFile } = this.props;
       const { state } = view;
-      this.clearSearch();  
+      this.clearSearch();
       attachFiles(view, state.selection.from, {
-        accept, 
+        accept,
         attachFile,
         handleSrc: this.props.handleSrc,
         isAttachment: accept === "*",
@@ -299,7 +302,7 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
       onShowToast,
     } = this.props;
     const { state } = view;
-    const parent = findParentNode(node => !!node)(state.selection as any);
+    const parent = findParentNode((node) => !!node)(state.selection as any);
 
     this.clearSearch();
 
@@ -465,11 +468,11 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
 
       // If no upload callback has been passed, filter the image/attachment block out
       if (
-        !(uploadFile || attachFile) && 
+        !(uploadFile || attachFile) &&
         (item.name === "image" || item.name === "attachment")
       ) {
         return false;
-      } 
+      }
 
       // some items (defaultHidden) are not visible until a search query exists
       if (!search) return !item.defaultHidden;
@@ -492,82 +495,81 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
     const items = this.filtered;
     const { insertEmbed, isabove, ...positioning } = this.state;
 
-    return (
-      createPortal(
-        <Wrapper
-          id={this.props.id || "slash-menu-container"}
-          active={isActive ? 1 : 0}
-          isabove={isabove ? 1 : 0}
-          ref={this.menuRef}
-          {...positioning}
-        >
-          {insertEmbed ? (
-            <LinkInputWrapper>
-              <LinkInput
-                type="text"
-                placeholder={insertEmbed.title
+    return createPortal(
+      <Wrapper
+        id={this.props.id || "slash-menu-container"}
+        active={isActive ? 1 : 0}
+        isabove={isabove ? 1 : 0}
+        ref={this.menuRef}
+        {...positioning}
+      >
+        {insertEmbed ? (
+          <LinkInputWrapper>
+            <LinkInput
+              type="text"
+              placeholder={
+                insertEmbed.title
                   ? dictionary.pasteLinkWithTitle(insertEmbed.title)
                   : dictionary.pasteLink
-                }
-                onKeyDown={this.handleLinkInputKeydown}
-                onPaste={this.handleLinkInputPaste}
-                autoFocus
-              />
-            </LinkInputWrapper>
-          ) : (
-            <List>
-              {items.map((item, index) => {
-                if (item.name === "separator") {
-                  return (
-                    <ListItem key={index}>
-                      <hr />
-                    </ListItem>
-                  );
-                }
-
-                if (!item.title) {
-                  return null;
-                }
-
-                const handlePointer = () => {
-                  if (this.state.selectedindex !== index) {
-                    this.setState({ selectedindex: index });
-                  }
-                };
-
+              }
+              onKeyDown={this.handleLinkInputKeydown}
+              onPaste={this.handleLinkInputPaste}
+              autoFocus
+            />
+          </LinkInputWrapper>
+        ) : (
+          <List>
+            {items.map((item, index) => {
+              if (item.name === "separator") {
                 return (
-                  <ListItem
-                    key={index}
-                    onPointerMove={handlePointer}
-                    onPointerDown={handlePointer}
-                  >
-                    {this.props.renderMenuItem(item as any, index, {
-                      selected: index === this.state.selectedindex,
-                      onClick: () => this.insertItem(item),
-                    })}
+                  <ListItem key={index}>
+                    <hr />
                   </ListItem>
                 );
-              })}
-              {items.length === 0 && (
-                <ListItem>
-                  <Empty>{dictionary.noResults}</Empty>
+              }
+
+              if (!item.title) {
+                return null;
+              }
+
+              const handlePointer = () => {
+                if (this.state.selectedindex !== index) {
+                  this.setState({ selectedindex: index });
+                }
+              };
+
+              return (
+                <ListItem
+                  key={index}
+                  onPointerMove={handlePointer}
+                  onPointerDown={handlePointer}
+                >
+                  {this.props.renderMenuItem(item as any, index, {
+                    selected: index === this.state.selectedindex,
+                    onClick: () => this.insertItem(item),
+                  })}
                 </ListItem>
-              )}
-            </List>
-          )}
-          {uploadFile && (
-            <VisuallyHidden>
-              <input
-                type="file"
-                ref={this.inputRef}
-                onChange={this.handleFilePicked}
-                accept="*"
-              />
-            </VisuallyHidden>
-          )}
-        </Wrapper>,
-        document.body  // FIXME? https://github.com/tajo/react-portal/blob/master/src/Portal.js
-      )
+              );
+            })}
+            {items.length === 0 && (
+              <ListItem>
+                <Empty>{dictionary.noResults}</Empty>
+              </ListItem>
+            )}
+          </List>
+        )}
+        {uploadFile && (
+          <VisuallyHidden>
+            <input
+              type="file"
+              ref={this.inputRef}
+              onChange={this.handleFilePicked}
+              accept="*"
+            />
+          </VisuallyHidden>
+        )}
+      </Wrapper>,
+      document.body // FIXME? https://github.com/tajo/react-portal/blob/master/src/Portal.js
     );
   }
 }

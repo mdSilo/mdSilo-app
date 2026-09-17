@@ -15,7 +15,7 @@ export type Attach = {
   name: string;
   size: number;
   src: string;
-}
+};
 
 const attachFiles = function (
   view: EditorView,
@@ -34,18 +34,14 @@ const attachFiles = function (
     // the user might have attached multiple files at once, we need to loop
     for (const file of attachs) {
       const isImage = file.type.startsWith("image/");
-      const src = file.src; 
+      const src = file.src;
       const { tr } = view.state;
 
       // insert new line below before attach
       // console.log("pos", view.state.selection.from, view.state.selection.to);
-      const transaction0 = view.state.tr.split(
-        view.state.selection.from
-      );
+      const transaction0 = view.state.tr.split(view.state.selection.from);
       view.dispatch(transaction0);
-      const transaction1 = view.state.tr.split(
-        view.state.selection.to
-      );
+      const transaction1 = view.state.tr.split(view.state.selection.to);
       view.dispatch(transaction1);
 
       const $pos = tr.doc.resolve(pos);
@@ -53,7 +49,7 @@ const attachFiles = function (
       const from = $pos.pos;
       const to = $pos.pos;
       // console.log("after node size", $pos.nodeAfter, $pos.nodeAfter?.nodeSize);
-      
+
       if (isImage) {
         const newImg = new Image();
         const imgSrc = (handleSrc && handleSrc(src)) || src;
@@ -78,7 +74,9 @@ const attachFiles = function (
           }
         };
 
-        newImg.onerror = (error) => { throw error; };
+        newImg.onerror = (error) => {
+          throw error;
+        };
       } else {
         view.dispatch(
           view.state.tr.replaceWith(
@@ -104,7 +102,7 @@ const attachFiles = function (
         }
       }
     }
-  })
+  });
 };
 
 export default attachFiles;

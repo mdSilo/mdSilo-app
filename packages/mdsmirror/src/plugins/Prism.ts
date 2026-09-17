@@ -51,12 +51,14 @@ type DecorProps = {
   name: string;
   /** Whether to include line numbers */
   lineNumbers?: boolean;
-}
+};
 
-function getDecorations({doc, name, lineNumbers}: DecorProps) {
+function getDecorations({ doc, name, lineNumbers }: DecorProps) {
   const decorations: Decoration[] = [];
-  const blocks: { node: Node; pos: number }[] = 
-    findBlockNodes(doc, true).filter((item) => item.node.type.name === name);
+  const blocks: { node: Node; pos: number }[] = findBlockNodes(
+    doc,
+    true
+  ).filter((item) => item.node.type.name === name);
 
   function parseNodes(
     nodes: refractor.RefractorNode[],
@@ -157,7 +159,13 @@ function getDecorations({doc, name, lineNumbers}: DecorProps) {
   return DecorationSet.create(doc, decorations);
 }
 
-export default function Prism({name, lineNumbers}: {name: string; lineNumbers?: boolean;}) {
+export default function Prism({
+  name,
+  lineNumbers,
+}: {
+  name: string;
+  lineNumbers?: boolean;
+}) {
   let highlighted = false;
 
   return new Plugin({

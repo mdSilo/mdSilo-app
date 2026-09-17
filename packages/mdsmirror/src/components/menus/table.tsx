@@ -18,9 +18,7 @@ export default function tableMenuItems(
   return [
     {
       name: "setTableAttr",
-      tooltip: isFullWidth
-        ? dictionary.defaultWidth
-        : dictionary.fullWidth,
+      tooltip: isFullWidth ? dictionary.defaultWidth : dictionary.fullWidth,
       icon: AiOutlineColumnWidth,
       attrs: isFullWidth ? { layout: null } : { layout: TableLayout.fullWidth },
       active: () => !isFullWidth,

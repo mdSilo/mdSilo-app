@@ -6,7 +6,13 @@ import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { MarkdownParser } from "prosemirror-markdown";
 import { Decoration, EditorView, NodeViewConstructor } from "prosemirror-view";
-import { Schema, NodeSpec, MarkSpec, Slice, Node as PmNode } from "prosemirror-model";
+import {
+  Schema,
+  NodeSpec,
+  MarkSpec,
+  Slice,
+  Node as PmNode,
+} from "prosemirror-model";
 import { inputRules, InputRule } from "prosemirror-inputrules";
 import { keymap } from "prosemirror-keymap";
 import { baseKeymap } from "prosemirror-commands";
@@ -117,9 +123,9 @@ export type Props = {
   /** Extensions to load */
   extensions?: Extension[];
   /** filter out some extensions */
-  disables?: string[]; 
+  disables?: string[];
   /** must enable some extensions */
-  forced?: string[]; 
+  forced?: string[];
   /** if focused on mount? */
   autoFocus?: boolean;
   /** if not allow editing */
@@ -138,7 +144,7 @@ export type Props = {
   template?: boolean;
   headingsOffset?: number;
   /** content length limitation */
-  maxLength?: number; 
+  maxLength?: number;
   /** Heading id to scroll */
   scrollTo?: string;
   // theme, style
@@ -220,8 +226,8 @@ type State = {
   slashMenuSearch: string;
   linkMenuOpen: boolean;
   searchTriggerOpen: boolean;
-  isRemoteSearch: boolean,
-  isHashTagSearch: boolean,
+  isRemoteSearch: boolean;
+  isHashTagSearch: boolean;
 };
 
 type Step = {
@@ -459,25 +465,26 @@ class MsEditor extends React.PureComponent<Props, State> {
         },
       }),
       new Placeholder({
-        placeholder: this.props.placeholder || '',
+        placeholder: this.props.placeholder || "",
       }),
       new MaxLength({
         maxLength: this.props.maxLength,
       }),
     ];
 
-    const enabledExtensions = extensions.filter(extension => {
+    const enabledExtensions = extensions.filter((extension) => {
       // Optionaly disable extensions
       const exts0 = this.props.disables;
       const exts1 = this.props.forced;
       const extName = extension.name;
-      return !(exts0 && exts0.includes(extName)) && (!exts1 || exts1.includes(extName));
+      return (
+        !(exts0 && exts0.includes(extName)) &&
+        (!exts1 || exts1.includes(extName))
+      );
     });
 
     return new ExtensionManager(
-      [...enabledExtensions,
-        ...(this.props.extensions || []),
-      ],
+      [...enabledExtensions, ...(this.props.extensions || [])],
       this
     );
   }
@@ -571,7 +578,7 @@ class MsEditor extends React.PureComponent<Props, State> {
   }
 
   createState(value?: string) {
-    const doc = this.createDocument(value || this.props.defaultValue || '');
+    const doc = this.createDocument(value || this.props.defaultValue || "");
 
     return EditorState.create({
       schema: this.schema,
@@ -595,7 +602,7 @@ class MsEditor extends React.PureComponent<Props, State> {
 
   createView() {
     console.log(">> start to create view", this.isInited);
-    
+
     if (!this.elementRef.current) {
       throw new Error("createView called before ref available");
     }
@@ -604,7 +611,7 @@ class MsEditor extends React.PureComponent<Props, State> {
       return this.view;
     }
 
-    const isEditingCheckbox = tr => {
+    const isEditingCheckbox = (tr) => {
       return tr.steps.some(
         (step: Step) =>
           step.slice?.content?.firstChild?.type.name ===
@@ -618,11 +625,10 @@ class MsEditor extends React.PureComponent<Props, State> {
       editable: () => !this.props.readOnly,
       nodeViews: this.nodeViews,
       handleDOMEvents: this.props.handleDOMEvents,
-      dispatchTransaction: function(transaction) {
+      dispatchTransaction: function (transaction) {
         // callback is bound to have the view instance as its this binding
-        const { state, transactions } = this.state.applyTransaction(
-          transaction
-        );
+        const { state, transactions } =
+          this.state.applyTransaction(transaction);
 
         this.updateState(state);
 
@@ -630,7 +636,7 @@ class MsEditor extends React.PureComponent<Props, State> {
         // changing then call our own change handler to let the outside world
         // know
         if (
-          transactions.some(tr => tr.docChanged) &&
+          transactions.some((tr) => tr.docChanged) &&
           (!self.props.readOnly ||
             (self.props.readOnlyWriteCheckboxes &&
               transactions.some(isEditingCheckbox)))
@@ -733,9 +739,9 @@ class MsEditor extends React.PureComponent<Props, State> {
   };
 
   handleOpenSlashMenu = (search: string, ifNewLine = true, isSlash = true) => {
-    // insert new line below automatically, to workaround 
-    // the RangeError/override bug on attach local img/file and mix block bug. 
-    // workaround override bug, need at least 2 more line 
+    // insert new line below automatically, to workaround
+    // the RangeError/override bug on attach local img/file and mix block bug.
+    // workaround override bug, need at least 2 more line
     // for sake of style, insert another line before attach
     // only insert new line on input '/', not on search
     if (!search && ifNewLine) {
@@ -749,7 +755,11 @@ class MsEditor extends React.PureComponent<Props, State> {
       this.view.dispatch(transaction1);
       this.view.focus();
     }
-    this.setState({ slashMenuOpen: true, slashMenuSearch: search, slashOrBlock: isSlash });
+    this.setState({
+      slashMenuOpen: true,
+      slashMenuSearch: search,
+      slashOrBlock: isSlash,
+    });
   };
 
   handleCloseSlashMenu = () => {
@@ -760,8 +770,8 @@ class MsEditor extends React.PureComponent<Props, State> {
   // for relative image src
   handleSrc = (src: string) => {
     const { rootPath, protocol } = this.props;
-    if (src.startsWith('./') && rootPath && protocol) {
-      const newSrc = src.replace('./', `${protocol}${rootPath}/`);
+    if (src.startsWith("./") && rootPath && protocol) {
+      const newSrc = src.replace("./", `${protocol}${rootPath}/`);
       return newSrc;
     } else {
       return src;
@@ -794,7 +804,7 @@ class MsEditor extends React.PureComponent<Props, State> {
   theme = () => {
     const givenTheme: typeof theme = this.props.dark ? darkTheme : lightTheme;
     const customeTheme = this.props.theme || {};
-    return {...givenTheme, ...customeTheme};
+    return { ...givenTheme, ...customeTheme };
   };
 
   dictionary = memoize(
@@ -855,19 +865,27 @@ class MsEditor extends React.PureComponent<Props, State> {
                   onCreateLink={this.props.onCreateLink}
                   onSearchLink={this.props.onSearchLink}
                   onSearchRemote={
-                    this.state.isRemoteSearch ? this.props.onSearchRemote : undefined
+                    this.state.isRemoteSearch
+                      ? this.props.onSearchRemote
+                      : undefined
                   }
                   onSearchHashTag={
-                    this.state.isHashTagSearch ? this.props.onSearchHashTag : undefined
+                    this.state.isHashTagSearch
+                      ? this.props.onSearchHashTag
+                      : undefined
                   }
                   onOpenLink={this.props.onOpenLink}
                   showPreview={this.props.showPreview}
                   onShowPreview={this.props.onShowPreview}
                   onShowToast={this.props.onShowToast}
                   searchTriggerOpen={this.state.searchTriggerOpen}
-                  resetSearchTrigger={() => this.setState({ 
-                    searchTriggerOpen: false, isRemoteSearch: false, isHashTagSearch: false 
-                  })}
+                  resetSearchTrigger={() =>
+                    this.setState({
+                      searchTriggerOpen: false,
+                      isRemoteSearch: false,
+                      isHashTagSearch: false,
+                    })
+                  }
                   isRemoteSearch={this.state.isRemoteSearch}
                   isHashTagSearch={this.state.isHashTagSearch}
                 />

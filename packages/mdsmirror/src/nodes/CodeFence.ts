@@ -2,8 +2,19 @@
 import copy from "copy-to-clipboard";
 import { Token } from "markdown-it";
 import { textblockTypeInputRule } from "prosemirror-inputrules";
-import { NodeSpec, NodeType, Schema, Node as ProsemirrorNode } from "prosemirror-model";
-import { Command, EditorState, Selection, TextSelection, Transaction } from "prosemirror-state";
+import {
+  NodeSpec,
+  NodeType,
+  Schema,
+  Node as ProsemirrorNode,
+} from "prosemirror-model";
+import {
+  Command,
+  EditorState,
+  Selection,
+  TextSelection,
+  Transaction,
+} from "prosemirror-state";
 import refractor from "refractor/core";
 import bash from "refractor/lang/bash";
 import cpp from "refractor/lang/cpp";
@@ -70,7 +81,7 @@ const DEFAULT_LANGUAGE = "javascript";
 ].forEach(refractor.register);
 
 export default class CodeFence extends Node {
-  constructor(options: Record<string, any> = {dark: false}) {
+  constructor(options: Record<string, any> = { dark: false }) {
     super(options);
   }
 
@@ -137,14 +148,13 @@ export default class CodeFence extends Node {
           // For the diagram language we add an extra button to toggle between
           // source code and a rendered diagram view.
           const lang = node.attrs.language;
-          if (lang === "mermaid" || lang === "echarts" || lang === 'abcjs') {
+          if (lang === "mermaid" || lang === "echarts" || lang === "abcjs") {
             const showSourceButton = document.createElement("button");
             showSourceButton.innerText = "Source";
             showSourceButton.type = "button";
             showSourceButton.classList.add("show-source-button");
-            showSourceButton.addEventListener(
-              "click",
-              (e: InputEvent) => this.handleToggleDiagram(e, lang)
+            showSourceButton.addEventListener("click", (e: InputEvent) =>
+              this.handleToggleDiagram(e, lang)
             );
             actions.prepend(showSourceButton);
 
@@ -152,9 +162,8 @@ export default class CodeFence extends Node {
             showDiagramButton.innerText = "Diagram";
             showDiagramButton.type = "button";
             showDiagramButton.classList.add("show-diagram-button");
-            showDiagramButton.addEventListener(
-              "click",
-              (e: InputEvent) => this.handleToggleDiagram(e, lang)
+            showDiagramButton.addEventListener("click", (e: InputEvent) =>
+              this.handleToggleDiagram(e, lang)
             );
             actions.prepend(showDiagramButton);
           }
@@ -162,8 +171,11 @@ export default class CodeFence extends Node {
 
         return [
           "div",
-          { class: `code-block ${this.options.showLineNumber ? "with-line-numbers" : ""}`, 
-            "data-language": node.attrs.language 
+          {
+            class: `code-block ${
+              this.options.showLineNumber ? "with-line-numbers" : ""
+            }`,
+            "data-language": node.attrs.language,
           },
           ...(actions ? [["div", { contentEditable: "false" }, actions]] : []),
           ["pre", ["code", { spellCheck: "false" }, 0]],
@@ -196,7 +208,8 @@ export default class CodeFence extends Node {
 
         if (text) {
           const splitByNewLine = text.split("\n");
-          const offset = splitByNewLine[splitByNewLine.length - 1].search(/\S|$/);
+          const offset =
+            splitByNewLine[splitByNewLine.length - 1].search(/\S|$/);
           newText += " ".repeat(offset);
         }
 
@@ -268,7 +281,9 @@ export default class CodeFence extends Node {
       return;
     }
 
-    const diagramId = element.closest(".code-block")?.getAttribute("data-diagram-id");
+    const diagramId = element
+      .closest(".code-block")
+      ?.getAttribute("data-diagram-id");
     if (!diagramId) {
       return;
     }
@@ -280,23 +295,23 @@ export default class CodeFence extends Node {
   get plugins() {
     return [
       Prism({ name: this.name, lineNumbers: this.options.showLineNumber }),
-      Diagram({ 
-        pluginKey: 'mermaid', 
-        name: this.name, 
-        dark: this.options.dark, 
-        onSave: this.options.onSaveDiagram 
-      }),
-      Diagram({ 
-        pluginKey: 'echarts', 
-        name: this.name, 
-        dark: this.options.dark, 
-        onSave: this.options.onSaveDiagram
-      }),
-      Diagram({ 
-        pluginKey: 'abcjs', 
-        name: this.name, 
+      Diagram({
+        pluginKey: "mermaid",
+        name: this.name,
         dark: this.options.dark,
-        onSave: this.options.onSaveDiagram 
+        onSave: this.options.onSaveDiagram,
+      }),
+      Diagram({
+        pluginKey: "echarts",
+        name: this.name,
+        dark: this.options.dark,
+        onSave: this.options.onSaveDiagram,
+      }),
+      Diagram({
+        pluginKey: "abcjs",
+        name: this.name,
+        dark: this.options.dark,
+        onSave: this.options.onSaveDiagram,
       }),
     ];
   }

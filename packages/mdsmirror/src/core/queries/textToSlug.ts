@@ -16,7 +16,7 @@ function safeSlugify(text: string, prefix: string) {
 
 // calculates a unique slug for this heading based on it's text and position
 // in the document that is as stable as possible
-export default function textToSlug(text: string, index = 0, prefix = 'h') {
+export default function textToSlug(text: string, index = 0, prefix = "h") {
   const slugified = safeSlugify(text, prefix);
   if (index === 0) {
     return slugified;

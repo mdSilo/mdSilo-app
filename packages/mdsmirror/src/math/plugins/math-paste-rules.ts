@@ -9,20 +9,31 @@
  * the default set of note attributes should be used.
  */
 
-import { Node as ProseNode, Fragment, ParseRule, Schema, TagParseRule } from "prosemirror-model";
+import {
+  Node as ProseNode,
+  Fragment,
+  ParseRule,
+  Schema,
+  TagParseRule,
+} from "prosemirror-model";
 
 ////////////////////////////////////////////////////////////
 
-function getFirstMatch(root: Element, rules: ((root:Element) => false|string)[]) : false|string {
-	for(let rule of rules) {
-		let match: false|string = rule(root);
-		if(match !== false) { return match; }
-	}
-	return false;
+function getFirstMatch(
+  root: Element,
+  rules: ((root: Element) => false | string)[]
+): false | string {
+  for (const rule of rules) {
+    const match: false | string = rule(root);
+    if (match !== false) {
+      return match;
+    }
+  }
+  return false;
 }
 
 function makeTextFragment(text: string, schema: Schema): Fragment {
-	return Fragment.from(schema.text(text) as ProseNode);
+  return Fragment.from(schema.text(text) as ProseNode);
 }
 
 ////////////////////////////////////////////////////////////
@@ -35,54 +46,56 @@ function makeTextFragment(text: string, schema: Schema): Fragment {
  *              class="mwe-math-fallback-image-inline"
  *              alt="..." />
  */
-function texFromMediaWikiFallbackImage(root: Element): false|string {
-	let match = root.querySelector("img.mwe-math-fallback-image-inline[alt]");
-	return (match?.getAttribute("alt") ?? false);
+function texFromMediaWikiFallbackImage(root: Element): false | string {
+  const match = root.querySelector("img.mwe-math-fallback-image-inline[alt]");
+  return match?.getAttribute("alt") ?? false;
 }
 
 /**
  * Look for a child node that matches the following template:
  * <math xmlns="http://www.w3.org/1998/Math/MathML" alttext="...">
  */
-function texFromMathML_01(root: Element): false|string {
-	let match = root.querySelector("math[alttext]");
-	return (match?.getAttribute("alttext") ?? false);
+function texFromMathML_01(root: Element): false | string {
+  const match = root.querySelector("math[alttext]");
+  return match?.getAttribute("alttext") ?? false;
 }
 
 /**
  * Look for a child node that matches the following template:
  * <math xmlns="http://www.w3.org/1998/Math/MathML" alttext="...">
  */
-function texFromMathML_02(root: Element): false|string {
-	let match = root.querySelector("math annotation[encoding='application/x-tex'");
-	return (match?.textContent ?? false);
+function texFromMathML_02(root: Element): false | string {
+  const match = root.querySelector(
+    "math annotation[encoding='application/x-tex'"
+  );
+  return match?.textContent ?? false;
 }
 
 /**
  * Look for a child node that matches the following template:
  * <script type="math/tex"></script>
  */
-function texFromScriptTag(root: Element): false|string {
-	let match = root.querySelector("script[type*='math/tex']");
-	return (match?.textContent ?? false);
+function texFromScriptTag(root: Element): false | string {
+  const match = root.querySelector("script[type*='math/tex']");
+  return match?.textContent ?? false;
 }
 
-function matchWikipedia(root: Element): false|string {
-	let match: false|string = getFirstMatch(root, [
-		texFromMediaWikiFallbackImage, 
-		texFromMathML_01, 
-		texFromMathML_02
-	]);
-	// TODO: if no tex string was found, but we have MathML, try to parse it
-	return match;
+function matchWikipedia(root: Element): false | string {
+  const match: false | string = getFirstMatch(root, [
+    texFromMediaWikiFallbackImage,
+    texFromMathML_01,
+    texFromMathML_02,
+  ]);
+  // TODO: if no tex string was found, but we have MathML, try to parse it
+  return match;
 }
 
 /**
  * Wikipedia formats block math inside a <dl>...</dl> element, as below.
- * 
+ *
  *   - Evidently no CSS class is used to distinguish inline vs block math
  *   - Sometimes the `\displaystyle` TeX command is present even in inline math
- * 
+ *
  * ```html
  * <dl><dd><span class="mwe-math-element">
  *     <span class="mwe-math-mathml-inline mwe-math-mathml-ally" style="...">
@@ -99,31 +112,39 @@ function matchWikipedia(root: Element): false|string {
  * </span></dd></dl>
  * ```
  */
-export const wikipediaBlockMathParseRule: ParseRule = { 
-	tag: "dl",
-	getAttrs(p: Node|string):false|null {
-		let dl = p as HTMLDListElement;
+export const wikipediaBlockMathParseRule: ParseRule = {
+  tag: "dl",
+  getAttrs(p: Node | string): false | null {
+    const dl = p as HTMLDListElement;
 
-		// <dl> must contain exactly one child
-		if(dl.childElementCount !== 1) { return false; }
-		let dd = dl.firstChild as Element;
-		if(dd.tagName !== "DD") { return false; } 
-		
-		// <dd> must contain exactly one child
-		if(dd.childElementCount !== 1) { return false; }
-		let mweElt = dd.firstChild as Element;
-		if(!mweElt.classList.contains("mwe-math-element")) { return false;}
+    // <dl> must contain exactly one child
+    if (dl.childElementCount !== 1) {
+      return false;
+    }
+    const dd = dl.firstChild as Element;
+    if (dd.tagName !== "DD") {
+      return false;
+    }
 
-		// success!  proceed to `getContent` for further processing
-		return null;
-	},
-	getContent(p: Node, schema: Schema): Fragment {
-		// search the matched element for a TeX string
-		let match: false|string = matchWikipedia(p as Element);
-		// return a fragment representing the math node's children
-		let texString: string = match || "\\text{\\color{red}(paste error)}";
-		return makeTextFragment(texString, schema);
-	}
+    // <dd> must contain exactly one child
+    if (dd.childElementCount !== 1) {
+      return false;
+    }
+    const mweElt = dd.firstChild as Element;
+    if (!mweElt.classList.contains("mwe-math-element")) {
+      return false;
+    }
+
+    // success!  proceed to `getContent` for further processing
+    return null;
+  },
+  getContent(p: Node, schema: Schema): Fragment {
+    // search the matched element for a TeX string
+    const match: false | string = matchWikipedia(p as Element);
+    // return a fragment representing the math node's children
+    const texString: string = match || "\\text{\\color{red}(paste error)}";
+    return makeTextFragment(texString, schema);
+  },
 };
 
 /**
@@ -146,30 +167,32 @@ export const wikipediaBlockMathParseRule: ParseRule = {
  * ```
  */
 export const wikipediaInlineMathParseRule: ParseRule = {
-	tag: "span",
-	getAttrs(p: Node|string):false|null {
-		let span = p as HTMLSpanElement;
-		if(!span.classList.contains("mwe-math-element")) { return false;}
-		// success!  proceed to `getContent` for further processing
-		return null;
-	},
-	getContent(p: Node, schema: Schema): Fragment {
-		// search the matched element for a TeX string
-		let match: false|string = matchWikipedia(p as Element);
-		// return a fragment representing the math node's children
-		let texString: string = match || "\\text{\\color{red}(paste error)}";
-		return makeTextFragment(texString, schema);
-	}
-}
+  tag: "span",
+  getAttrs(p: Node | string): false | null {
+    const span = p as HTMLSpanElement;
+    if (!span.classList.contains("mwe-math-element")) {
+      return false;
+    }
+    // success!  proceed to `getContent` for further processing
+    return null;
+  },
+  getContent(p: Node, schema: Schema): Fragment {
+    // search the matched element for a TeX string
+    const match: false | string = matchWikipedia(p as Element);
+    // return a fragment representing the math node's children
+    const texString: string = match || "\\text{\\color{red}(paste error)}";
+    return makeTextFragment(texString, schema);
+  },
+};
 
 // -- MathJax ------------------------------------------- //
 
 ////////////////////////////////////////////////////////////
 
 export const defaultInlineMathParseRules: TagParseRule[] = [
-	wikipediaInlineMathParseRule,
-]
+  wikipediaInlineMathParseRule,
+];
 
 export const defaultBlockMathParseRules: TagParseRule[] = [
-	wikipediaBlockMathParseRule,
-]
+  wikipediaBlockMathParseRule,
+];

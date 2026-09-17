@@ -68,12 +68,12 @@ export default class Itemcard extends Node {
 
   component({ theme, node }: ComponentProps) {
     return (
-      <CardBox 
-        theme={theme} 
-        className="itemcard" 
+      <CardBox
+        theme={theme}
+        className="itemcard"
         href={node.attrs.href}
         target="_blank"
-        rel="noreferrer nofollow" 
+        rel="noreferrer nofollow"
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -87,13 +87,15 @@ export default class Itemcard extends Node {
           <Title>{node.attrs.title}</Title>
           <CardMeta>{node.attrs.info}</CardMeta>
         </CardInfo>
-        {node.attrs.cover && <CardCover>
-          <CardImg 
-            src={node.attrs.cover} 
-            loading="lazy" 
-            referrerPolicy="no-referrer"
-          ></CardImg>
-        </CardCover>}
+        {node.attrs.cover && (
+          <CardCover>
+            <CardImg
+              src={node.attrs.cover}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            ></CardImg>
+          </CardCover>
+        )}
       </CardBox>
     );
   }
@@ -133,7 +135,7 @@ const CardBox = styled.a`
 `;
 
 const CardInfo = styled.div`
-  flex: 8; 
+  flex: 8;
   padding: 2px;
   overflow: auto;
 `;

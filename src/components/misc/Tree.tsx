@@ -34,9 +34,11 @@ function Tree(props: Props) {
 
   const onNodeClick = useCallback(
     (node: FlattenedTreeNode) => {
-      node.collapsed
-        ? setClosedNodeIds(closedNodeIds.filter((id) => id !== node.id))
-        : setClosedNodeIds([...closedNodeIds, node.id]);
+      if (node.collapsed) {
+        setClosedNodeIds(closedNodeIds.filter((id) => id !== node.id));
+      } else {
+        setClosedNodeIds([...closedNodeIds, node.id]);
+      }
       
       // avoid trigger useEffect
       while(collapseIds.length > 0) {

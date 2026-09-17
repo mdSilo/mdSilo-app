@@ -1,7 +1,7 @@
 import { InputRule } from "prosemirror-inputrules";
 import { ParseSpec } from "prosemirror-markdown";
 import { Command } from "prosemirror-state";
-import { Node as PmNode,NodeSpec,NodeType,Schema } from "prosemirror-model";
+import { Node as PmNode, NodeSpec, NodeType, Schema } from "prosemirror-model";
 import Extension, { CommandFactory } from "../core/Extension";
 import { MarkdownSerializerState } from "../core/mdSerializer";
 

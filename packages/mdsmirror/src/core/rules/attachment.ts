@@ -19,8 +19,9 @@ function isLinkClose(token: Token) {
 // check if turn markdown [](url) to Attachment
 function isAttachment(token: Token) {
   const href = token.attrGet("href");
-  const reg = /\.(pdf|docx?|xlsx?|pptx?|xps|odt|ods|odp|pages|numbers|key|zip)$/gmi;
-  return href && href.startsWith('./') && reg.test(href || '');
+  const reg =
+    /\.(pdf|docx?|xlsx?|pptx?|xps|odt|ods|odp|pages|numbers|key|zip)$/gim;
+  return href && href.startsWith("./") && reg.test(href || "");
 }
 
 export default function linksToAttachments(md: MarkdownIt) {
@@ -58,7 +59,7 @@ export default function linksToAttachments(md: MarkdownIt) {
             token.attrSet("href", insideLink.attrGet("href") || "");
 
             const parts = content.split(" ");
-            const size = parts.length > 1 ? parts.pop() : '0';
+            const size = parts.length > 1 ? parts.pop() : "0";
             const title = isNumeric(size) ? parts.join(" ") : content;
             token.attrSet("size", isNumeric(size) ? size || "0" : "0");
             token.attrSet("title", title);

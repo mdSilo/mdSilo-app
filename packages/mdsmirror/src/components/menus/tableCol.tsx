@@ -1,11 +1,19 @@
-import {TbTrash, TbAlignLeft, TbAlignRight, TbAlignCenter } from "react-icons/tb";
+import {
+  TbTrash,
+  TbAlignLeft,
+  TbAlignRight,
+  TbAlignCenter,
+} from "react-icons/tb";
 import { FaTableColumns } from "react-icons/fa6";
 import { ImSortAmountAsc, ImSortAmountDesc } from "react-icons/im";
 import { AiOutlineMergeCells, AiOutlineSplitCells } from "react-icons/ai";
 import { EditorState } from "prosemirror-state";
 import { CellSelection } from "prosemirror-tables";
 import isNodeActive from "../../core/queries/isNodeActive";
-import { isMergedCellSelection, isMultipleCellSelection } from "../../core/queries/table";
+import {
+  isMergedCellSelection,
+  isMultipleCellSelection,
+} from "../../core/queries/table";
 import { MenuItem } from "../types";
 import { baseDictionary } from "../../dictionary";
 

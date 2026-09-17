@@ -110,7 +110,7 @@ export default function ColumnContainer({
               <IconTrash />
             </button>
             <button
-              onClick={() => { openSetCol && openSetCol(column.id);}}
+              onClick={() => openSetCol?.(column.id)}
               className="hover:bg-green-500 rounded p-1 w-8" 
               title="Column Setting"
             >

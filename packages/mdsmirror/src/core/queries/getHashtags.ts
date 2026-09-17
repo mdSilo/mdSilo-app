@@ -17,18 +17,18 @@ export function getHashtags(doc: Node) {
   const previouslySeen = {};
 
   doc.forEach((node) => {
-    node.forEach(child => {
-      const hashs = child.marks.filter((m) => m.type.name === 'hashtag')
-      if (hashs.length > 0) { 
+    node.forEach((child) => {
+      const hashs = child.marks.filter((m) => m.type.name === "hashtag");
+      if (hashs.length > 0) {
         // calculate the optimal id
-        const slug = textToSlug(child.textContent, 0, 't');
+        const slug = textToSlug(child.textContent, 0, "t");
         let id = slug;
 
         // check if we've already used it, and if so how many times?
         // Make the new id based on that number ensuring that we have
         // unique ID's even when headings are identical
         if (previouslySeen[slug] > 0) {
-          id = textToSlug(child.textContent, previouslySeen[slug], 't');
+          id = textToSlug(child.textContent, previouslySeen[slug], "t");
         }
 
         // record that we've seen this slug for the next loop
@@ -40,7 +40,7 @@ export function getHashtags(doc: Node) {
           id,
         });
       }
-    })
+    });
   });
   return hashtags;
 }

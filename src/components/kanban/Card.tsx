@@ -154,7 +154,7 @@ export default function TaskCard({ card, updateCard, openSetCard }: Props) {
               <IconPaperclip />
           </button>
           <button
-              onClick={() => { openSetCard && openSetCard(card.id);}}
+              onClick={() => openSetCard?.(card.id)}
               className="hover:bg-green-500 rounded p-1 w-8" 
               title="Card Modal"
             >

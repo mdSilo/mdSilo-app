@@ -1,26 +1,22 @@
 import React from "react";
-import type { Meta } from '@storybook/react-webpack5';
+import type { Meta } from "@storybook/react-webpack5";
 import DefaultEditor from "./index";
 import { Props } from "..";
 
 const meta: Meta<typeof DefaultEditor> = {
-  title: '<editor>',
+  title: "<editor>",
   component: DefaultEditor,
-}
+};
 
-export default meta  
+export default meta;
 
 export const Example = (props: Props) => {
-  
   return (
     <div style={{ padding: "1em 2em" }}>
-      <DefaultEditor
-        defaultValue={defaultValue}
-      />
+      <DefaultEditor defaultValue={defaultValue} />
     </div>
   );
-}
-
+};
 
 const defaultValue = `# Welcome
 
@@ -137,9 +133,7 @@ some issue to tackle
 
 `;
 
-
 export const ReadOnly = (props: Props) => {
-  
   return (
     <div style={{ padding: "1em 2em" }}>
       <DefaultEditor
@@ -149,7 +143,7 @@ export const ReadOnly = (props: Props) => {
       />
     </div>
   );
-}
+};
 
 const readonlyValue = `# Read Only  
 The content of this editor cannot be edited:  
@@ -165,19 +159,13 @@ A read-only editor with the exception that checkboxes remain toggleable:
   
 `;
 
-
 export const RTL = (props: Props) => {
-  
   return (
     <div style={{ padding: "1em 2em" }}>
-      <DefaultEditor
-        defaultValue={ltrValue}
-        dir={'rtl'}
-      />
+      <DefaultEditor defaultValue={ltrValue} dir={"rtl"} />
     </div>
   );
-}
-
+};
 
 const ltrValue = `# خوش آمدید
 

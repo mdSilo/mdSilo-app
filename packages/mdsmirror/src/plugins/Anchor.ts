@@ -48,24 +48,23 @@ const getNodeAnchors = (doc: PmNode, name: string, className: string) => {
   return DecorationSet.create(doc, decorations);
 };
 
-
 const getMarkAnchors = (doc: PmNode, name: string, className: string) => {
   const decorations: Decoration[] = [];
   const previouslySeen = {};
 
   doc.descendants((node, pos) => {
-    node.forEach(child => {
-      const hashs = child.marks.filter((m) => m.type.name === name)
-      if (hashs.length > 0) { 
+    node.forEach((child) => {
+      const hashs = child.marks.filter((m) => m.type.name === name);
+      if (hashs.length > 0) {
         // calculate the optimal id
-        const slug = textToSlug(child.textContent, 0, 't');
+        const slug = textToSlug(child.textContent, 0, "t");
         let id = slug;
 
         // check if we've already used it, and if so how many times?
         // Make the new id based on that number ensuring that we have
         // unique ID's even when headings are identical
         if (previouslySeen[slug] > 0) {
-          id = textToSlug(child.textContent, previouslySeen[slug], 't');
+          id = textToSlug(child.textContent, previouslySeen[slug], "t");
         }
 
         // record that we've seen this slug for the next loop
@@ -88,7 +87,7 @@ const getMarkAnchors = (doc: PmNode, name: string, className: string) => {
           )
         );
       }
-    })
+    });
   });
 
   return DecorationSet.create(doc, decorations);
@@ -98,14 +97,14 @@ export default function Anchor(name: string, className: string, isNode = true) {
   const plugin: Plugin = new Plugin({
     state: {
       init: (config, state) => {
-        return isNode 
+        return isNode
           ? getNodeAnchors(state.doc, name, className)
           : getMarkAnchors(state.doc, name, className);
       },
       apply: (tr, oldState) => {
-        return tr.docChanged 
-          ? isNode 
-            ? getNodeAnchors(tr.doc, name, className) 
+        return tr.docChanged
+          ? isNode
+            ? getNodeAnchors(tr.doc, name, className)
             : getMarkAnchors(tr.doc, name, className)
           : oldState;
       },
@@ -118,7 +117,7 @@ export default function Anchor(name: string, className: string, isNode = true) {
   return plugin;
 }
 
-export function copyAnchor (event: MouseEvent, className: string, onCopy?: any) {
+export function copyAnchor(event: MouseEvent, className: string, onCopy?: any) {
   // this is unfortunate but appears to be the best way to grab the anchor
   // as it's added directly to the dom by a decoration.
   const anchor =
@@ -135,9 +134,9 @@ export function copyAnchor (event: MouseEvent, className: string, onCopy?: any) 
   } else {
     copy(hash);
   }
-} 
+}
 
-export function copyHashtag (anchor: HTMLElement, onCopy?: any) {
+export function copyHashtag(anchor: HTMLElement, onCopy?: any) {
   // console.log("target", anchor)
   const hash = `#${anchor.id}`;
   if (onCopy) {

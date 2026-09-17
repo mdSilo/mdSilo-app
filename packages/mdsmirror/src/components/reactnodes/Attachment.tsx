@@ -70,13 +70,10 @@ export default class Attachment extends Node {
         icon={<TbPaperclip />}
         href={node.attrs.href}
         title={node.attrs.title}
-        context={node.attrs.href 
-          ? (bytesToHumanReadable(node.attrs.size)) 
-          : null
-        }
+        context={node.attrs.href ? bytesToHumanReadable(node.attrs.size) : null}
         isSelected={isSelected}
         //theme={theme}
-        className="attachment-link" 
+        className="attachment-link"
         onClickAnchor={this.editor.props.onClickAttachment}
       >
         {node.attrs.href && <TbLink color="currentColor" size={20} />}
@@ -108,20 +105,19 @@ export default class Attachment extends Node {
   }
 }
 
-
 /**
  * Converts bytes to human readable string for display
  *
  * @param bytes filesize in bytes
  * @returns Human readable filesize as a string
  */
- export function bytesToHumanReadable(bytes: number) {
+export function bytesToHumanReadable(bytes: number) {
   const out = ("0".repeat((bytes.toString().length * 2) % 3) + bytes).match(
     /.{3}/g
   );
 
   if (!out || bytes < 1000) {
-    return bytes > 0 ? `${bytes} Bytes` : '';
+    return bytes > 0 ? `${bytes} Bytes` : "";
   }
 
   const f = out[1].substring(0, 2);

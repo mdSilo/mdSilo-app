@@ -50,7 +50,7 @@ export default class Heading extends Node {
 
         const fold = document.createElement("button");
         fold.innerText = "";
-        fold.innerHTML = '>';
+        fold.innerHTML = ">";
         fold.type = "button";
         fold.className = `heading-fold ${
           node.attrs.collapsed ? "collapsed" : ""
@@ -116,11 +116,9 @@ export default class Heading extends Node {
       (items: Record<string, Command>, level: number) => ({
         ...items,
         ...{
-          [`Ctrl-${level}`]: toggleBlockType(
-            type,
-            schema.nodes.paragraph,
-            { level }
-          ),
+          [`Ctrl-${level}`]: toggleBlockType(type, schema.nodes.paragraph, {
+            level,
+          }),
         },
       }),
       {}
@@ -180,5 +178,5 @@ export default class Heading extends Node {
 
   handleCopyLink = (event: MouseEvent) => {
     copyAnchor(event, this.className, this.editor.props.onCopyHash);
-  };  
+  };
 }

@@ -2,9 +2,9 @@ import MarkdownIt from "markdown-it";
 
 export default function wikiLinkRule(md: MarkdownIt) {
   const opts = {
-    baseUrl: '',
-    relativeBaseURL: '',
-    uriSuffix: '',
+    baseUrl: "",
+    relativeBaseURL: "",
+    uriSuffix: "",
   };
 
   // Recognize Mediawiki links ([[wiki text]])
@@ -16,4 +16,4 @@ export default function wikiLinkRule(md: MarkdownIt) {
       match.url = opts.baseUrl + parts[0].trim(); //.replace(/\s/g, "_");
     },
   });
-};
+}

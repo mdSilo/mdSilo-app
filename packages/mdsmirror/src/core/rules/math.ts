@@ -3,45 +3,49 @@
 
 import MarkdownIt, { StateInline } from "markdown-it";
 
-export default function(md: MarkdownIt) {
-  md.inline.ruler.before("escape", "math", (state: StateInline, silent: boolean) => {
-    let startMathPos = state.pos;
-    if (state.src.charCodeAt(startMathPos) !== 0x5c /* \ */) {
-      return false;
+export default function (md: MarkdownIt) {
+  md.inline.ruler.before(
+    "escape",
+    "math",
+    (state: StateInline, silent: boolean) => {
+      let startMathPos = state.pos;
+      if (state.src.charCodeAt(startMathPos) !== 0x5c /* \ */) {
+        return false;
+      }
+      const match = state.src
+        .slice(++startMathPos)
+        .match(/^(?:\\\[|\\\(|begin\{([^}]*)\})/);
+      if (!match) {
+        return false;
+      }
+      startMathPos += match[0].length;
+      let type, endMarker, includeMarkers;
+      if (match[0] === "\\[") {
+        type = "math_display";
+        endMarker = "\\\\]";
+      } else if (match[0] === "\\(") {
+        type = "math_inline";
+        endMarker = "\\\\)";
+      } else if (match[1]) {
+        type = "math";
+        endMarker = "\\end{" + match[1] + "}";
+        includeMarkers = true;
+      }
+      const endMarkerPos = state.src.indexOf(endMarker, startMathPos);
+      if (endMarkerPos === -1) {
+        return false;
+      }
+      const nextPos = endMarkerPos + endMarker.length;
+      if (!silent) {
+        const token = state.push(type, "", 0);
+        token.content = includeMarkers
+          ? state.src.slice(state.pos, nextPos)
+          : state.src.slice(startMathPos, endMarkerPos);
+      }
+      state.pos = nextPos;
+      return true;
     }
-    const match = state.src
-      .slice(++startMathPos)
-      .match(/^(?:\\\[|\\\(|begin\{([^}]*)\})/);
-    if (!match) {
-      return false;
-    }
-    startMathPos += match[0].length;
-    let type, endMarker, includeMarkers;
-    if (match[0] === "\\[") {
-      type = "math_display";
-      endMarker = "\\\\]";
-    } else if (match[0] === "\\(") {
-      type = "math_inline";
-      endMarker = "\\\\)";
-    } else if (match[1]) {
-      type = "math";
-      endMarker = "\\end{" + match[1] + "}";
-      includeMarkers = true;
-    }
-    const endMarkerPos = state.src.indexOf(endMarker, startMathPos);
-    if (endMarkerPos === -1) {
-      return false;
-    }
-    const nextPos = endMarkerPos + endMarker.length;
-    if (!silent) {
-      const token = state.push(type, "", 0);
-      token.content = includeMarkers
-        ? state.src.slice(state.pos, nextPos)
-        : state.src.slice(startMathPos, endMarkerPos);
-    }
-    state.pos = nextPos;
-    return true;
-  });
+  );
 
   md.inline.ruler.push("texMath", (state: StateInline, silent: boolean) => {
     let startMathPos = state.pos;
@@ -125,12 +129,12 @@ export default function(md: MarkdownIt) {
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/\u00a0/g, " ");
-  }
+  };
 
-  Object.keys(mapping).forEach(function(key) {
+  Object.keys(mapping).forEach(function (key) {
     const before = options["before" + mapping[key]];
     const after = options["after" + mapping[key]];
-    md.renderer.rules[key] = function(tokens, idx) {
+    md.renderer.rules[key] = function (tokens, idx) {
       return before + escapeHtml(tokens[idx].content) + after;
     };
   });

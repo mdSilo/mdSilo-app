@@ -44,7 +44,7 @@ export default class Hashtag extends Mark {
     return [
       new Plugin({
         props: {
-          handleClick: (view, pos, event: MouseEvent) => { 
+          handleClick: (view, pos, event: MouseEvent) => {
             if (
               event.target instanceof HTMLSpanElement &&
               event.target.className.includes("hashtag-link")
@@ -54,7 +54,8 @@ export default class Hashtag extends Mark {
               clickHashTag && clickHashTag(event.target.innerText, event);
 
               // copy hashtag's id
-              const hashAnchor = event.target.parentNode?.previousSibling as HTMLElement;
+              const hashAnchor = event.target.parentNode
+                ?.previousSibling as HTMLElement;
               // console.log("target", hashAnchor);
               if (hashAnchor && hashAnchor.className.includes(this.className)) {
                 copyHashtag(hashAnchor, this.editor.props.onCopyHash);
@@ -66,7 +67,7 @@ export default class Hashtag extends Mark {
           },
         },
       }),
-      Anchor(this.name, this.className, false)
+      Anchor(this.name, this.className, false),
     ];
   }
 }

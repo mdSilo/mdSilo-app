@@ -58,11 +58,7 @@ export default class Table extends Node {
       },
       toDOM() {
         // Note: This is overridden by TableView
-        return [
-          "div",
-          { class: 'table-wrapper' },
-          ["table", {}, ["tbody", 0]],
-        ];
+        return ["div", { class: "table-wrapper" }, ["table", {}, ["tbody", 0]]];
       },
     };
   }

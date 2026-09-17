@@ -2,12 +2,15 @@ import { EditorState } from "prosemirror-state";
 import { CellSelection } from "prosemirror-tables";
 import { AiOutlineMergeCells, AiOutlineSplitCells } from "react-icons/ai";
 import { baseDictionary } from "../../dictionary";
-import { isMergedCellSelection, isMultipleCellSelection } from "../../core/queries/table";
+import {
+  isMergedCellSelection,
+  isMultipleCellSelection,
+} from "../../core/queries/table";
 import { MenuItem } from "../types";
 
 export default function tableCellMenuItems(
   state: EditorState,
-  dictionary: typeof baseDictionary,
+  dictionary: typeof baseDictionary
 ): MenuItem[] {
   const { selection } = state;
 

@@ -1,4 +1,9 @@
-import { NodeSpec, Node as ProsemirrorNode, NodeType, Schema } from "prosemirror-model";
+import {
+  NodeSpec,
+  Node as ProsemirrorNode,
+  NodeType,
+  Schema,
+} from "prosemirror-model";
 import { Command } from "prosemirror-state";
 import {
   chainCommands,
@@ -28,7 +33,7 @@ export default class Math extends Node {
       content: "text*",
       inline: true,
       atom: true,
-      parseDOM: [{tag: "math-inline"}],
+      parseDOM: [{ tag: "math-inline" }],
       toDOM: () => ["math-inline", { class: "math-node" }, 0],
     };
   }

@@ -19,7 +19,8 @@ export default function markdownTables(md: MarkdownIt) {
       // convert unescaped \n and <br> tags in the text into real br tokens
       if (
         tokens[i].type === "inline" &&
-        (tokens[i].content.match(BREAK_REGEX) || tokens[i].content.match(BR_TAG_REGEX))
+        (tokens[i].content.match(BREAK_REGEX) ||
+          tokens[i].content.match(BR_TAG_REGEX))
       ) {
         const existing = tokens[i].children || [];
         tokens[i].children = [];
@@ -130,8 +131,8 @@ export function getCellAttrs(dom: HTMLElement | string): Attrs {
       dom.style.textAlign === "center"
         ? "center"
         : dom.style.textAlign === "right"
-          ? "right"
-          : null,
+        ? "right"
+        : null,
   } satisfies CellAttrs;
 }
 

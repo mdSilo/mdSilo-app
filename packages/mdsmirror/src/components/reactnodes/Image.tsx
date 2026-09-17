@@ -22,7 +22,8 @@ import Node from "../../nodes/Node";
  * ![](image.jpg "class") -> [, "", "image.jpg", "small"]
  * ![Lorem](image.jpg "class") -> [, "Lorem", "image.jpg", "small"]
  */
-const IMAGE_INPUT_REGEX = /!\[(?<alt>[^\][]*?)]\((?<filename>[^\][]*?)(?=“|\))“?(?<layoutclass>[^\][”]+)?”?\)$/;
+const IMAGE_INPUT_REGEX =
+  /!\[(?<alt>[^\][]*?)]\((?<filename>[^\][]*?)(?=“|\))“?(?<layoutclass>[^\][”]+)?”?\)$/;
 
 const IMAGE_CLASSES = ["right-50", "left-50"];
 
@@ -112,77 +113,69 @@ export default class Image extends Node {
     };
   }
 
-  handleKeyDown = ({
-    node,
-    getPos,
-  }: {
-    node: ProsemirrorNode;
-    getPos: () => number;
-  }) => (event: React.KeyboardEvent<HTMLSpanElement>) => {
-    // Pressing Enter in the caption field should move the cursor/selection
-    // below the image
-    if (event.key === "Enter") {
+  handleKeyDown =
+    ({ node, getPos }: { node: ProsemirrorNode; getPos: () => number }) =>
+    (event: React.KeyboardEvent<HTMLSpanElement>) => {
+      // Pressing Enter in the caption field should move the cursor/selection
+      // below the image
+      if (event.key === "Enter") {
+        event.preventDefault();
+
+        const { view } = this.editor;
+        const $pos = view.state.doc.resolve(getPos() + node.nodeSize);
+        view.dispatch(
+          view.state.tr.setSelection(new TextSelection($pos)).split($pos.pos)
+        );
+        view.focus();
+        return;
+      }
+
+      // Pressing Backspace in an an empty caption field should remove the entire
+      // image, leaving an empty paragraph
+      if (event.key === "Backspace" && event.currentTarget.innerText === "") {
+        const { view } = this.editor;
+        const $pos = view.state.doc.resolve(getPos());
+        const tr = view.state.tr.setSelection(new NodeSelection($pos));
+        view.dispatch(tr.deleteSelection());
+        view.focus();
+        return;
+      }
+    };
+
+  handleBlur =
+    ({ node, getPos }: { node: ProsemirrorNode; getPos: () => number }) =>
+    (event: React.FocusEvent<HTMLSpanElement>) => {
+      const alt = event.currentTarget.innerText;
+      const { src, title, layoutClass } = node.attrs;
+
+      if (alt === node.attrs.alt) {
+        return;
+      }
+
+      const { view } = this.editor;
+      const { tr } = view.state;
+
+      // update meta on object
+      const pos = getPos();
+      const transaction = tr.setNodeMarkup(pos, undefined, {
+        src,
+        alt,
+        title,
+        layoutClass,
+      });
+      view.dispatch(transaction);
+    };
+
+  handleSelect =
+    ({ getPos }: { getPos: () => number }) =>
+    (event: React.MouseEvent) => {
       event.preventDefault();
 
       const { view } = this.editor;
-      const $pos = view.state.doc.resolve(getPos() + node.nodeSize);
-      view.dispatch(
-        view.state.tr.setSelection(new TextSelection($pos)).split($pos.pos)
-      );
-      view.focus();
-      return;
-    }
-
-    // Pressing Backspace in an an empty caption field should remove the entire
-    // image, leaving an empty paragraph
-    if (event.key === "Backspace" && event.currentTarget.innerText === "") {
-      const { view } = this.editor;
       const $pos = view.state.doc.resolve(getPos());
-      const tr = view.state.tr.setSelection(new NodeSelection($pos));
-      view.dispatch(tr.deleteSelection());
-      view.focus();
-      return;
-    }
-  };
-
-  handleBlur = ({
-    node,
-    getPos,
-  }: {
-    node: ProsemirrorNode;
-    getPos: () => number;
-  }) => (event: React.FocusEvent<HTMLSpanElement>) => {
-    const alt = event.currentTarget.innerText;
-    const { src, title, layoutClass } = node.attrs;
-
-    if (alt === node.attrs.alt) {
-      return;
-    }
-
-    const { view } = this.editor;
-    const { tr } = view.state;
-
-    // update meta on object
-    const pos = getPos();
-    const transaction = tr.setNodeMarkup(pos, undefined, {
-      src,
-      alt,
-      title,
-      layoutClass,
-    });
-    view.dispatch(transaction);
-  };
-
-  handleSelect = ({ getPos }: { getPos: () => number }) => (
-    event: React.MouseEvent
-  ) => {
-    event.preventDefault();
-
-    const { view } = this.editor;
-    const $pos = view.state.doc.resolve(getPos());
-    const transaction = view.state.tr.setSelection(new NodeSelection($pos));
-    view.dispatch(transaction);
-  };
+      const transaction = view.state.tr.setSelection(new NodeSelection($pos));
+      view.dispatch(transaction);
+    };
 
   handleMouseDown = (ev: React.MouseEvent<HTMLParagraphElement>) => {
     if (document.activeElement !== ev.currentTarget) {
@@ -263,7 +256,7 @@ export default class Image extends Node {
         if ((!uploadFile && !attachFile) || (uploadFile && attachFile)) {
           throw new Error("Attach or Upload?");
         }
-        
+
         if (uploadFile) {
           // create an input element and click to trigger picker
           const inputElement = document.createElement("input");
@@ -287,7 +280,7 @@ export default class Image extends Node {
 
         if (attachFile) {
           attachFiles(view, state.selection.from, {
-            accept: "image/*", 
+            accept: "image/*",
             attachFile,
             handleSrc: this.editor.handleSrc,
             replaceExisting: true,
@@ -336,24 +329,23 @@ export default class Image extends Node {
         dispatch(state.tr.setNodeMarkup(selection.from, undefined, attrs));
         return true;
       },
-      createImage: (attrs: Record<string, any>) => (
-        state: EditorState,
-        dispatch: Dispatch
-      ) => {
-        const { selection } = state;
-        const position =
-          selection instanceof TextSelection
-            ? selection.$cursor?.pos
-            : selection.$to.pos;
-        if (position === undefined) {
-          return false;
-        }
+      createImage:
+        (attrs: Record<string, any>) =>
+        (state: EditorState, dispatch: Dispatch) => {
+          const { selection } = state;
+          const position =
+            selection instanceof TextSelection
+              ? selection.$cursor?.pos
+              : selection.$to.pos;
+          if (position === undefined) {
+            return false;
+          }
 
-        const node = type.create(attrs);
-        const transaction = state.tr.insert(position, node);
-        dispatch(transaction);
-        return true;
-      },
+          const node = type.create(attrs);
+          const transaction = state.tr.insert(position, node);
+          dispatch(transaction);
+          return true;
+        },
     };
   }
 

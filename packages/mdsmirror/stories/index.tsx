@@ -79,11 +79,11 @@ export default function Editor(props: Props) {
   return (
     <div style={{ padding: "1em 2em" }}>
       <MsEditor
-        onChange= {(text, json) => {
+        onChange={(text, json) => {
           console.log("text: ", text, "JSON: ", json);
           // localStorage.setItem("saved", text);
         }}
-        onCreateLink={title => {
+        onCreateLink={(title) => {
           console.log("create", title);
           // Delay to simulate time taken for remote API request to complete
           return new Promise((resolve, reject) => {
@@ -98,13 +98,13 @@ export default function Editor(props: Props) {
             }, 1500);
           });
         }}
-        onSearchLink={async term => {
+        onSearchLink={async (term) => {
           console.log("Searched link: ", term);
           // Delay to simulate time taken for remote API request to complete
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             setTimeout(() => {
               resolve(
-                docSearchResults.filter(result =>
+                docSearchResults.filter((result) =>
                   result.title.toLowerCase().includes(term.toLowerCase())
                 )
               );
@@ -114,23 +114,23 @@ export default function Editor(props: Props) {
         onSearchRemote={async (term) => {
           console.log("search text remote:", term);
           // Simulate remote search returning SearchResult[]
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             setTimeout(() => {
               resolve(
-                docSearchResults.filter(result =>
+                docSearchResults.filter((result) =>
                   result.title.toLowerCase().includes(term.toLowerCase())
                 )
               );
             }, Math.random() * 500);
           });
         }}
-        onSearchHashTag={async term => {
+        onSearchHashTag={async (term) => {
           console.log("Searched hashtag: ", term);
           // Delay to simulate time taken for remote API request to complete
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             setTimeout(() => {
               resolve(
-                docSearchResults.filter(result =>
+                docSearchResults.filter((result) =>
                   result.title.toLowerCase().includes(term.toLowerCase())
                 )
               );
@@ -142,7 +142,7 @@ export default function Editor(props: Props) {
           console.log("open here", href);
           window.open(href, "_blank");
         }}
-        embeds={embeds} 
+        embeds={embeds}
         // disables={['image']}
         {...props}
       />

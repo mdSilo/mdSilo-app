@@ -18,7 +18,11 @@ export function SlashMenu(props: SlashMenuProps) {
     if (parent) {
       // console.log("parentNode", parent.pos, state.selection.to, parent, state.selection)
       dispatch(
-        state.tr.insertText("", parent.pos, props.isSlash ? state.selection.to : parent.pos)
+        state.tr.insertText(
+          "",
+          parent.pos,
+          props.isSlash ? state.selection.to : parent.pos
+        )
       );
     }
   };

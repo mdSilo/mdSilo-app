@@ -4,7 +4,11 @@ import { Plugin } from "prosemirror-state";
 import { DecorationSet, Decoration } from "prosemirror-view";
 import Node from "./Node";
 import { addRowBefore, selectRow, selectTable } from "../core/commands/table";
-import { getCellsInColumn, isRowSelected, isTableSelected } from "../core/queries/table";
+import {
+  getCellsInColumn,
+  isRowSelected,
+  isTableSelected,
+} from "../core/queries/table";
 import { getCellAttrs, setCellAttrs } from "../core/rules/tables";
 import { combineClass } from "../core/helper";
 
@@ -44,7 +48,7 @@ export default class TableCell extends Node {
 
   get plugins() {
     function buildAddRowDecoration(pos: number, index: number) {
-      const className = combineClass('table-add-row', {first: index === 0});
+      const className = combineClass("table-add-row", { first: index === 0 });
 
       return Decoration.widget(
         pos + 1,
@@ -99,9 +103,7 @@ export default class TableCell extends Node {
                 return false;
               }
 
-              const targetAddRow = event.target.closest(
-                `.table-add-row`
-              );
+              const targetAddRow = event.target.closest(`.table-add-row`);
               if (targetAddRow) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
@@ -111,9 +113,7 @@ export default class TableCell extends Node {
                 return true;
               }
 
-              const targetGrip = event.target.closest(
-                `.table-grip`
-              );
+              const targetGrip = event.target.closest(`.table-grip`);
               if (targetGrip) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
@@ -121,9 +121,7 @@ export default class TableCell extends Node {
                 return true;
               }
 
-              const targetGripRow = event.target.closest(
-                `.table-grip-row`
-              );
+              const targetGripRow = event.target.closest(`.table-grip-row`);
               if (targetGripRow) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
@@ -150,7 +148,7 @@ export default class TableCell extends Node {
             if (rows) {
               rows.forEach((pos, index) => {
                 if (index === 0) {
-                  const className = combineClass('table-grip', {
+                  const className = combineClass("table-grip", {
                     selected: isTableSelected(state),
                   });
 
@@ -170,7 +168,7 @@ export default class TableCell extends Node {
                   );
                 }
 
-                const className = combineClass('table-grip-row', {
+                const className = combineClass("table-grip-row", {
                   selected: isRowSelected(index)(state),
                   first: index === 0,
                   last: index === rows.length - 1,

@@ -107,8 +107,7 @@ export type Store = {
 } & UserSettings;
 
 type FunctionPropertyNames<T> = {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  [K in keyof T]: T[K] extends Function ? K : never;
+  [K in keyof T]: T[K] extends (...args: never[]) => unknown ? K : never;
 }[keyof T];
 
 type StoreWithoutFunctions = Omit<Store, FunctionPropertyNames<Store>>;

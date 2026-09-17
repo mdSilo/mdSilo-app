@@ -1,5 +1,10 @@
 import { EditorState } from "prosemirror-state";
-import {CellSelection, TableRect, isInTable, selectedRect } from "prosemirror-tables";
+import {
+  CellSelection,
+  TableRect,
+  isInTable,
+  selectedRect,
+} from "prosemirror-tables";
 
 /**
  * Checks if the current selection is a column selection.

@@ -170,8 +170,13 @@ export default class SelectionToolbar extends React.Component<Props> {
   };
 
   render() {
-    const { 
-      dictionary, onCreateLink, onSearchSelectText, isTemplate, rtl, ...rest 
+    const {
+      dictionary,
+      onCreateLink,
+      onSearchSelectText,
+      isTemplate,
+      rtl,
+      ...rest
     } = this.props;
     const { view } = rest;
     const { state } = view;
@@ -189,8 +194,9 @@ export default class SelectionToolbar extends React.Component<Props> {
     const isCellSelection = selection instanceof CellSelection;
     const isLink = isMarkActive(state.schema.marks.link)(state);
     const linkRange = getMarkRange(selection.$from, state.schema.marks.link);
-    const isImageSelection = 
-      selection instanceof NodeSelection && selection.node.type.name === "image";
+    const isImageSelection =
+      selection instanceof NodeSelection &&
+      selection.node.type.name === "image";
     const isDividerSelection = isNodeActive(state.schema.nodes.hr)(state);
 
     let isTextSelection = false;
@@ -242,9 +248,9 @@ export default class SelectionToolbar extends React.Component<Props> {
     }
 
     const onSearchText = () => {
-      onSearchSelectText 
-        ? onSearchSelectText(selectionText)  
-        : console.log(selectionText) 
+      onSearchSelectText
+        ? onSearchSelectText(selectionText)
+        : console.log(selectionText);
     };
 
     return (

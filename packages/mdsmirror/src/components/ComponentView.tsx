@@ -63,7 +63,7 @@ export default class ComponentView {
     const { dark } = this.editor.props;
     // Ensure theme is a complete DefaultTheme object
     const theme: typeof lightTheme = {
-      ...((dark ? darkTheme : lightTheme)),
+      ...(dark ? darkTheme : lightTheme),
       ...(this.editor.props.theme || {}),
     };
 
@@ -79,9 +79,7 @@ export default class ComponentView {
         this._root = ReactDOM.createRoot(this.dom);
       }
       this._root.render(
-        <ThemeProvider theme={theme}>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider theme={theme}>{children}</ThemeProvider>
       );
     }
   };

@@ -9,12 +9,7 @@ import Mark from "./Mark";
 
 const LINK_INPUT_REGEX = /\[([^[]+)]\((\S+)\)$/;
 
-function isPlainURL(
-  link: PmMark,
-  parent: Node,
-  index: number,
-  side: -1 | 1
-) {
+function isPlainURL(link: PmMark, parent: Node, index: number, side: -1 | 1) {
   if (link.attrs.title || !/^\w+:/.test(link.attrs.href)) {
     return false;
   }

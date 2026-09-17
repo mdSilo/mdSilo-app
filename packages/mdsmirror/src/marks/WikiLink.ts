@@ -1,5 +1,5 @@
 import { InputRule } from "prosemirror-inputrules";
-import {MarkSpec,MarkType,} from "prosemirror-model";
+import { MarkSpec, MarkType } from "prosemirror-model";
 import wikiLinkRule from "../core/rules/wikilink";
 import Mark from "./Mark";
 
@@ -37,9 +37,9 @@ export default class WikiLink extends Mark {
     };
   }
 
-  // Note: 
+  // Note:
   // rulePlugins used to parse Markdown `[[wiki link]]` to link in the linkifying way
-  // inputRules used in WYSIWYG mode, but transfer `[[]]` to `[]()` to Markdown  
+  // inputRules used in WYSIWYG mode, but transfer `[[]]` to `[]()` to Markdown
   // wikilink is the special type of link that the href is not url but plain_text_title
 
   get rulePlugins() {
@@ -61,7 +61,7 @@ export default class WikiLink extends Mark {
           );
         }
         // create new use href as title if not existing
-        this.options.onCreateLink && this.options.onCreateLink(href.trim())
+        this.options.onCreateLink && this.options.onCreateLink(href.trim());
 
         return tr;
       }),

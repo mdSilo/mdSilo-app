@@ -23,17 +23,17 @@ export default function (options: { delim: string; mark: string }) {
       // console.log(">> markRule, marker: ", marker);
 
       const scanned = state.scanDelims(state.pos, true);
-      let len = scanned.length;
+      const len = scanned.length;
 
       // console.log(">> markRule, scanned: ", scanned);
       // console.log(">> markRule, ch: ", ch);
       // console.log(">> markRule, scanned len: ", len);
 
-      if (len != delimLen) {
+      if (len !== delimLen) {
         return false;
       }
 
-      let token = state.push("text", "", 0);
+      const token = state.push("text", "", 0);
       token.content = options.delim;
 
       state.delimiters.push({
@@ -46,7 +46,7 @@ export default function (options: { delim: string; mark: string }) {
         open: scanned.can_open,
         close: scanned.can_close,
       });
-      
+
       state.pos += scanned.length;
 
       // console.log(">> markRule, state: ", state);

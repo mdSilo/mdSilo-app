@@ -65,7 +65,7 @@ class LinkEditor extends React.Component<Props, State> {
   };
 
   get href(): string {
-    const href =  this.props.mark ? this.props.mark.attrs.href : "";
+    const href = this.props.mark ? this.props.mark.attrs.href : "";
     return decodeURI(href);
   }
 
@@ -128,10 +128,7 @@ class LinkEditor extends React.Component<Props, State> {
           const result = results[selectedIndex];
           if (result) {
             this.save(result.url, result.title);
-          } else if (
-            onCreateLink && 
-            selectedIndex === results.length
-          ) {
+          } else if (onCreateLink && selectedIndex === results.length) {
             this.handleCreateLink(this.suggestedLinkTitle);
           }
         } else {
@@ -210,9 +207,10 @@ class LinkEditor extends React.Component<Props, State> {
 
     if (trimmedValue && this.props.onSearchLink) {
       try {
-        const results = this.props.isRemoteSearch && this.props.onSearchRemote 
-          ? await this.props.onSearchRemote(trimmedValue)
-          : this.props.isHashTagSearch && this.props.onSearchHashTag 
+        const results =
+          this.props.isRemoteSearch && this.props.onSearchRemote
+            ? await this.props.onSearchRemote(trimmedValue)
+            : this.props.isHashTagSearch && this.props.onSearchHashTag
             ? await this.props.onSearchHashTag(trimmedValue)
             : await this.props.onSearchLink(trimmedValue);
         this.setState((state) => ({
@@ -273,16 +271,15 @@ class LinkEditor extends React.Component<Props, State> {
     view.focus();
   };
 
-  handleSelectLink = (url: string, title: string) => (
-    event: React.MouseEvent
-  ) => {
-    event.preventDefault();
-    this.save(url, title);
+  handleSelectLink =
+    (url: string, title: string) => (event: React.MouseEvent) => {
+      event.preventDefault();
+      this.save(url, title);
 
-    if (this.initialSelectionLength) {
-      this.moveSelectionToEnd();
-    }
-  };
+      if (this.initialSelectionLength) {
+        this.moveSelectionToEnd();
+      }
+    };
 
   moveSelectionToEnd = () => {
     const { to, view } = this.props;
@@ -307,14 +304,15 @@ class LinkEditor extends React.Component<Props, State> {
       !!this.props.onCreateLink &&
       !(suggestedLinkTitle === this.initialValue) &&
       suggestedLinkTitle.length > 0 &&
-      !looksLikeUrl && 
+      !looksLikeUrl &&
       !this.props.isRemoteSearch;
 
     const showResults =
       !!suggestedLinkTitle && (showCreateLink || results.length > 0);
-    
+
     const showPreview = this.props.showPreview;
-    const previewContent = this.props.onShowPreview && this.props.onShowPreview(value);
+    const previewContent =
+      this.props.onShowPreview && this.props.onShowPreview(value);
 
     return (
       <Wrapper>
@@ -341,7 +339,7 @@ class LinkEditor extends React.Component<Props, State> {
           </ToolbarButton>
         </Tooltip>
 
-        {(showPreview && previewContent?.trim() && !showResults) && (
+        {showPreview && previewContent?.trim() && !showResults && (
           <Preview>{previewContent}</Preview>
         )}
 

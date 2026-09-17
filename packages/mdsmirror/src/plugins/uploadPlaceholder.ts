@@ -37,8 +37,8 @@ const uploadPlaceholder = new Plugin({
 
           const img = document.createElement("img");
           img.src = action.add.file.src
-            ? action.add.file.src 
-            : URL.createObjectURL(action.add.file); 
+            ? action.add.file.src
+            : URL.createObjectURL(action.add.file);
 
           element.appendChild(img);
 
@@ -51,7 +51,7 @@ const uploadPlaceholder = new Plugin({
 
       if (action?.remove) {
         set = set.remove(
-          set.find(undefined, undefined, spec => spec.id === action.remove.id)
+          set.find(undefined, undefined, (spec) => spec.id === action.remove.id)
         );
       }
       return set;
@@ -71,6 +71,6 @@ export function findPlaceholder(
   id: string
 ): [number, number] | null {
   const decos = uploadPlaceholder.getState(state);
-  const found = decos?.find(undefined, undefined, spec => spec.id === id);
+  const found = decos?.find(undefined, undefined, (spec) => spec.id === id);
   return found?.length ? [found[0].from, found[0].to] : null;
 }

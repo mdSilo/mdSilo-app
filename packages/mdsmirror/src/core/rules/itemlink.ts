@@ -5,10 +5,10 @@ export default function itemLinkRule(md: MarkdownIt) {
   md.linkify.add("{{", {
     validate: /^([^{\}\n]+)\}\}/u,
     normalize: (match) => {
-      const raw = match.raw.slice(2, -2)
+      const raw = match.raw.slice(2, -2);
       const parts = raw.split("|");
       match.text = raw.trim();
       match.url = `${parts[0].trim()}@item`; // magic suffix
     },
   });
-};
+}

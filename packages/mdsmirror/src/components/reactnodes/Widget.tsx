@@ -16,13 +16,13 @@ export default function Widget(props: Props) {
   //const {isSelected, href, cla}
   return (
     <Wrapper
-      className={
-        `${props.isSelected ? "ProseMirror-selectednode widget" : "widget"} 
-         ${props.className ?? ''}`
-      }
+      className={`${
+        props.isSelected ? "ProseMirror-selectednode widget" : "widget"
+      } 
+         ${props.className ?? ""}`}
       href={props.href}
       target="_blank"
-      rel="noreferrer nofollow" 
+      rel="noreferrer nofollow"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();

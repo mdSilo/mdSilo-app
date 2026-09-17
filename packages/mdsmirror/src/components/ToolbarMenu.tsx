@@ -31,11 +31,11 @@ function ToolbarMenu(props: Props) {
         const isActive = item.active ? item.active(state) : false;
 
         return (
-          <Tooltip tooltip={item.tooltip || ''} key={index}>
+          <Tooltip tooltip={item.tooltip || ""} key={index}>
             <ToolbarButton
               onClick={() => {
                 const name = item.name;
-                if (name === 'search') {
+                if (name === "search") {
                   onSearch();
                 } else {
                   name && props.commands[name](item.attrs);

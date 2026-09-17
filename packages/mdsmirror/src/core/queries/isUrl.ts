@@ -11,12 +11,12 @@ export default function isUrl(text: string) {
   }
 }
 
-// external link, internal backlink, hashtag.. 
+// external link, internal backlink, hashtag..
 export function checkLinkType(href: string) {
   if (href.startsWith("http")) {
     return "external";
   } else if (href.startsWith("#")) {
-    return "hashtag"
+    return "hashtag";
   } else {
     return "internal";
   }

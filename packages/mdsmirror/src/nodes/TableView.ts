@@ -3,19 +3,16 @@ import { TableView as ProsemirrorTableView } from "prosemirror-tables";
 import { TableLayout } from "../core/rules/tables";
 
 export class TableView extends ProsemirrorTableView {
-  public constructor(
-    public node: Node,
-    public cellMinWidth: number
-  ) {
+  public constructor(public node: Node, public cellMinWidth: number) {
     super(node, cellMinWidth);
 
     this.dom.removeChild(this.table);
-    this.dom.classList.add('table-wrapper');
+    this.dom.classList.add("table-wrapper");
 
     // Add an extra wrapper to enable scrolling
     this.scrollable = this.dom.appendChild(document.createElement("div"));
     this.scrollable.appendChild(this.table);
-    this.scrollable.classList.add('table-scrollable');
+    this.scrollable.classList.add("table-scrollable");
 
     this.scrollable.addEventListener(
       "scroll",
@@ -59,7 +56,7 @@ export class TableView extends ProsemirrorTableView {
 
   private updateClassList(node: Node) {
     this.dom.classList.toggle(
-      'table-full-width',
+      "table-full-width",
       node.attrs.layout === TableLayout.fullWidth
     );
 
@@ -71,8 +68,8 @@ export class TableView extends ProsemirrorTableView {
         this.scrollable.scrollWidth - 1
     );
 
-    this.dom.classList.toggle('table-shadow-left', shadowLeft);
-    this.dom.classList.toggle('table-shadow-right', shadowRight);
+    this.dom.classList.toggle("table-shadow-left", shadowLeft);
+    this.dom.classList.toggle("table-shadow-right", shadowRight);
 
     if (this.scrollable) {
       this.dom.style.setProperty(

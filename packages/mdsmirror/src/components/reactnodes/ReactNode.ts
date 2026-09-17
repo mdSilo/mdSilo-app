@@ -6,6 +6,6 @@ export default abstract class ReactNode extends Node {
     node,
     isSelected,
     isEditable,
-    //innerRef,
-  }: Omit<ComponentProps, "theme">): React.ReactElement;
+  }: //innerRef,
+  Omit<ComponentProps, "theme">): React.ReactElement;
 }

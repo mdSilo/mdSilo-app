@@ -1,14 +1,17 @@
 import { ResizeObserver } from "@juggle/resize-observer";
 import { useState, useEffect } from "react";
 
-export default function useComponentSize(ref): { width: number; height: number } {
+export default function useComponentSize(ref): {
+  width: number;
+  height: number;
+} {
   const [size, setSize] = useState({
     width: 0,
     height: 0,
   });
 
   useEffect(() => {
-    const sizeObserver = new ResizeObserver(entries => {
+    const sizeObserver = new ResizeObserver((entries) => {
       entries.forEach(({ target }) => {
         if (
           size.width !== target.clientWidth ||

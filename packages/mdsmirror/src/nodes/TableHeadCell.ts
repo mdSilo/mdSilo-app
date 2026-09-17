@@ -44,7 +44,9 @@ export default class TableHeadCell extends Node {
 
   get plugins() {
     function buildAddColumnDecoration(pos: number, index: number) {
-      const className = combineClass('table-add-column', {first: index === 0});
+      const className = combineClass("table-add-column", {
+        first: index === 0,
+      });
 
       return Decoration.widget(
         pos + 1,
@@ -70,9 +72,7 @@ export default class TableHeadCell extends Node {
                 return false;
               }
 
-              const targetAddColumn = event.target.closest(
-                `.table-add-column`
-              );
+              const targetAddColumn = event.target.closest(`.table-add-column`);
               if (targetAddColumn) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
@@ -83,9 +83,8 @@ export default class TableHeadCell extends Node {
                 return true;
               }
 
-              const targetGripColumn = event.target.closest(
-                `.table-grip-column`
-              );
+              const targetGripColumn =
+                event.target.closest(`.table-grip-column`);
               if (targetGripColumn) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
@@ -111,7 +110,7 @@ export default class TableHeadCell extends Node {
 
             if (cols) {
               cols.forEach((pos, index) => {
-                const className = combineClass('table-grip-column', {
+                const className = combineClass("table-grip-column", {
                   selected: isColumnSelected(index)(state),
                   first: index === 0,
                   last: index === cols.length - 1,

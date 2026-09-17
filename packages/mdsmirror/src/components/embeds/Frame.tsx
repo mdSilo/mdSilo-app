@@ -21,12 +21,18 @@ export type FrameProps = EmbedProps & {
 
 export class Frame extends React.Component<FrameProps> {
   render() {
-    const { isSelected, src, title, width="100%", height="420" } = this.props;
+    const {
+      isSelected,
+      src,
+      title,
+      width = "100%",
+      height = "420",
+    } = this.props;
 
     return (
       <iframe
         className={isSelected ? "ProseMirror-selectednode" : ""}
-        width={width} 
+        width={width}
         height={height}
         src={src}
         title={title}

@@ -17,14 +17,11 @@ import katex, { KatexOptions } from "katex";
 // Test if potential opening or closing delimieter
 // Assumes that there is a "$" at state.src[pos]
 function isValidDelim(state, pos) {
-  let prevChar,
-    nextChar,
-    max = state.posMax,
-    can_open = true,
+  const max = state.posMax;
+  const prevChar = pos > 0 ? state.src.charCodeAt(pos - 1) : -1;
+  const nextChar = pos + 1 <= max ? state.src.charCodeAt(pos + 1) : -1;
+  let can_open = true,
     can_close = true;
-
-  prevChar = pos > 0 ? state.src.charCodeAt(pos - 1) : -1;
-  nextChar = pos + 1 <= max ? state.src.charCodeAt(pos + 1) : -1;
 
   // Check non-whitespace conditions for opening and closing, and
   // check that closing delimeter isn't followed by a number
@@ -46,7 +43,7 @@ function isValidDelim(state, pos) {
 }
 
 function math_inline(state: StateInline, silent: boolean) {
-  let start, match, token, res, pos, esc_count;
+  let match, token, res, pos, esc_count;
 
   if (state.src[state.pos] !== "$") {
     return false;
@@ -65,7 +62,7 @@ function math_inline(state: StateInline, silent: boolean) {
   // This loop will assume that the first leading backtick can not
   // be the first character in state.src, which is known since
   // we have found an opening delimieter already.
-  start = state.pos + 1;
+  const start = state.pos + 1;
   match = start;
   while ((match = state.src.indexOf("$", match)) !== -1) {
     // Found potential $, look for escapes, pos will point to
@@ -76,7 +73,7 @@ function math_inline(state: StateInline, silent: boolean) {
     }
 
     // Even number of escapes, potential closing delimiter found
-    if ((match - pos) % 2 == 1) {
+    if ((match - pos) % 2 === 1) {
       break;
     }
     match += 1;
@@ -120,13 +117,17 @@ function math_inline(state: StateInline, silent: boolean) {
   return true;
 }
 
-function math_display(state: StateBlock, start: number, end: number, silent: boolean) {
+function math_display(
+  state: StateBlock,
+  start: number,
+  end: number,
+  silent: boolean
+) {
   let firstLine,
     lastLine,
     next,
     lastPos,
     found = false,
-    token,
     pos = state.bMarks[start] + state.tShift[start],
     max = state.eMarks[start];
 
@@ -164,12 +165,7 @@ function math_display(state: StateBlock, start: number, end: number, silent: boo
       break;
     }
 
-    if (
-      state.src
-        .slice(pos, max)
-        .trim()
-        .slice(-2) === "$$"
-    ) {
+    if (state.src.slice(pos, max).trim().slice(-2) === "$$") {
       lastPos = state.src.slice(0, max).lastIndexOf("$$");
       lastLine = state.src.slice(pos, lastPos);
       found = true;
@@ -178,7 +174,7 @@ function math_display(state: StateBlock, start: number, end: number, silent: boo
 
   state.line = next + 1;
 
-  token = state.push("math_display", "math", 0);
+  const token = state.push("math_display", "math", 0);
   token.block = true;
   token.content =
     (firstLine && firstLine.trim() ? firstLine + "\n" : "") +
@@ -194,7 +190,7 @@ export default function math_plugin(options: KatexOptions | undefined) {
   options = options || {};
 
   // set KaTeX as the renderer for markdown-it-simplemath
-  const katexInline = function(latex: string) {
+  const katexInline = function (latex: string) {
     if (options) options.displayMode = false;
     try {
       return katex.renderToString(latex, options);
@@ -206,11 +202,11 @@ export default function math_plugin(options: KatexOptions | undefined) {
     }
   };
 
-  const inlineRenderer = function(tokens: Token[], idx: number) {
+  const inlineRenderer = function (tokens: Token[], idx: number) {
     return katexInline(tokens[idx].content);
   };
 
-  const katexBlock = function(latex: string) {
+  const katexBlock = function (latex: string) {
     if (options) options.displayMode = true;
     try {
       return "<p>" + katex.renderToString(latex, options) + "</p>";
@@ -222,11 +218,11 @@ export default function math_plugin(options: KatexOptions | undefined) {
     }
   };
 
-  const blockRenderer = function(tokens: Token[], idx: number) {
+  const blockRenderer = function (tokens: Token[], idx: number) {
     return katexBlock(tokens[idx].content) + "\n";
   };
 
-  return function(md: MarkdownIt): void {
+  return function (md: MarkdownIt): void {
     md.inline.ruler.after("escape", "math_inline", math_inline);
     md.block.ruler.after("blockquote", "math_display", math_display, {
       alt: ["paragraph", "reference", "blockquote", "list"],

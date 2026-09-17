@@ -20,8 +20,8 @@ function isLinkClose(token: Token) {
 // check if turn markdown [](url) to itemcard
 function isItemcard(token: Token) {
   const href = token.attrGet("href");
-  const reg = /^https:\/\/mdsilo\.com\/item\/(.+)$/gmi;
-  return href && reg.test(href || '');
+  const reg = /^https:\/\/mdsilo\.com\/item\/(.+)$/gim;
+  return href && reg.test(href || "");
 }
 
 export default function linksToItemcards(md: MarkdownIt) {

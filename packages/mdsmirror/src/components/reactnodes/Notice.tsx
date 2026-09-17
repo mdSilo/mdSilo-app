@@ -46,8 +46,8 @@ export default class Notice extends Node {
             style: dom.className.includes("tip")
               ? "tip"
               : dom.className.includes("warning")
-                ? "warning"
-                : undefined,
+              ? "warning"
+              : undefined,
           }),
         },
       ],

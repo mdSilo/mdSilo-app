@@ -1,21 +1,24 @@
-import { Node as ProseMirrorNode } from 'prosemirror-model';
+import { Node as ProseMirrorNode } from "prosemirror-model";
 
 export type JSONContent = {
-  type?: string,
-  from?: number,
-  to?: number,
-  attrs?: Record<string, any>,
-  content?: JSONContent[],
+  type?: string;
+  from?: number;
+  to?: number;
+  attrs?: Record<string, any>;
+  content?: JSONContent[];
   marks?: {
-    type: string,
-    attrs?: Record<string, any>,
-    [key: string]: any,
-  }[],
-  text?: string,
-  [key: string]: any,
+    type: string;
+    attrs?: Record<string, any>;
+    [key: string]: any;
+  }[];
+  text?: string;
+  [key: string]: any;
 };
 
-export function getJSONContent(node: ProseMirrorNode, startOffset = 0): JSONContent {
+export function getJSONContent(
+  node: ProseMirrorNode,
+  startOffset = 0
+): JSONContent {
   const isTopNode = node.type === node.type.schema.topNodeType;
   const increment = isTopNode ? 0 : 1;
   const from = startOffset;
@@ -27,8 +30,8 @@ export function getJSONContent(node: ProseMirrorNode, startOffset = 0): JSONCont
     to,
   };
   // marks
-  const marks = node.marks.map(mark => {
-    const output: { type: string, attrs?: Record<string, any> } = {
+  const marks = node.marks.map((mark) => {
+    const output: { type: string; attrs?: Record<string, any> } = {
       type: mark.type.name,
     };
 
@@ -52,13 +55,15 @@ export function getJSONContent(node: ProseMirrorNode, startOffset = 0): JSONCont
   if (node.text) {
     output.text = node.text;
   }
-  // content, 
+  // content,
   if (node.content.childCount) {
     output.content = [];
 
     node.forEach((child, offset) => {
-      output.content?.push(getJSONContent(child, startOffset + offset + increment))
-    })
+      output.content?.push(
+        getJSONContent(child, startOffset + offset + increment)
+      );
+    });
   }
 
   return output;
