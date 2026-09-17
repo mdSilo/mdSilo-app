@@ -134,7 +134,7 @@ export function getCellAttrs(dom: HTMLElement | string): Attrs {
         ? "right"
         : null,
     // prettier-ignore
-  } satisfies CellAttrs;
+  } as CellAttrs;
 }
 
 /**

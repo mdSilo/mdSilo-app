@@ -51,7 +51,13 @@ module.exports = {
       "version": "detect"
     },
     'import/resolver': {
-      typescript: {},
+      "typescript": {
+        "project": "./tsconfig.json"
+      },
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"],
+        "moduleDirectory": ["node_modules", "src"]
+      }
     },
   },
 };
