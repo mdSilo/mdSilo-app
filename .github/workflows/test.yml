@@ -16,6 +16,8 @@ jobs:
       with:
         node-version: 22
 
-    - run: yarn && yarn lint 
-    - run: yarn tc 
-    - run: yarn test 
+    - run: yarn
+    - run: yarn --cwd packages/mdsmirror build
+    - run: yarn lint
+    - run: yarn tc
+    - run: yarn test
