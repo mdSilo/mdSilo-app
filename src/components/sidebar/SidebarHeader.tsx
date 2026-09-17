@@ -1,9 +1,9 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Menu } from '@headlessui/react';
 import { 
-  IconChevronsDown, IconChevronLeft, IconSettings, IconBrowser, 
-  IconPizza, IconInfoCircle, IconCurrentLocation 
-} from '@tabler/icons-react';
+  TbChevronsDown as IconChevronsDown, TbChevronLeft as IconChevronLeft, TbSettings as IconSettings, TbBrowser as IconBrowser,
+  TbPizza as IconPizza, TbInfoCircle as IconInfoCircle, TbCurrentLocation as IconCurrentLocation
+} from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import { DropdownItem } from 'components/misc/Dropdown';

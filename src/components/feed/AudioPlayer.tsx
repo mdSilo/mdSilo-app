@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { IconPlaylist } from '@tabler/icons-react';
+import { TbPlaylist as IconPlaylist } from 'react-icons/tb';
 import { SidebarTab, store } from 'lib/store';
 import { PodType } from 'types/model';
 import { computePlaylist } from 'components/sidebar/SidebarPlaylist';

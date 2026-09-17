@@ -1,9 +1,9 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
-  IconMenu2, IconDna, IconCalendar, IconFile, IconFeather, IconCheckbox,
-  IconFolderPlus, IconFileText, IconDeviceFloppy, IconClearAll, 
-  IconFileImport, IconRss, IconSettings, IconLayoutKanban 
-} from '@tabler/icons-react';
+  TbMenu2 as IconMenu2, TbDna as IconDna, TbCalendar as IconCalendar, TbFile as IconFile, TbFeather as IconFeather, TbCheckbox as IconCheckbox,
+  TbFolderPlus as IconFolderPlus, TbFileText as IconFileText, TbDeviceFloppy as IconDeviceFloppy, TbClearAll as IconClearAll,
+  TbFileImport as IconFileImport, TbRss as IconRss, TbSettings as IconSettings, TbLayoutKanban as IconLayoutKanban
+} from 'react-icons/tb';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';

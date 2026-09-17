@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
-import { IconHeadphones } from '@tabler/icons-react';
+import { TbHeadphones as IconHeadphones } from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettings';
 import { ciStringCompare, dateCompare } from 'utils/helper';
@@ -158,7 +158,7 @@ const Playitem = (
   const { node, isHighlighted, className = '', style, ...otherProps } = props;
   const setCurrentPod = useStore((state) => state.setCurrentPod);
 
-  const onClickItem = useCallback((e) => {
+  const onClickItem = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     setCurrentPod(node);
   }, [node, setCurrentPod]);

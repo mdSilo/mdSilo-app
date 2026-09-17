@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconPlus, IconTool, IconTrash } from "@tabler/icons-react";
+import { TbPlus as IconPlus, TbTool as IconTool, TbTrash as IconTrash } from "react-icons/tb";
 import { Column, Id, Card } from "./types";
 import TaskCard from "./Card";
 

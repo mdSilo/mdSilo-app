@@ -13,7 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
-import { IconCircle, IconCircleX } from "@tabler/icons-react";
+import { TbCircle as IconCircle, TbCircleX as IconCircleX } from "react-icons/tb";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { genId } from "utils/helper";
 import { imageExtensions } from "utils/file-extensions";

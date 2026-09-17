@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { IconHeadphones, IconPlus, IconRss, IconTrash } from "@tabler/icons-react";
+import { TbHeadphones as IconHeadphones, TbPlus as IconPlus, TbRss as IconRss, TbTrash as IconTrash } from "react-icons/tb";
 import Tooltip from "components/misc/Tooltip";
 import { ChannelType } from "types/model";
 import * as dataAgent from "./dataAgent";

@@ -1,6 +1,7 @@
 import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState, useEffect } from 'react';
-import { IconChevronsUp, IconFolderPlus, IconSearch, Icon } from '@tabler/icons-react';
+import { TbChevronsUp as IconChevronsUp, TbFolderPlus as IconFolderPlus, TbSearch as IconSearch } from 'react-icons/tb';
+import type { IconType as Icon } from 'react-icons';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
 import { store, useStore } from 'lib/store';
 import type { Note } from 'types/model';

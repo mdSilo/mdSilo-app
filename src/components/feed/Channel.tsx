@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from "react";
-import { IconCircle, IconCircleCheck, IconRefresh } from "@tabler/icons-react";
+import { TbCircle as IconCircle, TbCircleCheck as IconCircleCheck, TbRefresh as IconRefresh } from "react-icons/tb";
 import Tooltip from "components/misc/Tooltip";
 import Spinner from "components/misc/Spinner";
 import { fmtDatetime, dateCompare } from 'utils/helper';

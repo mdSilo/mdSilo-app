@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { IconArrowBarToUp } from '@tabler/icons-react';
+import { TbArrowBarToUp as IconArrowBarToUp } from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettings';
 import Tooltip from 'components/misc/Tooltip';

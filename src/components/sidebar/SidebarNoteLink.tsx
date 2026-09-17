@@ -5,7 +5,7 @@ import {
   memo,
   useCallback,
 } from 'react';
-import { IconCaretRight, IconMarkdown, IconNote, IconPhoto } from '@tabler/icons-react';
+import { TbCaretRight as IconCaretRight, TbMarkdown as IconMarkdown, TbNote as IconNote, TbPhoto as IconPhoto } from 'react-icons/tb';
 import { NoteTreeItem, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import { imageExtensions } from 'utils/file-extensions';
@@ -35,7 +35,7 @@ const SidebarNoteLink = (
   const isDir = node.is_dir; 
   const isNonMd = !isDir && !checkFileIsMd(node.id);
   const isImage = imageExtensions.includes(getFileExt(node.id).toLowerCase());
-  const onClickFile = useCallback(async (e) => {
+  const onClickFile = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     // console.log("click, isLoading", isLoading, node.id);
     if (isDir) {

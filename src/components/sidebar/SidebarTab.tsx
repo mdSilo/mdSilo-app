@@ -1,5 +1,5 @@
 import { ForwardedRef, forwardRef, memo } from 'react';
-import { Icon } from '@tabler/icons-react';
+import type { IconType as Icon } from 'react-icons';
 
 type Props = {
   isActive: boolean;

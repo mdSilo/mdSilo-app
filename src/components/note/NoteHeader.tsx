@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
 import { 
-  IconDots, IconFile, IconFileText, IconMarkdown, 
-  IconPhoto, IconTournament, IconTrash 
-} from '@tabler/icons-react';
+  TbDots as IconDots, TbFile as IconFile, TbFileText as IconFileText, TbMarkdown as IconMarkdown,
+  TbPhoto as IconPhoto, TbTournament as IconTournament, TbTrash as IconTrash
+} from 'react-icons/tb';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
 import { ExportAs } from 'editor/hooks/useExport';

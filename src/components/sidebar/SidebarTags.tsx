@@ -1,7 +1,7 @@
 import React, { useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes } from 'react';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
-import { IconHash } from '@tabler/icons-react';
+import { TbHash as IconHash } from 'react-icons/tb';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { Notes, useStore } from 'lib/store';
 import { HASHTAG_REGEX } from 'components/view/ForceGraph';
@@ -98,7 +98,7 @@ const SidebarTag = (
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
-  const onClickTag = useCallback(async (e) => {
+  const onClickTag = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     dispatch({view: 'tag', tag: node.name});
   }, [dispatch, node]);

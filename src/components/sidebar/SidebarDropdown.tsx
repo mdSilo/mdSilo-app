@@ -1,8 +1,8 @@
 import { memo, useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
 import { 
-  IconCornerDownRight, IconDots, IconDotsDiagonal, IconId, IconPlus, IconTrash 
-} from '@tabler/icons-react';
+  TbCornerDownRight as IconCornerDownRight, TbDots as IconDots, TbDotsDiagonal as IconDotsDiagonal, TbId as IconId, TbPlus as IconPlus, TbTrash as IconTrash
+} from 'react-icons/tb';
 import { usePopper } from 'react-popper';
 import { DropdownItem } from 'components/misc/Dropdown';
 import Portal from 'components/misc/Portal';
