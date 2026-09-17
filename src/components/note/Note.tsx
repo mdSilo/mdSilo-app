@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
-import { invoke } from '@tauri-apps/api';
-import { convertFileSrc } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
+import { convertFileSrc } from '@tauri-apps/api/core';
 import copy from "copy-to-clipboard";
 import { IconCaretRight } from '@tabler/icons-react';
 import Title from 'components/note/Title';

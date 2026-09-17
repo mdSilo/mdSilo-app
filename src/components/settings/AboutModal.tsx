@@ -1,5 +1,4 @@
 import { getVersion, getTauriVersion } from '@tauri-apps/api/app';
-import { writeText } from '@tauri-apps/api/clipboard';
 import { useState, useEffect } from 'react';
 import { openUrl } from 'file/open';
 import { getLog, clearLog } from 'file/storage';
@@ -40,7 +39,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
           <button 
             className="link m-2"
             onClick={async () => { 
-              await writeText(`App: ${appVersion} \n Tauri: ${tauriVersion}`);
+              await navigator.clipboard.writeText(`App: ${appVersion} \n Tauri: ${tauriVersion}`);
             }}
           >
             Copy About
@@ -50,7 +49,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
             onClick={async () => { 
               const log = await getLog();
               // console.log("log", log);
-              await writeText(JSON.stringify(log));
+              await navigator.clipboard.writeText(JSON.stringify(log));
             }}
           >
             Copy Log

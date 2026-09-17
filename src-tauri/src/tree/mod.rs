@@ -161,9 +161,9 @@ impl Tree {
 
 // Build a new Parallel walker
 fn new_walker(dir: PathBuf, depth: Option<usize>) -> Result<WalkParallel, String> {
-  let root = fs::canonicalize(dir).map_err(|e| (format!("{e}")))?;
+  let root = fs::canonicalize(dir).map_err(|e| format!("{e}"))?;
 
-  fs::metadata(&root).map_err(|e| (format!("Not Found {}: {e}", root.display())))?;
+  fs::metadata(&root).map_err(|e| format!("Not Found {}: {e}", root.display()))?;
 
   Ok(
     WalkBuilder::new(root)

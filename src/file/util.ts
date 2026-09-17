@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { window as appWindow } from '@tauri-apps/api';
-import { invoke } from '@tauri-apps/api/tauri'
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { invoke } from '@tauri-apps/api/core'
 import { store, NotesData } from 'lib/store';
 
 
@@ -14,7 +14,7 @@ export const isTauri = Boolean(
 export const setWindowTitle = (title: string, inLoading?: boolean): void => {
 	if (isTauri) {
     const isLoading = inLoading ?? store.getState().isLoading;
-		appWindow.getCurrent().setTitle(`${title} ${isLoading ? ' --- Loading ---' : ''}`);
+    getCurrentWindow().setTitle(`${title} ${isLoading ? ' --- Loading ---' : ''}`);
 	}
 };
 

@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useEffect } from 'react';
 import 'styles/styles.css';
 import 'tippy.js/dist/tippy.css';

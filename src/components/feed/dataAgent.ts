@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { ChannelType, ArticleType } from "types/model";
 
 type FeedResult = {

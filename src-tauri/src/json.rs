@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::files::{read_dir, write_file, EventPayload};
 use crate::storage::get_data;
 use crate::tree::assemble_note_tree;
+use tauri::Emitter;
 // use crate::models::Note;
 
 #[derive(serde::Serialize, Clone, Debug, Default)]

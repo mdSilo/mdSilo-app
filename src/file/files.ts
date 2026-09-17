@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/core'
 import DirectoryAPI, { FileMetaData } from './directory';
 import { isTauri, normalizeSlash, joinPath, joinPaths, getDirPath } from './util';
 

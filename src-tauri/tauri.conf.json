@@ -1,20 +1,41 @@
 {
-  "package": {
-    "productName": "mdsilo",
-    "version": "0.5.10"
-  },
+  "productName": "mdsilo",
+  "version": "0.5.10",
+  "identifier": "mdsilo",
   "build": {
-    "distDir": "../build",
-    "devPath": "http://localhost:3000",
+    "frontendDist": "../build",
+    "devUrl": "http://localhost:3000",
     "beforeDevCommand": "yarn start",
-    "beforeBuildCommand": "yarn build",
+    "beforeBuildCommand": "yarn build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "mdSilo",
+        "width": 1024,
+        "height": 768,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "visible": false
+      },
+      {
+        "width": 800,
+        "height": 600,
+        "decorations": false,
+        "url": "splashscreen.html",
+        "label": "splashscreen"
+      }
+    ],
+    "security": {
+      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'"
+    },
     "withGlobalTauri": true
   },
-  "tauri": {
-    "bundle": {
+  "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "mdsilo",
       "publisher": "mdSilo Team",
       "icon": [
         "icons/32x32.png",
@@ -29,8 +50,10 @@
       "category": "Productivity",
       "shortDescription": "",
       "longDescription": "",
-      "deb": {
-        "depends": []
+      "linux": {
+        "deb": {
+          "depends": []
+        }
       },
       "macOS": {
         "frameworks": [],
@@ -44,49 +67,10 @@
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": ""
-      }
-    },
-    "allowlist": {
-      "clipboard": {
-        "all": true
       },
-      "dialog": {
-        "all": true
-      },
-      "window": {
-        "all": true
-      },
-      "shell": {
-        "all": true
-      },
-      "protocol": {
-				"all": true,
-				"asset": true,
-				"assetScope": ["**", "**/*"]
-			}
-    },
-    "windows": [
-      {
-        "title": "mdSilo",
-        "width": 1024,
-        "height": 768,
-				"minWidth": 800,
-				"minHeight": 600,
-				"resizable": true,
-				"fullscreen": false,
-        "visible": false
-      },
-      {
-        "width": 800,
-        "height": 600,
-        "decorations": false,
-        "url": "splashscreen.html",
-        "label": "splashscreen"
-      }
-    ],
-    "security": {
-      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'"
-    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
     "updater": {
       "active": true,
       "dialog": true,
@@ -94,10 +78,6 @@
         "https://mdSilo.github.io/mdSilo-app/install.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVBRkUxMUMwNTU0QjcyM0MKUldROGNrdFZ3QkgrNm1xWFpmb3FpK3ExV1NWWjk0TFRmSm42UHVqQk9PZmdYa0JhZlpsRzFHZm8K"
-    },
-    "systemTray": {
-      "iconPath": "icons/icon.ico",
-      "iconAsTemplate": true
     }
   }
 }

@@ -14,7 +14,7 @@ import {
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { IconCircle, IconCircleX } from "@tabler/icons-react";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { genId } from "utils/helper";
 import { imageExtensions } from "utils/file-extensions";
 import { openFileDilog, openFilePath, openUrl } from "file/open";

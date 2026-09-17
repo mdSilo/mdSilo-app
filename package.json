@@ -29,7 +29,8 @@
     "@tabler/icons-react": "^2.42.0",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.12",
-    "@tauri-apps/api": "1.6.0",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
     "@tippyjs/react": "^4.2.6",
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/sortable": "^8.0.0",
@@ -57,7 +58,7 @@
     "zustand": "^3.7.2"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "1.6.3",
+    "@tauri-apps/cli": "^2.11.4",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^12.1.4",
     "@types/d3-drag": "^3.0.7",

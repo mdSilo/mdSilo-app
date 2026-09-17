@@ -1,5 +1,5 @@
 use std::path::Path;
-use tauri::{api::dialog, Manager};
+use tauri_plugin_dialog::DialogExt;
 
 use crate::files::read_directory;
 
@@ -16,6 +16,9 @@ pub async fn web_window(
   // inject js script
   let mut inject_script = format!("// ## [{title}] Script Injection ## \n\n");
   let script_path = script_path.unwrap_or_default();
+  
+  // Check if the script path is provided and valid
+  
   if !script_path.is_empty() {
     // check is dir or file and read all files
     let file_path = Path::new(&script_path);
@@ -31,9 +34,11 @@ pub async fn web_window(
     } else if file_path.is_file() {
       let script_content =
         std::fs::read_to_string(&script_path).unwrap_or_else(|msg| {
-          let main_window = app.get_window("main").unwrap();
           let err_msg = format!("[app.items.script] {}\n{}", script_path, msg);
-          dialog::message(Some(&main_window), &title, err_msg);
+          app.dialog()
+            .message(err_msg)
+            .title(&title)
+            .show(|_| {});
           "".to_string()
         });
       inject_script += &format!("{script_content}\n");
@@ -41,10 +46,10 @@ pub async fn web_window(
   }
 
   std::thread::spawn(move || {
-    let _window = tauri::WindowBuilder::new(
+      let _window = tauri::WebviewWindowBuilder::new(
       &app,
       label,
-      tauri::WindowUrl::App(url.parse().unwrap()),
+        tauri::WebviewUrl::App(url.parse().unwrap()),
     )
     .initialization_script(INIT_SCRIPT)
     .initialization_script(&inject_script)
@@ -55,7 +60,10 @@ pub async fn web_window(
 }
 
 #[tauri::command]
-pub fn msg_dialog(app: tauri::AppHandle, title: &str, msg: &str) {
-  let win = app.app_handle().get_window("main");
-  tauri::api::dialog::message(win.as_ref(), title, msg);
+pub fn msg_dialog(_app: tauri::AppHandle, title: &str, msg: &str) {
+  _app
+    .dialog()
+    .message(msg)
+    .title(title)
+    .show(|_| {});
 }

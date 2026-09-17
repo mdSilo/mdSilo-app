@@ -12,7 +12,7 @@ use std::fs;
 use std::path::Path;
 use std::sync::mpsc::channel;
 use std::time::SystemTime;
-use tauri::{api, AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Listener};
 
 #[cfg(windows)]
 use std::os::windows::fs::MetadataExt;
@@ -673,8 +673,8 @@ pub fn open_url(url: String) -> bool {
 }
 
 #[tauri::command]
-pub fn open_link(app: AppHandle, url: String) {
-  api::shell::open(&app.shell_scope(), url, None).unwrap_or(());
+pub fn open_link(_app: AppHandle, url: String) {
+  open::that(url).unwrap_or(());
 }
 
 /// watch event as a bridge from injected script to frontend via invoke()

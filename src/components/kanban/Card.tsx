@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { IconFeather, IconPaperclip, IconStack } from "@tabler/icons-react";
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import { useStore } from "lib/store";
 import { isMobile } from "utils/helper";
 import { openFileDilog } from "file/open";

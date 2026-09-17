@@ -4,7 +4,7 @@ use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::str;
-use tauri::api::path::local_data_dir;
+use dirs::data_local_dir;
 
 #[derive(Serialize, Debug, Default)]
 pub struct StorageData {
@@ -19,7 +19,7 @@ pub fn create_mdsilo_dir() -> Option<PathBuf> {
   // Linux: $HOME/.local/share/mdsilo
   // macOS: $HOME/Library/Application
   // Windows: $HOME/AppData/Local/mdsilo
-  if let Some(local_dir) = local_data_dir() {
+  if let Some(local_dir) = data_local_dir() {
     let data_path = Path::new(&local_dir).join("mdsilo");
     // make sure the mdsilo dir is created
     match fs::create_dir_all(data_path.clone()) {
@@ -80,7 +80,7 @@ pub fn set_data(key: String, value: Value) -> bool {
 
 #[tauri::command]
 pub fn get_data(key: String) -> Result<StorageData, String> {
-  let storage_dir = match local_data_dir() {
+  let storage_dir = match data_local_dir() {
     Some(dir) => Path::new(&dir).join("mdsilo"),
     None => {
       return Ok(StorageData::default());
@@ -117,7 +117,7 @@ pub fn get_data(key: String) -> Result<StorageData, String> {
 
 #[tauri::command]
 pub fn delete_data(key: String) -> bool {
-  let storage_dir = match local_data_dir() {
+  let storage_dir = match data_local_dir() {
     Some(dir) => Path::new(&dir).join("mdsilo"),
     None => {
       return false;

@@ -1,6 +1,5 @@
 use tauri::{
-  api::path::local_data_dir, 
-  Runtime, generate_handler, 
+  Runtime, generate_handler,
   plugin::{Builder, TauriPlugin}, 
 };
 
@@ -20,7 +19,7 @@ pub fn inject_script(script_path: Option<String>) -> String {
   let mut script = format!("// ## Script Injection ## \n\n {INIT_SCRIPT}");
   // TODO: set the script dir or default dir is `local_data_dir/mdsilo/plugins`
   let script_path = script_path.unwrap_or_else(|| {
-    if let Some(local_dir) = local_data_dir() {
+    if let Some(local_dir) = dirs::data_local_dir() {
       Path::new(&local_dir).join("mdsilo/plugins").display().to_string()
     } else {
       String::new()

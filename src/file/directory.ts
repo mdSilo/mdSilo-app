@@ -1,5 +1,5 @@
-import type { UnlistenFn } from '@tauri-apps/api/event';
-import { invoke } from '@tauri-apps/api/tauri'
+import type { Event, UnlistenFn } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core'
 import { doDeleteNote } from 'editor/hooks/useDeleteNote';
 import { store } from 'lib/store';
 import { emitCustomEvent } from 'utils/helper';
@@ -48,13 +48,6 @@ interface DirectoryData {
 interface EventPayload {
   paths: string[];
   event: string;
-}
-
-interface Event {
-  event: string;
-  windowLabel: string;
-  payload: EventPayload;
-  id: number;
 }
 
 let listener: UnlistenFn;
@@ -146,8 +139,8 @@ class DirectoryAPI {
       // emit
       invoke('listen_dir', { dir: this.dirPath });
       // listen
-      const { getCurrent } = await import('@tauri-apps/api/window');
-      listener = await getCurrent().listen('changes', async (e: Event) => {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      listener = await getCurrentWindow().listen('changes', async (e: Event<EventPayload>) => {
         // console.log("listen event: ", e);
         // sync the change on listen
         const payload: EventPayload = e.payload;
@@ -228,8 +221,8 @@ class DirectoryAPI {
   */
   async unlisten(): Promise<void> {
     listener?.();
-    const { getCurrent } = await import('@tauri-apps/api/window');
-    return getCurrent().emit('unlisten_dir');
+    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+    return getCurrentWindow().emit('unlisten_dir');
   }
 }
 

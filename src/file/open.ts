@@ -1,5 +1,5 @@
-import * as dialog from '@tauri-apps/api/dialog';
-import { invoke } from '@tauri-apps/api/tauri';
+import * as dialog from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
 import { Notes, store } from 'lib/store';
 import { defaultNote, Note } from 'types/model';
 import DirectoryAPI from './directory';
