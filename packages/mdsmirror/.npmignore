@@ -1,0 +1,17 @@
+src
+dist/stories
+demo 
+.github
+.storybook
+.eslintignore
+.eslintrc
+.gitattributes
+.gitignore
+babel.config.js
+devlog.md
+tsconfig.json
+
+.test.js
+example
+.circleci
+.map

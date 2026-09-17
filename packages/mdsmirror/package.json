@@ -1,0 +1,109 @@
+{
+  "name": "mdsmirror",
+  "description": "More than a WYSIWYG Markdown editor",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "test": "jest",
+    "lint": "tsc --noEmit && eslint '*/**/*.{js,ts,tsx}' --quiet",
+    "tc": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "tsc",
+    "preversion": "yarn build",
+    "watch": "yarn tsc-watch",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "dist"
+    ]
+  },
+  "dependencies": {
+    "@juggle/resize-observer": "^3.4.0",
+    "abcjs": "6.2.2",
+    "copy-to-clipboard": "^3.3.3",
+    "echarts": "5.4.3",
+    "katex": "^0.16.33",
+    "lodash": "^4.17.23",
+    "markdown-it": "^14.1.1",
+    "markdown-it-container": "^4.0.0",
+    "markdown-it-mathjax": "^2.0.0",
+    "mermaid": "9.1.7",
+    "mhchemparser": "4.2.1",
+    "prosemirror-commands": "^1.7.1",
+    "prosemirror-dropcursor": "^1.8.2",
+    "prosemirror-gapcursor": "^1.4.0",
+    "prosemirror-history": "^1.5.0",
+    "prosemirror-inputrules": "^1.5.1",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-markdown": "^1.13.4",
+    "prosemirror-model": "1.25.11",
+    "prosemirror-schema-list": "^1.5.1",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-tables": "^1.8.5",
+    "prosemirror-transform": "1.11.0",
+    "prosemirror-utils": "^1.2.2",
+    "prosemirror-view": "1.42.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-icons": "=5.4.0",
+    "refractor": "^3.6.0",
+    "slugify": "^1.6.6",
+    "scroll-into-view-if-needed": "^3.1.0",
+    "styled-components": "^6.1.19",
+    "stylis": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/echarts": "^4.9.17",
+    "@types/jest": "^27.4.1",
+    "@types/katex": "^0.16.8",
+    "@types/lodash": "^4.14.181",
+    "@types/markdown-it": "^14.1.2",
+    "@types/markdown-it-container": "4.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/refractor": "^3.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
+    "@typescript-eslint/parser": "^5.17.0",
+    "eslint": "^8.12.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-react-app": "^7.0.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.29.4",
+    "eslint-plugin-react-hooks": "^4.4.0",
+    "jest": "^27.5.1",
+    "prettier": "^2.6.2",
+    "storybook": "^10.2.15",
+    "@storybook/addon-a11y": "^10.2.15",
+    "@storybook/addon-docs": "^10.2.15",
+    "@storybook/addon-webpack5-compiler-swc": "^4.0.2",
+    "@storybook/react-webpack5": "^10.2.15",
+    "@storybook/test-runner": "^0.24.2",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+  },
+  "resolutions": {
+    "prosemirror-model": "1.25.11",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-transform": "1.11.0",
+    "prosemirror-view": "1.42.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "editor",
+    "markdown",
+    "text",
+    "wysiwyg"
+  ],
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

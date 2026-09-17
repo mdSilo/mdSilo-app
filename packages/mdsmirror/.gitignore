@@ -1,0 +1,9 @@
+dist
+node_modules/
+.log
+.DS_Store
+.idea
+devlog.md
+
+*storybook.log
+storybook-static
