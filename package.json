@@ -68,7 +68,7 @@
     "@types/is-hotkey": "^0.1.10",
     "@types/jest": "^29.1.2",
     "@types/lodash": "^4.17.23",
-    "@types/node": "^20.11.19",
+    "@types/node": "^22.13.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/react-highlight-words": "^0.16.7",
