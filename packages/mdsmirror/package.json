@@ -8,8 +8,8 @@
   "scripts": {
     "test": "jest",
     "lint": "tsc --noEmit && ESLINT_USE_FLAT_CONFIG=false eslint '*/**/*.{js,ts,tsx}' --quiet",
-    "tc": "../../node_modules/.bin/tsc -p tsconfig.json",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "tc": "yarn tsc -p tsconfig.json",
+    "build": "yarn tsc -p tsconfig.json",
     "preversion": "yarn build",
     "watch": "yarn tsc-watch",
     "start": "NODE_OPTIONS=--openssl-legacy-provider storybook dev -p 6006",

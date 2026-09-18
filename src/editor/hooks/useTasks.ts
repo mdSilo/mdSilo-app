@@ -21,7 +21,7 @@ export default function useTasks() {
       loadDir(initDir).then(() => setIsLoaded(true));
     }
   }, [initDir, isLoaded, setIsLoaded]);
-  
+
   const notes = useStore((state) => state.notes);
 
   const docTasks = useMemo(
@@ -40,7 +40,7 @@ export const computeTasks = (notes: Notes): DocTask[] => {
 
     if (tasks.length > 0) {
       const newTasks: TaskWithID[] = tasks.map(
-        t => {return {title: note.title, text: t.text, completed: t.completed}}
+        (t: Task) => {return {title: note.title, text: t.text, completed: t.completed}}
       );
       result.push({ note, tasks: newTasks });
     }
@@ -51,7 +51,7 @@ export const computeTasks = (notes: Notes): DocTask[] => {
 const computeNoteTasks = (content: string) => {
   const doc = parser.parse(content);
   // console.log(">> doc: ", doc, content)
-  const tasks = getTasks(doc); 
-  
+  const tasks = getTasks(doc);
+
   return tasks;
 };

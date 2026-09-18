@@ -16,8 +16,9 @@ jobs:
       with:
         node-version: 22
 
-    - run: yarn
+    - run: yarn --cwd packages/mdsmirror install
     - run: yarn --cwd packages/mdsmirror build
+    - run: yarn
     - name: Lint (non-blocking)
       run: yarn lint
       continue-on-error: true

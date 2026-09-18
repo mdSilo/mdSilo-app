@@ -21,8 +21,8 @@ import { imageExtensions, docExtensions } from 'utils/file-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
 import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
-import { 
-  joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir 
+import {
+  joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir
 } from 'file/util';
 import { getFileExt } from 'file/process';
 import NoteHeader from './NoteHeader';
@@ -33,7 +33,7 @@ import updateBacklinks from './backlinks/updateBacklinks';
 type Props = {
   noteId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  highlightedPath?: any; // TODO 
+  highlightedPath?: any; // TODO
   className?: string;
 };
 
@@ -45,11 +45,11 @@ function Note(props: Props) {
   const editorInstance = useRef<MsEditor>(null);
   const getHeading = () => {
     const hdings = editorInstance.current?.getHeadings();
-    // console.log(hdings); 
+    // console.log(hdings);
     setHeadings(hdings ?? []);
   };
 
-  useEffect(() => { getHeading(); }, [noteId]); // to trigger change on dep change 
+  useEffect(() => { getHeading(); }, [noteId]); // to trigger change on dep change
 
   useEffect(() => {
     emitCustomEvent("PageLoaded", noteId);
@@ -64,7 +64,7 @@ function Note(props: Props) {
   const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
   const useAsset = useStore((state) => state.useAsset);
-  
+
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
 
@@ -73,23 +73,23 @@ function Note(props: Props) {
 
   // console.log("initDir", initDir, protocol, navigator.platform);
   const storeNotes = useStore((state) => state.notes);
-  // get note and properties: title,  content value.... 
+  // get note and properties: title,  content value....
   const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
   const isDaily = thisNote?.is_daily ?? false;
   const title = thisNote?.title || '';
-  const mdContent = thisNote?.content || ' '; // show ' ' if null 
-  
+  const mdContent = thisNote?.content || ' '; // show ' ' if null
+
   // const doc = parser.parse(mdContent);
   // console.log(">> doc: ", doc);
-  // const json = getJSONContent(doc); 
+  // const json = getJSONContent(doc);
   // console.log(">>json: ", json);
-  
+
   const notePath = thisNote?.file_path;
-  const shortNotePath = initDir && notePath 
+  const shortNotePath = initDir && notePath
     ? notePath.replace(initDir, normalizeSlash(initDir).split('/').pop() || '.')
     : notePath;
 
-  // for context 
+  // for context
   const currentView = useCurrentViewContext();
   const state = currentView.state;
   const dispatch = currentView.dispatch;
@@ -108,7 +108,7 @@ function Note(props: Props) {
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
       await writeFile(notePath, text);
-      // update TOC if any 
+      // update TOC if any
       getHeading();
     },
     [notePath]
@@ -133,9 +133,9 @@ function Note(props: Props) {
         return notesArr.findIndex((n) => (n.title === newTitle)) === -1;
       };
       if (isTitleUnique()) {
-        await updateBacklinks(title, newTitle); 
-        // on rename file: 
-        // 0- reload the old note to store.  
+        await updateBacklinks(title, newTitle);
+        // on rename file:
+        // 0- reload the old note to store.
         await openFilePath(noteId, false);
         const oldPath = noteId;
         // 1- new FilePath
@@ -161,9 +161,9 @@ function Note(props: Props) {
         // 5- nav to renamed note
         await openFilePath(newPath, true);
         dispatch({view: 'md', params: {noteId: newPath}});
-        
-        if (initDir) { 
-          await writeJsonFile(initDir); 
+
+        if (initDir) {
+          await writeJsonFile(initDir);
         }
       }
     },
@@ -209,7 +209,7 @@ function Note(props: Props) {
       }
       const parentDir = await getDirPath(notePath);
       await createNewNote(parentDir, title);
-      
+
       return encodeURI(title);
     },
     [notePath, storeNotes]
@@ -218,14 +218,14 @@ function Note(props: Props) {
   // open link
   const onOpenLink = useCallback(
     async (href: string) => {
-      if (isUrl(href)) { 
+      if (isUrl(href)) {
         await openUrl(href);
       } else {
         // find the note per title
-        const title = decodeURI(href.trim()); 
-        // ISSUE ALERT: 
-        // maybe more than one notes with same title(ci), 
-        // but only link to first searched one 
+        const title = decodeURI(href.trim());
+        // ISSUE ALERT:
+        // maybe more than one notes with same title(ci),
+        // but only link to first searched one
         const toNote = Object.values(storeNotes).find((n) => (n.title === title));
         if (!toNote) {
           // IF note is not existing, create new
@@ -242,7 +242,7 @@ function Note(props: Props) {
     [dispatch, notePath, storeNotes]
   );
 
-  // attach file 
+  // attach file
   const onAttachFile = useCallback(
     async (accept: string) => {
       const ext = accept === 'image/*' ? imageExtensions : docExtensions;
@@ -260,7 +260,7 @@ function Note(props: Props) {
           // now it is relative path
           fileUrl = encodeURI(assetPath[1] || filePath);
         } else {
-          fileUrl = accept === 'image/*' 
+          fileUrl = accept === 'image/*'
             ? convertFileSrc(filePath)
             : encodeURI(filePath);
         }
@@ -284,7 +284,7 @@ function Note(props: Props) {
     [initDir, useAsset]
   );
 
-   // open Attachment file using defult application 
+   // open Attachment file using defult application
   const onClickAttachment = useCallback(async (href: string) => {
     const realHref = href.startsWith('./') && initDir
       ? href.replace('.', initDir)
@@ -299,7 +299,7 @@ function Note(props: Props) {
     const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-${ty}.svg`
     const dir = await saveDilog(fname);
     const defaultDir = `${initDir}/mindmap/${fname}`;
-    const saveDir = normalizeSlash(dir || defaultDir); 
+    const saveDir = normalizeSlash(dir || defaultDir);
     await writeFile(saveDir, rawSVG);
   }, [initDir, title]);
 
@@ -315,7 +315,7 @@ function Note(props: Props) {
 
   const noteContainerClassName =
     'flex flex-col w-full bg-white dark:bg-black dark:text-gray-200';
-  const errorContainerClassName = 
+  const errorContainerClassName =
     `${noteContainerClassName} items-center justify-center h-full p-4`;
 
   const isNoteExists = useMemo(() => !!storeNotes[noteId], [noteId, storeNotes]);
@@ -358,8 +358,8 @@ function Note(props: Props) {
                 onChange={onTitleChange}
                 isDaily={isDaily}
               />
-              {(rawMode === 'wysiwyg') && headings.length > 0 
-                ? (<Toc headings={headings} />) 
+              {(rawMode === 'wysiwyg') && headings.length > 0
+                ? (<Toc headings={headings} />)
                 : null
               }
               <div className="flex-1 px-2 pt-2 pb-8" id="note-content">
@@ -373,14 +373,14 @@ function Note(props: Props) {
                     className={"text-xl"}
                   />
                 ) : rawMode === 'mindmap' ? (
-                  <Mindmap 
-                    key={`mp-${noteId}`} 
-                    title={title} 
-                    mdValue={mdContent} 
-                    initDir={initDir} 
+                  <Mindmap
+                    key={`mp-${noteId}`}
+                    title={title}
+                    mdValue={mdContent}
+                    initDir={initDir}
                   />
                 ) : (
-                  <MsEditor 
+                  <MsEditor
                     key={`wys-${noteId}`}
                     ref={editorInstance}
                     value={mdContent}
@@ -392,12 +392,12 @@ function Note(props: Props) {
                     onChange={onContentChange}
                     onSearchLink={onSearchNote}
                     onCreateLink={onCreateNote}
-                    onSearchSelectText={(txt) => onSearchText(txt)}
-                    onClickHashtag={(txt) => onSearchText(txt, 'hashtag')}
-                    onOpenLink={onOpenLink} 
-                    attachFile={onAttachFile} 
-                    onClickAttachment={onClickAttachment} 
-                    onSaveDiagram={onSaveDiagram} 
+                    onSearchSelectText={(txt: string) => onSearchText(txt)}
+                    onClickHashtag={(txt: string) => onSearchText(txt, 'hashtag')}
+                    onOpenLink={onOpenLink}
+                    attachFile={onAttachFile}
+                    onClickAttachment={onClickAttachment}
+                    onSaveDiagram={onSaveDiagram}
                     onCopyHash={onCopyHash}
                     embeds={embeds}
                     disables={['sub']}
@@ -456,9 +456,9 @@ const getUntitledTitle = (noteId: string) => {
 
 const createNewNote = async (parentDir: string, title: string) => {
   const notePath = await joinPaths(parentDir, [`${title}.md`]);
-  const newNote = { 
-    ...defaultNote, 
-    id: notePath, 
+  const newNote = {
+    ...defaultNote,
+    id: notePath,
     title,
     file_path: notePath,
     is_daily: regDateStr.test(title),

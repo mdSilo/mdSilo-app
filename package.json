@@ -6,12 +6,12 @@
   "homepage": "https://mdsilo.com",
   "scripts": {
     "start": "vite --host 0.0.0.0 --port 3000",
-    "build": "vite build",
+    "build": "yarn workspace mdsmirror build && vite build",
     "test": "vitest run",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint src packages/mdsmirror --ignore-pattern packages/mdsmirror/dist --ext .tsx,.ts",
     "lint-ignore": "ESLINT_USE_FLAT_CONFIG=false eslint src packages/mdsmirror --ignore-pattern packages/mdsmirror/dist --ext .tsx,.ts || true",
     "fix": "prettier --write src",
-    "tc": "tsc",
+    "tc": "yarn workspace mdsmirror build && tsc",
     "tauri": "tauri"
   },
   "dependencies": {
@@ -44,7 +44,7 @@
     "markmap-common": "^0.18.9",
     "markmap-lib": "0.18.12",
     "markmap-view": "0.18.12",
-    "mdsmirror": "file:packages/mdsmirror",
+    "mdsmirror": "^0.1.0",
     "prosemirror-utils": "^1.2.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -94,6 +94,11 @@
     "typescript": "5.9.3",
     "vite": "^5.4.10",
     "vitest": "^2.1.8"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
   },
   "resolutions": {
     "@types/node": "22.13.1",
