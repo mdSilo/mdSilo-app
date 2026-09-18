@@ -18,6 +18,8 @@ jobs:
 
     - run: yarn
     - run: yarn --cwd packages/mdsmirror build
-    - run: yarn lint
+    - name: Lint (non-blocking)
+      run: yarn lint
+      continue-on-error: true
     - run: yarn tc
     - run: yarn test

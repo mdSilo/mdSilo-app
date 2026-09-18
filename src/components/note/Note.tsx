@@ -1,8 +1,8 @@
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
-import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import { invoke , convertFileSrc } from '@tauri-apps/api/core';
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
+import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';

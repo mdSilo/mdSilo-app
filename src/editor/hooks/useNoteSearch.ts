@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { getJSONContent, parser } from "mdsmirror";
 import Fuse from 'fuse.js';
+import { getJSONContent, parser } from "mdsmirror";
 import { store } from 'lib/store';
 import { Note } from 'types/model';
 import { loadDir } from 'file/open';

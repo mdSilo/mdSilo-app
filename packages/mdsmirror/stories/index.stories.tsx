@@ -1,7 +1,7 @@
 import React from "react";
 import type { Meta } from "@storybook/react-webpack5";
 import DefaultEditor from "./index";
-import { Props } from "..";
+import { Props } from "../src";
 
 const meta: Meta<typeof DefaultEditor> = {
   title: "<editor>",

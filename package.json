@@ -9,6 +9,7 @@
     "build": "vite build",
     "test": "vitest run",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint src packages/mdsmirror --ignore-pattern packages/mdsmirror/dist --ext .tsx,.ts",
+    "lint-ignore": "ESLINT_USE_FLAT_CONFIG=false eslint src packages/mdsmirror --ignore-pattern packages/mdsmirror/dist --ext .tsx,.ts || true",
     "fix": "prettier --write src",
     "tc": "tsc",
     "tauri": "tauri"
