@@ -47,9 +47,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      - name: install app dependencies and build it
-        run: cd packages/mdsmirror && yarn install --network-timeout 1000000 && yarn build && cd ../../.. && yarn install --network-timeout 1000000 && yarn build
-      - uses: tauri-apps/tauri-action@v1
+      - name: build workspace package
+        run: yarn --cwd packages/mdsmirror install --network-timeout 1000000 && yarn --cwd packages/mdsmirror build
+      - name: install dependencies
+        run: yarn install --network-timeout 1000000
+      - name: build app
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
