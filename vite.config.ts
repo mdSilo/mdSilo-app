@@ -4,6 +4,14 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  // Yarn workspaces are symlinked outside node_modules. mdsmirror is emitted as
+  // CommonJS, so Rollup's default CommonJS include rule would otherwise skip it
+  // during production builds.
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/, /packages[\\/]mdsmirror/],
+    },
+  },
   server: {
     host: '0.0.0.0',
     port: 3000,
