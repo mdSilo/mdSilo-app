@@ -72,8 +72,8 @@
   },
   "plugins": {
     "updater": {
-      "active": true,
-      "dialog": true,
+      "active": false,
+      "dialog": false,
       "endpoints": [
         "https://mdSilo.github.io/mdSilo-app/install.json"
       ],

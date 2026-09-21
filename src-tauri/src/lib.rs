@@ -45,7 +45,7 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(plugins::inject_plugin())
     .plugin(tauri_plugin_dialog::init())
-    .plugin(tauri_plugin_updater::Builder::new().build())
+    // .plugin(tauri_plugin_updater::Builder::new().build())
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
       window::msg_dialog,
