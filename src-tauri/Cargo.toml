@@ -21,22 +21,22 @@ tauri-build = { version = "2.6.3", features = [] }
 [dependencies]
 serde_json = "1.0.140"
 serde = { version = "1.0.219", features = ["derive"] }
-tauri = { version = "2.11.5", features = ["tray-icon"] }
+tauri = { version = "2.11.6", features = ["tray-icon"] }
 tauri-plugin-dialog = "2.7.1"
-tauri-plugin-updater = "2.11.0"
-dirs = "6.0.0"
+tauri-plugin-updater = "2.12.0"
+dirs = "7.0.0"
 trash = "5.2.2"
-notify = "6.1.1"
+notify = "8.2.0"
 open = "5.3.2"
 bincode = { version = "2.0", features = ["serde"] }
 chrono = "0.4.41"
-whatlang = "0.16.4"
+whatlang = "0.18.0"
 # walk dir
 crossbeam = "0.8.4"
-ignore = "0.4.23"
+ignore = "0.4.33"
 indextree = "4.7.4"
 ## rss reader
-reqwest = { version = "0.12.15", features = ["json", "socks"] }
+reqwest = { version = "0.13.5", features = ["json", "socks"] }
 rss = { version = "2.0.12", features = ["serde"] }
 atom_syndication = "0.12.7"
 bytes = "1.10.1"
