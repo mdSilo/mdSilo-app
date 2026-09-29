@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - build: linux
-            os: ubuntu-latest
+            os: ubuntu-22.04
             arch: x86_64
             target: x86_64-unknown-linux-gnu
           - build: macos
