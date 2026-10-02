@@ -92,6 +92,17 @@ describe('Title', () => {
     expect(screen.getByRole('textbox')).toHaveAttribute('contenteditable', 'false');
   });
 
+  test('pastes plain text without newlines', () => {
+    const execCommand = vi.fn();
+    Object.defineProperty(document, 'execCommand', { configurable: true, value: execCommand });
+    render(<Title initialTitle="x" onChange={vi.fn()} />);
+    const notPrevented = fireEvent.paste(screen.getByRole('textbox'), {
+      clipboardData: { getData: () => 'line one\r\nline two\nthree' },
+    });
+    expect(notPrevented).toBe(false);
+    expect(execCommand).toHaveBeenCalledWith('insertText', false, 'line one line two three');
+  });
+
   test('blocks Enter', () => {
     render(<Title initialTitle="x" onChange={vi.fn()} />);
     const notPrevented = fireEvent.keyPress(screen.getByRole('textbox'), { key: 'Enter', code: 'Enter', charCode: 13 });

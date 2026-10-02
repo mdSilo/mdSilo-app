@@ -5,8 +5,8 @@ import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { Markmap } from 'markmap-view';
 import { store } from 'lib/store';
-import { mockInvoke } from '../../testUtils';
 import { writeFile } from 'file/write';
+import { mockInvoke } from '../../testUtils';
 import { Mindmap } from './mindmap';
 
 const destroy = vi.hoisted(() => vi.fn());

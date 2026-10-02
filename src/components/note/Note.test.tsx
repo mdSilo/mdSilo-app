@@ -17,10 +17,10 @@ const editor = vi.hoisted(() => ({ props: undefined as unknown as EditorProps })
 
 vi.mock('mdsmirror', async (importOriginal) => {
   const actual = await importOriginal<typeof import('mdsmirror')>();
-  const MockEditor = forwardRef((props: EditorProps, ref) => {
-    editor.props = props;
+  const MockEditor = forwardRef(function MockEditor(props: Record<string, unknown>, ref) {
+    editor.props = props as EditorProps;
     useImperativeHandle(ref, () => ({ getHeadings: () => [{ title: 'Heading', level: 1, id: 'heading' }] }));
-    return <div data-testid="ms-editor">{props.value}</div>;
+    return <div data-testid="ms-editor">{props.value as string}</div>;
   });
   return { ...actual, default: MockEditor };
 });

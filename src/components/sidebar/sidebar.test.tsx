@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import * as dialog from '@tauri-apps/plugin-dialog';
+import { TbFolder } from 'react-icons/tb';
 import { store, SidebarTab as SidebarTabType } from 'lib/store';
 import { Sort } from 'lib/userSettings';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { TbFolder } from 'react-icons/tb';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout, renderWithView } from '../../testUtils';
 import SidebarItem from './SidebarItem';
 import SidebarTab from './SidebarTab';

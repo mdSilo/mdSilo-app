@@ -12,6 +12,7 @@ import { resetStore } from './testUtils';
 // imported and rendered; individual tests override the return values.
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(async () => undefined),
+  convertFileSrc: vi.fn((path: string) => `asset://localhost/${encodeURIComponent(path)}`),
 }));
 
 vi.mock('@tauri-apps/api/window', () => {
@@ -50,6 +51,8 @@ if (typeof Range !== 'undefined') {
   Range.prototype.getBoundingClientRect ??= emptyRect as unknown as () => DOMRect;
 }
 document.elementFromPoint ??= () => null;
+// jsdom logs "Not implemented" for canvas; return no context instead (tests can spy on it)
+HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;
 
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
