@@ -87,3 +87,21 @@ export function leaveTauri() {
   delete (window as unknown as Record<string, unknown>).__TAURI__;
   vi.resetModules();
 }
+
+/**
+ * Give elements a size so virtualized lists (react-virtualized AutoSizer,
+ * react-virtual) render their rows in jsdom. Absolutely positioned elements
+ * are treated as 32px rows, everything else as a 300x1000 container.
+ * Restore with vi.restoreAllMocks().
+ */
+export function mockLayout() {
+  const size = (el: HTMLElement) => (el.style.position === 'absolute' ? 32 : 1000);
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+    return size(this);
+  });
+  vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(300);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    const height = size(this);
+    return { width: 300, height, top: 0, left: 0, bottom: height, right: 300, x: 0, y: 0, toJSON: () => ({}) };
+  });
+}

@@ -33,6 +33,24 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
   save: vi.fn(async () => null),
 }));
 
+// jsdom lacks ResizeObserver, which headlessui and others rely on
+class ResizeObserverStub {
+  observe() { /* noop */ }
+  unobserve() { /* noop */ }
+  disconnect() { /* noop */ }
+}
+globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
+
+// jsdom does not implement layout on Range; editors (CodeMirror, ProseMirror) measure with it
+const emptyRect = () => ({ x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0, toJSON: () => ({}) });
+if (typeof Range !== 'undefined') {
+  Range.prototype.getClientRects ??= function () {
+    return { length: 0, item: () => null, [Symbol.iterator]: [][Symbol.iterator] } as unknown as DOMRectList;
+  };
+  Range.prototype.getBoundingClientRect ??= emptyRect as unknown as () => DOMRect;
+}
+document.elementFromPoint ??= () => null;
+
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
@@ -50,9 +68,16 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
   vi.clearAllMocks();
+  // clearAllMocks keeps implementations; reset the shared Tauri mocks so
+  // per-test mockInvoke/mockResolvedValue setups do not leak into other tests
+  const { invoke } = await import('@tauri-apps/api/core');
+  vi.mocked(invoke).mockReset().mockImplementation(async () => undefined);
+  const dialog = await import('@tauri-apps/plugin-dialog');
+  vi.mocked(dialog.open).mockReset().mockImplementation(async () => null);
+  vi.mocked(dialog.save).mockReset().mockImplementation(async () => null);
   localStorage.clear();
   resetStore();
 });
