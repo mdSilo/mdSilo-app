@@ -227,6 +227,16 @@ describe('SidebarHistory', () => {
     expect(store.getState().initDir).toBe('/home/me/pinned');
   });
 
+  test('reopens the previous folder only once', async () => {
+    mockInvoke(invoke, { file_exist: false });
+    store.getState().setRecentDir(['/home/me/last']);
+    await act(async () => {
+      render(<SidebarHistory />);
+    });
+    expect(store.getState().initDir).toBe('/home/me/last');
+    expect(vi.mocked(invoke).mock.calls.filter((c) => c[0] === 'write_json')).toHaveLength(1);
+  });
+
   test('reopens the previous folder on startup', async () => {
     // rendered through SidebarNotes, which unmounts the history once a dir is open
     mockInvoke(invoke, { file_exist: false });
@@ -290,14 +300,13 @@ describe('SidebarNoteLink', () => {
 
 describe('SidebarTags', () => {
   test('counts hashtags and opens the tag view', async () => {
-    // HASHTAG_REGEX is greedy within a line, so keep one tag per line
-    const a = makeNote({ id: '/a.md', content: 'x #todo# y\nz #idea# z' });
+    const a = makeNote({ id: '/a.md', content: 'x #todo# y #idea# #todo# z' });
     const b = makeNote({ id: '/b.md', content: 'p #todo# q' });
     const dir = makeNote({ id: '/d', content: ' #hidden# ', is_dir: true });
     store.getState().setNotes({ [a.id]: a, [b.id]: b, [dir.id]: dir });
     renderWithView(<><SidebarTags /><ViewProbe /></>);
     const todo = screen.getByText('todo');
-    expect(todo.parentElement?.nextSibling).toHaveTextContent('2');
+    expect(todo.parentElement?.nextSibling).toHaveTextContent('3');
     expect(screen.getByText('idea')).toBeInTheDocument();
     expect(screen.queryByText('hidden')).not.toBeInTheDocument();
     await userEvent.click(todo);
@@ -382,10 +391,7 @@ describe('SidebarPlaylist', () => {
     expect(store.getState().currentPod?.url).toBe('a.mp3');
   });
 
-  // Known bug: Playlist sorts `data` in place, so `sortedData` keeps the same
-  // reference, the row renderer is memoized on it and the virtualized list
-  // never re-renders. Remove `.fails` once sorting re-renders the rows.
-  test.fails('re-sorts when a sort button is clicked', async () => {
+  test('re-sorts when a sort button is clicked', async () => {
     vi.mocked(invoke).mockResolvedValue(articles);
     render(<SidebarPlaylist />);
     expect(await titles()).toEqual(['Beta', 'alpha']);

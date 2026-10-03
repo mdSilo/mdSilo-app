@@ -54,8 +54,10 @@ type TreeProps = {
 function Playlist(props: TreeProps) {
   const { data, currentPod, className = '' } = props;
   const [podSort, setPodSort] = useState(Sort.DateCreatedDescending); 
+  // sort a copy: sorting `data` in place keeps the same reference and the
+  // memoized row renderer would never re-render the list
   const sortedData = useMemo(() => { return data.length >= 2 
-    ? data.sort((n1, n2) => {
+    ? [...data].sort((n1, n2) => {
       switch (podSort) {
         case Sort.DateCreatedAscending:
           return n2.published && n1.published 

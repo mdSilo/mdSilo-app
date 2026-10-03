@@ -58,16 +58,12 @@ describe('Kanban view', () => {
     expect(saved.work).toEqual(boards.work);
   });
 
-  // Known bug: the board is keyed on `${board}-${cards.length}`. When the
-  // initial board has no cards, the key does not change after kanban.json
-  // loads, so the board keeps its empty initial state (and the next save
-  // would overwrite the stored columns). Remove `.fails` once fixed.
-  test.fails('shows a stored board without cards on first load', async () => {
+  test('shows a stored board without cards on first load', async () => {
     files.content = JSON.stringify(boards);
     store.getState().setInitDir('/root');
     store.getState().setCurrentBoard('work');
     renderWithView(<Kanban />);
-    expect(await screen.findByText('Sprint', {}, { timeout: 500 })).toBeInTheDocument();
+    expect(await screen.findByText('Sprint')).toBeInTheDocument();
   });
 
   test('creates a new board by name', async () => {

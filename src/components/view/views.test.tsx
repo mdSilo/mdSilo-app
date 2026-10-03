@@ -59,6 +59,12 @@ describe('graph regexes', () => {
     expect([...'a #tag# b'.matchAll(HASHTAG_REGEX)].map((x) => x[1])).toEqual(['tag']);
     expect([...'a#tag# b'.matchAll(HASHTAG_REGEX)]).toHaveLength(0);
   });
+
+  test('HASHTAG_REGEX finds several tags on one line, including adjacent ones', () => {
+    const tags = [...'x #one# y #two words# #three# z'.matchAll(HASHTAG_REGEX)].map((x) => x[1]);
+    expect(tags).toEqual(['one', 'two words', 'three']);
+    expect([...'a #not\nclosed# b'.matchAll(HASHTAG_REGEX)]).toHaveLength(0);
+  });
 });
 
 describe('MainView', () => {
