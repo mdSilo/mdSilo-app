@@ -32,7 +32,8 @@ import { checkFileIsMd } from 'file/process';
 
 export const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
 export const WIKILINK_REGEX = /\[\[(.+)\]\]/g;
-export const HASHTAG_REGEX = /\s#(.+)#\s/g;
+// non-greedy per tag; the trailing space is a lookahead so adjacent tags share it
+export const HASHTAG_REGEX = /\s#([^#\n]+)#(?=\s)/g;
 
 export type NodeDatum = {
   id: string;

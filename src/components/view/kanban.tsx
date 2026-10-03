@@ -11,6 +11,9 @@ export default function Kanban() {
   const currentKanban = useStore((state) => state.currentBoard);
   const setCurrentKanban = useStore((state) => state.setCurrentBoard);
   const [kanbans, setKanbans] = useState<Kanbans>({});
+  // bumped when kanban.json is loaded, so the board remounts with the loaded
+  // data even if the card count did not change (e.g. a board without cards)
+  const [loadCount, setLoadCount] = useState(0);
 
   // console.log("currentKanban", currentKanban, kanbans);
 
@@ -22,6 +25,7 @@ export default function Kanban() {
         const kanbans: Kanbans = JSON.parse(json || "{}");
         // console.log("effect Kanbans", kanbans);
         setKanbans(kanbans);
+        setLoadCount((n) => n + 1);
       });
     }
   }, [initDir]);
@@ -81,7 +85,7 @@ export default function Kanban() {
         </div>
         {kanbanData && (
           <KanbanBoard 
-            key={`${currentKanban}-${kanbanData.cards.length}`} 
+            key={`${currentKanban}-${loadCount}-${kanbanData.cards.length}`} 
             initData={kanbanData} 
             onKanbanChange={onKanbanChange} 
           />

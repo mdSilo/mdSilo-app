@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { TbPin as IconPin, TbTrash as IconTrash } from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
@@ -26,15 +26,16 @@ function SidebarHistory(props: Props) {
 
   const isOpenPreOn = useStore((state) => state.isOpenPreOn);
   const showHistory = useStore((state) => state.showHistory);
-  let isOpened = false;
+  // reopen the previous folder once: listInitDir updates recentDir, which
+  // would otherwise re-run this effect forever while the history is mounted
+  const isOpened = useRef(false);
   useEffect(() => { 
-    if (!isOpenPreOn || showHistory || isOpened) return;
+    if (!isOpenPreOn || showHistory || isOpened.current) return;
     const recentDirPath = history.length > 0 ? history[history.length - 1] : '';
     if (!recentDirPath) return;
-    listInitDir(recentDirPath).then(() => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      isOpened = true;
-    }); 
+    isOpened.current = true;
+    listInitDir(recentDirPath);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history]);
 
   return (
