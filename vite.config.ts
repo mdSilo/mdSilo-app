@@ -49,6 +49,10 @@ export default defineConfig({
       types: path.resolve(__dirname, './src/types'),
       asset: path.resolve(__dirname, './src/asset'),
       styles: path.resolve(__dirname, './src/styles'),
+      // prosemirror-history's CommonJS build does `require('rope-sequence')`,
+      // which resolves to the ES module (no default interop) and breaks the
+      // undo history on typing. Point it to the CommonJS entry instead.
+      'rope-sequence': path.resolve(__dirname, './node_modules/rope-sequence/dist/index.js'),
     },
   },
 });

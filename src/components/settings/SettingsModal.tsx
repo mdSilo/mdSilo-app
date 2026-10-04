@@ -1,6 +1,8 @@
 import { useStore } from 'lib/store';
+import { isWeb } from 'file/util';
 import { BaseModal } from './BaseModal';
 import { SettingsToggle } from './SettingsToggle';
+import { CorsProxySetting } from './CorsProxySetting';
 
 type Props = {
   isOpen: boolean;
@@ -67,6 +69,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           optionLeft="Left To Right" 
           optionRight="Right To Left"
         />
+        {isWeb ? <CorsProxySetting /> : null}
         <div className="flex flex-col items-center mb-2">
           <div className="mb-2">
             <h1 className="text-base font-semibold">Editor Font Family</h1>

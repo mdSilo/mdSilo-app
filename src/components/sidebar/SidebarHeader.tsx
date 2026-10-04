@@ -2,12 +2,14 @@ import { invoke } from '@tauri-apps/api/core';
 import { Menu } from '@headlessui/react';
 import { 
   TbChevronsDown as IconChevronsDown, TbChevronLeft as IconChevronLeft, TbSettings as IconSettings, TbBrowser as IconBrowser,
-  TbPizza as IconPizza, TbInfoCircle as IconInfoCircle, TbCurrentLocation as IconCurrentLocation
+  TbPizza as IconPizza, TbInfoCircle as IconInfoCircle, TbCurrentLocation as IconCurrentLocation,
+  TbDatabaseExport as IconDatabaseExport,
 } from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import { DropdownItem } from 'components/misc/Dropdown';
 import { isMobile } from 'utils/helper';
+import { isWeb } from 'file/util';
 
 
 export default function SidebarHeader() {
@@ -67,15 +69,31 @@ export default function SidebarHeader() {
             <IconInfoCircle size={18} className="mr-1" />
             <span>About</span>
           </DropdownItem>
-          <DropdownItem
-            onClick={async () => {
-              const dir_path = await invoke("create_mdsilo_dir");
-              await invoke("open_url", {url: dir_path});
-            }}
-          >
-            <IconCurrentLocation size={18} className="mr-1" />
-            <span>Local mdsilo</span>
-          </DropdownItem>
+          {isWeb ? (
+            // web: notes are in IndexedDB, back up to a zip file
+            <DropdownItem
+              onClick={async () => {
+                try {
+                  await invoke('export_backup');
+                } catch (e) {
+                  console.error('Failed to export backup:', e);
+                }
+              }}
+            >
+              <IconDatabaseExport size={18} className="mr-1" />
+              <span>Export Backup</span>
+            </DropdownItem>
+          ) : (
+            <DropdownItem
+              onClick={async () => {
+                const dir_path = await invoke("create_mdsilo_dir");
+                await invoke("open_url", {url: dir_path});
+              }}
+            >
+              <IconCurrentLocation size={18} className="mr-1" />
+              <span>Local mdsilo</span>
+            </DropdownItem>
+          )}
         </Menu.Items>
       </Menu>
     </div>

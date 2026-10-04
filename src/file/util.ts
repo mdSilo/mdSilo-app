@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import { store, NotesData } from 'lib/store';
 
 
@@ -11,8 +11,25 @@ export const isTauri = Boolean(
   && (window as any).promisified !== null
 );
 
+/** web version, built by vite.web.config.ts, files are stored in IndexedDB */
+export const isWeb = typeof __MDSILO_WEB__ !== 'undefined' && __MDSILO_WEB__ === true;
+
+/** has a file system backend: disk on Tauri, IndexedDB on web */
+export const hasFs = isTauri || isWeb;
+
+/**
+ * URL prefix to load local assets, e.g. `${protocol}${dir}/assets/a.png`
+ */
+export const getAssetProtocol = (): string => {
+  if (isWeb) {
+    // the web stand-in of convertFileSrc returns an URL served from IndexedDB
+    return new URL(convertFileSrc('/'), window.location.href).href.replace(/\/$/, '');
+  }
+  return navigator.platform.startsWith('Win') ? 'https://asset.localhost/' : 'asset://';
+};
+
 export const setWindowTitle = (title: string, inLoading?: boolean): void => {
-	if (isTauri) {
+	if (hasFs) {
     const isLoading = inLoading ?? store.getState().isLoading;
     void getCurrentWindow()
       .setTitle(`${title} ${isLoading ? ' --- Loading ---' : ''}`)

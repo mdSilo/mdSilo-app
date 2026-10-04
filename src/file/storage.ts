@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoke } from '@tauri-apps/api/core'
-import { isTauri } from './util';
+import { hasFs } from './util';
 
 interface StorageData {
   status: boolean;
@@ -14,7 +14,7 @@ interface StorageData {
  * @returns {Promise<void>}
  */
 export const set = async (key: string, value: any): Promise<void> => {
-  if (isTauri) {
+  if (hasFs) {
     return await invoke('set_data', { key, value });
   } else {
     localStorage.setItem(key, JSON.stringify(value));
@@ -27,7 +27,7 @@ export const set = async (key: string, value: any): Promise<void> => {
  * @returns {Promise<any>} 
  */
 export const get = async (key: string): Promise<JSON | any> => {
-  if (isTauri) {
+  if (hasFs) {
     const storeData: StorageData = await invoke('get_data', { key });
     return storeData.status ? storeData.data : {};
   } else {
@@ -42,7 +42,7 @@ export const get = async (key: string): Promise<JSON | any> => {
  * @returns {any}
  */
 export const remove = async (key: string): Promise<void> => {
-  if (isTauri) {
+  if (hasFs) {
     await invoke('delete_data', { key });
   } else {
     localStorage.removeItem(key);
