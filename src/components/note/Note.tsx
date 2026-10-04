@@ -9,14 +9,15 @@ import RawMarkdown from 'components/md/Markdown';
 import { Mindmap } from 'components/mindmap/mindmap';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { updateCardLinks } from 'components/kanban/updateCard';
+import { updateIssueNoteLinks } from 'components/issue/issueStore';
 import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
 import { defaultNote } from 'types/model';
-import useNoteSearch from 'editor/hooks/useNoteSearch';
+import useLinkHandlers from 'editor/hooks/useLinkHandlers';
 import { listDirPath } from 'editor/hooks/useOpen';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
-import { ciStringEqual, regDateStr, isUrl, decodeHTMLEntity, emitCustomEvent } from 'utils/helper';
+import { ciStringEqual, regDateStr, decodeHTMLEntity, emitCustomEvent } from 'utils/helper';
 import { imageExtensions, docExtensions } from 'utils/file-extensions';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
@@ -27,6 +28,7 @@ import {
 import { getFileExt } from 'file/process';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
+import IssueRefs from './IssueRefs';
 import updateBacklinks from './backlinks/updateBacklinks';
 
 
@@ -158,6 +160,7 @@ function Note(props: Props) {
         upsertNote(newNote);
         upsertTree(dirPath, [newNote]);
         await updateCardLinks(newPath, oldPath);
+        await updateIssueNoteLinks(oldPath, newPath, title, newTitle);
         // 5- nav to renamed note
         await openFilePath(newPath, true);
         dispatch({view: 'md', params: {noteId: newPath}});
@@ -181,24 +184,6 @@ function Note(props: Props) {
     []
   );
 
-  // Search note
-  const search = useNoteSearch({ numOfResults: 10 });
-  const onSearchNote = useCallback(
-    async (text: string) => {
-      const results = search(text);
-      const searchResults = results.map(res => {
-        const itemTitle = res.item.title.trim();
-        const search = {
-          title: itemTitle,
-          url: encodeURI(itemTitle), // used as [title](encodedTitle)
-        };
-        return search;
-      });
-      return searchResults;
-    },
-    [search]
-  );
-
   // Create new note, return encoded title as url: [title](encoded title as url)
   const onCreateNote = useCallback(
     async (title: string) => {
@@ -215,32 +200,15 @@ function Note(props: Props) {
     [notePath, storeNotes]
   );
 
-  // open link
-  const onOpenLink = useCallback(
-    async (href: string) => {
-      if (isUrl(href)) {
-        await openUrl(href);
-      } else {
-        // find the note per title
-        const title = decodeURI(href.trim());
-        // ISSUE ALERT:
-        // maybe more than one notes with same title(ci),
-        // but only link to first searched one
-        const toNote = Object.values(storeNotes).find((n) => (n.title === title));
-        if (!toNote) {
-          // IF note is not existing, create new
-          const parentDir = await getDirPath(notePath);
-          const newNotePath = await createNewNote(parentDir, title);
-          await openFilePath(newNotePath, true);
-          dispatch({view: 'md', params: { noteId: newNotePath }});
-          return;
-        }
-        await openFilePath(toNote.id, true);
-        dispatch({view: 'md', params: { noteId: toNote.id }});
-      }
+  // open link: url, note title or issue:N; missing notes are created
+  const onMissingNote = useCallback(
+    async (title: string) => {
+      const parentDir = await getDirPath(notePath);
+      return await createNewNote(parentDir, title);
     },
-    [dispatch, notePath, storeNotes]
+    [notePath]
   );
+  const { onSearchLink, onOpenLink } = useLinkHandlers({ onMissingNote });
 
   // attach file
   const onAttachFile = useCallback(
@@ -390,7 +358,7 @@ function Note(props: Props) {
                     dir={isRTL ? 'rtl' : 'ltr'}
                     theme={customTheme}
                     onChange={onContentChange}
-                    onSearchLink={onSearchNote}
+                    onSearchLink={onSearchLink}
                     onCreateLink={onCreateNote}
                     onSearchSelectText={(txt: string) => onSearchText(txt)}
                     onClickHashtag={(txt: string) => onSearchText(txt, 'hashtag')}
@@ -423,6 +391,7 @@ function Note(props: Props) {
               <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
                 {showBacklink ? (<Backlinks className="mx-4 mb-8" isCollapse={false} />) : null}
               </div>
+              <IssueRefs noteId={noteId} title={title} className="mb-8" />
             </div>
           </div>
         </div>

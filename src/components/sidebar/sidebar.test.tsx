@@ -453,15 +453,15 @@ describe('SideMenu', () => {
     store.getState().setCurrentDir('/n');
     renderWithView(withContainer(<><SideMenu /><ViewProbe /></>));
     const btns = Array.from(document.querySelectorAll('#side-menu-btns button')) as HTMLElement[];
-    // toggle, feed, new, kanban, chronicle, graph, task, file
-    expect(btns).toHaveLength(8);
+    // toggle, feed, new, kanban, issues, projects, chronicle, graph, task, file
+    expect(btns).toHaveLength(10);
     await userEvent.click(btns[0]);
     expect(store.getState().isSidebarOpen).toBe(false);
     await userEvent.click(btns[1]);
     expect(viewState().view).toBe('feed');
     await userEvent.click(btns[2]);
     expect(store.getState().isFindOrCreateModalOpen).toBe(true);
-    for (const [i, view] of [[3, 'kanban'], [4, 'chronicle'], [5, 'graph'], [6, 'task']] as const) {
+    for (const [i, view] of [[3, 'kanban'], [4, 'issues'], [5, 'project'], [6, 'chronicle'], [7, 'graph'], [8, 'task']] as const) {
       await userEvent.click(btns[i]);
       expect(viewState().view).toBe(view);
     }
@@ -476,6 +476,8 @@ describe('SideMenu', () => {
       ['c', 67, 'chronicle'],
       ['t', 84, 'task'],
       ['k', 75, 'kanban'],
+      ['i', 73, 'issues'],
+      ['b', 66, 'project'],
       ['r', 82, 'feed'],
     ] as const) {
       act(() => {

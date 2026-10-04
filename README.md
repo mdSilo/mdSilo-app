@@ -21,6 +21,7 @@ Then you can find the app in `./src-tauri/target/release` folder.
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
 - Chronicle view, Graph view, Task view... 
 - Kanban to make personal knowledge base a serious project;  
+- Built-in issue tracker (GitHub-like): issues with labels, milestones, comments and timeline, project boards and tables, two-way links with notes (`[[Note]]` in issues, `[#12](issue:12)` in notes), stored in `issues.json` in the workspace;  
 - Full-text search;  
 - Dark and Light Mode;  
 - Available for Windows, macOS, Linux;   
@@ -102,6 +103,7 @@ Then you can find the app in `./src-tauri/target/release` folder.
 - Organize writings
   - [X] Folder management 
   - [X] Kanban board  
+  - [X] Issues and Projects  
   - [X] Hashtag 
   - [X] Backlinks 
   - [X] Recent history 

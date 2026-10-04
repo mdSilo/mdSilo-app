@@ -1,6 +1,6 @@
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { forwardRef, useImperativeHandle } from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import * as dialog from '@tauri-apps/plugin-dialog';
@@ -8,6 +8,8 @@ import copy from 'copy-to-clipboard';
 import { store, SidebarTab } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
 import { writeFile, deleteFile } from 'file/write';
+import * as issueOps from 'components/issue/issueOps';
+import { issueStore, resetIssueStore } from 'components/issue/issueStore';
 import { makeFileMeta, makeNote, mockInvoke } from '../../testUtils';
 import Note from './Note';
 
@@ -33,6 +35,8 @@ vi.mock('file/write', () => ({
   writeJsonFile: vi.fn(async () => undefined),
 }));
 vi.mock('copy-to-clipboard', () => ({ default: vi.fn() }));
+// kanban.json can only be read inside Tauri
+vi.mock('components/kanban/updateCard', () => ({ updateCardLinks: vi.fn(async () => undefined) }));
 
 const joinPaths = ({ root, parts }: Record<string, unknown>) => [root, ...(parts as string[])].join('/');
 const dirOf = (p: string) => p.substring(0, p.lastIndexOf('/'));
@@ -241,6 +245,60 @@ describe('Note', () => {
     setup();
     await userEvent.click(screen.getByRole('button', { name: /BackLinks/ }));
     expect(await screen.findByText(/BackLinks$/, { selector: 'p' })).toBeInTheDocument();
+  });
+
+  describe('issues', () => {
+    function seedIssues() {
+      let d = issueOps.createIssue(issueOps.defaultIssueData(), { title: 'Linked bug', notes: [note.id] });
+      d = issueOps.createIssue(d, { title: 'Mentions it', body: 'see [[My Note]]' });
+      d = issueOps.createIssue(d, { title: 'Unrelated' });
+      issueStore.setState({ data: d, dir: '/root', isLoaded: true });
+    }
+    afterEach(() => {
+      cleanup(); // unmount before resetting the store
+      resetIssueStore();
+    });
+
+    test('onSearchLink also offers issues', async () => {
+      seedIssues();
+      setup();
+      const results = await callEditor('onSearchLink', 'Linked');
+      expect(results).toEqual([{ title: '#1 Linked bug', url: 'issue:1' }]);
+      await expect(callEditor('onSearchLink', '#3')).resolves.toEqual([{ title: '#3 Unrelated', url: 'issue:3' }]);
+    });
+
+    test('onOpenLink opens issue links', async () => {
+      seedIssues();
+      setup();
+      await callEditor('onOpenLink', 'issue:2');
+      expect(viewState()).toEqual({ view: 'issue', issueNumber: 2 });
+    });
+
+    test('shows issues referencing the note', async () => {
+      seedIssues();
+      setup();
+      const refs = await screen.findByTestId('issue-refs');
+      expect(refs).toHaveTextContent('Referenced by issues');
+      expect(refs).toHaveTextContent('#1 Linked bug');
+      expect(refs).toHaveTextContent('#2 Mentions itmentioned');
+      expect(refs).not.toHaveTextContent('Unrelated');
+      await userEvent.click(screen.getByRole('button', { name: '#1 Linked bug' }));
+      expect(viewState()).toEqual({ view: 'issue', issueNumber: 1 });
+    });
+
+    test('renaming the note updates issue links', async () => {
+      seedIssues();
+      setup();
+      const title = screen.getByRole('textbox');
+      title.textContent = 'Renamed';
+      await act(async () => {
+        fireEvent.blur(title);
+      });
+      await waitFor(() => expect(viewState().params?.noteId).toBe('/root/sub/Renamed.md'));
+      const issues = issueStore.getState().data.issues;
+      expect(issues[0].notes).toEqual(['/root/sub/Renamed.md']);
+      expect(issues[1].body).toBe('see [[Renamed]]');
+    });
   });
 
   test('clicking the path lists the parent dir', async () => {
