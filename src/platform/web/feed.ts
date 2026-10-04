@@ -125,17 +125,50 @@ export function parseFeed(xml: string, url: string, ty: string, title?: string |
 export const CORS_PROXY_KEY = 'cors_proxy';
 
 /**
- * The default CORS proxy: from build env MDSILO_WEB_CORS_PROXY, or the one
- * mounted on the vite dev/preview server (web/cors-proxy.mjs)
+ * Public CORS proxy as the last resort, when no proxy is configured and the
+ * site is on static hosting. Feed urls are sent to this third party, set a
+ * proxy (e.g. web/cors-proxy-worker.mjs) or `none` in Settings to avoid it.
  */
-export function defaultCorsProxy(): string {
-  const fromEnv = typeof __MDSILO_CORS_PROXY__ === 'string' ? __MDSILO_CORS_PROXY__.trim() : '';
-  if (fromEnv) return fromEnv;
+export const PUBLIC_CORS_PROXY = 'https://api.allorigins.win/raw?url={url}';
+
+/** header set by web/cors-proxy-core.mjs, to tell the proxy from a static file server */
+const PROXY_HEADER = 'X-Mdsilo-Cors-Proxy';
+
+function builtinProxyPath(): string {
   const base = (import.meta as unknown as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? '/';
-  return `${base.endsWith('/') ? base : `${base}/`}__cors_proxy__?url={url}`;
+  return `${base.endsWith('/') ? base : `${base}/`}__cors_proxy__`;
 }
 
-/** the CORS proxy in use, 'none' to disable */
+let builtinProxy: Promise<boolean> | null = null;
+
+/** if the site is served with the built-in proxy: vite dev/preview server */
+function hasBuiltinProxy(): Promise<boolean> {
+  if (!builtinProxy) {
+    builtinProxy = fetch(builtinProxyPath())
+      .then((resp) => resp.headers.get(PROXY_HEADER) === '1')
+      .catch(() => false);
+  }
+  return builtinProxy;
+}
+
+/** for test */
+export function resetBuiltinProxy() {
+  builtinProxy = null;
+}
+
+/**
+ * The default CORS proxy, in order:
+ * build env MDSILO_WEB_CORS_PROXY, the built-in proxy of vite dev/preview
+ * server (web/cors-proxy.mjs), the public proxy on static hosting.
+ */
+export async function defaultCorsProxy(): Promise<string> {
+  const fromEnv = typeof __MDSILO_CORS_PROXY__ === 'string' ? __MDSILO_CORS_PROXY__.trim() : '';
+  if (fromEnv) return fromEnv;
+  if (await hasBuiltinProxy()) return `${builtinProxyPath()}?url={url}`;
+  return PUBLIC_CORS_PROXY;
+}
+
+/** the CORS proxy in use: setting in Settings, `none` to disable, or the default */
 export async function getCorsProxy(): Promise<string> {
   const value = await get<unknown>(KV, CORS_PROXY_KEY).catch(() => undefined);
   const proxy = typeof value === 'string' ? value.trim() : '';

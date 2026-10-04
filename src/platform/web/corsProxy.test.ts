@@ -54,3 +54,30 @@ describe('cors proxy', () => {
     }
   });
 });
+
+describe('cors proxy worker', () => {
+  it('handles requests like the node proxy', async () => {
+    const { default: worker } = await import('../../../web/cors-proxy-worker.mjs');
+    const env = { ALLOW_ORIGIN: 'https://mdsilo.github.io' };
+
+    const pre = await worker.fetch(new Request('https://w.dev/', { method: 'OPTIONS' }), env);
+    expect(pre.status).toBe(204);
+    expect(pre.headers.get('access-control-allow-origin')).toBe('https://mdsilo.github.io');
+    expect(pre.headers.get('x-mdsilo-cors-proxy')).toBe('1');
+
+    expect((await worker.fetch(new Request('https://w.dev/'), env)).status).toBe(400);
+    expect((await worker.fetch(new Request('https://w.dev/?url=http%3A%2F%2Flocalhost%2F'), env)).status).toBe(403);
+    expect((await worker.fetch(new Request('https://w.dev/?url=http%3A%2F%2F10.0.0.1%2F'), env)).status).toBe(403);
+
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn(async () => new Response('<rss/>', { headers: { 'content-type': 'application/xml' } })) as unknown as typeof fetch;
+    try {
+      const resp = await worker.fetch(new Request('https://w.dev/?url=https%3A%2F%2Fa.com%2Ffeed'), env);
+      expect(resp.status).toBe(200);
+      expect(await resp.text()).toBe('<rss/>');
+      expect(resp.headers.get('content-type')).toBe('application/xml');
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+});

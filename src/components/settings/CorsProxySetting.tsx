@@ -37,7 +37,9 @@ export function CorsProxySetting() {
         <h1 className="text-base font-semibold">RSS CORS Proxy</h1>
         <p className="mt-1 text-sm text-gray-700">
           Used when a feed can not be fetched directly. <code>{'{url}'}</code> is replaced
-          by the feed url, or the url is appended. Empty for default, <code>none</code> to disable.
+          by the feed url, or the url is appended. <code>none</code> to disable.
+          Empty for default: the proxy of this site if any, otherwise a public proxy
+          (api.allorigins.win) which can see the feed urls.
         </p>
       </div>
       <input
