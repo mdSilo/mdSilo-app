@@ -23,7 +23,7 @@ import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
 import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
 import {
-  joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir
+  joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
 } from 'file/util';
 import { getFileExt } from 'file/process';
 import NoteHeader from './NoteHeader';
@@ -71,7 +71,7 @@ function Note(props: Props) {
   const currentDir = useStore((state) => state.currentDir);
 
   // need to update timely if possible
-  const protocol = navigator.platform.startsWith('Win') ? 'https://asset.localhost/' : 'asset://';
+  const protocol = getAssetProtocol();
 
   // console.log("initDir", initDir, protocol, navigator.platform);
   const storeNotes = useStore((state) => state.notes);

@@ -5,7 +5,7 @@ import { store } from 'lib/store';
 import { emitCustomEvent } from 'utils/helper';
 import { openFilePaths, openJSONFilePath } from './open';
 import { rmFileNameExt } from './process';
-import { isTauri, normalizeSlash, joinPath, getBaseName, joinPaths } from './util';
+import { hasFs, normalizeSlash, joinPath, getBaseName, joinPaths } from './util';
 
 interface SystemTime {
   nanos_since_epoch: number; // locale
@@ -73,7 +73,7 @@ class DirectoryAPI {
   */
   listDirectory(): Promise<SimpleFileMeta[]> {
     return new Promise((resolve) => {
-      if (isTauri) {
+      if (hasFs) {
         invoke<SimpleFileMeta[]>(
           'list_directory', { dir: this.dirPath }
         ).then((files: SimpleFileMeta[]) => {
@@ -90,7 +90,7 @@ class DirectoryAPI {
   */
   getFiles(): Promise<DirectoryData> {
     return new Promise((resolve) => {
-      if (isTauri) {
+      if (hasFs) {
         invoke<DirectoryData>(
           'read_directory', { dir: this.dirPath }
         ).then((files: DirectoryData) => {
@@ -107,7 +107,7 @@ class DirectoryAPI {
   */
   async isDir(): Promise<boolean> {
     return new Promise((resolve) => {
-      if (isTauri) {
+      if (hasFs) {
         invoke<boolean>(
           'is_dir', { path: this.dirPath }
         ).then(
@@ -135,7 +135,7 @@ class DirectoryAPI {
    * @returns {any}
    */
   async listen(callbackFn: () => void): Promise<void> {
-    if (isTauri) {
+    if (hasFs) {
       // emit
       invoke('listen_dir', { dir: this.dirPath });
       // listen

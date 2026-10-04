@@ -7,6 +7,9 @@
   "scripts": {
     "start": "vite --host 0.0.0.0 --port 3000",
     "build": "yarn workspace mdsmirror build && vite build",
+    "start:web": "vite --config vite.web.config.ts --host 0.0.0.0",
+    "build:web": "yarn workspace mdsmirror build && vite build --config vite.web.config.ts",
+    "preview:web": "vite preview --config vite.web.config.ts",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint src packages/mdsmirror --ignore-pattern packages/mdsmirror/dist --ext .tsx,.ts",
@@ -94,6 +97,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-testing-library": "^7.13.3",
+    "fake-indexeddb": "^6",
     "jsdom": "^25.0.1",
     "postcss": "8.4.22",
     "prettier": "2.7.1",

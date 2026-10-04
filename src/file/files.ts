@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import DirectoryAPI, { FileMetaData } from './directory';
-import { isTauri, normalizeSlash, joinPath, joinPaths, getDirPath } from './util';
+import { hasFs, normalizeSlash, joinPath, joinPaths, getDirPath } from './util';
 
 /** Invoke Rust command to handle files */
 class FileAPI {
@@ -23,14 +23,14 @@ class FileAPI {
   readFile(): Promise<string> {
 		return new Promise((resolve, reject) => {
 			if (typeof this.fileName === 'string') {
-				if (isTauri) {
+				if (hasFs) {
 					invoke<string>(
 						'read_file', { filePath: this.fileName}
 					).then(
 						(fileContent: string) => resolve(fileContent)
 					);
 				} else {
-					reject('Read file is currently not supported on web version');
+					reject('Read file is not supported without a file system backend');
 				}
 			} else {
 				reject('File name is not a string');
@@ -95,7 +95,7 @@ class FileAPI {
    */
   async createFile(): Promise<void> {
 		if (typeof this.fileName === 'string') {
-			if (isTauri) {
+			if (hasFs) {
 				const dirPath = await getDirPath(this.fileName);
 				await invoke('create_dir_recursive', { dirPath });
 				return await invoke('create_file', { filePath: this.fileName });
@@ -111,7 +111,7 @@ class FileAPI {
    */
 	async writeFile(text: string): Promise<void> {
 		if (typeof this.fileName === 'string') {
-			if (isTauri) {
+			if (hasFs) {
 				return await invoke('write_file', { filePath: this.fileName, text });
 			} else {
 				return;
@@ -135,7 +135,7 @@ class FileAPI {
    */
 	async moveFile(tar: string): Promise<string | undefined> {
 		if (typeof this.fileName === 'string') {
-			if (isTauri) {
+			if (hasFs) {
 				const tarDir = new DirectoryAPI(tar);
 				if (await tarDir.isDir()) {
 					const fileBaseName = (await this.getBasename())[0];
