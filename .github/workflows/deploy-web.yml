@@ -1,0 +1,87 @@
+name: Deploy Web to GitHub Pages
+
+# Build the web version (vite.web.config.ts) and deploy it to GitHub Pages.
+# Setup: repo Settings > Pages > Build and deployment > Source: GitHub Actions.
+#
+# Optional, CORS proxy to fetch RSS feeds (otherwise a public proxy is used):
+#   - secrets CLOUDFLARE_API_TOKEN (Workers edit permission) and CLOUDFLARE_ACCOUNT_ID:
+#     deploy web/cors-proxy-worker.mjs to Cloudflare Workers and use it, or
+#   - variable MDSILO_WEB_CORS_PROXY: an existing proxy, e.g. https://proxy.example.com/?url={url}
+# Optional variables:
+#   - MDSILO_WEB_BASE: base path, default /<repo name>/ (use / for a custom domain)
+#   - MDSILO_WEB_ORIGIN: site origin allowed by the proxy, default https://<owner>.github.io
+#   - MDSILO_CORS_WORKER_NAME: worker name, default mdsilo-cors-proxy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - run: yarn --cwd packages/mdsmirror install
+      - run: yarn install --frozen-lockfile --network-timeout 1000000
+
+      - name: Check Cloudflare secrets
+        id: cf
+        run: echo "enabled=${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy CORS proxy to Cloudflare Workers
+        id: proxy
+        if: steps.cf.outputs.enabled == 'true' && vars.MDSILO_WEB_CORS_PROXY == ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WORKER_NAME: ${{ vars.MDSILO_CORS_WORKER_NAME || 'mdsilo-cors-proxy' }}
+          SITE_ORIGIN: ${{ vars.MDSILO_WEB_ORIGIN }}
+        run: |
+          origin="${SITE_ORIGIN:-https://${GITHUB_REPOSITORY_OWNER,,}.github.io}"
+          out=$(npx --yes wrangler@3 deploy web/cors-proxy-worker.mjs \
+            --name "$WORKER_NAME" --compatibility-date 2024-09-01 \
+            --var "ALLOW_ORIGIN:$origin" 2>&1) || { echo "$out"; exit 1; }
+          echo "$out"
+          url=$(echo "$out" | grep -o 'https://[^ ]*workers\.dev' | head -1)
+          if [ -z "$url" ]; then
+            echo "::warning::Worker deployed, but its URL is not found in the output; set variable MDSILO_WEB_CORS_PROXY"
+          else
+            echo "url=$url" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build web
+        env:
+          MDSILO_WEB_BASE: ${{ vars.MDSILO_WEB_BASE || format('/{0}/', github.event.repository.name) }}
+          MDSILO_WEB_CORS_PROXY: ${{ vars.MDSILO_WEB_CORS_PROXY || (steps.proxy.outputs.url && format('{0}/?url={1}', steps.proxy.outputs.url, '{url}')) || '' }}
+        run: |
+          echo "base: $MDSILO_WEB_BASE, cors proxy: ${MDSILO_WEB_CORS_PROXY:-<public fallback>}"
+          yarn build:web
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

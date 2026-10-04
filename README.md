@@ -20,13 +20,23 @@ The web version shares the frontend code in `./src` with the desktop app, files 
 - `yarn start:web`: dev server on http://localhost:3001
 - `yarn build:web`: build to `./dist-web`, a static site that can be served by any web server (set `MDSILO_WEB_BASE=/sub/path/` to serve from a sub path)
 
-How it works: `vite.web.config.ts` replaces the Tauri APIs (`@tauri-apps/api/*`, `@tauri-apps/plugin-dialog`) with the stand-ins in `./src/platform/web`, which handle the same commands as the Rust end (`src-tauri/src/lib.rs`) on a virtual file system in IndexedDB. A service worker (`./web/public/fs-sw.js`) serves the stored files by URL, so images and attachments can be displayed. Folders and files on your device can be imported via the Open Folder / Open File dialog, exported files are downloaded by the browser. Note: clearing the site data of the browser will delete the notes.
+How it works: `vite.web.config.ts` replaces the Tauri APIs (`@tauri-apps/api/*`, `@tauri-apps/plugin-dialog`) with the stand-ins in `./src/platform/web`, which handle the same commands as the Rust end (`src-tauri/src/lib.rs`) on a virtual file system in IndexedDB. A service worker (`./web/public/fs-sw.js`) serves the stored files by URL, so images and attachments can be displayed. Folders and files on your device can be imported via the Open Folder / Open File dialog, exported files are downloaded by the browser.
 
-RSS feeds: browsers block most feeds by CORS, so a feed is fetched directly first, then via a CORS proxy:
+Backup: clearing the site data of the browser deletes the notes, so back up regularly via the **mdSilo** menu (top of sidebar) > **Export Backup**, which downloads all files as a zip. To restore, unzip it and import the folder via Open Folder > Import Folder.
 
-- `yarn start:web` / `yarn preview:web` have a built-in proxy at `/__cors_proxy__?url={url}`, used by default
-- for static hosting, run the proxy yourself: `node web/cors-proxy.mjs` (no dependencies; env `PORT`, default 8787, `HOST`, `ALLOW_ORIGIN`), it only proxies GET to public http(s) addresses
-- set the proxy in Settings > RSS CORS Proxy, e.g. `https://proxy.example.com/?url={url}` (`{url}` is replaced by the encoded feed url, otherwise the url is appended); `none` to disable. Or set the default at build time: `MDSILO_WEB_CORS_PROXY=https://proxy.example.com/?url={url} yarn build:web`
+RSS feeds: browsers block most feeds by CORS, so a feed is fetched directly first, then via a CORS proxy. The proxy in use, in order:
+
+1. Settings > RSS CORS Proxy, e.g. `https://proxy.example.com/?url={url}` (`{url}` is replaced by the encoded feed url, otherwise the url is appended); `none` to disable
+2. build time default: `MDSILO_WEB_CORS_PROXY=https://proxy.example.com/?url={url} yarn build:web`
+3. the built-in proxy `/__cors_proxy__` of `yarn start:web` / `yarn preview:web`, if detected
+4. a public proxy ([allorigins](https://allorigins.win)) on static hosting, which can see the feed urls
+
+To run your own proxy (same API, GET to public http(s) addresses only):
+
+- Node: `node web/cors-proxy.mjs` (no dependencies; env `PORT`, default 8787, `HOST`, `ALLOW_ORIGIN`)
+- Cloudflare Workers, for static hosting w/o a server (free tier is enough): `npx wrangler deploy web/cors-proxy-worker.mjs --name mdsilo-cors-proxy --compatibility-date 2024-09-01 --var ALLOW_ORIGIN:https://<your site origin>`
+
+Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on push to `main` (or run it manually). Enable it in repo Settings > Pages > Source: **GitHub Actions**. With repo secrets `CLOUDFLARE_API_TOKEN` (Workers edit permission) and `CLOUDFLARE_ACCOUNT_ID`, it also deploys the Cloudflare Worker proxy and builds it in as the default; or set repo variable `MDSILO_WEB_CORS_PROXY` to use an existing proxy. Other variables: `MDSILO_WEB_BASE` (default `/<repo name>/`, use `/` for a custom domain), `MDSILO_WEB_ORIGIN` (origin allowed by the proxy, default `https://<owner>.github.io`), `MDSILO_CORS_WORKER_NAME`.
 
 ## Features
 
