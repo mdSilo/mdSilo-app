@@ -12,6 +12,12 @@ export default defineConfig({
       include: [/node_modules/, /packages[\\/]mdsmirror/],
     },
   },
+  // Linked workspace packages are served as raw source in dev, not pre-bundled.
+  // mdsmirror's CommonJS dist then breaks named ESM imports at runtime, so
+  // force esbuild to pre-bundle it.
+  optimizeDeps: {
+    include: ['mdsmirror'],
+  },
   server: {
     host: '0.0.0.0',
     port: 3000,

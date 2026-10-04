@@ -62,7 +62,9 @@ const App = () => {
   useHotkeys(hotkeys);
 
   useEffect(() => {
-    void invoke('close_splashscreen');
+    void invoke('close_splashscreen').catch((error) => {
+      console.error('Failed to close splashscreen:', error);
+    });
   }, []);
 
   const appContainerClassName = `h-screen flex flex-col ${darkMode ? 'dark' : ''}`;
