@@ -2,7 +2,8 @@ import { useMemo, useCallback, useRef, useState } from 'react';
 import { 
   TbMenu2 as IconMenu2, TbDna as IconDna, TbCalendar as IconCalendar, TbFile as IconFile, TbFeather as IconFeather, TbCheckbox as IconCheckbox,
   TbFolderPlus as IconFolderPlus, TbFileText as IconFileText, TbDeviceFloppy as IconDeviceFloppy, TbClearAll as IconClearAll,
-  TbFileImport as IconFileImport, TbRss as IconRss, TbSettings as IconSettings, TbLayoutKanban as IconLayoutKanban
+  TbFileImport as IconFileImport, TbRss as IconRss, TbSettings as IconSettings, TbLayoutKanban as IconLayoutKanban,
+  TbCircleDot as IconCircleDot, TbLayoutBoardSplit as IconLayoutBoardSplit
 } from 'react-icons/tb';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
@@ -49,6 +50,15 @@ export default function SideMenu() {
         hotkey: 'mod+shift+k',
         callback: () => dispatchView({view: 'kanban'}),
       },
+      // mod+shift+p is taken by the Playlist sidebar tab, so B(oard) for projects
+      {
+        hotkey: 'mod+shift+i',
+        callback: () => dispatchView({view: 'issues'}),
+      },
+      {
+        hotkey: 'mod+shift+b',
+        callback: () => dispatchView({view: 'project'}),
+      },
     ],
     [dispatchView]
   );
@@ -65,6 +75,8 @@ export default function SideMenu() {
         <>
           <NewButton />
           <KanbanButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'kanban'})} />
+          <IssuesButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'issues'})} />
+          <ProjectButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'project'})} />
           <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
           <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
           <TaskButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'task'})} />
@@ -216,6 +228,40 @@ const KanbanButton = (props: ButtonProps) => {
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconLayoutKanban size={24} className={btnIconClass} />
+        </button>
+      </Tooltip>
+    </SidebarItem>
+  );
+};
+
+const IssuesButton = (props: ButtonProps) => {
+  const { viewTy, onClick, onDispatch } = props;
+
+  return (
+    <SidebarItem isHighlighted={viewTy === 'issues' || viewTy === 'issue'} onClick={onClick}>
+      <Tooltip
+        content="Issues (Ctrl/⌘+Shift+I)"
+        placement="right"
+      >
+        <button aria-label="Issues" className={btnClass} onClick={onDispatch}>
+          <IconCircleDot size={24} className={btnIconClass} />
+        </button>
+      </Tooltip>
+    </SidebarItem>
+  );
+};
+
+const ProjectButton = (props: ButtonProps) => {
+  const { viewTy, onClick, onDispatch } = props;
+
+  return (
+    <SidebarItem isHighlighted={viewTy === 'project'} onClick={onClick}>
+      <Tooltip
+        content="Projects (Ctrl/⌘+Shift+B)"
+        placement="right"
+      >
+        <button aria-label="Projects" className={btnClass} onClick={onDispatch}>
+          <IconLayoutBoardSplit size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>

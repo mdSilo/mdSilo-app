@@ -9,6 +9,8 @@ export interface ViewState {
   view: string;
   params?: ViewParams; 
   tag?: string; 
+  issueNumber?: number;
+  projectId?: string;
 }
 
 export type ViewAction = 
@@ -19,6 +21,9 @@ export type ViewAction =
   | { view: 'graph' }
   | { view: 'journal' }
   | { view: 'kanban' }
+  | { view: 'issues' }
+  | { view: 'issue'; number: number }
+  | { view: 'project'; projectId?: string }
   | {
       view: 'md';
       params: ViewParams;
@@ -52,6 +57,13 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return {...state, view: 'kanban'};
     case 'journal':
       return {...state, view: 'journal'};
+    case 'issues':
+      return {view: 'issues'};
+    case 'issue':
+      setWindowTitle(`: #${action.number} - mdSilo`);
+      return {view: 'issue', issueNumber: action.number};
+    case 'project':
+      return {view: 'project', projectId: action.projectId};
     case 'md':
       return {view: 'md', params: action.params};
     case 'tag':

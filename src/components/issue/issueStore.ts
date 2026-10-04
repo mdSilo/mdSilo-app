@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import create from 'zustand';
 import FileAPI from 'file/files';
-import { useStore } from 'lib/store';
-import { createIssue as createIssueOp, defaultIssueData, NewIssue, normalizeIssueData } from './issueOps';
+import { store, useStore } from 'lib/store';
+import {
+  createIssue as createIssueOp, defaultIssueData, NewIssue, normalizeIssueData, renameNoteRefs,
+} from './issueOps';
 import type { IssueData } from './types';
 
 export const ISSUE_FILE = 'issues.json';
@@ -108,6 +110,16 @@ export function useIssueData() {
     if (initDir) void load(initDir);
   }, [initDir, load]);
   return { data, isLoaded: isLoaded && dir === initDir, initDir };
+}
+
+/** On note rename: keep issue links to the note working. */
+export async function updateIssueNoteLinks(
+  oldPath: string, newPath: string, oldTitle: string, newTitle: string
+) {
+  const initDir = store.getState().initDir;
+  if (!initDir) return;
+  await useIssueStore.getState().load(initDir);
+  useIssueStore.getState().apply((d) => renameNoteRefs(d, oldPath, newPath, oldTitle, newTitle));
 }
 
 /** Reset module state; for tests. */

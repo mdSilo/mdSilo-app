@@ -14,9 +14,11 @@ type Props = {
   children: React.ReactNode;
   isOpen: boolean;
   handleClose: () => void;
+  /** classes for the panel, to override the default small width */
+  panelClassName?: string;
 }
 
-export const BaseModal = ({ title, children, isOpen, handleClose }: Props) => {
+export const BaseModal = ({ title, children, isOpen, handleClose, panelClassName = 'max-w-sm' }: Props) => {
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
@@ -53,11 +55,11 @@ export const BaseModal = ({ title, children, isOpen, handleClose }: Props) => {
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className="inline-block bg-white rounded p-4 overflow-hidden shadow-xl transform transition-all max-w-sm w-full">
+            <div className={`inline-block bg-white rounded p-4 overflow-hidden shadow-xl transform transition-all w-full ${panelClassName}`}>
               <div className="absolute right-4 top-4">
                 <IconX 
                   size={24} 
-                  className="cursor-pointer"
+                  className="cursor-pointer text-gray-500"
                   onClick={() => handleClose()}
                 />
               </div>

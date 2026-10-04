@@ -9,6 +9,8 @@ import Graph from './graph';
 import NotePage from './md';
 import HashTags from "./hashtags";
 import Feed from "./feed";
+import Issues, { IssuePage } from "./issues";
+import ProjectView from "./project";
 
 export default function MainView() {
   const currentView = useCurrentViewContext();
@@ -26,6 +28,12 @@ export default function MainView() {
         <Tasks />
       ) : viewTy === 'kanban' ? (
         <Kanban />
+      ) : viewTy === 'issues' ? (
+        <Issues />
+      ) : viewTy === 'issue' ? (
+        <IssuePage />
+      ) : viewTy === 'project' ? (
+        <ProjectView />
       ) : viewTy === 'graph' ? (
         <Graph />
       ) : viewTy === 'journal' ? (
@@ -62,6 +70,7 @@ A lightweight, local-first personal Wiki and knowledge base for storing ideas, t
   - 🗄️ Build personal wiki with bidirectional wiki links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...  
   - 📋 Kanban board to manage the process of knowledge growing   
+  - 🐞 Built-in issue tracker: labels, milestones, comments and project boards, linked to notes   
   - 🕸️ Graph view to visualize the networked writing  
   - 📅 Chronicle view and Daily activities graph  
   - ✔️ Task view to track todo/doing/done  
