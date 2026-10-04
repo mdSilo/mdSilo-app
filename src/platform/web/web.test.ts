@@ -6,7 +6,7 @@ import { resetFsInit } from './fs';
 import { invoke, convertFileSrc } from './core';
 import { getCurrentWindow } from './window';
 import { normalize, join, parent, basename, isWithin } from './path';
-import { parseFeed } from './feed';
+import { parseFeed, proxiedUrl, getCorsProxy } from './feed';
 
 beforeEach(async () => {
   await closeDB();
@@ -201,5 +201,35 @@ describe('web invoke: feed', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(await invoke('add_channel', { url: 'https://x.com/feed', ty: 'rss', title: null })).toBe(0);
     expect(await invoke('fetch_feed', { url: 'https://x.com/feed' })).toBeNull();
+  });
+
+  it('falls back to the CORS proxy', async () => {
+    const fetchMock = vi.fn(async (input: string) => {
+      if (input.startsWith('https://b.com')) throw new TypeError('CORS');
+      return new Response(RSS);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    // default: the proxy of dev/preview server
+    expect(await getCorsProxy()).toBe('/__cors_proxy__?url={url}');
+    expect(await invoke('fetch_feed', { url: 'https://b.com/feed' })).toMatchObject({ channel: { title: 'Blog' } });
+    expect(fetchMock).toHaveBeenLastCalledWith('/__cors_proxy__?url=https%3A%2F%2Fb.com%2Ffeed');
+
+    // custom proxy in settings
+    await invoke('set_data', { key: 'cors_proxy', value: 'https://p.com/' });
+    expect(await invoke('add_channel', { url: 'https://b.com/feed', ty: 'rss', title: null })).toBe(2);
+    expect(fetchMock).toHaveBeenLastCalledWith('https://p.com/https://b.com/feed');
+
+    // disabled
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await invoke('set_data', { key: 'cors_proxy', value: 'none' });
+    fetchMock.mockClear();
+    expect(await invoke('fetch_feed', { url: 'https://b.com/feed' })).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('builds proxied url', () => {
+    expect(proxiedUrl('https://p.com/?url={url}', 'https://a.com/f?x=1'))
+      .toBe('https://p.com/?url=https%3A%2F%2Fa.com%2Ff%3Fx%3D1');
+    expect(proxiedUrl('https://p.com/', 'https://a.com/f')).toBe('https://p.com/https://a.com/f');
   });
 });

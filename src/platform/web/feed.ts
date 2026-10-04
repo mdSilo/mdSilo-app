@@ -1,9 +1,10 @@
 /**
  * RSS / Atom feed on web, stored in IndexedDB.
  * Port of src-tauri/src/feed.rs and db.rs.
- * NOTE: fetching a feed from browser is subject to CORS, many feeds may fail.
+ * NOTE: fetching a feed from browser is subject to CORS, a CORS proxy is used
+ * as fallback, see getCorsProxy.
  */
-import { ARTICLES, CHANNELS, get, getAll, put, reqToPromise, tx } from './idb';
+import { ARTICLES, CHANNELS, KV, get, getAll, put, reqToPromise, tx } from './idb';
 
 export interface NewChannel {
   title: string;
@@ -120,15 +121,62 @@ export function parseFeed(xml: string, url: string, ty: string, title?: string |
   return null;
 }
 
-async function processFeed(url: string, ty: string, title?: string | null): Promise<FeedResult | null> {
+/** KV key of the CORS proxy setting, set in src/components/settings/CorsProxySetting.tsx */
+export const CORS_PROXY_KEY = 'cors_proxy';
+
+/**
+ * The default CORS proxy: from build env MDSILO_WEB_CORS_PROXY, or the one
+ * mounted on the vite dev/preview server (web/cors-proxy.mjs)
+ */
+export function defaultCorsProxy(): string {
+  const fromEnv = typeof __MDSILO_CORS_PROXY__ === 'string' ? __MDSILO_CORS_PROXY__.trim() : '';
+  if (fromEnv) return fromEnv;
+  const base = (import.meta as unknown as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? '/';
+  return `${base.endsWith('/') ? base : `${base}/`}__cors_proxy__?url={url}`;
+}
+
+/** the CORS proxy in use, 'none' to disable */
+export async function getCorsProxy(): Promise<string> {
+  const value = await get<unknown>(KV, CORS_PROXY_KEY).catch(() => undefined);
+  const proxy = typeof value === 'string' ? value.trim() : '';
+  if (proxy.toLowerCase() === 'none') return '';
+  return proxy || defaultCorsProxy();
+}
+
+/**
+ * Build proxied url: `{url}` in the template is replaced with the encoded url,
+ * otherwise the url is appended, e.g. `https://proxy.example.com/`
+ */
+export function proxiedUrl(proxy: string, url: string): string {
+  return proxy.includes('{url}')
+    ? proxy.split('{url}').join(encodeURIComponent(url))
+    : `${proxy}${url}`;
+}
+
+async function fetchText(url: string): Promise<string | null> {
   try {
     const resp = await fetch(url);
-    if (!resp.ok) return null;
-    return parseFeed(await resp.text(), url, ty, title);
-  } catch (e) {
-    console.error(`Failed to fetch feed ${url}:`, e);
+    return resp.ok ? await resp.text() : null;
+  } catch {
+    // mostly blocked by CORS
     return null;
   }
+}
+
+async function processFeed(url: string, ty: string, title?: string | null): Promise<FeedResult | null> {
+  // try directly first, then via the CORS proxy if any
+  const direct = await fetchText(url);
+  const directResult = direct === null ? null : parseFeed(direct, url, ty, title);
+  if (directResult) return directResult;
+
+  const proxy = await getCorsProxy();
+  if (proxy) {
+    const proxied = await fetchText(proxiedUrl(proxy, url));
+    const result = proxied === null ? null : parseFeed(proxied, url, ty, title);
+    if (result) return result;
+  }
+  console.error(`Failed to fetch feed ${url}${proxy ? ' (also via CORS proxy)' : ''}`);
+  return null;
 }
 
 async function nextId(store: typeof CHANNELS | typeof ARTICLES): Promise<number> {

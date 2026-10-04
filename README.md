@@ -20,7 +20,13 @@ The web version shares the frontend code in `./src` with the desktop app, files 
 - `yarn start:web`: dev server on http://localhost:3001
 - `yarn build:web`: build to `./dist-web`, a static site that can be served by any web server (set `MDSILO_WEB_BASE=/sub/path/` to serve from a sub path)
 
-How it works: `vite.web.config.ts` replaces the Tauri APIs (`@tauri-apps/api/*`, `@tauri-apps/plugin-dialog`) with the stand-ins in `./src/platform/web`, which handle the same commands as the Rust end (`src-tauri/src/lib.rs`) on a virtual file system in IndexedDB. A service worker (`./web/public/fs-sw.js`) serves the stored files by URL, so images and attachments can be displayed. Folders and files on your device can be imported via the Open Folder / Open File dialog, exported files are downloaded by the browser. Note: clearing the site data of the browser will delete the notes, and fetching RSS feeds is subject to CORS in browser.
+How it works: `vite.web.config.ts` replaces the Tauri APIs (`@tauri-apps/api/*`, `@tauri-apps/plugin-dialog`) with the stand-ins in `./src/platform/web`, which handle the same commands as the Rust end (`src-tauri/src/lib.rs`) on a virtual file system in IndexedDB. A service worker (`./web/public/fs-sw.js`) serves the stored files by URL, so images and attachments can be displayed. Folders and files on your device can be imported via the Open Folder / Open File dialog, exported files are downloaded by the browser. Note: clearing the site data of the browser will delete the notes.
+
+RSS feeds: browsers block most feeds by CORS, so a feed is fetched directly first, then via a CORS proxy:
+
+- `yarn start:web` / `yarn preview:web` have a built-in proxy at `/__cors_proxy__?url={url}`, used by default
+- for static hosting, run the proxy yourself: `node web/cors-proxy.mjs` (no dependencies; env `PORT`, default 8787, `HOST`, `ALLOW_ORIGIN`), it only proxies GET to public http(s) addresses
+- set the proxy in Settings > RSS CORS Proxy, e.g. `https://proxy.example.com/?url={url}` (`{url}` is replaced by the encoded feed url, otherwise the url is appended); `none` to disable. Or set the default at build time: `MDSILO_WEB_CORS_PROXY=https://proxy.example.com/?url={url} yarn build:web`
 
 ## Features
 
