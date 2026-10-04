@@ -9,6 +9,7 @@ import { KV, del, get, put } from './idb';
 import { basename, fileStem, isTextNote, join, normalize, parent } from './path';
 import { emitChanges, watchDir } from './watch';
 import { downloadBlob, fileUrl, showMessage } from './browser';
+import { exportBackup } from './backup';
 
 type Args = Record<string, any>;
 type Command = (args: Args) => unknown;
@@ -204,4 +205,6 @@ export const commands: Record<string, Command> = {
   },
   // json
   write_json: ({ dir }) => writeJson(dir),
+  // web only: back up notes in IndexedDB to a zip file
+  export_backup: ({ dir }) => exportBackup(dir ?? '/'),
 };

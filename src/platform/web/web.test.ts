@@ -6,11 +6,14 @@ import { resetFsInit } from './fs';
 import { invoke, convertFileSrc } from './core';
 import { getCurrentWindow } from './window';
 import { normalize, join, parent, basename, isWithin } from './path';
-import { parseFeed, proxiedUrl, getCorsProxy } from './feed';
+import { parseFeed, proxiedUrl, getCorsProxy, resetBuiltinProxy, PUBLIC_CORS_PROXY } from './feed';
+import { buildBackup, backupFileName } from './backup';
+import { crc32 } from './zip';
 
 beforeEach(async () => {
   await closeDB();
   resetFsInit();
+  resetBuiltinProxy();
   globalThis.indexedDB = new IDBFactory();
 });
 
@@ -206,10 +209,12 @@ describe('web invoke: feed', () => {
   it('falls back to the CORS proxy', async () => {
     const fetchMock = vi.fn(async (input: string) => {
       if (input.startsWith('https://b.com')) throw new TypeError('CORS');
+      // the built-in proxy of dev/preview server tells itself by header
+      if (input === '/__cors_proxy__') return new Response('Missing url', { status: 400, headers: { 'X-Mdsilo-Cors-Proxy': '1' } });
       return new Response(RSS);
     });
     vi.stubGlobal('fetch', fetchMock);
-    // default: the proxy of dev/preview server
+    // default: the built-in proxy if detected
     expect(await getCorsProxy()).toBe('/__cors_proxy__?url={url}');
     expect(await invoke('fetch_feed', { url: 'https://b.com/feed' })).toMatchObject({ channel: { title: 'Blog' } });
     expect(fetchMock).toHaveBeenLastCalledWith('/__cors_proxy__?url=https%3A%2F%2Fb.com%2Ffeed');
@@ -227,9 +232,98 @@ describe('web invoke: feed', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('uses the public proxy on static hosting', async () => {
+    // static host: 404 (or index.html), w/o the proxy header
+    const fetchMock = vi.fn(async (input: string) => {
+      if (input.startsWith('https://b.com')) throw new TypeError('CORS');
+      if (input === '/__cors_proxy__') return new Response('Not Found', { status: 404 });
+      return new Response(RSS);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    expect(await getCorsProxy()).toBe(PUBLIC_CORS_PROXY);
+    expect(await invoke('fetch_feed', { url: 'https://b.com/feed' })).toMatchObject({ channel: { title: 'Blog' } });
+    expect(fetchMock).toHaveBeenLastCalledWith('https://api.allorigins.win/raw?url=https%3A%2F%2Fb.com%2Ffeed');
+  });
+
   it('builds proxied url', () => {
     expect(proxiedUrl('https://p.com/?url={url}', 'https://a.com/f?x=1'))
       .toBe('https://p.com/?url=https%3A%2F%2Fa.com%2Ff%3Fx%3D1');
     expect(proxiedUrl('https://p.com/', 'https://a.com/f')).toBe('https://p.com/https://a.com/f');
   });
 });
+
+/** read entries back from a stored zip, checking the crc */
+async function readZip(blob: Blob): Promise<Record<string, string>> {
+  // jsdom Blob has no arrayBuffer()
+  const buf = new Uint8Array(await new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(blob);
+  }));
+  const view = new DataView(buf.buffer);
+  const end = buf.length - 22;
+  expect(view.getUint32(end, true)).toBe(0x06054b50);
+  const count = view.getUint16(end + 10, true);
+  let p = view.getUint32(end + 16, true);
+  const out: Record<string, string> = {};
+  const decoder = new TextDecoder();
+  for (let i = 0; i < count; i++) {
+    expect(view.getUint32(p, true)).toBe(0x02014b50);
+    const crc = view.getUint32(p + 16, true);
+    const size = view.getUint32(p + 24, true);
+    const nameLen = view.getUint16(p + 28, true);
+    const offset = view.getUint32(p + 42, true);
+    const name = decoder.decode(buf.slice(p + 46, p + 46 + nameLen));
+    expect(view.getUint32(offset, true)).toBe(0x04034b50);
+    const start = offset + 30 + view.getUint16(offset + 26, true);
+    const data = buf.slice(start, start + size);
+    expect(crc32(data)).toBe(crc);
+    out[name] = decoder.decode(data);
+    p += 46 + nameLen;
+  }
+  return out;
+}
+
+describe('backup', () => {
+  it('computes crc32', () => {
+    expect(crc32(new TextEncoder().encode('123456789'))).toBe(0xcbf43926);
+  });
+
+  it('zips all files', async () => {
+    await invoke('write_file', { filePath: '/w/笔记.md', text: '# 你好' });
+    await invoke('write_file', { filePath: '/w/sub/.hidden', text: 'h' });
+    await invoke('create_dir_recursive', { dirPath: '/empty' });
+    const { blob, count } = await buildBackup();
+    expect(count).toBe(3);
+    const files = await readZip(blob);
+    expect(files).toEqual({
+      'empty/': '',
+      'mdSilo/': '',
+      'mdSilo/Welcome.md': expect.stringContaining('Welcome to mdSilo'),
+      'w/': '',
+      'w/sub/': '',
+      'w/sub/.hidden': 'h',
+      'w/笔记.md': '# 你好',
+    });
+  });
+
+  it('zips a folder with its name', async () => {
+    await invoke('write_file', { filePath: '/w/a/b.md', text: 'b' });
+    const files = await readZip((await buildBackup('/w/a')).blob);
+    expect(files).toEqual({ 'a/': '', 'a/b.md': 'b' });
+    await expect(buildBackup('/none')).rejects.toThrow();
+  });
+
+  it('exports backup by command', async () => {
+    const createObjectURL = vi.fn(() => 'blob:x');
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    expect(await invoke('export_backup')).toBe(1);
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(backupFileName(new Date(2026, 0, 2, 3, 4, 5))).toBe('mdsilo-backup-20260102-030405.zip');
+    vi.unstubAllGlobals();
+  });
+});
+

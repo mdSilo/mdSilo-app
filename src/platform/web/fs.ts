@@ -55,7 +55,8 @@ function newEntry(path: string, isDir: boolean, data?: FileData, now = Date.now(
 /** key range of all descendants of dir */
 function descendantsRange(dir: string): IDBKeyRange {
   const prefix = dir === ROOT ? '/' : `${dir}/`;
-  return IDBKeyRange.bound(prefix, `${prefix}￿`, false, false);
+  // lower bound open: excludes the root `/` itself, no other path ends with `/`
+  return IDBKeyRange.bound(prefix, `${prefix}\uffff`, true, false);
 }
 
 let initialized: Promise<void> | null = null;
