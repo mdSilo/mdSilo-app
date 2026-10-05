@@ -3,7 +3,6 @@ import { useTransition, animated, SpringConfig } from '@react-spring/web';
 import { isMobile } from 'utils/helper';
 import { useStore } from 'lib/store';
 import SidebarContent from './SidebarContent';
-import SidebarHeader from './SidebarHeader';
 
 const SPRING_CONFIG: SpringConfig = {
   mass: 1,
@@ -88,7 +87,6 @@ function Sidebar(props: Props) {
             <div
               className={`flex flex-col flex-none h-full border-r border-lime-900 bg-gray-50 dark:bg-gray-800 dark:text-gray-300 ${className}`}
             >
-              <SidebarHeader />
               <SidebarContent className="flex-1 overflow-x-hidden overflow-y-auto" />
             </div>
           </animated.div>

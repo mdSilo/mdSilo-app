@@ -1,19 +1,23 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { 
   TbMenu2 as IconMenu2, TbDna as IconDna, TbCalendar as IconCalendar, TbFile as IconFile, TbFeather as IconFeather, TbCheckbox as IconCheckbox,
   TbFolderPlus as IconFolderPlus, TbFileText as IconFileText, TbDeviceFloppy as IconDeviceFloppy, TbClearAll as IconClearAll,
   TbFileImport as IconFileImport, TbRss as IconRss, TbSettings as IconSettings, TbLayoutKanban as IconLayoutKanban,
-  TbCircleDot as IconCircleDot, TbLayoutBoardSplit as IconLayoutBoardSplit
+  TbCircleDot as IconCircleDot, TbLayoutBoardSplit as IconLayoutBoardSplit, TbBrowser as IconBrowser,
+  TbPizza as IconPizza, TbInfoCircle as IconInfoCircle, TbCurrentLocation as IconCurrentLocation,
+  TbDatabaseExport as IconDatabaseExport,
 } from 'react-icons/tb';
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
 import { onOpenFile, onListDir, onSave, openJsonFile } from 'editor/hooks/useOpen';
+import { isWeb } from 'file/util';
 import { store, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import { ViewAction } from 'context/viewReducer';
-import { DropdownItem } from 'components/misc/Dropdown';
+import Dropdown, { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import Logo from '../Logo';
@@ -68,7 +72,7 @@ export default function SideMenu() {
   return (    
     <div className='flex flex-col h-full pb-3 bg-gray-100 dark:bg-gray-800'>
       <div className="flex flex-col h-full" id="side-menu-btns">
-        <Logo />
+        <LogoMenu />
         <OpenButton />
         <FeedButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'feed'})} />
         {currentDir ? (
@@ -87,6 +91,79 @@ export default function SideMenu() {
     </div>
   );
 }
+
+const LogoMenu = () => {
+  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
+  const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
+
+  return (
+    <Dropdown
+      buttonChildren={<Logo />}
+      buttonClassName="block w-full focus:outline-none"
+      itemsClassName="w-56"
+      placement="right-start"
+      tooltipContent="mdSilo"
+      tooltipPlacement="right"
+    >
+      <DropdownItem
+        onClick={() => {
+          if (isMobile()) {
+            setIsSidebarOpen(false);
+          }
+          setIsSettingsOpen(true);
+        }}
+      >
+        <IconSettings size={18} className="mr-1" />
+        <span>Settings</span>
+      </DropdownItem>
+      <DropdownItem
+        className="border-t dark:border-gray-700"
+        as="link"
+        href="https://mdsilo.com"
+      >
+        <IconBrowser size={18} className="mr-1" />
+        <span>Website</span>
+      </DropdownItem>
+      <DropdownItem
+        className="border-t dark:border-gray-700"
+        as="link"
+        href="https://mdsilo.com/helpus"
+      >
+        <IconPizza size={18} className="mr-1" />
+        <span>Help Us</span>
+      </DropdownItem>
+      <DropdownItem onClick={() => setIsAboutOpen(true)}>
+        <IconInfoCircle size={18} className="mr-1" />
+        <span>About</span>
+      </DropdownItem>
+      {isWeb ? (
+        <DropdownItem
+          onClick={async () => {
+            try {
+              await invoke('export_backup');
+            } catch (e) {
+              console.error('Failed to export backup:', e);
+            }
+          }}
+        >
+          <IconDatabaseExport size={18} className="mr-1" />
+          <span>Export Backup</span>
+        </DropdownItem>
+      ) : (
+        <DropdownItem
+          onClick={async () => {
+            const dir_path = await invoke<string>('create_mdsilo_dir');
+            await invoke('open_url', { url: dir_path });
+          }}
+        >
+          <IconCurrentLocation size={18} className="mr-1" />
+          <span>Local mdsilo</span>
+        </DropdownItem>
+      )}
+    </Dropdown>
+  );
+};
 
 const btnClass = 'title flex items-center text-lg p-2';
 const btnIconClass = 'flex-shrink-0 mx-1 text-gray-600 dark:text-gray-400';

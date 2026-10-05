@@ -10,7 +10,6 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout, renderWithView } from '../../testUtils';
 import SidebarItem from './SidebarItem';
 import SidebarTab from './SidebarTab';
-import SidebarHeader from './SidebarHeader';
 import SidebarContent from './SidebarContent';
 import SidebarNotes from './SidebarNotes';
 import SidebarNotesBar from './SidebarNotesBar';
@@ -65,32 +64,6 @@ describe('SidebarTab', () => {
     expect(btn.className).toContain('border-b-green-700');
     await userEvent.click(btn);
     expect(setActive).toHaveBeenCalled();
-  });
-});
-
-describe('SidebarHeader', () => {
-  test('menu opens settings, about and local folder', async () => {
-    mockInvoke(invoke, { create_mdsilo_dir: '/home/me/mdsilo' });
-    render(<SidebarHeader />);
-    await userEvent.click(screen.getByText('mdSilo'));
-    expect(screen.getByText('Website').closest('a')).toHaveAttribute('href', 'https://mdsilo.com');
-    await userEvent.click(screen.getByText('Settings'));
-    expect(store.getState().isSettingsOpen).toBe(true);
-
-    await userEvent.click(screen.getByText('mdSilo'));
-    await userEvent.click(screen.getByText('About'));
-    expect(store.getState().isAboutOpen).toBe(true);
-
-    await userEvent.click(screen.getByText('mdSilo'));
-    await userEvent.click(screen.getByText('Local mdsilo'));
-    await waitFor(() => expect(invoke).toHaveBeenCalledWith('open_url', { url: '/home/me/mdsilo' }));
-  });
-
-  test('collapse button closes the sidebar', async () => {
-    const { container } = render(<SidebarHeader />);
-    const collapse = container.querySelector('span.p-1') as HTMLElement;
-    await userEvent.click(collapse);
-    expect(store.getState().isSidebarOpen).toBe(false);
   });
 });
 
@@ -405,11 +378,10 @@ describe('SidebarPlaylist', () => {
 });
 
 describe('Sidebar', () => {
-  test('renders header and content when open', async () => {
+  test('renders content when open', async () => {
     vi.mocked(invoke).mockResolvedValue([]);
     store.getState().setIsOpenPreOn(false);
     renderWithView(<Sidebar />);
-    expect(screen.getByText('mdSilo')).toBeInTheDocument();
     expect(screen.getByText('Open Folder')).toBeInTheDocument();
   });
 
@@ -445,23 +417,42 @@ describe('StatusBar', () => {
 });
 
 describe('SideMenu', () => {
+  test('logo menu opens settings, about, and local folder actions', async () => {
+    mockInvoke(invoke, { create_mdsilo_dir: '/home/me/mdsilo' });
+    renderWithView(withContainer(<SideMenu />));
+
+    const logoButton = screen.getByRole('button', { name: 'mdSilo' });
+    await userEvent.click(logoButton);
+    expect(screen.getByText('Website').closest('a')).toHaveAttribute('href', 'https://mdsilo.com');
+    await userEvent.click(screen.getByText('Settings'));
+    expect(store.getState().isSettingsOpen).toBe(true);
+
+    await userEvent.click(logoButton);
+    await userEvent.click(screen.getByText('About'));
+    expect(store.getState().isAboutOpen).toBe(true);
+
+    await userEvent.click(logoButton);
+    await userEvent.click(screen.getByText('Local mdsilo'));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('open_url', { url: '/home/me/mdsilo' }));
+  });
+
   test('shows view buttons only with a dir and dispatches views', async () => {
     const { unmount } = renderWithView(withContainer(<SideMenu />));
-    expect(document.querySelectorAll('#side-menu-btns button')).toHaveLength(3);
+    expect(document.querySelectorAll('#side-menu-btns button')).toHaveLength(4);
     unmount();
 
     store.getState().setCurrentDir('/n');
     renderWithView(withContainer(<><SideMenu /><ViewProbe /></>));
     const btns = Array.from(document.querySelectorAll('#side-menu-btns button')) as HTMLElement[];
-    // toggle, feed, new, kanban, issues, projects, chronicle, graph, task, file
-    expect(btns).toHaveLength(10);
-    await userEvent.click(btns[0]);
+    // logo, toggle, feed, new, kanban, issues, projects, chronicle, graph, task, file
+    expect(btns).toHaveLength(11);
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle Sidebar' }));
     expect(store.getState().isSidebarOpen).toBe(false);
-    await userEvent.click(btns[1]);
-    expect(viewState().view).toBe('feed');
     await userEvent.click(btns[2]);
+    expect(viewState().view).toBe('feed');
+    await userEvent.click(btns[3]);
     expect(store.getState().isFindOrCreateModalOpen).toBe(true);
-    for (const [i, view] of [[3, 'kanban'], [4, 'issues'], [5, 'project'], [6, 'chronicle'], [7, 'graph'], [8, 'task']] as const) {
+    for (const [i, view] of [[4, 'kanban'], [5, 'issues'], [6, 'project'], [7, 'chronicle'], [8, 'graph'], [9, 'task']] as const) {
       await userEvent.click(btns[i]);
       expect(viewState().view).toBe(view);
     }
@@ -493,11 +484,12 @@ describe('SideMenu', () => {
     await userEvent.click(buttons.at(-1) as HTMLElement);
     expect(store.getState().isSettingsOpen).toBe(true);
 
-    await userEvent.click(document.querySelector('#side-menu-btns [aria-haspopup]') as HTMLElement);
+    const menus = document.querySelectorAll('#side-menu-btns [aria-haspopup="menu"]');
+    await userEvent.click(menus[1] as HTMLElement);
     for (const label of ['Open Folder', 'Open File', 'Import JSON', 'Recent', 'Save']) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
-    store.getState().setCurrentDir('/n');
+    act(() => store.getState().setCurrentDir('/n'));
     await userEvent.click(screen.getByText('Recent'));
     expect(store.getState().showHistory).toBe(true);
     expect(store.getState().currentDir).toBeUndefined();
