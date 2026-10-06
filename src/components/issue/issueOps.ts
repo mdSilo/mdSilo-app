@@ -137,6 +137,7 @@ export type NewIssue = {
   labels?: string[];
   milestone?: string;
   notes?: string[];
+  noteTask?: Issue['noteTask'];
   /** add the new issue to this project, in this status (default: first status) */
   project?: { id: string; status?: string };
 };
@@ -152,6 +153,7 @@ export const createIssue = (data: IssueData, input: NewIssue) =>
       labels: (input.labels ?? []).filter((id) => d.labels.some((l) => l.id === id)),
       ...(input.milestone && d.milestones.some((m) => m.id === input.milestone) ? { milestone: input.milestone } : {}),
       notes: [...new Set(input.notes ?? [])],
+      ...(input.noteTask ? { noteTask: input.noteTask } : {}),
       timeline: [{ id: newId(), kind: 'event', event: 'opened', createdAt: at }],
       createdAt: at,
       updatedAt: at,
@@ -229,6 +231,13 @@ export const setMilestone = (data: IssueData, num: number, milestoneId?: string)
     }
   });
 
+/** Log an event on an issue's timeline. */
+export const addEvent = (data: IssueData, num: number, event: IssueEventKind, detail?: string) =>
+  produce(data, (d) => {
+    const issue = findIssue(d, num);
+    if (issue) pushEvent(issue, event, detail);
+  });
+
 // comments
 
 export const addComment = (data: IssueData, num: number, body: string) =>
@@ -284,6 +293,9 @@ export const renameNoteRefs = (
     for (const issue of d.issues) {
       if (oldPath && issue.notes.includes(oldPath)) {
         issue.notes = [...new Set(issue.notes.map((p) => (p === oldPath ? newPath : p)))];
+      }
+      if (oldPath && issue.noteTask?.note === oldPath) {
+        issue.noteTask.note = newPath;
       }
       issue.body = renameTitleInText(issue.body, oldTitle, newTitle);
       for (const t of issue.timeline) {

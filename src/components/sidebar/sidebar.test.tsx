@@ -444,15 +444,15 @@ describe('SideMenu', () => {
     store.getState().setCurrentDir('/n');
     renderWithView(withContainer(<><SideMenu /><ViewProbe /></>));
     const btns = Array.from(document.querySelectorAll('#side-menu-btns button')) as HTMLElement[];
-    // logo, toggle, feed, new, issues, projects, chronicle, graph, task, file
-    expect(btns).toHaveLength(10);
+    // logo, toggle, feed, new, issues, projects, chronicle, graph, file
+    expect(btns).toHaveLength(9);
     await userEvent.click(screen.getByRole('button', { name: 'Toggle Sidebar' }));
     expect(store.getState().isSidebarOpen).toBe(false);
     await userEvent.click(btns[2]);
     expect(viewState().view).toBe('feed');
     await userEvent.click(btns[3]);
     expect(store.getState().isFindOrCreateModalOpen).toBe(true);
-    for (const [i, view] of [[4, 'issues'], [5, 'project'], [6, 'chronicle'], [7, 'graph'], [8, 'task']] as const) {
+    for (const [i, view] of [[4, 'issues'], [5, 'project'], [6, 'chronicle'], [7, 'graph']] as const) {
       await userEvent.click(btns[i]);
       expect(viewState().view).toBe(view);
     }
@@ -465,7 +465,6 @@ describe('SideMenu', () => {
     for (const [key, code, view] of [
       ['g', 71, 'graph'],
       ['c', 67, 'chronicle'],
-      ['t', 84, 'task'],
       ['k', 75, 'project'],
       ['i', 73, 'issues'],
       ['r', 82, 'feed'],
@@ -475,6 +474,10 @@ describe('SideMenu', () => {
       });
       expect(viewState().view).toBe(view);
     }
+    act(() => {
+      press('t', 84);
+    });
+    expect(viewState()).toEqual({ view: 'issues', issuesTab: 'tasks' });
   });
 
   test('settings button and file menu', async () => {

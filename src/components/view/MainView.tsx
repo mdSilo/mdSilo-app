@@ -1,9 +1,9 @@
 import MsEditor from "mdsmirror";
 import ErrorBoundary from 'components/misc/ErrorBoundary';
+import useNoteTaskSync from 'components/issue/useNoteTaskSync';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Chronicle from './chronicle';
 import Journals from './journals';
-import Tasks from './tasks';
 import Graph from './graph';
 import NotePage from './md';
 import HashTags from "./hashtags";
@@ -12,6 +12,8 @@ import Issues, { IssuePage } from "./issues";
 import ProjectView from "./project";
 
 export default function MainView() {
+  // issues created from note tasks follow their tasks, whatever the view
+  useNoteTaskSync();
   const currentView = useCurrentViewContext();
   const viewTy = currentView.state.view;
   // 
@@ -23,8 +25,6 @@ export default function MainView() {
         <Feed />
       ) : viewTy === 'chronicle' ? (
         <Chronicle />
-      ) : viewTy === 'task' ? (
-        <Tasks />
       ) : viewTy === 'issues' ? (
         <Issues />
       ) : viewTy === 'issue' ? (
@@ -67,10 +67,9 @@ A lightweight, local-first personal Wiki and knowledge base for storing ideas, t
   - 🗄️ Build personal wiki with bidirectional wiki links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...  
   - 📋 Projects: Kanban boards and tables to manage the process of knowledge growing   
-  - 🐞 Built-in issue tracker: labels, milestones and comments, linked to notes   
+  - 🐞 Built-in issue tracker: labels, milestones and comments, linked to notes; tasks in notes (#todo# #doing# #done#, checkboxes) become issues   
   - 🕸️ Graph view to visualize the networked writing  
   - 📅 Chronicle view and Daily activities graph  
-  - ✔️ Task view to track todo/doing/done  
   - 🔍 Full-text search 
   - ✨ Available for Windows, macOS, Linux and Web  
 

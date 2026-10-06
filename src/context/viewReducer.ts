@@ -3,6 +3,9 @@ import { setWindowTitle } from 'file/util';
 
 export const initialState = {view: 'default'};
 
+/** tabs of the Issues view; tasks replaced the old Task view */
+export type IssuesTab = 'issues' | 'tasks' | 'labels' | 'milestones';
+
 type ViewParams = { noteId: string; stackIds?: string[], hash?: string };
 
 export interface ViewState {
@@ -10,6 +13,7 @@ export interface ViewState {
   params?: ViewParams; 
   tag?: string; 
   issueNumber?: number;
+  issuesTab?: IssuesTab;
   projectId?: string;
 }
 
@@ -17,10 +21,9 @@ export type ViewAction =
   | { view: 'default' }
   | { view: 'feed' }
   | { view: 'chronicle' }
-  | { view: 'task' }
   | { view: 'graph' }
   | { view: 'journal' }
-  | { view: 'issues' }
+  | { view: 'issues'; tab?: IssuesTab }
   | { view: 'issue'; number: number }
   | { view: 'project'; projectId?: string }
   | {
@@ -48,14 +51,12 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return {...state, view: 'feed'};
     case 'chronicle':
       return {...state, view: 'chronicle'};
-    case 'task':
-      return {...state, view: 'task'};
     case 'graph':
       return {...state, view: 'graph'};
     case 'journal':
       return {...state, view: 'journal'};
     case 'issues':
-      return {view: 'issues'};
+      return {view: 'issues', ...(action.tab ? {issuesTab: action.tab} : {})};
     case 'issue':
       setWindowTitle(`: #${action.number} - mdSilo`);
       return {view: 'issue', issueNumber: action.number};

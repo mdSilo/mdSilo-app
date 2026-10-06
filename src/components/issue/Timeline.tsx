@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   TbCircleDot as IconOpened, TbCircleCheck as IconClosed, TbRefresh as IconReopened, TbTag as IconTag,
-  TbFlag as IconFlag, TbPencil as IconPencil, TbLayoutBoardSplit as IconStatus, TbTrash as IconTrash,
+  TbFlag as IconFlag, TbPencil as IconPencil, TbLayoutBoardSplit as IconStatus, TbTrash as IconTrash, TbCheckbox as IconTask,
 } from 'react-icons/tb';
 import { useIssueStore } from './issueStore';
 import { deleteComment, editComment } from './issueOps';
@@ -19,6 +19,7 @@ const EVENT_ICONS: Record<IssueEventKind, typeof IconOpened> = {
   demilestoned: IconFlag,
   renamed: IconPencil,
   status: IconStatus,
+  task: IconTask,
 };
 
 export function eventText(e: EventItem) {
@@ -33,6 +34,7 @@ export function eventText(e: EventItem) {
     case 'demilestoned': return `removed this from the ${d} milestone`;
     case 'renamed': return `changed the title ${d}`;
     case 'status': return `moved this to ${d}`;
+    case 'task': return `synced with its note task: ${d}`;
     default: return d;
   }
 }

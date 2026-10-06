@@ -131,6 +131,22 @@ describe('Note', () => {
     expect(writeFile).toHaveBeenCalledWith(note.id, 'new text');
   });
 
+  test('edits reach the notes in the store, debounced and on leaving', async () => {
+    vi.useFakeTimers();
+    try {
+      const { unmount } = setup();
+      await callEditor('onChange', 'typed #todo#', {});
+      expect(store.getState().notes[note.id].content).toBe(note.content);
+      await act(async () => { vi.advanceTimersByTime(800); });
+      expect(store.getState().notes[note.id].content).toBe('typed #todo#');
+      await callEditor('onChange', 'last words', {});
+      unmount();
+      expect(store.getState().notes[note.id].content).toBe('last words');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('search callbacks open the sidebar search', () => {
     setup();
     act(() => {

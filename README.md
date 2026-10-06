@@ -44,7 +44,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 - All-In-One Editor: Markdown, WYSIWYG, MindMap... 
 - Markdown and extensions: Diagram, Table, Math/Chemical, Code block(Highlight)...   
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
-- Chronicle view, Graph view, Task view... 
+- Chronicle view, Graph view, Issues and Tasks... 
 - Projects (Kanban boards and tables) to make personal knowledge base a serious project;  
 - Built-in issue tracker (GitHub-like): issues with labels, milestones, comments and timeline, project boards and tables, two-way links with notes (`[[Note]]` in issues, `[#12](issue:12)` in notes), stored in `issues.json` in the workspace;  
 - Full-text search;  
@@ -122,7 +122,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 
 - View
   - [X] Graph
-  - [X] Task
+  - [X] Tasks (`#todo#` `#doing#` `#done#` and `- [ ]` checkboxes in notes, turned into issues that stay in sync)
   - [X] Chronicle 
 
 - Organize writings

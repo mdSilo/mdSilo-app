@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TbX as IconX } from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
@@ -6,12 +6,16 @@ import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import { useIssueStore } from '../issueStore';
 import { linkNote, unlinkNote } from '../issueOps';
 import { inputClass } from '../common';
+import { issueTexts, linkedNoteTitles } from '../refs';
 import type { Issue } from '../types';
 import Picker, { menuItemClass } from './Picker';
 
 const titleOfPath = (p: string) => (p.split(/[\\/]/).pop() || p).replace(/\.md$/i, '');
 
-/** Explicitly linked notes. Deleted notes stay listed, greyed out. */
+/**
+ * Explicitly linked notes (deleted ones stay listed, greyed out), then the
+ * notes linked with [[title]] in the body or comments.
+ */
 export default function NotePicker({ issue }: { issue: Issue }) {
   const apply = useIssueStore((s) => s.apply);
   const notes = useStore((state) => state.notes);
@@ -20,11 +24,20 @@ export default function NotePicker({ issue }: { issue: Issue }) {
   const [query, setQuery] = useState('');
   const results = query.trim() ? search(query) : [];
 
+  // notes linked with [[title]] in the body or comments, not already listed
+  const mentioned = useMemo(() => {
+    const byTitle = new Map(Object.values(notes).filter((n) => !n.is_dir).map((n) => [n.title, n.id]));
+    const titles = new Set(issueTexts(issue).flatMap((t) => [...linkedNoteTitles(t)]));
+    return [...titles]
+      .map((title) => ({ title, id: byTitle.get(title) }))
+      .filter(({ id }) => !id || !issue.notes.includes(id));
+  }, [issue, notes]);
+
   return (
     <Picker
       title="Linked notes"
       summary={
-        issue.notes.length ? (
+        issue.notes.length || mentioned.length ? (
           <ul className="space-y-1">
             {issue.notes.map((p) => {
               const note = notes[p];
@@ -50,6 +63,18 @@ export default function NotePicker({ issue }: { issue: Issue }) {
                 </li>
               );
             })}
+            {mentioned.map(({ title, id }) => (
+              <li key={`m-${title}`} className="flex items-center gap-1" data-testid="mentioned-note">
+                {id ? (
+                  <button type="button" className="flex-1 text-left truncate link" title={id} onClick={() => openNote(id)}>
+                    {title}
+                  </button>
+                ) : (
+                  <span className="flex-1 text-gray-400 truncate" title="No note with this title">{title}</span>
+                )}
+                <span className="text-xs text-gray-500" title="Linked with [[ ]] in the text">mentioned</span>
+              </li>
+            ))}
           </ul>
         ) : (<span className="text-gray-500">None yet</span>)
       }

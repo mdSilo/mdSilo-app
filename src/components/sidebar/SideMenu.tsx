@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { 
-  TbMenu2 as IconMenu2, TbDna as IconDna, TbCalendar as IconCalendar, TbFile as IconFile, TbFeather as IconFeather, TbCheckbox as IconCheckbox,
+  TbMenu2 as IconMenu2, TbDna as IconDna, TbCalendar as IconCalendar, TbFile as IconFile, TbFeather as IconFeather,
   TbFolderPlus as IconFolderPlus, TbFileText as IconFileText, TbDeviceFloppy as IconDeviceFloppy, TbClearAll as IconClearAll,
   TbFileImport as IconFileImport, TbRss as IconRss, TbSettings as IconSettings, TbLayoutKanban as IconLayoutKanban,
   TbCircleDot as IconCircleDot, TbBrowser as IconBrowser,
@@ -48,7 +48,8 @@ export default function SideMenu() {
       },
       {
         hotkey: 'mod+shift+t',
-        callback: () => dispatchView({view: 'task'}),
+        // the Task view became the Tasks tab of Issues
+        callback: () => dispatchView({view: 'issues', tab: 'tasks'}),
       },
       // Projects replaced the Kanban board and keep its hotkey
       {
@@ -78,7 +79,6 @@ export default function SideMenu() {
           <ProjectButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'project'})} />
           <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
           <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
-          <TaskButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'task'})} />
         </>) : null}
         <FileButton />
       </div>
@@ -272,30 +272,13 @@ const ChronButton = (props: ButtonProps) => {
   );
 };
 
-const TaskButton = (props: ButtonProps) => {
-  const { viewTy, onClick, onDispatch } = props;
-
-  return (
-    <SidebarItem isHighlighted={viewTy === 'task'} onClick={onClick}>
-      <Tooltip
-        content="Tasks View (Ctrl/⌘+Shift+T)"
-        placement="right"
-      >
-        <button className={btnClass} onClick={onDispatch}>
-          <IconCheckbox size={24} className={btnIconClass} />
-        </button>
-      </Tooltip>
-    </SidebarItem>
-  );
-};
-
 const IssuesButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
     <SidebarItem isHighlighted={viewTy === 'issues' || viewTy === 'issue'} onClick={onClick}>
       <Tooltip
-        content="Issues (Ctrl/⌘+Shift+I)"
+        content="Issues (Ctrl/⌘+Shift+I), Tasks (Ctrl/⌘+Shift+T)"
         placement="right"
       >
         <button aria-label="Issues" className={btnClass} onClick={onDispatch}>
