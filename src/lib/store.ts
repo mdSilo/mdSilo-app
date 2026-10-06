@@ -25,7 +25,10 @@ const immer =
 // storage in LOCAL_DATA_DIR
 const storage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
-    return await Storage.get(name);
+    // missing key is `{}`: return null, otherwise zustand fails to parse it
+    // and never finishes hydrating on the first launch
+    const value = await Storage.get(name);
+    return typeof value === 'string' ? value : null;
   },
   setItem: async (name: string, value: string): Promise<void> => {
     await Storage.set(name, value);
@@ -248,6 +251,26 @@ export const store = createVanilla<Store>(
 );
 
 export const useStore = create<Store>(store);
+
+type PersistApi = {
+  persist?: {
+    hasHydrated: () => boolean;
+    onFinishHydration: (fn: () => void) => () => void;
+  };
+};
+
+/**
+ * Run `fn` once the persisted settings are loaded from storage (async on web).
+ * @returns unsubscribe
+ */
+export const onStoreHydrated = (fn: () => void): (() => void) => {
+  const api = (store as unknown as PersistApi).persist;
+  if (!api || api.hasHydrated()) {
+    fn();
+    return () => undefined;
+  }
+  return api.onFinishHydration(fn);
+};
 
 
 /**

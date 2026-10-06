@@ -4,7 +4,9 @@ import '../styles/styles.css';
 import 'tippy.js/dist/tippy.css';
 import { ProvideCurrentView } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
-import { useStore, SidebarTab } from 'lib/store';
+import { useStore, onStoreHydrated, SidebarTab } from 'lib/store';
+import { isWeb } from 'file/util';
+import { openWebWorkspace } from 'editor/hooks/useOpen';
 import SideMenu from './sidebar/SideMenu';
 import Sidebar from './sidebar/Sidebar';
 import StatusBar from './sidebar/StatusBar';
@@ -60,6 +62,18 @@ const App = () => {
     [setIsFindOrCreateModalOpen, setIsSidebarOpen, setSidebarTab]
   );
   useHotkeys(hotkeys);
+
+  // web: always work in a folder in IndexedDB, open it once settings
+  // (recent / pinned folder) are loaded from storage
+  useEffect(() => {
+    if (!isWeb) return;
+    const open = () => {
+      void openWebWorkspace().catch((error) => {
+        console.error('Failed to open workspace:', error);
+      });
+    };
+    return onStoreHydrated(open);
+  }, []);
 
   useEffect(() => {
     void invoke('close_splashscreen').catch((error) => {

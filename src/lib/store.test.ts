@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { makeNote } from '../testUtils';
-import { store, useStore, getNoteTreeItem, SidebarTab, type NoteTreeItem } from './store';
+import { store, useStore, getNoteTreeItem, onStoreHydrated, SidebarTab, type NoteTreeItem } from './store';
 
 describe('store defaults', () => {
   test('has sensible initial values', () => {
@@ -132,4 +132,15 @@ describe('persistence', () => {
     expect(saved.state).not.toHaveProperty('notes');
     expect(saved.version).toBe(1);
   });
+
+  test('finishes hydrating on first launch w/o saved settings', async () => {
+    localStorage.clear();
+    const persist = (store as unknown as { persist: { rehydrate: () => Promise<void>; hasHydrated: () => boolean } }).persist;
+    await persist.rehydrate();
+    expect(persist.hasHydrated()).toBe(true);
+    let called = 0;
+    onStoreHydrated(() => { called += 1; });
+    expect(called).toBe(1);
+  });
 });
+

@@ -1,8 +1,10 @@
+import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
 import { 
   openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir, openJSONFilePath 
 } from 'file/open';
 import { normalizeSlash, getDirPath, getBaseName, joinPaths } from 'file/util';
+import DirectoryAPI from 'file/directory';
 import { writeAllFile, writeFile } from 'file/write';
 import { rmFileNameExt } from 'file/process';
 
@@ -62,6 +64,41 @@ export const listInitDir = async (dirPath: string) => {
   await listDir(dirPath);
   // load dir/sub-dirs to json on rust end 
   loadDir(dirPath);
+};
+
+let isWebWorkspaceOpening = false;
+
+/**
+ * Web: notes live in IndexedDB, there is always a folder to work in. Open the
+ * previous folder (if enabled), the pinned folder, or the default workspace
+ * `/mdSilo`, so the views depending on a folder (issues, chronicle, graph...)
+ * are available on startup.
+ */
+export const openWebWorkspace = async (): Promise<string | undefined> => {
+  const state = store.getState();
+  if (state.initDir || isWebWorkspaceOpening) return;
+  isWebWorkspaceOpening = true;
+  try {
+    const recent = state.recentDir ?? [];
+    const candidates = [
+      state.isOpenPreOn ? recent[recent.length - 1] : '',
+      state.pinnedDir,
+    ].filter((d): d is string => Boolean(d));
+    for (const dir of candidates) {
+      if (await new DirectoryAPI(dir).isDir()) {
+        await listInitDir(normalizeSlash(dir));
+        return dir;
+      }
+    }
+    // create the default workspace if missing
+    const dir = await invoke<string>('create_mdsilo_dir');
+    if (dir && !store.getState().initDir) {
+      await listInitDir(normalizeSlash(dir));
+      return dir;
+    }
+  } finally {
+    isWebWorkspaceOpening = false;
+  }
 };
 
 // use for list sub-dir: 
