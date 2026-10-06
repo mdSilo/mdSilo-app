@@ -127,6 +127,16 @@ describe('open (tauri)', () => {
     expect(noteTree['/notes'].map((i) => i.id)).toEqual(['/notes/sub', '/notes/a.md', '/notes/pic.png']);
   });
 
+  test.each(['listDir', 'openDir'] as const)('%s checks the dir once and writes no storage', async (fn) => {
+    tInvoke.mockClear();
+    await tOpen[fn]('/notes', false);
+    const cmds = tInvoke.mock.calls.map((c) => c[0]);
+    // no existence check per listed sub dir
+    expect(cmds.filter((c) => c === 'file_exist')).toHaveLength(1);
+    // loading notes does not touch persisted settings
+    expect(cmds).not.toContain('set_data');
+  });
+
   test('openDir keeps file content, listDir does not', async () => {
     await tOpen.listDir('/notes', false);
     expect(tStore.getState().notes['/notes/a.md'].content).toBe('');

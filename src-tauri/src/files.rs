@@ -1,9 +1,10 @@
 use crate::paths::{PathBufExt, PathExt};
 use crate::storage::do_log;
-use crate::tree::node::from_node;
+use crate::tree::node::{from_node, Node};
 use crate::tree::Tree;
 use chrono::offset::Local;
 use chrono::DateTime;
+use ignore::WalkBuilder;
 use notify::{
   event::{EventKind, ModifyKind, RenameMode},
   Config, Event as RawEvent, RecommendedWatcher, RecursiveMode, Watcher,
@@ -79,6 +80,20 @@ pub fn check_hidden(file_path: &str) -> bool {
 pub fn check_hidden(file_path: &str) -> bool {
   let basename = get_basename(file_path).0;
   basename.starts_with(".")
+}
+
+// Check if a file is hidden, with its metadata already at hand
+#[cfg(windows)]
+#[inline]
+pub fn check_hidden_meta(_file_path: &str, meta: &fs::Metadata) -> bool {
+  // FILE_ATTRIBUTE_HIDDEN 2 (0x2), no extra fs::metadata call
+  (meta.file_attributes() & 0x2) > 0
+}
+
+#[cfg(unix)]
+#[inline]
+pub fn check_hidden_meta(file_path: &str, _meta: &fs::Metadata) -> bool {
+  check_hidden(file_path)
 }
 
 #[inline]
@@ -414,12 +429,29 @@ pub fn read_dir(dir: &str) -> Result<Tree, String> {
 // Get array of files of a directory
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
-  let tree = Tree::init(dir, Some(1), false);
-  // println!(">> dir tree: {:?}", tree);
-  let nodes = tree.map(|t| t.children_vec()).unwrap_or_default();
-  let metas: Vec<FileMetaData> = nodes.iter().filter_map(|n| from_node(n)).collect();
-  // println!(">> dir files: {:?}", metas);
-  Ok(metas)
+  Ok(list_dir_entries(dir))
+}
+
+// List the direct children of a directory, w/o content.
+// Walk the single level sequentially: the parallel Tree traversal (threads,
+// channel, arena) costs more than it saves here, see list_directory bench.
+// Same filters as the Tree walker: hidden skipped, .gitignore not applied.
+pub fn list_dir_entries(dir: &str) -> Vec<FileMetaData> {
+  let root = match fs::canonicalize(dir) {
+    Ok(root) => root,
+    Err(_) => return vec![],
+  };
+
+  WalkBuilder::new(root)
+    .max_depth(Some(1))
+    .follow_links(false)
+    .git_ignore(false)
+    .hidden(true)
+    .build()
+    .filter_map(|entry| entry.ok())
+    .filter(|entry| entry.depth() == 1)
+    .filter_map(|entry| from_node(&Node::from((&entry, false))))
+    .collect()
 }
 
 // Check if path given exists

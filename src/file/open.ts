@@ -65,26 +65,14 @@ export const listDir = async (dir: string, toListen=true): Promise<void> => {
   const processeds =  mds.length ? processFiles(mds) : [[], []];
   const processedMds = processeds[0];
 
-  const upsertNote = store.getState().upsertNote;
+  const upsertNotes = store.getState().upsertNotes;
   const upsertTree = store.getState().upsertTree;
   const dirPath = dirInfo.dirPath;
   // console.log("dir path 0", dirPath, dir);
-  const treeItemList: Note[] = [];
-  // 2- upsert store dirs
-  for (const subdir of processedDirs) {
-    const subDir =  new DirectoryAPI(subdir.file_path);
-    if (await subDir.exists()) {
-      // console.log("dir path1", dirPath, dir);
-      treeItemList.push(subdir);
-      upsertNote(subdir); 
-    }
-  }
-  // 3- upsert store md files
-  for (const md of processedMds) {
-    // console.log("dir path2", dirPath, dir);
-    treeItemList.push(md);
-    upsertNote(md);
-  }
+  // 2- dirs and md files: just listed, no need to check existence again; 
+  // 3- upsert them in one store update 
+  const treeItemList: Note[] = [...processedDirs, ...processedMds];
+  upsertNotes(treeItemList);
 
   // 4- push non-md to tree
   const processedNons = processeds[1];
@@ -125,25 +113,13 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
   const processeds =  mds.length ? processFiles(mds) : [[], []];
   const processedMds = processeds[0];
 
-  const upsertNote = store.getState().upsertNote;
+  const upsertNotes = store.getState().upsertNotes;
   const upsertTree = store.getState().upsertTree;
   const dirPath = dirInfo.dirPath;
-  const treeItemList: Note[] = [];
-  // 2- upsert store dirs
-  for (const subdir of processedDirs) {
-    const subDir =  new DirectoryAPI(subdir.file_path);
-    if (await subDir.exists()) {
-      // console.log("dir path1", dirPath, dir);
-      treeItemList.push(subdir);
-      upsertNote(subdir);
-    }
-  }
-  // 3- upsert store md files
-  for (const md of processedMds) {
-    // console.log("dir path2", dirPath, dir);
-    treeItemList.push(md);
-    upsertNote(md);
-  }
+  // 2- dirs and md files: just listed, no need to check existence again; 
+  // 3- upsert them in one store update 
+  const treeItemList: Note[] = [...processedDirs, ...processedMds];
+  upsertNotes(treeItemList);
   // 4- push non-md to tree
   const processedNons = processeds[1];
   // console.log("non", processedNons)

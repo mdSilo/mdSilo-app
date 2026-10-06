@@ -5,6 +5,8 @@
 2024-XX-XX
 
 - Sidebar workspace explorer: expand folders in place as a multi-level tree (#751)
+- Sidebar: resize by dragging its edge; tree scrolls horizontally for deep folders
+- Faster folder listing in sidebar explorer, rust end and frontend
 
 ## app-v0.5.9 
 

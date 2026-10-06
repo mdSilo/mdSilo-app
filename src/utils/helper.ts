@@ -59,11 +59,14 @@ export const isMobile = (breakpoint: number = SM_BREAKPOINT) => {
 // string
 // 
 // case Insensitive
+// shared collator: localeCompare with options builds a new one on every call
+const ciCollator = new Intl.Collator(undefined, {
+  sensitivity: 'base',
+  numeric: true,
+});
+
 export function ciStringCompare(str1: string, str2: string) {
-  return str1.localeCompare(str2, undefined, {
-    sensitivity: 'base',
-    numeric: true,
-  });
+  return ciCollator.compare(str1, str2);
 }
 
 export function ciStringEqual(str1: string, str2: string) {

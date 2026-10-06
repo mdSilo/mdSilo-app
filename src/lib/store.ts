@@ -22,6 +22,9 @@ const immer =
   ): StateCreator<T> =>
   (set, get, api) => config((fn) => set(produce<T>(fn)), get, api);
 
+// last value written per storage key
+const lastSaved: Record<string, string> = {};
+
 // storage in LOCAL_DATA_DIR
 const storage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
@@ -31,9 +34,18 @@ const storage: StateStorage = {
     return typeof value === 'string' ? value : null;
   },
   setItem: async (name: string, value: string): Promise<void> => {
-    await Storage.set(name, value);
+    // persist runs on every store update: skip writing what's already saved
+    if (lastSaved[name] === value) return;
+    lastSaved[name] = value;
+    try {
+      await Storage.set(name, value);
+    } catch (e) {
+      delete lastSaved[name];
+      throw e;
+    }
   },
   removeItem: async (name: string): Promise<void> => {
+    delete lastSaved[name];
     await Storage.remove(name);
   },
 };
@@ -73,6 +85,7 @@ export type Store = {
   setNotes: Setter<Notes>;
   // operate note
   upsertNote: (note: Note) => void;
+  upsertNotes: (notes: Note[]) => void;
   upsertTree: (targetDir: string, noteList: Note[], isDir?: boolean) => void;
   updateNote: (note: NoteUpdate) => void;
   deleteNote: (noteId: string) => void;
@@ -154,6 +167,16 @@ export const store = createVanilla<Store>(
           // alert: not check title unique, wiki-link will link to first searched note
         });
       },
+      // upsert many notes in one store update, rather than one update per note
+      upsertNotes: (notes: Note[]) => {
+        if (notes.length === 0) return;
+        set((state) => {
+          for (const note of notes) {
+            const existing = state.notes[note.id];
+            state.notes[note.id] = existing ? { ...existing, ...note } : note;
+          }
+        });
+      },
       upsertTree: (targetDir: string, noteList: Note[]) => {
         set((state) => {
           const itemsToInsert: NoteTreeItem[] = noteList.map(note => ({ 
@@ -168,11 +191,13 @@ export const store = createVanilla<Store>(
           const targetList = state.noteTree[targetDir] || [];
           const newTargetList = [...targetList, ...itemsToInsert];
           const newList: NoteTreeItem[] = [];
-          newTargetList.forEach(item => {
-            if (!newList.some(n => n.id === item.id)) {
-              newList.push(item)
+          const seen = new Set<string>();
+          for (const item of newTargetList) {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              newList.push(item);
             }
-          })
+          }
           state.noteTree[targetDir] = newList;
         });
       },
@@ -245,6 +270,7 @@ export const store = createVanilla<Store>(
       name: 'mdsilo-storage',
       version: 1,
       getStorage: () => storage,
+      serialize: serializePersisted,
       partialize: (state) => ({
         // user setting related
         userId: state.userId,
@@ -268,6 +294,26 @@ export const store = createVanilla<Store>(
 );
 
 export const useStore = create<Store>(store);
+
+// Cache the serialized persisted state: persist serializes it on every store
+// update, but the persisted fields rarely change (e.g. not when notes load).
+let lastPersisted: { state: Record<string, unknown>; version?: number } | null = null;
+let lastSerialized = '';
+function serializePersisted(value: { state: unknown; version?: number }): string {
+  const state = value.state as Record<string, unknown>;
+  const prev = lastPersisted;
+  if (
+    prev &&
+    prev.version === value.version &&
+    Object.keys(state).length === Object.keys(prev.state).length &&
+    Object.keys(state).every((key) => state[key] === prev.state[key])
+  ) {
+    return lastSerialized;
+  }
+  lastPersisted = { state, version: value.version };
+  lastSerialized = JSON.stringify(value);
+  return lastSerialized;
+}
 
 type PersistApi = {
   persist?: {

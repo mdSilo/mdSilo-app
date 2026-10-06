@@ -142,21 +142,6 @@ impl Tree {
       current_node_id.append(child_id, tree);
     }
   }
-
-  pub fn children_vec(&self) -> Vec<Node> {
-    let root = self.root;
-    let inner = self.inner();
-
-    let mut children = root.children(inner);
-    let mut res: Vec<Node> = Vec::new();
-
-    while let Some(current_node_id) = children.next() {
-      let node = inner[current_node_id].get().clone();
-      res.push(node);
-    }
-
-    res
-  }
 }
 
 // Build a new Parallel walker
