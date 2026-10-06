@@ -1,11 +1,12 @@
 import { memo, useMemo } from 'react';
-import { NoteTreeItem, useStore } from 'lib/store';
+import { NoteTree, NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettings';
 import { ciStringCompare, dateCompare } from 'utils/helper';
 import { onOpenFile, onListDir } from 'editor/hooks/useOpen';
+import { normalizeSlash } from 'file/util';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
-import SidebarNotesTree from './SidebarNotesTree';
+import SidebarNotesTree, { NoteTreeRow } from './SidebarNotesTree';
 import SidebarHistory from './SidebarHistory';
 
 type SidebarNotesProps = {
@@ -19,15 +20,17 @@ function SidebarNotes(props: SidebarNotesProps) {
   
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
+  const expandedDirs = useStore((state) => state.expandedDirs);
   // console.log("note tree", noteTree)
   const [sortedNoteTree, numOfNotes] = useMemo(() => {
     if (currentDir) {
       const treeList = noteTree[currentDir] || [];
-      return [sortNoteTree(treeList, noteSort), treeList.length];
+      const rows = flattenNoteTree(noteTree, currentDir, expandedDirs, noteSort);
+      return [rows, treeList.length];
     } else {
       return [[], 0];
     }
-  }, [noteTree, currentDir, noteSort]);
+  }, [noteTree, currentDir, expandedDirs, noteSort]);
 
   // console.log("tree", numOfNotes, sortedNoteTree, currentDir)
   
@@ -58,6 +61,35 @@ function SidebarNotes(props: SidebarNotesProps) {
     </ErrorBoundary>
   );
 }
+
+/**
+ * Flattens the multi-level tree under rootDir into rows for the sidebar,
+ * descending into expanded dirs (like a workspace explorer).
+ */
+export const flattenNoteTree = (
+  noteTree: NoteTree,
+  rootDir: string,
+  expandedDirs: Record<string, boolean>,
+  noteSort: Sort,
+): NoteTreeRow[] => {
+  const rows: NoteTreeRow[] = [];
+  const visited = new Set<string>();
+  const walk = (dir: string, depth: number) => {
+    if (visited.has(dir)) return;
+    visited.add(dir);
+    const items = sortNoteTree(noteTree[dir] || [], noteSort);
+    for (const node of items) {
+      const dirKey = node.is_dir ? normalizeSlash(node.id) : '';
+      const isExpanded = node.is_dir && Boolean(expandedDirs[dirKey]);
+      rows.push({ node, depth, isExpanded });
+      if (isExpanded) {
+        walk(dirKey, depth + 1);
+      }
+    }
+  };
+  walk(rootDir, 0);
+  return rows;
+};
 
 /**
  * Sorts the tree item with the given noteSort.

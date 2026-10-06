@@ -5,8 +5,14 @@ import { NoteTreeItem } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarNoteLink from './SidebarNoteLink';
 
+export type NoteTreeRow = {
+  node: NoteTreeItem;
+  depth: number;
+  isExpanded: boolean;
+};
+
 type Props = {
-  data: NoteTreeItem[];
+  data: NoteTreeRow[];
   className?: string;
 };
 
@@ -24,11 +30,13 @@ function SidebarNotesTree(props: Props) {
 
   const Row = useCallback(
     ({ index, style }: {index: number; style: React.CSSProperties}) => {
-      const node = data[index];
+      const { node, depth, isExpanded } = data[index];
       return (
         <SidebarNoteLink
           key={`${node.id}-${index}`}
           node={node}
+          depth={depth}
+          isExpanded={isExpanded}
           isHighlighted={node.id === currentNoteId}
           style={style}
         />
