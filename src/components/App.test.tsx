@@ -18,7 +18,7 @@ describe('App', () => {
     });
     expect(invoke).toHaveBeenCalledWith('close_splashscreen');
     expect(document.getElementById('app-container')).toHaveClass('dark');
-    expect(screen.getByText('Hello, welcome to mdSilo Desktop.')).toBeInTheDocument();
+    expect(screen.getByText('Hello, welcome to mdSilo.')).toBeInTheDocument();
     // the logo menu (first side menu button) replaced the sidebar header
     expect(document.querySelector('#side-menu-btns button')).toBeInTheDocument();
   });

@@ -74,7 +74,7 @@ describe('MainView', () => {
 
   test('shows the welcome page by default', () => {
     renderView(<MainView />);
-    expect(screen.getByText('Hello, welcome to mdSilo Desktop.')).toBeInTheDocument();
+    expect(screen.getByText('Hello, welcome to mdSilo.')).toBeInTheDocument();
   });
 
   test.each([
@@ -87,7 +87,7 @@ describe('MainView', () => {
   ] as [ViewAction, string | null][])('routes %j', async (action, text) => {
     renderView(<MainView />);
     await go(action);
-    expect(screen.queryByText('Hello, welcome to mdSilo Desktop.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hello, welcome to mdSilo.')).not.toBeInTheDocument();
     if (text) expect(screen.getByText(text)).toBeInTheDocument();
   });
 

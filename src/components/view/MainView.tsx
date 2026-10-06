@@ -49,7 +49,7 @@ function DefaultView() {
     <ErrorBoundary>
       <div className="flex flex-col p-8 w-full h-full mx-auto bg-white overflow-auto">
         <p className="text-2xl py-3 text-center text-primary-500">
-          Hello, welcome to mdSilo Desktop.
+          Hello, welcome to mdSilo.
         </p>
         <MsEditor value={defaultValue} dark={false} />
       </div>
