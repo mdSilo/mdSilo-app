@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react';
 import useHotkeys from 'editor/hooks/useHotkeys';
-import { store } from 'lib/store';
 import FindOrCreateInput from './NoteNewInput';
 
 type Props = {
@@ -11,7 +10,6 @@ export default function FindOrCreateModal(props: Props) {
   const { setIsOpen } = props;
 
   const handleClose = useCallback(() => {
-    store.getState().setCurrentCard(undefined);
     setIsOpen(false);
   }, [setIsOpen])
 

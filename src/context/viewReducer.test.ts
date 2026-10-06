@@ -3,7 +3,7 @@ import { store } from 'lib/store';
 import { viewReducer, initialState, type ViewAction } from './viewReducer';
 
 describe('viewReducer', () => {
-  test.each(['default', 'feed', 'chronicle', 'task', 'graph', 'kanban', 'journal'] as const)(
+  test.each(['default', 'feed', 'chronicle', 'task', 'graph', 'journal'] as const)(
     'switches to %s and clears the current note',
     (view) => {
       store.getState().setCurrentNoteId('/a.md');

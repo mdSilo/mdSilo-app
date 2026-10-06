@@ -6,6 +6,7 @@ mdSilo today has notes, a free-form Kanban (`kanban.json`) and a Tasks view buil
 Decisions confirmed with you:
 - Storage: one `issues.json` in `initDir`, next to `kanban.json`.
 - Kanban: a new, separate **Project** view. The existing free-form Kanban stays as it is.
+  - **Update:** the free-form Kanban was later merged into Projects. On load, `kanban.json` boards are converted once by `migrateKanbans` (`src/components/issue/migrateKanban.ts`): boards → projects, columns → statuses, cards → issues. The file is then kept as `kanban.json.bak` and removed; only `issues.json` is used afterwards.
 - Note references: two-way. Issues link to notes, notes link to issues, and the note page shows "Referenced by issues".
 - Comments plus an automatic event timeline.
 

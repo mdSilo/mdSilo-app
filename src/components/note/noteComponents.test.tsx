@@ -219,13 +219,11 @@ describe('FindOrCreateInput', () => {
 });
 
 describe('FindOrCreateModal', () => {
-  test('closes on backdrop click and Escape, clearing the current card', async () => {
-    store.getState().setCurrentCard(3);
+  test('closes on backdrop click and Escape', async () => {
     const setIsOpen = vi.fn();
     const { container } = renderWithView(<FindOrCreateModal setIsOpen={setIsOpen} />);
     fireEvent.click(container.querySelector('.bg-black') as Element);
     expect(setIsOpen).toHaveBeenCalledWith(false);
-    expect(store.getState().currentCard).toBeUndefined();
 
     setIsOpen.mockClear();
     fireEvent.keyDown(document, { key: 'Escape', keyCode: 27, which: 27 });

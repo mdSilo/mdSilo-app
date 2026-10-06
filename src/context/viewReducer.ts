@@ -20,7 +20,6 @@ export type ViewAction =
   | { view: 'task' }
   | { view: 'graph' }
   | { view: 'journal' }
-  | { view: 'kanban' }
   | { view: 'issues' }
   | { view: 'issue'; number: number }
   | { view: 'project'; projectId?: string }
@@ -53,8 +52,6 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return {...state, view: 'task'};
     case 'graph':
       return {...state, view: 'graph'};
-    case 'kanban':
-      return {...state, view: 'kanban'};
     case 'journal':
       return {...state, view: 'journal'};
     case 'issues':

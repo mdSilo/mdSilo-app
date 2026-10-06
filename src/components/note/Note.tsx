@@ -8,7 +8,6 @@ import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
 import { Mindmap } from 'components/mindmap/mindmap';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { updateCardLinks } from 'components/kanban/updateCard';
 import { updateIssueNoteLinks } from 'components/issue/issueStore';
 import { SidebarTab, store, useStore } from 'lib/store';
 import type { Note as NoteType } from 'types/model';
@@ -159,7 +158,6 @@ function Note(props: Props) {
         };
         upsertNote(newNote);
         upsertTree(dirPath, [newNote]);
-        await updateCardLinks(newPath, oldPath);
         await updateIssueNoteLinks(oldPath, newPath, title, newTitle);
         // 5- nav to renamed note
         await openFilePath(newPath, true);

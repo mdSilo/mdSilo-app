@@ -91,14 +91,14 @@ describe('MainView', () => {
     if (text) expect(screen.getByText(text)).toBeInTheDocument();
   });
 
-  test('routes feed, kanban and graph', async () => {
+  test('routes feed, projects and graph', async () => {
     renderView(<MainView />);
     await go({ view: 'feed' });
     expect(screen.getByText('Starred')).toBeInTheDocument();
     await go({ view: 'graph' });
     expect(screen.getByTestId('graph-canvas')).toBeInTheDocument();
-    await go({ view: 'kanban' });
-    expect(screen.getByPlaceholderText('Type to new board')).toBeInTheDocument();
+    await go({ view: 'project' });
+    expect(screen.getByText('Open a folder to use projects.')).toBeInTheDocument();
   });
 });
 
