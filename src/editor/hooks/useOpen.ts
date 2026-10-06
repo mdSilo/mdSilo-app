@@ -110,6 +110,7 @@ export const listDirPath = async (dirPath: string, noCache = true) => {
   store.getState().setCurrentDir(normalizedDir);
   if (noCache) {
     store.getState().setNoteTree({});
+    store.getState().setExpandedDirs({});
     // console.log("rencent dir path", store.getState().recentDir);
     await listDir(normalizedDir, false);
   } else {
@@ -160,6 +161,7 @@ export const onSave = async () => {
 function cleanStore() {
   // cleaning store, *first tree then notes*
   store.getState().setNoteTree({});
+  store.getState().setExpandedDirs({});
   store.getState().setNotes({});
   store.getState().setCurrentDir(undefined);
   store.getState().setCurrentNoteId('');

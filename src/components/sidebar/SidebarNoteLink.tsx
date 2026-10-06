@@ -6,30 +6,35 @@ import {
   useCallback,
 } from 'react';
 import { TbCaretRight as IconCaretRight, TbMarkdown as IconMarkdown, TbNote as IconNote, TbPhoto as IconPhoto } from 'react-icons/tb';
-import { NoteTreeItem, useStore } from 'lib/store';
+import { NoteTreeItem, store, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import { imageExtensions } from 'utils/file-extensions';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
-import { listDirPath } from 'editor/hooks/useOpen';
 import { checkFileIsMd, getFileExt } from 'file/process';
-import { openUrl } from 'file/open';
+import { listDir, openUrl } from 'file/open';
+import { normalizeSlash } from 'file/util';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
   node: NoteTreeItem;
   isHighlighted?: boolean;
+  depth?: number;
+  isExpanded?: boolean;
 }
 
 const SidebarNoteLink = (
   props: Props,
   forwardedRef: ForwardedRef<HTMLDivElement>
 ) => {
-  const { node, isHighlighted, className = '', style, ...otherProps } = props;
+  const {
+    node, isHighlighted, depth = 0, isExpanded = false, className = '', style, ...otherProps
+  } = props;
   // console.log("node: ", node)
   const filePath = node.id;
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const toggleExpandedDir = useStore((state) => state.toggleExpandedDir);
   // console.log("isLoading", isLoading, node.id);
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
   const isDir = node.is_dir; 
@@ -39,7 +44,13 @@ const SidebarNoteLink = (
     e.preventDefault();
     // console.log("click, isLoading", isLoading, node.id);
     if (isDir) {
-      await listDirPath(node.id, false);
+      // expand or collapse in place, load the sub dir lazily
+      const dirPath = normalizeSlash(node.id);
+      if (!isExpanded && !store.getState().noteTree[dirPath]) {
+        await listDir(dirPath, false);
+      }
+      toggleExpandedDir(dirPath, !isExpanded);
+      return;
     } else if (isNonMd) {
       await openUrl(node.id)
     } else {
@@ -48,10 +59,10 @@ const SidebarNoteLink = (
     if (isMobile()) {
       setIsSidebarOpen(false);
     }
-  }, [isDir, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen]);
+  }, [isDir, isExpanded, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen, toggleExpandedDir]);
   
   // add 16px for every level of nesting, plus 8px base padding
-  const leftPadding = 8; // useMemo(() => node.depth * 16 + 8, [node.depth]);
+  const leftPadding = depth * 16 + 8;
 
   return (
     <SidebarItem
@@ -71,7 +82,7 @@ const SidebarNoteLink = (
         <div className="p-1 mr-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
           {isDir ? (
             <IconCaretRight
-              className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${!node.collapsed ? 'rotate-90' : ''}`}
+              className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
               size={16}
               fill="currentColor"
             />

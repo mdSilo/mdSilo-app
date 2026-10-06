@@ -4,6 +4,8 @@
 
 2024-XX-XX
 
+- Sidebar workspace explorer: expand folders in place as a multi-level tree (#751)
+
 ## app-v0.5.9 
 
 2024-03-06

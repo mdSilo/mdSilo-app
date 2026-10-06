@@ -11,7 +11,7 @@ import { makeFileMeta, makeNote, mockInvoke, mockLayout, renderWithView } from '
 import SidebarItem from './SidebarItem';
 import SidebarTab from './SidebarTab';
 import SidebarContent from './SidebarContent';
-import SidebarNotes from './SidebarNotes';
+import SidebarNotes, { flattenNoteTree } from './SidebarNotes';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
 import SidebarHistory from './SidebarHistory';
@@ -125,6 +125,42 @@ describe('SidebarNotes', () => {
     renderWithView(withContainer(<SidebarNotes />));
     expect(rowTitles()).toEqual(expected);
     expect(screen.getByText('n: 4')).toBeInTheDocument();
+  });
+
+  test('shows expanded sub dirs as a nested tree', () => {
+    seedTree();
+    store.getState().setNoteSort(Sort.TitleAscending);
+    store.getState().setNoteTree({
+      ...store.getState().noteTree,
+      '/n/sub': [
+        treeItem('/n/sub/z.md', 'z'),
+        treeItem('/n/sub/deep', 'deep', { is_dir: true }),
+      ],
+      '/n/sub/deep': [treeItem('/n/sub/deep/d.md', 'd')],
+    });
+    store.getState().setExpandedDirs({ '/n/sub': true });
+    renderWithView(withContainer(<SidebarNotes />));
+    expect(rowTitles()).toEqual(['sub', 'deep', 'z', 'A', 'b', 'c']);
+    expect(screen.getByText('n: 4')).toBeInTheDocument();
+  });
+
+  test('flattens nested dirs with depth', () => {
+    const tree = {
+      '/n': [treeItem('/n/a.md', 'a'), treeItem('/n/sub', 'sub', { is_dir: true })],
+      '/n/sub': [treeItem('/n/sub/deep', 'deep', { is_dir: true }), treeItem('/n/sub/b.md', 'b')],
+      '/n/sub/deep': [treeItem('/n/sub/deep/c.md', 'c')],
+    };
+    const rows = flattenNoteTree(tree, '/n', { '/n/sub': true, '/n/sub/deep': true }, Sort.TitleAscending);
+    expect(rows.map((r) => [r.node.title, r.depth, r.isExpanded])).toEqual([
+      ['sub', 0, true],
+      ['deep', 1, true],
+      ['c', 2, false],
+      ['b', 1, false],
+      ['a', 0, false],
+    ]);
+    // collapsed dirs hide their children
+    expect(flattenNoteTree(tree, '/n', { '/n/sub/deep': true }, Sort.TitleAscending).map((r) => r.node.title))
+      .toEqual(['sub', 'a']);
   });
 });
 
@@ -240,13 +276,34 @@ describe('SidebarNoteLink', () => {
     expect(invoke).toHaveBeenCalledWith('open_url', { url: '/n/pic.png' });
   });
 
-  test('lists dirs', async () => {
-    mockInvoke(invoke, { get_dirpath: '/n/sub', file_exist: false });
+  test('expands and collapses dirs in place', async () => {
+    store.getState().setCurrentDir('/n');
+    store.getState().setNoteTree({ '/n/sub': [] });
     renderWithView(withContainer(<SidebarNoteLink node={treeItem('/n/sub', 'sub', { is_dir: true })} />));
     await act(async () => {
       fireEvent.click(screen.getByText('sub'));
     });
-    expect(store.getState().currentDir).toBe('/n/sub');
+    expect(store.getState().expandedDirs['/n/sub']).toBe(true);
+    expect(store.getState().currentDir).toBe('/n');
+  });
+
+  test('collapses an expanded dir', async () => {
+    store.getState().setExpandedDirs({ '/n/sub': true });
+    renderWithView(withContainer(<SidebarNoteLink node={treeItem('/n/sub', 'sub', { is_dir: true })} isExpanded />));
+    await act(async () => {
+      fireEvent.click(screen.getByText('sub'));
+    });
+    expect(store.getState().expandedDirs['/n/sub']).toBeUndefined();
+  });
+
+  test('dir dropdown opens the folder as current dir', async () => {
+    mockInvoke(invoke, { get_dirpath: '/n/sub', file_exist: false });
+    renderWithView(withContainer(<SidebarNoteLink node={treeItem('/n/sub', 'sub', { is_dir: true })} />));
+    await userEvent.click(screen.getAllByRole('button').at(-1) as HTMLElement);
+    await act(async () => {
+      fireEvent.click(screen.getByText('Open Folder Here'));
+    });
+    await waitFor(() => expect(store.getState().currentDir).toBe('/n/sub'));
   });
 
   test('note dropdown offers move to', async () => {

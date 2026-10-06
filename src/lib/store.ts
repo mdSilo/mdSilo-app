@@ -82,6 +82,9 @@ export type Store = {
   setCurrentNote: Setter<Notes>;
   noteTree: NoteTree;
   setNoteTree: Setter<NoteTree>;
+  expandedDirs: Record<string, boolean>;  // dir path -> expanded in sidebar tree
+  setExpandedDirs: Setter<Record<string, boolean>>;
+  toggleExpandedDir: (dirPath: string, expanded?: boolean) => void;
   activities: ActivityRecord;
   setActivities: Setter<ActivityRecord>;
   sidebarTab: SidebarTab;
@@ -199,6 +202,19 @@ export const store = createVanilla<Store>(
       // The tree of notes visible in the sidebar
       noteTree: {},
       setNoteTree: setter(set, 'noteTree'),
+      // expanded dirs in the sidebar tree, not persisted
+      expandedDirs: {},
+      setExpandedDirs: setter(set, 'expandedDirs'),
+      toggleExpandedDir: (dirPath: string, expanded?: boolean) => {
+        set((state) => {
+          const toExpand = expanded ?? !state.expandedDirs[dirPath];
+          if (toExpand) {
+            state.expandedDirs[dirPath] = true;
+          } else {
+            delete state.expandedDirs[dirPath];
+          }
+        });
+      },
       // daily activities 
       activities: {},
       setActivities: setter(set, 'activities'),
