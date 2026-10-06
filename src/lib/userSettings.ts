@@ -64,9 +64,16 @@ export type UserSettings = {
   setPinnedDir: Setter<string>;
   sidebarWidth: number;
   setSidebarWidth: Setter<number>;
+  feedChannelWidth: number;
+  setFeedChannelWidth: Setter<number>;
+  feedArticleWidth: number;
+  setFeedArticleWidth: Setter<number>;
 };
 
+// resizable panel widths in px
 export const SIDEBAR_WIDTH = { min: 160, max: 640, default: 256 } as const;
+export const FEED_CHANNEL_WIDTH = { min: 120, max: 480, default: 192 } as const;
+export const FEED_ARTICLE_WIDTH = { min: 200, max: 720, default: 288 } as const;
 
 const userSettingsSlice = (
   set: (fn: (draft: Draft<Store>) => void) => void
@@ -134,6 +141,10 @@ const userSettingsSlice = (
   setPinnedDir: setter(set, 'pinnedDir'),
   sidebarWidth: SIDEBAR_WIDTH.default as number,
   setSidebarWidth: setter(set, 'sidebarWidth'),
+  feedChannelWidth: FEED_CHANNEL_WIDTH.default as number,
+  setFeedChannelWidth: setter(set, 'feedChannelWidth'),
+  feedArticleWidth: FEED_ARTICLE_WIDTH.default as number,
+  setFeedArticleWidth: setter(set, 'feedArticleWidth'),
 });
 
 export default userSettingsSlice;

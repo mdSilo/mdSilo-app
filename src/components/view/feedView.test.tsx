@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
@@ -96,7 +96,39 @@ describe('Feed view', () => {
     await userEvent.click(spans[1]);
     expect(invoke).toHaveBeenCalledWith('update_article_star_status', { url: 'https://tech/1', status: 1 });
     await userEvent.click(spans[0]);
-    expect(document.querySelector('.w-48')).toHaveClass('hidden');
+    const channelCol = screen.getByRole('separator', { name: 'Resize channel list' }).parentElement;
+    expect(channelCol).toHaveClass('hidden');
+  });
+
+  test('resizes the channel and article columns and keeps the widths', async () => {
+    setup();
+    await userEvent.click(await screen.findByText('Tech'));
+    await screen.findByText('Hello world');
+    const channelHandle = screen.getByRole('separator', { name: 'Resize channel list' });
+    const articleHandle = screen.getByRole('separator', { name: 'Resize article list' });
+    expect(channelHandle.parentElement?.style.width).toBe('192px');
+    expect(articleHandle.parentElement?.style.width).toBe('288px');
+
+    fireEvent.keyDown(channelHandle, { key: 'ArrowRight', shiftKey: true });
+    fireEvent.keyDown(articleHandle, { key: 'ArrowLeft' });
+    expect(store.getState().feedChannelWidth).toBe(256);
+    expect(store.getState().feedArticleWidth).toBe(272);
+    expect(channelHandle.parentElement?.style.width).toBe('256px');
+    expect(articleHandle.parentElement?.style.width).toBe('272px');
+
+    // clamped, and reset on double click
+    for (let i = 0; i < 10; i++) fireEvent.keyDown(channelHandle, { key: 'ArrowLeft', shiftKey: true });
+    expect(store.getState().feedChannelWidth).toBe(120);
+    fireEvent.doubleClick(channelHandle);
+    expect(store.getState().feedChannelWidth).toBe(192);
+  });
+
+  test('channel titles do not wrap, the column scrolls horizontally', async () => {
+    setup();
+    const row = (await screen.findByText('Tech')).closest('.cursor-pointer') as HTMLElement;
+    expect(row).toHaveClass('whitespace-nowrap');
+    const scroller = screen.getByRole('separator', { name: 'Resize channel list' }).previousElementSibling;
+    expect(scroller).toHaveClass('overflow-auto');
   });
 
   test('shows the store article when none is selected', async () => {

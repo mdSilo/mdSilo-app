@@ -7,6 +7,8 @@ import { Channel } from 'components/feed/Channel';
 import { ArticleView } from 'components/feed/ArticleView';
 import { FeedManager } from 'components/feed/FeedManager';
 import * as dataAgent from 'components/feed/dataAgent';
+import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
+import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from 'lib/userSettings';
 
 export default function Feed() {
   // channel list
@@ -18,6 +20,18 @@ export default function Feed() {
   const [showManager, setShowManager] = useState(false);
 
   const storeArticle = useStore(state => state.currentArticle);
+
+  // resizable columns, widths saved in user settings
+  const channelCol = useResizableWidth(
+    useStore(state => state.feedChannelWidth),
+    useStore(state => state.setFeedChannelWidth),
+    FEED_CHANNEL_WIDTH,
+  );
+  const articleCol = useResizableWidth(
+    useStore(state => state.feedArticleWidth),
+    useStore(state => state.setFeedArticleWidth),
+    FEED_ARTICLE_WIDTH,
+  );
 
   const getList = () => {
     Promise.all(
@@ -144,15 +158,28 @@ export default function Feed() {
   return (
     <ErrorBoundary>
       <div className="flex flex-row overflow-y-auto h-full">
-        <div className={`w-48 p-1 border-r-2 border-gray-200 dark:border-gray-800 overflow-y-auto ${hideCol ? 'hidden' : ''}`}>
-          <ChannelList 
-            channelList={channelList} 
-            refreshList={refreshList} 
-            onShowManager={onShowManager} 
-            onClickFeed={onClickFeed}
-            onClickStar={onClickStar} 
-            refreshing={refreshing}
-            doneNum={doneNum}
+        <div
+          className={`relative flex-none border-r-2 border-gray-200 dark:border-gray-800 ${hideCol ? 'hidden' : ''}`}
+          style={{ width: channelCol.width }}
+        >
+          {/* long feed titles do not wrap: scroll horizontally */}
+          <div className="h-full p-1 overflow-auto">
+            <ChannelList 
+              channelList={channelList} 
+              refreshList={refreshList} 
+              onShowManager={onShowManager} 
+              onClickFeed={onClickFeed}
+              onClickStar={onClickStar} 
+              refreshing={refreshing}
+              doneNum={doneNum}
+            />
+          </div>
+          <ResizeHandle
+            width={channelCol.width}
+            bounds={FEED_CHANNEL_WIDTH}
+            label="Resize channel list"
+            onResize={channelCol.onResize}
+            onResizeEnd={channelCol.onResizeEnd}
           />
         </div>
         {showManager ? (
@@ -165,16 +192,28 @@ export default function Feed() {
           </div>
         ) : (
           <>
-            <div className={`w-72 p-1 overflow-y-auto ${isHideChannel ? 'hidden' : ''}`}>
-              <Channel 
-                channel={currentChannel} 
-                starChannel={starChannel} 
-                articles={currentArticles}
-                handleRefresh={handleRefresh}
-                updateAllReadStatus={updateAllReadStatus}
-                onClickArticle={onClickArticle}
-                loading={loading}
-                syncing={syncing}
+            <div
+              className={`relative flex-none ${isHideChannel ? 'hidden' : ''}`}
+              style={{ width: articleCol.width }}
+            >
+              <div className="h-full p-1 overflow-x-hidden overflow-y-auto">
+                <Channel 
+                  channel={currentChannel} 
+                  starChannel={starChannel} 
+                  articles={currentArticles}
+                  handleRefresh={handleRefresh}
+                  updateAllReadStatus={updateAllReadStatus}
+                  onClickArticle={onClickArticle}
+                  loading={loading}
+                  syncing={syncing}
+                />
+              </div>
+              <ResizeHandle
+                width={articleCol.width}
+                bounds={FEED_ARTICLE_WIDTH}
+                label="Resize article list"
+                onResize={articleCol.onResize}
+                onResizeEnd={articleCol.onResizeEnd}
               />
             </div>
             <div className="flex-1 overflow-y-auto border-l-2 border-gray-200 dark:border-gray-800">

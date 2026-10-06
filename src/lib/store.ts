@@ -286,6 +286,8 @@ export const store = createVanilla<Store>(
         recentDir: state.recentDir,
         pinnedDir: state.pinnedDir,
         sidebarWidth: state.sidebarWidth,
+        feedChannelWidth: state.feedChannelWidth,
+        feedArticleWidth: state.feedArticleWidth,
         useAsset: state.useAsset,
         activities: state.activities,
       }),
