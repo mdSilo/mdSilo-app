@@ -1,5 +1,5 @@
 import { isUrl } from 'utils/helper';
-import type { Notes } from 'lib/store';
+import type { NoteMap } from 'lib/store';
 import type { Issue } from './types';
 
 // [[title]] or [[title|alias]]
@@ -78,8 +78,8 @@ export function computeIssueRefs(issues: Issue[], noteId: string, title: string)
 }
 
 /** Notes whose content links the issue via `issue:N`. */
-export function computeNoteMentions(notes: Notes, num: number) {
-  return Object.values(notes)
+export function computeNoteMentions(notes: NoteMap, num: number) {
+  return notes.values()
     .filter((n) => !n.is_dir && n.content && linkedIssueNumbers(n.content).has(num))
     .map((n) => ({ id: n.id, title: n.title }));
 }

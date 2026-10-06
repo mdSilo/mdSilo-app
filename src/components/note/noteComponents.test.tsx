@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
@@ -34,7 +35,7 @@ describe('NoteMetadata', () => {
 
   test('shows counts and dates', () => {
     const note = makeNote({ id: '/a.md', content: 'hello big world' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     render(<NoteMetadata noteId="/a.md" />);
     expect(screen.getByText('~3 words, 15 characters')).toBeInTheDocument();
     expect(screen.getByText(/^Created:/)).toBeInTheDocument();
@@ -43,7 +44,7 @@ describe('NoteMetadata', () => {
 
   test('hides counts for empty notes', () => {
     const note = makeNote({ id: '/a.md', content: '' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     render(<NoteMetadata noteId="/a.md" />);
     expect(screen.queryByText(/words/)).not.toBeInTheDocument();
   });
@@ -144,7 +145,7 @@ describe('FindOrCreateInput', () => {
   const seed = () => {
     const a = makeNote({ id: '/n/apple.md', title: 'apple' });
     const b = makeNote({ id: '/n/apricot.md', title: 'apricot' });
-    store.getState().setNotes({ [a.id]: a, [b.id]: b });
+    store.getState().setNotes(NoteMap.from({ [a.id]: a, [b.id]: b }));
     store.getState().setCurrentDir('/n');
   };
 
@@ -177,7 +178,7 @@ describe('FindOrCreateInput', () => {
     await userEvent.click(screen.getByText('New: 2022-02-02'));
     await waitFor(() => expect(viewState().view).toBe('md'));
     expect(onOptionClick).toHaveBeenCalled();
-    const note = store.getState().notes['/n/2022-02-02.md'];
+    const note = store.getState().notes.get('/n/2022-02-02.md');
     expect(note).toMatchObject({ title: '2022-02-02', is_daily: true, file_path: '/n/2022-02-02.md' });
     expect(store.getState().noteTree['/n'].map((i) => i.id)).toContain('/n/2022-02-02.md');
     expect(store.getState().currentNote).toEqual({ '/n/2022-02-02.md': note });
@@ -235,7 +236,7 @@ describe('MoveToInput', () => {
   const seedTree = () => {
     const dirs = ['zeta', 'alpha', 'beta'].map((t) => makeNote({ id: `/root/${t}`, title: t, is_dir: true }));
     const file = makeNote({ id: '/root/file.md', title: 'file' });
-    store.getState().setNotes(Object.fromEntries([...dirs, file].map((n) => [n.id, n])));
+    store.getState().setNotes(NoteMap.from(Object.fromEntries([...dirs, file].map((n) => [n.id, n]))));
     store.getState().upsertTree('/root', [...dirs, file]);
     store.getState().setInitDir('/root');
     store.getState().setCurrentDir('/root');
@@ -281,20 +282,20 @@ describe('MoveToInput', () => {
 describe('moveNoteTreeItem', () => {
   test('moves the note in the store', () => {
     const note = makeNote({ id: '/a/x.md', title: 'x' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     store.getState().upsertTree('/a', [note]);
     moveNoteTreeItem('/a/x.md', '/b', '/b/x.md', note);
-    expect(Object.keys(store.getState().notes)).toEqual(['/b/x.md']);
-    expect(store.getState().notes['/b/x.md']).toMatchObject({ title: 'x', file_path: '/b/x.md' });
+    expect(store.getState().notes.keys()).toEqual(['/b/x.md']);
+    expect(store.getState().notes.get('/b/x.md')).toMatchObject({ title: 'x', file_path: '/b/x.md' });
     expect(store.getState().noteTree['/a']).toEqual([]);
     expect(store.getState().noteTree['/b'].map((i) => i.id)).toEqual(['/b/x.md']);
   });
 
   test('ignores moves to the same path', () => {
     const note = makeNote({ id: '/a/x.md' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     moveNoteTreeItem('/a/x.md', '/a', '/a/x.md', note);
-    expect(store.getState().notes).toEqual({ '/a/x.md': note });
+    expect(store.getState().notes.toRecord()).toEqual({ '/a/x.md': note });
   });
 });
 
@@ -310,10 +311,10 @@ describe('MoveToModal', () => {
 describe('NoteDelModal', () => {
   test('confirms deletion', async () => {
     const note = makeNote({ id: '/n/a.md', title: 'a' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     renderWithView(<NoteDelModal noteId={note.id} noteTitle="a" isOpen handleClose={vi.fn()} />);
     await userEvent.click(await screen.findByText('Confirm Delete'));
-    await waitFor(() => expect(store.getState().notes).toEqual({}));
+    await waitFor(() => expect(store.getState().notes.toRecord()).toEqual({}));
     expect(invoke).toHaveBeenCalledWith('delete_files', { paths: ['/n/a.md'] });
   });
 
@@ -329,7 +330,7 @@ describe('NoteHeader', () => {
   const note = makeNote({ id: '/n/a.md', title: 'a', content: 'body' });
 
   const renderHeader = (setShowBacklink = vi.fn()) => {
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     const value = { ty: 'md', id: note.id, state: { view: 'md' }, dispatch: vi.fn() };
     const Wrapper = ({ children }: { children: ReactNode }) => (
       <ProvideCurrentView>

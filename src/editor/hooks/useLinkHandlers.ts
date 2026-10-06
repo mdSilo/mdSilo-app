@@ -69,7 +69,7 @@ export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Op
       // ISSUE ALERT:
       // maybe more than one notes with same title(ci),
       // but only link to first searched one
-      const toNote = Object.values(store.getState().notes).find((n) => n.title === title);
+      const toNote = store.getState().notes.values().find((n) => n.title === title);
       const noteId = toNote ? toNote.id : await onMissingNote?.(title);
       if (!noteId) return;
       await openFilePath(noteId, true);

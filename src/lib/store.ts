@@ -8,6 +8,9 @@ import { ArticleType, PodType } from 'types/model';
 import type { ActivityRecord } from 'components/view/HeatMap';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettings';
+import { NoteMap } from './noteMap';
+
+export { NoteMap } from './noteMap';
 
 export { shallow as shallowEqual } from 'zustand/shallow';
 
@@ -60,6 +63,7 @@ const storage: PersistStorage<PersistedState> = {
   },
 };
 
+// plain record of notes, e.g. in JSON data; the store keeps a NoteMap
 export type Notes = Record<Note['id'], Note>;
 
 export type NoteTreeItem = {
@@ -91,8 +95,8 @@ export enum SidebarTab {
 
 export type Store = {
   // note
-  notes: Notes;
-  setNotes: Setter<Notes>;
+  notes: NoteMap;
+  setNotes: Setter<NoteMap>;
   // operate note
   upsertNote: (note: Note) => void;
   upsertNotes: (notes: Note[]) => void;
@@ -154,7 +158,7 @@ export const setter =
   (value: Store[K] | ((value: Store[K]) => Store[K])) => {
     if (typeof value === 'function') {
       set((state) => {
-        state[key] = value(state[key]);
+        state[key] = value(state[key] as Store[K]);
       });
     } else {
       set((state) => {
@@ -166,8 +170,8 @@ export const setter =
 export const store = createStore<Store>()(
   persist(
     immer<Store>((set) => ({
-      //  Map of note id to notes
-      notes: {},  // all private notes
+      //  Map of note id to notes, see NoteMap
+      notes: NoteMap.EMPTY,  // all private notes
       setNotes: setter(set, 'notes'),
       /**
        * update or insert the note
@@ -175,13 +179,8 @@ export const store = createStore<Store>()(
        */
       upsertNote: (note: Note) => {
         set((state) => {
-          if (state.notes[note.id]) {
-            // if existing per id, update 
-            state.notes[note.id] = { ...state.notes[note.id], ...note };
-          } else {
-            // otherwise, new insert
-            state.notes[note.id] = note;
-          }
+          // if existing per id, update, otherwise, new insert
+          state.notes = state.notes.upsert(note);
           // alert: not check title unique, wiki-link will link to first searched note
         });
       },
@@ -189,10 +188,7 @@ export const store = createStore<Store>()(
       upsertNotes: (notes: Note[]) => {
         if (notes.length === 0) return;
         set((state) => {
-          for (const note of notes) {
-            const existing = state.notes[note.id];
-            state.notes[note.id] = existing ? { ...existing, ...note } : note;
-          }
+          state.notes = state.notes.upsertMany(notes);
         });
       },
       upsertTree: (targetDir: string, noteList: Note[]) => {
@@ -221,20 +217,18 @@ export const store = createStore<Store>()(
       },
       // Update the given note
       updateNote: (note: NoteUpdate) => {
+        if (!store.getState().notes.has(note.id)) return;
         set((state) => {
-          if (state.notes[note.id]) {
-            state.notes[note.id] = { 
-              ...state.notes[note.id], 
-              ...note, 
-              updated_at: new Date().toISOString() 
-            };
-          }
+          state.notes = state.notes.update(note.id, {
+            ...note,
+            updated_at: new Date().toISOString(),
+          });
         });
       },
       // Delete the note with the given noteId
       deleteNote: (noteId: string) => {
         set((state) => {
-          delete state.notes[noteId];
+          state.notes = state.notes.delete(noteId);
           deleteTreeItem(state.noteTree, noteId);
         });
       },

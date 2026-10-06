@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { makeNote } from '../../../testUtils';
 import useBacklinks, { computeLinkedBacklinks } from './useBacklinks';
@@ -9,7 +10,7 @@ const wiki = makeNote({ id: '/n/wiki.md', title: 'wiki', content: 'Links to [[ta
 const md = makeNote({ id: '/n/md.md', title: 'md', content: 'A [label](target%20note) link' });
 const web = makeNote({ id: '/n/web.md', title: 'web', content: 'A [label](https://target.note) url' });
 const mention = makeNote({ id: '/n/mention.md', title: 'mention', content: 'Just says target note in text' });
-const notes = Object.fromEntries([target, wiki, md, web, mention].map((n) => [n.id, n]));
+const notes = NoteMap.from([target, wiki, md, web, mention]);
 
 describe('computeLinkedBacklinks', () => {
   test('finds wiki and markdown links to the title', () => {
@@ -27,7 +28,7 @@ describe('computeLinkedBacklinks', () => {
 
   test('skips the note itself', () => {
     const self = makeNote({ id: '/n/self.md', title: 'self', content: '[[self]]' });
-    expect(computeLinkedBacklinks({ [self.id]: self }, 'self')).toEqual([]);
+    expect(computeLinkedBacklinks(NoteMap.from([self]), 'self')).toEqual([]);
   });
 });
 
@@ -40,7 +41,7 @@ describe('useBacklinks', () => {
   });
 
   test('returns linked and unlinked backlinks after debounce', () => {
-    store.getState().setNotes(notes);
+    store.getState().setNotes(NoteMap.from(notes));
     const { result } = renderHook(() => useBacklinks(target.id));
     act(() => vi.advanceTimersByTime(1000));
 
@@ -50,7 +51,7 @@ describe('useBacklinks', () => {
   });
 
   test('is empty for unknown notes', () => {
-    store.getState().setNotes(notes);
+    store.getState().setNotes(NoteMap.from(notes));
     const { result } = renderHook(() => useBacklinks('/n/unknown.md'));
     expect(result.current).toEqual({ linkedBacklinks: [], unlinkedBacklinks: [] });
   });

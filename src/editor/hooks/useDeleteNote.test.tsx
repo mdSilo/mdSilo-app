@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import type { ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { invoke } from '@tauri-apps/api/core';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
 import { makeNote } from '../../testUtils';
@@ -13,12 +14,12 @@ describe('doDeleteNote', () => {
   test('removes the note, its backlinks and the file', async () => {
     const target = makeNote({ id: '/n/target.md', title: 'target' });
     const linker = makeNote({ id: '/n/linker.md', title: 'linker', content: 'see [[target]]' });
-    store.getState().setNotes({ [target.id]: target, [linker.id]: linker });
+    store.getState().setNotes(NoteMap.from({ [target.id]: target, [linker.id]: linker }));
 
     await doDeleteNote(target.id, target.title);
 
-    expect(store.getState().notes[target.id]).toBeUndefined();
-    expect(store.getState().notes[linker.id].content).toBe('see target');
+    expect(store.getState().notes.get(target.id)).toBeUndefined();
+    expect(store.getState().notes.get(linker.id)?.content).toBe('see target');
     expect(invoke).toHaveBeenCalledWith('delete_files', { paths: ['/n/target.md'] });
   });
 });
@@ -26,7 +27,7 @@ describe('doDeleteNote', () => {
 describe('useDeleteNote', () => {
   test('returns to the default view and deletes', async () => {
     const note = makeNote({ id: '/n/a.md', title: 'a' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
 
     const { result } = renderHook(
       () => ({ onDelete: useDeleteNote(note.id, note.title), view: useCurrentViewContext() }),
@@ -38,6 +39,6 @@ describe('useDeleteNote', () => {
     });
 
     expect(result.current.view.state.view).toBe('default');
-    expect(store.getState().notes).toEqual({});
+    expect(store.getState().notes.toRecord()).toEqual({});
   });
 });

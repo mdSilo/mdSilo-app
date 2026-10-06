@@ -6,7 +6,7 @@ import { store, useStore, getNoteTreeItem, onStoreHydrated, SidebarTab, type Not
 describe('store defaults', () => {
   test('has sensible initial values', () => {
     const s = store.getState();
-    expect(s.notes).toEqual({});
+    expect(s.notes.toRecord()).toEqual({});
     expect(s.noteTree).toEqual({});
     expect(s.currentNoteId).toBe('');
     expect(s.sidebarTab).toBe(SidebarTab.Silo);
@@ -34,11 +34,11 @@ describe('note operations', () => {
   test('upsertNote inserts and then merges', () => {
     const note = makeNote({ id: '/a.md', title: 'a', content: 'one' });
     store.getState().upsertNote(note);
-    expect(store.getState().notes['/a.md']).toEqual(note);
+    expect(store.getState().notes.get('/a.md')).toEqual(note);
 
     store.getState().upsertNote({ ...note, content: 'two' });
-    expect(store.getState().notes['/a.md'].content).toBe('two');
-    expect(Object.keys(store.getState().notes)).toHaveLength(1);
+    expect(store.getState().notes.get('/a.md')?.content).toBe('two');
+    expect(store.getState().notes.keys()).toHaveLength(1);
   });
 
   test('upsertNotes inserts and merges many notes at once', () => {
@@ -46,8 +46,8 @@ describe('note operations', () => {
     store.getState().upsertNote(a);
     const before = store.getState();
     store.getState().upsertNotes([{ ...a, content: 'two' }, makeNote({ id: '/b.md', title: 'b' })]);
-    expect(store.getState().notes['/a.md'].content).toBe('two');
-    expect(store.getState().notes['/b.md'].title).toBe('b');
+    expect(store.getState().notes.get('/a.md')?.content).toBe('two');
+    expect(store.getState().notes.get('/b.md')?.title).toBe('b');
     // empty list is a no-op
     const after = store.getState();
     store.getState().upsertNotes([]);
@@ -59,14 +59,14 @@ describe('note operations', () => {
     const note = makeNote({ id: '/a.md', updated_at: '2000-01-01T00:00:00.000Z' });
     store.getState().upsertNote(note);
     store.getState().updateNote({ id: '/a.md', title: 'renamed' });
-    const updated = store.getState().notes['/a.md'];
-    expect(updated.title).toBe('renamed');
-    expect(updated.updated_at > note.updated_at).toBe(true);
+    const updated = store.getState().notes.get('/a.md');
+    expect(updated?.title).toBe('renamed');
+    expect((updated?.updated_at ?? '') > note.updated_at).toBe(true);
   });
 
   test('updateNote ignores unknown notes', () => {
     store.getState().updateNote({ id: '/missing.md', title: 'x' });
-    expect(store.getState().notes).toEqual({});
+    expect(store.getState().notes.toRecord()).toEqual({});
   });
 
   test('upsertTree appends unique items to a dir', () => {
@@ -95,13 +95,13 @@ describe('note operations', () => {
     store.getState().upsertNote(b);
     store.getState().upsertTree('/d', [a, b]);
     store.getState().deleteNote('/d/a.md');
-    expect(Object.keys(store.getState().notes)).toEqual(['/d/b.md']);
+    expect(store.getState().notes.keys()).toEqual(['/d/b.md']);
     expect(store.getState().noteTree['/d'].map((i) => i.id)).toEqual(['/d/b.md']);
   });
 
   test('deleteNote tolerates ids missing from the tree', () => {
     store.getState().deleteNote('/nope');
-    expect(store.getState().notes).toEqual({});
+    expect(store.getState().notes.toRecord()).toEqual({});
   });
 });
 

@@ -10,7 +10,7 @@ import { openFilePath } from "file/open";
 export default function Journals() {
   const initDir = useStore((state) => state.initDir);
   const notes = useStore((state) => state.notes);
-  const notesArr = Object.values(notes);
+  const notesArr = notes.values();
   const dailyNotes = notesArr.filter(n => regDateStr.test(n.title));
   dailyNotes.sort(
     (n1, n2) => dateCompare(strToDate(n2.title), strToDate(n1.title))

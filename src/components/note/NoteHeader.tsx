@@ -19,7 +19,7 @@ export default function NoteHeader(
   {setShowBacklink} : {setShowBacklink : (show: boolean) => void}
 ) {
   const currentNote = useCurrentMdContext();
-  const note = useStore((state) => state.notes[currentNote.id]);
+  const note = useStore((state) => state.notes.get(currentNote.id));
 
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
@@ -35,11 +35,11 @@ export default function NoteHeader(
   const setRawMode = useStore((state) => state.setRawMode);
   const setRaw = useCallback(
     async (mode: string) => {
-      await openFilePath(note.id, true);
+      await openFilePath(currentNote.id, true);
       setRawMode(mode);
       setShowBacklink(false);
     }, 
-    [note.id, setRawMode, setShowBacklink]
+    [currentNote.id, setRawMode, setShowBacklink]
   );
 
   const [isNoteDelModalOpen, setIsNoteDelModalOpen] = useState(false);
@@ -97,20 +97,20 @@ export default function NoteHeader(
                       <span>Delete Permanently</span>
                     </DropdownItem>
                     <DropdownItem
-                      onClick={() => ExportAs('pdf', `${note.id}.pdf`)}
+                      onClick={() => ExportAs('pdf', `${currentNote.id}.pdf`)}
                       className="border-t dark:border-gray-700"
                     >
                       <IconFile className="mr-1" />
                       <span>Export PDF</span>
                     </DropdownItem>
                     <DropdownItem
-                      onClick={() => ExportAs('png', `${note.id}.png`)}
+                      onClick={() => ExportAs('png', `${currentNote.id}.png`)}
                       className="border-t dark:border-gray-700"
                     >
                       <IconPhoto className="mr-1" />
                       <span>Export PNG</span>
                     </DropdownItem>
-                    <NoteMetadata noteId={note.id} />
+                    <NoteMetadata noteId={currentNote.id} />
                   </Menu.Items>
                 </Portal>
               )}
@@ -122,7 +122,7 @@ export default function NoteHeader(
         <Portal>
           <NoteDelModal
             noteId={currentNote.id}
-            noteTitle={note?.title}
+            noteTitle={note?.title ?? ''}
             isOpen={isNoteDelModalOpen}
             handleClose={() => setIsNoteDelModalOpen(false)}
           />

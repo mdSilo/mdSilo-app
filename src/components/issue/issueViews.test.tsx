@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import MainView from 'components/view/MainView';
@@ -46,7 +47,7 @@ vi.mock('mdsmirror', async (importOriginal) => {
 
 vi.mock('file/open', async (importOriginal) => ({
   ...(await importOriginal<typeof import('file/open')>()),
-  openFilePath: vi.fn(async (id: string) => store.getState().notes[id]),
+  openFilePath: vi.fn(async (id: string) => store.getState().notes.get(id)),
   openUrl: vi.fn(async () => undefined),
 }));
 
@@ -261,7 +262,7 @@ describe('Issue detail', () => {
       d = ops.createMilestone(d, { title: 'v1' });
       return ops.createIssue(d, { title: 'Crash', body: 'see [[Spec]]', notes: ['/w/Gone.md'] });
     });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
   }
 
   test('shows a missing issue', async () => {
@@ -419,7 +420,7 @@ describe('Tasks tab', () => {
     seed();
     const a = makeNote({ id: '/w/Plan.md', title: 'Plan', content: 'Write spec #todo#\n\nShip it #doing#', updated_at: '2026-02-01T00:00:00Z' });
     const b = makeNote({ id: '/w/Old.md', title: 'Old', content: 'Archive #done#', updated_at: '2026-01-01T00:00:00Z' });
-    store.getState().setNotes({ [a.id]: a, [b.id]: b });
+    store.getState().setNotes(NoteMap.from({ [a.id]: a, [b.id]: b }));
   }
   const rows = () => screen.getAllByTestId('note-task').map((r) => r.textContent);
 

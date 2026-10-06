@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { TbFolder } from 'react-icons/tb';
+import { NoteMap } from 'lib/noteMap';
 import { store, SidebarTab as SidebarTabType } from 'lib/store';
 import { Sort } from 'lib/userSettings';
 import { useCurrentViewContext } from 'context/useCurrentView';
@@ -309,7 +310,7 @@ describe('SidebarNoteLink', () => {
 
   test('note dropdown offers move to', async () => {
     const note = makeNote({ id: '/n/a.md', title: 'a' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     store.getState().setIsLoaded(true);
     renderWithView(withContainer(<SidebarNoteLink node={treeItem('/n/a.md', 'a')} />));
     await userEvent.click(screen.getAllByRole('button').at(-1) as HTMLElement);
@@ -334,7 +335,7 @@ describe('SidebarTags', () => {
     const a = makeNote({ id: '/a.md', content: 'x #todo# y #idea# #todo# z' });
     const b = makeNote({ id: '/b.md', content: 'p #todo# q' });
     const dir = makeNote({ id: '/d', content: ' #hidden# ', is_dir: true });
-    store.getState().setNotes({ [a.id]: a, [b.id]: b, [dir.id]: dir });
+    store.getState().setNotes(NoteMap.from({ [a.id]: a, [b.id]: b, [dir.id]: dir }));
     renderWithView(<><SidebarTags /><ViewProbe /></>);
     const todo = screen.getByText('todo');
     expect(todo.parentElement?.nextSibling).toHaveTextContent('3');
@@ -354,7 +355,7 @@ describe('SidebarSearch', () => {
   const seed = () => {
     const a = makeNote({ id: '/n/a.md', title: 'apple', content: 'red fruit\n\nsweet #fruit# here' });
     const b = makeNote({ id: '/n/b.md', title: 'banana', content: 'yellow' });
-    store.getState().setNotes({ [a.id]: a, [b.id]: b });
+    store.getState().setNotes(NoteMap.from({ [a.id]: a, [b.id]: b }));
     store.getState().setIsLoaded(true);
   };
 

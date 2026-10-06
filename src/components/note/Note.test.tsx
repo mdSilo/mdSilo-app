@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import copy from 'copy-to-clipboard';
+import { NoteMap } from 'lib/noteMap';
 import { store, SidebarTab } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
 import { writeFile, deleteFile } from 'file/write';
@@ -58,7 +59,7 @@ const note = makeNote({ id: '/root/sub/My Note.md', title: 'My Note', content: '
 const other = makeNote({ id: '/root/Other.md', title: 'Other', content: 'links [[My Note]]' });
 
 function setup({ withInitDir = true } = {}) {
-  store.getState().setNotes({ [note.id]: note, [other.id]: other });
+  store.getState().setNotes(NoteMap.from({ [note.id]: note, [other.id]: other }));
   store.getState().setCurrentNote({ [note.id]: note });
   store.getState().setInitDir(withInitDir ? '/root' : undefined);
   store.getState().setIsLoaded(true);
@@ -136,12 +137,12 @@ describe('Note', () => {
     try {
       const { unmount } = setup();
       await callEditor('onChange', 'typed #todo#', {});
-      expect(store.getState().notes[note.id].content).toBe(note.content);
+      expect(store.getState().notes.get(note.id)?.content).toBe(note.content);
       await act(async () => { vi.advanceTimersByTime(800); });
-      expect(store.getState().notes[note.id].content).toBe('typed #todo#');
+      expect(store.getState().notes.get(note.id)?.content).toBe('typed #todo#');
       await callEditor('onChange', 'last words', {});
       unmount();
-      expect(store.getState().notes[note.id].content).toBe('last words');
+      expect(store.getState().notes.get(note.id)?.content).toBe('last words');
     } finally {
       vi.useRealTimers();
     }
@@ -172,7 +173,7 @@ describe('Note', () => {
     setup();
     await expect(callEditor('onCreateLink', ' Other ')).resolves.toBe('Other');
     await expect(callEditor('onCreateLink', 'Brand New')).resolves.toBe('Brand%20New');
-    const created = store.getState().notes['/root/sub/Brand New.md'];
+    const created = store.getState().notes.get('/root/sub/Brand New.md');
     expect(created).toMatchObject({ title: 'Brand New', file_path: '/root/sub/Brand New.md' });
     expect(writeFile).toHaveBeenCalledWith('/root/sub/Brand New.md', ' ');
   });
@@ -240,9 +241,9 @@ describe('Note', () => {
     await waitFor(() => expect(viewState().params?.noteId).toBe('/root/sub/Renamed.md'));
     expect(deleteFile).toHaveBeenCalledWith(note.id);
     expect(writeFile).toHaveBeenCalledWith('/root/sub/Renamed.md', 'disk content');
-    expect(store.getState().notes[note.id]).toBeUndefined();
-    expect(store.getState().notes['/root/sub/Renamed.md'].title).toBe('Renamed');
-    expect(store.getState().notes[other.id].content).toBe('links [[Renamed]]');
+    expect(store.getState().notes.get(note.id)).toBeUndefined();
+    expect(store.getState().notes.get('/root/sub/Renamed.md')?.title).toBe('Renamed');
+    expect(store.getState().notes.get(other.id)?.content).toBe('links [[Renamed]]');
   });
 
   test('does not rename to an existing title', async () => {

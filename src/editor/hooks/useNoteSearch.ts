@@ -44,7 +44,7 @@ export default function useNoteSearch({
     }
 
     const notes = store.getState().notes;
-    const notesArr = Object.values(notes);
+    const notesArr = notes.values();
     const allNotes = searchDir 
       ? notesArr.filter(n => n.is_dir) 
       : notesArr.filter(n => !n.is_dir && checkFileIsMd(n.id));

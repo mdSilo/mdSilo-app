@@ -166,7 +166,7 @@ export function trimSlashAll(txt: string) {
 // 
 export const buildNotesJson = () => {
   const isloaded = store.getState().isLoaded;
-  const notesobj = store.getState().notes;
+  const notesobj = store.getState().notes.toRecord();
   const notetree = store.getState().noteTree;
   const activities = store.getState().activities;
   const notesData: NotesData = {isloaded, notesobj, notetree, activities};

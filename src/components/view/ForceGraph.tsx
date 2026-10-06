@@ -70,7 +70,7 @@ export default function ForceGraph(props: Props) {
   const data: GraphData = useMemo(() => {
     const data: GraphData = { nodes: [], links: [] };
     // filter out the dir and non-md file
-    const notesArr = Object.values(notes).filter(n => !n.is_dir && checkFileIsMd(n.id));
+    const notesArr = notes.values().filter(n => !n.is_dir && checkFileIsMd(n.id));
 
     // Initialize linksByNoteId: {id: Set[ids]}
     const linksByNoteId: Record<string, Set<string>> = {};
@@ -384,7 +384,7 @@ export default function ForceGraph(props: Props) {
         const clickedNode = getNode(simulation, context.canvas, x, y);
         // Redirect to note when a node is clicked
         if (clickedNode && clickedNode.ty === 'link') {
-          const note = storeNotes[clickedNode.id];
+          const note = storeNotes.get(clickedNode.id);
           if (!note) return;
           await openFilePath(note.id, true);
           dispatch({view: 'md', params: { noteId: note.id }});

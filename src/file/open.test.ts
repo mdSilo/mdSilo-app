@@ -122,8 +122,8 @@ describe('open (tauri)', () => {
   test.each(['listDir', 'openDir'] as const)('%s upserts notes and tree, skipping hidden and json', async (fn) => {
     await tOpen[fn]('/notes', false);
     const { notes, noteTree } = tStore.getState();
-    expect(Object.keys(notes).sort()).toEqual(['/notes/a.md', '/notes/sub']);
-    expect(notes['/notes/sub'].is_dir).toBe(true);
+    expect(notes.keys().sort()).toEqual(['/notes/a.md', '/notes/sub']);
+    expect(notes.get('/notes/sub')?.is_dir).toBe(true);
     expect(noteTree['/notes'].map((i) => i.id)).toEqual(['/notes/sub', '/notes/a.md', '/notes/pic.png']);
   });
 
@@ -143,9 +143,9 @@ describe('open (tauri)', () => {
 
   test('openDir keeps file content, listDir does not', async () => {
     await tOpen.listDir('/notes', false);
-    expect(tStore.getState().notes['/notes/a.md'].content).toBe('');
+    expect(tStore.getState().notes.get('/notes/a.md')?.content).toBe('');
     await tOpen.openDir('/notes', false);
-    expect(tStore.getState().notes['/notes/a.md'].content).toBe('A');
+    expect(tStore.getState().notes.get('/notes/a.md')?.content).toBe('A');
   });
 
   test('listDir attaches a listener by default', async () => {
@@ -157,7 +157,7 @@ describe('open (tauri)', () => {
     const opened = await tOpen.openFilePaths(['/notes/a.md', '/notes/sub', '/notes/pic.png', '/notes/mdsilo.json']);
     expect(opened).toBe(true);
     const { notes, noteTree } = tStore.getState();
-    expect(Object.keys(notes).sort()).toEqual(['/notes/a.md', '/notes/sub']);
+    expect(notes.keys().sort()).toEqual(['/notes/a.md', '/notes/sub']);
     expect(noteTree['/notes'].map((i) => i.id)).toEqual(['/notes/a.md', '/notes/pic.png', '/notes/sub']);
   });
 

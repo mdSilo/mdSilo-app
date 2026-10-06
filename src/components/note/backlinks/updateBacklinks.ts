@@ -24,7 +24,7 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
   const updateNote = store.getState().updateNote;
   const backlinks = computeLinkedBacklinks(notes, noteTitle);
   for (const backlink of backlinks) {
-    const note = notes[backlink.id];
+    const note = notes.get(backlink.id);
     if (!note) {
       continue;
     }

@@ -92,10 +92,7 @@ function HeatMapAndList(props: Props) {
 
   const notes = useStore((state) => state.notes);
 
-  const noteList: Note[] = useMemo(() => {
-    const noteList: Note[] = Object.values(notes) || [];
-    return noteList;
-  }, [notes]);
+  const noteList: readonly Note[] = notes.values();
 
   const sortedNotes = useMemo(() => {
     const myNotes = noteList.filter(n => !n.is_daily && !n.is_dir && checkFileIsMd(n.id));
