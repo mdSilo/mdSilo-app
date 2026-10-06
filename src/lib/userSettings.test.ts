@@ -14,6 +14,7 @@ describe('user settings slice', () => {
     expect(s.recentDir).toEqual([]);
     expect(s.pinnedDir).toBe('');
     expect(s.useAsset).toBe(true);
+    expect(s.sideMenuOrientation).toBe('auto');
   });
 
   test.each([
@@ -23,6 +24,7 @@ describe('user settings slice', () => {
     ['setNoteSort', 'noteSort', Sort.DateCreatedDescending],
     ['setRawMode', 'rawMode', 'raw'],
     ['setPinnedDir', 'pinnedDir', '/pinned'],
+    ['setSideMenuOrientation', 'sideMenuOrientation', 'horizontal'],
     ['setIsRTL', 'isRTL', true],
     ['setReadMode', 'readMode', true],
   ] as const)('%s updates %s', (setterName, key, value) => {

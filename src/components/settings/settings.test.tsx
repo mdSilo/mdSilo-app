@@ -57,7 +57,10 @@ describe('SettingsModal', () => {
     await userEvent.click(screen.getByLabelText('', { selector: '#Text-Direction' }));
     expect(store.getState().isRTL).toBe(true);
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'Sniglet' } });
+    fireEvent.change(screen.getByLabelText('Side Menu Orientation'), { target: { value: 'horizontal' } });
+    expect(store.getState().sideMenuOrientation).toBe('horizontal');
+
+    fireEvent.change(screen.getByLabelText('Editor Font Family'), { target: { value: 'Sniglet' } });
     expect(store.getState().font).toBe('Sniglet');
 
     const [size, height, weight] = screen.getAllByRole('spinbutton');

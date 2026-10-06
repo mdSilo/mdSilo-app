@@ -20,6 +20,7 @@ const App = () => {
   const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
 
   const darkMode = useStore((state) => state.darkMode);
+  const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
@@ -86,12 +87,20 @@ const App = () => {
   return (
     <ProvideCurrentView>
       <div id="app-container" className={appContainerClassName}>
-        <div className="flex w-full h-full dark:bg-gray-900">
+        <div className={`flex w-full h-full dark:bg-gray-900 ${
+          sideMenuOrientation === 'horizontal'
+            ? 'flex-col'
+            : sideMenuOrientation === 'vertical'
+              ? 'flex-row'
+              : 'flex-col md:flex-row'
+        }`}>
           <SideMenu />
-          <Sidebar />
-          <div className="relative flex-1 flex flex-col overflow-y-auto">
-            <div className="flex items-center justify-center"><StatusBar /></div>
-            <MainView />
+          <div className="relative flex flex-1 min-h-0">
+            <Sidebar />
+            <div className="relative flex flex-1 flex-col overflow-y-auto">
+              <div className="flex items-center justify-center"><StatusBar /></div>
+              <MainView />
+            </div>
           </div>
           {isFindOrCreateModalOpen ? (
             <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />

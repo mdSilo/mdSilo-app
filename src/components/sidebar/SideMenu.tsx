@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef, useState } from 'react';
+import { createContext, useMemo, useCallback, useContext, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { 
   TbMenu2 as IconMenu2, TbDna as IconDna, TbCalendar as IconCalendar, TbFile as IconFile, TbFeather as IconFeather,
@@ -15,6 +15,7 @@ import useHotkeys from 'editor/hooks/useHotkeys';
 import { onOpenFile, onListDir, onSave, openJsonFile } from 'editor/hooks/useOpen';
 import { isWeb } from 'file/util';
 import { store, useStore } from 'lib/store';
+import type { SideMenuOrientation } from 'lib/userSettings';
 import { isMobile } from 'utils/helper';
 import { ViewAction } from 'context/viewReducer';
 import Dropdown, { DropdownItem } from 'components/misc/Dropdown';
@@ -22,6 +23,15 @@ import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import Logo from '../Logo';
 import SidebarItem from './SidebarItem';
+
+const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
+
+const useIsHorizontalMenu = () => {
+  const orientation = useContext(SideMenuOrientationContext);
+  return orientation === 'horizontal' || (orientation === 'auto' && isMobile(768));
+};
+
+const useTooltipPlacement = () => useIsHorizontalMenu() ? 'top' : 'right';
 
 export default function SideMenu() {
   const currentView = useCurrentViewContext();
@@ -66,28 +76,51 @@ export default function SideMenu() {
   useHotkeys(hotkeys);
 
   const currentDir = useStore((state) => state.currentDir);
-  return (    
-    <div className='flex flex-col h-full pb-3 bg-gray-100 dark:bg-gray-800'>
-      <div className="flex flex-col h-full" id="side-menu-btns">
-        <LogoMenu />
-        <OpenButton />
-        <FeedButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'feed'})} />
-        {currentDir ? (
-        <>
-          <NewButton />
-          <IssuesButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'issues'})} />
-          <ProjectButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'project'})} />
-          <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
-          <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
-        </>) : null}
-        <FileButton />
+  const orientation = useStore((state) => state.sideMenuOrientation);
+  const menuClassName = orientation === 'horizontal'
+    ? 'flex flex-row items-center w-full px-1 bg-gray-100 dark:bg-gray-800'
+    : orientation === 'vertical'
+      ? 'flex flex-col h-full pb-3 bg-gray-100 dark:bg-gray-800'
+      : 'flex flex-row items-center w-full px-1 bg-gray-100 dark:bg-gray-800 md:flex-col md:items-stretch md:w-auto md:h-full md:pb-3';
+  const buttonsClassName = orientation === 'horizontal'
+    ? 'flex flex-row items-center'
+    : orientation === 'vertical'
+      ? 'flex flex-col h-full'
+      : 'flex flex-row items-center md:flex-col md:flex-1 md:items-stretch';
+  const bottomClassName = orientation === 'horizontal'
+    ? 'ml-auto'
+    : orientation === 'vertical'
+      ? ''
+      : 'ml-auto md:ml-0';
+
+  return (
+    <SideMenuOrientationContext.Provider value={orientation}>
+      <div className={menuClassName}>
+        <div className={buttonsClassName} id="side-menu-btns">
+          <LogoMenu />
+          <OpenButton />
+          <FeedButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'feed'})} />
+          {currentDir ? (
+          <>
+            <NewButton />
+            <IssuesButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'issues'})} />
+            <ProjectButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'project'})} />
+            <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
+            <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
+          </>) : null}
+          <FileButton />
+        </div>
+        <div className={bottomClassName}>
+          <BottomSection />
+        </div>
       </div>
-      <BottomSection />
-    </div>
+    </SideMenuOrientationContext.Provider>
   );
 }
 
 const LogoMenu = () => {
+  const isHorizontal = useIsHorizontalMenu();
+  const tooltipPlacement = useTooltipPlacement();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
@@ -95,15 +128,15 @@ const LogoMenu = () => {
   return (
     <Dropdown
       buttonChildren={<Logo />}
-      buttonClassName="block w-full focus:outline-none"
+      buttonClassName="block focus:outline-none"
       itemsClassName="w-56"
-      placement="right-start"
+      placement={isHorizontal ? 'bottom-start' : 'right-start'}
       tooltipContent="mdSilo"
-      tooltipPlacement="right"
+      tooltipPlacement={tooltipPlacement}
     >
       <DropdownItem
         onClick={() => {
-          if (isMobile()) {
+          if (isMobile(768)) {
             setIsSidebarOpen(false);
           }
           setIsSettingsOpen(true);
@@ -132,20 +165,7 @@ const LogoMenu = () => {
         <IconInfoCircle size={18} className="mr-1" />
         <span>About</span>
       </DropdownItem>
-      {isWeb ? (
-        <DropdownItem
-          onClick={async () => {
-            try {
-              await invoke('export_backup');
-            } catch (e) {
-              console.error('Failed to export backup:', e);
-            }
-          }}
-        >
-          <IconDatabaseExport size={18} className="mr-1" />
-          <span>Export Backup</span>
-        </DropdownItem>
-      ) : (
+      {!isWeb && (
         <DropdownItem
           onClick={async () => {
             const dir_path = await invoke<string>('create_mdsilo_dir');
@@ -164,12 +184,13 @@ const btnClass = 'title flex items-center text-lg p-2';
 const btnIconClass = 'flex-shrink-0 mx-1 text-gray-600 dark:text-gray-400';
 
 const OpenButton = () => {
+  const tooltipPlacement = useTooltipPlacement();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const isSidebarOpen: boolean = useStore((state) => state.isSidebarOpen);
 
   return (
     <SidebarItem isHighlighted={isSidebarOpen}>
-      <Tooltip content="Toggle Sidebar (Alt+X)" placement="right">
+      <Tooltip content="Toggle Sidebar (Alt+X)" placement={tooltipPlacement}>
         <button
           aria-label="Toggle Sidebar"
           className={btnClass}
@@ -183,12 +204,13 @@ const OpenButton = () => {
 }
 
 const NewButton = () => {
+  const tooltipPlacement = useTooltipPlacement();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
   const isFindOrCreateModalOpen = useStore((state) => state.isFindOrCreateModalOpen);
 
   const onCreateNoteClick = useCallback(() => {
-    if (isMobile()) {
+    if (isMobile(768)) {
       setIsSidebarOpen(false);
     }
     setIsFindOrCreateModalOpen((isOpen) => !isOpen);
@@ -196,7 +218,7 @@ const NewButton = () => {
 
   return (
     <SidebarItem isHighlighted={isFindOrCreateModalOpen}>
-      <Tooltip content="New Writing" placement="right">
+      <Tooltip content="New Writing" placement={tooltipPlacement}>
         <button
           className={btnClass}
           onClick={onCreateNoteClick}
@@ -215,6 +237,7 @@ type ButtonProps = {
 };
 
 const FeedButton = (props: ButtonProps) => {
+  const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
@@ -228,7 +251,7 @@ const FeedButton = (props: ButtonProps) => {
     <SidebarItem isHighlighted={viewTy === 'feed'} onClick={onClick}>
       <Tooltip
         content="Feed Reader (Ctrl/⌘+Shift+R)"
-        placement="right"
+        placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onViewFeed}>
           <IconRss size={24} className="flex-shrink-0 mx-1 text-orange-600" />
@@ -239,13 +262,14 @@ const FeedButton = (props: ButtonProps) => {
 }
 
 const GraphButton = (props: ButtonProps) => {
+  const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
     <SidebarItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
       <Tooltip
         content="Graph View (Ctrl/⌘+Shift+G)"
-        placement="right"
+        placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconDna size={24} className={btnIconClass} />
@@ -256,13 +280,14 @@ const GraphButton = (props: ButtonProps) => {
 };
 
 const ChronButton = (props: ButtonProps) => {
+  const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
     <SidebarItem isHighlighted={viewTy === 'chronicle'} onClick={onClick}>
       <Tooltip
         content="Chronicle View (Ctrl/⌘+Shift+C)"
-        placement="right"
+        placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onDispatch}>
           <IconCalendar size={24} className={btnIconClass} />
@@ -273,13 +298,14 @@ const ChronButton = (props: ButtonProps) => {
 };
 
 const IssuesButton = (props: ButtonProps) => {
+  const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
     <SidebarItem isHighlighted={viewTy === 'issues' || viewTy === 'issue'} onClick={onClick}>
       <Tooltip
         content="Issues (Ctrl/⌘+Shift+I), Tasks (Ctrl/⌘+Shift+T)"
-        placement="right"
+        placement={tooltipPlacement}
       >
         <button aria-label="Issues" className={btnClass} onClick={onDispatch}>
           <IconCircleDot size={24} className={btnIconClass} />
@@ -290,13 +316,14 @@ const IssuesButton = (props: ButtonProps) => {
 };
 
 const ProjectButton = (props: ButtonProps) => {
+  const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
     <SidebarItem isHighlighted={viewTy === 'project'} onClick={onClick}>
       <Tooltip
         content="Projects (Ctrl/⌘+Shift+K)"
-        placement="right"
+        placement={tooltipPlacement}
       >
         <button aria-label="Projects" className={btnClass} onClick={onDispatch}>
           <IconLayoutKanban size={24} className={btnIconClass} />
@@ -328,6 +355,21 @@ export function FileDrop() {
         <IconFileImport size={18} className="mr-1" />
         <Tooltip content="Open JSON"><span>Import JSON</span></Tooltip>
       </DropdownItem>
+      {isWeb && (
+        <DropdownItem
+          className="border-t-2 border-gray-200 dark:border-gray-600"
+          onClick={async () => {
+            try {
+              await invoke('export_backup');
+            } catch (e) {
+              console.error('Failed to export backup:', e);
+            }
+          }}
+        >
+          <IconDatabaseExport size={18} className="mr-1" />
+          <Tooltip content="Export Backup"><span>Backup</span></Tooltip>
+        </DropdownItem>
+      )}
       <DropdownItem 
         onClick={onClear} 
         className="border-t-2 border-gray-200 dark:border-gray-600"
@@ -347,11 +389,15 @@ export function FileDrop() {
 }
 
 const FileButton = () => {
+  const isHorizontal = useIsHorizontalMenu();
+  const tooltipPlacement = useTooltipPlacement();
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = 
     useState<HTMLDivElement | null>(null);
   const { styles, attributes } = usePopper(
-    btnRef.current, popperElement, { placement: 'right-start' }
+    btnRef.current, popperElement, {
+      placement: isHorizontal ? 'bottom-start' : 'right-start',
+    }
   );
 
   return (
@@ -359,7 +405,7 @@ const FileButton = () => {
       {({ open }) => (
         <>
           <Menu.Button ref={btnRef} className="hover:bg-gray-200 dark:hover:bg-gray-700">
-            <Tooltip content="File Menu" placement="right">
+            <Tooltip content="File Menu" placement={tooltipPlacement}>
               <span className={btnClass}>
                 <IconFile size={24} className={btnIconClass} />
               </span>
@@ -394,10 +440,11 @@ const BottomSection = () => {
 }
 
 const SettingsButton = () => {
+  const tooltipPlacement = useTooltipPlacement();
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   
   return (
-    <Tooltip content="Preferences" placement='right'>
+    <Tooltip content="Preferences" placement={tooltipPlacement}>
       <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
         <IconSettings size={24} className={btnIconClass} />
         </button>

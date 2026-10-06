@@ -24,6 +24,12 @@ function Sidebar(props: Props) {
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const sidebarWidth = useStore((state) => state.sidebarWidth);
   const setSidebarWidth = useStore((state) => state.setSidebarWidth);
+  const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
+  const horizontalMenu = sideMenuOrientation === 'horizontal'
+    ? 'top-12 md:top-0'
+    : sideMenuOrientation === 'vertical'
+      ? 'top-0'
+      : 'top-12 md:top-0';
   // width while dragging, saved to store (persisted) on release
   const { width, onResize, onResizeEnd } = useResizableWidth(sidebarWidth, setSidebarWidth, SIDEBAR_WIDTH);
 
@@ -68,12 +74,13 @@ function Sidebar(props: Props) {
     (styles, item) =>
       item && (
         <>
-          {isMobile() ? (
+          {isMobile(768) ? (
             <animated.div
               className="fixed inset-0 z-10"
               style={{
                 backgroundColor: styles.backgroundColor,
                 opacity: styles.backgroundOpacity,
+                top: sideMenuOrientation === 'vertical' ? 0 : '3rem',
                 display: styles.dspl.to((displ) =>
                   displ === 0 ? 'none' : 'initial'
                 ),
@@ -82,11 +89,11 @@ function Sidebar(props: Props) {
             />
           ) : null}
           <animated.div
-            className="fixed top-0 bottom-0 left-0 z-20 flex-none shadow-popover md:shadow-none md:relative md:z-0"
+            className={`fixed bottom-0 left-0 z-20 flex-none shadow-popover md:shadow-none md:relative md:z-0 ${horizontalMenu}`}
             style={{
               width,
               // overlay on mobile: keep some of the page visible
-              maxWidth: isMobile() ? '85vw' : undefined,
+              maxWidth: isMobile(768) ? '85vw' : undefined,
               transform: styles.transform,
               display: styles.dspl.to((displ) =>
                 displ === 0 ? 'none' : 'initial'

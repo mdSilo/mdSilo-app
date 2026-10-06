@@ -1,8 +1,12 @@
 import { useStore } from 'lib/store';
+import type { SideMenuOrientation } from 'lib/userSettings';
 import { isWeb } from 'file/util';
 import { BaseModal } from './BaseModal';
 import { SettingsToggle } from './SettingsToggle';
 import { CorsProxySetting } from './CorsProxySetting';
+
+const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
+  value === 'auto' || value === 'vertical' || value === 'horizontal';
 
 type Props = {
   isOpen: boolean;
@@ -19,6 +23,8 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   const setIsRTL = useStore((state) => state.setIsRTL);
   const isOpenPreOn = useStore((state) => state.isOpenPreOn);
   const setIsOpenPreOn = useStore((state) => state.setIsOpenPreOn);
+  const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
+  const setSideMenuOrientation = useStore((state) => state.setSideMenuOrientation);
   
   const fontSize = useStore((state) => state.fontSize);
   const setSize = useStore((state) => state.setFontSize);
@@ -69,14 +75,36 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           optionLeft="Left To Right" 
           optionRight="Right To Left"
         />
+        <div className="flex flex-col items-center mb-2">
+          <label htmlFor="side-menu-orientation" className="mb-2 text-base font-semibold">
+            Side Menu Orientation
+          </label>
+          <select
+            id="side-menu-orientation"
+            className="w-full p-1 rounded text-primary-500 border-none"
+            style={{ width: '12em' }}
+            value={sideMenuOrientation}
+            onChange={(event) => {
+              const orientation = event.target.value;
+              if (isSideMenuOrientation(orientation)) {
+                setSideMenuOrientation(orientation);
+              }
+            }}
+          >
+            <option value="auto">Auto (responsive)</option>
+            <option value="vertical">Vertical</option>
+            <option value="horizontal">Horizontal</option>
+          </select>
+        </div>
         {isWeb ? <CorsProxySetting /> : null}
         <div className="flex flex-col items-center mb-2">
           <div className="mb-2">
-            <h1 className="text-base font-semibold">Editor Font Family</h1>
+            <label htmlFor="select-font" className="text-base font-semibold">Editor Font Family</label>
           </div>
           <div className="flex flex-row items-center">
             <select 
               name="select-font" 
+              id="select-font"
               className="w-full p-1 rounded text-primary-500 border-none"
               style={{width: '8em'}}
               value={font || 'Default'}

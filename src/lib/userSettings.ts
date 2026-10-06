@@ -10,6 +10,8 @@ export enum Sort {
   DateCreatedDescending = 'DATE_CREATED_DESCENDING',
 }
 
+export type SideMenuOrientation = 'auto' | 'vertical' | 'horizontal';
+
 export const ReadableNameBySort = {
   [Sort.TitleAscending]: 'Title (A-Z)',
   [Sort.TitleDescending]: 'Title (Z-A)',
@@ -64,6 +66,8 @@ export type UserSettings = {
   setPinnedDir: Setter<string>;
   sidebarWidth: number;
   setSidebarWidth: Setter<number>;
+  sideMenuOrientation: SideMenuOrientation;
+  setSideMenuOrientation: Setter<SideMenuOrientation>;
   feedChannelWidth: number;
   setFeedChannelWidth: Setter<number>;
   feedArticleWidth: number;
@@ -141,6 +145,8 @@ const userSettingsSlice = (
   setPinnedDir: setter(set, 'pinnedDir'),
   sidebarWidth: SIDEBAR_WIDTH.default as number,
   setSidebarWidth: setter(set, 'sidebarWidth'),
+  sideMenuOrientation: 'auto' as SideMenuOrientation,
+  setSideMenuOrientation: setter(set, 'sideMenuOrientation'),
   feedChannelWidth: FEED_CHANNEL_WIDTH.default as number,
   setFeedChannelWidth: setter(set, 'feedChannelWidth'),
   feedArticleWidth: FEED_ARTICLE_WIDTH.default as number,

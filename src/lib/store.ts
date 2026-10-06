@@ -139,7 +139,7 @@ export type Store = {
 type PersistedState = Pick<Store,
   | 'userId' | 'darkMode' | 'font' | 'fontSize' | 'fontWt' | 'lineHeight'
   | 'isRTL' | 'isCheckSpellOn' | 'isOpenPreOn' | 'noteSort' | 'recentDir'
-  | 'pinnedDir' | 'sidebarWidth' | 'feedChannelWidth' | 'feedArticleWidth'
+  | 'pinnedDir' | 'sidebarWidth' | 'sideMenuOrientation' | 'feedChannelWidth' | 'feedArticleWidth'
   | 'useAsset' | 'activities'
 >;
 
@@ -297,6 +297,7 @@ export const store = createStore<Store>()(
         recentDir: state.recentDir,
         pinnedDir: state.pinnedDir,
         sidebarWidth: state.sidebarWidth,
+        sideMenuOrientation: state.sideMenuOrientation,
         feedChannelWidth: state.feedChannelWidth,
         feedArticleWidth: state.feedArticleWidth,
         useAsset: state.useAsset,
