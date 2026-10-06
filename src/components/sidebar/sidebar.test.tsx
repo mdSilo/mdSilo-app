@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
@@ -16,6 +16,7 @@ import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
 import SidebarHistory from './SidebarHistory';
 import SidebarNoteLink from './SidebarNoteLink';
+import SidebarNotesTree, { treeContentWidth } from './SidebarNotesTree';
 import SidebarTags from './SidebarTags';
 import SidebarSearch, { matchSort, SearchTree } from './SidebarSearch';
 import SidebarPlaylist, { computePlaylist } from './SidebarPlaylist';
@@ -449,6 +450,124 @@ describe('Sidebar', () => {
     fireEvent.click(container.querySelector('.fixed.inset-0') as Element);
     expect(store.getState().isSidebarOpen).toBe(false);
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024 });
+  });
+});
+
+describe('Sidebar resize', () => {
+  // jsdom lacks PointerEvent: fireEvent.pointer* would drop clientX and button
+  beforeAll(() => {
+    if (typeof window.PointerEvent === 'undefined') {
+      class PointerEventPolyfill extends MouseEvent {
+        pointerId: number;
+        constructor(type: string, init: PointerEventInit = {}) {
+          super(type, init);
+          this.pointerId = init.pointerId ?? 0;
+        }
+      }
+      (window as unknown as Record<string, unknown>).PointerEvent = PointerEventPolyfill;
+    }
+  });
+  afterAll(() => {
+    delete (window as unknown as Record<string, unknown>).PointerEvent;
+  });
+
+  const handle = () => screen.getByRole('separator', { name: 'Resize sidebar' });
+  const panelWidth = () => (handle().parentElement as HTMLElement).style.width;
+
+  test('drags to resize and saves the width on release', () => {
+    store.getState().setIsOpenPreOn(false);
+    renderWithView(<Sidebar />);
+    expect(panelWidth()).toBe('256px');
+    fireEvent.pointerDown(handle(), { button: 0, clientX: 300, pointerId: 1 });
+    fireEvent.pointerMove(handle(), { clientX: 400, pointerId: 1 });
+    expect(panelWidth()).toBe('356px');
+    // not saved while dragging
+    expect(store.getState().sidebarWidth).toBe(256);
+    fireEvent.pointerUp(handle(), { clientX: 400, pointerId: 1 });
+    expect(store.getState().sidebarWidth).toBe(356);
+    expect(panelWidth()).toBe('356px');
+    expect(document.body.style.cursor).toBe('');
+  });
+
+  test('clamps the width', () => {
+    store.getState().setIsOpenPreOn(false);
+    renderWithView(<Sidebar />);
+    fireEvent.pointerDown(handle(), { button: 0, clientX: 300, pointerId: 1 });
+    fireEvent.pointerMove(handle(), { clientX: 5000, pointerId: 1 });
+    fireEvent.pointerUp(handle(), { pointerId: 1 });
+    expect(store.getState().sidebarWidth).toBe(640);
+    fireEvent.pointerDown(handle(), { button: 0, clientX: 300, pointerId: 1 });
+    fireEvent.pointerMove(handle(), { clientX: -5000, pointerId: 1 });
+    fireEvent.pointerUp(handle(), { pointerId: 1 });
+    expect(store.getState().sidebarWidth).toBe(160);
+  });
+
+  test('ignores moves without a drag and non-primary buttons', () => {
+    store.getState().setIsOpenPreOn(false);
+    renderWithView(<Sidebar />);
+    fireEvent.pointerMove(handle(), { clientX: 400, pointerId: 1 });
+    fireEvent.pointerDown(handle(), { button: 2, clientX: 300, pointerId: 1 });
+    fireEvent.pointerMove(handle(), { clientX: 400, pointerId: 1 });
+    fireEvent.pointerUp(handle(), { pointerId: 1 });
+    expect(panelWidth()).toBe('256px');
+    expect(store.getState().sidebarWidth).toBe(256);
+  });
+
+  test('resizes by keyboard and resets on double click', () => {
+    store.getState().setIsOpenPreOn(false);
+    store.getState().setSidebarWidth(400);
+    renderWithView(<Sidebar />);
+    expect(panelWidth()).toBe('400px');
+    fireEvent.keyDown(handle(), { key: 'ArrowRight' });
+    expect(store.getState().sidebarWidth).toBe(416);
+    fireEvent.keyDown(handle(), { key: 'ArrowLeft', shiftKey: true });
+    expect(store.getState().sidebarWidth).toBe(352);
+    fireEvent.keyDown(handle(), { key: 'Enter' });
+    expect(store.getState().sidebarWidth).toBe(352);
+    fireEvent.doubleClick(handle());
+    expect(store.getState().sidebarWidth).toBe(256);
+  });
+});
+
+describe('SidebarNotesTree horizontal scroll', () => {
+  const grid = () => document.querySelector('.ReactVirtualized__Grid') as HTMLElement;
+  const inner = () => document.querySelector('.ReactVirtualized__Grid__innerScrollContainer') as HTMLElement;
+
+  test('fits short rows without horizontal scroll', () => {
+    renderWithView(withContainer(
+      <SidebarNotesTree data={[{ node: treeItem('/n/a.md', 'a'), depth: 0, isExpanded: false }]} className="h-full" />
+    ));
+    expect(grid().style.overflowX).toBe('hidden');
+    expect(inner().style.width).toBe('300px');
+  });
+
+  test('scrolls horizontally when deep rows overflow', () => {
+    const title = 'a-quite-long-note-title-at-depth-ten';
+    renderWithView(withContainer(
+      <SidebarNotesTree
+        data={[
+          { node: treeItem('/n/a.md', 'a'), depth: 0, isExpanded: false },
+          { node: treeItem(`/n/deep/${title}.md`, title), depth: 10, isExpanded: false },
+        ]}
+        className="h-full"
+      />
+    ));
+    expect(grid().style.overflowX).toBe('auto');
+    // jsdom has no canvas: titles are estimated at 8px per char
+    const expected = treeContentWidth(
+      [{ node: treeItem('/x', title), depth: 10, isExpanded: false }],
+      (text) => text.length * 8
+    );
+    expect(expected).toBeGreaterThan(300);
+    expect(inner().style.width).toBe(`${expected}px`);
+  });
+
+  test('content width grows with depth and title', () => {
+    const row = (title: string, depth: number) => ({ node: treeItem('/x', title), depth, isExpanded: false });
+    const measure = (text: string) => text.length;
+    expect(treeContentWidth([], measure)).toBe(0);
+    expect(treeContentWidth([row('ab', 2)], measure) - treeContentWidth([row('ab', 0)], measure)).toBe(32);
+    expect(treeContentWidth([row('a', 0), row('abcd', 0)], measure) - treeContentWidth([row('a', 0)], measure)).toBe(3);
   });
 });
 

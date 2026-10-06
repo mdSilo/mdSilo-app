@@ -259,6 +259,7 @@ export const store = createVanilla<Store>(
         noteSort: state.noteSort,
         recentDir: state.recentDir,
         pinnedDir: state.pinnedDir,
+        sidebarWidth: state.sidebarWidth,
         useAsset: state.useAsset,
         activities: state.activities,
       }),

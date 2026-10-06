@@ -62,7 +62,11 @@ export type UserSettings = {
   deleteRecentDir: (dir: string) => void;
   pinnedDir: string;
   setPinnedDir: Setter<string>;
+  sidebarWidth: number;
+  setSidebarWidth: Setter<number>;
 };
+
+export const SIDEBAR_WIDTH = { min: 160, max: 640, default: 256 } as const;
 
 const userSettingsSlice = (
   set: (fn: (draft: Draft<Store>) => void) => void
@@ -128,6 +132,8 @@ const userSettingsSlice = (
   },
   pinnedDir: '',
   setPinnedDir: setter(set, 'pinnedDir'),
+  sidebarWidth: SIDEBAR_WIDTH.default as number,
+  setSidebarWidth: setter(set, 'sidebarWidth'),
 });
 
 export default userSettingsSlice;
