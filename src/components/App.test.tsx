@@ -19,7 +19,8 @@ describe('App', () => {
     expect(invoke).toHaveBeenCalledWith('close_splashscreen');
     expect(document.getElementById('app-container')).toHaveClass('dark');
     expect(screen.getByText('Hello, welcome to mdSilo Desktop.')).toBeInTheDocument();
-    expect(screen.getByText('mdSilo')).toBeInTheDocument();
+    // the logo menu (first side menu button) replaced the sidebar header
+    expect(document.querySelector('#side-menu-btns button')).toBeInTheDocument();
   });
 
   test('uses light mode when dark mode is off', async () => {
@@ -60,7 +61,7 @@ describe('App', () => {
     await act(async () => {
       render(<App />);
     });
-    await userEvent.click(screen.getByText('mdSilo'));
+    await userEvent.click(document.querySelector('#side-menu-btns button') as HTMLElement);
     await userEvent.click(screen.getByText('Settings'));
     expect(await screen.findByText('Editor Font Family')).toBeInTheDocument();
     act(() => store.getState().setIsSettingsOpen(false));

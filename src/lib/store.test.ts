@@ -11,7 +11,6 @@ describe('store defaults', () => {
     expect(s.currentNoteId).toBe('');
     expect(s.sidebarTab).toBe(SidebarTab.Silo);
     expect(s.sidebarSearchType).toBe('content');
-    expect(s.currentBoard).toBe('default');
     expect(s.isLoading).toBe(false);
     expect(s.isLoaded).toBe(false);
     expect(s.currentArticle).toBeNull();

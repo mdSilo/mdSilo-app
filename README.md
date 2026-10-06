@@ -45,7 +45,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 - Markdown and extensions: Diagram, Table, Math/Chemical, Code block(Highlight)...   
 - Slash commands, Hovering toolbar, hotkeys and more toolkits...   
 - Chronicle view, Graph view, Task view... 
-- Kanban to make personal knowledge base a serious project;  
+- Projects (Kanban boards and tables) to make personal knowledge base a serious project;  
 - Built-in issue tracker (GitHub-like): issues with labels, milestones, comments and timeline, project boards and tables, two-way links with notes (`[[Note]]` in issues, `[#12](issue:12)` in notes), stored in `issues.json` in the workspace;  
 - Full-text search;  
 - Dark and Light Mode;  
@@ -58,7 +58,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 
 ![editor](https://user-images.githubusercontent.com/1472485/222804255-f2c4a22b-d7b2-4621-b508-20e1b8545e45.png)
 
-- Kanban board: to manage the process of knowledge base growing
+- Projects board (Kanban): to manage the process of knowledge base growing. Boards from the old `kanban.json` are moved into Projects automatically (a backup is kept as `kanban.json.bak`)
 
 ![kanban](https://github.com/mdSilo/mdSilo-app/assets/1472485/e5293e4e-ddf7-4510-81c2-8ed358ca8a09)
 
@@ -127,8 +127,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 
 - Organize writings
   - [X] Folder management 
-  - [X] Kanban board  
-  - [X] Issues and Projects  
+  - [X] Issues and Projects (Kanban boards)  
   - [X] Hashtag 
   - [X] Backlinks 
   - [X] Recent history 

@@ -4,7 +4,7 @@ import {
   TbMenu2 as IconMenu2, TbDna as IconDna, TbCalendar as IconCalendar, TbFile as IconFile, TbFeather as IconFeather, TbCheckbox as IconCheckbox,
   TbFolderPlus as IconFolderPlus, TbFileText as IconFileText, TbDeviceFloppy as IconDeviceFloppy, TbClearAll as IconClearAll,
   TbFileImport as IconFileImport, TbRss as IconRss, TbSettings as IconSettings, TbLayoutKanban as IconLayoutKanban,
-  TbCircleDot as IconCircleDot, TbLayoutBoardSplit as IconLayoutBoardSplit, TbBrowser as IconBrowser,
+  TbCircleDot as IconCircleDot, TbBrowser as IconBrowser,
   TbPizza as IconPizza, TbInfoCircle as IconInfoCircle, TbCurrentLocation as IconCurrentLocation,
   TbDatabaseExport as IconDatabaseExport,
 } from 'react-icons/tb';
@@ -50,18 +50,14 @@ export default function SideMenu() {
         hotkey: 'mod+shift+t',
         callback: () => dispatchView({view: 'task'}),
       },
+      // Projects replaced the Kanban board and keep its hotkey
       {
         hotkey: 'mod+shift+k',
-        callback: () => dispatchView({view: 'kanban'}),
+        callback: () => dispatchView({view: 'project'}),
       },
-      // mod+shift+p is taken by the Playlist sidebar tab, so B(oard) for projects
       {
         hotkey: 'mod+shift+i',
         callback: () => dispatchView({view: 'issues'}),
-      },
-      {
-        hotkey: 'mod+shift+b',
-        callback: () => dispatchView({view: 'project'}),
       },
     ],
     [dispatchView]
@@ -78,7 +74,6 @@ export default function SideMenu() {
         {currentDir ? (
         <>
           <NewButton />
-          <KanbanButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'kanban'})} />
           <IssuesButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'issues'})} />
           <ProjectButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'project'})} />
           <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
@@ -294,23 +289,6 @@ const TaskButton = (props: ButtonProps) => {
   );
 };
 
-const KanbanButton = (props: ButtonProps) => {
-  const { viewTy, onClick, onDispatch } = props;
-
-  return (
-    <SidebarItem isHighlighted={viewTy === 'kanban'} onClick={onClick}>
-      <Tooltip
-        content="Kanban Board (Ctrl/⌘+Shift+K)"
-        placement="right"
-      >
-        <button className={btnClass} onClick={onDispatch}>
-          <IconLayoutKanban size={24} className={btnIconClass} />
-        </button>
-      </Tooltip>
-    </SidebarItem>
-  );
-};
-
 const IssuesButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
@@ -334,11 +312,11 @@ const ProjectButton = (props: ButtonProps) => {
   return (
     <SidebarItem isHighlighted={viewTy === 'project'} onClick={onClick}>
       <Tooltip
-        content="Projects (Ctrl/⌘+Shift+B)"
+        content="Projects (Ctrl/⌘+Shift+K)"
         placement="right"
       >
         <button aria-label="Projects" className={btnClass} onClick={onDispatch}>
-          <IconLayoutBoardSplit size={24} className={btnIconClass} />
+          <IconLayoutKanban size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>

@@ -4,7 +4,6 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import Chronicle from './chronicle';
 import Journals from './journals';
 import Tasks from './tasks';
-import Kanban from './kanban';
 import Graph from './graph';
 import NotePage from './md';
 import HashTags from "./hashtags";
@@ -26,8 +25,6 @@ export default function MainView() {
         <Chronicle />
       ) : viewTy === 'task' ? (
         <Tasks />
-      ) : viewTy === 'kanban' ? (
-        <Kanban />
       ) : viewTy === 'issues' ? (
         <Issues />
       ) : viewTy === 'issue' ? (
@@ -69,8 +66,8 @@ A lightweight, local-first personal Wiki and knowledge base for storing ideas, t
   - 📝 Markdown and extensions: Math/Chemical Equation, Diagram, Hashtag...   
   - 🗄️ Build personal wiki with bidirectional wiki links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...  
-  - 📋 Kanban board to manage the process of knowledge growing   
-  - 🐞 Built-in issue tracker: labels, milestones, comments and project boards, linked to notes   
+  - 📋 Projects: Kanban boards and tables to manage the process of knowledge growing   
+  - 🐞 Built-in issue tracker: labels, milestones and comments, linked to notes   
   - 🕸️ Graph view to visualize the networked writing  
   - 📅 Chronicle view and Daily activities graph  
   - ✔️ Task view to track todo/doing/done  

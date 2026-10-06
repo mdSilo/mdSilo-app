@@ -35,8 +35,6 @@ vi.mock('file/write', () => ({
   writeJsonFile: vi.fn(async () => undefined),
 }));
 vi.mock('copy-to-clipboard', () => ({ default: vi.fn() }));
-// kanban.json can only be read inside Tauri
-vi.mock('components/kanban/updateCard', () => ({ updateCardLinks: vi.fn(async () => undefined) }));
 
 const joinPaths = ({ root, parts }: Record<string, unknown>) => [root, ...(parts as string[])].join('/');
 const dirOf = (p: string) => p.substring(0, p.lastIndexOf('/'));

@@ -5,6 +5,7 @@ import { store, useStore } from 'lib/store';
 import {
   createIssue as createIssueOp, defaultIssueData, NewIssue, normalizeIssueData, renameNoteRefs,
 } from './issueOps';
+import { LEGACY_KANBAN_FILE, migrateKanbans, parseLegacyKanbans } from './migrateKanban';
 import type { IssueData } from './types';
 
 export const ISSUE_FILE = 'issues.json';
@@ -35,6 +36,35 @@ async function writeIssues(dir: string, data: IssueData) {
   await new FileAPI(ISSUE_FILE, dir).writeFile(JSON.stringify(data, null, 2));
 }
 
+/**
+ * One-time move of the old kanban.json boards into Projects. issues.json is
+ * written first, then kanban.json is kept as kanban.json.bak and removed, so
+ * the boards are not imported twice. Only the issues.json format remains.
+ */
+async function migrateLegacyKanban(dir: string, data: IssueData, fresh: boolean) {
+  const kanbanFile = new FileAPI(LEGACY_KANBAN_FILE, dir);
+  let text = '';
+  try {
+    text = await kanbanFile.readFile();
+  } catch {
+    return data; // no file system
+  }
+  const kanbans = parseLegacyKanbans(text);
+  if (!kanbans) return data;
+  const migrated = migrateKanbans(data, kanbans, fresh);
+  try {
+    await writeIssues(dir, migrated);
+    await new FileAPI(`${LEGACY_KANBAN_FILE}.bak`, dir).writeFile(text);
+    // if deleting fails, an empty board list keeps it from being imported again
+    const deleted = await kanbanFile.deleteFiles().catch(() => false);
+    if (!deleted) await kanbanFile.writeFile('{}');
+  } catch (e) {
+    console.error('Failed to migrate kanban.json', e);
+    return data;
+  }
+  return migrated;
+}
+
 export const useIssueStore = create<IssueStore>((set, get) => ({
   data: defaultIssueData(),
   dir: undefined,
@@ -45,9 +75,11 @@ export const useIssueStore = create<IssueStore>((set, get) => ({
     await get().flush();
     const seq = ++loadSeq;
     let data: IssueData;
+    let fresh = false; // no issues.json yet
     try {
       const text = await new FileAPI(ISSUE_FILE, initDir).readFile();
       if (!text || !text.trim()) {
+        fresh = true;
         data = defaultIssueData();
       } else {
         try {
@@ -63,6 +95,7 @@ export const useIssueStore = create<IssueStore>((set, get) => ({
       // e.g. not in Tauri
       data = defaultIssueData();
     }
+    data = await migrateLegacyKanban(initDir, data, fresh);
     if (seq !== loadSeq) return; // a newer load won
     set({ data, dir: initDir, isLoaded: true });
   },

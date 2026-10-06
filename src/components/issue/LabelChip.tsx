@@ -56,7 +56,7 @@ type ColorProps = {
   onChange: (color: string) => void;
 };
 
-/** Palette plus a free color input, like the kanban SetColor. */
+/** Palette plus a free color input. */
 export function ColorPicker({ value, onChange }: ColorProps) {
   return (
     <div className="flex flex-wrap items-center gap-1">
