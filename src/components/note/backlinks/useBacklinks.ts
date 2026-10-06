@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { parser, getJSONContent } from "mdsmirror";
+import { parser } from "mdsmirror";
 import { NoteMap, useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
 import { isUrl } from 'utils/helper';
@@ -81,38 +81,15 @@ export const computeLinkedBacklinks = (
 
 const computeLinkedMatches = (content: string, noteTitle: string) => {
   const out: BacklinkMatch[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const findMatch = (node: any, context?: any) => {
-    if (node.text && node.marks && node.marks.length > 0) {
-      for (const mark of node.marks) {
-        if ((mark.type === "link" || mark.type === 'wikilink') && mark.attrs) {
-          const href = mark.attrs.href;
-          if (href && !isUrl(href)) {
-            const title = decodeURI(href);
-            if (noteTitle === title) {
-              out.push({ text: node.text, from: node.from, to: node.to, context })
-            }
-          }
-        }
+  for (const textRuns of getMarkdownTextRuns(content)) {
+    const context = textRuns.map(({ text }) => ({ text }));
+    for (const run of textRuns) {
+      if (run.href && !isUrl(run.href) && decodeURI(run.href) === noteTitle) {
+        out.push({ text: run.text, from: run.from, to: run.to, context });
       }
     }
-    // recursively
-    if (node.content?.length > 0) {
-      for (const n of node.content) {
-        findMatch(n, node.content);
-      }
-    }
-
-    return out;
   }
-
-  const doc = parser.parse(content);
-  // console.log(">> doc: ", doc, content)
-  const json = getJSONContent(doc); 
-  // console.log(">>json: ", noteTitle, json)
-  const result: BacklinkMatch[] = findMatch(json);
-
-  return result;
+  return out;
 };
 
 
@@ -145,27 +122,80 @@ const computeUnlinkedBacklinks = (
 
 const computeUnlinkedMatches = (content: string, noteTitle: string) => {
   const out: BacklinkMatch[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const findMatch = (node: any, context?: any) => {
-    if (node.text && node.text.includes(noteTitle)) {
-      out.push({
-        text: node.text,
-        from: node.from,
-        to: node.to,
-        context,
-      });
-    }
-    if (node.content?.length > 0) {
-      for (const n of node.content) {
-        findMatch(n, node.content);
+  for (const textRuns of getMarkdownTextRuns(content)) {
+    const context = textRuns.map(({ text }) => ({ text }));
+    for (const run of textRuns) {
+      if (run.text.includes(noteTitle)) {
+        out.push({
+          text: run.text,
+          from: run.from,
+          to: run.to,
+          context,
+        });
       }
     }
-    return out;
+  }
+  return out;
+};
+
+type MarkdownTextRun = {
+  text: string;
+  from: number;
+  to: number;
+  href?: string;
+};
+
+const getMarkdownTextRuns = (content: string): MarkdownTextRun[][] => {
+  const textRuns: MarkdownTextRun[][] = [];
+  let contentOffset = 0;
+
+  for (const token of parser.tokenizer.parse(content, {})) {
+    if (
+      token.type !== 'inline' ||
+      typeof token.content !== 'string' ||
+      !token.children?.length
+    ) {
+      continue;
+    }
+
+    let inlineOffset = content.indexOf(token.content, contentOffset);
+    if (inlineOffset < 0) {
+      inlineOffset = contentOffset;
+    }
+    contentOffset = inlineOffset + token.content.length;
+
+    let textOffset = 0;
+    let href: string | undefined;
+    const runs: MarkdownTextRun[] = [];
+
+    for (const child of token.children) {
+      if (child.type === 'link_open') {
+        href = child.attrGet('href') || undefined;
+      } else if (child.type === 'link_close') {
+        href = undefined;
+      } else if (
+        (child.type === 'text' || child.type === 'code_inline') &&
+        typeof child.content === 'string'
+      ) {
+        let textIndex = token.content.indexOf(child.content, textOffset);
+        if (textIndex < 0) {
+          textIndex = textOffset;
+        }
+        const from = inlineOffset + textIndex;
+        runs.push({
+          text: child.content,
+          from,
+          to: from + child.content.length,
+          href,
+        });
+        textOffset = textIndex + child.content.length;
+      }
+    }
+
+    if (runs.length > 0) {
+      textRuns.push(runs);
+    }
   }
 
-  const doc = parser.parse(content);
-  const json = getJSONContent(doc);
-  const result: BacklinkMatch[] = findMatch(json);
-  
-  return result;
+  return textRuns;
 };
