@@ -127,8 +127,11 @@ describe('Feed view', () => {
     setup();
     const row = (await screen.findByText('Tech')).closest('.cursor-pointer') as HTMLElement;
     expect(row).toHaveClass('whitespace-nowrap');
-    const scroller = screen.getByRole('separator', { name: 'Resize channel list' }).previousElementSibling;
+    const scroller = screen.getByTestId('channel-list-scroller');
     expect(scroller).toHaveClass('overflow-auto');
+    expect(scroller).toContainElement(row);
+    // toolbar stays out of the horizontal scroll
+    expect(scroller).not.toContainElement(screen.getAllByRole('button')[0]);
   });
 
   test('shows the store article when none is selected', async () => {

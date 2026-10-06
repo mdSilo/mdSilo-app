@@ -162,8 +162,7 @@ export default function Feed() {
           className={`relative flex-none border-r-2 border-gray-200 dark:border-gray-800 ${hideCol ? 'hidden' : ''}`}
           style={{ width: channelCol.width }}
         >
-          {/* long feed titles do not wrap: scroll horizontally */}
-          <div className="h-full p-1 overflow-auto">
+          <div className="h-full p-1 overflow-hidden">
             <ChannelList 
               channelList={channelList} 
               refreshList={refreshList} 
