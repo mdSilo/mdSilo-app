@@ -31,6 +31,8 @@ import IssueRefs from './IssueRefs';
 import updateBacklinks from './backlinks/updateBacklinks';
 
 
+const CONTENT_SYNC_MS = 800;
+
 type Props = {
   noteId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -103,24 +105,45 @@ function Note(props: Props) {
   const upsertNote = useStore((state) => state.upsertNote);
   const upsertTree = useStore((state) => state.upsertTree);
 
+  // Keep the note content in the store fresh too (tasks, issue sync,
+  // backlinks and search read it), debounced to not re-render on each key.
+  const contentTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pendingContent = useRef<string | null>(null);
+  const flushContent = useCallback(() => {
+    if (contentTimer.current) clearTimeout(contentTimer.current);
+    contentTimer.current = undefined;
+    if (pendingContent.current !== null) {
+      store.getState().updateNote({ id: noteId, content: pendingContent.current });
+      pendingContent.current = null;
+    }
+  }, [noteId]);
+  const syncContent = useCallback((text: string) => {
+    pendingContent.current = text;
+    if (contentTimer.current) clearTimeout(contentTimer.current);
+    contentTimer.current = setTimeout(flushContent, CONTENT_SYNC_MS);
+  }, [flushContent]);
+  useEffect(() => flushContent, [flushContent]);
+
   // write to local file
   const onContentChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
       await writeFile(notePath, text);
+      syncContent(text);
       // update TOC if any
       getHeading();
     },
-    [notePath]
+    [notePath, syncContent]
   );
 
   const onMarkdownChange = useCallback(
     async (text: string) => {
       // console.log("on markdown content change", text);
       await writeFile(notePath, text);
+      syncContent(text);
     },
-    [notePath]
+    [notePath, syncContent]
   );
 
   setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));

@@ -51,8 +51,9 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
   return (
     <div data-testid="note-tasks">
       <p className="mb-3 text-sm text-gray-500">
-        Tasks written in notes with <code>#todo#</code>, <code>#doing#</code> or <code>#done#</code>.
-        Create an issue from a task to track it here; the issue links back to its note.
+        Tasks written in notes with <code>#todo#</code>, <code>#doing#</code>, <code>#done#</code> or as
+        checkboxes (<code>- [ ]</code>, <code>- [x]</code>). Create an issue from a task to track it here:
+        the issue links back to its note and follows the task when it changes or is removed.
       </p>
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {(['all', ...TASK_TAGS] as Filter[]).map((f) => (
@@ -63,7 +64,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
             className={`px-2 py-1 text-sm rounded ${filter === f ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? 'All' : `#${f}`} <span className="text-xs text-gray-500">{count(f)}</span>
+            {f === 'all' ? 'All' : f[0].toUpperCase() + f.slice(1)} <span className="text-xs text-gray-500">{count(f)}</span>
           </button>
         ))}
         <label className="flex items-center gap-1 ml-2 text-sm">
@@ -87,7 +88,9 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
                 className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 last:border-b-0 dark:border-gray-700"
                 data-testid="note-task"
               >
-                <span className={`px-2 text-xs rounded-full ${TAG_CLASS[task.tag]}`}>#{task.tag}</span>
+                <span className={`px-2 text-xs rounded-full whitespace-nowrap ${TAG_CLASS[task.tag]}`}>
+                  {task.kind === 'checkbox' ? (task.tag === 'done' ? '[x]' : '[ ]') : `#${task.tag}`}
+                </span>
                 <div className="flex-1 min-w-0">
                   <div className="break-words">{task.text || <i className="text-gray-500">(no text)</i>}</div>
                   <button type="button" className="text-xs link" title={task.noteId} onClick={() => openNote(task.noteId)}>

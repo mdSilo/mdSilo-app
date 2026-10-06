@@ -1,7 +1,19 @@
 export type IssueState = 'open' | 'closed';
 
-/** A task in a note: the note path and the task text. */
-export type NoteTaskRef = { note: string; text: string };
+export type TaskTag = 'todo' | 'doing' | 'done';
+/** tag: #todo# #doing# #done#; checkbox: - [ ] / - [x] */
+export type TaskKind = 'tag' | 'checkbox';
+
+/** The note task an issue was created from, kept in sync with the note. */
+export type NoteTaskRef = {
+  note: string; // note path
+  text: string; // task text, identifies the task in the note
+  kind?: TaskKind; // default 'tag'
+  /** the task's tag at the last sync; only changes made in the note are applied */
+  tag?: TaskTag;
+  /** the task is no longer in the note (the issue was closed) */
+  missing?: boolean;
+};
 
 export type Label = {
   id: string;
@@ -27,7 +39,8 @@ export type IssueEventKind =
   | 'milestoned'
   | 'demilestoned'
   | 'renamed'
-  | 'status';
+  | 'status'
+  | 'task'; // synced from the source task in a note
 
 export type CommentItem = {
   id: string;

@@ -1,5 +1,6 @@
 import MsEditor from "mdsmirror";
 import ErrorBoundary from 'components/misc/ErrorBoundary';
+import useNoteTaskSync from 'components/issue/useNoteTaskSync';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import Chronicle from './chronicle';
 import Journals from './journals';
@@ -11,6 +12,8 @@ import Issues, { IssuePage } from "./issues";
 import ProjectView from "./project";
 
 export default function MainView() {
+  // issues created from note tasks follow their tasks, whatever the view
+  useNoteTaskSync();
   const currentView = useCurrentViewContext();
   const viewTy = currentView.state.view;
   // 
@@ -64,7 +67,7 @@ A lightweight, local-first personal Wiki and knowledge base for storing ideas, t
   - 🗄️ Build personal wiki with bidirectional wiki links 
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...  
   - 📋 Projects: Kanban boards and tables to manage the process of knowledge growing   
-  - 🐞 Built-in issue tracker: labels, milestones and comments, linked to notes; #todo# #doing# #done# tasks in notes become issues   
+  - 🐞 Built-in issue tracker: labels, milestones and comments, linked to notes; tasks in notes (#todo# #doing# #done#, checkboxes) become issues   
   - 🕸️ Graph view to visualize the networked writing  
   - 📅 Chronicle view and Daily activities graph  
   - 🔍 Full-text search 

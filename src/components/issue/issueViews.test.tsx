@@ -431,7 +431,7 @@ describe('Tasks tab', () => {
       '#todoWrite specPlanCreate issue', '#doingShip itPlanCreate issue', '#doneArchiveOldCreate issue',
     ]);
     // filter by tag
-    await userEvent.click(screen.getByRole('button', { name: /^#doing/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Doing/ }));
     expect(rows()).toEqual(['#doingShip itPlanCreate issue']);
     await userEvent.click(screen.getByRole('button', { name: /^All/ }));
     // one issue
@@ -453,6 +453,21 @@ describe('Tasks tab', () => {
     await go({ view: 'issues', tab: 'tasks' });
     await userEvent.click(screen.getAllByRole('button', { name: 'Old' })[0]);
     expect(viewState()).toEqual({ view: 'md', params: { noteId: '/w/Old.md', hash: '' } });
+  });
+
+  test('issues follow their note tasks while the app runs', async () => {
+    seedTasks();
+    await renderApp({ view: 'issues', tab: 'tasks' });
+    await waitFor(() => expect(screen.getAllByTestId('note-task')).toHaveLength(3));
+    await userEvent.click(screen.getByRole('button', { name: 'Create issues for 3 tasks' }));
+    expect(data().issues.map((i) => i.state)).toEqual(['open', 'open', 'closed']);
+    // the note is edited: one task done, one removed
+    act(() => store.getState().updateNote({ id: '/w/Plan.md', content: 'Write spec #done#' }));
+    await waitFor(() => expect(data().issues.map((i) => i.state)).toEqual(['closed', 'closed', 'closed']), { timeout: 3000 });
+    expect(data().issues[1].noteTask?.missing).toBe(true);
+    expect(screen.getAllByTestId('note-task')).toHaveLength(2);
+    await go({ view: 'issue', number: 2 });
+    expect(screen.getByText('synced with its note task: the task was removed from Plan')).toBeInTheDocument();
   });
 
   test('tabs are part of the view state', async () => {

@@ -231,6 +231,13 @@ export const setMilestone = (data: IssueData, num: number, milestoneId?: string)
     }
   });
 
+/** Log an event on an issue's timeline. */
+export const addEvent = (data: IssueData, num: number, event: IssueEventKind, detail?: string) =>
+  produce(data, (d) => {
+    const issue = findIssue(d, num);
+    if (issue) pushEvent(issue, event, detail);
+  });
+
 // comments
 
 export const addComment = (data: IssueData, num: number, body: string) =>

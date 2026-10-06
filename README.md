@@ -122,7 +122,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 
 - View
   - [X] Graph
-  - [X] Tasks (`#todo#` `#doing#` `#done#` in notes, turned into issues)
+  - [X] Tasks (`#todo#` `#doing#` `#done#` and `- [ ]` checkboxes in notes, turned into issues that stay in sync)
   - [X] Chronicle 
 
 - Organize writings

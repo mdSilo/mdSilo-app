@@ -7,7 +7,7 @@ Decisions confirmed with you:
 - Storage: one `issues.json` in `initDir`, next to `kanban.json`.
 - Kanban: a new, separate **Project** view. The existing free-form Kanban stays as it is.
   - **Update:** the free-form Kanban was later merged into Projects. On load, `kanban.json` boards are converted once by `migrateKanbans` (`src/components/issue/migrateKanban.ts`): boards → projects, columns → statuses, cards → issues. The file is then kept as `kanban.json.bak` and removed; only `issues.json` is used afterwards.
-  - **Update:** the Task view was also merged: tasks written in notes as `#todo#`, `#doing#` or `#done#` are listed in the Issues view's Tasks tab (`src/components/issue/noteTasks.ts`, `NoteTaskList.tsx`). Each links to its note and can become an issue linked to it (`issue.noteTask` remembers the source); `#done#` tasks become closed issues. The checkbox-based task lists of the old view were dropped.
+  - **Update:** the Task view was also merged: tasks written in notes as `#todo#`, `#doing#` or `#done#` are listed in the Issues view's Tasks tab (`src/components/issue/noteTasks.ts`, `NoteTaskList.tsx`). Each links to its note and can become an issue linked to it (`issue.noteTask` remembers the source); `#done#` tasks become closed issues. Checkbox tasks (`- [ ]` todo, `- [x]` done) are included too. `syncNoteTasks` (run by `useNoteTaskSync` from `MainView`) keeps such issues in line with their task: a tag/checkbox change in the note moves and opens/closes the issue, a removed task (or deleted note) closes it with a timeline event, and only changes made in the note are applied.
 - Note references: two-way. Issues link to notes, notes link to issues, and the note page shows "Referenced by issues".
 - Comments plus an automatic event timeline.
 
