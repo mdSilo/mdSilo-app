@@ -165,6 +165,21 @@ describe('persistence', () => {
     setItem.mockRestore();
   });
 
+  test('loads settings saved by the previous version', async () => {
+    // as written by zustand 3 persist: a JSON string, stored as JSON
+    const saved = JSON.stringify({ state: { darkMode: false, fontSize: 1.3, sidebarWidth: 320 }, version: 1 });
+    localStorage.setItem('mdsilo-storage', JSON.stringify(saved));
+    const persist = (store as unknown as { persist: { rehydrate: () => Promise<void> } }).persist;
+    await persist.rehydrate();
+    expect(store.getState().darkMode).toBe(false);
+    expect(store.getState().fontSize).toBe(1.3);
+    expect(store.getState().sidebarWidth).toBe(320);
+    // unknown or broken data is ignored
+    localStorage.setItem('mdsilo-storage', JSON.stringify('not json'));
+    await persist.rehydrate();
+    expect(store.getState().fontSize).toBe(1.3);
+  });
+
   test('finishes hydrating on first launch w/o saved settings', async () => {
     localStorage.clear();
     const persist = (store as unknown as { persist: { rehydrate: () => Promise<void>; hasHydrated: () => boolean } }).persist;

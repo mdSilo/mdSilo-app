@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import create from 'zustand';
+import { create } from 'zustand';
 import FileAPI from 'file/files';
 import { store, useStore } from 'lib/store';
 import {

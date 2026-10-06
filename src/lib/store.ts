@@ -1,7 +1,7 @@
-import create, { State, StateCreator } from 'zustand';
-import createVanilla from 'zustand/vanilla';
-import { persist, StateStorage } from 'zustand/middleware';
-import produce, { Draft } from 'immer';
+import { useStore as useZustandStore, type StoreApi } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
+import { produce, type Draft } from 'immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
 import { ArticleType, PodType } from 'types/model';
@@ -9,36 +9,46 @@ import type { ActivityRecord } from 'components/view/HeatMap';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettings';
 
-export { default as shallowEqual } from 'zustand/shallow';
+export { shallow as shallowEqual } from 'zustand/shallow';
 
 type NoteUpdate = PickPartial<
   Note, // id required
   'title' | 'content' | 'file_path' | 'cover' | 'created_at' | 'updated_at' | 'is_daily'
 >;
 
+type ImmerSet<T> = (fn: (draft: Draft<T>) => void) => void;
+
+// update state by mutating an immer draft
 const immer =
-  <T extends State>(
-    config: StateCreator<T, (fn: (draft: Draft<T>) => void) => void>
-  ): StateCreator<T> =>
-  (set, get, api) => config((fn) => set(produce<T>(fn)), get, api);
+  <T>(config: (set: ImmerSet<T>, get: () => T, api: StoreApi<T>) => T) =>
+  (set: StoreApi<T>['setState'], get: () => T, api: StoreApi<T>): T =>
+    config((fn) => set(produce<T>(fn)), get, api);
 
 // last value written per storage key
 const lastSaved: Record<string, string> = {};
 
-// storage in LOCAL_DATA_DIR
-const storage: StateStorage = {
-  getItem: async (name: string): Promise<string | null> => {
+// storage in LOCAL_DATA_DIR, saved as a JSON string (same format as before)
+const storage: PersistStorage<PersistedState> = {
+  getItem: async (name: string): Promise<StorageValue<PersistedState> | null> => {
     // missing key is `{}`: return null, otherwise zustand fails to parse it
     // and never finishes hydrating on the first launch
     const value = await Storage.get(name);
-    return typeof value === 'string' ? value : null;
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    // persist runs on every store update: skip writing what's already saved
-    if (lastSaved[name] === value) return;
+    if (typeof value !== 'string') return null;
+    // as saved: no need to write it back unchanged
     lastSaved[name] = value;
     try {
-      await Storage.set(name, value);
+      return JSON.parse(value) as StorageValue<PersistedState>;
+    } catch {
+      return null;
+    }
+  },
+  setItem: async (name: string, value: StorageValue<PersistedState>): Promise<void> => {
+    // persist runs on every store update: skip writing what's already saved
+    const serialized = serializePersisted(value);
+    if (lastSaved[name] === serialized) return;
+    lastSaved[name] = serialized;
+    try {
+      await Storage.set(name, serialized);
     } catch (e) {
       delete lastSaved[name];
       throw e;
@@ -121,6 +131,14 @@ export type Store = {
   setCurrentPod: Setter<PodType | null>;
 } & UserSettings;
 
+// user settings kept in LOCAL_DATA_DIR, see partialize
+type PersistedState = Pick<Store,
+  | 'userId' | 'darkMode' | 'font' | 'fontSize' | 'fontWt' | 'lineHeight'
+  | 'isRTL' | 'isCheckSpellOn' | 'isOpenPreOn' | 'noteSort' | 'recentDir'
+  | 'pinnedDir' | 'sidebarWidth' | 'feedChannelWidth' | 'feedArticleWidth'
+  | 'useAsset' | 'activities'
+>;
+
 type FunctionPropertyNames<T> = {
   [K in keyof T]: T[K] extends (...args: never[]) => unknown ? K : never;
 }[keyof T];
@@ -145,9 +163,9 @@ export const setter =
     }
   };
 
-export const store = createVanilla<Store>(
+export const store = createStore<Store>()(
   persist(
-    immer((set) => ({
+    immer<Store>((set) => ({
       //  Map of note id to notes
       notes: {},  // all private notes
       setNotes: setter(set, 'notes'),
@@ -269,9 +287,8 @@ export const store = createVanilla<Store>(
     {
       name: 'mdsilo-storage',
       version: 1,
-      getStorage: () => storage,
-      serialize: serializePersisted,
-      partialize: (state) => ({
+      storage,
+      partialize: (state): PersistedState => ({
         // user setting related
         userId: state.userId,
         darkMode: state.darkMode,
@@ -295,14 +312,17 @@ export const store = createVanilla<Store>(
   )
 );
 
-export const useStore = create<Store>(store);
+/** Select from the store in a component, re-rendering when the selection changes. */
+export function useStore<U>(selector: (state: Store) => U): U {
+  return useZustandStore(store, selector);
+}
 
 // Cache the serialized persisted state: persist serializes it on every store
 // update, but the persisted fields rarely change (e.g. not when notes load).
 let lastPersisted: { state: Record<string, unknown>; version?: number } | null = null;
 let lastSerialized = '';
-function serializePersisted(value: { state: unknown; version?: number }): string {
-  const state = value.state as Record<string, unknown>;
+function serializePersisted(value: StorageValue<PersistedState>): string {
+  const state = value.state as unknown as Record<string, unknown>;
   const prev = lastPersisted;
   if (
     prev &&

@@ -1,4 +1,4 @@
-import produce from 'immer';
+import { produce } from 'immer';
 import { getJSONContent, parser } from 'mdsmirror';
 import type { Notes } from 'lib/store';
 import { checkFileIsMd } from 'file/process';

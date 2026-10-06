@@ -133,8 +133,12 @@ describe('open (tauri)', () => {
     const cmds = tInvoke.mock.calls.map((c) => c[0]);
     // no existence check per listed sub dir
     expect(cmds.filter((c) => c === 'file_exist')).toHaveLength(1);
+    // nothing saved yet (first launch): default settings written once at most
+    expect(cmds.filter((c) => c === 'set_data').length).toBeLessThanOrEqual(1);
     // loading notes does not touch persisted settings
-    expect(cmds).not.toContain('set_data');
+    tInvoke.mockClear();
+    await tOpen[fn]('/notes', false);
+    expect(tInvoke.mock.calls.map((c) => c[0])).not.toContain('set_data');
   });
 
   test('openDir keeps file content, listDir does not', async () => {
