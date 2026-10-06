@@ -31,7 +31,7 @@ export function ChannelList(props: Props) {
           return (
             <div 
               key={`${title}-${idx}`}
-              className={`m-1 flex flex-row items-center justify-between cursor-pointer ${activeClass}`}
+              className={`m-1 flex flex-row items-center justify-between whitespace-nowrap cursor-pointer ${activeClass}`}
               onClick={() => {
                 onClickFeed(link);
                 setHighlighted(channel);
@@ -39,11 +39,12 @@ export function ChannelList(props: Props) {
             >
               <Tooltip content={channel.link} placement="top">
                 <div className="flex flex-row items-center justify-start mr-1">
-                  <img src={ico} className="h-4 w-4 mx-1" alt=">" />
+                  <img src={ico} className="flex-none h-4 w-4 mx-1" alt=">" />
                   <span className="text-sm text-black dark:text-white">{title}</span>
                 </div>
               </Tooltip>
-              <span className="flex items-center justify-between">
+              {/* stick to the visible right edge when the list scrolls horizontally */}
+              <span className="sticky right-0 flex flex-none items-center justify-between pl-1 bg-white dark:bg-gray-900">
                 <span className="text-sm dark:text-white">{unread}</span>
                 {ty === 'rss' 
                   ? <IconRss size={12} className="ml-1 text-orange-500" /> 
@@ -58,8 +59,8 @@ export function ChannelList(props: Props) {
   };
 
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center justify-end">
+    <div className="flex flex-col h-full">
+      <div className="flex flex-none items-center justify-end">
         <div className="flex flex-end">
           <Tooltip content="Refresh All" placement="bottom">
             <button className="cursor-pointer" onClick={refreshList}>
@@ -79,7 +80,10 @@ export function ChannelList(props: Props) {
           <span className="dark:text-white">{doneNum}/{channelList.length}</span>
         </div>
       )}
-      <div className="p-1">
+      {/* long feed titles do not wrap: the list scrolls horizontally */}
+      <div className="flex-1 overflow-auto" data-testid="channel-list-scroller">
+      {/* as wide as the longest title, at least the column */}
+      <div className="p-1 w-max min-w-full">
         <div 
           className="flex flex-row items-center justify-between cursor-pointer"
           onClick={onClickStar}
@@ -90,6 +94,7 @@ export function ChannelList(props: Props) {
           </div>
         </div>
         {renderFeedList()}
+      </div>
       </div>
     </div>
   );

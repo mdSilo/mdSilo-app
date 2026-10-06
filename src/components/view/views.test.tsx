@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
 import type { ViewAction } from 'context/viewReducer';
@@ -136,7 +137,7 @@ describe('Chronicle', () => {
     store.getState().setIsLoaded(true);
     const a = makeNote({ id: '/n/a.md', title: 'Alpha', updated_at: '2022-03-05T12:00:00' });
     const daily = makeNote({ id: '/n/2022-03-05.md', title: '2022-03-05', is_daily: true, updated_at: '2022-03-05T12:00:00' });
-    store.getState().setNotes({ [a.id]: a, [daily.id]: daily });
+    store.getState().setNotes(NoteMap.from({ [a.id]: a, [daily.id]: daily }));
     renderView(<Chronicle />);
     expect(screen.getByText('2022-3-5')).toBeInTheDocument();
     expect(screen.getByText('Alpha')).toBeInTheDocument();
@@ -162,7 +163,7 @@ describe('Chronicle', () => {
     });
     const id = `/root/daily/${today()}.md`;
     await waitFor(() => expect(viewState()).toEqual({ view: 'md', params: { noteId: id } }));
-    expect(store.getState().notes[id]).toMatchObject({ title: today(), is_daily: true });
+    expect(store.getState().notes.get(id)).toMatchObject({ title: today(), is_daily: true });
     expect(store.getState().noteTree['/root'].map((i) => i.id)).toEqual(['/root/daily']);
     expect(store.getState().currentNote[id]).toBeDefined();
   });
@@ -183,7 +184,7 @@ describe('Chronicle', () => {
       fireEvent.click(screen.getByText(`Today : ${today()}`));
     });
     await waitFor(() => expect(viewState().view).toBe('md'));
-    expect(store.getState().notes[`/root/daily/${today()}.md`].content).toBe('');
+    expect(store.getState().notes.get(`/root/daily/${today()}.md`)?.content).toBe('');
   });
 
   test('loads the init dir when not loaded', async () => {
@@ -200,7 +201,7 @@ describe('Journals', () => {
     const d1 = makeNote({ id: '/d/2022-01-01.md', title: '2022-01-01', content: 'first day' });
     const d2 = makeNote({ id: '/d/2022-02-01.md', title: '2022-02-01', content: 'second day' });
     const other = makeNote({ id: '/d/other.md', title: 'other' });
-    store.getState().setNotes({ [d1.id]: d1, [d2.id]: d2, [other.id]: other });
+    store.getState().setNotes(NoteMap.from({ [d1.id]: d1, [d2.id]: d2, [other.id]: other }));
     store.getState().setInitDir('/d');
     store.getState().setIsLoaded(true);
     mockInvoke(invoke, { file_exist: false });
@@ -246,7 +247,7 @@ describe('Graph / ForceGraph', () => {
     const a = makeNote({ id: '/n/a.md', title: 'Alpha', content: 'to [[Beta]] and [b](Beta) #topic# end' });
     const b = makeNote({ id: '/n/b.md', title: 'Beta', content: 'plain' });
     const pic = makeNote({ id: '/n/pic.png', title: 'pic.png' });
-    store.getState().setNotes({ [a.id]: a, [b.id]: b, [pic.id]: pic });
+    store.getState().setNotes(NoteMap.from({ [a.id]: a, [b.id]: b, [pic.id]: pic }));
     store.getState().setIsLoaded(true);
   };
 
@@ -262,7 +263,7 @@ describe('Graph / ForceGraph', () => {
 
   test('clicking a note node opens it', async () => {
     const a = makeNote({ id: '/n/a.md', title: 'Alpha' });
-    store.getState().setNotes({ [a.id]: a });
+    store.getState().setNotes(NoteMap.from({ [a.id]: a }));
     store.getState().setIsLoaded(true);
     mockInvoke(invoke, {
       file_exist: true,

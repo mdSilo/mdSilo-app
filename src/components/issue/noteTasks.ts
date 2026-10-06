@@ -1,6 +1,6 @@
-import produce from 'immer';
+import { produce } from 'immer';
 import { getJSONContent, parser } from 'mdsmirror';
-import type { Notes } from 'lib/store';
+import type { NoteMap } from 'lib/store';
 import { checkFileIsMd } from 'file/process';
 import { addEvent, createIssue, moveProjectItem, setState } from './issueOps';
 import type { Issue, IssueData, NoteTaskRef, ProjectStatus, TaskKind, TaskTag } from './types';
@@ -73,8 +73,8 @@ export function extractTasks(content: string): { kind: TaskKind; tag: TaskTag; t
 }
 
 /** All tasks in the notes, newest notes first. */
-export function computeNoteTasks(notes: Notes): NoteTask[] {
-  return Object.values(notes)
+export function computeNoteTasks(notes: NoteMap): NoteTask[] {
+  return notes.values()
     .filter((n) => !n.is_dir && checkFileIsMd(n.id))
     .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''))
     .flatMap((n) =>
@@ -166,14 +166,14 @@ export function createIssueFromTask(data: IssueData, task: NoteTask): IssueData 
  * in the tracker stays so until its task changes. `tasks` must be the
  * tasks of all notes (computeNoteTasks), with the notes fully loaded.
  */
-export function syncNoteTasks(data: IssueData, tasks: NoteTask[], notes: Notes): IssueData {
+export function syncNoteTasks(data: IssueData, tasks: NoteTask[], notes: NoteMap): IssueData {
   let d = data;
   for (const issue of data.issues) {
     const ref = issue.noteTask;
     if (!ref) continue;
     const num = issue.number;
     const task = tasks.find((t) => sameTask(ref, t));
-    const where = notes[ref.note]?.title ?? ref.note.split(/[\\/]/).pop();
+    const where = notes.get(ref.note)?.title ?? ref.note.split(/[\\/]/).pop();
     if (!task) {
       if (ref.missing) continue;
       d = addEvent(d, num, 'task', `the task was removed from ${where}`);

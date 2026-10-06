@@ -12,7 +12,7 @@ type ActivityData = {
 export type ActivityRecord = Record<string, ActivityData>;
 
 type HeatMapProps = {
-  noteList: Note[];
+  noteList: readonly Note[];
   onClickCell: (date: string) => void;
   className?: string;
 };

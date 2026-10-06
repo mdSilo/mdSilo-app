@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { invoke } from '@tauri-apps/api/core';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { makeNote } from '../../testUtils';
 import useNoteSearch from './useNoteSearch';
@@ -13,7 +14,7 @@ const notes = [
   makeNote({ id: '/n/apples', title: 'apples', is_dir: true }),
 ];
 
-const seed = () => store.getState().setNotes(Object.fromEntries(notes.map((n) => [n.id, n])));
+const seed = () => store.getState().setNotes(NoteMap.from(Object.fromEntries(notes.map((n) => [n.id, n]))));
 
 describe('useNoteSearch', () => {
   test('searches note titles, excluding dirs and non-md files', () => {

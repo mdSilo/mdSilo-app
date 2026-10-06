@@ -43,7 +43,7 @@
     "d3-zoom": "^3.0.0",
     "fuse.js": "^6.6.2",
     "html2canvas": "1.4.1",
-    "immer": "9.0.21",
+    "immer": "^11.1.21",
     "is-hotkey": "^0.2.0",
     "jspdf": "2.5.1",
     "markmap-common": "^0.18.9",
@@ -58,10 +58,10 @@
     "react-popper": "^2.3.0",
     "react-scripts": "^5.0.1",
     "react-virtual": "^2.10.4",
-    "react-virtualized": "^9.22.5",
+    "react-virtualized": "^9.22.6",
     "styled-components": "^6.1.19",
     "tailwindcss": "^3.4.3",
-    "zustand": "^3.7.2"
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.12.0",

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, type Mock } from 'vitest';
+import { NoteMap } from 'lib/noteMap';
 import { enterTauri, leaveTauri, makeNote, mockInvoke } from '../testUtils';
 
 describe('write (tauri)', () => {
@@ -33,7 +34,7 @@ describe('write (tauri)', () => {
 
   test('writeJsonFile defaults to the store snapshot', async () => {
     const note = makeNote({ id: '/n/a.md', title: 'a' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     await write.writeJsonFile('/n');
     const call = invoke.mock.calls.find((c) => c[0] === 'write_file');
     expect(JSON.parse(call?.[1].text).notesobj).toEqual({ '/n/a.md': note });
@@ -47,7 +48,7 @@ describe('write (tauri)', () => {
   test('writeAllFile writes one md per note plus the json', async () => {
     const a = makeNote({ id: '/old/a.md', title: 'a', content: 'A' });
     const b = makeNote({ id: '/old/b.md', title: 'b', content: 'B' });
-    await write.writeAllFile('/save', { [a.id]: a, [b.id]: b });
+    await write.writeAllFile('/save', NoteMap.from([a, b]));
     const writes = invoke.mock.calls.filter((c) => c[0] === 'write_file').map((c) => c[1]);
     expect(writes).toEqual([
       { filePath: '/save/a.md', text: 'A' },

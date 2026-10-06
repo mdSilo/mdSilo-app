@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, type Mock } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { enterTauri, leaveTauri, makeNote, mockInvoke } from '../testUtils';
 import * as util from './util';
@@ -46,7 +47,7 @@ describe('web mode', () => {
 
   test('buildNotesJson serializes notes, tree and activities', () => {
     const note = makeNote({ id: '/a.md', title: 'a' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     store.getState().setIsLoaded(true);
     store.getState().upsertTree('/', [note]);
     store.getState().setActivities({ '2022-1-1': { createNum: 1, updateNum: 0 } } as never);

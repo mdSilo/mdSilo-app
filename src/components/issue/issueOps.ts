@@ -1,4 +1,4 @@
-import produce, { Draft } from 'immer';
+import { produce, Draft } from 'immer';
 import { genId } from 'utils/helper';
 import { renameTitleInText } from './refs';
 import {

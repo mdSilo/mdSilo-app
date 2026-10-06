@@ -364,4 +364,41 @@ mod tests {
     assert_eq!(serde_json::Value::Null, store_data_0.data);
     assert_eq!(false, store_data_0.status);
   }
+
+  #[tokio::test]
+  async fn test_list_directory() {
+    // own dir: other tests remove ../temp while running in parallel
+    let dir = std::env::temp_dir().join("mdsilo_test_list_directory");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("sub/inner")).unwrap();
+    std::fs::write(dir.join("a.md"), "# a").unwrap();
+    std::fs::write(dir.join("b.png"), "").unwrap();
+    std::fs::write(dir.join(".hidden.md"), "").unwrap();
+    std::fs::write(dir.join("sub/c.md"), "# c").unwrap();
+
+    let mut names: Vec<(String, bool)> = list_directory(dir.to_str().unwrap())
+      .await
+      .unwrap()
+      .into_iter()
+      .map(|f| (f.file_name, f.is_dir))
+      .collect();
+    names.sort();
+    // direct children only, hidden skipped, no content
+    assert_eq!(
+      names,
+      vec![
+        ("a.md".to_string(), false),
+        ("b.png".to_string(), false),
+        ("sub".to_string(), true),
+      ]
+    );
+    let listed = list_directory(dir.to_str().unwrap()).await.unwrap();
+    assert!(listed.iter().all(|f| f.file_text.is_empty() && !f.is_hidden));
+    assert!(listed.iter().all(|f| f.file_path.ends_with(&format!("/{}", f.file_name))));
+
+    // missing dir lists nothing
+    assert!(list_directory(dir.join("nope").to_str().unwrap()).await.unwrap().is_empty());
+
+    std::fs::remove_dir_all(&dir).unwrap();
+  }
 }

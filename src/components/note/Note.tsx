@@ -153,7 +153,7 @@ function Note(props: Props) {
       // update note title in storage as unique title
       const newTitle = newtitle.trim() || getUntitledTitle(noteId);
       const isTitleUnique = () => {
-        const notesArr = Object.values(storeNotes);
+        const notesArr = storeNotes.values();
         return notesArr.findIndex((n) => (n.title === newTitle)) === -1;
       };
       if (isTitleUnique()) {
@@ -166,15 +166,15 @@ function Note(props: Props) {
         const dirPath = await getDirPath(oldPath);
         const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
         // 2- swap value on disk: delete then write
-        const swapContent = store.getState().notes[noteId]?.content || mdContent;
+        const swapContent = store.getState().notes.get(noteId)?.content || mdContent;
         await deleteFile(oldPath);
         await writeFile(newPath, swapContent);
         // 3- delete the old redundant in store before upsert note
         deleteNote(oldPath);
         // 4- update note in store
-        const oldNote = storeNotes[noteId];
+        const oldNote = storeNotes.get(noteId);
         const newNote = {
-          ...oldNote,
+          ...(oldNote ?? defaultNote),
           id: newPath,
           title: newTitle,
           file_path: newPath,
@@ -209,7 +209,7 @@ function Note(props: Props) {
   const onCreateNote = useCallback(
     async (title: string) => {
       title = title.trim();
-      const existingNote = Object.values(storeNotes).find((n) => (n.title === title));
+      const existingNote = storeNotes.values().find((n) => (n.title === title));
       if (existingNote) {
         return encodeURI(existingNote.title.trim());
       }
@@ -307,7 +307,7 @@ function Note(props: Props) {
   const errorContainerClassName =
     `${noteContainerClassName} items-center justify-center h-full p-4`;
 
-  const isNoteExists = useMemo(() => !!storeNotes[noteId], [noteId, storeNotes]);
+  const isNoteExists = useMemo(() => storeNotes.has(noteId), [noteId, storeNotes]);
 
   if (!isNoteExists) {
     return (
@@ -430,7 +430,7 @@ const getUntitledTitle = (noteId: string) => {
   const getResult = () => (suffix > 0 ? `${title} ${suffix}` : title);
 
   let suffix = 0;
-  const notesArr: NoteType[] = Object.values(store.getState().notes);
+  const notesArr: readonly NoteType[] = store.getState().notes.values();
   while (
     notesArr.findIndex(
       (note) =>

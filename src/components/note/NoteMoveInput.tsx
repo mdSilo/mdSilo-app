@@ -117,8 +117,8 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       if (tarDir) {
         const thisFile = new FileAPI(noteId);
         const tarPath = await thisFile.moveFile(tarDir);
-        if (tarPath) {
-          const oldNote =  notes[noteId];
+        const oldNote = notes.get(noteId);
+        if (tarPath && oldNote) {
           moveNoteTreeItem(noteId, tarDir, tarPath, oldNote);
         }
       }

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { NoteMap } from 'lib/noteMap';
 import { makeNote } from '../../testUtils';
 import * as ops from './issueOps';
 import {
@@ -35,11 +36,11 @@ describe('refs', () => {
   });
 
   test('computeNoteMentions scans note content', () => {
-    const notes = {
+    const notes = NoteMap.from({
       a: makeNote({ id: 'a', title: 'A', content: 'fixes [#1](issue:1)' }),
       b: makeNote({ id: 'b', title: 'B', content: 'see issue:1 text' }),
       c: makeNote({ id: 'c', title: 'C', content: '[#1](issue:1)', is_dir: true }),
-    };
+    });
     expect(computeNoteMentions(notes, 1)).toEqual([{ id: 'a', title: 'A' }]);
     expect(computeNoteMentions(notes, 2)).toEqual([]);
   });

@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { store } from 'lib/store';
+import { NoteMap, store } from 'lib/store';
 import { 
   openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir, openJSONFilePath 
 } from 'file/open';
@@ -162,7 +162,7 @@ function cleanStore() {
   // cleaning store, *first tree then notes*
   store.getState().setNoteTree({});
   store.getState().setExpandedDirs({});
-  store.getState().setNotes({});
+  store.getState().setNotes(NoteMap.EMPTY);
   store.getState().setCurrentDir(undefined);
   store.getState().setCurrentNoteId('');
   store.getState().setIsLoaded(false);

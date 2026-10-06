@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { NoteMap } from 'lib/noteMap';
 import { makeNote } from '../../testUtils';
 import * as ops from './issueOps';
 import {
@@ -46,12 +47,12 @@ describe('extractTasks', () => {
   });
 
   test('computeNoteTasks lists tasks of md notes, newest first', () => {
-    const notes = {
+    const notes = NoteMap.from({
       a: makeNote({ id: '/w/a.md', title: 'A', content: 'one #todo#', updated_at: '2026-01-01T00:00:00Z' }),
       b: makeNote({ id: '/w/b.md', title: 'B', content: 'two #done#\n\n- [ ] three', updated_at: '2026-02-01T00:00:00Z' }),
       d: makeNote({ id: '/w/dir', title: 'dir', content: 'x #todo#', is_dir: true }),
       t: makeNote({ id: '/w/t.json', title: 't', content: 'x #todo#' }),
-    };
+    });
     expect(computeNoteTasks(notes).map((t) => [t.id, t.noteTitle, t.kind, t.tag, t.text])).toEqual([
       ['/w/b.md::0', 'B', 'tag', 'done', 'two'],
       ['/w/b.md::1', 'B', 'checkbox', 'todo', 'three'],
@@ -106,7 +107,7 @@ describe('createIssueFromTask', () => {
 });
 
 describe('syncNoteTasks', () => {
-  const notes = { '/w/N.md': makeNote({ id: '/w/N.md', title: 'N' }) };
+  const notes = NoteMap.from({ '/w/N.md': makeNote({ id: '/w/N.md', title: 'N' }) });
   const status = (d: IssueData) => {
     const p = d.projects[0];
     return p.statuses.find((s) => s.id === p.items[0].status)?.name;
@@ -164,7 +165,7 @@ describe('syncNoteTasks', () => {
 
   test('a deleted note closes its task issues', () => {
     let d = createIssueFromTask(ops.defaultIssueData(), task('todo'));
-    d = syncNoteTasks(d, [], {});
+    d = syncNoteTasks(d, [], NoteMap.EMPTY);
     expect(d.issues[0].state).toBe('closed');
     expect(lastEvent(d)).toBe('the task was removed from N.md');
   });

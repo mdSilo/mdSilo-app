@@ -7,7 +7,7 @@ type Props = {
 
 export default function NoteMetadata(props: Props) {
   const { noteId } = props;
-  const note = useStore((state) => state.notes[noteId]);
+  const note = useStore((state) => state.notes.get(noteId));
 
   if (!note) {
     return null;

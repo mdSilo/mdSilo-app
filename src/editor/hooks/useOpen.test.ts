@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, type Mock } from 'vitest';
+import { NoteMap } from 'lib/noteMap';
 import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '../../testUtils';
 
 const joinPaths = ({ root, parts }: Record<string, unknown>) =>
@@ -48,7 +49,7 @@ describe('useOpen (tauri)', () => {
 
   const dirty = () => {
     const stale = makeNote({ id: '/old/x.md' });
-    store.getState().setNotes({ [stale.id]: stale });
+    store.getState().setNotes(NoteMap.from({ [stale.id]: stale }));
     store.getState().setCurrentNoteId(stale.id);
     store.getState().setIsLoaded(true);
   };
@@ -58,7 +59,7 @@ describe('useOpen (tauri)', () => {
     dialog.open.mockResolvedValueOnce(['/picked/a.md', '/picked/b.md']);
     await useOpen.onOpenFile();
     const s = store.getState();
-    expect(Object.keys(s.notes).sort()).toEqual(['/picked/a.md', '/picked/b.md']);
+    expect(s.notes.keys().sort()).toEqual(['/picked/a.md', '/picked/b.md']);
     expect(s.currentDir).toBe('/picked');
     expect(s.recentDir).toEqual(['/picked']);
     expect(s.currentNoteId).toBe('');
@@ -68,11 +69,11 @@ describe('useOpen (tauri)', () => {
   test('onOpenFile accepts a single path and ignores cancel', async () => {
     dialog.open.mockResolvedValueOnce('/picked/a.md');
     await useOpen.onOpenFile();
-    expect(Object.keys(store.getState().notes)).toEqual(['/picked/a.md']);
+    expect(store.getState().notes.keys()).toEqual(['/picked/a.md']);
 
     dialog.open.mockResolvedValueOnce(null);
     await useOpen.onOpenFile();
-    expect(Object.keys(store.getState().notes)).toEqual(['/picked/a.md']);
+    expect(store.getState().notes.keys()).toEqual(['/picked/a.md']);
   });
 
   test('onOpenDir opens all files of the folder', async () => {
@@ -82,7 +83,7 @@ describe('useOpen (tauri)', () => {
     const s = store.getState();
     expect(s.initDir).toBe('/picked');
     expect(s.currentDir).toBe('/picked');
-    expect(Object.keys(s.notes).sort()).toEqual(['/picked/a.md', '/picked/b.md']);
+    expect(s.notes.keys().sort()).toEqual(['/picked/a.md', '/picked/b.md']);
     expect(invoke).toHaveBeenCalledWith('read_directory', { dir: '/picked' });
   });
 
@@ -136,7 +137,7 @@ describe('useOpen (tauri)', () => {
 
   test('onSave writes everything to the chosen dir', async () => {
     const note = makeNote({ id: '/n/a.md', title: 'a', content: 'A' });
-    store.getState().setNotes({ [note.id]: note });
+    store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     dialog.save.mockResolvedValueOnce('C:\\out\\');
     await useOpen.onSave();
     expect(invoke).toHaveBeenCalledWith('write_file', { filePath: 'C:/out/a.md', text: 'A' });

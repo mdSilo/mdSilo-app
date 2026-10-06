@@ -17,6 +17,9 @@ import { normalizeSlash } from 'file/util';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
 
+// indent of each nesting level in the tree
+export const INDENT_PER_LEVEL = 16;
+
 interface Props extends HTMLAttributes<HTMLDivElement> {
   node: NoteTreeItem;
   isHighlighted?: boolean;
@@ -62,12 +65,12 @@ const SidebarNoteLink = (
   }, [isDir, isExpanded, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen, toggleExpandedDir]);
   
   // add 16px for every level of nesting, plus 8px base padding
-  const leftPadding = depth * 16 + 8;
+  const leftPadding = depth * INDENT_PER_LEVEL + 8;
 
   return (
     <SidebarItem
       ref={forwardedRef}
-      className={`relative flex items-center justify-between overflow-x-hidden group focus:outline-none ${className}`}
+      className={`relative flex items-center justify-between !overflow-x-visible group focus:outline-none ${className}`}
       isHighlighted={isHighlighted}
       style={style}
       {...otherProps}
@@ -112,17 +115,20 @@ const SidebarNoteLink = (
           </span>
         </Tooltip>
       </div>
-      {isDir ? (
-        <SidebarDirDropdown
-          dirPath={node.id}
-          className="opacity-0.1 group-hover:opacity-100"
-        />
-      ) : !isNonMd ? (
-        <SidebarNoteDropdown
-          noteId={node.id}
-          className="opacity-0.1 group-hover:opacity-100"
-        />
-      ) : null}
+      {/* stick to the visible right edge when the tree scrolls horizontally */}
+      <div className="sticky right-0 flex-none bg-inherit">
+        {isDir ? (
+          <SidebarDirDropdown
+            dirPath={node.id}
+            className="opacity-0.1 group-hover:opacity-100"
+          />
+        ) : !isNonMd ? (
+          <SidebarNoteDropdown
+            noteId={node.id}
+            className="opacity-0.1 group-hover:opacity-100"
+          />
+        ) : null}
+      </div>
     </SidebarItem>
   );
 };

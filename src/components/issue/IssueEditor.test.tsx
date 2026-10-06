@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { makeNote, renderWithView } from '../../testUtils';
@@ -23,7 +24,7 @@ vi.mock('mdsmirror', async (importOriginal) => {
 });
 vi.mock('file/open', async (importOriginal) => ({
   ...(await importOriginal<typeof import('file/open')>()),
-  openFilePath: vi.fn(async (id: string) => store.getState().notes[id]),
+  openFilePath: vi.fn(async (id: string) => store.getState().notes.get(id)),
 }));
 
 const ViewProbe = () => <p data-testid="view">{JSON.stringify(useCurrentViewContext().state)}</p>;
@@ -31,7 +32,7 @@ const view = () => JSON.parse(screen.getByTestId('view').textContent as string);
 
 function setup(readOnly: boolean) {
   const note = makeNote({ id: '/w/Spec.md', title: 'Spec' });
-  store.getState().setNotes({ [note.id]: note });
+  store.getState().setNotes(NoteMap.from({ [note.id]: note }));
   renderWithView(<><IssueEditor defaultValue="" readOnly={readOnly} /><ViewProbe /></>);
 }
 

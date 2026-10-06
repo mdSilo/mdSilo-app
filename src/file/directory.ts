@@ -1,7 +1,7 @@
 import type { Event, UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core'
 import { doDeleteNote } from 'editor/hooks/useDeleteNote';
-import { store } from 'lib/store';
+import { NoteMap, store } from 'lib/store';
 import { emitCustomEvent } from 'utils/helper';
 import { openFilePaths, openJSONFilePath } from './open';
 import { rmFileNameExt } from './process';
@@ -197,7 +197,7 @@ class DirectoryAPI {
           const jsonPath = await joinPaths(dir, ['mdsilo.json']);
           const jsonData = await openJSONFilePath(jsonPath);
           if (jsonData) {
-            store.getState().setNotes(jsonData.notesobj);
+            store.getState().setNotes(NoteMap.from(jsonData.notesobj));
             //store.getState().setNoteTree(jsonData.notetree);
             store.getState().setIsLoaded(true);
             store.getState().setIsLoading(false);

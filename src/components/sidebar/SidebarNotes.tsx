@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 import { NoteTree, NoteTreeItem, useStore } from 'lib/store';
 import { Sort } from 'lib/userSettings';
-import { ciStringCompare, dateCompare } from 'utils/helper';
+import { ciStringCompare } from 'utils/helper';
 import { onOpenFile, onListDir } from 'editor/hooks/useOpen';
 import { normalizeSlash } from 'file/util';
 import ErrorBoundary from '../misc/ErrorBoundary';
@@ -77,7 +77,7 @@ export const flattenNoteTree = (
   const walk = (dir: string, depth: number) => {
     if (visited.has(dir)) return;
     visited.add(dir);
-    const items = sortNoteTree(noteTree[dir] || [], noteSort);
+    const items = sortNoteTreeCached(noteTree[dir] || [], noteSort);
     for (const node of items) {
       const dirKey = node.is_dir ? normalizeSlash(node.id) : '';
       const isExpanded = node.is_dir && Boolean(expandedDirs[dirKey]);
@@ -92,38 +92,56 @@ export const flattenNoteTree = (
 };
 
 /**
- * Sorts the tree item with the given noteSort.
+ * Sorts the tree item with the given noteSort, dirs first.
  */
 const sortNoteTree = (
   tree: NoteTreeItem[],
   noteSort: Sort
 ): NoteTreeItem[] => {
-  // Copy tree shallowly
-  const newTree = [...tree];
-  // Sort tree items (one level)
-  if (newTree.length >= 2) {
-    newTree.sort((n1, n2) => {
-      switch (noteSort) {
-        case Sort.DateModifiedAscending:
-          return dateCompare(n1.updated_at, n2.updated_at);
-        case Sort.DateModifiedDescending:
-          return dateCompare(n2.updated_at, n1.updated_at);
-        case Sort.DateCreatedAscending:
-          return dateCompare(n1.created_at, n2.created_at);
-        case Sort.DateCreatedDescending:
-          return dateCompare(n2.created_at, n1.created_at);
-        case Sort.TitleAscending:
-          return ciStringCompare(n1.title, n2.title);
-        case Sort.TitleDescending:
-          return ciStringCompare(n2.title, n1.title);
-        default:
-          return ciStringCompare(n1.title, n2.title);
-      }
-    });
-    newTree.sort((n1, n2) => Number(Boolean(n2.is_dir)) - Number(Boolean(n1.is_dir)));
-  }
+  if (tree.length < 2) return [...tree];
 
-  return newTree;
+  // compute sort keys once rather than in every comparison
+  const byDate = (item: NoteTreeItem) => {
+    switch (noteSort) {
+      case Sort.DateModifiedAscending:
+      case Sort.DateModifiedDescending:
+        return new Date(item.updated_at).getTime();
+      case Sort.DateCreatedAscending:
+      case Sort.DateCreatedDescending:
+        return new Date(item.created_at).getTime();
+      default:
+        return 0;
+    }
+  };
+  const isDesc = noteSort === Sort.DateModifiedDescending
+    || noteSort === Sort.DateCreatedDescending
+    || noteSort === Sort.TitleDescending;
+  const isByTitle = noteSort === Sort.TitleAscending
+    || noteSort === Sort.TitleDescending
+    || !Object.values(Sort).includes(noteSort);
+  const keyed = tree.map((item) => ({ item, date: byDate(item) }));
+
+  keyed.sort((a, b) => {
+    const dirFirst = Number(Boolean(b.item.is_dir)) - Number(Boolean(a.item.is_dir));
+    if (dirFirst !== 0) return dirFirst;
+    const [x, y] = isDesc ? [b, a] : [a, b];
+    return isByTitle
+      ? ciStringCompare(x.item.title, y.item.title)
+      : x.date - y.date;
+  });
+
+  return keyed.map((k) => k.item);
+};
+
+// sorted dir lists, by list (immutable in store) and sort
+const sortCache = new WeakMap<NoteTreeItem[], { sort: Sort; sorted: NoteTreeItem[] }>();
+
+const sortNoteTreeCached = (tree: NoteTreeItem[], noteSort: Sort): NoteTreeItem[] => {
+  const cached = sortCache.get(tree);
+  if (cached && cached.sort === noteSort) return cached.sorted;
+  const sorted = sortNoteTree(tree, noteSort);
+  sortCache.set(tree, { sort: noteSort, sorted });
+  return sorted;
 };
 
 export default memo(SidebarNotes);

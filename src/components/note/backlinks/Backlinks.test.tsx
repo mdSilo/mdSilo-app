@@ -3,6 +3,7 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
 import { makeFileMeta, makeNote, mockInvoke } from '../../../testUtils';
@@ -51,7 +52,7 @@ describe('BacklinkBranch', () => {
 describe('Backlinks', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    store.getState().setNotes({ [target.id]: target, [linker.id]: linker, [mention.id]: mention });
+    store.getState().setNotes(NoteMap.from({ [target.id]: target, [linker.id]: linker, [mention.id]: mention }));
   });
   afterEach(() => {
     vi.useRealTimers();

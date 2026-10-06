@@ -2,6 +2,8 @@ import { memo } from 'react';
 import { useTransition, animated, SpringConfig } from '@react-spring/web';
 import { isMobile } from 'utils/helper';
 import { useStore } from 'lib/store';
+import { SIDEBAR_WIDTH } from 'lib/userSettings';
+import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
 import SidebarContent from './SidebarContent';
 
 const SPRING_CONFIG: SpringConfig = {
@@ -20,6 +22,10 @@ function Sidebar(props: Props) {
 
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const sidebarWidth = useStore((state) => state.sidebarWidth);
+  const setSidebarWidth = useStore((state) => state.setSidebarWidth);
+  // width while dragging, saved to store (persisted) on release
+  const { width, onResize, onResizeEnd } = useResizableWidth(sidebarWidth, setSidebarWidth, SIDEBAR_WIDTH);
 
   const transition = useTransition<
     boolean,
@@ -76,8 +82,11 @@ function Sidebar(props: Props) {
             />
           ) : null}
           <animated.div
-            className="fixed top-0 bottom-0 left-0 z-20 w-64 shadow-popover md:shadow-none md:static md:z-0"
+            className="fixed top-0 bottom-0 left-0 z-20 flex-none shadow-popover md:shadow-none md:relative md:z-0"
             style={{
+              width,
+              // overlay on mobile: keep some of the page visible
+              maxWidth: isMobile() ? '85vw' : undefined,
               transform: styles.transform,
               display: styles.dspl.to((displ) =>
                 displ === 0 ? 'none' : 'initial'
@@ -89,6 +98,13 @@ function Sidebar(props: Props) {
             >
               <SidebarContent className="flex-1 overflow-x-hidden overflow-y-auto" />
             </div>
+            <ResizeHandle
+              width={width}
+              bounds={SIDEBAR_WIDTH}
+              label="Resize sidebar"
+              onResize={onResize}
+              onResizeEnd={onResizeEnd}
+            />
           </animated.div>
         </>
       )

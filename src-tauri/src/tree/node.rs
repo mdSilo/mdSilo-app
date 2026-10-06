@@ -1,5 +1,5 @@
 use crate::{
-  files::{check_hidden, check_md, FileMetaData},
+  files::{check_hidden_meta, check_md, FileMetaData},
   paths::PathExt,
 };
 use ignore::DirEntry;
@@ -113,7 +113,7 @@ impl From<(NodeId, &mut Arena<Self>)> for &Node {
 }
 
 pub fn from_node(node: &Node) -> Option<FileMetaData> {
-  let metadata = match node.file_meta.clone() {
+  let metadata = match node.file_meta.as_ref() {
     Some(meta) => meta,
     None => return None,
   };
@@ -126,7 +126,7 @@ pub fn from_node(node: &Node) -> Option<FileMetaData> {
     Some(normalized) => normalized,
     None => return None,
   };
-  let is_hidden = check_hidden(&normalized_path);
+  let is_hidden = check_hidden_meta(&normalized_path, metadata);
 
   let data = FileMetaData {
     file_path: normalized_path,

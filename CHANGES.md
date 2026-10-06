@@ -5,6 +5,11 @@
 2024-XX-XX
 
 - Sidebar workspace explorer: expand folders in place as a multi-level tree (#751)
+- Sidebar: resize by dragging its edge; tree scrolls horizontally for deep folders
+- Faster folder listing in sidebar explorer, rust end and frontend
+- Feed reader: resizable channel and article columns, channel list scrolls horizontally
+- Upgrade zustand 5, immer 11: faster store updates
+- Notes kept in an immutable bucketed NoteMap: editing a note no longer copies all notes
 
 ## app-v0.5.9 
 

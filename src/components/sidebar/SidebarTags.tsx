@@ -3,7 +3,7 @@ import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import { TbHash as IconHash } from 'react-icons/tb';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import { Notes, useStore } from 'lib/store';
+import { NoteMap, useStore } from 'lib/store';
 import { HASHTAG_REGEX } from 'components/view/ForceGraph';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import SidebarItem from './SidebarItem';
@@ -139,8 +139,8 @@ const SidebarTag = (
 const Tag = memo(forwardRef(SidebarTag));
 
 
-const computeTags = (notes: Notes) => {
-  const notesArr = Object.values(notes).filter(n => !n.is_dir);
+const computeTags = (notes: NoteMap) => {
+  const notesArr = notes.values().filter(n => !n.is_dir);
   const tagNames: Record<string, number> = {};
   // Search for links in each note 
   for (const note of notesArr) {

@@ -26,7 +26,7 @@ export default function NotePicker({ issue }: { issue: Issue }) {
 
   // notes linked with [[title]] in the body or comments, not already listed
   const mentioned = useMemo(() => {
-    const byTitle = new Map(Object.values(notes).filter((n) => !n.is_dir).map((n) => [n.title, n.id]));
+    const byTitle = new Map(notes.values().filter((n) => !n.is_dir).map((n) => [n.title, n.id]));
     const titles = new Set(issueTexts(issue).flatMap((t) => [...linkedNoteTitles(t)]));
     return [...titles]
       .map((title) => ({ title, id: byTitle.get(title) }))
@@ -40,7 +40,7 @@ export default function NotePicker({ issue }: { issue: Issue }) {
         issue.notes.length || mentioned.length ? (
           <ul className="space-y-1">
             {issue.notes.map((p) => {
-              const note = notes[p];
+              const note = notes.get(p);
               return (
                 <li key={p} className="flex items-center gap-1">
                   {note ? (

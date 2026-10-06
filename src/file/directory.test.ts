@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
+import { NoteMap } from 'lib/noteMap';
 import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '../testUtils';
 import DirectoryAPI from './directory';
 
@@ -94,20 +95,20 @@ describe('DirectoryAPI (tauri)', () => {
 
     test('remove deletes notes from the store', async () => {
       const note = makeNote({ id: '/notes/a.md' });
-      store.getState().setNotes({ [note.id]: note });
+      store.getState().setNotes(NoteMap.from({ [note.id]: note }));
       const { emit } = await startListening();
       await emit('remove', ['/notes/a.md']);
-      expect(store.getState().notes).toEqual({});
+      expect(store.getState().notes.toRecord()).toEqual({});
     });
 
     test('renameFrom deletes the note and clears the current note', async () => {
       const note = makeNote({ id: '/notes/a.md', title: 'a' });
-      store.getState().setNotes({ [note.id]: note });
+      store.getState().setNotes(NoteMap.from({ [note.id]: note }));
       store.getState().setCurrentNoteId('/notes/a.md');
       mockInvoke(tauriInvoke, { get_basename: ['a.md', true] });
       const { emit } = await startListening();
       await emit('renameFrom', ['/notes/a.md']);
-      expect(store.getState().notes).toEqual({});
+      expect(store.getState().notes.toRecord()).toEqual({});
       expect(store.getState().currentNoteId).toBe('');
       expect(tauriInvoke).toHaveBeenCalledWith('delete_files', { paths: ['/notes/a.md'] });
     });
@@ -130,7 +131,7 @@ describe('DirectoryAPI (tauri)', () => {
       store.getState().setIsLoading(true);
       const { emit } = await startListening();
       await emit('loaded', ['/notes']);
-      expect(store.getState().notes).toEqual({ [note.id]: note });
+      expect(store.getState().notes.toRecord()).toEqual({ [note.id]: note });
       expect(store.getState().isLoaded).toBe(true);
       expect(store.getState().isLoading).toBe(false);
     });

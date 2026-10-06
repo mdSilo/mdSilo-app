@@ -1,43 +1,69 @@
-import create, { State, StateCreator } from 'zustand';
-import createVanilla from 'zustand/vanilla';
-import { persist, StateStorage } from 'zustand/middleware';
-import produce, { Draft } from 'immer';
+import { useStore as useZustandStore, type StoreApi } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
+import { produce, type Draft } from 'immer';
 import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
 import { ArticleType, PodType } from 'types/model';
 import type { ActivityRecord } from 'components/view/HeatMap';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettings';
+import { NoteMap } from './noteMap';
 
-export { default as shallowEqual } from 'zustand/shallow';
+export { NoteMap } from './noteMap';
+
+export { shallow as shallowEqual } from 'zustand/shallow';
 
 type NoteUpdate = PickPartial<
   Note, // id required
   'title' | 'content' | 'file_path' | 'cover' | 'created_at' | 'updated_at' | 'is_daily'
 >;
 
-const immer =
-  <T extends State>(
-    config: StateCreator<T, (fn: (draft: Draft<T>) => void) => void>
-  ): StateCreator<T> =>
-  (set, get, api) => config((fn) => set(produce<T>(fn)), get, api);
+type ImmerSet<T> = (fn: (draft: Draft<T>) => void) => void;
 
-// storage in LOCAL_DATA_DIR
-const storage: StateStorage = {
-  getItem: async (name: string): Promise<string | null> => {
+// update state by mutating an immer draft
+const immer =
+  <T>(config: (set: ImmerSet<T>, get: () => T, api: StoreApi<T>) => T) =>
+  (set: StoreApi<T>['setState'], get: () => T, api: StoreApi<T>): T =>
+    config((fn) => set(produce<T>(fn)), get, api);
+
+// last value written per storage key
+const lastSaved: Record<string, string> = {};
+
+// storage in LOCAL_DATA_DIR, saved as a JSON string (same format as before)
+const storage: PersistStorage<PersistedState> = {
+  getItem: async (name: string): Promise<StorageValue<PersistedState> | null> => {
     // missing key is `{}`: return null, otherwise zustand fails to parse it
     // and never finishes hydrating on the first launch
     const value = await Storage.get(name);
-    return typeof value === 'string' ? value : null;
+    if (typeof value !== 'string') return null;
+    // as saved: no need to write it back unchanged
+    lastSaved[name] = value;
+    try {
+      return JSON.parse(value) as StorageValue<PersistedState>;
+    } catch {
+      return null;
+    }
   },
-  setItem: async (name: string, value: string): Promise<void> => {
-    await Storage.set(name, value);
+  setItem: async (name: string, value: StorageValue<PersistedState>): Promise<void> => {
+    // persist runs on every store update: skip writing what's already saved
+    const serialized = serializePersisted(value);
+    if (lastSaved[name] === serialized) return;
+    lastSaved[name] = serialized;
+    try {
+      await Storage.set(name, serialized);
+    } catch (e) {
+      delete lastSaved[name];
+      throw e;
+    }
   },
   removeItem: async (name: string): Promise<void> => {
+    delete lastSaved[name];
     await Storage.remove(name);
   },
 };
 
+// plain record of notes, e.g. in JSON data; the store keeps a NoteMap
 export type Notes = Record<Note['id'], Note>;
 
 export type NoteTreeItem = {
@@ -69,10 +95,11 @@ export enum SidebarTab {
 
 export type Store = {
   // note
-  notes: Notes;
-  setNotes: Setter<Notes>;
+  notes: NoteMap;
+  setNotes: Setter<NoteMap>;
   // operate note
   upsertNote: (note: Note) => void;
+  upsertNotes: (notes: Note[]) => void;
   upsertTree: (targetDir: string, noteList: Note[], isDir?: boolean) => void;
   updateNote: (note: NoteUpdate) => void;
   deleteNote: (noteId: string) => void;
@@ -108,6 +135,14 @@ export type Store = {
   setCurrentPod: Setter<PodType | null>;
 } & UserSettings;
 
+// user settings kept in LOCAL_DATA_DIR, see partialize
+type PersistedState = Pick<Store,
+  | 'userId' | 'darkMode' | 'font' | 'fontSize' | 'fontWt' | 'lineHeight'
+  | 'isRTL' | 'isCheckSpellOn' | 'isOpenPreOn' | 'noteSort' | 'recentDir'
+  | 'pinnedDir' | 'sidebarWidth' | 'feedChannelWidth' | 'feedArticleWidth'
+  | 'useAsset' | 'activities'
+>;
+
 type FunctionPropertyNames<T> = {
   [K in keyof T]: T[K] extends (...args: never[]) => unknown ? K : never;
 }[keyof T];
@@ -123,7 +158,7 @@ export const setter =
   (value: Store[K] | ((value: Store[K]) => Store[K])) => {
     if (typeof value === 'function') {
       set((state) => {
-        state[key] = value(state[key]);
+        state[key] = value(state[key] as Store[K]);
       });
     } else {
       set((state) => {
@@ -132,11 +167,11 @@ export const setter =
     }
   };
 
-export const store = createVanilla<Store>(
+export const store = createStore<Store>()(
   persist(
-    immer((set) => ({
-      //  Map of note id to notes
-      notes: {},  // all private notes
+    immer<Store>((set) => ({
+      //  Map of note id to notes, see NoteMap
+      notes: NoteMap.EMPTY,  // all private notes
       setNotes: setter(set, 'notes'),
       /**
        * update or insert the note
@@ -144,14 +179,16 @@ export const store = createVanilla<Store>(
        */
       upsertNote: (note: Note) => {
         set((state) => {
-          if (state.notes[note.id]) {
-            // if existing per id, update 
-            state.notes[note.id] = { ...state.notes[note.id], ...note };
-          } else {
-            // otherwise, new insert
-            state.notes[note.id] = note;
-          }
+          // if existing per id, update, otherwise, new insert
+          state.notes = state.notes.upsert(note);
           // alert: not check title unique, wiki-link will link to first searched note
+        });
+      },
+      // upsert many notes in one store update, rather than one update per note
+      upsertNotes: (notes: Note[]) => {
+        if (notes.length === 0) return;
+        set((state) => {
+          state.notes = state.notes.upsertMany(notes);
         });
       },
       upsertTree: (targetDir: string, noteList: Note[]) => {
@@ -168,30 +205,30 @@ export const store = createVanilla<Store>(
           const targetList = state.noteTree[targetDir] || [];
           const newTargetList = [...targetList, ...itemsToInsert];
           const newList: NoteTreeItem[] = [];
-          newTargetList.forEach(item => {
-            if (!newList.some(n => n.id === item.id)) {
-              newList.push(item)
+          const seen = new Set<string>();
+          for (const item of newTargetList) {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              newList.push(item);
             }
-          })
+          }
           state.noteTree[targetDir] = newList;
         });
       },
       // Update the given note
       updateNote: (note: NoteUpdate) => {
+        if (!store.getState().notes.has(note.id)) return;
         set((state) => {
-          if (state.notes[note.id]) {
-            state.notes[note.id] = { 
-              ...state.notes[note.id], 
-              ...note, 
-              updated_at: new Date().toISOString() 
-            };
-          }
+          state.notes = state.notes.update(note.id, {
+            ...note,
+            updated_at: new Date().toISOString(),
+          });
         });
       },
       // Delete the note with the given noteId
       deleteNote: (noteId: string) => {
         set((state) => {
-          delete state.notes[noteId];
+          state.notes = state.notes.delete(noteId);
           deleteTreeItem(state.noteTree, noteId);
         });
       },
@@ -244,8 +281,8 @@ export const store = createVanilla<Store>(
     {
       name: 'mdsilo-storage',
       version: 1,
-      getStorage: () => storage,
-      partialize: (state) => ({
+      storage,
+      partialize: (state): PersistedState => ({
         // user setting related
         userId: state.userId,
         darkMode: state.darkMode,
@@ -259,6 +296,9 @@ export const store = createVanilla<Store>(
         noteSort: state.noteSort,
         recentDir: state.recentDir,
         pinnedDir: state.pinnedDir,
+        sidebarWidth: state.sidebarWidth,
+        feedChannelWidth: state.feedChannelWidth,
+        feedArticleWidth: state.feedArticleWidth,
         useAsset: state.useAsset,
         activities: state.activities,
       }),
@@ -266,7 +306,30 @@ export const store = createVanilla<Store>(
   )
 );
 
-export const useStore = create<Store>(store);
+/** Select from the store in a component, re-rendering when the selection changes. */
+export function useStore<U>(selector: (state: Store) => U): U {
+  return useZustandStore(store, selector);
+}
+
+// Cache the serialized persisted state: persist serializes it on every store
+// update, but the persisted fields rarely change (e.g. not when notes load).
+let lastPersisted: { state: Record<string, unknown>; version?: number } | null = null;
+let lastSerialized = '';
+function serializePersisted(value: StorageValue<PersistedState>): string {
+  const state = value.state as unknown as Record<string, unknown>;
+  const prev = lastPersisted;
+  if (
+    prev &&
+    prev.version === value.version &&
+    Object.keys(state).length === Object.keys(prev.state).length &&
+    Object.keys(state).every((key) => state[key] === prev.state[key])
+  ) {
+    return lastSerialized;
+  }
+  lastPersisted = { state, version: value.version };
+  lastSerialized = JSON.stringify(value);
+  return lastSerialized;
+}
 
 type PersistApi = {
   persist?: {

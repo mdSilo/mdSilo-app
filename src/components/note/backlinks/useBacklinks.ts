@@ -1,6 +1,6 @@
 import { useMemo, useEffect } from 'react';
 import { parser, getJSONContent } from "mdsmirror";
-import { Notes, useStore } from 'lib/store';
+import { NoteMap, useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
 import { isUrl } from 'utils/helper';
 import { loadDir } from 'file/open';
@@ -37,7 +37,7 @@ export default function useBacklinks(noteId: string) {
     DEBOUNCE_MS
   );
   
-  const noteTitle = notes[noteId]?.title || '';
+  const noteTitle = notes.get(noteId)?.title || '';
 
   const linkedBacklinks = useMemo(
     () => computeLinkedBacklinks(notes, noteTitle),
@@ -54,7 +54,7 @@ export default function useBacklinks(noteId: string) {
 
 // Searches the notes linked to the given noteId
 export const computeLinkedBacklinks = (
-  notes: Notes,
+  notes: NoteMap,
   noteTitle: string
 ): Backlink[] => {
   if (!noteTitle || !noteTitle.trim()) {
@@ -62,7 +62,7 @@ export const computeLinkedBacklinks = (
   }
 
   const result: Backlink[] = [];
-  const myNotes = Object.values(notes);
+  const myNotes = notes.values();
   for (const note of myNotes) {
     if (note.title === noteTitle) {
       continue;
@@ -118,7 +118,7 @@ const computeLinkedMatches = (content: string, noteTitle: string) => {
 
 // Searches the notes text-matched to the given noteTitle
 const computeUnlinkedBacklinks = (
-  notes: Notes,
+  notes: NoteMap,
   noteTitle: string | undefined
 ): Backlink[] => {
   if (!noteTitle || !noteTitle.trim()) {
@@ -126,7 +126,7 @@ const computeUnlinkedBacklinks = (
   }
 
   const result: Backlink[] = [];
-  const myNotes = Object.values(notes);
+  const myNotes = notes.values();
   for (const note of myNotes) {
     if (note.title === noteTitle) {
       continue;
