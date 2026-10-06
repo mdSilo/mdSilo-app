@@ -372,6 +372,21 @@ describe('Issue detail', () => {
     expect(viewState()).toEqual({ view: 'md', params: { noteId: '/w/Spec.md', hash: '' } });
   });
 
+  test('linked notes include notes mentioned with [[ ]]', async () => {
+    seedDetail();
+    act(() => issueStore.getState().apply((d) => ops.addComment(d, 1, 'and [[Nowhere]]')));
+    await renderApp({ view: 'issue', number: 1 });
+    const mentioned = () => screen.getAllByTestId('mentioned-note').map((li) => li.textContent);
+    expect(mentioned()).toEqual(['Specmentioned', 'Nowherementioned']);
+    expect(screen.getByTitle('No note with this title')).toHaveTextContent('Nowhere');
+    await userEvent.click(within(screen.getAllByTestId('mentioned-note')[0]).getByRole('button', { name: 'Spec' }));
+    expect(viewState()).toEqual({ view: 'md', params: { noteId: '/w/Spec.md', hash: '' } });
+    // once linked explicitly it is listed only once
+    await go({ view: 'issue', number: 1 });
+    act(() => issueStore.getState().apply((d) => ops.linkNote(d, 1, '/w/Spec.md')));
+    expect(mentioned()).toEqual(['Nowherementioned']);
+  });
+
   test('shows notes mentioning the issue and deletes it', async () => {
     seedDetail();
     await renderApp({ view: 'issue', number: 1 });
@@ -396,6 +411,65 @@ describe('Issue detail', () => {
     await go({ view: 'issue', number: 1 });
     await act(async () => { await editors.props['Describe the issue… [[Note]] links a note'].onOpenLink('Spec' as never); });
     expect(viewState()).toEqual({ view: 'md', params: { noteId: '/w/Spec.md' } });
+  });
+});
+
+describe('Tasks tab', () => {
+  function seedTasks() {
+    seed();
+    const a = makeNote({ id: '/w/Plan.md', title: 'Plan', content: 'Write spec #todo#\n\nShip it #doing#', updated_at: '2026-02-01T00:00:00Z' });
+    const b = makeNote({ id: '/w/Old.md', title: 'Old', content: 'Archive #done#', updated_at: '2026-01-01T00:00:00Z' });
+    store.getState().setNotes({ [a.id]: a, [b.id]: b });
+  }
+  const rows = () => screen.getAllByTestId('note-task').map((r) => r.textContent);
+
+  test('lists note tasks and turns them into issues', async () => {
+    seedTasks();
+    await renderApp({ view: 'issues', tab: 'tasks' });
+    await waitFor(() => expect(screen.getAllByTestId('note-task')).toHaveLength(3));
+    expect(rows()).toEqual([
+      '#todoWrite specPlanCreate issue', '#doingShip itPlanCreate issue', '#doneArchiveOldCreate issue',
+    ]);
+    // filter by tag
+    await userEvent.click(screen.getByRole('button', { name: /^#doing/ }));
+    expect(rows()).toEqual(['#doingShip itPlanCreate issue']);
+    await userEvent.click(screen.getByRole('button', { name: /^All/ }));
+    // one issue
+    await userEvent.click(within(screen.getAllByTestId('note-task')[0]).getByRole('button', { name: 'Create issue' }));
+    expect(data().issues[0]).toMatchObject({ number: 1, title: 'Write spec', notes: ['/w/Plan.md'] });
+    expect(rows()[0]).toBe('#todoWrite specPlan#1');
+    // the rest
+    await userEvent.click(screen.getByRole('button', { name: 'Create issues for 2 tasks' }));
+    expect(data().issues.map((i) => [i.title, i.state])).toEqual([
+      ['Write spec', 'open'], ['Ship it', 'open'], ['Archive', 'closed'],
+    ]);
+    expect(screen.getByRole('button', { name: 'Create issues for 0 tasks' })).toBeDisabled();
+    await userEvent.click(screen.getByLabelText('Without issue only'));
+    expect(screen.getByText('No tasks in notes.')).toBeInTheDocument();
+    await userEvent.click(screen.getByLabelText('Without issue only'));
+    // open the issue and the note
+    await userEvent.click(screen.getByRole('button', { name: /#3/ }));
+    expect(viewState()).toEqual({ view: 'issue', issueNumber: 3 });
+    await go({ view: 'issues', tab: 'tasks' });
+    await userEvent.click(screen.getAllByRole('button', { name: 'Old' })[0]);
+    expect(viewState()).toEqual({ view: 'md', params: { noteId: '/w/Old.md', hash: '' } });
+  });
+
+  test('tabs are part of the view state', async () => {
+    seedTasks();
+    await renderApp({ view: 'issues' });
+    await userEvent.click(screen.getByRole('button', { name: /Tasks/ }));
+    expect(viewState()).toEqual({ view: 'issues', issuesTab: 'tasks' });
+    expect(screen.getByTestId('note-tasks')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Issues/ }));
+    expect(viewState()).toEqual({ view: 'issues', issuesTab: 'issues' });
+  });
+
+  test('empty state', async () => {
+    seed();
+    await renderApp({ view: 'issues', tab: 'tasks' });
+    expect(screen.getByText('No tasks in notes.')).toBeInTheDocument();
+    expect(screen.getByText(/Create issues for 0/)).toBeDisabled();
   });
 });
 

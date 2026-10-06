@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { TbTag as IconTag, TbFlag as IconFlag, TbCircleDot as IconIssue } from 'react-icons/tb';
+import { TbTag as IconTag, TbFlag as IconFlag, TbCircleDot as IconIssue, TbCheckbox as IconTasks } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useIssueData, useIssueStore } from 'components/issue/issueStore';
@@ -9,10 +9,11 @@ import IssueEditor from 'components/issue/IssueEditor';
 import IssueDetail from 'components/issue/IssueDetail';
 import LabelManager from 'components/issue/LabelManager';
 import MilestoneManager from 'components/issue/MilestoneManager';
+import NoteTaskList from 'components/issue/NoteTaskList';
 import { StateIcon, btnClass, inputClass, primaryBtnClass } from 'components/issue/common';
 import type { IssueState } from 'components/issue/types';
 
-type Tab = 'issues' | 'labels' | 'milestones';
+import type { IssuesTab as Tab } from 'context/viewReducer';
 
 const selectClass =
   'py-1 pl-2 pr-8 text-sm bg-transparent border-gray-300 rounded dark:border-gray-600 dark:bg-gray-800';
@@ -20,8 +21,10 @@ const selectClass =
 export default function Issues() {
   const { data, isLoaded, initDir } = useIssueData();
   const createIssue = useIssueStore((s) => s.createIssue);
-  const { dispatch } = useCurrentViewContext();
-  const [tab, setTab] = useState<Tab>('issues');
+  const { state, dispatch } = useCurrentViewContext();
+  // the tab lives in the view state, so other views and hotkeys can open a tab
+  const tab: Tab = state.issuesTab ?? 'issues';
+  const setTab = (t: Tab) => dispatch({ view: 'issues', tab: t });
   const [query, setQuery] = useState('is:open ');
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -67,6 +70,9 @@ export default function Issues() {
             <button type="button" className={tabClass('issues')} onClick={() => setTab('issues')}>
               <IconIssue size={16} /> Issues
             </button>
+            <button type="button" className={tabClass('tasks')} onClick={() => setTab('tasks')}>
+              <IconTasks size={16} /> Tasks
+            </button>
             <button type="button" className={tabClass('labels')} onClick={() => setTab('labels')}>
               <IconTag size={16} /> Labels <span className="text-xs text-gray-500">{data.labels.length}</span>
             </button>
@@ -82,6 +88,8 @@ export default function Issues() {
 
           {!isLoaded ? (
             <p className="text-gray-500">Loading issues…</p>
+          ) : tab === 'tasks' ? (
+            <NoteTaskList data={data} />
           ) : tab === 'labels' ? (
             <LabelManager data={data} onFilter={(name) => { setTab('issues'); update({ labels: [name] }); }} />
           ) : tab === 'milestones' ? (

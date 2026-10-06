@@ -12,7 +12,6 @@ import MainView from './MainView';
 import HeatMap from './HeatMap';
 import Chronicle from './chronicle';
 import Journals from './journals';
-import Tasks from './tasks';
 import Graph from './graph';
 import { LINK_REGEX, WIKILINK_REGEX, HASHTAG_REGEX } from './ForceGraph';
 
@@ -79,7 +78,7 @@ describe('MainView', () => {
 
   test.each([
     [{ view: 'chronicle' }, 'Journals'],
-    [{ view: 'task' }, 'PER NOTE'],
+    [{ view: 'issues', tab: 'tasks' }, 'Open a folder to track issues.'],
     [{ view: 'journal' }, null],
     [{ view: 'tag', tag: 'idea' }, '#idea'],
     [{ view: 'md', params: { noteId: '' } }, 'This note does not exists!'],
@@ -213,52 +212,6 @@ describe('Journals', () => {
     expect(screen.getByPlaceholderText('new or find')).toBeInTheDocument();
     await userEvent.click(screen.getByText('2022-01-01'));
     await waitFor(() => expect(viewState().params?.noteId).toBe(d1.id));
-  });
-});
-
-describe('Tasks', () => {
-  const seed = () => {
-    const a = makeNote({ id: '/n/a.md', title: 'Alpha', content: '- [ ] write tests\n- [x] read code\n' });
-    const b = makeNote({ id: '/n/b.md', title: 'Beta', content: 'Working on it #doing# today\n\nLater #todo# stuff' });
-    store.getState().setNotes({ [a.id]: a, [b.id]: b });
-    store.getState().setIsLoaded(true);
-  };
-
-  test('groups checkbox tasks per note', () => {
-    seed();
-    renderView(<Tasks />);
-    expect(screen.getByText(/: Alpha$/)).toBeInTheDocument();
-    expect(screen.getByText('write tests')).toBeInTheDocument();
-    expect(screen.getByText('read code')).toBeInTheDocument();
-  });
-
-  test('switches to per completion', async () => {
-    seed();
-    renderView(<Tasks />);
-    await userEvent.click(screen.getByText('PER COMPLETION'));
-    expect(screen.getByText('PER COMPLETION')).toHaveClass('text-red-500');
-    expect(screen.getByText(/write tests/)).toBeInTheDocument();
-  });
-
-  test('lists hashtag tasks and collapses others', async () => {
-    seed();
-    renderView(<Tasks />);
-    expect(screen.getByText('Doing')).toBeInTheDocument();
-    expect(screen.getAllByText(/: Beta$/)).toHaveLength(2);
-    await userEvent.click(screen.getByText('#doing'));
-    expect(screen.getAllByText(/: Beta$/)).toHaveLength(1);
-  });
-
-  test('opens a note from its task group', async () => {
-    seed();
-    mockInvoke(invoke, {
-      file_exist: true,
-      get_file_meta: makeFileMeta({ file_path: '/n/a.md', file_name: 'a.md' }),
-      get_parent_dir: '/n',
-    });
-    renderView(<Tasks />);
-    await userEvent.click(screen.getByText(/: Alpha$/));
-    await waitFor(() => expect(viewState().params?.noteId).toBe('/n/a.md'));
   });
 });
 

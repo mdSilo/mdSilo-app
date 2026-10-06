@@ -1,5 +1,8 @@
 export type IssueState = 'open' | 'closed';
 
+/** A task in a note: the note path and the task text. */
+export type NoteTaskRef = { note: string; text: string };
+
 export type Label = {
   id: string;
   name: string;
@@ -53,6 +56,8 @@ export type Issue = {
   labels: string[]; // Label ids
   milestone?: string; // Milestone id
   notes: string[]; // explicitly linked note paths (note.id === file_path)
+  /** set when created from a #todo#/#doing#/#done# task in a note */
+  noteTask?: NoteTaskRef;
   timeline: TimelineItem[];
   createdAt: string;
   updatedAt: string;
