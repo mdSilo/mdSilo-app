@@ -3,6 +3,7 @@ import { TbPin as IconPin, TbTrash as IconTrash } from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import Tooltip from 'components/misc/Tooltip';
 import { listInitDir } from 'editor/hooks/useOpen';
+import { isWeb } from 'file/util';
 
 type Props = {
   className?: string;
@@ -30,7 +31,8 @@ function SidebarHistory(props: Props) {
   // would otherwise re-run this effect forever while the history is mounted
   const isOpened = useRef(false);
   useEffect(() => { 
-    if (!isOpenPreOn || showHistory || isOpened.current) return;
+    // web: the workspace is opened on startup, see openWebWorkspace
+    if (isWeb || !isOpenPreOn || showHistory || isOpened.current) return;
     const recentDirPath = history.length > 0 ? history[history.length - 1] : '';
     if (!recentDirPath) return;
     isOpened.current = true;

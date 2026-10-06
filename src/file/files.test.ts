@@ -80,7 +80,8 @@ describe('FileAPI (tauri)', () => {
   test('createFile creates parent dirs first', async () => {
     mockInvoke(tauriInvoke, { get_dirpath: '/notes' });
     await new TauriFileAPI('/notes/a.md').createFile();
-    const cmds = tauriInvoke.mock.calls.map((c) => c[0]).filter((c) => c !== 'get_data');
+    // skip the settings store loading / saving itself (get_data / set_data)
+    const cmds = tauriInvoke.mock.calls.map((c) => c[0]).filter((c) => c !== 'get_data' && c !== 'set_data');
     expect(cmds).toEqual(['get_dirpath', 'create_dir_recursive', 'create_file']);
     expect(tauriInvoke).toHaveBeenCalledWith('create_dir_recursive', { dirPath: '/notes' });
     expect(tauriInvoke).toHaveBeenCalledWith('create_file', { filePath: '/notes/a.md' });

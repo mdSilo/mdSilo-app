@@ -148,4 +148,48 @@ describe('useOpen (tauri)', () => {
     await useOpen.onSave();
     expect(invoke).not.toHaveBeenCalledWith('write_file', expect.anything());
   });
+
+  describe('openWebWorkspace', () => {
+    const withDirs = (dirs: string[]) => mockInvoke(invoke, {
+      get_data: { status: false },
+      file_exist: true,
+      is_dir: ({ path }: Record<string, unknown>) => dirs.includes(path as string),
+      create_mdsilo_dir: '/mdSilo',
+      get_dirpath: ({ path }: Record<string, unknown>) => path,
+      list_directory: [],
+      join_paths: joinPaths,
+    });
+
+    test('opens the default workspace on first visit', async () => {
+      withDirs(['/mdSilo']);
+      expect(await useOpen.openWebWorkspace()).toBe('/mdSilo');
+      expect(invoke).toHaveBeenCalledWith('create_mdsilo_dir');
+      expect(store.getState().initDir).toBe('/mdSilo');
+      expect(store.getState().currentDir).toBe('/mdSilo');
+    });
+
+    test('reopens the previous folder, else the pinned one', async () => {
+      withDirs(['/mdSilo', '/work', '/pinned']);
+      store.getState().setRecentDir(['/old', '/work']);
+      store.getState().setPinnedDir('/pinned');
+      expect(await useOpen.openWebWorkspace()).toBe('/work');
+
+      store.getState().setInitDir(undefined);
+      store.getState().setRecentDir(['/gone']);
+      expect(await useOpen.openWebWorkspace()).toBe('/pinned');
+
+      store.getState().setInitDir(undefined);
+      store.getState().setIsOpenPreOn(false);
+      store.getState().setRecentDir(['/work']);
+      store.getState().setPinnedDir('');
+      expect(await useOpen.openWebWorkspace()).toBe('/mdSilo');
+    });
+
+    test('does nothing if a folder is open', async () => {
+      withDirs(['/mdSilo']);
+      store.getState().setInitDir('/opened');
+      expect(await useOpen.openWebWorkspace()).toBeUndefined();
+      expect(invoke).not.toHaveBeenCalledWith('create_mdsilo_dir', expect.anything());
+    });
+  });
 });
