@@ -1,6 +1,37 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
+
+/**
+ * Fingerprint of the mdsmirror build (packages/mdsmirror/dist).
+ * Vite keys its pre-bundled deps cache on the lockfile and this config only,
+ * so a rebuilt mdsmirror would keep being served from the stale cache.
+ */
+function mdsmirrorBuildId(): string {
+  const dist = path.resolve(__dirname, 'packages/mdsmirror/dist');
+  const hash = crypto.createHash('sha1');
+  const walk = (dir: string) => {
+    let entries: fs.Dirent[] = [];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return; // not built yet
+    }
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(file);
+      } else if (entry.name.endsWith('.js')) {
+        const { size, mtimeMs } = fs.statSync(file);
+        hash.update(`${file}:${size}:${mtimeMs}\n`);
+      }
+    }
+  };
+  walk(dist);
+  return hash.digest('hex');
+}
 
 export default defineConfig({
   plugins: [react()],
@@ -17,6 +48,10 @@ export default defineConfig({
   // force esbuild to pre-bundle it.
   optimizeDeps: {
     include: ['mdsmirror'],
+    // part of the cache key: re-bundle mdsmirror whenever it is rebuilt
+    esbuildOptions: {
+      define: { __MDSMIRROR_BUILD__: JSON.stringify(mdsmirrorBuildId()) },
+    },
   },
   // keep the errors from the Rust side visible in `tauri dev`
   clearScreen: false,
