@@ -21,7 +21,7 @@ extern crate diesel;
 extern crate diesel_migrations;
 
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use tauri::Manager;
+use tauri::{Listener, Manager};
 
 #[tauri::command]
 async fn close_splashscreen(window: tauri::Window) {
@@ -97,6 +97,8 @@ pub fn run() {
     ])
     .setup(|app| {
       tray::setup(app)?;
+      // frontend: src/file/directory.ts/DirectoryAPI/unlisten
+      app.listen_any("unlisten_dir", |_| files::unlisten_dir());
       Ok(())
     })
     .run(tauri::generate_context!())

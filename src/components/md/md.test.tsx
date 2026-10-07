@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { createRef } from 'react';
+import { createRef, StrictMode } from 'react';
 import { render, waitFor, act } from '@testing-library/react';
 import { EditorView } from '@codemirror/view';
 import CodeMirror, { type ReactCodeMirrorRef } from './ReactCodeMirror';
@@ -60,6 +60,30 @@ describe('ReactCodeMirror', () => {
     const destroy = vi.spyOn(view, 'destroy');
     unmount();
     expect(destroy).toHaveBeenCalled();
+  });
+});
+
+describe('ReactCodeMirror in StrictMode', () => {
+  test('mounts exactly one editor', async () => {
+    const ref = createRef<ReactCodeMirrorRef>();
+    const { container } = render(
+      <StrictMode>
+        <CodeMirror ref={ref} value="once" />
+      </StrictMode>
+    );
+    await waitFor(() => expect(ref.current?.view).toBeDefined());
+    expect(container.querySelectorAll('.cm-editor')).toHaveLength(1);
+    expect(content(container)).toBe('once');
+  });
+
+  test('syncing the value is not reported as a change', async () => {
+    const ref = createRef<ReactCodeMirrorRef>();
+    const onChange = vi.fn();
+    const { rerender } = render(<CodeMirror ref={ref} value="a" onChange={onChange} />);
+    await waitFor(() => expect(ref.current?.view).toBeDefined());
+    rerender(<CodeMirror ref={ref} value="b" onChange={onChange} />);
+    await waitFor(() => expect(ref.current?.view?.state.doc.toString()).toBe('b'));
+    expect(onChange).not.toHaveBeenCalled();
   });
 });
 

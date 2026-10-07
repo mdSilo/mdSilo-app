@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { basicSetup } from 'codemirror';
-import { EditorState, StateEffect } from '@codemirror/state';
+import { Annotation, EditorState, Extension, StateEffect } from '@codemirror/state';
 import { indentWithTab } from '@codemirror/commands';
 import { EditorView, keymap, ViewUpdate, placeholder } from '@codemirror/view';
 import { oneDark } from './darkTheme';
 import { ReactCodeMirrorProps } from './ReactCodeMirror';
+
+// stable default: a new array would reconfigure the editor on every render
+export const NO_EXTENSIONS: Extension[] = [];
+
+// marks the transactions syncing the `value` prop, not reported by onChange
+const External = Annotation.define<boolean>();
 
 export interface UseCodeMirror extends ReactCodeMirrorProps {
   container?: HTMLDivElement | null;
@@ -16,7 +22,7 @@ export function useCodeMirror(props: UseCodeMirror) {
     selection,
     onChange,
     onUpdate,
-    extensions = [],
+    extensions = NO_EXTENSIONS,
     autoFocus,
     theme = 'light',
     height = '',
@@ -35,6 +41,11 @@ export function useCodeMirror(props: UseCodeMirror) {
   const [container, setContainer] = useState(props.container);
   const [view, setView] = useState<EditorView>();
   const [state, setState] = useState<EditorState>();
+  // latest callbacks, the listeners below are created once per view
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
   const defaultLightThemeOption = EditorView.theme(
     {
@@ -58,10 +69,15 @@ export function useCodeMirror(props: UseCodeMirror) {
   });
 
   const updateListener = EditorView.updateListener.of((vu: ViewUpdate) => {
-    if (vu.docChanged && typeof onChange === 'function') {
+    const onChangeFn = onChangeRef.current;
+    if (
+      vu.docChanged &&
+      typeof onChangeFn === 'function' &&
+      !vu.transactions.some((tr) => tr.annotation(External))
+    ) {
       const doc = vu.state.doc;
       const value = doc.toString();
-      onChange(value, vu);
+      onChangeFn(value, vu);
     }
   });
 
@@ -93,45 +109,34 @@ export function useCodeMirror(props: UseCodeMirror) {
     getExtensions.push(EditorState.readOnly.of(true));
   }
   if (onUpdate && typeof onUpdate === 'function') {
-    getExtensions.push(EditorView.updateListener.of(onUpdate));
+    getExtensions.push(EditorView.updateListener.of((vu) => onUpdateRef.current?.(vu)));
   }
   getExtensions.push(EditorView.lineWrapping)
   getExtensions = getExtensions.concat(extensions);
 
+  // create the view once the container is set, destroy it on cleanup:
+  // effects run twice in StrictMode, a view must never be left behind
   useEffect(() => {
-    if (container && !state) {
-      const stateCurrent = EditorState.create({
-        doc: value,
-        selection,
-        extensions: getExtensions,
-      });
-      setState(stateCurrent);
-      if (!view) {
-        const viewCurrent = new EditorView({
-          state: stateCurrent,
-          parent: container,
-          root,
-        });
-        setView(viewCurrent);
-      }
-    }
+    if (!container) return;
+    const stateCurrent = EditorState.create({
+      doc: value,
+      selection,
+      extensions: getExtensions,
+    });
+    const viewCurrent = new EditorView({
+      state: stateCurrent,
+      parent: container,
+      root,
+    });
+    setState(stateCurrent);
+    setView(viewCurrent);
     return () => {
-      if (view) {
-        setView(undefined);
-      }
+      viewCurrent.destroy();
+      setView(undefined);
+      setState(undefined);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [container, state]);
-
-  useEffect(
-    () => () => {
-      if (view) {
-        view.destroy();
-        setView(undefined);
-      }
-    },
-    [view],
-  );
+  }, [container]);
 
   useEffect(() => {
     if (autoFocus && view) {
@@ -144,6 +149,7 @@ export function useCodeMirror(props: UseCodeMirror) {
     if (view && value !== currentValue) {
       view.dispatch({
         changes: { from: 0, to: currentValue.length, insert: value || '' },
+        annotations: [External.of(true)],
       });
     }
   }, [value, view]);

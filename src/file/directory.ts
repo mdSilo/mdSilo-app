@@ -50,7 +50,9 @@ interface EventPayload {
   event: string;
 }
 
-let listener: UnlistenFn;
+// the only listener of dir changes: listening again replaces it
+let listener: UnlistenFn | undefined;
+let listenSeq = 0;
 
 /** Invoke Rust command to handle directory */
 class DirectoryAPI {
@@ -137,15 +139,27 @@ class DirectoryAPI {
   async listen(callbackFn: () => void): Promise<void> {
     if (hasFs) {
       // emit
-      invoke('listen_dir', { dir: this.dirPath });
-      // listen
+      // the backend replaces the previous watcher, if any
+      invoke('listen_dir', { dir: this.dirPath }).catch((e) =>
+        console.error('Failed to watch dir:', e)
+      );
+      // listen, replacing the previous listener: otherwise every change
+      // would be handled once more each time a folder is opened
+      const seq = ++listenSeq;
+      listener?.();
+      listener = undefined;
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
-      listener = await getCurrentWindow().listen('changes', async (e: Event<EventPayload>) => {
+      const unlisten = await getCurrentWindow().listen('changes', async (e: Event<EventPayload>) => {
         // console.log("listen event: ", e);
         // sync the change on listen
         const payload: EventPayload = e.payload;
-        const filePaths = payload.paths; // FULL PATH
         const event = payload.event;
+        // FULL PATH; skip the json written by the app itself on loading,
+        // reading it back on every load is wasted work
+        const filePaths = event === 'loaded' || event === 'unloaded'
+          ? payload.paths
+          : payload.paths.filter((f) => !f.endsWith('/mdsilo.json'));
+        if (filePaths.length === 0 && payload.paths.length > 0) return;
         // console.log("event kind: ", event);
         // console.log("file paths: ", filePaths);
         if (event === 'write' || event === 'close_write') {
@@ -212,6 +226,12 @@ class DirectoryAPI {
         }
         callbackFn();
       });
+      if (seq !== listenSeq) {
+        // listened again meanwhile
+        unlisten();
+      } else {
+        listener = unlisten;
+      }
     }
   }
 
@@ -220,7 +240,9 @@ class DirectoryAPI {
    * @returns {Promise<void>}
   */
   async unlisten(): Promise<void> {
+    listenSeq++;
     listener?.();
+    listener = undefined;
     const { getCurrentWindow } = await import('@tauri-apps/api/window');
     return getCurrentWindow().emit('unlisten_dir');
   }

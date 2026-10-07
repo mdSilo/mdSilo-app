@@ -29,7 +29,11 @@
       }
     ],
     "security": {
-      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'"
+      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: http://asset.localhost https://asset.localhost 'self'; script-src 'self'",
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**", "**/*"]
+      }
     },
     "withGlobalTauri": true
   },

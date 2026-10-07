@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { EditorState, EditorStateConfig, Extension } from '@codemirror/state';
 import { EditorView, ViewUpdate } from '@codemirror/view';
-import { useCodeMirror } from './useCodeMirror';
+import { NO_EXTENSIONS, useCodeMirror } from './useCodeMirror';
 
 export interface ReactCodeMirrorProps
   extends Omit<EditorStateConfig, 'doc' | 'extensions'>,
@@ -55,7 +55,7 @@ const ReactCodeMirror = forwardRef<ReactCodeMirrorRef, ReactCodeMirrorProps>((pr
     className,
     value = '',
     selection,
-    extensions = [],
+    extensions = NO_EXTENSIONS,
     onChange,
     onUpdate,
     autoFocus,

@@ -142,6 +142,22 @@ describe('DirectoryAPI (tauri)', () => {
       expect(callback).not.toHaveBeenCalled();
     });
 
+    test('listening again replaces the previous listener', async () => {
+      const unlisten = vi.fn();
+      win.listen.mockResolvedValueOnce(unlisten);
+      await new Dir('/notes').listen(vi.fn());
+      await new Dir('/other').listen(vi.fn());
+      expect(unlisten).toHaveBeenCalledTimes(1);
+      expect(tauriInvoke).toHaveBeenCalledWith('listen_dir', { dir: '/other' });
+    });
+
+    test('the json written on load is not read back', async () => {
+      const { callback, emit } = await startListening();
+      await emit('write', ['/notes/mdsilo.json']);
+      expect(tauriInvoke).not.toHaveBeenCalledWith('file_exist', expect.anything());
+      expect(callback).not.toHaveBeenCalled();
+    });
+
     test('unloaded resets isLoaded', async () => {
       store.getState().setIsLoaded(true);
       const { emit } = await startListening();

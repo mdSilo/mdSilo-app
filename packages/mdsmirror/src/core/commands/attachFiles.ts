@@ -1,3 +1,4 @@
+import { Node, Schema } from "prosemirror-model";
 import { NodeSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
@@ -19,7 +20,8 @@ export type Attach = {
 
 const attachFiles = function (
   view: EditorView,
-  pos: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _pos: number,
   options: Options
 ): void {
   const { accept, attachFile, handleSrc } = options;
@@ -29,80 +31,67 @@ const attachFiles = function (
     return;
   }
 
-  attachFile(accept).then((attachs: Attach[]) => {
-    const { schema } = view.state;
-    // the user might have attached multiple files at once, we need to loop
-    for (const file of attachs) {
-      const isImage = file.type.startsWith("image/");
-      const src = file.src;
-      const { tr } = view.state;
-
-      // insert new line below before attach
-      // console.log("pos", view.state.selection.from, view.state.selection.to);
-      const transaction0 = view.state.tr.split(view.state.selection.from);
-      view.dispatch(transaction0);
-      const transaction1 = view.state.tr.split(view.state.selection.to);
-      view.dispatch(transaction1);
-
-      const $pos = tr.doc.resolve(pos);
-      // console.log("$pos", $pos);
-      const from = $pos.pos;
-      const to = $pos.pos;
-      // console.log("after node size", $pos.nodeAfter, $pos.nodeAfter?.nodeSize);
-
-      if (isImage) {
-        const newImg = new Image();
-        const imgSrc = (handleSrc && handleSrc(src)) || src;
-        newImg.src = imgSrc;
-        newImg.onload = () => {
-          view.dispatch(
-            view.state.tr.replaceWith(
-              from,
-              to || from,
-              schema.nodes.image.create({ src })
-            )
-          );
-          // If the users selection is still at the file then make sure to select
-          // the entire node once done. Otherwise, if the selection has moved
-          // elsewhere then we don't want to modify it
-          if (view.state.selection.from === from) {
-            view.dispatch(
-              view.state.tr.setSelection(
-                new NodeSelection(view.state.doc.resolve(from))
-              )
-            );
-          }
-        };
-
-        newImg.onerror = (error) => {
-          throw error;
-        };
-      } else {
-        view.dispatch(
-          view.state.tr.replaceWith(
-            from,
-            to || from,
+  attachFile(accept)
+    .then((attachs: Attach[]) => {
+      // the user might have attached multiple files at once
+      for (const file of attachs) {
+        const isImage = file.type.startsWith("image/");
+        if (!isImage) {
+          insertNode(view, (schema) =>
             schema.nodes.attachment.create({
-              href: src,
+              href: file.src,
               title: file.name ?? "Untitled",
               size: file.size,
             })
-          )
-        );
-
-        // If the users selection is still at the file then make sure to select
-        // the entire node once done. Otherwise, if the selection has moved
-        // elsewhere then we don't want to modify it
-        if (view.state.selection.from === from) {
-          view.dispatch(
-            view.state.tr.setSelection(
-              new NodeSelection(view.state.doc.resolve(from))
-            )
           );
+          continue;
         }
+
+        const insert = () =>
+          insertNode(view, (schema) =>
+            schema.nodes.image.create({ src: file.src })
+          );
+        // preload the image so it is shown at once when inserted,
+        // insert it anyway if it fails to load: never lose the attached
+        const img = new Image();
+        img.onload = insert;
+        img.onerror = insert;
+        img.src = (handleSrc && handleSrc(file.src)) || file.src;
       }
-    }
-  });
+    })
+    .catch((error) => console.error("Failed to attach file:", error));
 };
+
+/**
+ * Insert the node at the current selection, which is read when inserting:
+ * the document may have changed while picking the file.
+ * An inline node(image) is put in its own paragraph unless the selection is
+ * in an empty one, a block node(attachment) is put after the current block.
+ */
+function insertNode(view: EditorView, create: (schema: Schema) => Node) {
+  const { state } = view;
+  const node = create(state.schema);
+  const { $from } = state.selection;
+  let tr = state.tr;
+
+  if (
+    node.isInline &&
+    $from.parent.isTextblock &&
+    $from.parent.content.size > 0
+  ) {
+    const paragraph = state.schema.nodes.paragraph.create(null, node);
+    const at = $from.after();
+    tr = tr.insert(at, paragraph);
+    tr = tr.setSelection(NodeSelection.create(tr.doc, at + 1));
+  } else {
+    tr = tr.replaceSelectionWith(node);
+    const pos = tr.selection.from - node.nodeSize;
+    if (pos >= 0 && tr.doc.nodeAt(pos)?.type === node.type) {
+      tr = tr.setSelection(NodeSelection.create(tr.doc, pos));
+    }
+  }
+
+  view.dispatch(tr.scrollIntoView());
+}
 
 export default attachFiles;

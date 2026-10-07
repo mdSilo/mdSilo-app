@@ -250,9 +250,8 @@ function Note(props: Props) {
           // now it is relative path
           fileUrl = encodeURI(assetPath[1] || filePath);
         } else {
-          fileUrl = accept === 'image/*'
-            ? convertFileSrc(filePath)
-            : encodeURI(filePath);
+          // the local path, resolved to url by `resolveSrc` on display
+          fileUrl = encodeURI(filePath);
         }
         // console.log("file url", fileUrl)
         const fileInfo = new FileAPI(fullPath);
@@ -355,7 +354,7 @@ function Note(props: Props) {
               <div className="flex-1 px-2 pt-2 pb-8" id="note-content">
                 {rawMode === 'raw' ? (
                   <RawMarkdown
-                    key={`raw-${title}`}
+                    key={`raw-${noteId}`}
                     initialContent={mdContent}
                     onChange={onMarkdownChange}
                     dark={darkMode}
@@ -393,6 +392,7 @@ function Note(props: Props) {
                     disables={['sub']}
                     rootPath={initDir}
                     protocol={protocol}
+                    resolveSrc={convertFileSrc}
                   />
                 )}
               </div>

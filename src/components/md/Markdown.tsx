@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { json } from "@codemirror/lang-json";
 import { languages } from "@codemirror/language-data";
@@ -27,6 +27,14 @@ function Markdown(props: Props) {
 
   //const readMode = useStore((state) => state.readMode); 
 
+  // keep the same extensions across renders: new ones reconfigure the editor
+  const extensions = useMemo(
+    () => lang === "markdown"
+      ? [markdown({ base: markdownLanguage, codeLanguages: languages })]
+      : [json()],
+    [lang]
+  );
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onValueChange = (value: string, _viewUpdate: unknown) => {
     // console.log('md Changed, value:', value, _viewUpdate);
@@ -38,10 +46,7 @@ function Markdown(props: Props) {
       value={initialContent}
       onChange={onValueChange}
       onFocus={onFocus}
-      extensions={lang === "markdown" 
-        ? [markdown({ base: markdownLanguage, codeLanguages: languages })]
-        : [json()]
-      }
+      extensions={extensions}
       className={`border-none focus:outline-none p-0 break-words ${className}`}
       theme={dark ? 'dark' : 'light'}
       editable={!readMode}

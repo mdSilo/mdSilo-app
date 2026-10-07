@@ -11,9 +11,9 @@ use notify::{
 };
 use std::fs;
 use std::path::Path;
-use std::sync::mpsc::channel;
+use std::sync::Mutex;
 use std::time::SystemTime;
-use tauri::{AppHandle, Emitter, Listener};
+use tauri::{AppHandle, Emitter};
 
 #[cfg(windows)]
 use std::os::windows::fs::MetadataExt;
@@ -589,112 +589,97 @@ pub fn detect_lang(text: String) -> String {
   }
 }
 
-// Listen to change events in a directory
+// Only one directory is watched at a time. Watching again, e.g. after the
+// page is reloaded or another folder is opened, replaces the previous watcher,
+// which is dropped and so stops.
+static DIR_WATCHER: Mutex<Option<RecommendedWatcher>> = Mutex::new(None);
+
+fn log_watch_err(info: String) {
+  do_log(
+    "Error".to_string(),
+    info,
+    format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
+  );
+}
+
+// Listen to change events in a directory, emit them to the window.
+// It returns once watching: the events are handled on the watcher's thread,
+// never block a thread of the async runtime, otherwise the commands
+// invoked later would hang once all the threads are blocked.
 #[tauri::command]
 pub async fn listen_dir(
   dir: String,
   window: tauri::Window,
 ) -> Result<String, String> {
-  let (tx, rx) = channel();
-  let raw_watch = match RecommendedWatcher::new(tx, Config::default()) {
-    Ok(watch) => watch,
-    Err(e) => {
-      do_log(
-        "Error".to_string(),
-        format!("Err on [listen_dir: new watcher] : {}", e),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
-      return Err(format!("new watcher err: {}", e));
-    }
-  };
-  let watcher = std::sync::Arc::new(std::sync::Mutex::new(raw_watch));
+  // stop the previous watcher first
+  unlisten_dir();
 
-  match watcher.lock() {
-    Ok(mut mutex_watch) => {
-      mutex_watch
-        .watch(dir.as_ref(), RecursiveMode::Recursive)
-        .unwrap_or(());
-    }
-    Err(e) => {
-      do_log(
-        "Error".to_string(),
-        format!("Err on [listen_dir: lock watcher]: {}", e),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
-      return Err(format!("lock watcher on listen err: {}", e));
-    }
-  };
+  let handler = move |res: notify::Result<RawEvent>| match res {
+    Ok(RawEvent {
+      paths,  // Vec<PathBuff>
+      kind,   // EventKind: Access,Create,Modify,Remove
+      ..      // attrs,  // EventAttributes: tracker, flag...
+    }) => {
+      let event_kind = match kind {
+        // EventKind::Access(_) => "access",
+        EventKind::Create(_) => "create",
+        EventKind::Modify(ModifyKind::Name(rename)) => match rename {
+          RenameMode::To => "renameTo",
+          RenameMode::From => "renameFrom",
+          _ => "rename",
+        },
+        EventKind::Modify(_) => "write",
+        EventKind::Remove(_) => "remove",
+        _ => "unknown",
+      };
 
-  window.once("unlisten_dir", move |_| {
-    if let Ok(mut watch) = watcher.lock() {
-      watch.unwatch(dir.as_ref()).unwrap_or(());
-    }
-  });
-
-  loop {
-    match rx.recv() {
-      Ok(event) => {
-        match event {
-          Ok(RawEvent {
-            paths,  // Vec<PathBuff>
-            kind,   // EventKind: Access,Create,Modify,Remove
-            ..      // attrs,  // EventAttributes: tracker, flag... 
-          }) => {
-            // println!("event, paths: {:?}, kind: {:?}, attrs: {:?}", paths, kind, attrs);
-            let event_kind = match kind {
-              // EventKind::Access(_) => "access",
-              EventKind::Create(_) => "create",
-              EventKind::Modify(modify_kind) => {
-                match modify_kind {
-                  ModifyKind::Name(rename) => {
-                    match rename {
-                      RenameMode::To => "renameTo",
-                      RenameMode::From => "renameFrom",
-                      _ => "rename",
-                    }
-                  },
-                  _ => "write",
-                }
-              },
-              EventKind::Remove(_) => "remove",
-              _ => "unknown", 
-            };
-
-            // emit event here, then Frontend will listen the event.
-            // frontend: src/file/directory.ts/DirectoryAPI/listen
-            if event_kind != "unknown" {
-              window.emit(
-                "changes", 
-                EventPayload {
-                  paths: paths
-                    .iter()
-                    .map(|path| path.normalize_slash().unwrap_or_default())
-                    .collect(),
-                  event: event_kind.to_string(),
-                },
-              )
-              .unwrap_or(());
-            }
-          },
-          Err(e) => {
-            do_log(
-              "Error".to_string(), 
-              format!("error on [listen_dir: revieve event]: {}", e), 
-              format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S"))
-            );
-            return Err(format!("error on revieve event: {}", e));
-          },
-        }
-      }
-      Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!("error on [listen_dir: revieve]: {}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
-        break Err(e.to_string());
+      // emit event here, then Frontend will listen the event.
+      // frontend: src/file/directory.ts/DirectoryAPI/listen
+      if event_kind != "unknown" {
+        window
+          .emit(
+            "changes",
+            EventPayload {
+              paths: paths
+                .iter()
+                .map(|path| path.normalize_slash().unwrap_or_default())
+                .collect(),
+              event: event_kind.to_string(),
+            },
+          )
+          .unwrap_or(());
       }
     }
+    Err(e) => log_watch_err(format!("error on [listen_dir: receive event]: {}", e)),
+  };
+
+  let mut watcher = RecommendedWatcher::new(handler, Config::default()).map_err(|e| {
+    log_watch_err(format!("Err on [listen_dir: new watcher] : {}", e));
+    format!("new watcher err: {}", e)
+  })?;
+  watcher
+    .watch(dir.as_ref(), RecursiveMode::Recursive)
+    .map_err(|e| {
+      log_watch_err(format!("Err on [listen_dir: watch]: {}", e));
+      format!("watch err: {}", e)
+    })?;
+
+  match DIR_WATCHER.lock() {
+    Ok(mut current) => {
+      current.replace(watcher);
+      Ok(dir)
+    }
+    Err(e) => {
+      log_watch_err(format!("Err on [listen_dir: lock watcher]: {}", e));
+      Err(format!("lock watcher on listen err: {}", e))
+    }
+  }
+}
+
+// Stop watching the directory, if any
+pub fn unlisten_dir() {
+  if let Ok(mut current) = DIR_WATCHER.lock() {
+    current.take();
   }
 }
 

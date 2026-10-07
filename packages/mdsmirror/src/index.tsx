@@ -162,6 +162,9 @@ export type Props = {
   // for relative image path
   rootPath?: string;
   protocol?: string; // asset: or https://asset.localhost
+  // local file path to url to load it, e.g. Tauri's convertFileSrc,
+  // used for relative(to rootPath) and absolute local image paths
+  resolveSrc?: (filePath: string) => string;
   // handle event
   handleDOMEvents?: {
     [name: string]: (view: EditorView, event: Event) => boolean;
@@ -233,6 +236,14 @@ type State = {
 type Step = {
   slice?: Slice;
 };
+
+function safeDecodeURI(str: string) {
+  try {
+    return decodeURI(str);
+  } catch {
+    return str;
+  }
+}
 
 class MsEditor extends React.PureComponent<Props, State> {
   static defaultProps = {
@@ -769,13 +780,25 @@ class MsEditor extends React.PureComponent<Props, State> {
 
   // for relative image src
   handleSrc = (src: string) => {
-    const { rootPath, protocol } = this.props;
-    if (src.startsWith("./") && rootPath && protocol) {
-      const newSrc = src.replace("./", `${protocol}${rootPath}/`);
-      return newSrc;
-    } else {
+    const { rootPath, protocol, resolveSrc } = this.props;
+    if (src.startsWith("./") && rootPath) {
+      if (resolveSrc) {
+        const base = rootPath.replace(/[\\/]+$/, "");
+        return resolveSrc(`${base}/${safeDecodeURI(src.slice(2))}`);
+      }
+      if (protocol) {
+        return src.replace("./", `${protocol}${rootPath}/`);
+      }
       return src;
     }
+    // absolute local path, e.g. `/home/me/a.png` or `C:\me\a.png`
+    if (resolveSrc) {
+      const path = safeDecodeURI(src);
+      if (/^(\/(?!\/)|[a-zA-Z]:[\\/])/.test(path)) {
+        return resolveSrc(path);
+      }
+    }
+    return src;
   };
 
   // 'public' methods
