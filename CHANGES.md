@@ -1,25 +1,34 @@
 # Changelog 
 
+## app-v0.6.0 
+
+2026-10-07
+
+- Sidebar workspace explorer: expand folders in place as a multi-level tree (close #751).
+- Sidebar: resize by dragging its edge; tree scrolls horizontally for deep folders.
+- Faster folder listing in sidebar explorer, rust end and frontend.
+- Feed reader: resizable channel and article columns, channel list scrolls horizontally.
+- Upgrade zustand 5, immer 11: faster store updates
+- Notes kept in an immutable bucketed NoteMap: editing a note no longer copies all notes.
+- Fix wiki links with `_`/`*` in title (e.g. `[[_draft_]]`): parsed as links, no longer broken on save.
+- Backlinks: faster computing (parse cached per note), mentions exclude link text, plain text context.
+- Fix inserting local image: enable Tauri 2 asset protocol, resolve local image paths, insert at the current cursor.
+- Fix raw mode (Markdown source): upgrade CodeMirror packages to latest, one copy of each; editor lifecycle safe in StrictMode.
+- Fix app hanging in loading after reload / dev tools: dir watcher no longer blocks a backend thread, one watcher and listener at a time.
+- Fix creating link from the selection toolbar: the link editor shows again; toolbar commands act on the editor's own schema and view.
+- CSP allows Tauri 2 IPC (`ipc:`, `http://ipc.localhost`): no more fallback to the slower postMessage IPC.
+- Tooltip built on tippy.js directly: `@tippyjs/react` read `element.ref`, removed in React 19.
+- Rename/delete note: update links with alias, escapes, several per line; skip code; wait for notes loaded. 
+- SideMenu Orientation setting with Auto, Vertical, and Horizontal options.
+- Add frontend test with more coverage.
+- Personal issue tracker.
+
+
 ## app-v0.5.10 
 
-2024-XX-XX
+2026-09-20
 
-- Sidebar workspace explorer: expand folders in place as a multi-level tree (#751)
-- Sidebar: resize by dragging its edge; tree scrolls horizontally for deep folders
-- Faster folder listing in sidebar explorer, rust end and frontend
-- Feed reader: resizable channel and article columns, channel list scrolls horizontally
-- Upgrade zustand 5, immer 11: faster store updates
-- Notes kept in an immutable bucketed NoteMap: editing a note no longer copies all notes
-- Fix wiki links with `_`/`*` in title (e.g. `[[_draft_]]`): parsed as links, no longer broken on save
-- Backlinks: faster computing (parse cached per note), mentions exclude link text, plain text context
-- Legacy links with `_` for spaces (`[a b](a_b)`, written before v0.5.7) resolve to note `a b` again: navigation, backlinks, graph, rename
-- Fix inserting local image: enable Tauri 2 asset protocol, resolve local image paths, insert at the current cursor
-- Fix raw mode (Markdown source): upgrade CodeMirror packages to latest, one copy of each; editor lifecycle safe in StrictMode
-- Fix app hanging in loading after reload / dev tools: dir watcher no longer blocks a backend thread, one watcher and listener at a time
-- Fix creating link from the selection toolbar: the link editor shows again; toolbar commands act on the editor's own schema and view
-- CSP allows Tauri 2 IPC (`ipc:`, `http://ipc.localhost`): no more fallback to the slower postMessage IPC
-- Tooltip built on tippy.js directly: `@tippyjs/react` read `element.ref`, removed in React 19
-- Rename/delete note: update links with alias, escapes, several per line; skip code; wait for notes loaded
+Upgrade React to version 19 and Tauri to version 2.
 
 ## app-v0.5.9 
 
