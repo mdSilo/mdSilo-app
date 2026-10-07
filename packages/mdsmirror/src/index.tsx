@@ -359,7 +359,12 @@ class MsEditor extends React.PureComponent<Props, State> {
   }
 
   init() {
-    console.log(">> start to init", this.isInited);
+    // StrictMode mounts twice: keep what was created first. Creating the
+    // schema, extensions... again would not match the existing view, e.g.
+    // the toolbar commands would add marks of another schema.
+    if (this.isInited) {
+      return;
+    }
     this.extensionManager = this.createExtensions();
     this.nodes = this.createNodes();
     this.marks = this.createMarks();
@@ -372,10 +377,10 @@ class MsEditor extends React.PureComponent<Props, State> {
     this.pasteParser = this.createPasteParser();
     this.inputRules = this.createInputRules();
     this.nodeViews = this.createNodeViews();
+    this.view = this.createView();
+    // the commands are bound to the view: create them after it
     this.commands = this.createCommands();
-    this.view = this.createView()!;
     this.isInited = true;
-    console.log(">> end of init", this.isInited);
   }
 
   createExtensions() {
@@ -612,14 +617,8 @@ class MsEditor extends React.PureComponent<Props, State> {
   }
 
   createView() {
-    console.log(">> start to create view", this.isInited);
-
     if (!this.elementRef.current) {
       throw new Error("createView called before ref available");
-    }
-    if (this.isInited) {
-      console.log("inited");
-      return this.view;
     }
 
     const isEditingCheckbox = (tr) => {
