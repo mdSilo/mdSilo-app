@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { useState } from 'react';
+import { createRef, useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
@@ -217,5 +217,38 @@ describe('Tooltip', () => {
       </Tooltip>
     );
     expect(screen.getByRole('button', { name: 'target' })).toBeInTheDocument();
+  });
+
+  test('shows the content on hover, without reading element.ref', async () => {
+    const error = vi.spyOn(console, 'error');
+    render(
+      <Tooltip content={<b>tip text</b>}>
+        <button>target</button>
+      </Tooltip>
+    );
+    await userEvent.hover(screen.getByRole('button', { name: 'target' }));
+    expect(await screen.findByText('tip text')).toBeInTheDocument();
+    expect(error).not.toHaveBeenCalledWith(expect.stringMatching(/element\.ref/));
+    error.mockRestore();
+  });
+
+  test('keeps the ref of its child', () => {
+    const ref = createRef<HTMLButtonElement>();
+    render(
+      <Tooltip content="tip">
+        <button ref={ref}>target</button>
+      </Tooltip>
+    );
+    expect(ref.current).toBe(screen.getByRole('button', { name: 'target' }));
+  });
+
+  test('shows nothing when disabled', async () => {
+    render(
+      <Tooltip content="hidden tip" disabled>
+        <button>target</button>
+      </Tooltip>
+    );
+    await userEvent.hover(screen.getByRole('button', { name: 'target' }));
+    expect(screen.queryByText('hidden tip')).not.toBeInTheDocument();
   });
 });

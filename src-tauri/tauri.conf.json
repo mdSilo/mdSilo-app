@@ -29,7 +29,8 @@
       }
     ],
     "security": {
-      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: http://asset.localhost https://asset.localhost 'self'; script-src 'self'",
+      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: http://asset.localhost https://asset.localhost ipc: http://ipc.localhost 'self'; script-src 'self'",
+      "devCsp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: http://asset.localhost https://asset.localhost ipc: http://ipc.localhost 'self' ws://localhost:3000; script-src 'self'",
       "assetProtocol": {
         "enable": true,
         "scope": ["**", "**/*"]

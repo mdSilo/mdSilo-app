@@ -18,10 +18,17 @@ export default defineConfig({
   optimizeDeps: {
     include: ['mdsmirror'],
   },
+  // keep the errors from the Rust side visible in `tauri dev`
+  clearScreen: false,
   server: {
     host: '0.0.0.0',
     port: 3000,
     strictPort: true,
+    watch: {
+      // `tauri dev` writes there (target/, gen/schemas): watching it is
+      // costly and must never reload the page, Tauri restarts the app itself
+      ignored: ['**/src-tauri/**'],
+    },
   },
   preview: {
     host: '0.0.0.0',

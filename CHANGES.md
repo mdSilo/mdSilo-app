@@ -16,6 +16,8 @@
 - Fix inserting local image: enable Tauri 2 asset protocol, resolve local image paths, insert at the current cursor
 - Fix raw mode (Markdown source): upgrade CodeMirror packages to latest, one copy of each; editor lifecycle safe in StrictMode
 - Fix app hanging in loading after reload / dev tools: dir watcher no longer blocks a backend thread, one watcher and listener at a time
+- CSP allows Tauri 2 IPC (`ipc:`, `http://ipc.localhost`): no more fallback to the slower postMessage IPC
+- Tooltip built on tippy.js directly: `@tippyjs/react` read `element.ref`, removed in React 19
 - Rename/delete note: update links with alias, escapes, several per line; skip code; wait for notes loaded
 
 ## app-v0.5.9 
