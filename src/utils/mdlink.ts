@@ -65,6 +65,45 @@ export function encodeHref(title: string) {
 
 const isNoteHref = (href: string) => !!href && !isUrl(href);
 
+/**
+ * Before v0.5.7, the spaces in title were written as `_` in the link href,
+ * e.g. `[a b](a_b)`, the notes written then still have such links.
+ * @returns the href title a legacy link to the note would have, or
+ * undefined if the title has no space (the legacy link is same as now)
+ */
+export function legacyLinkTitle(title: string) {
+  const legacy = title.replace(/\s/g, '_');
+  return legacy !== title ? legacy : undefined;
+}
+
+/**
+ * The titles a link to the note titled `title` may have: the title, plus
+ * its legacy form if no note is titled so, see `legacyLinkTitle`.
+ * @param hasNote whether a note has exactly the given title
+ */
+export function linkTitlesOf(title: string, hasNote: (title: string) => boolean) {
+  const legacy = legacyLinkTitle(title);
+  return legacy && !hasNote(legacy) ? [title, legacy] : [title];
+}
+
+/**
+ * Map the titles links may have (current and legacy, see `legacyLinkTitle`)
+ * to the note titles. The exact title wins over a legacy one.
+ */
+export function noteTitleMap(titles: Iterable<string>) {
+  const titleOf = new Map<string, string>();
+  const legacies: Array<[string, string]> = [];
+  for (const title of titles) {
+    titleOf.set(title, title);
+    const legacy = legacyLinkTitle(title);
+    if (legacy) legacies.push([legacy, title]);
+  }
+  for (const [legacy, title] of legacies) {
+    if (!titleOf.has(legacy)) titleOf.set(legacy, title);
+  }
+  return titleOf;
+}
+
 type RawNoteLink = {
   title: string;
   index: number;
@@ -126,10 +165,16 @@ export function findNoteLinks(content: string): RawNoteLink[] {
 /**
  * Rewrite the links to the note titled `oldTitle` in the content:
  * point them to `newTitle` on rename, or unlink them if no `newTitle`.
+ * @param oldTitles all the titles the links may have, see `linkTitlesOf`
  * @returns the new content, same as input if nothing changed
  */
-export function rewriteNoteLinks(content: string, oldTitle: string, newTitle?: string) {
-  const links = findNoteLinks(content).filter((l) => l.title === oldTitle);
+export function rewriteNoteLinks(
+  content: string,
+  oldTitle: string,
+  newTitle?: string,
+  oldTitles: string[] = [oldTitle]
+) {
+  const links = findNoteLinks(content).filter((l) => oldTitles.includes(l.title));
   if (links.length === 0) return content;
 
   const to = newTitle?.trim();

@@ -5,7 +5,7 @@ import { issueStore } from 'components/issue/issueStore';
 import { issueHref, parseIssueHref } from 'components/issue/refs';
 import { openFilePath, openUrl } from 'file/open';
 import { isUrl } from 'utils/helper';
-import { encodeHref, hrefToTitle } from 'utils/mdlink';
+import { encodeHref, hrefToTitle, legacyLinkTitle } from 'utils/mdlink';
 import useNoteSearch from './useNoteSearch';
 
 export type LinkSearchResult = { title: string; url: string };
@@ -65,7 +65,13 @@ export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Op
       // ISSUE ALERT:
       // maybe more than one notes with same title(ci),
       // but only link to first searched one
-      const toNote = store.getState().notes.values().find((n) => n.title === title);
+      const notes = store.getState().notes.values().filter((n) => !n.is_dir);
+      const toNote =
+        notes.find((n) => n.title === title) ??
+        // legacy link: `a_b` for the note `a b`
+        (title.includes('_')
+          ? notes.find((n) => legacyLinkTitle(n.title) === title)
+          : undefined);
       const noteId = toNote ? toNote.id : await onMissingNote?.(title);
       if (!noteId) return;
       await openFilePath(noteId, true);

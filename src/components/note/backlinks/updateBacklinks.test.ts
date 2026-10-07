@@ -113,3 +113,13 @@ describe('updateBacklinks', () => {
     expect(updateNote.mock.calls[0][0].id).toBe('/n/linker.md');
   });
 });
+
+describe('updateBacklinks legacy links', () => {
+  test('renames the links with `_` for spaces', async () => {
+    const target = makeNote({ id: '/n/a b.md', title: 'a b' });
+    const legacy = makeNote({ id: '/n/old.md', title: 'old', content: '[a b](a_b) and [[a_b]]' });
+    store.getState().setNotes(NoteMap.from([target, legacy]));
+    await updateBacklinks('a b', 'c d');
+    expect(store.getState().notes.get(legacy.id)?.content).toBe('[a b](c%20d) and [[c d]]');
+  });
+});

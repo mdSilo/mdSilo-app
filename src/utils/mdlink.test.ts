@@ -1,5 +1,15 @@
 import { describe, expect, test } from 'vitest';
-import { encodeHref, findNoteLinks, maskCode, rawHrefToTitle, rewriteNoteLinks, safeDecode } from './mdlink';
+import {
+  encodeHref,
+  findNoteLinks,
+  legacyLinkTitle,
+  linkTitlesOf,
+  maskCode,
+  noteTitleMap,
+  rawHrefToTitle,
+  rewriteNoteLinks,
+  safeDecode,
+} from './mdlink';
 
 describe('mdlink', () => {
   test('safeDecode does not throw', () => {
@@ -40,5 +50,28 @@ describe('mdlink', () => {
   test('rewriteNoteLinks returns the same string if nothing changed', () => {
     const src = 'no [[link]] to it';
     expect(rewriteNoteLinks(src, 'other', 'x')).toBe(src);
+  });
+});
+
+describe('legacy links: spaces written as `_` before v0.5.7', () => {
+  test('legacyLinkTitle', () => {
+    expect(legacyLinkTitle('a b')).toBe('a_b');
+    expect(legacyLinkTitle('ab')).toBeUndefined();
+  });
+
+  test('linkTitlesOf skips the legacy title if a note has it exactly', () => {
+    expect(linkTitlesOf('a b', () => false)).toEqual(['a b', 'a_b']);
+    expect(linkTitlesOf('a b', (t) => t === 'a_b')).toEqual(['a b']);
+  });
+
+  test('noteTitleMap prefers the exact title', () => {
+    expect(noteTitleMap(['a b']).get('a_b')).toBe('a b');
+    expect(noteTitleMap(['a b', 'a_b']).get('a_b')).toBe('a_b');
+  });
+
+  test('rewriteNoteLinks updates legacy links too', () => {
+    expect(rewriteNoteLinks('[x](a_b) [[a_b]] [[a b]]', 'a b', 'c d', ['a b', 'a_b'])).toBe(
+      '[x](c%20d) [[c d]] [[c d]]'
+    );
   });
 });

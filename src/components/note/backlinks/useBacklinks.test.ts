@@ -117,3 +117,19 @@ describe('computeBacklinks', () => {
     expect(computeBacklinks(NoteMap.from([a]), 'https://t').linkedBacklinks).toEqual([]);
   });
 });
+
+describe('legacy links with `_` for spaces', () => {
+  const target = makeNote({ id: '/n/a b.md', title: 'a b' });
+  const legacy = makeNote({ id: '/n/old.md', title: 'old', content: 'see [a b](a_b) and [[a_b]]' });
+
+  test('are backlinks of the note with spaces', () => {
+    const result = computeBacklinks(NoteMap.from([target, legacy]), 'a b', target.id);
+    expect(result.linkedBacklinks[0].matches.map((m) => m.text)).toEqual(['a b', 'a_b']);
+  });
+
+  test('are not if a note is titled with `_` exactly', () => {
+    const exact = makeNote({ id: '/n/a_b.md', title: 'a_b' });
+    const result = computeBacklinks(NoteMap.from([target, exact, legacy]), 'a b', target.id);
+    expect(result.linkedBacklinks).toEqual([]);
+  });
+});

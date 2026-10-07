@@ -26,7 +26,7 @@ import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
-import { findNoteLinks } from 'utils/mdlink';
+import { findNoteLinks, noteTitleMap } from 'utils/mdlink';
 import { openFilePath } from 'file/open';
 import { checkFileIsMd } from 'file/process';
 
@@ -84,12 +84,15 @@ export default function ForceGraph(props: Props) {
     for (const note of notesArr) {
       if (!idByTitle.has(note.title)) idByTitle.set(note.title, note.id);
     }
+    // link title (including legacy `a_b` for `a b`) to note title
+    const titleOf = noteTitleMap(idByTitle.keys());
 
     // Search for links in each note 
     for (const note of notesArr) {
       // CASE []() and [[]]
       for (const link of findNoteLinks(note.content)) {
-        const linkedId = idByTitle.get(link.title);
+        const linkedTitle = titleOf.get(link.title);
+        const linkedId = linkedTitle !== undefined ? idByTitle.get(linkedTitle) : undefined;
         if (linkedId && linkedId !== note.id) {
           linksByNoteId[note.id].add(linkedId);
           linksByNoteId[linkedId].add(note.id);

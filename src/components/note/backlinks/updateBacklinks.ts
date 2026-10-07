@@ -1,5 +1,5 @@
 import { store } from 'lib/store';
-import { rewriteNoteLinks } from 'utils/mdlink';
+import { linkTitlesOf, rewriteNoteLinks } from 'utils/mdlink';
 import { writeFile } from 'file/write';
 import { loadDir } from 'file/open';
 
@@ -46,10 +46,14 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
     return;
   }
 
+  // also update the legacy links, e.g. `a_b` for `a b`
+  const oldTitles = linkTitlesOf(noteTitle, (t) =>
+    notes.values().some((n) => !n.is_dir && n.title === t)
+  );
   const updateNote = store.getState().updateNote;
   for (const note of notes.values()) {
     if (note.is_dir || !note.content) continue;
-    const content = rewriteNoteLinks(note.content, noteTitle, toTitle);
+    const content = rewriteNoteLinks(note.content, noteTitle, toTitle, oldTitles);
     if (content === note.content) continue;
     // update content and write file
     updateNote({ id: note.id, content });

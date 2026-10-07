@@ -190,6 +190,13 @@ describe('Note', () => {
     expect(viewState()).toEqual({ view: 'md', params: { noteId: other.id } });
   });
 
+  test('onOpenLink resolves legacy links with `_` for spaces', async () => {
+    setup();
+    await callEditor('onOpenLink', 'My_Note');
+    expect(viewState()).toEqual({ view: 'md', params: { noteId: note.id } });
+    expect(store.getState().notes.get('/root/sub/My_Note.md')).toBeUndefined();
+  });
+
   test('onOpenLink creates missing notes', async () => {
     setup();
     await callEditor('onOpenLink', 'Fresh%20One');

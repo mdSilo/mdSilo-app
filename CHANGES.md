@@ -12,6 +12,7 @@
 - Notes kept in an immutable bucketed NoteMap: editing a note no longer copies all notes
 - Fix wiki links with `_`/`*` in title (e.g. `[[_draft_]]`): parsed as links, no longer broken on save
 - Backlinks: faster computing (parse cached per note), mentions exclude link text, plain text context
+- Legacy links with `_` for spaces (`[a b](a_b)`, written before v0.5.7) resolve to note `a b` again: navigation, backlinks, graph, rename
 - Rename/delete note: update links with alias, escapes, several per line; skip code; wait for notes loaded
 
 ## app-v0.5.9 

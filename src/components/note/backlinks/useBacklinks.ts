@@ -3,7 +3,7 @@ import { parser } from "mdsmirror";
 import { NoteMap, useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
 import { isUrl } from 'utils/helper';
-import { hrefToTitle } from 'utils/mdlink';
+import { hrefToTitle, linkTitlesOf } from 'utils/mdlink';
 import { loadDir } from 'file/open';
 
 const DEBOUNCE_MS = 1000;
@@ -68,6 +68,10 @@ export const computeBacklinks = (
     return { linkedBacklinks, unlinkedBacklinks };
   }
 
+  // the titles a link to the note may have, including the legacy one
+  const linkTitles = linkTitlesOf(title, (t) =>
+    notes.values().some((n) => !n.is_dir && n.title === t)
+  );
   const nextCache: ParseCache = new Map();
   for (const note of notes.values()) {
     if (note.id === noteId || note.is_dir || !note.content) {
@@ -85,7 +89,7 @@ export const computeBacklinks = (
       for (const run of block.runs) {
         if (run.link !== undefined) {
           // linked: href is the title
-          if (run.link === title) {
+          if (linkTitles.includes(run.link)) {
             linked.push(toMatch(block, index, run.from, run.text.length));
           }
           continue;
