@@ -36,7 +36,7 @@ const renderBacklinks = (isCollapse = false) =>
 
 describe('getNumOfMatches', () => {
   test('sums matches', () => {
-    const m = { text: '', from: 0, to: 0, context: null };
+    const m = { text: '', from: 0, to: 0, context: '', block: 0 };
     expect(getNumOfMatches([])).toBe(0);
     expect(getNumOfMatches([{ id: 'a', title: 'a', matches: [m, m] }, { id: 'b', title: 'b', matches: [m] }])).toBe(3);
   });
@@ -64,8 +64,9 @@ describe('Backlinks', () => {
     act(() => vi.advanceTimersByTime(1000));
 
     expect(screen.getByText('1 BackLinks')).toBeInTheDocument();
-    expect(screen.getByText('2 Mentions')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'linker' })).toHaveLength(2);
+    // the link text is not an unlinked mention
+    expect(screen.getByText('1 Mentions')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'linker' })).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'mention' })).toBeInTheDocument();
   });
 

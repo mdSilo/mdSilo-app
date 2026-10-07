@@ -37,7 +37,8 @@ export default function Backlinks(props: Props) {
   }, [linkedBacklinks, unlinkedBacklinks, isCollapse]);
 
   return (
-    <Tree data={backlinkData} className={className} collapseAll={collapseAll} />
+    // keyed by note: reset the collapsed state on switching note
+    <Tree key={noteId} data={backlinkData} className={className} collapseAll={collapseAll} />
   );
 }
 
@@ -70,15 +71,14 @@ const getTreeData = (
 
 // eslint-disable-next-line react/display-name
 const backlinkToTreeData = (isLinked: boolean) => (backlink: Backlink) => {
-  const matches: Array<BacklinkMatch> = [];
-  const linePaths: Record<string, boolean> = {};
-
-  // Only keep matches with unique line paths
+  // one leaf per block, highlighting all the matches in the block
+  const blocks = new Map<number, BacklinkMatch[]>();
   for (const match of backlink.matches) {
-    const linePathKey = `${match.from}-${match.to}`;
-    if (!linePaths[linePathKey]) {
+    const matches = blocks.get(match.block);
+    if (matches) {
       matches.push(match);
-      linePaths[linePathKey] = true;
+    } else {
+      blocks.set(match.block, [match]);
     }
   }
 
@@ -87,12 +87,12 @@ const backlinkToTreeData = (isLinked: boolean) => (backlink: Backlink) => {
   return {
     id: `${idPrefix}-${backlink.id}`,
     labelNode: <BacklinkNoteBranch backlink={backlink} />,
-    children: matches.map((match) => ({
-      id: `${idPrefix}-${backlink.id}-${match.from}-${match.to}`,
+    children: [...blocks].map(([block, matches]) => ({
+      id: `${idPrefix}-${backlink.id}-${block}`,
       labelNode: (
         <BacklinkMatchLeaf
           noteId={backlink.id}
-          match={match}
+          matches={matches}
           className="text-gray-600 dark:text-gray-100 bg-white dark:bg-black"
         />
       ),

@@ -8,13 +8,14 @@ import { store } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
 import type { ViewAction } from 'context/viewReducer';
 import { getStrDate } from 'utils/helper';
+import { MD_LINK_REGEX, WIKI_LINK_REGEX } from 'utils/mdlink';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout } from '../../testUtils';
 import MainView from './MainView';
 import HeatMap from './HeatMap';
 import Chronicle from './chronicle';
 import Journals from './journals';
 import Graph from './graph';
-import { LINK_REGEX, WIKILINK_REGEX, HASHTAG_REGEX } from './ForceGraph';
+import { HASHTAG_REGEX } from './ForceGraph';
 
 const Controls = ({ children }: { children: ReactNode }) => {
   const { state, dispatch } = useCurrentViewContext();
@@ -46,13 +47,14 @@ const viewState = () => JSON.parse(screen.getByTestId('view').textContent as str
 const today = () => getStrDate(new Date().toString());
 
 describe('graph regexes', () => {
-  test('LINK_REGEX captures label and href', () => {
-    const m = [...'a [x](y) b [z](https://w)'.matchAll(LINK_REGEX)];
-    expect(m.map((x) => [x[1], x[2]])).toEqual([['x', 'y'], ['z', 'https://w']]);
+  test('MD_LINK_REGEX captures label and href', () => {
+    const m = [...'a [x](y) b [z](https://w)'.matchAll(MD_LINK_REGEX)];
+    expect(m.map((x) => [x[2], x[3]])).toEqual([['x', 'y'], ['z', 'https://w']]);
   });
 
-  test('WIKILINK_REGEX captures the title', () => {
-    expect([...'see [[My Note]].'.matchAll(WIKILINK_REGEX)].map((x) => x[1])).toEqual(['My Note']);
+  test('WIKI_LINK_REGEX captures the title, one link at a time', () => {
+    const m = [...'see [[My Note]] and [[b|alias]].'.matchAll(WIKI_LINK_REGEX)];
+    expect(m.map((x) => [x[1], x[2]])).toEqual([['My Note', undefined], ['b', 'alias']]);
   });
 
   test('HASHTAG_REGEX needs surrounding whitespace', () => {

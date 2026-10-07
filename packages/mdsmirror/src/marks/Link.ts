@@ -163,7 +163,7 @@ export default class Link extends Mark {
         return isPlainURL(mark, parent, index, 1) ? "<" : "[";
       },
       close(
-        state: MarkdownSerializerState,
+        _state: MarkdownSerializerState,
         mark: PmMark,
         parent: Node,
         index: number
@@ -171,7 +171,7 @@ export default class Link extends Mark {
         return isPlainURL(mark, parent, index, -1)
           ? ">"
           : "](" +
-              state.esc(mark.attrs.href) +
+              escapeHref(mark.attrs.href) +
               (mark.attrs.title ? " " + quote(mark.attrs.title) : "") +
               ")";
       },
@@ -187,6 +187,28 @@ export default class Link extends Mark {
       }),
     };
   }
+}
+
+/**
+ * Make the href safe as a Markdown link destination.
+ *
+ * Markdown escapes such as `\*` are not needed in a destination and
+ * make the raw text differ from the href, so only what would end or break
+ * the destination is encoded/escaped.
+ */
+export function escapeHref(href = "") {
+  let out = href
+    .replace(/\\/g, "\\\\")
+    .replace(/[\s<>]/g, (c) => encodeURIComponent(c));
+  let depth = 0;
+  for (const c of out) {
+    if (c === "(") depth++;
+    else if (c === ")" && --depth < 0) break;
+  }
+  if (depth !== 0) {
+    out = out.replace(/[()]/g, "\\$&");
+  }
+  return out;
 }
 
 function quote(str: string) {

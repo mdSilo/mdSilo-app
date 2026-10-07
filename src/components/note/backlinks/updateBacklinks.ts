@@ -1,70 +1,59 @@
 import { store } from 'lib/store';
-import { isUrl } from 'utils/helper';
-import { LINK_REGEX, WIKILINK_REGEX } from 'components/view/ForceGraph'
+import { rewriteNoteLinks } from 'utils/mdlink';
 import { writeFile } from 'file/write';
 import { loadDir } from 'file/open';
-import { computeLinkedBacklinks } from './useBacklinks';
+
+const LOAD_TIMEOUT_MS = 5000;
 
 /**
- * Updates the backlink properties of notes on the current note title changed.
+ * Make sure the notes are loaded with content, otherwise the links in
+ * the notes not opened yet would be missed.
+ * Wait for the load at most `timeout` ms then go on with what we have.
+ */
+export const ensureNotesLoaded = async (timeout = LOAD_TIMEOUT_MS) => {
+  const { isLoaded, initDir } = store.getState();
+  if (isLoaded || !initDir) return;
+
+  await new Promise<void>((resolve) => {
+    let unsubscribe = () => {};
+    const timer = setTimeout(() => done(), timeout);
+    const done = () => {
+      clearTimeout(timer);
+      unsubscribe();
+      resolve();
+    };
+    unsubscribe = store.subscribe((state) => {
+      if (state.isLoaded) done();
+    });
+    loadDir(initDir);
+  });
+};
+
+/**
+ * Updates the backlinks of the note on its title changed or deleted.
  * the current note is the note other notes link to
- * @param noteTitle of current note 
- * @param newTitle of current note, it is undefined on delete note 
+ * @param noteTitle of current note
+ * @param newTitle of current note, it is undefined on delete note
  */
 const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
-  const isLoaded = store.getState().isLoaded;
-  const setIsLoaded = store.getState().setIsLoaded;
-  const initDir = store.getState().initDir;
-  // console.log("updateBackLinks loaded?", isLoaded);
-  if (!isLoaded && initDir) {
-    loadDir(initDir).then(() => setIsLoaded(true));
-  }
+  if (!noteTitle.trim()) return;
+  await ensureNotesLoaded();
 
   const notes = store.getState().notes;
+  const toTitle = newTitle?.trim();
+  // on delete, the links still work if another note has the same title
+  if (!toTitle && notes.values().some((n) => !n.is_dir && n.title === noteTitle)) {
+    return;
+  }
+
   const updateNote = store.getState().updateNote;
-  const backlinks = computeLinkedBacklinks(notes, noteTitle);
-  for (const backlink of backlinks) {
-    const note = notes.get(backlink.id);
-    if (!note) {
-      continue;
-    }
-
-    let content = note.content;
-    // CASE: []()
-    const link_array: RegExpMatchArray[] = [...note.content.matchAll(LINK_REGEX)];
-    for (const match of link_array) {
-      const href = match[2];
-      if (!isUrl(href)) {
-        const title = decodeURI(href);
-        if (noteTitle === title) {
-          newTitle = newTitle?.trim();
-          const replaceTo = newTitle
-            ? `[${match[1]}](${encodeURI(newTitle)})` // rename
-            : match[1]                                // delete
-          content = content.replaceAll(match[0], replaceTo);
-        }
-      }
-    }
-    // CASE: [[]]
-    const wiki_array: RegExpMatchArray[] = [...note.content.matchAll(WIKILINK_REGEX)];
-    // console.log("wiki arr", wiki_array, noteTitle, newTitle)
-    for (const match of wiki_array) {
-      const href = match[1];
-      if (!isUrl(href)) {
-        const title = href;
-        if (noteTitle === title) {
-          newTitle = newTitle?.trim();
-          const replaceTo = newTitle
-            ? `[[${newTitle}]]` // rename
-            : match[1]          // delete
-          content = content.replaceAll(match[0], replaceTo);
-        }
-      }
-    }
-
+  for (const note of notes.values()) {
+    if (note.is_dir || !note.content) continue;
+    const content = rewriteNoteLinks(note.content, noteTitle, toTitle);
+    if (content === note.content) continue;
     // update content and write file
     updateNote({ id: note.id, content });
-    await writeFile(note?.file_path, content);
+    await writeFile(note.file_path, content);
   }
 };
 

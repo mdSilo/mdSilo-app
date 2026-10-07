@@ -5,6 +5,7 @@ import { issueStore } from 'components/issue/issueStore';
 import { issueHref, parseIssueHref } from 'components/issue/refs';
 import { openFilePath, openUrl } from 'file/open';
 import { isUrl } from 'utils/helper';
+import { encodeHref, hrefToTitle } from 'utils/mdlink';
 import useNoteSearch from './useNoteSearch';
 
 export type LinkSearchResult = { title: string; url: string };
@@ -41,7 +42,7 @@ export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Op
     async (text: string): Promise<LinkSearchResult[]> => {
       const notes = search(text).map((res) => {
         const title = res.item.title.trim();
-        return { title, url: encodeURI(title) }; // used as [title](encodedTitle)
+        return { title, url: encodeHref(title) }; // used as [title](encodedTitle)
       });
       return [...notes, ...searchIssues(text, numOfResults)];
     },
@@ -60,12 +61,7 @@ export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Op
         return;
       }
       // find the note per title
-      let title = href.trim();
-      try {
-        title = decodeURI(title);
-      } catch {
-        // keep the raw title
-      }
+      const title = hrefToTitle(href);
       // ISSUE ALERT:
       // maybe more than one notes with same title(ci),
       // but only link to first searched one

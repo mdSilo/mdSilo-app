@@ -18,6 +18,7 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import { ProvideCurrentMd } from 'context/useCurrentMd';
 import { ciStringEqual, regDateStr, decodeHTMLEntity, emitCustomEvent } from 'utils/helper';
 import { imageExtensions, docExtensions } from 'utils/file-extensions';
+import { encodeHref } from 'utils/mdlink';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile, writeJsonFile } from 'file/write';
 import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
@@ -211,12 +212,12 @@ function Note(props: Props) {
       title = title.trim();
       const existingNote = storeNotes.values().find((n) => (n.title === title));
       if (existingNote) {
-        return encodeURI(existingNote.title.trim());
+        return encodeHref(existingNote.title);
       }
       const parentDir = await getDirPath(notePath);
       await createNewNote(parentDir, title);
 
-      return encodeURI(title);
+      return encodeHref(title);
     },
     [notePath, storeNotes]
   );

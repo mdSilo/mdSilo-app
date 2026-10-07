@@ -26,12 +26,10 @@ import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
-import { isUrl } from 'utils/helper';
+import { findNoteLinks } from 'utils/mdlink';
 import { openFilePath } from 'file/open';
 import { checkFileIsMd } from 'file/process';
 
-export const LINK_REGEX = /\[([^[]+)]\((\S+)\)/g;
-export const WIKILINK_REGEX = /\[\[(.+)\]\]/g;
 // non-greedy per tag; the trailing space is a lookahead so adjacent tags share it
 export const HASHTAG_REGEX = /\s#([^#\n]+)#(?=\s)/g;
 
@@ -81,32 +79,20 @@ export default function ForceGraph(props: Props) {
     // initiate tag set
     const tagNames: Set<string> = new Set();
 
+    // title to note id, the first one if more than one note with same title
+    const idByTitle = new Map<string, string>();
+    for (const note of notesArr) {
+      if (!idByTitle.has(note.title)) idByTitle.set(note.title, note.id);
+    }
+
     // Search for links in each note 
     for (const note of notesArr) {
-      // CASE []()
-      const link_array: RegExpMatchArray[] = [...note.content.matchAll(LINK_REGEX)];
-      for (const match of link_array) {
-        const href = match[2];
-        if (!isUrl(href)) {
-          const title = decodeURI(href);
-          const existingNote = notesArr.find(n => (n.title === title));
-          if (existingNote) {
-            linksByNoteId[note.id].add(existingNote.id);
-            linksByNoteId[existingNote.id].add(note.id);
-          }
-        }
-      }
-      // CASE [[]]
-      const wiki_array: RegExpMatchArray[] = [...note.content.matchAll(WIKILINK_REGEX)];
-      for (const match of wiki_array) {
-        const href = match[1];
-        if (!isUrl(href)) {
-          const title = href;
-          const existingNote = notesArr.find(n => (n.title === title));
-          if (existingNote) {
-            linksByNoteId[note.id].add(existingNote.id);
-            linksByNoteId[existingNote.id].add(note.id);
-          }
+      // CASE []() and [[]]
+      for (const link of findNoteLinks(note.content)) {
+        const linkedId = idByTitle.get(link.title);
+        if (linkedId && linkedId !== note.id) {
+          linksByNoteId[note.id].add(linkedId);
+          linksByNoteId[linkedId].add(note.id);
         }
       }
       // HashTag

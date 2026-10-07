@@ -66,7 +66,12 @@ class LinkEditor extends React.Component<Props, State> {
 
   get href(): string {
     const href = this.props.mark ? this.props.mark.attrs.href : "";
-    return decodeURI(href);
+    try {
+      return decodeURI(href);
+    } catch {
+      // malformed URI sequence, e.g. a literal `%`
+      return href;
+    }
   }
 
   get suggestedLinkTitle(): string {

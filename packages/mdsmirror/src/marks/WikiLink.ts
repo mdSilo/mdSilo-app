@@ -38,7 +38,7 @@ export default class WikiLink extends Mark {
   }
 
   // Note:
-  // rulePlugins used to parse Markdown `[[wiki link]]` to link in the linkifying way
+  // rulePlugins used to parse Markdown `[[wiki link]]` to link by an inline rule
   // inputRules used in WYSIWYG mode, but transfer `[[]]` to `[]()` to Markdown
   // wikilink is the special type of link that the href is not url but plain_text_title
 

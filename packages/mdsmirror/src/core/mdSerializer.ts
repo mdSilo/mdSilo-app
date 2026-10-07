@@ -416,7 +416,16 @@ export class MarkdownSerializerState {
   // content. If `startOfLine` is true, also escape characters that
   // has special meaning only at the start of the line.
   esc(str = "", startOfLine) {
-    str = str.replace(/[`*\\~[\]]/g, "\\$&");
+    str = str.replace(/[`*\\~[\]_]/g, (m, i) =>
+      // keep intra-word `_` as is, e.g. snake_case, it is not emphasis
+      m === "_" &&
+      i > 0 &&
+      i + 1 < str.length &&
+      /[\p{L}\p{N}]/u.test(str[i - 1]) &&
+      /[\p{L}\p{N}]/u.test(str[i + 1])
+        ? m
+        : "\\" + m
+    );
     if (startOfLine) {
       str = str.replace(/^[:#\-*+]/, "\\$&").replace(/^(\d+)\./, "$1\\.");
     }

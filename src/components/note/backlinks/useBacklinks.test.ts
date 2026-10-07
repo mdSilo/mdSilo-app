@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { makeNote } from '../../../testUtils';
-import useBacklinks, { computeLinkedBacklinks } from './useBacklinks';
+import useBacklinks, { computeBacklinks, computeLinkedBacklinks } from './useBacklinks';
 
 const target = makeNote({ id: '/n/target note.md', title: 'target note', content: 'I am the target' });
 const wiki = makeNote({ id: '/n/wiki.md', title: 'wiki', content: 'Links to [[target note]] here' });
@@ -33,7 +33,7 @@ describe('computeLinkedBacklinks', () => {
 
   test('skips the note itself', () => {
     const self = makeNote({ id: '/n/self.md', title: 'self', content: '[[self]]' });
-    expect(computeLinkedBacklinks(NoteMap.from([self]), 'self')).toEqual([]);
+    expect(computeLinkedBacklinks(NoteMap.from([self]), 'self', self.id)).toEqual([]);
   });
 
   test('finds backlinks in markdown tables', () => {
@@ -55,13 +55,65 @@ describe('useBacklinks', () => {
     act(() => vi.advanceTimersByTime(1000));
 
     expect(result.current.linkedBacklinks.map((b) => b.id).sort()).toEqual(['/n/md.md', '/n/table.md', '/n/wiki.md']);
-    // unlinked = text matches of the title, which also includes the wiki link text
-    expect(result.current.unlinkedBacklinks.map((b) => b.id).sort()).toEqual(['/n/mention.md', '/n/table.md', '/n/wiki.md']);
+    // unlinked = text matches of the title, not in links
+    expect(result.current.unlinkedBacklinks.map((b) => b.id).sort()).toEqual(['/n/mention.md', '/n/table.md']);
   });
 
   test('is empty for unknown notes', () => {
     store.getState().setNotes(NoteMap.from(notes));
     const { result } = renderHook(() => useBacklinks('/n/unknown.md'));
     expect(result.current).toEqual({ linkedBacklinks: [], unlinkedBacklinks: [] });
+  });
+});
+
+describe('computeBacklinks', () => {
+  test('finds wiki links whose title looks like emphasis', () => {
+    const draft = makeNote({ id: '/n/_draft_.md', title: '_draft_' });
+    const init = makeNote({ id: '/n/__init__.md', title: '__init__' });
+    const linker = makeNote({
+      id: '/n/linker.md',
+      title: 'linker',
+      content: 'see [[_draft_]], [[__init__|the init]] and [md](_draft_)',
+    });
+    const notes = NoteMap.from([draft, init, linker]);
+    const drafts = computeBacklinks(notes, '_draft_', draft.id).linkedBacklinks;
+    expect(drafts.map((b) => b.id)).toEqual([linker.id]);
+    expect(drafts[0].matches.map((m) => m.text)).toEqual(['_draft_', 'md']);
+    const inits = computeBacklinks(notes, '__init__', init.id).linkedBacklinks;
+    expect(inits[0].matches.map((m) => m.text)).toEqual(['the init']);
+  });
+
+  test('matches have offsets in the plain text context of the block', () => {
+    const notes = NoteMap.from([
+      makeNote({ id: '/n/a.md', title: 'a', content: '# head\n\nfoo *x* [[t]]\nbar t baz t' }),
+    ]);
+    const { linkedBacklinks, unlinkedBacklinks } = computeBacklinks(notes, 't');
+    const [link] = linkedBacklinks[0].matches;
+    expect(link).toMatchObject({ text: 't', context: 'foo x t bar t baz t', block: 1 });
+    expect(link.context.slice(link.from, link.to)).toBe('t');
+    // every occurrence not in a link
+    expect(unlinkedBacklinks[0].matches.map((m) => m.from)).toEqual([12, 18]);
+  });
+
+  test('excludes the note itself by id, not other notes of same title', () => {
+    const self = makeNote({ id: '/n/x.md', title: 'x', content: '[[x]]' });
+    const twin = makeNote({ id: '/m/x.md', title: 'x', content: '[[x]]' });
+    const result = computeBacklinks(NoteMap.from([self, twin]), 'x', self.id);
+    expect(result.linkedBacklinks.map((b) => b.id)).toEqual([twin.id]);
+  });
+
+  test('follows note changes', () => {
+    const a = makeNote({ id: '/n/a.md', title: 'a', content: '[[t]]' });
+    expect(computeLinkedBacklinks(NoteMap.from([a]), 't')).toHaveLength(1);
+    const changed = NoteMap.from([{ ...a, content: 'no link' }]);
+    expect(computeLinkedBacklinks(changed, 't')).toHaveLength(0);
+    expect(computeLinkedBacklinks(NoteMap.from([a]), 't')).toHaveLength(1);
+  });
+
+  test('ignores links to urls and malformed hrefs', () => {
+    const a = makeNote({ id: '/n/a.md', title: 'a', content: '[x](https://t) [y](100%) t' });
+    const result = computeBacklinks(NoteMap.from([a]), '100%');
+    expect(result.linkedBacklinks.map((b) => b.id)).toEqual([a.id]);
+    expect(computeBacklinks(NoteMap.from([a]), 'https://t').linkedBacklinks).toEqual([]);
   });
 });
