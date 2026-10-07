@@ -387,6 +387,7 @@ const Wrapper = styled(Flex)`
   min-width: 336px;
   pointer-events: all;
   gap: 8px;
+  flex-direction: row !important;
 `;
 
 const SearchResults = styled.ol`
