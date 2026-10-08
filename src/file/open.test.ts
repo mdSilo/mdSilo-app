@@ -27,6 +27,27 @@ describe('open (web)', () => {
     );
   });
 
+  test('dialogs get no empty default path, which crashes them on macOS', async () => {
+    mockInvoke(invoke, { join_paths: joinPaths });
+    await open.openDirDilog();
+    await open.openFileDilog(['md']);
+    await open.saveDilog();
+    for (const fn of [dialog.open, dialog.save] as Mock[]) {
+      for (const [options] of fn.mock.calls) {
+        expect(options.defaultPath).toBeUndefined();
+      }
+    }
+    await open.saveDilog('out.json');
+    expect(dialog.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({ defaultPath: 'out.json' })
+    );
+  });
+
+  test('openDirDilog has no file filters, which crash it on macOS', async () => {
+    await open.openDirDilog();
+    expect((dialog.open as Mock).mock.calls[0][0].filters).toBeUndefined();
+  });
+
   test('openFileDilog filters by extension', async () => {
     (dialog.open as Mock).mockResolvedValueOnce(['/a.md']);
     await expect(open.openFileDilog(['md'])).resolves.toEqual(['/a.md']);

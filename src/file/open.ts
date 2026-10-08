@@ -28,15 +28,13 @@ export function getRecentDirPath() {
  * @returns 
  */
 export const openDirDilog = async () => {
-  const recentDirPath = getRecentDirPath();
+  // no filters on a folder dialog, and no empty default path:
+  // either makes the dialog crash the app on macOS
   const dirPath  = await dialog.open({
     title: `Open Folder`,
     directory: true,
     multiple: false,
-    defaultPath: recentDirPath,
-    filters: [
-      {name: 'dir', extensions: ['md', 'json']}
-    ],
+    defaultPath: getRecentDirPath() || undefined,
   });
   return dirPath;
 };
@@ -140,12 +138,12 @@ export const openDir = async (dir: string, toListen=true): Promise<void> => {
  * @returns 
  */
 export const openFileDilog = async (ty: string[], multi = true) => {
-  const recentDirPath = getRecentDirPath();
   const filePaths = await dialog.open({
     title: `Open ${ty} File`,
     directory: false,
     multiple: multi,
-    defaultPath: recentDirPath,
+    // an empty default path makes the dialog crash the app on macOS
+    defaultPath: getRecentDirPath() || undefined,
     filters: [
       {
         name: 'file', 
@@ -344,12 +342,13 @@ export async function openUrl(url: string): Promise<boolean> {
  */
 export const saveDilog = async (fname?: string) => {
   const recentDirPath = getRecentDirPath();
-  const saveToPath = fname 
-    ? await joinPaths(recentDirPath, [fname]) 
-    : recentDirPath;
+  const saveToPath = recentDirPath && fname
+    ? await joinPaths(recentDirPath, [fname])
+    : recentDirPath || fname;
   const dirPath = await dialog.save({
     title: 'Select Folder to Save Data',
-    defaultPath: saveToPath,
+    // an empty default path makes the dialog crash the app on macOS
+    defaultPath: saveToPath || undefined,
   });
   return dirPath;
 };
