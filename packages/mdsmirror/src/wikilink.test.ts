@@ -9,7 +9,13 @@ const links = (md: string) => {
   const children = inline?.children ?? [];
   children.forEach((t, i) => {
     if (t.type === "link_open") {
-      out.push([t.attrGet("href"), children[i + 1]?.content]);
+      // the text of the link, escaped chars are tokens of their own
+      let text = "";
+      for (let j = i + 1; j < children.length; j++) {
+        if (children[j].type === "link_close") break;
+        text += children[j].content;
+      }
+      out.push([t.attrGet("href"), text]);
     }
   });
   return out;

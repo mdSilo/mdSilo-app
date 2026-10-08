@@ -16,6 +16,10 @@ export default class OrderedList extends Node {
         order: {
           default: 1,
         },
+        // all items numbered the same, e.g. `1.` `1.` `1.`, keep it on save
+        sameNumber: {
+          default: false,
+        },
       },
       content: "list_item+",
       group: "block",
@@ -58,14 +62,13 @@ export default class OrderedList extends Node {
   }
 
   toMarkdown(state: MarkdownSerializerState, node: PmNode) {
-    state.write("\n");
-
     const start = node.attrs.order !== undefined ? node.attrs.order : 1;
-    const maxW = `${start + node.childCount - 1}`.length;
+    const same = !!node.attrs.sameNumber;
+    const maxW = `${same ? start : start + node.childCount - 1}`.length;
     const space = state.repeat(" ", maxW + 2);
 
     state.renderList(node, space, (index: number) => {
-      const nStr = `${start + index}`;
+      const nStr = `${same ? start : start + index}`;
       return state.repeat(" ", maxW - nStr.length) + nStr + ". ";
     });
   }
@@ -73,9 +76,29 @@ export default class OrderedList extends Node {
   parseMarkdown() {
     return {
       block: "ordered_list",
-      getAttrs: (tok: Token) => ({
+      getAttrs: (tok: Token, tokens: Token[], i: number) => ({
         order: parseInt(tok.attrGet("start") || "1", 10),
+        sameNumber: isSameNumber(tokens, i),
       }),
     };
   }
+}
+
+/**
+ * Check if the items of the ordered list opened at `tokens[i]` are all
+ * numbered the same, e.g. `1.` `1.` `1.`
+ */
+function isSameNumber(tokens: Token[], i: number): boolean {
+  const level = tokens[i].level;
+  const numbers: string[] = [];
+  for (let j = i + 1; j < tokens.length; j++) {
+    const tok = tokens[j];
+    if (tok.level === level && tok.type === "ordered_list_close") {
+      break;
+    }
+    if (tok.level === level + 1 && tok.type === "list_item_open") {
+      numbers.push(tok.info);
+    }
+  }
+  return numbers.length > 1 && numbers.every((n) => n === numbers[0]);
 }

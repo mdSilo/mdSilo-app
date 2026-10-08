@@ -59,6 +59,32 @@ export class MarkdownSerializer {
   }
 }
 
+/**
+ * The positions of the brackets of footnotes like `[^1]` in `str`: they are
+ * not links, keep them as is instead of escaping, unless they could be one:
+ * followed by `(` or `[`, or a link reference definition `[^1]: url`.
+ */
+function footnoteBrackets(str: string, startOfLine: boolean): Set<number> {
+  const keep = new Set<number>();
+  const footnote = /\[\^[^\s[\]\\]+\](?![([])/g;
+  let m: RegExpExecArray | null;
+  while ((m = footnote.exec(str))) {
+    const end = m.index + m[0].length;
+    if (m.index === 0 && startOfLine && str[end] === ":") {
+      // `[^1]: the text` is not a definition, but `[^1]: url "title"` is
+      const rest = str
+        .slice(end + 1)
+        .trim()
+        .split(/\s+/);
+      if (rest.length < 2 || /^["'(]/.test(rest[1]) || /^</.test(rest[0])) {
+        continue;
+      }
+    }
+    keep.add(m.index).add(end - 1);
+  }
+  return keep;
+}
+
 // ::- This is an object used to track state and expose
 // methods related to markdown serialization. Instances are passed to
 // node and mark serialization methods (see `toMarkdown`).
@@ -236,6 +262,18 @@ export class MarkdownSerializerState {
         }
       }
 
+      // the mark whose content is not escaped, i.e. code, must be the
+      // innermost one, e.g. a link of code: [`code`](url)
+      const noEscIdx = marks.findIndex(
+        (m) => this.marks[m.type.name]().escape === false
+      );
+      if (noEscIdx > -1 && noEscIdx < marks.length - 1) {
+        marks = marks
+          .slice(0, noEscIdx)
+          .concat(marks.slice(noEscIdx + 1))
+          .concat(marks[noEscIdx]);
+      }
+
       const inner = marks.length && marks[marks.length - 1],
         noEsc = inner && this.marks[inner.type.name]().escape === false;
       const len = marks.length - (noEsc ? 1 : 0);
@@ -284,7 +322,11 @@ export class MarkdownSerializerState {
 
       // Close the marks that need to be closed
       while (keep < active.length) {
-        this.text(this.markString(active.pop(), false, parent, index), false);
+        const close = this.markString(active.pop(), false, parent, index);
+        // nothing to write: keep the state, e.g. at the start of a line
+        if (close) {
+          this.text(close, false);
+        }
       }
 
       // Output any previously expelled trailing whitespace outside the marks
@@ -297,7 +339,10 @@ export class MarkdownSerializerState {
         while (active.length < len) {
           const add = marks[active.length];
           active.push(add);
-          this.text(this.markString(add, true, parent, index), false);
+          const open = this.markString(add, true, parent, index);
+          if (open) {
+            this.text(open, false);
+          }
         }
 
         // Render the node. Special case code marks, since their content is not
@@ -416,15 +461,21 @@ export class MarkdownSerializerState {
   // content. If `startOfLine` is true, also escape characters that
   // has special meaning only at the start of the line.
   esc(str = "", startOfLine) {
-    str = str.replace(/[`*\\~[\]_]/g, (m, i) =>
-      // keep intra-word `_` as is, e.g. snake_case, it is not emphasis
-      m === "_" &&
-      i > 0 &&
-      i + 1 < str.length &&
-      /[\p{L}\p{N}]/u.test(str[i - 1]) &&
-      /[\p{L}\p{N}]/u.test(str[i + 1])
-        ? m
-        : "\\" + m
+    const keep = footnoteBrackets(str, startOfLine);
+    str = str.replace(
+      // `\` escapes only an ASCII punctuation, e.g. `\eqref` is as is;
+      // escape it at the end too, as what follows is unknown here
+      /\\(?=[!-/:-@[-`{-~]|$)|[`*~[\]_]/g,
+      (m, i) =>
+        // keep intra-word `_` as is, e.g. snake_case, it is not emphasis
+        (m === "_" &&
+          i > 0 &&
+          i + 1 < str.length &&
+          /[\p{L}\p{N}]/u.test(str[i - 1]) &&
+          /[\p{L}\p{N}]/u.test(str[i + 1])) ||
+        keep.has(i)
+          ? m
+          : "\\" + m
     );
     if (startOfLine) {
       str = str.replace(/^[:#\-*+]/, "\\$&").replace(/^(\d+)\./, "$1\\.");

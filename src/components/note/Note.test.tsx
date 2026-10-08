@@ -129,7 +129,10 @@ describe('Note', () => {
   test('writes content changes to disk', async () => {
     setup();
     await callEditor('onChange', 'new text', {});
-    expect(writeFile).toHaveBeenCalledWith(note.id, 'new text');
+    // the file ends with a newline
+    expect(writeFile).toHaveBeenCalledWith(note.id, 'new text\n');
+    await callEditor('onChange', 'line\n', {});
+    expect(writeFile).toHaveBeenLastCalledWith(note.id, 'line\n');
   });
 
   test('edits reach the notes in the store, debounced and on leaving', async () => {

@@ -130,7 +130,8 @@ function Note(props: Props) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
-      await writeFile(notePath, text);
+      // end the file with a newline, as a text file should
+      await writeFile(notePath, text && !text.endsWith('\n') ? `${text}\n` : text);
       syncContent(text);
       // update TOC if any
       getHeading();

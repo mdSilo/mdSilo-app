@@ -37,15 +37,25 @@ export default class ExtensionManager {
   }
 
   get marks() {
-    return this.extensions
-      .filter((extension) => extension.type === "mark")
-      .reduce(
-        (marks, { name, schema }: Mark) => ({
-          ...marks,
-          [name]: schema,
-        }),
-        {}
-      );
+    const marks = this.extensions.filter(
+      (extension) => extension.type === "mark"
+    ) as Mark[];
+    const names = marks.map((mark) => mark.name);
+
+    return marks.reduce((specs, { name, schema }: Mark) => {
+      // the marks named in `excludes` may be disabled, drop them,
+      // otherwise the schema cannot be created
+      if (schema.excludes) {
+        schema = {
+          ...schema,
+          excludes: schema.excludes
+            .split(" ")
+            .filter((n) => n === "_" || names.includes(n))
+            .join(" "),
+        };
+      }
+      return { ...specs, [name]: schema };
+    }, {});
   }
 
   get plugins(): Plugin[] {
@@ -205,6 +215,17 @@ export default class ExtensionManager {
         };
       }, {});
 
-    return new MarkdownParser(schema, makeRules({ rules, plugins }), tokens);
+    const parser = new MarkdownParser(
+      schema,
+      makeRules({ rules, plugins }),
+      tokens
+    );
+    // keep the line breaks in a paragraph, instead of joining the lines
+    // with a space, so the file keeps them on save
+    // @ts-expect-error tokenHandlers is internal
+    parser.tokenHandlers.softbreak = (state: {
+      addText: (t: string) => void;
+    }) => state.addText("\n");
+    return parser;
   }
 }

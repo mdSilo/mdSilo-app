@@ -39,7 +39,22 @@ export default class Code extends Mark {
 
   get schema(): MarkSpec {
     return {
-      excludes: "_",
+      // no formatting in inline code, but it can be the text of a link,
+      // e.g. [`code`](url)
+      excludes: [
+        "code_inline",
+        "strong",
+        "em",
+        "highlight",
+        "strikethrough",
+        "underline",
+        "sub",
+        "sup",
+        "placeholder",
+        "hashtag",
+        "wikilink",
+        "escape",
+      ].join(" "),
       parseDOM: [{ tag: "code.inline", preserveWhitespace: true }],
       toDOM: () => ["code", { class: "inline", spellCheck: "false" }],
     };

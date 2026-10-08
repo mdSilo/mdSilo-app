@@ -1,3 +1,4 @@
+import { Token } from "markdown-it";
 import { wrappingInputRule } from "prosemirror-inputrules";
 import {
   Schema,
@@ -16,6 +17,12 @@ export default class BulletList extends Node {
 
   get schema(): NodeSpec {
     return {
+      attrs: {
+        // the list marker: `-`, `*` or `+`, keep it on save
+        bullet: {
+          default: "-",
+        },
+      },
       content: "list_item+",
       group: "block",
       parseDOM: [{ tag: "ul" }],
@@ -34,7 +41,11 @@ export default class BulletList extends Node {
   }
 
   inputRules({ type }: { type: NodeType }) {
-    return [wrappingInputRule(/^\s*([-+*])\s$/, type)];
+    return [
+      wrappingInputRule(/^\s*([-+*])\s$/, type, (match) => ({
+        bullet: match[1],
+      })),
+    ];
   }
 
   toMarkdown(state: MarkdownSerializerState, node: ProsemirrorModel) {
@@ -42,6 +53,11 @@ export default class BulletList extends Node {
   }
 
   parseMarkdown() {
-    return { block: "bullet_list" };
+    return {
+      block: "bullet_list",
+      getAttrs: (tok: Token) => ({
+        bullet: ["-", "*", "+"].includes(tok.markup) ? tok.markup : "-",
+      }),
+    };
   }
 }

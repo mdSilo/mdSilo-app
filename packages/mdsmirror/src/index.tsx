@@ -80,6 +80,7 @@ import Sup from "./marks/Sup";
 import Link from "./marks/Link";
 import WikiLink from "./marks/WikiLink";
 import Strikethrough from "./marks/Strikethrough";
+import Escape from "./marks/Escape";
 import TemplatePlaceholder from "./marks/Placeholder";
 import Underline from "./marks/Underline";
 import Hashtag from "./marks/Hashtag";
@@ -450,6 +451,8 @@ class MsEditor extends React.PureComponent<Props, State> {
         onClickHashtag: this.props.onClickHashtag,
       }),
       new Strikethrough(),
+      // the last mark: its backslash goes right before the escaped char
+      new Escape(),
       new History(),
       new Folding(),
       new SmartText(),

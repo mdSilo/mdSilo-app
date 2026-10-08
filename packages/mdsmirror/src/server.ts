@@ -38,6 +38,7 @@ import Hashtag from "./marks/Hashtag";
 import Strikethrough from "./marks/Strikethrough";
 import TemplatePlaceholder from "./marks/Placeholder";
 import Underline from "./marks/Underline";
+import Escape from "./marks/Escape";
 
 // react nodes
 import Embed from "./components/reactnodes/Embed";
@@ -77,6 +78,8 @@ const extensions = new ExtensionManager([
   new Strikethrough(),
   new TemplatePlaceholder(),
   new Underline(),
+  // the last mark: its backslash goes right before the escaped char
+  new Escape(),
   new OrderedList(),
   new Embed(),
   new Notice(),
