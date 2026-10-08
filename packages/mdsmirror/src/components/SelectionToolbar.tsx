@@ -110,6 +110,13 @@ export default class SelectionToolbar extends React.Component<Props> {
       return;
     }
 
+    // a click in the editor sets the selection itself. The editor may have
+    // lost the focus on this click: clicking a link without href opens the
+    // link editor, which focuses its input, so do not reset the selection
+    if (ev.target instanceof Node && view.dom.contains(ev.target)) {
+      return;
+    }
+
     const { dispatch } = view;
 
     dispatch(

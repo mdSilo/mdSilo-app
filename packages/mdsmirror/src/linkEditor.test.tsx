@@ -40,6 +40,40 @@ describe.each([false, true])("create link (StrictMode: %s)", (strict) => {
     expect(document.querySelectorAll(".ProseMirror")).toHaveLength(1);
   });
 
+  test("clicking a link left without href shows the link editor again", async () => {
+    const { ed, view } = await setup(strict);
+    await act(async () => {
+      ed.commands.link({ href: "" });
+    });
+    // cancel: click elsewhere in the text, the link editor is gone
+    await act(async () => {
+      view.focus();
+      view.dispatch(
+        view.state.tr.setSelection(TextSelection.create(view.state.doc, 3))
+      );
+    });
+    expect(document.querySelector("input")).toBeNull();
+    expect(
+      view.state.doc.rangeHasMark(16, 21, view.state.schema.marks.link)
+    ).toBe(true);
+
+    // click into the link: the link editor shows and focuses its input
+    await act(async () => {
+      view.dispatch(
+        view.state.tr.setSelection(TextSelection.create(view.state.doc, 18))
+      );
+    });
+    const input = document.querySelector("input");
+    expect(input).not.toBeNull();
+    // the mouseup of the click must not reset the selection
+    await act(async () => {
+      const target = view.domAtPos(18).node;
+      target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+    });
+    expect(view.state.selection.from).toBe(18);
+    expect(document.querySelector("input")).not.toBeNull();
+  });
+
   test("other toolbar commands work on the view", async () => {
     const { ed, view } = await setup(strict);
     await act(async () => {
