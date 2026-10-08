@@ -18,6 +18,7 @@ export const baseDictionary = {
   codeBlock: "Code block",
   codeCopied: "Copied to clipboard",
   codeInline: "Code",
+  comment: "Comment",
   createLink: "Create link",
   createLinkError: "Sorry, an error occurred creating the link",
   createNewDoc: "Create a new doc",

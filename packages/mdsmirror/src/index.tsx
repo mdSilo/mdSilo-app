@@ -81,6 +81,8 @@ import Link from "./marks/Link";
 import WikiLink from "./marks/WikiLink";
 import Strikethrough from "./marks/Strikethrough";
 import Escape from "./marks/Escape";
+import Comment from "./nodes/Comment";
+import CommentInline from "./marks/CommentInline";
 import TemplatePlaceholder from "./marks/Placeholder";
 import Underline from "./marks/Underline";
 import Hashtag from "./marks/Hashtag";
@@ -401,6 +403,7 @@ class MsEditor extends React.PureComponent<Props, State> {
         showLineNumber: this.props.showLineNumber,
         onSaveDiagram: this.props.onSaveDiagram,
       }),
+      new Comment(),
       new Text(),
       new CheckboxList(),
       new CheckboxItem(),
@@ -434,6 +437,7 @@ class MsEditor extends React.PureComponent<Props, State> {
       new MathDisplay(),
       new Bold(),
       new Code(),
+      new CommentInline(),
       new Highlight(),
       new Italic(),
       new Sub(),

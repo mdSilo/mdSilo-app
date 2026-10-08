@@ -39,6 +39,8 @@ import Strikethrough from "./marks/Strikethrough";
 import TemplatePlaceholder from "./marks/Placeholder";
 import Underline from "./marks/Underline";
 import Escape from "./marks/Escape";
+import Comment from "./nodes/Comment";
+import CommentInline from "./marks/CommentInline";
 
 // react nodes
 import Embed from "./components/reactnodes/Embed";
@@ -55,6 +57,7 @@ const extensions = new ExtensionManager([
   new BulletList(),
   new CodeBlock(),
   new CodeFence(),
+  new Comment(),
   new CheckboxList(),
   new CheckboxItem(),
   new ListItem(),
@@ -68,6 +71,7 @@ const extensions = new ExtensionManager([
   //new MathDisplay(),
   new Bold(),
   new Code(),
+  new CommentInline(),
   new Highlight(),
   new Italic(),
   new Sub(),

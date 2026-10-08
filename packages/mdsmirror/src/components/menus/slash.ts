@@ -20,6 +20,7 @@ import {
   TbCalendar,
   TbClock,
   TbAlarm,
+  TbMessageCircle,
 } from "react-icons/tb";
 import { MenuItem } from "../types";
 import { baseDictionary } from "../../dictionary";
@@ -145,6 +146,13 @@ export function slashMenuItems(
           icon: TbBraces,
           shortcut: "```",
           keywords: "script",
+        },
+        {
+          name: "comment",
+          title: dictionary.comment,
+          icon: TbMessageCircle,
+          shortcut: "<!-- -->",
+          keywords: "comment note hidden",
         },
         {
           name: "math_inline",

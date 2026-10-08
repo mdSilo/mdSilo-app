@@ -405,6 +405,40 @@ export const StyledEditor = styled("div")<{
     font-style: italic;
   }
 
+  /* comments <!-- ... -->: shown muted, not in the rendered html */
+  .comment-block,
+  .comment-inline {
+    color: ${(props) => props.theme.textSecondary};
+    font-family: ${(props) => props.theme.fontFamilyMono};
+    font-size: 90%;
+    white-space: pre-wrap;
+    opacity: 0.8;
+  }
+
+  .comment-block {
+    margin: 0.5em 0;
+    padding: 2px 8px;
+    border-left: 3px dashed ${(props) => props.theme.placeholder};
+  }
+
+  .comment-block::before,
+  .comment-block::after,
+  .comment-inline::before,
+  .comment-inline::after {
+    color: ${(props) => props.theme.placeholder};
+    user-select: none;
+  }
+
+  .comment-block::before,
+  .comment-inline::before {
+    content: "<!--";
+  }
+
+  .comment-block::after,
+  .comment-inline::after {
+    content: "-->";
+  }
+
   b,
   strong {
     font-weight: ${(props) =>

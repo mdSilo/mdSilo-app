@@ -2,10 +2,16 @@ import { EditorState } from "prosemirror-state";
 import { isMarkActive } from "./isMarkActive";
 
 export default function isInCode(state: EditorState): boolean {
-  if (state.schema.nodes.code_block) {
+  // a comment is edited like code: its text is kept as is
+  const { code_block, comment } = state.schema.nodes;
+  if (code_block || comment) {
     const $head = state.selection.$head;
     for (let d = $head.depth; d > 0; d--) {
-      if ($head.node(d).type === state.schema.nodes.code_block) {
+      const type = $head.node(d).type;
+      if (
+        (code_block && type === code_block) ||
+        (comment && type === comment)
+      ) {
         return true;
       }
     }

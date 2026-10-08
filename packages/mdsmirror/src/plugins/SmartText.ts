@@ -1,7 +1,8 @@
 import { ellipsis, smartQuotes, InputRule } from "prosemirror-inputrules";
 import Extension from "../core/Extension";
 
-const rightArrow = new InputRule(/->$/, "→");
+// not `-->`, which closes a comment `<!-- -->`
+const rightArrow = new InputRule(/(?:^|[^-])(->)$/, "→");
 
 export default class SmartText extends Extension {
   get name() {

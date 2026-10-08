@@ -13,6 +13,7 @@ import attachmentRule from "../core/rules/attachment";
 import itemcardRule from "../core/rules/itemcard";
 import itemLinkRule from "../core/rules/itemlink";
 import wikiLinkRule from "../core/rules/wikilink";
+import { commentBlockRule, commentInlineRule } from "../core/rules/comment";
 
 const defaultRules = [
   embedsRule([]),
@@ -32,6 +33,8 @@ const defaultRules = [
   attachmentRule,
   itemcardRule,
   itemLinkRule,
+  commentBlockRule,
+  commentInlineRule,
 ];
 
 export default function renderToHtml(
