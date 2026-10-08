@@ -2427,7 +2427,7 @@ dependencies = [
 
 [[package]]
 name = "mdsilo"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "atom_syndication",
  "bincode",

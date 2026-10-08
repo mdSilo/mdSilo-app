@@ -1,13 +1,11 @@
 import { createContext, useMemo, useCallback, useContext, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { 
-  TbMenu2 as IconMenu2, TbDna as IconDna, TbCalendar as IconCalendar, TbFile as IconFile, TbFeather as IconFeather,
-  TbFolderPlus as IconFolderPlus, TbFileText as IconFileText, TbDeviceFloppy as IconDeviceFloppy, TbClearAll as IconClearAll,
-  TbFileImport as IconFileImport, TbRss as IconRss, TbSettings as IconSettings, TbLayoutKanban as IconLayoutKanban,
-  TbCircleDot as IconCircleDot, TbBrowser as IconBrowser,
-  TbPizza as IconPizza, TbInfoCircle as IconInfoCircle, TbCurrentLocation as IconCurrentLocation,
-  TbDatabaseExport as IconDatabaseExport,
+  TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
+  TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
+  TbPizza, TbInfoCircle, TbCurrentLocation, TbDatabaseExport,
 } from 'react-icons/tb';
+import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from 'context/useCurrentView';
@@ -142,7 +140,7 @@ const LogoMenu = () => {
           setIsSettingsOpen(true);
         }}
       >
-        <IconSettings size={18} className="mr-1" />
+        <TbSettings size={18} className="mr-1" />
         <span>Settings</span>
       </DropdownItem>
       <DropdownItem
@@ -150,7 +148,7 @@ const LogoMenu = () => {
         as="link"
         href="https://mdsilo.com"
       >
-        <IconBrowser size={18} className="mr-1" />
+        <TbBrowser size={18} className="mr-1" />
         <span>Website</span>
       </DropdownItem>
       <DropdownItem
@@ -158,11 +156,11 @@ const LogoMenu = () => {
         as="link"
         href="https://mdsilo.com/helpus"
       >
-        <IconPizza size={18} className="mr-1" />
+        <TbPizza size={18} className="mr-1" />
         <span>Help Us</span>
       </DropdownItem>
       <DropdownItem onClick={() => setIsAboutOpen(true)}>
-        <IconInfoCircle size={18} className="mr-1" />
+        <TbInfoCircle size={18} className="mr-1" />
         <span>About</span>
       </DropdownItem>
       {!isWeb && (
@@ -172,7 +170,7 @@ const LogoMenu = () => {
             await invoke('open_url', { url: dir_path });
           }}
         >
-          <IconCurrentLocation size={18} className="mr-1" />
+          <TbCurrentLocation size={18} className="mr-1" />
           <span>Local mdsilo</span>
         </DropdownItem>
       )}
@@ -196,7 +194,7 @@ const OpenButton = () => {
           className={btnClass}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          <IconMenu2 size={24} className={btnIconClass} />
+          <TbMenu2 size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -223,7 +221,7 @@ const NewButton = () => {
           className={btnClass}
           onClick={onCreateNoteClick}
         >
-          <IconFeather size={25} className="flex-shrink-0 mx-1 text-primary-600" />
+          <TbFeather size={25} className="flex-shrink-0 mx-1 text-primary-600" />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -254,7 +252,7 @@ const FeedButton = (props: ButtonProps) => {
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onViewFeed}>
-          <IconRss size={24} className="flex-shrink-0 mx-1 text-orange-600" />
+          <TbRss size={24} className="flex-shrink-0 mx-1 text-orange-600" />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -272,7 +270,7 @@ const GraphButton = (props: ButtonProps) => {
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onDispatch}>
-          <IconDna size={24} className={btnIconClass} />
+          <TbDna size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -290,7 +288,7 @@ const ChronButton = (props: ButtonProps) => {
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onDispatch}>
-          <IconCalendar size={24} className={btnIconClass} />
+          <TbCalendar size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -308,7 +306,7 @@ const IssuesButton = (props: ButtonProps) => {
         placement={tooltipPlacement}
       >
         <button aria-label="Issues" className={btnClass} onClick={onDispatch}>
-          <IconCircleDot size={24} className={btnIconClass} />
+          <TbCircleDot size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -326,7 +324,7 @@ const ProjectButton = (props: ButtonProps) => {
         placement={tooltipPlacement}
       >
         <button aria-label="Projects" className={btnClass} onClick={onDispatch}>
-          <IconLayoutKanban size={24} className={btnIconClass} />
+          <TbLayoutKanban size={24} className={btnIconClass} />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -344,15 +342,15 @@ export function FileDrop() {
   return (
     <>
       <DropdownItem onClick={onListDir}>
-        <IconFolderPlus size={18} className="mr-1" />
+        <TbFolderPlus size={18} className="mr-1" />
         <Tooltip content="Open Folder"><span>Open Folder</span></Tooltip>
       </DropdownItem>
       <DropdownItem onClick={onOpenFile}>
-        <IconFileText size={18} className="mr-1" />
+        <TbFileText size={18} className="mr-1" />
         <Tooltip content="Open .md"><span>Open File</span></Tooltip>
       </DropdownItem>
       <DropdownItem onClick={openJsonFile}>
-        <IconFileImport size={18} className="mr-1" />
+        <TbFileImport size={18} className="mr-1" />
         <Tooltip content="Open JSON"><span>Import JSON</span></Tooltip>
       </DropdownItem>
       {isWeb && (
@@ -366,7 +364,7 @@ export function FileDrop() {
             }
           }}
         >
-          <IconDatabaseExport size={18} className="mr-1" />
+          <TbDatabaseExport size={18} className="mr-1" />
           <Tooltip content="Export Backup"><span>Backup</span></Tooltip>
         </DropdownItem>
       )}
@@ -374,14 +372,14 @@ export function FileDrop() {
         onClick={onClear} 
         className="border-t-2 border-gray-200 dark:border-gray-600"
       >
-        <IconClearAll size={18} className="mr-1" />
+        <TbClearAll size={18} className="mr-1" />
         <Tooltip content="Open Recent History"><span>Recent</span></Tooltip>
       </DropdownItem>
       <DropdownItem 
         onClick={onSave} 
         className="border-t-2 border-gray-200 dark:border-gray-600"
       >
-        <IconDeviceFloppy size={18} className="mr-1" />
+        <TbDeviceFloppy size={18} className="mr-1" />
         <Tooltip content="Save All Data"><span>Save</span></Tooltip>
       </DropdownItem>
     </>
@@ -407,7 +405,7 @@ const FileButton = () => {
           <Menu.Button ref={btnRef} className="hover:bg-gray-200 dark:hover:bg-gray-700">
             <Tooltip content="File Menu" placement={tooltipPlacement}>
               <span className={btnClass}>
-                <IconFile size={24} className={btnIconClass} />
+                <MdFolderOpen size={24} className={btnIconClass} />
               </span>
             </Tooltip>
           </Menu.Button>
@@ -446,7 +444,7 @@ const SettingsButton = () => {
   return (
     <Tooltip content="Preferences" placement={tooltipPlacement}>
       <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
-        <IconSettings size={24} className={btnIconClass} />
+        <TbSettings size={24} className={btnIconClass} />
         </button>
     </Tooltip>
   )
