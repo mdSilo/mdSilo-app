@@ -115,6 +115,18 @@ describe('DirectoryAPI (tauri)', () => {
       expect(tauriInvoke).not.toHaveBeenCalledWith('write_file', expect.anything());
     });
 
+    test('renameFrom of a dir deletes its notes and clears the current note', async () => {
+      const dir = makeNote({ id: '/notes/sub', is_dir: true });
+      const note = makeNote({ id: '/notes/sub/a.md', title: 'a' });
+      store.getState().setNotes(NoteMap.from({ [dir.id]: dir, [note.id]: note }));
+      store.getState().setCurrentNoteId('/notes/sub/a.md');
+      mockInvoke(tauriInvoke, { file_exist: false });
+      const { emit } = await startListening();
+      await emit('renameFrom', ['/notes/sub']);
+      expect(store.getState().notes.toRecord()).toEqual({});
+      expect(store.getState().currentNoteId).toBe('');
+    });
+
     test.each(['renameFrom', 'remove'])(
       '%s keeps a file written again at the path, e.g. saved by vim',
       async (event) => {

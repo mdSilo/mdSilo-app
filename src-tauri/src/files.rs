@@ -614,40 +614,69 @@ pub async fn listen_dir(
   // stop the previous watcher first
   unlisten_dir();
 
+  // FSEvents (macOS) reports the resolved paths, e.g. /private/var/.. for
+  // /var/.., map them back to the dir as opened, which the notes are keyed by.
+  // Other watchers report the paths under the dir as watched already.
+  let real_dir = cfg!(target_os = "macos")
+    .then(|| fs::canonicalize(&dir).ok())
+    .flatten()
+    .filter(|real| real.as_path() != Path::new(&dir));
+  let dir_path = Path::new(&dir).to_path_buf();
+  let to_dir_path = move |path: &Path| -> String {
+    let path = match &real_dir {
+      Some(real) => match path.strip_prefix(real) {
+        Ok(rest) => dir_path.join(rest),
+        Err(_) => path.to_path_buf(),
+      },
+      None => path.to_path_buf(),
+    };
+    path.normalize_slash().unwrap_or_default()
+  };
+
+  let emit = move |event: &str, paths: Vec<String>| {
+    // emit event here, then Frontend will listen the event.
+    // frontend: src/file/directory.ts/DirectoryAPI/listen
+    if paths.is_empty() {
+      return;
+    }
+    window
+      .emit(
+        "changes",
+        EventPayload {
+          paths,
+          event: event.to_string(),
+        },
+      )
+      .unwrap_or(());
+  };
+
   let handler = move |res: notify::Result<RawEvent>| match res {
     Ok(RawEvent {
       paths,  // Vec<PathBuff>
       kind,   // EventKind: Access,Create,Modify,Remove
       ..      // attrs,  // EventAttributes: tracker, flag...
     }) => {
-      let event_kind = match kind {
+      let paths: Vec<String> = paths.iter().map(|path| to_dir_path(path)).collect();
+      match kind {
         // EventKind::Access(_) => "access",
-        EventKind::Create(_) => "create",
+        EventKind::Create(_) => emit("create", paths),
         EventKind::Modify(ModifyKind::Name(rename)) => match rename {
-          RenameMode::To => "renameTo",
-          RenameMode::From => "renameFrom",
-          _ => "rename",
+          RenameMode::To => emit("renameTo", paths),
+          RenameMode::From => emit("renameFrom", paths),
+          // [from, to] of a rename already reported by From and To, on Linux
+          RenameMode::Both => {}
+          // FSEvents (macOS) cannot tell the old path from the new one of a
+          // rename: the path is the new one if it exists, the old one if not
+          _ => {
+            let (to, from): (Vec<String>, Vec<String>) =
+              paths.into_iter().partition(|path| Path::new(path).exists());
+            emit("renameFrom", from);
+            emit("renameTo", to);
+          }
         },
-        EventKind::Modify(_) => "write",
-        EventKind::Remove(_) => "remove",
-        _ => "unknown",
-      };
-
-      // emit event here, then Frontend will listen the event.
-      // frontend: src/file/directory.ts/DirectoryAPI/listen
-      if event_kind != "unknown" {
-        window
-          .emit(
-            "changes",
-            EventPayload {
-              paths: paths
-                .iter()
-                .map(|path| path.normalize_slash().unwrap_or_default())
-                .collect(),
-              event: event_kind.to_string(),
-            },
-          )
-          .unwrap_or(());
+        EventKind::Modify(_) => emit("write", paths),
+        EventKind::Remove(_) => emit("remove", paths),
+        _ => {}
       }
     }
     Err(e) => log_watch_err(format!("error on [listen_dir: receive event]: {}", e)),

@@ -99,6 +99,21 @@ describe('note operations', () => {
     expect(store.getState().noteTree['/d'].map((i) => i.id)).toEqual(['/d/b.md']);
   });
 
+  test('deleteNote of a dir removes its descendants', () => {
+    const dir = makeNote({ id: '/d/sub', is_dir: true });
+    const a = makeNote({ id: '/d/sub/a.md' });
+    const b = makeNote({ id: '/d/sub/deep/b.md' });
+    const other = makeNote({ id: '/d/sub2.md' });
+    for (const note of [dir, a, b, other]) store.getState().upsertNote(note);
+    store.getState().upsertTree('/d', [dir, other]);
+    store.getState().upsertTree('/d/sub', [a]);
+    store.getState().upsertTree('/d/sub/deep', [b]);
+    store.getState().deleteNote('/d/sub');
+    expect(store.getState().notes.keys()).toEqual(['/d/sub2.md']);
+    expect(Object.keys(store.getState().noteTree)).toEqual(['/d']);
+    expect(store.getState().noteTree['/d'].map((i) => i.id)).toEqual(['/d/sub2.md']);
+  });
+
   test('deleteNote tolerates ids missing from the tree', () => {
     store.getState().deleteNote('/nope');
     expect(store.getState().notes.toRecord()).toEqual({});

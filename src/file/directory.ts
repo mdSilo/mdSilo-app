@@ -180,7 +180,7 @@ class DirectoryAPI {
               continue;
             }
             store.getState().deleteNote(filePath);
-            if (filePath === currentNoteId) {
+            if (filePath === currentNoteId || currentNoteId.startsWith(`${filePath}/`)) {
               store.getState().setCurrentNoteId('');
             }
           }

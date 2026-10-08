@@ -230,6 +230,14 @@ export const store = createStore<Store>()(
         set((state) => {
           state.notes = state.notes.delete(noteId);
           deleteTreeItem(state.noteTree, noteId);
+          // a dir: its descendants are gone too, the watcher reports the dir only
+          const prefix = `${noteId}/`;
+          for (const id of state.notes.keys()) {
+            if (id.startsWith(prefix)) state.notes = state.notes.delete(id);
+          }
+          for (const dir of Object.keys(state.noteTree)) {
+            if (dir === noteId || dir.startsWith(prefix)) delete state.noteTree[dir];
+          }
         });
       },
       currentNoteId: '',
