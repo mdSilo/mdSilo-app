@@ -101,17 +101,38 @@ describe('DirectoryAPI (tauri)', () => {
       expect(store.getState().notes.toRecord()).toEqual({});
     });
 
-    test('renameFrom deletes the note and clears the current note', async () => {
+    test('renameFrom deletes the note in store and clears the current note', async () => {
       const note = makeNote({ id: '/notes/a.md', title: 'a' });
       store.getState().setNotes(NoteMap.from({ [note.id]: note }));
       store.getState().setCurrentNoteId('/notes/a.md');
-      mockInvoke(tauriInvoke, { get_basename: ['a.md', true] });
+      mockInvoke(tauriInvoke, { file_exist: false });
       const { emit } = await startListening();
       await emit('renameFrom', ['/notes/a.md']);
       expect(store.getState().notes.toRecord()).toEqual({});
       expect(store.getState().currentNoteId).toBe('');
-      expect(tauriInvoke).toHaveBeenCalledWith('delete_files', { paths: ['/notes/a.md'] });
+      // the file is moved away already: never delete anything on disk
+      expect(tauriInvoke).not.toHaveBeenCalledWith('delete_files', expect.anything());
+      expect(tauriInvoke).not.toHaveBeenCalledWith('write_file', expect.anything());
     });
+
+    test.each(['renameFrom', 'remove'])(
+      '%s keeps a file written again at the path, e.g. saved by vim',
+      async (event) => {
+        const note = makeNote({ id: '/notes/a.md', title: 'a' });
+        store.getState().setNotes(NoteMap.from({ [note.id]: note }));
+        store.getState().setCurrentNoteId('/notes/a.md');
+        mockInvoke(tauriInvoke, {
+          file_exist: true,
+          get_file_meta: makeFileMeta({ file_path: '/notes/a.md', file_name: 'a.md' }),
+          get_parent_dir: '/notes',
+        });
+        const { emit } = await startListening();
+        await emit(event, ['/notes/a.md']);
+        expect(store.getState().notes.get('/notes/a.md')).toBeTruthy();
+        expect(store.getState().currentNoteId).toBe('/notes/a.md');
+        expect(tauriInvoke).not.toHaveBeenCalledWith('delete_files', expect.anything());
+      }
+    );
 
     test('renameTo and create open the new paths', async () => {
       const { emit } = await startListening();

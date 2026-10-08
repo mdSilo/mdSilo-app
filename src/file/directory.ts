@@ -1,11 +1,9 @@
 import type { Event, UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core'
-import { doDeleteNote } from 'editor/hooks/useDeleteNote';
 import { NoteMap, store } from 'lib/store';
 import { emitCustomEvent } from 'utils/helper';
 import { openFilePaths, openJSONFilePath } from './open';
-import { rmFileNameExt } from './process';
-import { hasFs, normalizeSlash, joinPath, getBaseName, joinPaths } from './util';
+import { hasFs, normalizeSlash, joinPath, joinPaths } from './util';
 
 interface SystemTime {
   nanos_since_epoch: number; // locale
@@ -168,24 +166,25 @@ class DirectoryAPI {
           // any change on current note will not be loaded 
           const wrotePaths = filePaths.filter(f => f !== currentNoteId);
           if (wrotePaths.length > 0) await openFilePaths(wrotePaths);
-        } else if (event === 'renameFrom') {
-          // on Linux, del is renameFrom
+        } else if (event === 'renameFrom' || event === 'remove') {
+          // The file is gone from the path already (on Linux, delete is
+          // renameFrom): only sync the store, never touch the disk here.
+          // A file may already be there again, e.g. vim saves by renaming
+          // the original away and then writing a new file at the path, so
+          // deleting it on disk would silently delete the saved file.
           const currentNoteId = store.getState().currentNoteId;
+          const backPaths: string[] = [];
           for (const filePath of filePaths) {
-            // console.log("open renamed file", filePath, event)
-            // delete in store
-            const baseName = await getBaseName(filePath);
-            let title = baseName[0];
-            const isFile = baseName[1];
-            if (isFile) {
-              title = rmFileNameExt(title);
+            if (await invoke<boolean>('file_exist', { filePath })) {
+              backPaths.push(filePath);
+              continue;
             }
-            await doDeleteNote(filePath, title);
-            // console.log("delete note: ", res, filePath, currentNoteId);
+            store.getState().deleteNote(filePath);
             if (filePath === currentNoteId) {
               store.getState().setCurrentNoteId('');
             }
           }
+          if (backPaths.length > 0) await openFilePaths(backPaths);
         } else if (event === 'renameTo') {
           await openFilePaths(filePaths)
           // for (const filePath of filePaths) {
@@ -197,12 +196,6 @@ class DirectoryAPI {
           // files and dir moved into a watch folder on Linux will now be reported as rename to events instead of create events
           // open, upsert 
           await openFilePaths(filePaths);
-        } else if (event === 'remove') {
-          // on Linux, remove event is renameFrom
-          for (const filePath of filePaths) {
-            store.getState().deleteNote(filePath);
-            // console.log("delete file", filePath, event);
-          }
         } else if (event === 'loaded') {
           // console.log("load: ", filePaths, event);
           if (!filePaths || filePaths.length < 1) return;
