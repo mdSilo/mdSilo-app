@@ -36,7 +36,8 @@ export default class Blockquote extends Node {
 
   keys({ type }: { type: NodeType }) {
     return {
-      ">": toggleWrap(type),
+      // no `>` key to quote: it made `>` impossible to type, e.g. `->`;
+      // type `> ` at the start of a line instead
       "Shift-Enter": (state: EditorState, dispatch: Dispatch) => {
         if (!isNodeActive(type)(state)) {
           return false;

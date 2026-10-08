@@ -3,9 +3,13 @@ import { render, act } from "@testing-library/react";
 import { TextSelection } from "prosemirror-state";
 import MsEditor from "./index";
 
-// type the text char by char, as the input rules see it
+// type the text char by char, as the key bindings and input rules see it
 const typeText = (view: MsEditor["view"], text: string) => {
   for (const ch of text) {
+    const key = new KeyboardEvent("keydown", { key: ch });
+    if (view.someProp("handleKeyDown", (f) => f(view, key))) {
+      continue;
+    }
     const { from, to } = view.state.selection;
     const insert = () => view.state.tr.insertText(ch, from, to);
     if (
@@ -23,7 +27,7 @@ const setup = (value: string) => {
   return { ed, view: ed.view };
 };
 
-describe("comment in the editor", () => {
+describe("typing in the editor", () => {
   test("typing <!-- text --> makes an inline comment", async () => {
     const { ed, view } = setup("a");
     await act(async () => {
@@ -50,6 +54,8 @@ describe("comment in the editor", () => {
       );
       typeText(view, " ->");
     });
+    // https://github.com/mdSilo/mdSilo-app/issues/402
+    expect(view.state.doc.child(0).type.name).toBe("paragraph");
     expect(view.state.doc.textContent).toBe("a →");
   });
 
