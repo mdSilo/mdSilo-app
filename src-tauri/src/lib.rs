@@ -6,6 +6,8 @@
 mod db;
 mod feed;
 mod files;
+#[cfg(target_os = "linux")]
+mod input_method;
 mod json;
 mod models;
 mod paths;
@@ -37,6 +39,10 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  // before GTK init
+  #[cfg(target_os = "linux")]
+  input_method::use_system_im_modules();
+
   let mut connection = db::establish_connection();
   connection
     .run_pending_migrations(MIGRATIONS)
