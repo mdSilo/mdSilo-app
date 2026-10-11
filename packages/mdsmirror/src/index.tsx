@@ -100,6 +100,7 @@ import SmartText from "./plugins/SmartText";
 import QuickAction from "./plugins/QuickAction";
 import TrailingNode from "./plugins/TrailingNode";
 import PasteHandler from "./plugins/PasteHandler";
+import { resolveImageSrc } from "./lib/resolveImageSrc";
 
 // re-export
 export { schema, parser, serializer, renderToHtml } from "./server";
@@ -162,11 +163,13 @@ export type Props = {
   /** embed types to render in the document */
   embeds?: EmbedDescriptor[];
   embedsDisabled?: boolean;
-  // for relative image path
+  // for relative image path, `./` paths are relative to rootPath
   rootPath?: string;
+  // dir of the current document, other relative paths are relative to it
+  docPath?: string;
   protocol?: string; // asset: or https://asset.localhost
   // local file path to url to load it, e.g. Tauri's convertFileSrc,
-  // used for relative(to rootPath) and absolute local image paths
+  // used for relative(to rootPath or docPath) and absolute local image paths
   resolveSrc?: (filePath: string) => string;
   // handle event
   handleDOMEvents?: {
@@ -239,14 +242,6 @@ type State = {
 type Step = {
   slice?: Slice;
 };
-
-function safeDecodeURI(str: string) {
-  try {
-    return decodeURI(str);
-  } catch {
-    return str;
-  }
-}
 
 class MsEditor extends React.PureComponent<Props, State> {
   static defaultProps = {
@@ -784,27 +779,10 @@ class MsEditor extends React.PureComponent<Props, State> {
     this.setState({ slashMenuOpen: false });
   };
 
-  // for relative image src
+  // for relative and absolute local image src
   handleSrc = (src: string) => {
-    const { rootPath, protocol, resolveSrc } = this.props;
-    if (src.startsWith("./") && rootPath) {
-      if (resolveSrc) {
-        const base = rootPath.replace(/[\\/]+$/, "");
-        return resolveSrc(`${base}/${safeDecodeURI(src.slice(2))}`);
-      }
-      if (protocol) {
-        return src.replace("./", `${protocol}${rootPath}/`);
-      }
-      return src;
-    }
-    // absolute local path, e.g. `/home/me/a.png` or `C:\me\a.png`
-    if (resolveSrc) {
-      const path = safeDecodeURI(src);
-      if (/^(\/(?!\/)|[a-zA-Z]:[\\/])/.test(path)) {
-        return resolveSrc(path);
-      }
-    }
-    return src;
+    const { rootPath, docPath, protocol, resolveSrc } = this.props;
+    return resolveImageSrc(src, { rootPath, docPath, protocol, resolveSrc });
   };
 
   // 'public' methods

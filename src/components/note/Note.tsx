@@ -92,6 +92,10 @@ function Note(props: Props) {
   const shortNotePath = initDir && notePath
     ? notePath.replace(initDir, normalizeSlash(initDir).split('/').pop() || '.')
     : notePath;
+  // dir of this note, relative image paths like `img/a.png` are relative to it
+  const noteDir = notePath
+    ? normalizeSlash(notePath).replace(/\/[^/]*$/, '') || '/'
+    : undefined;
 
   // for context
   const currentView = useCurrentViewContext();
@@ -392,6 +396,7 @@ function Note(props: Props) {
                     embeds={embeds}
                     disables={['sub']}
                     rootPath={initDir}
+                    docPath={noteDir}
                     protocol={protocol}
                     resolveSrc={convertFileSrc}
                   />
