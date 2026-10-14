@@ -64,10 +64,10 @@ A lightweight, local-first personal Wiki and knowledge base for storing ideas, t
   - ➰ I/O: Feed & Podcast client(Input) and Personal Wiki(Output); 
   - 🔀 All-In-One Editor: Markdown, WYSIWYG, Mind Map...  
   - 📝 Markdown and extensions: Math/Chemical Equation, Diagram, Hashtag...   
-  - 🗄️ Build personal wiki with bidirectional wiki links 
+  - 🗄️ Build personal wiki with bidirectional wiki links  
   - ⌨️ Slash commands, Hotkeys and Hovering toolbar...  
   - 📋 Projects: Kanban boards and tables to manage the process of knowledge growing   
-  - 🐞 Built-in issue tracker: labels, milestones and comments, linked to notes; tasks in notes (#todo# #doing# #done#, checkboxes) become issues   
+  - 🎯 Built-in issue tracker: labels, milestones and comments, linked to notes; tasks in notes (#todo# #doing# #done#, checkboxes) become issues   
   - 🕸️ Graph view to visualize the networked writing  
   - 📅 Chronicle view and Daily activities graph  
   - 🔍 Full-text search 

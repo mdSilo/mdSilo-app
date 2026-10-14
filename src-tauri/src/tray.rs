@@ -13,8 +13,12 @@ pub fn setup<R: Runtime>(app: &mut App<R>) -> tauri::Result<()> {
   let separator = PredefinedMenuItem::separator(app)?;
   let menu = Menu::with_items(app, &[&show, &hide, &separator, &quit])?;
 
-  TrayIconBuilder::new()
-    .menu(&menu)
+  let mut builder = TrayIconBuilder::new().tooltip("mdSilo").menu(&menu);
+  if let Some(icon) = app.default_window_icon() {
+    builder = builder.icon(icon.clone());
+  }
+
+  builder
     .on_menu_event(|app, event| {
       let Some(window) = app.get_webview_window(MAIN_WIN) else {
         return;
