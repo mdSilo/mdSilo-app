@@ -1,5 +1,5 @@
 import { NodeSpec, Node as ProsemirrorNode, Schema } from "prosemirror-model";
-import { Plugin, TextSelection } from "prosemirror-state";
+import { EditorState, Plugin, TextSelection } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 import { chainCommands } from "prosemirror-commands";
 import { InputRule } from "prosemirror-inputrules";
@@ -31,8 +31,12 @@ import {
   deleteTableIfSelected,
   splitCellAndCollapse,
   mergeCellsAndCollapse,
+  moveRow,
+  moveColumn,
 } from "../core/commands/table";
+import { isColSelection } from "../core/queries/table";
 import Node from "./Node";
+import { Dispatch } from "../types";
 import { TableView } from "./TableView";
 import { MarkdownSerializerState } from "../core/mdSerializer";
 import tablesRule from "../core/rules/tables";
@@ -83,6 +87,14 @@ export default class Table extends Node {
       exportTable,
       toggleHeaderColumn: () => toggleHeader("column"),
       toggleHeaderRow: () => toggleHeader("row"),
+      moveRowUp: ({ index }: { index?: number } = {}) =>
+        moveRow({ index, direction: -1 }),
+      moveRowDown: ({ index }: { index?: number } = {}) =>
+        moveRow({ index, direction: 1 }),
+      moveColumnLeft: ({ index }: { index?: number } = {}) =>
+        moveColumn({ index, direction: -1 }),
+      moveColumnRight: ({ index }: { index?: number } = {}) =>
+        moveColumn({ index, direction: 1 }),
       mergeCells: () => mergeCellsAndCollapse(),
       splitCell: () => splitCellAndCollapse(),
     };
@@ -105,6 +117,14 @@ export default class Table extends Node {
         deleteRowSelection(),
         deleteTableIfSelected()
       ),
+      "Alt-ArrowUp": moveRow({ direction: -1 }),
+      "Alt-ArrowDown": moveRow({ direction: 1 }),
+      // only claimed when a column is selected, so Alt-Left/Right keeps
+      // moving by word inside a cell on macOS
+      "Alt-ArrowLeft": (state: EditorState, dispatch?: Dispatch) =>
+        isColSelection(state) && moveColumn({ direction: -1 })(state, dispatch),
+      "Alt-ArrowRight": (state: EditorState, dispatch?: Dispatch) =>
+        isColSelection(state) && moveColumn({ direction: 1 })(state, dispatch),
       ArrowDown: moveOutOfTable(1),
       ArrowUp: moveOutOfTable(-1),
     };

@@ -1,4 +1,4 @@
-import { TbTrash } from "react-icons/tb";
+import { TbArrowDown, TbArrowUp, TbTrash } from "react-icons/tb";
 import { AiOutlineMergeCells, AiOutlineSplitCells } from "react-icons/ai";
 import { FaTableColumns } from "react-icons/fa6";
 import { EditorState } from "prosemirror-state";
@@ -7,6 +7,7 @@ import {
   isMergedCellSelection,
   isMultipleCellSelection,
 } from "../../core/queries/table";
+import { canMoveRow } from "../../core/commands/table";
 import { MenuItem } from "../types";
 import { baseDictionary } from "../../dictionary";
 
@@ -21,6 +22,20 @@ export default function tableRowMenuItems(
   }
 
   return [
+    {
+      name: "moveRowUp",
+      tooltip: dictionary.moveRowUp,
+      icon: TbArrowUp,
+      attrs: { index },
+      visible: canMoveRow(state, index, -1),
+    },
+    {
+      name: "moveRowDown",
+      tooltip: dictionary.moveRowDown,
+      icon: TbArrowDown,
+      attrs: { index },
+      visible: canMoveRow(state, index, 1),
+    },
     {
       name: "toggleHeaderRow",
       tooltip: dictionary.toggleHeader,

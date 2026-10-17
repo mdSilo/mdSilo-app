@@ -3,6 +3,8 @@ import {
   TbAlignLeft,
   TbAlignRight,
   TbAlignCenter,
+  TbArrowLeft,
+  TbArrowRight,
 } from "react-icons/tb";
 import { FaTableColumns } from "react-icons/fa6";
 import { ImSortAmountAsc, ImSortAmountDesc } from "react-icons/im";
@@ -14,6 +16,7 @@ import {
   isMergedCellSelection,
   isMultipleCellSelection,
 } from "../../core/queries/table";
+import { canMoveColumn } from "../../core/commands/table";
 import { MenuItem } from "../types";
 import { baseDictionary } from "../../dictionary";
 
@@ -29,6 +32,25 @@ export default function tableColMenuItems(
   }
 
   return [
+    {
+      name: "moveColumnLeft",
+      tooltip: dictionary.moveColumnLeft,
+      icon: TbArrowLeft,
+      attrs: { index },
+      visible: canMoveColumn(state, index, -1),
+    },
+    {
+      name: "moveColumnRight",
+      tooltip: dictionary.moveColumnRight,
+      icon: TbArrowRight,
+      attrs: { index },
+      visible: canMoveColumn(state, index, 1),
+    },
+    {
+      name: "separator",
+      visible:
+        canMoveColumn(state, index, -1) || canMoveColumn(state, index, 1),
+    },
     {
       name: "setColumnAttr",
       tooltip: dictionary.alignLeft,

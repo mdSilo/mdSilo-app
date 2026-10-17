@@ -19,6 +19,8 @@ import {
   deleteTable,
   mergeCells,
   splitCell,
+  moveTableRow,
+  moveTableColumn,
 } from "prosemirror-tables";
 import { sanitizeValue, toPlainText } from "../queries/textBetween";
 import {
@@ -697,4 +699,92 @@ function addRowWithAlignment(
  */
 export function mergeCellsAndCollapse(): Command {
   return chainTransactions(mergeCells, collapseSelection());
+}
+
+/**
+ * A command that moves a table row up or down by one, swapping it with its
+ * neighbour. The header row stays at the top of the table, as markdown
+ * always treats the first row as the header.
+ *
+ * @param index The index of the row to move, if undefined the current selection is used
+ * @param direction -1 to move up, 1 to move down
+ * @returns The command
+ */
+export function moveRow({
+  index,
+  direction,
+}: {
+  index?: number;
+  direction: -1 | 1;
+}): Command {
+  return (state, dispatch) => {
+    if (!isInTable(state)) {
+      return false;
+    }
+
+    const rect = selectedRect(state);
+    const from = index !== undefined ? index : rect.top;
+    const to = from + direction;
+    const minRow = isHeaderEnabled(state, "row", rect) ? 1 : 0;
+
+    if (from < minRow || to < minRow || to >= rect.map.height) {
+      return false;
+    }
+
+    return moveTableRow({ from, to })(state, dispatch);
+  };
+}
+
+/**
+ * A command that moves a table column left or right by one, swapping it with
+ * its neighbour.
+ *
+ * @param index The index of the column to move, if undefined the current selection is used
+ * @param direction -1 to move left, 1 to move right
+ * @returns The command
+ */
+export function moveColumn({
+  index,
+  direction,
+}: {
+  index?: number;
+  direction: -1 | 1;
+}): Command {
+  return (state, dispatch) => {
+    if (!isInTable(state)) {
+      return false;
+    }
+
+    const rect = selectedRect(state);
+    const from = index !== undefined ? index : rect.left;
+    const to = from + direction;
+
+    if (from < 0 || to < 0 || to >= rect.map.width) {
+      return false;
+    }
+
+    return moveTableColumn({ from, to })(state, dispatch);
+  };
+}
+
+/**
+ * Whether the row at index can be moved in the given direction.
+ */
+export function canMoveRow(
+  state: EditorState,
+  index: number,
+  direction: -1 | 1
+): boolean {
+  return moveRow({ index, direction })(state);
+}
+
+/**
+ * Whether the column at index can be moved in the given direction.
+ */
+export function canMoveColumn(
+  state: EditorState,
+  index: number,
+  direction: -1 | 1
+): boolean {
+  return moveColumn({ index, direction })(state);
 }
