@@ -1,5 +1,19 @@
 # Changelog 
 
+## app-v0.6.2 
+
+2026-XX-XX
+
+## app-v0.6.1 
+
+2026-10-23
+
+- Feat: support comments `<!-- ... -->` in Markdown 
+- Feat: move table rows and columns (close #780)
+- Fix tray icon missing
+- Fix Link Editor bug on creating link
+- Fix bug on inserting local image and displaying images with paths relative to the note 
+
 ## app-v0.6.0 
 
 2026-10-07
