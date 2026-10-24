@@ -24,6 +24,13 @@ describe('useNoteSearch', () => {
     expect(hits).toEqual(['/n/apple.md']);
   });
 
+  test('returns no results for an empty query', () => {
+    seed();
+    const { result } = renderHook(() => useNoteSearch());
+    expect(result.current('')).toEqual([]);
+    expect(result.current('   ')).toEqual([]);
+  });
+
   test('limits the number of results', () => {
     seed();
     const { result } = renderHook(() => useNoteSearch({ numOfResults: 1, extendedSearch: true }));

@@ -57,7 +57,8 @@ export default function useNoteSearch({
       loadDir(initDir).then(() => store.getState().setIsLoaded(true));
     }
 
-    return fuse.search(searchText.trim(), { limit: numOfResults });
+    const query = searchText.trim();
+    return query ? fuse.search(query, { limit: numOfResults }) : [];
   }, [fuse, numOfResults]);
   return search;
 }
