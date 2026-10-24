@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import Highlighter from 'react-highlight-words';
-import Fuse from 'fuse.js';
+import { type FuseResultMatch } from 'fuse.js';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useNoteSearch, { NoteBlock } from 'editor/hooks/useNoteSearch';
 import useDebounce from 'editor/hooks/useDebounce';
@@ -158,7 +158,7 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
   );
 });
 
-export const matchSort = (a: Fuse.FuseResultMatch, b: Fuse.FuseResultMatch) => {
+export const matchSort = (a: FuseResultMatch, b: FuseResultMatch) => {
   if (a.refIndex === undefined && b.refIndex === undefined) {
     return 0;
   } else if (a.refIndex === undefined) {

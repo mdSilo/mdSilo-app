@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoke } from '@tauri-apps/api/core';
 import { jsPDF } from "jspdf";
 import html2canvas from 'html2canvas';
@@ -45,8 +44,6 @@ async function handlePdf(
   const pdfHeight = pdf.internal.pageSize.getHeight();
   pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, '', 'FAST');
   
-  const data = (pdf as any).__private__.getArrayBuffer(
-    (pdf as any).__private__.buildDocument()
-  );
+  const data = pdf.output('arraybuffer');
   await invoke('download_file', { filePath, blob: Array.from(new Uint8Array(data)) });
 }

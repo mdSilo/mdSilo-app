@@ -6,6 +6,7 @@ import { ExportAs } from './useExport';
 const pdf = vi.hoisted(() => ({
   addImage: vi.fn(),
   ctor: vi.fn(),
+  output: vi.fn(),
 }));
 
 vi.mock('html2canvas', () => ({ default: vi.fn() }));
@@ -13,10 +14,7 @@ vi.mock('jspdf', () => ({
   jsPDF: class {
     internal = { pageSize: { getWidth: () => 200, getHeight: () => 100 } };
     addImage = pdf.addImage;
-    __private__ = {
-      buildDocument: () => 'doc',
-      getArrayBuffer: () => new Uint8Array([7, 8, 9]).buffer,
-    };
+    output = pdf.output;
     constructor(...args: unknown[]) {
       pdf.ctor(...args);
     }
@@ -51,6 +49,7 @@ describe('ExportAs', () => {
   });
 
   test('exports a pdf sized to the canvas', async () => {
+    pdf.output.mockReturnValue(new Uint8Array([7, 8, 9]).buffer);
     ExportAs('pdf', '/out.pdf');
     await vi.waitFor(() =>
       expect(invoke).toHaveBeenCalledWith('download_file', { filePath: '/out.pdf', blob: [7, 8, 9] })
@@ -58,5 +57,6 @@ describe('ExportAs', () => {
     const ratio = window.devicePixelRatio;
     expect(pdf.ctor).toHaveBeenCalledWith('l', 'pt', [400 / ratio, 200 / ratio]);
     expect(pdf.addImage).toHaveBeenCalledWith('data:image/png;base64,AAEC', 'PNG', 0, 0, 200, 100, '', 'FAST');
+    expect(pdf.output).toHaveBeenCalledWith('arraybuffer');
   });
 });

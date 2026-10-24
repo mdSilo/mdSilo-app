@@ -1,13 +1,15 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import Fuse from 'fuse.js';
 import { getJSONContent, parser } from "mdsmirror";
-import { store } from 'lib/store';
+import { store, useStore } from 'lib/store';
 import { Note } from 'types/model';
 import { loadDir } from 'file/open';
 import { checkFileIsMd } from 'file/process';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type NoteBlock = { text: string; path?: any };
+
+const EMPTY_NOTES: Note[] = [];
 
 type FuseDatum = {
   id: string;
@@ -33,9 +35,21 @@ export default function useNoteSearch({
   searchHashTag = false,
   extendedSearch = false,
   searchDir = false,
-  notesBase = [],
+  notesBase = EMPTY_NOTES,
 }: searchOptions = {}) {
-  const myNotes = useCallback(() => {
+  const notes = useStore((state) => state.notes);
+  const fuse = useMemo(() => {
+    const searchNotes = notesBase.length > 0
+      ? notesBase
+      : notes.values().filter((note) =>
+          searchDir
+            ? note.is_dir
+            : !note.is_dir && checkFileIsMd(note.id)
+        );
+    return initFuse(searchNotes, searchContent, searchHashTag, extendedSearch);
+  }, [notes, notesBase, searchDir, searchContent, searchHashTag, extendedSearch]);
+
+  const search = useCallback((searchText: string) => {
     const isLoaded = store.getState().isLoaded;
     const initDir = store.getState().initDir;
     // console.log("s loaded?", isLoaded);
@@ -43,27 +57,8 @@ export default function useNoteSearch({
       loadDir(initDir).then(() => store.getState().setIsLoaded(true));
     }
 
-    const notes = store.getState().notes;
-    const notesArr = notes.values();
-    const allNotes = searchDir 
-      ? notesArr.filter(n => n.is_dir) 
-      : notesArr.filter(n => !n.is_dir && checkFileIsMd(n.id));
-    
-    return allNotes;
-  }, [searchDir]);
-
-  const search = useCallback(
-    (searchText: string) => {
-      const fuse = initFuse(
-        notesBase.length > 0 ? notesBase : myNotes(),
-        searchContent,
-        searchHashTag,
-        extendedSearch
-      );
-      return fuse.search(searchText.trim(), { limit: numOfResults });
-    },
-    [notesBase, myNotes, searchContent, searchHashTag, extendedSearch, numOfResults]
-  );
+    return fuse.search(searchText.trim(), { limit: numOfResults });
+  }, [fuse, numOfResults]);
   return search;
 }
 

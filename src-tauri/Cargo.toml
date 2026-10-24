@@ -1,6 +1,6 @@
 [package]
 name = "mdsilo"
-version = "0.6.1"
+version = "0.6.2"
 description = "mdSilo Desktop"
 authors = ["dloh"]
 license = "AGPL-3.0-or-later"
@@ -16,36 +16,36 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.7.0", features = [] }
+tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
-serde_json = "1.0.140"
+serde_json = "1.0.154"
 serde = { version = "1.0.219", features = ["derive"] }
-tauri = { version = "2.12.0", features = ["tray-icon", "protocol-asset"] }
-tauri-plugin-dialog = "2.8.0"
+tauri = { version = "2.12.5", features = ["tray-icon", "protocol-asset"] }
+tauri-plugin-dialog = "2.8.3"
 tauri-plugin-updater = "2.13.1"
 dirs = "7.0.0"
 trash = "5.2.2"
 notify = "8.2.0"
-open = "5.3.2"
+open = "5.4.5"
 bincode = { version = "2.0", features = ["serde"] }
 chrono = "0.4.41"
 whatlang = "0.18.0"
 # walk dir
 crossbeam = "0.8.4"
 ignore = "0.4.33"
-indextree = "4.7.4"
+indextree = "4.9.2"
 ## rss reader
 reqwest = { version = "0.13.5", features = ["json", "socks"] }
 rss = { version = "2.0.12", features = ["serde"] }
 atom_syndication = "0.12.7"
 bytes = "1.10.1"
-diesel = { version = "2.2.10", features = ["sqlite", "chrono"] }
-diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
+diesel = { version = "2.3.14", features = ["sqlite", "chrono"] }
+diesel_migrations = { version = "2.3.2", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.30.1", features = ["bundled"] }
 
 [dev-dependencies]
-tokio = { version = "1.45.1", features = ["full"] }
+tokio = { version = "1.54.1", features = ["full"] }
 
 [features]
 # by default Tauri runs in production mode

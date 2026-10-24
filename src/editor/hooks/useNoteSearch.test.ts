@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { invoke } from '@tauri-apps/api/core';
 import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
@@ -59,6 +59,18 @@ describe('useNoteSearch', () => {
     const { result } = renderHook(() => useNoteSearch({ notesBase: base }));
     expect(result.current('kiwi').map((r) => r.item.id)).toEqual(['/x/kiwi.md']);
     expect(result.current('apple')).toEqual([]);
+  });
+
+  test('updates the search index when notes change', () => {
+    seed();
+    const { result } = renderHook(() => useNoteSearch());
+    expect(result.current('kiwi')).toEqual([]);
+
+    act(() => {
+      store.getState().upsertNote(makeNote({ id: '/n/kiwi.md', title: 'kiwi' }));
+    });
+
+    expect(result.current('kiwi').map((r) => r.item.id)).toEqual(['/n/kiwi.md']);
   });
 
   test('triggers a full load when the dir is not loaded', () => {
