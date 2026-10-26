@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import FileAPI from 'file/files';
+import { fromWorkspacePath, toWorkspacePath } from 'file/util';
 import { store, useStore } from 'lib/store';
 import {
   createIssue as createIssueOp, defaultIssueData, NewIssue, normalizeIssueData, renameNoteRefs,
@@ -32,8 +33,29 @@ let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let pending: { dir: string; data: IssueData } | undefined;
 let loadSeq = 0;
 
+/** The note paths of the data, mapped: relative in the file, absolute in the app. */
+function mapNotePaths(data: IssueData, map: (path: string) => string): IssueData {
+  return {
+    ...data,
+    issues: data.issues.map((issue) => ({
+      ...issue,
+      notes: issue.notes.map(map),
+      ...(issue.noteTask ? { noteTask: { ...issue.noteTask, note: map(issue.noteTask.note) } } : {}),
+    })),
+  };
+}
+
+/** as stored: paths relative to the workspace, so it can move (clone, sync) */
+export const toStoredIssueData = (dir: string, data: IssueData) =>
+  mapNotePaths(data, (path) => toWorkspacePath(dir, path));
+
+/** as used: absolute paths; older files have them absolute already */
+export const fromStoredIssueData = (dir: string, data: IssueData) =>
+  mapNotePaths(data, (path) => fromWorkspacePath(dir, path));
+
 async function writeIssues(dir: string, data: IssueData) {
-  await new FileAPI(ISSUE_FILE, dir).writeFile(JSON.stringify(data, null, 2));
+  const stored = toStoredIssueData(dir, data);
+  await new FileAPI(ISSUE_FILE, dir).writeFile(JSON.stringify(stored, null, 2));
 }
 
 /**
@@ -83,7 +105,7 @@ export const useIssueStore = create<IssueStore>((set, get) => ({
         data = defaultIssueData();
       } else {
         try {
-          data = normalizeIssueData(JSON.parse(text));
+          data = fromStoredIssueData(initDir, normalizeIssueData(JSON.parse(text)));
         } catch (e) {
           // keep the broken file around before it gets overwritten
           console.error('issues.json is not valid JSON, starting over', e);

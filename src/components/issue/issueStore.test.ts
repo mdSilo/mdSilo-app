@@ -43,6 +43,45 @@ afterEach(() => {
 });
 
 describe('issueStore', () => {
+  test('stores note paths relative to the workspace, so it can move', async () => {
+    await issueStore.getState().load('/w');
+    issueStore.getState().apply((d) => {
+      const withIssue = ops.createIssue(d, { title: 'x' });
+      const issue = withIssue.issues[0];
+      return {
+        ...withIssue,
+        issues: [{
+          ...issue,
+          notes: ['/w/a.md', '/w/sub/b.md', '/elsewhere/c.md'],
+          noteTask: { note: '/w/sub/b.md', text: 't' },
+        }],
+      };
+    });
+    await issueStore.getState().flush();
+    const stored = JSON.parse(files.written.at(-1)!.text);
+    expect(stored.issues[0].notes).toEqual(['a.md', 'sub/b.md', '/elsewhere/c.md']);
+    expect(stored.issues[0].noteTask.note).toBe('sub/b.md');
+    // in the app: absolute
+    expect(issueStore.getState().data.issues[0].notes[0]).toBe('/w/a.md');
+
+    // the workspace moved (cloned, synced): the links follow
+    resetIssueStore();
+    files.content['/moved/w/issues.json'] = JSON.stringify(stored);
+    await issueStore.getState().load('/moved/w');
+    const issue = issueStore.getState().data.issues[0];
+    expect(issue.notes).toEqual(['/moved/w/a.md', '/moved/w/sub/b.md', '/elsewhere/c.md']);
+    expect(issue.noteTask?.note).toBe('/moved/w/sub/b.md');
+  });
+
+  test('loads the absolute paths of older files', async () => {
+    files.content['/w/issues.json'] = JSON.stringify({
+      issues: [{ number: 1, title: 'x', notes: ['/w/a.md'], noteTask: { note: '/w/a.md', text: 't' } }],
+    });
+    await issueStore.getState().load('/w');
+    expect(issueStore.getState().data.issues[0].notes).toEqual(['/w/a.md']);
+    expect(issueStore.getState().data.issues[0].noteTask?.note).toBe('/w/a.md');
+  });
+
   test('missing file gives defaults and writes nothing', async () => {
     await issueStore.getState().load('/w');
     const s = issueStore.getState();
