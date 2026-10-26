@@ -208,41 +208,29 @@ pub fn get_article_by_url(url: String) -> Option<Article> {
 }
 
 pub fn update_article_read_status(url: String, status: i32) -> usize {
+  // no article of the url: nothing updated, 0
   let mut guard = connection();
   let connection = &mut *guard;
-  let article = get_article_by_url(String::from(&url));
-
-  match article {
-    Some(_) => diesel::update(
-      schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)),
-    )
+  diesel::update(schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)))
     .set(schema::articles::read_status.eq(status))
     .execute(connection)
     .map_err(|e| {
       log_error(format!("db Error on [update_article_read_status: {}]: {:?}", url, e))
     })
-    .unwrap_or(0),
-    None => 0,
-  }
+    .unwrap_or(0)
 }
 
 pub fn update_article_star_status(url: String, status: i32) -> usize {
+  // no article of the url: nothing updated, 0
   let mut guard = connection();
   let connection = &mut *guard;
-  let article = get_article_by_url(String::from(&url));
-
-  match article {
-    Some(_) => diesel::update(
-      schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)),
-    )
+  diesel::update(schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)))
     .set(schema::articles::star_status.eq(status))
     .execute(connection)
     .map_err(|e| {
       log_error(format!("db Error on [update_article_star_status, {}]: {:?}", url, e))
     })
-    .unwrap_or(0),
-    None => 0,
-  }
+    .unwrap_or(0)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -341,5 +329,13 @@ mod tests {
   #[test]
   fn test_get_unread_num() {
     get_unread_num();
+  }
+
+  // the connection is not reentrant: updating must not lock it twice
+  #[test]
+  fn updates_the_status_of_a_missing_article() {
+    let url = "https://mdsilo.test/no-such-article".to_string();
+    assert_eq!(update_article_read_status(url.clone(), 1), 0);
+    assert_eq!(update_article_star_status(url, 1), 0);
   }
 }
