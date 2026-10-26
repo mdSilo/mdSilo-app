@@ -45,6 +45,7 @@ Please follow these guidelines when contributing code to mdSilo:
 - Write clear and concise code with appropriate comments where necessary.
 - Ensure your changes do not introduce linting errors or break existing functionality.
 - Test your changes thoroughly before submitting a pull request.
+- Tests sit next to the code they test (`foo.ts` and `foo.test.ts`), fixtures in a `__fixtures__` folder nearby. Tests of a package in `packages/` stay in that package. `pnpm test` runs them all with Vitest (jsdom, setup in `src/setupTests.ts`).
 
 ## Submitting Changes
 
