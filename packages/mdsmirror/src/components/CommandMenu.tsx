@@ -493,15 +493,16 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<
   render() {
     const { dictionary, isActive, uploadFile } = this.props;
     const items = this.filtered;
-    const { insertEmbed, isabove, ...positioning } = this.state;
+    const { insertEmbed, isabove, top, bottom, left } = this.state;
 
     return createPortal(
       <Wrapper
         id={this.props.id || "slash-menu-container"}
-        active={isActive ? 1 : 0}
-        isabove={isabove ? 1 : 0}
+        $active={isActive}
+        $isAbove={isabove}
         ref={this.menuRef}
-        {...positioning}
+        // inline: a styled position would make a class per position
+        style={{ top, bottom, left }}
       >
         {insertEmbed ? (
           <LinkInputWrapper>
@@ -607,20 +608,15 @@ const Empty = styled.div`
   padding: 0 16px;
 `;
 
+// transient props ($): styled-components does not pass them to the DOM
 export const Wrapper = styled.div<{
-  active: 0 | 1;
-  isabove: 0 | 1;
-  top?: number;
-  bottom?: number;
-  left?: number;
+  $active: boolean;
+  $isAbove: boolean;
 }>`
   color: ${(props) => props.theme.text};
   font-family: ${(props) => props.theme.fontFamily};
   position: absolute;
   z-index: ${(props) => props.theme.zIndex + 100};
-  ${(props) => props.top !== undefined && `top: ${props.top}px`};
-  ${(props) => props.bottom !== undefined && `bottom: ${props.bottom}px`};
-  left: ${(props) => props.left}px;
   background-color: ${(props) => props.theme.blockToolbarBackground};
   border-radius: 4px;
   box-shadow:
@@ -652,10 +648,10 @@ export const Wrapper = styled.div<{
     border-top: 1px solid ${(props) => props.theme.blockToolbarDivider};
   }
 
-  ${({ active, isabove }) =>
-    Boolean(active) &&
+  ${({ $active, $isAbove }) =>
+    $active &&
     `
-    transform: translateY(${Boolean(isabove) ? "6px" : "-6px"}) scale(1);
+    transform: translateY(${$isAbove ? "6px" : "-6px"}) scale(1);
     pointer-events: all;
     opacity: 1;
   `};

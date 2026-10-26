@@ -41,7 +41,7 @@ function ToolbarMenu(props: Props) {
                   name && props.commands[name](item.attrs);
                 }
               }}
-              active={isActive}
+              $active={isActive}
             >
               <Icon color="currentColor" />
             </ToolbarButton>

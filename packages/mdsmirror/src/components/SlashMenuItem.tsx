@@ -44,7 +44,7 @@ export function SlashMenuItem({
 
   return (
     <MenuItem
-      selected={selected}
+      $selected={selected}
       onClick={disabled ? undefined : onClick}
       ref={ref}
     >
@@ -66,8 +66,9 @@ const Shortcut = styled.span`
   text-align: right;
 `;
 
+// transient props ($): styled-components does not pass them to the DOM
 const MenuItem = styled.button<{
-  selected: boolean;
+  $selected: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -81,11 +82,11 @@ const MenuItem = styled.button<{
   border: none;
   opacity: ${(props) => (props.disabled ? ".5" : "1")};
   color: ${(props) =>
-    props.selected
+    props.$selected
       ? props.theme.blockToolbarTextSelected
       : props.theme.blockToolbarText};
   background: ${(props) =>
-    props.selected
+    props.$selected
       ? props.theme.blockToolbarSelectedBackground ||
         props.theme.blockToolbarTrigger
       : "none"};
@@ -95,7 +96,7 @@ const MenuItem = styled.button<{
   &:active {
     color: ${(props) => props.theme.blockToolbarTextSelected};
     background: ${(props) =>
-      props.selected
+      props.$selected
         ? props.theme.blockToolbarSelectedBackground ||
           props.theme.blockToolbarTrigger
         : props.theme.blockToolbarHoverBackground};

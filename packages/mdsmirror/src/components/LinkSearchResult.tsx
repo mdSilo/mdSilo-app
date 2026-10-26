@@ -29,11 +29,11 @@ function LinkSearchResult({ title, subtitle, selected, icon, ...rest }: Props) {
   );
 
   return (
-    <ListItem ref={ref} compact={!subtitle} selected={selected} {...rest}>
+    <ListItem ref={ref} $compact={!subtitle} $selected={selected} {...rest}>
       <IconWrapper>{icon}</IconWrapper>
       <div>
         <Title>{title}</Title>
-        {subtitle ? <Subtitle selected={selected}>{subtitle}</Subtitle> : null}
+        {subtitle ? <Subtitle $selected={selected}>{subtitle}</Subtitle> : null}
       </div>
     </ListItem>
   );
@@ -46,9 +46,10 @@ const IconWrapper = styled.span`
   color: ${(props) => props.theme.toolbarItem};
 `;
 
+// transient props ($): styled-components does not pass them to the DOM
 const ListItem = styled.li<{
-  selected: boolean;
-  compact: boolean;
+  $selected: boolean;
+  $compact: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -56,15 +57,15 @@ const ListItem = styled.li<{
   border-radius: 4px;
   color: ${(props) => props.theme.toolbarItem};
   background: ${(props) =>
-    props.selected ? props.theme.toolbarHoverBackground : "transparent"};
+    props.$selected ? props.theme.toolbarHoverBackground : "transparent"};
   font-family: ${(props) => props.theme.fontFamily};
   text-decoration: none;
   overflow: hidden;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
-  line-height: ${(props) => (props.compact ? "inherit" : "1.2")};
-  height: ${(props) => (props.compact ? "28px" : "auto")};
+  line-height: ${(props) => (props.$compact ? "inherit" : "1.2")};
+  height: ${(props) => (props.$compact ? "28px" : "auto")};
 `;
 
 const Title = styled.div`
@@ -73,10 +74,10 @@ const Title = styled.div`
 `;
 
 const Subtitle = styled.div<{
-  selected: boolean;
+  $selected: boolean;
 }>`
   font-size: 13px;
-  opacity: ${(props) => (props.selected ? 0.75 : 0.5)};
+  opacity: ${(props) => (props.$selected ? 0.75 : 0.5)};
 `;
 
 export default LinkSearchResult;

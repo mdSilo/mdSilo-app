@@ -109,9 +109,12 @@ export default class ComponentView {
   }
 
   destroy() {
-    if (this._root) {
-      this._root.unmount();
-      this._root = undefined;
+    const root = this._root;
+    this._root = undefined;
+    // a node view is destroyed while React renders the editor, e.g. a new
+    // value: React cannot unmount a root then, it is done right after
+    if (root) {
+      setTimeout(() => root.unmount(), 0);
     }
     window.removeEventListener("theme-changed", this.renderElement);
     this.dom = null;

@@ -1,9 +1,10 @@
 import styled from "styled-components";
 
+// transient props ($): styled-components does not pass them to the DOM
 export const StyledEditor = styled("div")<{
-  rtl: 0 | 1; // workround of Warning: Received `false` for a non-boolean attribute
-  readOnly?: boolean;
-  readOnlyWriteCheckboxes?: boolean;
+  $rtl: boolean;
+  $readOnly?: boolean;
+  $readOnlyWriteCheckboxes?: boolean;
 }>`
   color: ${(props) => props.theme.text};
   background: ${(props) => props.theme.background};
@@ -41,7 +42,7 @@ export const StyledEditor = styled("div")<{
     clear: both;
 
     img {
-      pointer-events: ${(props) => (props.readOnly ? "initial" : "none")};
+      pointer-events: ${(props) => (props.$readOnly ? "initial" : "none")};
       display: inline-block;
       max-width: 100%;
     }
@@ -95,7 +96,7 @@ export const StyledEditor = styled("div")<{
 
   .ProseMirror-selectednode {
     outline: 2px solid
-      ${(props) => (props.readOnly ? "transparent" : props.theme.selected)};
+      ${(props) => (props.$readOnly ? "transparent" : props.theme.selected)};
   }
 
   /* Make sure li selections wrap around markers */
@@ -107,8 +108,8 @@ export const StyledEditor = styled("div")<{
   li.ProseMirror-selectednode:after {
     content: "";
     position: absolute;
-    left: ${(props) => (props.rtl ? "-2px" : "-32px")};
-    right: ${(props) => (props.rtl ? "-32px" : "-2px")};
+    left: ${(props) => (props.$rtl ? "-2px" : "-32px")};
+    right: ${(props) => (props.$rtl ? "-32px" : "-2px")};
     top: -2px;
     bottom: -2px;
     border: 2px solid ${(props) => props.theme.selected};
@@ -169,12 +170,12 @@ export const StyledEditor = styled("div")<{
     cursor: text;
 
     &:not(.placeholder):before {
-      display: ${(props) => (props.readOnly ? "none" : "inline-block")};
+      display: ${(props) => (props.$readOnly ? "none" : "inline-block")};
       font-family: ${(props) => props.theme.fontFamilyMono};
       color: ${(props) => props.theme.textSecondary};
       font-size: 13px;
       line-height: 0;
-      margin-${(props) => (props.rtl ? "right" : "left")}: -24px;
+      margin-${(props) => (props.$rtl ? "right" : "left")}: -24px;
       transition: opacity 150ms ease-in-out;
       opacity: 0;
       width: 24px;
@@ -274,8 +275,8 @@ export const StyledEditor = styled("div")<{
   .heading-actions {
     opacity: 0;
     background: ${(props) => props.theme.background};
-    margin-${(props) => (props.rtl ? "right" : "left")}: -26px;
-    flex-direction: ${(props) => (props.rtl ? "row-reverse" : "row")};
+    margin-${(props) => (props.$rtl ? "right" : "left")}: -26px;
+    flex-direction: ${(props) => (props.$rtl ? "row-reverse" : "row")};
     display: inline-flex;
     position: relative;
     top: -2px;
@@ -317,7 +318,7 @@ export const StyledEditor = styled("div")<{
     padding: 0;
 
     &.collapsed {
-      transform: rotate(${(props) => (props.rtl ? "90deg" : "-90deg")});
+      transform: rotate(${(props) => (props.$rtl ? "90deg" : "-90deg")});
       transition-delay: 0.1s;
       opacity: 1;
     }
@@ -331,7 +332,7 @@ export const StyledEditor = styled("div")<{
     display: block;
     opacity: 0;
     transition: opacity 150ms ease-in-out;
-    content: ${(props) => (props.readOnly ? "" : "attr(data-empty-text)")};
+    content: ${(props) => (props.$readOnly ? "" : "attr(data-empty-text)")};
     pointer-events: none;
     height: 0;
     color: ${(props) => props.theme.placeholder};
@@ -371,7 +372,7 @@ export const StyledEditor = styled("div")<{
     width: 24px;
     height: 24px;
     align-self: flex-start;
-    margin-${(props) => (props.rtl ? "left" : "right")}: 4px;
+    margin-${(props) => (props.$rtl ? "left" : "right")}: 4px;
     position: relative;
     top: 1px;
   }
@@ -454,7 +455,9 @@ export const StyledEditor = styled("div")<{
     &:hover {
       border-bottom: 1px dotted
         ${(props) =>
-          props.readOnly ? props.theme.placeholder : props.theme.textSecondary};
+          props.$readOnly
+            ? props.theme.placeholder
+            : props.theme.textSecondary};
     }
   }
 
@@ -499,8 +502,8 @@ export const StyledEditor = styled("div")<{
 
   ul,
   ol {
-    margin: ${(props) => (props.rtl ? "0 -26px 0 0.1em" : "0 0.1em 0 -26px")};
-    padding: ${(props) => (props.rtl ? "0 44px 0 0" : "0 0 0 44px")};
+    margin: ${(props) => (props.$rtl ? "0 -26px 0 0.1em" : "0 0.1em 0 -26px")};
+    padding: ${(props) => (props.$rtl ? "0 44px 0 0" : "0 0 0 44px")};
   }
 
   ol ol {
@@ -513,7 +516,7 @@ export const StyledEditor = styled("div")<{
 
   ul.checkbox_list {
     padding: 0;
-    margin: ${(props) => (props.rtl ? "0 -24px 0 0" : "0 0 0 -24px")};
+    margin: ${(props) => (props.$rtl ? "0 -24px 0 0" : "0 0 0 -24px")};
   }
 
   ul li,
@@ -533,7 +536,7 @@ export const StyledEditor = styled("div")<{
   ul.checkbox_list > li {
     display: flex;
     list-style: none;
-    padding-${(props) => (props.rtl ? "right" : "left")}: 24px;
+    padding-${(props) => (props.$rtl ? "right" : "left")}: 24px;
   }
 
   ul.checkbox_list > li.checked > div > p {
@@ -548,7 +551,7 @@ export const StyledEditor = styled("div")<{
 
   ul > li.counter-2::before,
   ol li.counter-2::before {
-    ${(props) => (props.rtl ? "right" : "left")}: -50px;
+    ${(props) => (props.$rtl ? "right" : "left")}: -50px;
   }
 
   ul > li.hovering::before,
@@ -562,15 +565,15 @@ export const StyledEditor = styled("div")<{
   }
 
   ul.checkbox_list > li::before {
-    ${(props) => (props.rtl ? "right" : "left")}: 0;
+    ${(props) => (props.$rtl ? "right" : "left")}: 0;
   }
 
   ul.checkbox_list li input {
     cursor: pointer;
     pointer-events: ${(props) =>
-      props.readOnly && !props.readOnlyWriteCheckboxes ? "none" : "initial"};
+      props.$readOnly && !props.$readOnlyWriteCheckboxes ? "none" : "initial"};
     opacity: ${(props) =>
-      props.readOnly && !props.readOnlyWriteCheckboxes ? 0.75 : 1};
+      props.$readOnly && !props.$readOnlyWriteCheckboxes ? 0.75 : 1};
     margin: 0 0.5em 0 0.5em;
     width: 14px;
     height: 14px;
@@ -662,7 +665,7 @@ export const StyledEditor = styled("div")<{
     &.notice-block {
       select,
       button {
-        ${(props) => (props.rtl ? "left" : "right")}: 4px;
+        ${(props) => (props.$rtl ? "left" : "right")}: 4px;
       }
     }
 
@@ -672,11 +675,11 @@ export const StyledEditor = styled("div")<{
 
     &:hover {
       select {
-        display: ${(props) => (props.readOnly ? "none" : "inline")};
+        display: ${(props) => (props.$readOnly ? "none" : "inline")};
       }
 
       button {
-        display: ${(props) => (props.readOnly ? "inline" : "none")};
+        display: ${(props) => (props.$readOnly ? "inline" : "none")};
       }
     }
 
@@ -948,7 +951,7 @@ export const StyledEditor = styled("div")<{
 
     .selectedCell {
       background: ${(props) =>
-        props.readOnly ? "inherit" : props.theme.tableSelectedBackground};
+        props.$readOnly ? "inherit" : props.theme.tableSelectedBackground};
 
       /* fixes Firefox background color painting over border:
       * https://bugzilla.mozilla.org/show_bug.cgi?id=688556 */
@@ -1008,7 +1011,7 @@ export const StyledEditor = styled("div")<{
         left: -10px;
         width: 4px;
         height: 4px;
-        display: ${(props) => (props.readOnly ? "none" : "block")};
+        display: ${(props) => (props.$readOnly ? "none" : "block")};
         border-radius: 100%;
         background-color: ${(props) => props.theme.divider};
       }
@@ -1052,7 +1055,7 @@ export const StyledEditor = styled("div")<{
         right: -1px;
         width: 4px;
         height: 4px;
-        display: ${(props) => (props.readOnly ? "none" : "block")};
+        display: ${(props) => (props.$readOnly ? "none" : "block")};
         border-radius: 100%;
         background-color: ${(props) => props.theme.divider};
       }
@@ -1097,7 +1100,7 @@ export const StyledEditor = styled("div")<{
         width: 100%;
         height: 12px;
         background: ${(props) => props.theme.divider};
-        display: ${(props) => (props.readOnly ? "none" : "block")};
+        display: ${(props) => (props.$readOnly ? "none" : "block")};
       }
 
       &:hover::after {
@@ -1127,7 +1130,7 @@ export const StyledEditor = styled("div")<{
         width: 12px;
         background: ${(props) => props.theme.divider};
         border-color: ${(props) => props.theme.background};
-        display: ${(props) => (props.readOnly ? "none" : "block")};
+        display: ${(props) => (props.$readOnly ? "none" : "block")};
       }
 
       &:hover::after {
@@ -1158,7 +1161,7 @@ export const StyledEditor = styled("div")<{
         position: absolute;
         top: -18px;
         left: -18px;
-        display: ${(props) => (props.readOnly ? "none" : "block")};
+        display: ${(props) => (props.$readOnly ? "none" : "block")};
         z-index: 10;
       }
 
@@ -1279,10 +1282,10 @@ export const StyledEditor = styled("div")<{
   .scrollable {
     overflow-y: hidden;
     overflow-x: auto;
-    padding-${(props) => (props.rtl ? "right" : "left")}: 1em;
-    margin-${(props) => (props.rtl ? "right" : "left")}: -1em;
-    border-${(props) => (props.rtl ? "right" : "left")}: 1px solid transparent;
-    border-${(props) => (props.rtl ? "left" : "right")}: 1px solid transparent;
+    padding-${(props) => (props.$rtl ? "right" : "left")}: 1em;
+    margin-${(props) => (props.$rtl ? "right" : "left")}: -1em;
+    border-${(props) => (props.$rtl ? "right" : "left")}: 1px solid transparent;
+    border-${(props) => (props.$rtl ? "left" : "right")}: 1px solid transparent;
     transition: border 250ms ease-in-out 0s;
   }
 
@@ -1290,11 +1293,11 @@ export const StyledEditor = styled("div")<{
     position: absolute;
     top: 0;
     bottom: 0;
-    ${(props) => (props.rtl ? "right" : "left")}: -1em;
+    ${(props) => (props.$rtl ? "right" : "left")}: -1em;
     width: 16px;
     transition: box-shadow 250ms ease-in-out;
     border: 0px solid transparent;
-    border-${(props) => (props.rtl ? "right" : "left")}-width: 1em;
+    border-${(props) => (props.$rtl ? "right" : "left")}-width: 1em;
     pointer-events: none;
 
     &.left {
@@ -1312,7 +1315,7 @@ export const StyledEditor = styled("div")<{
   }
 
   .slash-menu-trigger {
-    display: ${(props) => (props.readOnly ? "none" : "inline")};
+    display: ${(props) => (props.$readOnly ? "none" : "inline")};
     color: ${(props) => props.theme.textSecondary};
     font-size: 24px;
     background: none;
@@ -1324,7 +1327,7 @@ export const StyledEditor = styled("div")<{
     border: 0;
     padding: 0;
     margin-top: 1px;
-    margin-${(props) => (props.rtl ? "right" : "left")}: -24px;
+    margin-${(props) => (props.$rtl ? "right" : "left")}: -24px;
 
     &:hover,
     &:focus {

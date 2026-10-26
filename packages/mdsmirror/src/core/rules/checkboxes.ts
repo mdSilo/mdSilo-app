@@ -76,7 +76,8 @@ export default function markdownItCheckbox(md: MarkdownIt) {
           const contentMatches = tokenChildren[0].content.match(CHECKBOX_REGEX);
 
           if (contentMatches) {
-            const label = contentMatches[2];
+            // none when the label starts with code, a link...: "[ ] `code`"
+            const label = contentMatches[2] ?? "";
 
             tokens[i].content = label;
             tokenChildren[0].content = label;

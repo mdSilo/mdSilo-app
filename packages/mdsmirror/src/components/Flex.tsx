@@ -9,19 +9,20 @@ type AlignValues =
 
 type Props = {
   style?: React.CSSProperties;
-  align?: AlignValues;
-  justify?: JustifyValues;
-  auto?: 0 | 1;
+  $align?: AlignValues;
+  $justify?: JustifyValues;
+  $auto?: boolean;
   className?: string;
   children?: React.ReactNode;
 };
 
+// transient props ($): styled-components does not pass them to the DOM
 const Flex = styled.div<Props>`
   display: flex;
-  flex: ${({ auto }: Props) => (auto ? "1 1 auto" : "initial")};
+  flex: ${({ $auto }: Props) => ($auto ? "1 1 auto" : "initial")};
   flex-direction: column;
-  align-items: ${({ align }: Props) => align};
-  justify-content: ${({ justify }: Props) => justify};
+  align-items: ${({ $align }: Props) => $align};
+  justify-content: ${({ $justify }: Props) => $justify};
 `;
 
 export default Flex;

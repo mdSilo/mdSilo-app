@@ -94,6 +94,16 @@ describe("markdown round trip", () => {
     expect(roundTrip(md)).toBe(md);
   });
 
+  // the label started with code: no text after `[ ]`, the parse threw
+  test("a task starting with code or a link", () => {
+    const md = "- [ ] `Enter` to add more\n- [x] [a link](https://a.b) done";
+    const doc = parser.parse(md);
+    expect(doc.firstChild?.type.name).toBe("checkbox_list");
+    expect(doc.firstChild?.childCount).toBe(2);
+    expect(doc.firstChild?.child(1).attrs.checked).toBe(true);
+    expect(roundTrip(md)).toBe(md);
+  });
+
   test("keeps the prefixes of nested blocks", () => {
     const md = [
       "> a",

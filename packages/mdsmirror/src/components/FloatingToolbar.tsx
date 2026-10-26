@@ -185,9 +185,9 @@ const FloatingToolbar = React.forwardRef(
 
     return createPortal(
       <Wrapper
-        active={props.active && position.visible ? 1 : 0}
+        $active={!!props.active && position.visible}
         ref={menuRef}
-        offset={position.offset}
+        $offset={position.offset}
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,
@@ -200,9 +200,10 @@ const FloatingToolbar = React.forwardRef(
   }
 );
 
+// transient props ($): styled-components does not pass them to the DOM
 const Wrapper = styled.div<{
-  active?: 0 | 1; // workaround: Received `false` for a non-boolean attribute `active`
-  offset: number;
+  $active?: boolean;
+  $offset: number;
 }>`
   will-change: opacity, transform;
   padding: 8px 16px;
@@ -233,7 +234,7 @@ const Wrapper = styled.div<{
     z-index: -1;
     position: absolute;
     bottom: -2px;
-    left: calc(50% - ${(props) => props.offset || 0}px);
+    left: calc(50% - ${(props) => props.$offset || 0}px);
     pointer-events: none;
   }
 
@@ -241,8 +242,8 @@ const Wrapper = styled.div<{
     box-sizing: border-box;
   }
 
-  ${({ active }) =>
-    Boolean(active) &&
+  ${({ $active }) =>
+    $active &&
     `
     transform: translateY(-6px) scale(1);
     opacity: 1;

@@ -95,9 +95,10 @@ const App = () => {
               : 'flex-col md:flex-row'
         }`}>
           <SideMenu />
-          <div className="relative flex flex-1 min-h-0">
+          {/* min-w-0: shrink to the window, not to the widest content */}
+          <div className="relative flex flex-1 min-h-0 min-w-0">
             <Sidebar />
-            <div className="relative flex flex-1 flex-col overflow-y-auto">
+            <div className="relative flex flex-1 flex-col min-w-0 overflow-y-auto">
               <div className="flex items-center justify-center"><StatusBar /></div>
               <MainView />
             </div>

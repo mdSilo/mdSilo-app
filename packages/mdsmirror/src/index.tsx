@@ -324,10 +324,18 @@ class MsEditor extends React.PureComponent<Props, State> {
   componentDidUpdate(prevProps: Props) {
     // Allow changes to the 'value' prop to update the editor from outside
     if (this.props.value && prevProps.value !== this.props.value) {
-      const newState = this.createState(this.props.value);
-      this.view.updateState(newState);
-      this.contentDir = firstStrongDir(newState.doc);
-      this.calculateDir();
+      const doc = this.createDocument(this.props.value);
+      // the same document, e.g. the note loaded again: keep the state, so the
+      // selection and the history; the editor may have added a trailing line
+      const same =
+        doc.eq(this.view.state.doc) ||
+        this.serializer.serialize(doc).trimEnd() === this.text().trimEnd();
+      if (!same) {
+        const newState = this.createState(this.props.value, doc);
+        this.view.updateState(newState);
+        this.contentDir = firstStrongDir(newState.doc);
+        this.calculateDir();
+      }
     }
 
     // pass readOnly changes through to underlying editor instance
@@ -618,9 +626,10 @@ class MsEditor extends React.PureComponent<Props, State> {
     });
   }
 
-  createState(value?: string) {
-    const doc = this.createDocument(value || this.props.defaultValue || "");
-
+  createState(
+    value?: string,
+    doc = this.createDocument(value || this.props.defaultValue || "")
+  ) {
     return EditorState.create({
       schema: this.schema,
       doc,
@@ -884,16 +893,16 @@ class MsEditor extends React.PureComponent<Props, State> {
       <Flex
         style={style}
         className={className}
-        align="flex-start"
-        justify="center"
+        $align="flex-start"
+        $justify="center"
       >
         <ThemeProvider theme={this.theme()}>
           <React.Fragment>
             <EditorElement
               dir={dir}
-              rtl={isRTL ? 1 : 0}
-              readOnly={readOnly}
-              readOnlyWriteCheckboxes={readOnlyWriteCheckboxes}
+              $rtl={isRTL}
+              $readOnly={readOnly}
+              $readOnlyWriteCheckboxes={readOnlyWriteCheckboxes}
               ref={this.elementRef}
             />
             {!readOnly && this.view && (

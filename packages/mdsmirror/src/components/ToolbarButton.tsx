@@ -1,7 +1,8 @@
 import styled from "styled-components";
 
-type Props = { active?: boolean; disabled?: boolean };
+type Props = { $active?: boolean; disabled?: boolean };
 
+// transient props ($): styled-components does not pass them to the DOM
 export default styled.button<Props>`
   display: inline-block;
   flex: 0;
@@ -37,5 +38,5 @@ export default styled.button<Props>`
     bottom: -4px;
   }
 
-  ${(props) => props.active && `opacity: 1; color: ${props.theme.primary}`};
+  ${(props) => props.$active && `opacity: 1; color: ${props.theme.primary}`};
 `;
