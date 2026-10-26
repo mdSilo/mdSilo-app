@@ -3,11 +3,13 @@ import { create } from 'zustand';
 import FileAPI from 'file/files';
 import { fromWorkspacePath, toWorkspacePath } from 'file/util';
 import { store, useStore } from 'lib/store';
+import { dataDirOf, type Layout } from 'workspace/layout';
 import {
   createIssue as createIssueOp, defaultIssueData, NewIssue, normalizeIssueData, renameNoteRefs,
 } from './issueOps';
 import { LEGACY_KANBAN_FILE, migrateKanbans, parseLegacyKanbans } from './migrateKanban';
-import type { IssueData } from './types';
+import { ISSUES_DIR, readIssueDir, writeIssueDir } from './issueFiles';
+import type { Issue, IssueData } from './types';
 
 export const ISSUE_FILE = 'issues.json';
 export const SAVE_DEBOUNCE_MS = 300;
@@ -16,9 +18,14 @@ type IssueStore = {
   data: IssueData;
   /** the workspace (initDir) data was loaded from; undefined until loaded */
   dir?: string;
+  /** legacy: initDir/issues.json; workspace: one file per issue, see issueFiles */
+  layout?: Layout;
   isLoaded: boolean;
-  /** read issues.json in initDir; no-op if already loaded for that dir */
-  load: (initDir: string, force?: boolean) => Promise<void>;
+  /**
+   * read the issues of initDir; no-op if already loaded for that dir. The
+   * layout defaults to the one of the open workspace.
+   */
+  load: (initDir: string, force?: boolean, layout?: Layout) => Promise<void>;
   /** apply a pure op (see issueOps) and schedule a save */
   apply: (op: (data: IssueData) => IssueData) => void;
   /** create an issue and return its number */
@@ -28,22 +35,35 @@ type IssueStore = {
 };
 
 // Kept apart from the persisted main store: issues live in the workspace
-// (initDir/issues.json), never in LOCAL_DATA_DIR.
+// (initDir/issues.json, or .mdsilo/issues/), never in LOCAL_DATA_DIR.
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
-let pending: { dir: string; data: IssueData } | undefined;
+let pending: { dir: string; layout: Layout; data: IssueData } | undefined;
 let loadSeq = 0;
+// the data as last read or written per workspace, to write the changes only
+const saved = new Map<string, IssueData>();
+
+/** The note paths of an issue, mapped. */
+function mapIssuePaths(issue: Issue, map: (path: string) => string): Issue {
+  return {
+    ...issue,
+    notes: issue.notes.map(map),
+    ...(issue.noteTask ? { noteTask: { ...issue.noteTask, note: map(issue.noteTask.note) } } : {}),
+  };
+}
 
 /** The note paths of the data, mapped: relative in the file, absolute in the app. */
 function mapNotePaths(data: IssueData, map: (path: string) => string): IssueData {
-  return {
-    ...data,
-    issues: data.issues.map((issue) => ({
-      ...issue,
-      notes: issue.notes.map(map),
-      ...(issue.noteTask ? { noteTask: { ...issue.noteTask, note: map(issue.noteTask.note) } } : {}),
-    })),
-  };
+  return { ...data, issues: data.issues.map((issue) => mapIssuePaths(issue, map)) };
 }
+
+/** The dir of the issue files of a workspace in the workspace layout. */
+export const issueDirOf = (dir: string) => `${dataDirOf(dir)}/${ISSUES_DIR}`;
+
+/** The layout of a workspace: the open one's, legacy for any other. */
+const layoutOf = (dir: string): Layout => {
+  const { initDir, layout } = store.getState();
+  return initDir === dir && layout ? layout : 'legacy';
+};
 
 /** as stored: paths relative to the workspace, so it can move (clone, sync) */
 export const toStoredIssueData = (dir: string, data: IssueData) =>
@@ -53,9 +73,26 @@ export const toStoredIssueData = (dir: string, data: IssueData) =>
 export const fromStoredIssueData = (dir: string, data: IssueData) =>
   mapNotePaths(data, (path) => fromWorkspacePath(dir, path));
 
-async function writeIssues(dir: string, data: IssueData) {
-  const stored = toStoredIssueData(dir, data);
-  await new FileAPI(ISSUE_FILE, dir).writeFile(JSON.stringify(stored, null, 2));
+async function writeIssues(dir: string, data: IssueData, layout: Layout = 'legacy') {
+  if (layout === 'workspace') {
+    const toStored = (issue: Issue) => mapIssuePaths(issue, (path) => toWorkspacePath(dir, path));
+    await writeIssueDir(issueDirOf(dir), saved.get(dir), data, toStored);
+  } else {
+    const stored = toStoredIssueData(dir, data);
+    await new FileAPI(ISSUE_FILE, dir).writeFile(JSON.stringify(stored, null, 2));
+  }
+  saved.set(dir, data);
+}
+
+/** Read the issues of a workspace in the workspace layout. */
+async function readIssues(dir: string): Promise<IssueData> {
+  try {
+    const data = await readIssueDir(issueDirOf(dir));
+    return data ? fromStoredIssueData(dir, data) : defaultIssueData();
+  } catch {
+    // e.g. not in Tauri
+    return defaultIssueData();
+  }
 }
 
 /**
@@ -92,10 +129,18 @@ export const useIssueStore = create<IssueStore>((set, get) => ({
   dir: undefined,
   isLoaded: false,
 
-  load: async (initDir: string, force = false) => {
-    if (!force && get().dir === initDir && get().isLoaded) return;
+  load: async (initDir: string, force = false, layout = layoutOf(initDir)) => {
+    const loaded = get();
+    if (!force && loaded.dir === initDir && (loaded.layout ?? 'legacy') === layout && loaded.isLoaded) return;
     await get().flush();
     const seq = ++loadSeq;
+    if (layout === 'workspace') {
+      const data = await readIssues(initDir);
+      if (seq !== loadSeq) return; // a newer load won
+      saved.set(initDir, data);
+      set({ data, dir: initDir, layout, isLoaded: true });
+      return;
+    }
     let data: IssueData;
     let fresh = false; // no issues.json yet
     try {
@@ -119,16 +164,17 @@ export const useIssueStore = create<IssueStore>((set, get) => ({
     }
     data = await migrateLegacyKanban(initDir, data, fresh);
     if (seq !== loadSeq) return; // a newer load won
-    set({ data, dir: initDir, isLoaded: true });
+    saved.set(initDir, data);
+    set({ data, dir: initDir, layout, isLoaded: true });
   },
 
   apply: (op) => {
-    const { data, dir } = get();
+    const { data, dir, layout = 'legacy' } = get();
     const next = op(data);
     if (next === data) return;
     set({ data: next });
     if (!dir) return;
-    pending = { dir, data: next };
+    pending = { dir, layout, data: next };
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(() => { void get().flush(); }, SAVE_DEBOUNCE_MS);
   },
@@ -147,7 +193,7 @@ export const useIssueStore = create<IssueStore>((set, get) => ({
     const toSave = pending;
     pending = undefined;
     if (toSave) {
-      await writeIssues(toSave.dir, toSave.data);
+      await writeIssues(toSave.dir, toSave.data, toSave.layout);
     }
   },
 }));
@@ -157,14 +203,17 @@ export const issueStore = useIssueStore;
 /** Issue data of the open workspace, loading it on first use. */
 export function useIssueData() {
   const initDir = useStore((state) => state.initDir);
+  const layout = useStore((state) => state.layout);
   const load = useIssueStore((s) => s.load);
   const data = useIssueStore((s) => s.data);
   const dir = useIssueStore((s) => s.dir);
+  const loadedLayout = useIssueStore((s) => s.layout);
   const isLoaded = useIssueStore((s) => s.isLoaded);
   useEffect(() => {
     if (initDir) void load(initDir);
-  }, [initDir, load]);
-  return { data, isLoaded: isLoaded && dir === initDir, initDir };
+  }, [initDir, layout, load]);
+  const sameLayout = (loadedLayout ?? 'legacy') === (layout ?? 'legacy');
+  return { data, isLoaded: isLoaded && dir === initDir && sameLayout, initDir };
 }
 
 /** On note rename: keep issue links to the note working. */
@@ -183,5 +232,6 @@ export function resetIssueStore() {
   saveTimer = undefined;
   pending = undefined;
   loadSeq += 1;
-  useIssueStore.setState({ data: defaultIssueData(), dir: undefined, isLoaded: false });
+  saved.clear();
+  useIssueStore.setState({ data: defaultIssueData(), dir: undefined, layout: undefined, isLoaded: false });
 }

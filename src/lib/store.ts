@@ -6,6 +6,7 @@ import type { Note } from 'types/model';
 import type { PickPartial } from 'types/utils';
 import { ArticleType, PodType } from 'types/model';
 import * as Storage from 'file/storage';
+import type { Layout } from 'workspace/layout';
 import type { ActivityRecord } from './activity';
 import userSettingsSlice, { UserSettings } from './userSettings';
 import { NoteMap } from './noteMap';
@@ -123,6 +124,8 @@ export type Store = {
   setSidebarSearchType: Setter<string>;
   initDir: string | undefined;  // first open dir path
   setInitDir: Setter<string | undefined>;
+  layout: Layout | undefined;  // of initDir, see workspace/layout
+  setLayout: Setter<Layout | undefined>;
   isLoading: boolean;  // is loading all?
   setIsLoading: Setter<boolean>;
   isLoaded: boolean;  // is all loaded?
@@ -274,6 +277,8 @@ export const store = createStore<Store>()(
       setSidebarSearchType: setter(set, 'sidebarSearchType'),
       initDir: undefined,
       setInitDir: setter(set, 'initDir'),
+      layout: undefined,
+      setLayout: setter(set, 'layout'),
       isLoading: false,
       setIsLoading: setter(set, 'isLoading'),
       isLoaded: false,

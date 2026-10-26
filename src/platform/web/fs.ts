@@ -71,7 +71,14 @@ export function initFs(): Promise<void> {
         const s = t.objectStore(FILES);
         s.put(newEntry(ROOT, true));
         s.put(newEntry(DEFAULT_DIR, true));
-        s.put(newEntry(`${DEFAULT_DIR}/Welcome.md`, false, WELCOME));
+        // in the workspace layout, see src/workspace/layout.ts
+        for (const dir of ['reading', 'writing', '.mdsilo', '.mdsilo/local']) {
+          s.put(newEntry(`${DEFAULT_DIR}/${dir}`, true));
+        }
+        s.put(newEntry(`${DEFAULT_DIR}/.mdsilo/.gitignore`, false, 'local/\n'));
+        const meta = { version: 1, createdAt: new Date().toISOString() };
+        s.put(newEntry(`${DEFAULT_DIR}/.mdsilo/workspace.json`, false, JSON.stringify(meta, null, 2)));
+        s.put(newEntry(`${DEFAULT_DIR}/writing/Welcome.md`, false, WELCOME));
       });
     })().catch((e) => {
       initialized = null;

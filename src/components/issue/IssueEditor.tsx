@@ -3,6 +3,7 @@ import MsEditor, { embeds } from 'mdsmirror';
 import { EDITOR_THEME } from 'lib/themes';
 import { useStore } from 'lib/store';
 import useLinkHandlers from 'editor/hooks/useLinkHandlers';
+import { useWritingRoot } from 'workspace/useWorkspace';
 
 type Props = {
   /** initial markdown; remount (change `key`) to reset */
@@ -28,7 +29,8 @@ export default function IssueEditor(props: Props) {
   // the editor resets its doc whenever `value` changes, so keep the first value
   const [initial] = useState(defaultValue);
   const darkMode = useStore((state) => state.darkMode);
-  const initDir = useStore((state) => state.initDir);
+  // `./` paths are relative to where the notes are
+  const notesRoot = useWritingRoot();
   const { onSearchLink, onOpenLink } = useLinkHandlers();
   const ref = useRef<HTMLDivElement>(null);
   const wasFocused = useRef(false);
@@ -69,7 +71,7 @@ export default function IssueEditor(props: Props) {
         onOpenLink={onOpenLink}
         embeds={embeds}
         disables={['sub']}
-        rootPath={initDir}
+        rootPath={notesRoot}
       />
     </div>
   );

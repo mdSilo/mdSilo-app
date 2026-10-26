@@ -7,6 +7,7 @@ import { normalizeSlash, getDirPath, getBaseName, joinPaths } from 'file/util';
 import DirectoryAPI from 'file/directory';
 import { writeAllFile, writeFile } from 'file/write';
 import { rmFileNameExt } from 'file/process';
+import { READING_DIR, WRITING_DIR, resolveLayout } from 'workspace/layout';
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);
@@ -31,13 +32,31 @@ export const onOpenDir = async () => {
   if (dirPath && typeof dirPath === 'string') {
     cleanStore();
     const normalizedDir = await getDirPath(dirPath);
-    store.getState().setInitDir(normalizedDir);
+    await setWorkspace(normalizedDir);
     store.getState().setCurrentDir(normalizedDir);
     store.getState().upsertRecentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
     await openDir(normalizedDir);
+    await expandLayoutRoots(normalizedDir);
   }
 };
+
+/** Set the folder as the workspace, with its layout (see workspace/layout). */
+async function setWorkspace(dir: string) {
+  const layout = await resolveLayout(dir);
+  store.getState().setLayout(layout);
+  store.getState().setInitDir(dir);
+}
+
+/** In the workspace layout, the sidebar shows reading/ and writing/ expanded. */
+async function expandLayoutRoots(dir: string) {
+  if (store.getState().layout !== 'workspace') return;
+  for (const name of [READING_DIR, WRITING_DIR]) {
+    const root = await joinPaths(dir, [name]);
+    await listDir(root, false);
+    store.getState().toggleExpandedDir(normalizeSlash(root), true);
+  }
+}
 
 // used for list init dir: 
 // SidebarNotes init Open Folder,
@@ -57,13 +76,20 @@ export const onListDir = async () => {
 // onListDir 
 // SidebarHistory, to recent dir 
 export const listInitDir = async (dirPath: string) => {
-  store.getState().setInitDir(dirPath);
+  await setWorkspace(dirPath);
   store.getState().setCurrentDir(dirPath);
   store.getState().upsertRecentDir(dirPath);
   // listen on init dir only
   await listDir(dirPath);
+  await expandLayoutRoots(dirPath);
   // all notes with content, e.g. for backlinks and search
   void loadDir(dirPath);
+};
+
+/** Open the workspace again from scratch, e.g. once its layout changed. */
+export const reopenWorkspace = async (dirPath: string) => {
+  cleanStore();
+  await listInitDir(dirPath);
 };
 
 let isWebWorkspaceOpening = false;
@@ -165,6 +191,7 @@ function cleanStore() {
   store.getState().setNotes(NoteMap.EMPTY);
   store.getState().setCurrentDir(undefined);
   store.getState().setCurrentNoteId('');
+  store.getState().setLayout(undefined);
   store.getState().setIsLoaded(false);
   store.getState().setIsLoading(false);
 }

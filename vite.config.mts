@@ -112,6 +112,8 @@ export default defineConfig({
       types: path.resolve(import.meta.dirname, './src/types'),
       asset: path.resolve(import.meta.dirname, './src/asset'),
       styles: path.resolve(import.meta.dirname, './src/styles'),
+      workspace: path.resolve(import.meta.dirname, './src/workspace'),
+      reader: path.resolve(import.meta.dirname, './src/reader'),
       // prosemirror-history's CommonJS build does `require('rope-sequence')`,
       // which resolves to the ES module (no default interop) and breaks the
       // undo history on typing. Point it to the CommonJS entry instead.

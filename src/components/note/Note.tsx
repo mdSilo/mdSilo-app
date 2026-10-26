@@ -27,6 +27,7 @@ import {
   joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
 } from 'file/util';
 import { getFileExt } from 'file/process';
+import { useWritingRoot } from 'workspace/useWorkspace';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import IssueRefs from './IssueRefs';
@@ -74,11 +75,12 @@ function Note(props: Props) {
 
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
+  // `./` paths (assets) are relative to it: writing/ in the workspace layout
+  const notesRoot = useWritingRoot();
 
   // need to update timely if possible
   const protocol = getAssetProtocol();
 
-  // console.log("initDir", initDir, protocol, navigator.platform);
   const storeNotes = useStore((state) => state.notes);
   // get note and properties: title,  content value....
   const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
@@ -250,9 +252,9 @@ function Note(props: Props) {
         let fullPath = filePath;
         let fileUrl: string;
         // console.log("use asset", useAsset)
-        if (initDir && useAsset) {
+        if (notesRoot && useAsset) {
           const assetPath = await invoke<string[]>(
-            'copy_file_to_assets', { srcPath: filePath, workDir: initDir }
+            'copy_file_to_assets', { srcPath: filePath, workDir: notesRoot }
           );
           // console.log("asset path", assetPath)
           fullPath = assetPath[0] || filePath;
@@ -279,27 +281,26 @@ function Note(props: Props) {
       }
       return [];
     },
-    [initDir, useAsset]
+    [notesRoot, useAsset]
   );
 
    // open Attachment file using defult application
   const onClickAttachment = useCallback(async (href: string) => {
-    const realHref = href.startsWith('./') && initDir
-      ? href.replace('.', initDir)
+    const realHref = href.startsWith('./') && notesRoot
+      ? href.replace('.', notesRoot)
       : href;
-    // console.log("file href", href, decodeURI(realHref), initDir);
     await openUrl(decodeURI(realHref));
-  }, [initDir]);
+  }, [notesRoot]);
 
   const onSaveDiagram = useCallback(async (svg: string, ty: string) => {
-    if (!initDir) return;
+    if (!notesRoot) return;
     const rawSVG = decodeHTMLEntity(svg);
     const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-${ty}.svg`
     const dir = await saveDilog(fname);
-    const defaultDir = `${initDir}/mindmap/${fname}`;
+    const defaultDir = `${notesRoot}/mindmap/${fname}`;
     const saveDir = normalizeSlash(dir || defaultDir);
     await writeFile(saveDir, rawSVG);
-  }, [initDir, title]);
+  }, [notesRoot, title]);
 
   // copy heading hash or hashtag hash
   const onCopyHash = useCallback(
@@ -377,7 +378,7 @@ function Note(props: Props) {
                     key={`mp-${noteId}`}
                     title={title}
                     mdValue={mdContent}
-                    initDir={initDir}
+                    initDir={notesRoot}
                   />
                 ) : (
                   <MsEditor
@@ -401,7 +402,7 @@ function Note(props: Props) {
                     onCopyHash={onCopyHash}
                     embeds={embeds}
                     disables={['sub']}
-                    rootPath={initDir}
+                    rootPath={notesRoot}
                     docPath={noteDir}
                     protocol={protocol}
                     resolveSrc={convertFileSrc}

@@ -37,7 +37,7 @@ describe('path', () => {
 describe('web invoke: files', () => {
   it('seeds the default workspace', async () => {
     expect(await invoke('is_dir', { path: '/mdSilo' })).toBe(true);
-    expect(await invoke('read_file', { filePath: '/mdSilo/Welcome.md' })).toContain('web version');
+    expect(await invoke('read_file', { filePath: '/mdSilo/writing/Welcome.md' })).toContain('web version');
     expect(await invoke('create_mdsilo_dir')).toBe('/mdSilo');
   });
 
@@ -307,12 +307,19 @@ describe('backup', () => {
     await invoke('write_file', { filePath: '/w/sub/.hidden', text: 'h' });
     await invoke('create_dir_recursive', { dirPath: '/empty' });
     const { blob, count } = await buildBackup();
-    expect(count).toBe(3);
+    // and the workspace data of /mdSilo: workspace.json, .gitignore
+    expect(count).toBe(5);
     const files = await readZip(blob);
     expect(files).toEqual({
       'empty/': '',
       'mdSilo/': '',
-      'mdSilo/Welcome.md': expect.stringContaining('Welcome to mdSilo'),
+      'mdSilo/.mdsilo/': '',
+      'mdSilo/.mdsilo/.gitignore': 'local/\n',
+      'mdSilo/.mdsilo/local/': '',
+      'mdSilo/.mdsilo/workspace.json': expect.stringContaining('"version": 1'),
+      'mdSilo/reading/': '',
+      'mdSilo/writing/': '',
+      'mdSilo/writing/Welcome.md': expect.stringContaining('Welcome to mdSilo'),
       'w/': '',
       'w/sub/': '',
       'w/sub/.hidden': 'h',
@@ -331,7 +338,7 @@ describe('backup', () => {
     const createObjectURL = vi.fn(() => 'blob:x');
     vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
-    expect(await invoke('export_backup')).toBe(1);
+    expect(await invoke('export_backup')).toBe(3);
     expect(createObjectURL).toHaveBeenCalledTimes(1);
     expect(click).toHaveBeenCalledTimes(1);
     expect(backupFileName(new Date(2026, 0, 2, 3, 4, 5))).toBe('mdsilo-backup-20260102-030405.zip');

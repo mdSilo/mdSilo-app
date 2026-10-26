@@ -5,7 +5,9 @@ import {
   memo,
   useCallback,
 } from 'react';
-import { TbCaretRight as IconCaretRight, TbMarkdown as IconMarkdown, TbNote as IconNote, TbPhoto as IconPhoto } from 'react-icons/tb';
+import {
+  TbCaretRight as IconCaretRight, TbMarkdown as IconMarkdown, TbNote as IconNote, TbPhoto as IconPhoto,
+} from 'react-icons/tb';
 import { NoteTreeItem, store, useStore } from 'lib/store';
 import { isMobile } from 'utils/helper';
 import { imageExtensions } from 'utils/file-extensions';
@@ -13,7 +15,8 @@ import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import Tooltip from 'components/misc/Tooltip';
 import { checkFileIsMd, getFileExt } from 'file/process';
 import { listDir, openUrl } from 'file/open';
-import { normalizeSlash } from 'file/util';
+import { joinPath, normalizeSlash } from 'file/util';
+import { READING_DIR, WRITING_DIR } from 'workspace/layout';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
 
@@ -43,6 +46,14 @@ const SidebarNoteLink = (
   const isDir = node.is_dir; 
   const isNonMd = !isDir && !checkFileIsMd(node.id);
   const isImage = imageExtensions.includes(getFileExt(node.id).toLowerCase());
+  // reading/ and writing/ of a workspace: the two roots of the tree
+  const rootLabel = useStore((state) => {
+    if (!isDir || depth !== 0 || state.layout !== 'workspace' || !state.initDir) return '';
+    const id = normalizeSlash(node.id);
+    if (id === joinPath(state.initDir, READING_DIR)) return 'Reading';
+    if (id === joinPath(state.initDir, WRITING_DIR)) return 'Writing';
+    return '';
+  });
   const onClickFile = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     // console.log("click, isLoading", isLoading, node.id);
@@ -110,9 +121,15 @@ const SidebarNoteLink = (
           )}
         </div>
         <Tooltip content={filePath} disabled={!filePath}>
-          <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-            {node.title}
-          </span>
+          {rootLabel ? (
+            <span className="text-xs font-semibold tracking-wider uppercase text-base-content/70">
+              {rootLabel}
+            </span>
+          ) : (
+            <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+              {node.title}
+            </span>
+          )}
         </Tooltip>
       </div>
       {/* stick to the visible right edge when the tree scrolls horizontally */}

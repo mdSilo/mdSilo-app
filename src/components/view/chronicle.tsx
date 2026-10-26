@@ -11,17 +11,20 @@ import { defaultNote, Note } from 'types/model';
 import { openFilePath } from 'file/open';
 import useLoadNotes from 'editor/hooks/useLoadNotes';
 import { checkFileIsMd } from 'file/process';
+import { useWritingRoot } from 'workspace/useWorkspace';
 
 export default function Chronicle() {
   useLoadNotes();
   const initDir = useStore((state) => state.initDir);
+  // daily notes are in writing/daily in the workspace layout
+  const notesRoot = useWritingRoot();
 
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
   const onNewDailyNote = useCallback(async (date: string) => {
-    if (!initDir || !regDateStr.test(date)) return;
-    const noteId = await joinPaths(initDir, ['daily', `${date}.md`]);
+    if (!notesRoot || !regDateStr.test(date)) return;
+    const noteId = await joinPaths(notesRoot, ['daily', `${date}.md`]);
     const note = await openFilePath(noteId, true);
     if (!note) {
       const newNote: Note = {
@@ -32,7 +35,7 @@ export default function Chronicle() {
         is_daily: true,
       };
       store.getState().upsertNote(newNote);
-      const dailyDir = await joinPaths(initDir, ['daily']);
+      const dailyDir = await joinPaths(notesRoot, ['daily']);
       const newDailyDir: Note = {
         ...defaultNote,
         id: dailyDir,
@@ -40,14 +43,14 @@ export default function Chronicle() {
         file_path: dailyDir,
         is_dir: true,
       };
-      store.getState().upsertTree(initDir, [newDailyDir]);
+      store.getState().upsertTree(notesRoot, [newDailyDir]);
       store.getState().upsertTree(dailyDir, [newNote]);
       const cNote: Notes = {};
       cNote[noteId] = newNote;
       store.getState().setCurrentNote(cNote);
     }
     dispatch({view: 'md', params: { noteId }});
-  }, [dispatch, initDir]);
+  }, [dispatch, notesRoot]);
 
   const today = getStrDate((new Date()).toString());
 
