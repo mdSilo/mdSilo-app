@@ -6,7 +6,9 @@ import useDebounce from 'editor/hooks/useDebounce';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { useIssueData, useIssueStore } from './issueStore';
-import { addComment, commentCount, deleteIssue, getIssue, setState, updateIssue } from './issueOps';
+import {
+  addComment, commentCount, deleteIssue, getIssue, isOverdue, setDueOn, setState, updateIssue,
+} from './issueOps';
 import { computeNoteMentions } from './refs';
 import { StateBadge, TimeAgo, btnClass, inputClass, primaryBtnClass } from './common';
 import IssueEditor from './IssueEditor';
@@ -15,6 +17,7 @@ import LabelPicker from './pickers/LabelPicker';
 import MilestonePicker from './pickers/MilestonePicker';
 import ProjectPicker from './pickers/ProjectPicker';
 import NotePicker from './pickers/NotePicker';
+import Subtasks from './Subtasks';
 import type { Issue } from './types';
 
 type Props = {
@@ -122,6 +125,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
                 onChange={(body) => apply((d) => updateIssue(d, num, { body }))}
               />
             </div>
+            <Subtasks issue={issue} />
             <div className="mt-4">
               <Timeline issue={issue} />
             </div>
@@ -146,6 +150,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
           <aside className="w-full md:w-64 shrink-0">
             <LabelPicker issue={issue} labels={data.labels} />
             <MilestonePicker issue={issue} data={data} />
+            <DueDate issue={issue} />
             <ProjectPicker issue={issue} data={data} />
             <NotePicker issue={issue} />
             <NoteMentions num={num} />
@@ -162,6 +167,31 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
             </button>
           </aside>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** The day the issue is due. */
+function DueDate({ issue }: { issue: Issue }) {
+  const apply = useIssueStore((s) => s.apply);
+  const num = issue.number;
+  return (
+    <div className="py-3 border-b border-base-300">
+      <div className="mb-1 text-xs font-semibold text-base-content/60">Due date</div>
+      <div className="flex items-center gap-2">
+        <input
+          type="date"
+          aria-label="Due date"
+          className={`${inputClass} flex-1 ${isOverdue(issue) ? 'text-error' : ''}`}
+          value={issue.dueOn ?? ''}
+          onChange={(e) => apply((d) => setDueOn(d, num, e.target.value || undefined))}
+        />
+        {issue.dueOn ? (
+          <button type="button" className="text-xs ms-link" onClick={() => apply((d) => setDueOn(d, num, undefined))}>
+            Clear
+          </button>
+        ) : null}
       </div>
     </div>
   );

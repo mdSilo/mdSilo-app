@@ -241,6 +241,8 @@ describe('Note', () => {
     const attaches = await callEditor('attachFile', 'image/*');
     expect(invoke).toHaveBeenCalledWith('copy_file_to_assets', { srcPath: '/pics/cat.png', workDir: '/root' });
     expect(attaches).toEqual([{ type: 'image/png', name: 'cat.png', size: 42, src: './assets/cat.png' }]);
+    // in the tree at once
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('get_file_meta', { filePath: '/root/assets/cat.png' }));
   });
 
   test('attachFile returns nothing when cancelled', async () => {

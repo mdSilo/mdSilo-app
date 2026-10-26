@@ -69,6 +69,10 @@ export function normalizeIssueData(raw: unknown): IssueData {
       labels: arr<string>(i.labels),
       notes: arr<string>(i.notes),
       timeline: arr<Issue['timeline'][number]>(i.timeline),
+      ...(isDay(i.dueOn) ? { dueOn: i.dueOn } : { dueOn: undefined }),
+      ...(Array.isArray(i.subtasks)
+        ? { subtasks: i.subtasks.filter((t) => t && typeof t.text === 'string').map((t) => ({ id: t.id || newId(), text: t.text, done: Boolean(t.done) })) }
+        : {}),
       createdAt: i.createdAt ?? nowIso(),
       updatedAt: i.updatedAt ?? i.createdAt ?? nowIso(),
     }));
@@ -182,6 +186,68 @@ export const updateIssue = (data: IssueData, num: number, patch: { title?: strin
       issue.updatedAt = at;
     }
   });
+
+/** A day, yyyy-mm-dd. */
+export const isDay = (value: unknown): value is string =>
+  typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+/** Set the due date of an issue, or remove it (undefined). */
+export const setDueOn = (data: IssueData, num: number, dueOn?: string) =>
+  produce(data, (d) => {
+    const issue = findIssue(d, num);
+    const day = isDay(dueOn) ? dueOn : undefined;
+    if (!issue || (issue.dueOn ?? undefined) === day) return;
+    if (day) {
+      issue.dueOn = day;
+    } else {
+      delete issue.dueOn;
+    }
+    pushEvent(issue, 'due', day ?? '');
+  });
+
+/** The issue is due before today and still open. */
+export const isOverdue = (issue: Issue, today = new Date()) => {
+  if (!issue.dueOn || issue.state === 'closed') return false;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  return issue.dueOn < day;
+};
+
+export const addSubtask = (data: IssueData, num: number, text: string) =>
+  produce(data, (d) => {
+    const issue = findIssue(d, num);
+    const t = text.trim();
+    if (!issue || !t) return;
+    (issue.subtasks ??= []).push({ id: newId(), text: t, done: false });
+    issue.updatedAt = nowIso();
+  });
+
+export const updateSubtask = (
+  data: IssueData, num: number, id: string, patch: { text?: string; done?: boolean }
+) =>
+  produce(data, (d) => {
+    const task = findIssue(d, num)?.subtasks?.find((t) => t.id === id);
+    if (!task) return;
+    const text = patch.text?.trim();
+    if (text) task.text = text;
+    if (patch.done !== undefined) task.done = patch.done;
+    findIssue(d, num)!.updatedAt = nowIso();
+  });
+
+export const removeSubtask = (data: IssueData, num: number, id: string) =>
+  produce(data, (d) => {
+    const issue = findIssue(d, num);
+    if (!issue?.subtasks) return;
+    issue.subtasks = issue.subtasks.filter((t) => t.id !== id);
+    if (issue.subtasks.length === 0) delete issue.subtasks;
+    issue.updatedAt = nowIso();
+  });
+
+/** Done of all the sub-tasks; undefined without any. */
+export const subtaskProgress = (issue: Issue) =>
+  issue.subtasks?.length
+    ? { done: issue.subtasks.filter((t) => t.done).length, total: issue.subtasks.length }
+    : undefined;
 
 export const deleteIssue = (data: IssueData, num: number) =>
   produce(data, (d) => {

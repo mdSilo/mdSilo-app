@@ -22,7 +22,7 @@ import { encodeHref } from 'utils/mdlink';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile } from 'file/write';
 import { scheduleSave, flushSave } from 'file/pendingSaves';
-import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
+import { openFileDilog, openFilePath, openFilePaths, openUrl, saveDilog } from 'file/open';
 import {
   joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
 } from 'file/util';
@@ -256,10 +256,12 @@ function Note(props: Props) {
           const assetPath = await invoke<string[]>(
             'copy_file_to_assets', { srcPath: filePath, workDir: notesRoot }
           );
-          // console.log("asset path", assetPath)
           fullPath = assetPath[0] || filePath;
           // now it is relative path
           fileUrl = encodeURI(assetPath[1] || filePath);
+          // in the tree now, not once the watcher tells (if ever: a copy
+          // in place, the web version)
+          if (assetPath[0]) void openFilePaths([assetPath[0]]);
         } else {
           // the local path, resolved to url by `resolveSrc` on display
           fileUrl = encodeURI(filePath);
