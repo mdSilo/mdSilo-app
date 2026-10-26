@@ -1,4 +1,4 @@
-import { Schema } from "prosemirror-model";
+import { DOMParser, Schema } from "prosemirror-model";
 import type { MarkdownParser } from "prosemirror-markdown";
 import ExtensionManager from "./core/ExtensionManager";
 import render from "./components/renderToHtml";
@@ -102,6 +102,11 @@ export const parser = extensions.parser({
 });
 
 export const serializer = extensions.serializer();
+
+/** Markdown of a DOM node (e.g. a parsed HTML body), as the editor writes it. */
+export function domToMarkdown(node: Node): string {
+  return serializer.serialize(DOMParser.fromSchema(schema).parse(node));
+}
 
 export const renderToHtml = (markdown: string): string =>
   render(markdown, extensions.rulePlugins);

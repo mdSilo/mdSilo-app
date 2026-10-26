@@ -10,6 +10,9 @@ import { ChannelList } from './ChannelList';
 import { Channel } from './Channel';
 import { ArticleView } from './ArticleView';
 import { FeedManager } from './FeedManager';
+import { clipArticle } from './clip';
+
+vi.mock('./clip', () => ({ clipArticle: vi.fn(async () => '/w/clips/Article One.md') }));
 
 const channel = (partial: Partial<ChannelType> = {}): ChannelType => ({
   id: 1,
@@ -216,6 +219,37 @@ describe('ArticleView', () => {
     expect(content.querySelector('script, form, input')).toBeNull();
     expect(screen.getByText('js link')).not.toHaveAttribute('href');
     expect((window as { __feedXss?: number }).__feedXss).toBeUndefined();
+  });
+
+  test('clips the whole article and opens the note', async () => {
+    const onOpenNote = vi.fn();
+    const art = article({ content: '<p>Body text</p>' });
+    render(<ArticleView article={art} starArticle={vi.fn()} hideChannelCol={vi.fn()} onOpenNote={onOpenNote} />);
+    await userEvent.click(screen.getByLabelText('Clip'));
+    expect(clipArticle).toHaveBeenCalledWith(art, undefined);
+    expect(onOpenNote).toHaveBeenCalledWith('/w/clips/Article One.md');
+  });
+
+  test('clips the selected text and stays', async () => {
+    const onOpenNote = vi.fn();
+    const art = article({ content: '<p>Body <b>picked</b> text</p>' });
+    render(<ArticleView article={art} starArticle={vi.fn()} hideChannelCol={vi.fn()} onOpenNote={onOpenNote} />);
+    const range = document.createRange();
+    range.selectNodeContents(screen.getByText('picked'));
+    window.getSelection()?.removeAllRanges();
+    window.getSelection()?.addRange(range);
+    fireEvent.click(screen.getByLabelText('Clip'));
+    await waitFor(() => expect(screen.getByText('Clipped to Article One.md')).toBeInTheDocument());
+    expect(clipArticle).toHaveBeenCalledWith(art, 'picked');
+    expect(onOpenNote).not.toHaveBeenCalled();
+    window.getSelection()?.removeAllRanges();
+  });
+
+  test('asks for a folder to clip into', async () => {
+    vi.mocked(clipArticle).mockResolvedValueOnce(undefined);
+    render(<ArticleView article={article()} starArticle={vi.fn()} hideChannelCol={vi.fn()} />);
+    await userEvent.click(screen.getByLabelText('Clip'));
+    expect(await screen.findByText('Open a folder to save clips')).toBeInTheDocument();
   });
 
   test('falls back to the description', () => {

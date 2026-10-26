@@ -103,7 +103,13 @@ import PasteHandler from "./plugins/PasteHandler";
 import { resolveImageSrc } from "./lib/resolveImageSrc";
 
 // re-export
-export { schema, parser, serializer, renderToHtml } from "./server";
+export {
+  schema,
+  parser,
+  serializer,
+  renderToHtml,
+  domToMarkdown,
+} from "./server";
 export { default as Extension } from "./core/Extension";
 export { embeds } from "./components/embeds/Embeds";
 export { SearchResult } from "./components/LinkEditor";
