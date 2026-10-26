@@ -219,7 +219,7 @@ describe('Chronicle', () => {
     await act(async () => {
       renderView(<Chronicle />);
     });
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/root' });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/root' });
   });
 });
 
@@ -316,6 +316,6 @@ describe('Graph / ForceGraph', () => {
     await act(async () => {
       renderView(<Graph />);
     });
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/root' });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/root' });
   });
 });

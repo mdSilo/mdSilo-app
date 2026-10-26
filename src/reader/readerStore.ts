@@ -16,6 +16,7 @@ import {
   readBookState, readLibrary, saveBookEntry, titleOfFile, writeBookState, type BookEntry,
 } from './library';
 import { cacheCover } from './covers';
+import { indexBookText } from './bookIndex';
 
 export type ReaderLocation = {
   cfi: string;
@@ -175,8 +176,11 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       }
       set({ hash, entry, book, format, notes, initialCfi, time, status: 'ready' });
       startTicking();
-      // for the library
-      if (ws && hash) void cacheCover(ws, hash, book);
+      // for the library; for the search of the workspace
+      if (ws && hash) {
+        void cacheCover(ws, hash, book);
+        void indexBookText(hash, entry?.title ?? titleOfFile(path), book);
+      }
     } catch (e) {
       if (seq !== openSeq) return;
       console.error(`Failed to open the book ${path}`, e);

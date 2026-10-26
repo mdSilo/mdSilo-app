@@ -225,6 +225,8 @@ export const store = createStore<Store>()(
         set((state) => {
           state.notes = state.notes.update(note.id, {
             ...note,
+            // the content known: what the index parsed is no longer needed
+            ...('content' in note ? { parsed: undefined } : {}),
             updated_at: new Date().toISOString(),
           });
         });

@@ -1,12 +1,10 @@
 import { useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { issueStore } from 'components/issue/issueStore';
 import { issueHref, parseIssueHref } from 'components/issue/refs';
 import { openFilePath, openUrl } from 'file/open';
 import { isUrl } from 'utils/helper';
-import { fromWorkspacePath } from 'file/util';
 import { encodeHref, hrefToTitle, legacyLinkTitle } from 'utils/mdlink';
 import { parseBookHref } from 'reader/annotations';
 import useNoteSearch from './useNoteSearch';
@@ -37,15 +35,8 @@ export function searchIssues(text: string, limit = 10): LinkSearchResult[] {
 async function findBookPath(hash: string): Promise<string | undefined> {
   const ws = store.getState().initDir;
   if (!ws) return undefined;
-  const { readLibrary, refreshLibrary } = await import('reader/library');
-  const pathOf = async (lib: Awaited<ReturnType<typeof readLibrary>>) => {
-    const entry = lib.books[hash];
-    if (!entry) return undefined;
-    const path = fromWorkspacePath(ws, entry.file);
-    return (await invoke<boolean>('file_exist', { filePath: path })) ? path : undefined;
-  };
-  // moved or new since: look for it
-  return (await pathOf(await readLibrary(ws))) ?? (await pathOf(await refreshLibrary(ws)));
+  const library = await import('reader/library');
+  return library.findBookPath(ws, hash);
 }
 
 /**

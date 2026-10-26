@@ -2,8 +2,6 @@ use crate::atomic::{is_self_write, is_temp};
 use crate::wsfs::{LocalFs, WorkspaceFs};
 use crate::paths::{PathBufExt, PathExt};
 use crate::storage::log_error;
-use crate::tree::node::{from_node, Node};
-use crate::tree::Tree;
 use ignore::WalkBuilder;
 use notify::{
   event::{EventKind, ModifyKind, RenameMode},
@@ -346,11 +344,6 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
   })
 }
 
-// Read files and its information of a directory resursively
-pub fn read_dir(dir: &str) -> Result<Tree, String> {
-  Tree::init(dir, None, true)
-}
-
 // Get array of files of a directory
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
@@ -358,9 +351,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
 }
 
 // List the direct children of a directory, w/o content.
-// Walk the single level sequentially: the parallel Tree traversal (threads,
-// channel, arena) costs more than it saves here, see list_directory bench.
-// Same filters as the Tree walker: hidden skipped, .gitignore not applied.
+// Walk the single level: hidden skipped, .gitignore not applied.
 pub fn list_dir_entries(dir: &str) -> Vec<FileMetaData> {
   let root = match fs::canonicalize(dir) {
     Ok(root) => root,
@@ -375,8 +366,28 @@ pub fn list_dir_entries(dir: &str) -> Vec<FileMetaData> {
     .build()
     .filter_map(|entry| entry.ok())
     .filter(|entry| entry.depth() == 1)
-    .filter_map(|entry| from_node(&Node::from((&entry, false))))
+    .filter_map(|entry| meta_of_entry(&entry))
     .collect()
+}
+
+/// The metadata of an entry walked, without content.
+fn meta_of_entry(entry: &ignore::DirEntry) -> Option<FileMetaData> {
+  let metadata = entry.metadata().ok()?;
+  let file_path = entry.path().normalize_slash()?;
+  let is_hidden = check_hidden_meta(&file_path, &metadata);
+  Some(FileMetaData {
+    file_name: file_name_of(&file_path),
+    file_text: String::new(),
+    created: metadata.created().unwrap_or_else(|_| SystemTime::now()),
+    last_modified: metadata.modified().unwrap_or_else(|_| SystemTime::now()),
+    last_accessed: metadata.accessed().unwrap_or_else(|_| SystemTime::now()),
+    size: metadata.len(),
+    readonly: metadata.permissions().readonly(),
+    is_dir: metadata.is_dir(),
+    is_file: metadata.is_file(),
+    is_hidden,
+    file_path,
+  })
 }
 
 // Check if path given exists

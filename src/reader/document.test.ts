@@ -34,3 +34,29 @@ describe('book files', () => {
     await expect(openBook(new File(['just text'], 'a.txt'))).rejects.toThrow('Unsupported');
   });
 });
+
+describe('the text of a book for the search', () => {
+  test('by sections, labelled by the contents', async () => {
+    const { indexBookText, sectionLabels } = await import('./bookIndex');
+    const { invoke } = await import('@tauri-apps/api/core');
+    const { mockInvoke } = await import('../testUtils');
+    const { book } = await openBook(makeEpub());
+    expect([...sectionLabels(book)]).toEqual([[0, 'Chapter One'], [1, 'Chapter Two']]);
+    mockInvoke(invoke, { index_book_indexed: false, index_book: undefined });
+    await indexBookText('h1', 'Tiny Book', book);
+    const call = vi.mocked(invoke).mock.calls.find((c) => c[0] === 'index_book');
+    expect(call?.[1]).toEqual({
+      hash: 'h1',
+      title: 'Tiny Book',
+      sections: [
+        { cfi: expect.stringMatching(/^epubcfi\(\/6\/2/), label: 'Chapter One', text: 'Chapter 1 It was a bright cold day in April.' },
+        { cfi: expect.stringMatching(/^epubcfi\(\/6\/4/), label: 'Chapter Two', text: 'Chapter 2 The clocks were striking thirteen.' },
+      ],
+    });
+    // indexed already: not again
+    vi.mocked(invoke).mockClear();
+    mockInvoke(invoke, { index_book_indexed: true });
+    await indexBookText('h1', 'Tiny Book', book);
+    expect(vi.mocked(invoke).mock.calls.some((c) => c[0] === 'index_book')).toBe(false);
+  });
+});

@@ -40,9 +40,7 @@ percent-encoding = "2.3.2"
 tantivy = "0.27.0"
 tantivy-jieba = "0.21.0"
 # walk dir
-crossbeam = "0.8.4"
 ignore = "0.4.33"
-indextree = "4.9.2"
 ## rss reader
 reqwest = { version = "0.13.5", features = ["json", "socks"] }
 rss = { version = "2.0.12", features = ["serde"] }

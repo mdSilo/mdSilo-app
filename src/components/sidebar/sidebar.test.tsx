@@ -245,7 +245,7 @@ describe('SidebarHistory', () => {
       render(<SidebarHistory />);
     });
     expect(store.getState().initDir).toBe('/home/me/last');
-    expect(vi.mocked(invoke).mock.calls.filter((c) => c[0] === 'load_notes')).toHaveLength(1);
+    expect(vi.mocked(invoke).mock.calls.filter((c) => c[0] === 'index_open')).toHaveLength(1);
   });
 
   test('reopens the previous folder on startup', async () => {
@@ -256,7 +256,7 @@ describe('SidebarHistory', () => {
       renderWithView(<SidebarNotes />);
     });
     expect(store.getState().initDir).toBe('/home/me/last');
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/home/me/last' });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/home/me/last' });
   });
 });
 
@@ -379,14 +379,36 @@ describe('SidebarSearch', () => {
   test('shows no results', async () => {
     seed();
     renderWithView(<SearchTree keyword="zzz" ty="content" />);
-    expect(screen.getByText('No results found.')).toBeInTheDocument();
+    expect(await screen.findByText('No results found.')).toBeInTheDocument();
   });
 
-  test('searches hashtags', () => {
+  test('searches hashtags', async () => {
     seed();
     renderWithView(<SearchTree keyword="fruit" ty="hashtag" />);
-    expect(screen.getByText('apple')).toBeInTheDocument();
+    expect(await screen.findByText('apple')).toBeInTheDocument();
     expect(screen.queryByText('banana')).not.toBeInTheDocument();
+  });
+
+  test('searches the notes found by the index, reading them, and the books', async () => {
+    // the notes as indexed: not loaded
+    const indexed = (id: string, title: string) => ({
+      id, title, content: '', file_path: id, cover: '', created_at: 'c', updated_at: 'u', is_daily: false,
+      parsed: { links: [], tags: [], issues: [], has_tasks: false },
+    });
+    store.getState().setNotes(NoteMap.from([indexed('/n/a.md', 'apple'), indexed('/n/b.md', 'banana')]));
+    store.getState().setIsLoaded(true);
+    mockInvoke(invoke, {
+      index_search: [
+        { id: 'writing/a.md', path: '/n/a.md', kind: 'note', title: 'apple', label: '', snippet: '' },
+        { id: `book:${'a'.repeat(32)}#epubcfi(/6/4)`, path: '', kind: 'book', title: 'A Book', label: 'Two', snippet: 'a <b>fruit</b> tree' },
+      ],
+      read_file: ({ filePath }: Record<string, unknown>) => (filePath === '/n/a.md' ? 'red fruit' : 'yellow'),
+    });
+    renderWithView(<SearchTree keyword="fruit" ty="content" />);
+    expect(await screen.findByText('apple')).toBeInTheDocument();
+    expect(screen.queryByText('banana')).not.toBeInTheDocument();
+    expect(invoke).not.toHaveBeenCalledWith('read_file', { filePath: '/n/b.md' });
+    expect(screen.getByText('📖 A Book')).toBeInTheDocument();
   });
 
   test('matchSort orders by refIndex with undefined first', () => {

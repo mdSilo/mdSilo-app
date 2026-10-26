@@ -11,6 +11,7 @@ import { basename, fileStem, isTextNote, join, normalize, parent } from './path'
 import { emitChanges, watchDir } from './watch';
 import { downloadBlob, fileUrl, showMessage } from './browser';
 import { exportBackup } from './backup';
+import * as indexer from './indexer';
 
 type Args = Record<string, any>;
 type Command = (args: Args) => unknown;
@@ -30,29 +31,6 @@ async function getData(key: string) {
 async function getLog(): Promise<LogItem[]> {
   const res = await getData('log');
   return (res.data as { logs?: LogItem[] } | null)?.logs ?? [];
-}
-
-// # json, src-tauri/src/json.rs, src-tauri/src/tree/mod.rs
-// all the notes in the dir and its sub-dirs, with content
-async function loadNotes(dir: string): Promise<Record<string, unknown>> {
-  const root = normalize(dir);
-  const rootEntry = await fs.stat(root);
-  const notesobj: Record<string, unknown> = {};
-  if (!rootEntry?.is_dir) return notesobj;
-  for (const e of await fs.walk(root, true)) {
-    notesobj[e.path] = {
-      id: e.path,
-      title: fileStem(e.name),
-      content: !e.is_dir && isTextNote(e.path) && typeof e.data === 'string' ? e.data : '',
-      file_path: e.path,
-      cover: '',
-      created_at: new Date(e.created).toISOString(),
-      updated_at: new Date(e.modified).toISOString(),
-      is_daily: false,
-      is_dir: e.is_dir,
-    };
-  }
-  return notesobj;
 }
 
 // # files, src-tauri/src/files.rs
@@ -200,8 +178,12 @@ export const commands: Record<string, Command> = {
     await del(KV, 'log');
     return true;
   },
-  // json
-  load_notes: ({ dir }) => loadNotes(dir),
+  // the index, src-tauri/src/index
+  index_open: ({ dir }) => indexer.indexOpen(dir),
+  index_update: ({ paths }) => indexer.indexUpdate(paths ?? []),
+  index_search: ({ query, kind, limit }) => indexer.indexSearch(query ?? '', kind ?? undefined, limit ?? 50),
+  index_book: ({ hash, title, sections }) => indexer.indexBook(hash, title ?? '', sections ?? []),
+  index_book_indexed: ({ hash }) => indexer.indexBookIndexed(hash),
   // books, src-tauri/src/books.rs
   book_hash: ({ filePath }) => fs.readBlob(filePath).then(partialMd5).catch(() => ''),
   read_file_bytes: async ({ filePath }) => (await fs.readBlob(filePath)).arrayBuffer(),

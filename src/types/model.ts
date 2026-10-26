@@ -1,3 +1,5 @@
+import type { Parsed } from 'lib/parseNote';
+
 // READING
 //
 export interface ChannelType {
@@ -48,6 +50,11 @@ export type Note = {
   updated_at: string;
   is_daily: boolean;
   is_dir?: boolean;
+  /**
+   * What the note links to and contains, from the index of the workspace:
+   * set while its content is not loaded (content ''), see lib/parseNote
+   */
+  parsed?: Parsed;
 };
 
 export const defaultNote =  {

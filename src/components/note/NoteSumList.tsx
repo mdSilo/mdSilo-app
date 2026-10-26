@@ -5,6 +5,7 @@ import { Note } from 'types/model';
 import Tree from 'components/misc/Tree';
 import Tooltip from 'components/misc/Tooltip';
 import { openFilePath } from 'file/open';
+import { useNoteContent } from 'lib/contentCache';
 
 type Props = {
   anchor: string;
@@ -45,14 +46,23 @@ export default function NoteSumList(props: Props) {
   );
 }
 
-const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
-  const doc = parser.parse(note.content);
+/** The first paragraphs of a note, as markdown. */
+export function summaryOf(content: string): string {
+  const doc = parser.parse(content);
   const value = doc.content.content
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((node: any) => node.type.name === 'paragraph')
     .slice(0, 2);
-  const sum: string = serializer.serialize(value);
-  
+  return serializer.serialize(value);
+}
+
+/** The summary of a note, its content read on use (see Note.parsed). */
+function NoteSum({ note }: { note: Note }) {
+  const content = useNoteContent(note);
+  return <div>{content ? summaryOf(content) : ''}</div>;
+}
+
+const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
   return {
     id: note.id,
     labelNode: (
@@ -68,7 +78,7 @@ const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
             {note.title}
           </span>
         </button>
-        <div>{sum}</div>
+        <NoteSum note={note} />
       </div>
     ),
     showArrow: false,

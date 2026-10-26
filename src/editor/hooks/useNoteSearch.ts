@@ -1,7 +1,10 @@
 import { useCallback, useMemo } from 'react';
-import Fuse from 'fuse.js';
+import Fuse, { type FuseResult } from 'fuse.js';
+import { invoke } from '@tauri-apps/api/core';
 import { getJSONContent, parser } from "mdsmirror";
-import { store, useStore } from 'lib/store';
+import { NoteMap, store, useStore } from 'lib/store';
+import { indexOf } from 'lib/linkIndex';
+import { withContents } from 'lib/contentCache';
 import { Note } from 'types/model';
 import { loadDir } from 'file/open';
 import { checkFileIsMd } from 'file/process';
@@ -11,7 +14,7 @@ export type NoteBlock = { text: string; path?: any };
 
 const EMPTY_NOTES: Note[] = [];
 
-type FuseDatum = {
+export type FuseDatum = {
   id: string;
   title: string;
   file_path: string;
@@ -61,6 +64,59 @@ export default function useNoteSearch({
     return query ? fuse.search(query, { limit: numOfResults }) : [];
   }, [fuse, numOfResults]);
   return search;
+}
+
+/** A section of a book found by the search of the index. */
+export type BookHit = { id: string; title: string; label: string; snippet: string };
+
+export type ContentSearch = { notes: FuseResult<FuseDatum>[]; books: BookHit[] };
+
+type IndexHit = { id: string; path: string; kind: string; title: string; label: string; snippet: string };
+
+/** The words of a query, without the operators of the fuse extended search. */
+const plainWords = (query: string) => query.replace(/[!^$'=|"]/g, ' ').replace(/\s+/g, ' ').trim();
+
+/**
+ * Search the content of the notes (or their #tags#), by blocks: the full-text
+ * search of the index finds the notes, which are read to find the blocks;
+ * and the books whose text has the words.
+ */
+export async function searchContent(
+  notes: NoteMap,
+  query: string,
+  ty: 'content' | 'hashtag',
+): Promise<ContentSearch> {
+  const keyword = query.trim();
+  if (!keyword) return { notes: [], books: [] };
+  const mds = notes.values().filter((n) => !n.is_dir && checkFileIsMd(n.id));
+  let candidates: Note[];
+  let books: BookHit[] = [];
+  if (ty === 'hashtag') {
+    // the notes with a tag like it
+    const tag = keyword.replace(/^#|#$/g, '').toLowerCase();
+    const index = indexOf(notes);
+    candidates = mds.filter((n) => index.tags(n.id).some((t) => t.toLowerCase().includes(tag)));
+  } else {
+    let hits: IndexHit[] | undefined;
+    try {
+      hits = await invoke<IndexHit[]>('index_search', { query: plainWords(keyword), kind: null, limit: 300 });
+    } catch {
+      hits = undefined; // no index: in all the notes
+    }
+    if (hits) {
+      const found = new Set(hits.filter((h) => h.kind === 'note').map((h) => h.path));
+      const lower = keyword.toLowerCase();
+      // the notes loaded, maybe changed since indexed
+      candidates = mds.filter((n) => found.has(n.id) || (!n.parsed && n.content.toLowerCase().includes(lower)));
+      books = hits.filter((h) => h.kind === 'book')
+        .map(({ id, title, label, snippet }) => ({ id, title, label, snippet }));
+    } else {
+      candidates = [...mds];
+    }
+  }
+  const loaded = await withContents(candidates);
+  const fuse = initFuse(loaded, ty === 'content', ty === 'hashtag', true);
+  return { notes: fuse.search(keyword), books };
 }
 
 // Initializes Fuse

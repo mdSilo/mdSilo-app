@@ -54,8 +54,24 @@ export function unwatchAll(): void {
 // frontend: src/file/directory.ts DirectoryAPI.unlisten
 on('unlisten_dir', unwatchAll);
 
+// told of all the changes, watched or not: the index (indexer.ts)
+const fsListeners = new Set<(kind: string, paths: string[]) => void>();
+
+/** Be told of every change of the file system. */
+export function onFsChange(listener: (kind: string, paths: string[]) => void): () => void {
+  fsListeners.add(listener);
+  return () => fsListeners.delete(listener);
+}
+
 /** emit `changes` event asynchronously, as a file watcher does */
 export function emitFsChange(kind: string, paths: string[]): void {
+  for (const listener of fsListeners) {
+    try {
+      listener(kind, paths);
+    } catch (e) {
+      console.error('Error on a change of the files:', e);
+    }
+  }
   const dirs = Array.from(watchedDirs);
   const watched = paths.filter((p) => dirs.some((d) => isWithin(p, d)));
   if (watched.length === 0) return;

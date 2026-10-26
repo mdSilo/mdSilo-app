@@ -1,9 +1,12 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { NoteMap, useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
 import { linkTitlesOf } from 'utils/mdlink';
-import { getMarkdownTextBlocks, indexOf, type TextBlock } from 'lib/linkIndex';
+import { getMarkdownTextBlocks, indexOf, LinkIndex, type TextBlock } from 'lib/linkIndex';
+import { withContents } from 'lib/contentCache';
 import useLoadNotes from 'editor/hooks/useLoadNotes';
+import type { Note } from 'types/model';
 
 const DEBOUNCE_MS = 1000;
 
@@ -26,6 +29,8 @@ export type Backlinks = {
   unlinkedBacklinks: Backlink[];
 };
 
+const EMPTY: Backlinks = { linkedBacklinks: [], unlinkedBacklinks: [] };
+
 export default function useBacklinks(noteId: string): Backlinks {
   useLoadNotes();
 
@@ -35,11 +40,62 @@ export default function useBacklinks(noteId: string): Backlinks {
     useStore((state) => state.notes),
     DEBOUNCE_MS
   );
+  const [backlinks, setBacklinks] = useState<Backlinks>(EMPTY);
 
-  return useMemo(
-    () => computeBacklinks(notes, noteTitle, noteId),
-    [notes, noteTitle, noteId]
-  );
+  useEffect(() => {
+    let cancelled = false;
+    loadBacklinks(notes, noteTitle, noteId)
+      .then((found) => { if (!cancelled) setBacklinks(found); })
+      .catch((e) => console.error('Failed to find the backlinks', e));
+    return () => { cancelled = true; };
+  }, [notes, noteTitle, noteId]);
+
+  return backlinks;
+}
+
+/**
+ * The notes mentioning the text, of the full-text search of the index; none
+ * where it is not available.
+ */
+export async function searchMentions(text: string): Promise<string[]> {
+  const phrase = text.replace(/["\\]/g, ' ').trim();
+  if (!phrase) return [];
+  try {
+    const hits = await invoke<{ path: string }[] | undefined>(
+      'index_search', { query: `"${phrase}"`, kind: 'note', limit: 500 }
+    );
+    return (hits ?? []).map((hit) => hit.path).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The backlinks of a note, the notes not loaded (see Note.parsed) read for
+ * the candidates only: the notes linking to the note, as the index tells,
+ * and the ones mentioning its title, as its search finds.
+ */
+export async function loadBacklinks(
+  notes: NoteMap,
+  noteTitle: string,
+  noteId?: string
+): Promise<Backlinks> {
+  const title = noteTitle.trim();
+  if (!title) return EMPTY;
+  const index = indexOf(notes);
+  const linkTitles = linkTitlesOf(title, (t) => index.hasTitle(t));
+  const candidates = index.linking(linkTitles);
+  for (const id of index.mentioning(title)) candidates.add(id);
+  if (index.notLoaded().length > 0) {
+    for (const id of await searchMentions(title)) {
+      if (notes.has(id)) candidates.add(id);
+    }
+  }
+  candidates.delete(noteId ?? '');
+  // in the order of the notes
+  const found: Note[] = notes.values().filter((n) => candidates.has(n.id));
+  const loaded = await withContents(found);
+  return backlinksIn(loaded, title, linkTitles, noteId);
 }
 
 /**
@@ -54,11 +110,9 @@ export const computeBacklinks = (
   noteTitle: string,
   noteId?: string
 ): Backlinks => {
-  const linkedBacklinks: Backlink[] = [];
-  const unlinkedBacklinks: Backlink[] = [];
   const title = noteTitle.trim();
   if (!title) {
-    return { linkedBacklinks, unlinkedBacklinks };
+    return { linkedBacklinks: [], unlinkedBacklinks: [] };
   }
 
   const index = indexOf(notes);
@@ -67,9 +121,31 @@ export const computeBacklinks = (
   const candidates = index.linking(linkTitles);
   for (const id of index.mentioning(title)) candidates.add(id);
 
-  // in the order of the notes
-  for (const note of notes.values()) {
-    if (note.id === noteId || !candidates.has(note.id)) {
+  const found = notes.values().filter((n) => candidates.has(n.id));
+  return backlinksIn(found, title, linkTitles, noteId, index);
+};
+
+/**
+ * The matches in the notes (with content) of the links to and mentions of
+ * the title; parsed by the index given, synced with them, or by one of their own.
+ */
+function backlinksIn(
+  notes: readonly Note[],
+  title: string,
+  linkTitles: string[],
+  noteId: string | undefined,
+  synced?: LinkIndex,
+): Backlinks {
+  const linkedBacklinks: Backlink[] = [];
+  const unlinkedBacklinks: Backlink[] = [];
+  let index = synced;
+  if (!index) {
+    index = new LinkIndex();
+    index.sync(NoteMap.from(notes));
+  }
+
+  for (const note of notes) {
+    if (note.id === noteId) {
       continue;
     }
     const linked: BacklinkMatch[] = [];
@@ -101,7 +177,7 @@ export const computeBacklinks = (
   }
 
   return { linkedBacklinks, unlinkedBacklinks };
-};
+}
 
 // Searches the notes linked to the given title
 export const computeLinkedBacklinks = (

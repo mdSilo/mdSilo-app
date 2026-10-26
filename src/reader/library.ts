@@ -223,3 +223,14 @@ export function setBookSynced(ws: string, hash: string, synced: boolean) {
     await writeReadingGitignore(ws, lib);
   });
 }
+
+/** The book file of an id, if it is on this device; looked for if moved. */
+export async function findBookPath(ws: string, hash: string): Promise<string | undefined> {
+  const pathOf = async (lib: Library) => {
+    const entry = lib.books[hash];
+    if (!entry) return undefined;
+    const path = fromWorkspacePath(ws, entry.file);
+    return (await invoke<boolean>('file_exist', { filePath: path })) ? path : undefined;
+  };
+  return (await pathOf(await readLibrary(ws))) ?? (await pathOf(await refreshLibrary(ws)));
+}

@@ -11,13 +11,11 @@ mod files;
 mod index;
 #[cfg(target_os = "linux")]
 mod input_method;
-mod json;
 mod models;
 mod paths;
 mod schema;
 mod storage;
 mod tests;
-mod tree;
 mod window;
 mod plugins;
 mod tray;
@@ -104,7 +102,6 @@ pub fn run() {
       storage::set_log,
       storage::get_log,
       storage::del_log,
-      json::load_notes,
       books::book_hash,
       books::read_file_bytes,
       books::write_file_bytes,
