@@ -126,6 +126,21 @@ describe('HeatMap', () => {
     expect(onClickCell).toHaveBeenCalledWith(today());
   });
 
+  test('saves new activities once, out of render', () => {
+    const now = new Date().toISOString();
+    const notes = [makeNote({ id: '/n/a.md', created_at: now, updated_at: now })];
+    let saves = 0;
+    const unsubscribe = store.subscribe((state, prev) => {
+      if (state.activities !== prev.activities) saves += 1;
+    });
+    const { rerender } = render(<HeatMap noteList={notes} onClickCell={vi.fn()} />);
+    rerender(<HeatMap noteList={[...notes]} onClickCell={vi.fn()} />);
+    unsubscribe();
+    // saved once; the same counts again change nothing
+    expect(saves).toBe(1);
+    expect(store.getState().activities[today()]).toEqual({ activityNum: 2, createNum: 1, updateNum: 1 });
+  });
+
   test('labels twelve months', () => {
     const { container } = render(<HeatMap noteList={[]} onClickCell={vi.fn()} />);
     const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
