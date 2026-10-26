@@ -20,7 +20,7 @@ export type Attach = {
 
 const attachFiles = function (
   view: EditorView,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   _pos: number,
   options: Options
 ): void {

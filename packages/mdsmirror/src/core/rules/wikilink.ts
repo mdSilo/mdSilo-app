@@ -1,4 +1,4 @@
-import MarkdownIt, { StateInline } from "markdown-it";
+import type { MarkdownIt, StateInline } from "markdown-it";
 
 // [[target]] or [[target|alias]]
 const WIKILINK_REGEX = /^\[\[([^[|\]\n]+)(?:\|([^[|\]\n]+))?\]\]/;

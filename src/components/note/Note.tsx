@@ -135,7 +135,6 @@ function Note(props: Props) {
 
   // write to local file
   const onContentChange = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (text: string, json: JSONContent) => {
       // console.log("on content change", text.length, json);
       // end the file with a newline, as a text file should
@@ -244,7 +243,7 @@ function Note(props: Props) {
       const filePath = await openFileDilog(ext, false);
       if (filePath && typeof filePath === 'string') {
         let fullPath = filePath;
-        let fileUrl = filePath;
+        let fileUrl: string;
         // console.log("use asset", useAsset)
         if (initDir && useAsset) {
           const assetPath = await invoke<string[]>(

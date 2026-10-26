@@ -1,3 +1,4 @@
+import type { MarkdownIt } from "markdown-it";
 import { Node as ProsemirrorNode } from "prosemirror-model";
 import { Transaction } from "prosemirror-state";
 
@@ -15,3 +16,6 @@ export enum ToastType {
 }
 
 export type Dispatch = (tr: Transaction) => void;
+
+/** A markdown-it plugin without options */
+export type PluginSimple = (md: MarkdownIt) => void;

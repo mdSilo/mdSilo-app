@@ -1,7 +1,7 @@
 // based on https://raw.githubusercontent.com/classeur/markdown-it-mathjax/master/markdown-it-mathjax.js
 // token names needed to be flipped e.g. display_math -> math_display to work with prosemirror-math
 
-import MarkdownIt, { StateInline } from "markdown-it";
+import type { MarkdownIt, StateInline } from "markdown-it";
 
 export default function (md: MarkdownIt) {
   md.inline.ruler.before(

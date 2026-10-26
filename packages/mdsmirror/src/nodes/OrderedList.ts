@@ -1,4 +1,4 @@
-import { Token } from "markdown-it";
+import type { Token } from "markdown-it";
 import { wrappingInputRule } from "prosemirror-inputrules";
 import { NodeSpec, NodeType, Schema, Node as PmNode } from "prosemirror-model";
 import toggleList from "../core/commands/toggleList";
@@ -77,7 +77,7 @@ export default class OrderedList extends Node {
     return {
       block: "ordered_list",
       getAttrs: (tok: Token, tokens: Token[], i: number) => ({
-        order: parseInt(tok.attrGet("start") || "1", 10),
+        order: parseInt(String(tok.attrGet("start") || "1"), 10),
         sameNumber: isSameNumber(tokens, i),
       }),
     };

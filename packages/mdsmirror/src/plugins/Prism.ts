@@ -3,7 +3,7 @@ import { Node } from "prosemirror-model";
 import { Plugin, PluginKey, Transaction } from "prosemirror-state";
 import { findBlockNodes } from "prosemirror-utils";
 import { Decoration, DecorationSet } from "prosemirror-view";
-import refractor from "refractor/core";
+import { refractor } from "refractor/core";
 
 export const LANGUAGES = {
   none: "None", // additional entry to disable highlighting
@@ -37,6 +37,9 @@ export const LANGUAGES = {
   yaml: "YAML",
 };
 
+/** The hast nodes refractor highlights a code block into */
+type RefractorNode = ReturnType<typeof refractor.highlight>["children"][number];
+
 type ParsedNode = {
   text: string;
   classes: string[];
@@ -61,7 +64,7 @@ function getDecorations({ doc, name, lineNumbers }: DecorProps) {
   ).filter((item) => item.node.type.name === name);
 
   function parseNodes(
-    nodes: refractor.RefractorNode[],
+    nodes: RefractorNode[],
     classNames: string[] = []
   ): {
     text: string;
@@ -70,12 +73,12 @@ function getDecorations({ doc, name, lineNumbers }: DecorProps) {
     return flattenDeep(
       nodes.map((node) => {
         if (node.type === "element") {
-          const classes = [...classNames, ...(node.properties.className || [])];
-          return parseNodes(node.children, classes);
+          const className = (node.properties.className || []) as string[];
+          return parseNodes(node.children, [...classNames, ...className]);
         }
 
         return {
-          text: node.value,
+          text: node.type === "text" ? node.value : "",
           classes: classNames,
         };
       })
@@ -118,7 +121,7 @@ function getDecorations({ doc, name, lineNumbers }: DecorProps) {
       }
 
       const nodes = refractor.highlight(block.node.textContent, language);
-      const newDecorations = parseNodes(nodes)
+      const newDecorations = parseNodes(nodes.children)
         .map((node: ParsedNode) => {
           const from = startPos;
           const to = from + node.text.length;

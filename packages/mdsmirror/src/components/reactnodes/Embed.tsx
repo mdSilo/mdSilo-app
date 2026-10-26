@@ -1,4 +1,4 @@
-import { Token } from "markdown-it";
+import type { Token } from "markdown-it";
 import { NodeSpec, NodeType, Node as ProsemirrorNode } from "prosemirror-model";
 import { EditorState } from "prosemirror-state";
 import * as React from "react";

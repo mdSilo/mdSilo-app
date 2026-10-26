@@ -127,7 +127,6 @@ export function ArticleView(props: ViewProps) {
         <div
           ref={contentRef}
           className="text-lg p-2 mt-2 content text-base-content"
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{__html: pageContent}}
         />
       </div>

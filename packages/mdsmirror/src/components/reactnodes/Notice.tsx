@@ -1,4 +1,4 @@
-import { Token } from "markdown-it";
+import type { Token } from "markdown-it";
 import { wrappingInputRule } from "prosemirror-inputrules";
 import { NodeSpec, Node as ProsemirrorNode, NodeType } from "prosemirror-model";
 import * as React from "react";
@@ -46,8 +46,8 @@ export default class Notice extends Node {
             style: dom.className.includes("tip")
               ? "tip"
               : dom.className.includes("warning")
-              ? "warning"
-              : undefined,
+                ? "warning"
+                : undefined,
           }),
         },
       ],

@@ -65,7 +65,7 @@ async function writeIssues(dir: string, data: IssueData) {
  */
 async function migrateLegacyKanban(dir: string, data: IssueData, fresh: boolean) {
   const kanbanFile = new FileAPI(LEGACY_KANBAN_FILE, dir);
-  let text = '';
+  let text: string;
   try {
     text = await kanbanFile.readFile();
   } catch {

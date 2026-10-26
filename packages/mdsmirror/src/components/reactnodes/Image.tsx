@@ -1,4 +1,4 @@
-import { Token } from "markdown-it";
+import type { Token } from "markdown-it";
 import { InputRule } from "prosemirror-inputrules";
 import { Node as ProsemirrorNode, NodeSpec, NodeType } from "prosemirror-model";
 import { TextSelection, NodeSelection, EditorState } from "prosemirror-state";
@@ -235,7 +235,7 @@ export default class Image extends Node {
               token.children[0] &&
               token.children[0].content) ||
             null,
-          ...getLayoutAndTitle(token?.attrGet("title")),
+          ...getLayoutAndTitle(token?.attrGet("title")?.toString() ?? null),
         };
       },
     };

@@ -1,4 +1,4 @@
-import { PluginSimple } from "markdown-it";
+import type { PluginSimple } from "../types";
 import createMarkdown from "../core/rules/markdown";
 import breakRule from "../core/rules/breaks";
 import checkboxRule from "../core/rules/checkboxes";

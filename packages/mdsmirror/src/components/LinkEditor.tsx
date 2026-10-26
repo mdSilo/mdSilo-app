@@ -216,8 +216,8 @@ class LinkEditor extends React.Component<Props, State> {
           this.props.isRemoteSearch && this.props.onSearchRemote
             ? await this.props.onSearchRemote(trimmedValue)
             : this.props.isHashTagSearch && this.props.onSearchHashTag
-            ? await this.props.onSearchHashTag(trimmedValue)
-            : await this.props.onSearchLink(trimmedValue);
+              ? await this.props.onSearchHashTag(trimmedValue)
+              : await this.props.onSearchLink(trimmedValue);
         this.setState((state) => ({
           results: {
             ...state.results,

@@ -45,7 +45,6 @@ export default function NoteSumList(props: Props) {
   );
 }
 
-// eslint-disable-next-line react/display-name
 const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
   const doc = parser.parse(note.content);
   const value = doc.content.content

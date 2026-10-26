@@ -1,7 +1,7 @@
 // Adapted from:
 // https://github.com/markdown-it/markdown-it-mark/blob/master/index.js
 
-import MarkdownIt, { StateInline } from "markdown-it";
+import type { MarkdownIt, StateInline } from "markdown-it";
 
 export default function (options: { delim: string; mark: string }) {
   const delimCharCode = options.delim.charCodeAt(0);
@@ -39,7 +39,6 @@ export default function (options: { delim: string; mark: string }) {
       state.delimiters.push({
         marker,
         length: 0, // disable "rule of 3" length checks meant for emphasis
-        // @ts-expect-error unknown property
         jump: 0,
         token: state.tokens.length - 1,
         end: -1,

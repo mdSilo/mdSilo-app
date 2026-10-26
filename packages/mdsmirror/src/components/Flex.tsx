@@ -2,18 +2,10 @@ import * as React from "react";
 import styled from "styled-components";
 
 type JustifyValues =
-  | "center"
-  | "space-around"
-  | "space-between"
-  | "flex-start"
-  | "flex-end";
+  "center" | "space-around" | "space-between" | "flex-start" | "flex-end";
 
 type AlignValues =
-  | "stretch"
-  | "center"
-  | "baseline"
-  | "flex-start"
-  | "flex-end";
+  "stretch" | "center" | "baseline" | "flex-start" | "flex-end";
 
 type Props = {
   style?: React.CSSProperties;

@@ -14,7 +14,7 @@
     "jsx": "react",
     "types": [
       "react",
-      "jest"
+      "vitest/globals"
     ],
     "rootDir": "src",
     "outDir": "dist",

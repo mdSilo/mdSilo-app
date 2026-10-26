@@ -1,4 +1,4 @@
-import { Token } from "markdown-it";
+import type { Token } from "markdown-it";
 import { TbLink, TbPaperclip } from "react-icons/tb";
 import { NodeSpec, NodeType, Node as ProsemirrorNode } from "prosemirror-model";
 import * as React from "react";

@@ -1,4 +1,4 @@
-import { PluginSimple } from "markdown-it";
+import type { PluginSimple } from "../types";
 import { InputRule } from "prosemirror-inputrules";
 import { keymap } from "prosemirror-keymap";
 import { MarkdownParser } from "prosemirror-markdown";
@@ -217,7 +217,11 @@ export default class ExtensionManager {
 
     const parser = new MarkdownParser(
       schema,
-      makeRules({ rules, plugins }),
+      // prosemirror-markdown types its tokenizer with @types/markdown-it 14,
+      // markdown-it 15 ships its own types: same runtime shape
+      makeRules({ rules, plugins }) as unknown as ConstructorParameters<
+        typeof MarkdownParser
+      >[1],
       tokens
     );
     // keep the line breaks in a paragraph, instead of joining the lines

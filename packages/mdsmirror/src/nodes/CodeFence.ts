@@ -1,6 +1,6 @@
 // TODO: use codemirror
 import copy from "copy-to-clipboard";
-import { Token } from "markdown-it";
+import type { Token } from "markdown-it";
 import { textblockTypeInputRule } from "prosemirror-inputrules";
 import {
   NodeSpec,
@@ -15,32 +15,32 @@ import {
   TextSelection,
   Transaction,
 } from "prosemirror-state";
-import refractor from "refractor/core";
-import bash from "refractor/lang/bash";
-import cpp from "refractor/lang/cpp";
-import clike from "refractor/lang/clike";
-import csharp from "refractor/lang/csharp";
-import css from "refractor/lang/css";
-import elixir from "refractor/lang/elixir";
-import go from "refractor/lang/go";
-import java from "refractor/lang/java";
-import javascript from "refractor/lang/javascript";
-import json from "refractor/lang/json";
-import kotlin from "refractor/lang/kotlin";
-import lua from "refractor/lang/lua";
-import markup from "refractor/lang/markup";
-import objectivec from "refractor/lang/objectivec";
-import perl from "refractor/lang/perl";
-import php from "refractor/lang/php";
-import powershell from "refractor/lang/powershell";
-import python from "refractor/lang/python";
-import r from "refractor/lang/r";
-import ruby from "refractor/lang/ruby";
-import rust from "refractor/lang/rust";
-import sql from "refractor/lang/sql";
-import swift from "refractor/lang/swift";
-import typescript from "refractor/lang/typescript";
-import yaml from "refractor/lang/yaml";
+import { refractor } from "refractor/core";
+import bash from "refractor/bash";
+import cpp from "refractor/cpp";
+import clike from "refractor/clike";
+import csharp from "refractor/csharp";
+import css from "refractor/css";
+import elixir from "refractor/elixir";
+import go from "refractor/go";
+import java from "refractor/java";
+import javascript from "refractor/javascript";
+import json from "refractor/json";
+import kotlin from "refractor/kotlin";
+import lua from "refractor/lua";
+import markup from "refractor/markup";
+import objectivec from "refractor/objectivec";
+import perl from "refractor/perl";
+import php from "refractor/php";
+import powershell from "refractor/powershell";
+import python from "refractor/python";
+import r from "refractor/r";
+import ruby from "refractor/ruby";
+import rust from "refractor/rust";
+import sql from "refractor/sql";
+import swift from "refractor/swift";
+import typescript from "refractor/typescript";
+import yaml from "refractor/yaml";
 
 import toggleBlockType from "../core/commands/toggleBlockType";
 import { MarkdownSerializerState } from "../core/mdSerializer";

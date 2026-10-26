@@ -69,7 +69,6 @@ const getTreeData = (
   ];
 };
 
-// eslint-disable-next-line react/display-name
 const backlinkToTreeData = (isLinked: boolean) => (backlink: Backlink) => {
   // one leaf per block, highlighting all the matches in the block
   const blocks = new Map<number, BacklinkMatch[]>();

@@ -3,7 +3,10 @@ import { TableView as ProsemirrorTableView } from "prosemirror-tables";
 import { TableLayout } from "../core/rules/tables";
 
 export class TableView extends ProsemirrorTableView {
-  public constructor(public node: Node, public cellMinWidth: number) {
+  public constructor(
+    public node: Node,
+    public cellMinWidth: number
+  ) {
     super(node, cellMinWidth);
 
     this.dom.removeChild(this.table);

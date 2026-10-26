@@ -1,4 +1,4 @@
-import MarkdownIt, { StateBlock, StateInline } from "markdown-it";
+import type { MarkdownIt, StateBlock, StateInline } from "markdown-it";
 
 const OPEN = "<!--";
 const CLOSE = "-->";

@@ -1,4 +1,4 @@
-import { Token } from "markdown-it";
+import type { Token } from "markdown-it";
 import { NodeSpec, Node as ProsemirrorNode, NodeType } from "prosemirror-model";
 import {
   splitListItem,

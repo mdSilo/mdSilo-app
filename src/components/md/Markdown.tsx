@@ -35,7 +35,6 @@ function Markdown(props: Props) {
     [lang]
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onValueChange = (value: string, _viewUpdate: unknown) => {
     // console.log('md Changed, value:', value, _viewUpdate);
     onChange(value);

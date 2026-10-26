@@ -12,7 +12,7 @@ import { createRequire } from 'module';
  * resolve it from where mdsmirror finds prosemirror-history.
  */
 function ropeSequenceCjs(): string {
-  const fromMdsmirror = createRequire(path.resolve(__dirname, 'packages/mdsmirror/package.json'));
+  const fromMdsmirror = createRequire(path.resolve(import.meta.dirname, 'packages/mdsmirror/package.json'));
   const history = fromMdsmirror.resolve('prosemirror-history');
   return createRequire(history).resolve('rope-sequence');
 }
@@ -23,7 +23,7 @@ function ropeSequenceCjs(): string {
  * so a rebuilt mdsmirror would keep being served from the stale cache.
  */
 function mdsmirrorBuildId(): string {
-  const dist = path.resolve(__dirname, 'packages/mdsmirror/dist');
+  const dist = path.resolve(import.meta.dirname, 'packages/mdsmirror/dist');
   const hash = crypto.createHash('sha1');
   const walk = (dir: string) => {
     let entries: fs.Dirent[] = [];
@@ -49,22 +49,15 @@ function mdsmirrorBuildId(): string {
 export default defineConfig({
   // no CSS needed in tests (jsdom): skip compiling Tailwind CSS and daisyUI
   plugins: [react(), ...(process.env.VITEST ? [] : [tailwindcss()])],
-  // Workspace packages are symlinked outside node_modules. mdsmirror is emitted as
-  // CommonJS, so Rollup's default CommonJS include rule would otherwise skip it
-  // during production builds.
-  build: {
-    commonjsOptions: {
-      include: [/node_modules/, /packages[\\/]mdsmirror/],
-    },
-  },
-  // Linked workspace packages are served as raw source in dev, not pre-bundled.
-  // mdsmirror's CommonJS dist then breaks named ESM imports at runtime, so
-  // force esbuild to pre-bundle it.
+  // Linked workspace packages are served as raw source in dev, not pre-bundled:
+  // pre-bundle mdsmirror with its dependencies (hundreds of modules otherwise).
   optimizeDeps: {
     include: ['mdsmirror'],
     // part of the cache key: re-bundle mdsmirror whenever it is rebuilt
-    esbuildOptions: {
-      define: { __MDSMIRROR_BUILD__: JSON.stringify(mdsmirrorBuildId()) },
+    rolldownOptions: {
+      transform: {
+        define: { __MDSMIRROR_BUILD__: JSON.stringify(mdsmirrorBuildId()) },
+      },
     },
   },
   // keep the errors from the Rust side visible in `tauri dev`
@@ -87,6 +80,15 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
+    // vitest 4+ only excludes node_modules and .git by default; mdsmirror's
+    // dist has the compiled tests too
+    exclude: ['**/node_modules/**', '**/.git/**', '**/dist/**', 'dist-web/**', 'src-tauri/**'],
+    env: {
+      // styled-components outside production appends each rule as text, and
+      // jsdom 27+ re-parses the whole <style> on every append: the editor
+      // styles took ~7s per first render. insertRule does not re-parse.
+      SC_DISABLE_SPEEDY: 'false',
+    },
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
@@ -95,16 +97,16 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      components: path.resolve(__dirname, './src/components'),
-      context: path.resolve(__dirname, './src/context'),
-      editor: path.resolve(__dirname, './src/editor'),
-      file: path.resolve(__dirname, './src/file'),
-      lib: path.resolve(__dirname, './src/lib'),
-      utils: path.resolve(__dirname, './src/utils'),
-      types: path.resolve(__dirname, './src/types'),
-      asset: path.resolve(__dirname, './src/asset'),
-      styles: path.resolve(__dirname, './src/styles'),
+      '@': path.resolve(import.meta.dirname, './src'),
+      components: path.resolve(import.meta.dirname, './src/components'),
+      context: path.resolve(import.meta.dirname, './src/context'),
+      editor: path.resolve(import.meta.dirname, './src/editor'),
+      file: path.resolve(import.meta.dirname, './src/file'),
+      lib: path.resolve(import.meta.dirname, './src/lib'),
+      utils: path.resolve(import.meta.dirname, './src/utils'),
+      types: path.resolve(import.meta.dirname, './src/types'),
+      asset: path.resolve(import.meta.dirname, './src/asset'),
+      styles: path.resolve(import.meta.dirname, './src/styles'),
       // prosemirror-history's CommonJS build does `require('rope-sequence')`,
       // which resolves to the ES module (no default interop) and breaks the
       // undo history on typing. Point it to the CommonJS entry instead.

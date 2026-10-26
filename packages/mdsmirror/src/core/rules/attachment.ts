@@ -1,4 +1,4 @@
-import MarkdownIt, { Token } from "markdown-it";
+import type { MarkdownIt, Token } from "markdown-it";
 
 function isParagraph(token: Token) {
   return token.type === "paragraph_open";
@@ -18,7 +18,7 @@ function isLinkClose(token: Token) {
 
 // check if turn markdown [](url) to Attachment
 function isAttachment(token: Token) {
-  const href = token.attrGet("href");
+  const href = token.attrGet("href")?.toString();
   const reg =
     /\.(pdf|docx?|xlsx?|pptx?|xps|odt|ods|odp|pages|numbers|key|zip)$/gim;
   return href && href.startsWith("./") && reg.test(href || "");

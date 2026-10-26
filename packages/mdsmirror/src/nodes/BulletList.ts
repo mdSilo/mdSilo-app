@@ -1,4 +1,4 @@
-import { Token } from "markdown-it";
+import type { Token } from "markdown-it";
 import { wrappingInputRule } from "prosemirror-inputrules";
 import {
   Schema,

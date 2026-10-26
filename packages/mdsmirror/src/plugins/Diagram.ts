@@ -57,8 +57,8 @@ function getNewState({
       pluginKey === "mermaid"
         ? mermaidWidget(pluginState, diagramId, block, dark, onSave)
         : pluginKey === "echarts"
-        ? echartsWidget(pluginState, diagramId, block, dark, onSave)
-        : abcWidget(pluginState, diagramId, block, dark, onSave),
+          ? echartsWidget(pluginState, diagramId, block, dark, onSave)
+          : abcWidget(pluginState, diagramId, block, dark, onSave),
       { diagramId }
     );
 
@@ -108,7 +108,9 @@ const mermaidWidget =
         startOnLoad: true,
         // the default, explicit: HTML in labels encoded, no click handlers
         securityLevel: "strict",
-        flowchart: { htmlLabels: false },
+        htmlLabels: false,
+        // no error diagram left in the page: the error is shown below
+        suppressErrorRendering: true,
         fontFamily: "inherit",
       };
 
@@ -118,37 +120,27 @@ const mermaidWidget =
       }
 
       module.default.initialize(config);
-      try {
-        module.default.render(
-          `mermaid-diagram-${diagramId}`,
-          block.node.textContent,
-          (svgCode) => {
-            diagramWrapper.innerHTML = svgCode;
-          }
-        );
+      module.default
+        .render(`mermaid-diagram-${diagramId}`, block.node.textContent)
+        .then(({ svg }) => {
+          diagramWrapper.innerHTML = svg;
 
-        if (onSave) {
-          const saveDiagramButton = document.createElement("button");
-          saveDiagramButton.innerText = "Save Diagram SVG";
-          saveDiagramButton.type = "button";
-          saveDiagramButton.classList.add("save-diagram-button");
-          const svg = document.getElementById(
-            `mermaid-diagram-${diagramId}`
-          )?.outerHTML;
-          saveDiagramButton.addEventListener("click", () =>
-            onSave(svg || "", "mermaid")
-          );
-          mainWrapper.append(saveDiagramButton);
-        }
-      } catch (error) {
-        console.log(error);
-        const errorNode = document.getElementById(
-          `mermaid-diagram-${diagramId}`
-        );
-        if (errorNode) {
-          diagramWrapper.appendChild(errorNode);
-        }
-      }
+          if (onSave) {
+            const saveDiagramButton = document.createElement("button");
+            saveDiagramButton.innerText = "Save Diagram SVG";
+            saveDiagramButton.type = "button";
+            saveDiagramButton.classList.add("save-diagram-button");
+            saveDiagramButton.addEventListener("click", () =>
+              onSave(svg, "mermaid")
+            );
+            mainWrapper.append(saveDiagramButton);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          // mermaid removes its error diagram once render rejects
+          diagramWrapper.textContent = `Mermaid: ${error?.message ?? error}`;
+        });
     });
 
     return mainWrapper;

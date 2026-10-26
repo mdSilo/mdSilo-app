@@ -11,7 +11,7 @@ for rendering output.
 /*jslint node: true */
 "use strict";
 
-import MarkdownIt, { StateBlock, StateInline, Token } from "markdown-it";
+import type { MarkdownIt, StateBlock, StateInline, Token } from "markdown-it";
 import katex, { KatexOptions } from "katex";
 
 // Test if potential opening or closing delimieter
@@ -150,7 +150,7 @@ function math_display(
     found = true;
   }
 
-  for (next = start; !found; ) {
+  for (next = start; !found;) {
     next++;
 
     if (next >= end) {

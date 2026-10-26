@@ -1190,7 +1190,7 @@ export const StyledEditor = styled("div")<{
 
     &:hover {
       scrollbar-color: ${(props) => props.theme.scrollbarThumb} ${(props) =>
-  props.theme.scrollbarBackground};
+        props.theme.scrollbarBackground};
     }
 
     & ::-webkit-scrollbar {
@@ -1252,7 +1252,7 @@ export const StyledEditor = styled("div")<{
 
     &:hover {
       scrollbar-color: ${(props) => props.theme.scrollbarThumb} ${(props) =>
-  props.theme.scrollbarBackground};
+        props.theme.scrollbarBackground};
     }
 
     & ::-webkit-scrollbar {

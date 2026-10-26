@@ -1,4 +1,4 @@
-import MarkdownIt, { Token } from "markdown-it";
+import type { MarkdownIt, Token } from "markdown-it";
 import isUrl from "../queries/isUrl";
 
 function isParagraph(token: Token) {
@@ -19,7 +19,7 @@ function isLinkClose(token: Token) {
 
 // check if turn markdown [](url) to itemcard
 function isItemcard(token: Token) {
-  const href = token.attrGet("href");
+  const href = token.attrGet("href")?.toString();
   const reg = /^https:\/\/mdsilo\.com\/item\/(.+)$/gim;
   return href && reg.test(href || "");
 }

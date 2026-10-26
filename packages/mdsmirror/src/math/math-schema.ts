@@ -22,8 +22,10 @@ import { SchemaSpecMarkT, SchemaSpecNodeT } from "./utils/types";
  *
  * @see https://github.com/microsoft/TypeScript/issues/10727
  */
-interface SchemaSpecJson<N extends string = any, M extends string = any>
-  extends SchemaSpec<N, M> {
+interface SchemaSpecJson<
+  N extends string = any,
+  M extends string = any,
+> extends SchemaSpec<N, M> {
   nodes: { [name in N]: NodeSpec };
   marks: { [name in M]: MarkSpec };
   topNode?: string;

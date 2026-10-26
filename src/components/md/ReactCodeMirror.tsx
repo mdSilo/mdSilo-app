@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { EditorState, EditorStateConfig, Extension } from '@codemirror/state';
 import { EditorView, ViewUpdate } from '@codemirror/view';

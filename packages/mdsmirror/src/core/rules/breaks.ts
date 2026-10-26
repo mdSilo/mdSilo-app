@@ -1,4 +1,4 @@
-import MarkdownIt, { Token } from "markdown-it";
+import type { MarkdownIt, Token } from "markdown-it";
 
 function isHardbreak(token: Token) {
   return (

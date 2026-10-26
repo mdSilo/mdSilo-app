@@ -13,10 +13,13 @@ ignoredBuiltDependencies:
 
 # one copy of each, shared by the app and mdsmirror
 overrides:
-  '@types/node': 22.13.1
-  '@types/react': 19.2.14
-  '@types/react-dom': 19.2.3
-  prosemirror-model: 1.25.11
+  '@types/node': 22.20.5
+  '@types/react': 19.3.0
+  '@types/react-dom': 19.3.0
+  prosemirror-model: 1.25.12
   prosemirror-state: 1.4.4
-  prosemirror-transform: 1.11.0
-  prosemirror-view: 1.42.3
+  prosemirror-transform: 1.12.4
+  prosemirror-view: 1.42.8
+  react: 19.3.1
+  react-dom: 19.3.1
+  styled-components: 6.6.0

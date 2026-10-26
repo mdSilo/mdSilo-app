@@ -1,4 +1,4 @@
-import MarkdownIt from "markdown-it";
+import type { MarkdownIt } from "markdown-it";
 import { MarkSpec, Node } from "prosemirror-model";
 import { MarkdownSerializerState } from "../core/mdSerializer";
 import Mark from "./Mark";

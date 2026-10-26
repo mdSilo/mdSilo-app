@@ -13,7 +13,7 @@
 import { defineConfig, mergeConfig, Plugin } from 'vite';
 import path from 'path';
 import baseConfig from './vite.config.mts';
-import pkg from './package.json';
+import pkg from './package.json' with { type: 'json' };
 import { createCorsProxyHandler } from './web/cors-proxy.mjs';
 
 /** CORS proxy for fetching feeds, mounted at `/__cors_proxy__?url=` on dev/preview server */
@@ -30,7 +30,7 @@ const corsProxy = (): Plugin => {
   };
 };
 
-const web = (name: string) => path.resolve(__dirname, './src/platform/web', name);
+const web = (name: string) => path.resolve(import.meta.dirname, './src/platform/web', name);
 
 export default mergeConfig(
   baseConfig,

@@ -1,4 +1,4 @@
-import MarkdownIt from "markdown-it";
+import type { MarkdownIt } from "markdown-it";
 import { Attrs, Node } from "prosemirror-model";
 import { MutableAttrs } from "prosemirror-tables";
 
@@ -76,7 +76,7 @@ export default function markdownTables(md: MarkdownIt) {
         // to a simple string here
         const tokenAttrs = tokens[i].attrs;
         if (tokenAttrs) {
-          const style = tokenAttrs[0][1];
+          const style = String(tokenAttrs[0][1]);
           tokens[i].info = style.split(":")[1];
         }
       }
