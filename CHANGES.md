@@ -1,8 +1,15 @@
 # Changelog 
 
-## app-v0.6.2 
+## app-v0.7.0 
 
 2026-XX-XX
+
+## app-v0.6.2 
+
+2026-10-27
+
+- Fix bugs and improve performance.   
+- Upgrade dependencies and toolchain to latest version.  
 
 ## app-v0.6.1 
 
