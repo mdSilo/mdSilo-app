@@ -15,7 +15,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
   const { currentSort, setCurrentSort } = props;
 
   const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(
     null
   );
   const { styles, attributes } = usePopper(buttonRef.current, popperElement, {
@@ -54,11 +54,11 @@ const SidebarNotesSortDropdown = (props: Props) => {
                     (index + 1) % 2 === 0 && index !== arr.length - 1;
                   return (
                     <Menu.Item key={sort}>
-                      {({ active }) => (
+                      {({ focus }) => (
                         <button
                           className={`flex w-full items-center px-4 py-2 text-left text-base-content text-sm ${
                             showDivider ? 'border-b border-base-300' : ''
-                          } ${active ? 'bg-base-content/10' : ''}`}
+                          } ${focus ? 'bg-base-content/10' : ''}`}
                           onClick={() => setCurrentSort(sort)}
                         >
                           <span

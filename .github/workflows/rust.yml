@@ -11,11 +11,9 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: install Rust stable
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+        uses: dtolnay/rust-toolchain@stable
       - name: install webkit2gtk (ubuntu only)
         if: matrix.platform == 'ubuntu-latest'
         run: |

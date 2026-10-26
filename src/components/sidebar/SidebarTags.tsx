@@ -1,6 +1,6 @@
 import React, { useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes } from 'react';
-import List from 'react-virtualized/dist/commonjs/List';
-import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
+import { List } from 'react-virtualized';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { TbHash as IconHash } from 'react-icons/tb';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { NoteMap, useStore } from 'lib/store';

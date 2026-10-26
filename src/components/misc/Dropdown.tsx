@@ -35,7 +35,7 @@ export default function Dropdown(props: Props) {
   } = props;
 
   const referenceElementRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(
     null
   );
   const { styles, attributes } = usePopper(
@@ -112,19 +112,19 @@ export function DropdownItem(props: DropdownItemProps) {
   const { children, target = '_blank', className = '' } = props;
 
   const itemClassName = useCallback(
-    (active: boolean) =>
+    (focus: boolean) =>
       `flex w-full items-center px-4 py-2 text-left text-sm text-base-content select-none ${
-        active ? 'bg-base-content/10' : ''
+        focus ? 'bg-base-content/10' : ''
       } ${className}`,
     [className]
   );
 
   return (
     <Menu.Item>
-      {({ active }) =>
+      {({ focus }) =>
         (props.as === 'a' || props.as === 'link') ? (
           <a
-            className={itemClassName(active)}
+            className={itemClassName(focus)}
             href={props.href}
             target={target}
             rel="noopener noreferrer"
@@ -132,7 +132,7 @@ export function DropdownItem(props: DropdownItemProps) {
             {children}
           </a>
         ) : (
-          <button className={itemClassName(active)} onClick={props.onClick}>
+          <button className={itemClassName(focus)} onClick={props.onClick}>
             {children}
           </button>
         )

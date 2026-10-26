@@ -22,7 +22,7 @@ const SidebarNoteLinkDropdown = (props: NoteProps) => {
   const { noteId, className } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(
     null
   );
   const { styles, attributes } = usePopper(
@@ -90,7 +90,7 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
   const { dirPath, className = '', isOnBar = false, menuBtn } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(
     null
   );
   const { styles, attributes } = usePopper(

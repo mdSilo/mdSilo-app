@@ -89,6 +89,11 @@ export default defineConfig({
       // styles took ~7s per first render. insertRule does not re-parse.
       SC_DISABLE_SPEEDY: 'false',
     },
+    // react-virtualized 10's ESM imports 'dom-helpers/scrollbarSize', a
+    // directory import that Node's ESM loader refuses; let vite resolve it
+    server: {
+      deps: { inline: ['react-virtualized'] },
+    },
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],

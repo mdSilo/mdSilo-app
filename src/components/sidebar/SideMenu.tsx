@@ -391,7 +391,7 @@ const FileButton = () => {
   const tooltipPlacement = useTooltipPlacement();
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = 
-    useState<HTMLDivElement | null>(null);
+    useState<HTMLElement | null>(null);
   const { styles, attributes } = usePopper(
     btnRef.current, popperElement, {
       placement: isHorizontal ? 'bottom-start' : 'right-start',

@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useLayoutEffect, useRef, useState, memo } from 'react';
-import List from 'react-virtualized/dist/commonjs/List';
-import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
+import { List } from 'react-virtualized';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { NoteTreeItem } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarNoteLink, { INDENT_PER_LEVEL } from './SidebarNoteLink';

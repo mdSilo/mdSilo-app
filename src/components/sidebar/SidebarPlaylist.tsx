@@ -1,8 +1,8 @@
 import React, { 
   useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes, useState, useEffect, useMemo 
 } from 'react';
-import List from 'react-virtualized/dist/commonjs/List';
-import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
+import { List } from 'react-virtualized';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { TbHeadphones as IconHeadphones } from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettings';
