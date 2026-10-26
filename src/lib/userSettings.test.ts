@@ -5,7 +5,8 @@ import { Sort, ReadableNameBySort } from './userSettings';
 describe('user settings slice', () => {
   test('defaults', () => {
     const s = store.getState();
-    expect(s.darkMode).toBe(true);
+    expect(s.theme).toBe('system');
+    expect(s.darkMode).toBe(false); // jsdom: no dark system mode
     expect(s.fontSize).toBe(1.1);
     expect(s.fontWt).toBe(400);
     expect(s.lineHeight).toBe(1.6);
@@ -18,6 +19,7 @@ describe('user settings slice', () => {
   });
 
   test.each([
+    ['setTheme', 'theme', 'nord'],
     ['setDarkMode', 'darkMode', false],
     ['setFont', 'font', 'Sniglet'],
     ['setFontSize', 'fontSize', 1.4],

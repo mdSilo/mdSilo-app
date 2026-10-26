@@ -24,10 +24,10 @@ function SidebarNotesBar(props: Props) {
   const currentFolder = currentDir 
     ? normalizeSlash(currentDir).split('/').pop() || '/'
     : 'md';
-  const barClass = `px-2 text-sm bg-blue-500 text-white rounded overflow-hidden`; 
+  const barClass = `px-2 text-sm bg-secondary text-secondary-content rounded-sm overflow-hidden`; 
   
   return (
-    <div className="flex items-center justify-between border-t dark:border-gray-700">
+    <div className="flex items-center justify-between border-t border-base-300">
       <div className="flex mx-2 my-1">
         <SidebarNotesSortDropdown
           currentSort={noteSort}
@@ -54,7 +54,7 @@ function SidebarNotesBar(props: Props) {
       </Tooltip>
       <Tooltip content={checkInit ? "" : "Go Upper Folder"}>
         <button
-          className="p-1 mx-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
           onClick={async (e) => {
             e.preventDefault();
             if (!currentDir || currentDir === initDir) return;
@@ -63,7 +63,7 @@ function SidebarNotesBar(props: Props) {
           }}
           disabled={checkInit}
         >
-          <IconArrowBarToUp size={16} className="text-gray-600 dark:text-gray-300" />
+          <IconArrowBarToUp size={16} className="text-base-content/70" />
         </button>
       </Tooltip>
     </div>

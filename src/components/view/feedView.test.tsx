@@ -80,7 +80,7 @@ describe('Feed view', () => {
     await userEvent.click(screen.getByText('https://pods/feed').nextSibling as HTMLElement);
     expect(invoke).toHaveBeenCalledWith('delete_channel', { link: 'https://pods/feed' });
 
-    await userEvent.click(screen.getAllByRole('button').find((b) => b.className.includes('bg-primary-200')) as HTMLElement);
+    await userEvent.click(screen.getAllByRole('button').find((b) => b.className.includes('bg-primary/25')) as HTMLElement);
     await userEvent.click(screen.getByText('OK'));
     await waitFor(() =>
       expect(invoke).toHaveBeenCalledWith('add_channel', expect.objectContaining({ ty: 'rss' }))

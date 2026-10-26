@@ -44,18 +44,18 @@ export default function NotePicker({ issue }: { issue: Issue }) {
               return (
                 <li key={p} className="flex items-center gap-1">
                   {note ? (
-                    <button type="button" className="flex-1 text-left truncate link" title={p} onClick={() => openNote(p)}>
+                    <button type="button" className="flex-1 text-left truncate ms-link" title={p} onClick={() => openNote(p)}>
                       {note.title}
                     </button>
                   ) : (
-                    <span className="flex-1 text-gray-400 line-through truncate" title={`Missing: ${p}`}>
+                    <span className="flex-1 text-base-content/50 line-through truncate" title={`Missing: ${p}`}>
                       {titleOfPath(p)}
                     </span>
                   )}
                   <button
                     type="button"
                     aria-label={`Unlink ${titleOfPath(p)}`}
-                    className="text-gray-400 hover:text-red-600"
+                    className="text-base-content/50 hover:text-error/80"
                     onClick={() => apply((d) => unlinkNote(d, issue.number, p))}
                   >
                     <IconX size={14} />
@@ -66,17 +66,17 @@ export default function NotePicker({ issue }: { issue: Issue }) {
             {mentioned.map(({ title, id }) => (
               <li key={`m-${title}`} className="flex items-center gap-1" data-testid="mentioned-note">
                 {id ? (
-                  <button type="button" className="flex-1 text-left truncate link" title={id} onClick={() => openNote(id)}>
+                  <button type="button" className="flex-1 text-left truncate ms-link" title={id} onClick={() => openNote(id)}>
                     {title}
                   </button>
                 ) : (
-                  <span className="flex-1 text-gray-400 truncate" title="No note with this title">{title}</span>
+                  <span className="flex-1 text-base-content/50 truncate" title="No note with this title">{title}</span>
                 )}
-                <span className="text-xs text-gray-500" title="Linked with [[ ]] in the text">mentioned</span>
+                <span className="text-xs text-base-content/60" title="Linked with [[ ]] in the text">mentioned</span>
               </li>
             ))}
           </ul>
-        ) : (<span className="text-gray-500">None yet</span>)
+        ) : (<span className="text-base-content/60">None yet</span>)
       }
     >
       {(close) => (

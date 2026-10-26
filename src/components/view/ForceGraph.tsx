@@ -7,8 +7,8 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
-import colors from 'tailwindcss/colors';
 import {
   forceCenter,
   forceCollide,
@@ -29,6 +29,58 @@ import { useStore } from 'lib/store';
 import { findNoteLinks, noteTitleMap } from 'utils/mdlink';
 import { openFilePath } from 'file/open';
 import { checkFileIsMd } from 'file/process';
+
+type GraphColors = {
+  note: string;
+  neighbor: string; // nodes linked to the hovered one, highlighted links
+  hovered: string;
+  tag: string;
+  hoveredTag: string;
+  link: string;
+  text: string;
+};
+
+// fallbacks: no theme colors, e.g. in tests (Tailwind CSS v3 palette)
+const LIGHT_COLORS: GraphColors = {
+  note: '#86efac', neighbor: '#60a5fa', hovered: '#2563eb', tag: '#facc15',
+  hoveredTag: '#ca8a04', link: '#e5e5e5', text: '#525252',
+};
+const DARK_COLORS: GraphColors = { ...LIGHT_COLORS, link: '#404040', text: '#f5f5f5' };
+
+/** Colors of the daisyUI theme applied on <html>, see useTheme */
+function themeColors(): GraphColors {
+  const root = document.documentElement;
+  const fallback = root.classList.contains('dark') ? DARK_COLORS : LIGHT_COLORS;
+  const style = getComputedStyle(root);
+  const color = (name: string, alpha = 1) => {
+    const value = style.getPropertyValue(name).trim();
+    if (!value) return '';
+    // e.g. oklch(76% 0.17 163) => oklch(76% 0.17 163 / 0.5)
+    return alpha < 1 && value.endsWith(')') && !value.includes('/')
+      ? `${value.slice(0, -1)} / ${alpha})`
+      : value;
+  };
+  return {
+    note: color('--color-primary', 0.55) || fallback.note,
+    neighbor: color('--color-secondary') || fallback.neighbor,
+    hovered: color('--color-secondary') || fallback.hovered,
+    tag: color('--color-accent') || fallback.tag,
+    hoveredTag: color('--color-warning') || fallback.hoveredTag,
+    link: color('--color-base-content', 0.15) || fallback.link,
+    text: color('--color-base-content', 0.8) || fallback.text,
+  };
+}
+
+/** Theme colors, updated when the theme on <html> changes. */
+function useThemeColors(): GraphColors {
+  const [colors, setColors] = useState(themeColors);
+  useEffect(() => {
+    const observer = new MutationObserver(() => setColors(themeColors()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    return () => observer.disconnect();
+  }, []);
+  return colors;
+}
 
 // non-greedy per tag; the trailing space is a lookahead so adjacent tags share it
 export const HASHTAG_REGEX = /\s#([^#\n]+)#(?=\s)/g;
@@ -58,7 +110,7 @@ export default function ForceGraph(props: Props) {
   const transform = useRef(zoomIdentity);
   const hoveredNode = useRef<NodeDatum | null>(null);
 
-  const darkMode = useStore((state) => state.darkMode);
+  const colors = useThemeColors();
   const storeNotes = useStore((state) => state.notes);
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
@@ -198,17 +250,15 @@ export default function ForceGraph(props: Props) {
       if (isTag) {
         context.strokeStyle = 'transparent';
       } else if (isLinkHighlighted) {
-        context.strokeStyle = colors.blue[400];
-      } else if (darkMode) {
-        context.strokeStyle = colors.neutral[700];
+        context.strokeStyle = colors.neighbor;
       } else {
-        context.strokeStyle = colors.neutral[200];
+        context.strokeStyle = colors.link;
       }
       context.stroke();
 
       context.restore();
     },
-    [darkMode]
+    [colors]
   );
 
   const drawNode = useCallback(
@@ -228,17 +278,17 @@ export default function ForceGraph(props: Props) {
 
       // Fill node color
       if (isTag) {
-        context.fillStyle = colors.yellow[400];
+        context.fillStyle = colors.tag;
       } else if (areNeighbors(hoveredNode.current?.id, node.id)) {
-        context.fillStyle = colors.blue[400];
+        context.fillStyle = colors.neighbor;
       } else {
-        context.fillStyle = colors.green[300];
+        context.fillStyle = colors.note;
       }
 
       if (isHovered) {
-        context.strokeStyle = colors.blue[600];
+        context.strokeStyle = colors.hovered;
         context.stroke();
-        context.fillStyle = isTag ? colors.yellow[600] : colors.blue[400];
+        context.fillStyle = isTag ? colors.hoveredTag : colors.neighbor;
       }
 
       context.fill();
@@ -251,9 +301,7 @@ export default function ForceGraph(props: Props) {
       } else {
         context.globalAlpha = 0;
       }
-      context.fillStyle = darkMode
-        ? colors.neutral[100]
-        : colors.neutral[600];
+      context.fillStyle = colors.text;
       context.font = `4px font-sans`;
 
       const lines = getLines(context, node.name, 50);
@@ -266,7 +314,7 @@ export default function ForceGraph(props: Props) {
 
       context.restore();
     },
-    [areNeighbors, darkMode]
+    [areNeighbors, colors]
   );
 
   const renderCanvas = useCallback(() => {
@@ -443,7 +491,7 @@ export default function ForceGraph(props: Props) {
       <canvas
         data-testid="graph-canvas"
         ref={canvasRef}
-        className="absolute w-full h-full dark:bg-gray-900"
+        className="absolute w-full h-full bg-base-100"
       />
     </div>
   );

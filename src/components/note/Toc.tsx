@@ -27,18 +27,18 @@ export default function Toc(props: Props) {
         }}
       >
         <IconCaretRight
-          className={`mr-1 text-gray-500 dark:text-gray-200 ${showTOC ? 'rotate-90' : ''}`}
+          className={`mr-1 text-base-content/60 ${showTOC ? 'rotate-90' : ''}`}
           size={16}
           fill="currentColor"
         />
         Table of Contents {` ${metaInfo}`}
       </button>
       {showTOC && headings.length ? (
-        <div className={`pb-4 border-b-2 border-gray-200 dark:border-gray-600 ${className}`}>
+        <div className={`pb-4 border-b-2 border-base-300 ${className}`}>
           {headings.map((heading) => (
             <div
               key={heading.id}
-              className="flex items-center select-none link"
+              className="flex items-center select-none ms-link"
               style={{ 
                 paddingLeft: `${heading.level * 12}px`, 
                 fontSize: `${Math.max((12 - heading.level) * 2, 16)}px` 

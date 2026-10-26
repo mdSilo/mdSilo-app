@@ -76,10 +76,10 @@ export default function SideMenu() {
   const currentDir = useStore((state) => state.currentDir);
   const orientation = useStore((state) => state.sideMenuOrientation);
   const menuClassName = orientation === 'horizontal'
-    ? 'flex flex-row items-center w-full px-1 bg-gray-100 dark:bg-gray-800'
+    ? 'flex flex-row items-center w-full px-1 bg-base-200'
     : orientation === 'vertical'
-      ? 'flex flex-col h-full pb-3 bg-gray-100 dark:bg-gray-800'
-      : 'flex flex-row items-center w-full px-1 bg-gray-100 dark:bg-gray-800 md:flex-col md:items-stretch md:w-auto md:h-full md:pb-3';
+      ? 'flex flex-col h-full pb-3 bg-base-200'
+      : 'flex flex-row items-center w-full px-1 bg-base-200 md:flex-col md:items-stretch md:w-auto md:h-full md:pb-3';
   const buttonsClassName = orientation === 'horizontal'
     ? 'flex flex-row items-center'
     : orientation === 'vertical'
@@ -126,7 +126,7 @@ const LogoMenu = () => {
   return (
     <Dropdown
       buttonChildren={<Logo />}
-      buttonClassName="block focus:outline-none"
+      buttonClassName="block focus:outline-hidden"
       itemsClassName="w-56"
       placement={isHorizontal ? 'bottom-start' : 'right-start'}
       tooltipContent="mdSilo"
@@ -144,7 +144,7 @@ const LogoMenu = () => {
         <span>Settings</span>
       </DropdownItem>
       <DropdownItem
-        className="border-t dark:border-gray-700"
+        className="border-t border-base-300"
         as="link"
         href="https://mdsilo.com"
       >
@@ -152,7 +152,7 @@ const LogoMenu = () => {
         <span>Website</span>
       </DropdownItem>
       <DropdownItem
-        className="border-t dark:border-gray-700"
+        className="border-t border-base-300"
         as="link"
         href="https://mdsilo.com/helpus"
       >
@@ -179,7 +179,7 @@ const LogoMenu = () => {
 };
 
 const btnClass = 'title flex items-center text-lg p-2';
-const btnIconClass = 'flex-shrink-0 mx-1 text-gray-600 dark:text-gray-400';
+const btnIconClass = 'shrink-0 mx-1 text-base-content/70';
 
 const OpenButton = () => {
   const tooltipPlacement = useTooltipPlacement();
@@ -221,7 +221,7 @@ const NewButton = () => {
           className={btnClass}
           onClick={onCreateNoteClick}
         >
-          <TbFeather size={25} className="flex-shrink-0 mx-1 text-primary-600" />
+          <TbFeather size={25} className="shrink-0 mx-1 text-primary" />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -252,7 +252,7 @@ const FeedButton = (props: ButtonProps) => {
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onViewFeed}>
-          <TbRss size={24} className="flex-shrink-0 mx-1 text-orange-600" />
+          <TbRss size={24} className="shrink-0 mx-1 text-orange-600" />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -355,7 +355,7 @@ export function FileDrop() {
       </DropdownItem>
       {isWeb && (
         <DropdownItem
-          className="border-t-2 border-gray-200 dark:border-gray-600"
+          className="border-t-2 border-base-300"
           onClick={async () => {
             try {
               await invoke('export_backup');
@@ -370,14 +370,14 @@ export function FileDrop() {
       )}
       <DropdownItem 
         onClick={onClear} 
-        className="border-t-2 border-gray-200 dark:border-gray-600"
+        className="border-t-2 border-base-300"
       >
         <TbClearAll size={18} className="mr-1" />
         <Tooltip content="Open Recent History"><span>Recent</span></Tooltip>
       </DropdownItem>
       <DropdownItem 
         onClick={onSave} 
-        className="border-t-2 border-gray-200 dark:border-gray-600"
+        className="border-t-2 border-base-300"
       >
         <TbDeviceFloppy size={18} className="mr-1" />
         <Tooltip content="Save All Data"><span>Save</span></Tooltip>
@@ -402,7 +402,7 @@ const FileButton = () => {
     <Menu>
       {({ open }) => (
         <>
-          <Menu.Button ref={btnRef} className="hover:bg-gray-200 dark:hover:bg-gray-700">
+          <Menu.Button ref={btnRef} className="hover:bg-base-content/10">
             <Tooltip content="File Menu" placement={tooltipPlacement}>
               <span className={btnClass}>
                 <MdFolderOpen size={24} className={btnIconClass} />
@@ -413,7 +413,7 @@ const FileButton = () => {
             <Portal>
               <Menu.Items
                 ref={setPopperElement}
-                className="z-20 w-42 overflow-hidden bg-white rounded shadow-popover dark:bg-gray-800 focus:outline-none"
+                className="z-20 w-42 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                 static
                 style={styles.popper}
                 {...attributes.popper}

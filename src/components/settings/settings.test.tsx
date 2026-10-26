@@ -50,9 +50,10 @@ describe('SettingsModal', () => {
     render(<SettingsModal isOpen handleClose={vi.fn()} />);
     await screen.findByText('Settings');
 
-    const darkToggle = screen.getByLabelText('', { selector: '#Theme' });
-    await userEvent.click(darkToggle);
-    expect(store.getState().darkMode).toBe(false);
+    const themeSelect = screen.getByLabelText('Theme');
+    expect(themeSelect).toHaveValue('system');
+    fireEvent.change(themeSelect, { target: { value: 'dracula' } });
+    expect(store.getState().theme).toBe('dracula');
 
     await userEvent.click(screen.getByLabelText('', { selector: '#Text-Direction' }));
     expect(store.getState().isRTL).toBe(true);

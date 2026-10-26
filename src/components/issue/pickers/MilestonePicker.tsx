@@ -16,17 +16,17 @@ export default function MilestonePicker({ issue, data }: { issue: Issue; data: I
         current && progress ? (
           <div>
             <div className="font-medium">{current.title}</div>
-            <div className="h-1.5 mt-1 bg-gray-200 rounded dark:bg-gray-700">
-              <div className="h-1.5 bg-green-600 rounded" style={{ width: `${progress.percent}%` }} />
+            <div className="h-1.5 mt-1 bg-base-300 rounded-sm">
+              <div className="h-1.5 bg-success rounded-sm" style={{ width: `${progress.percent}%` }} />
             </div>
           </div>
-        ) : (<span className="text-gray-500">No milestone</span>)
+        ) : (<span className="text-base-content/60">No milestone</span>)
       }
     >
       {(close) => (
         <>
           {choices.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-gray-500">No open milestones.</p>
+            <p className="px-3 py-2 text-sm text-base-content/60">No open milestones.</p>
           ) : choices.map((m) => (
             <button
               type="button"
@@ -41,13 +41,13 @@ export default function MilestonePicker({ issue, data }: { issue: Issue; data: I
             >
               <span className="w-4">{m.id === issue.milestone ? <IconCheck size={14} /> : null}</span>
               <span className="flex-1">{m.title}</span>
-              {m.dueOn ? <span className="text-xs text-gray-500">{m.dueOn}</span> : null}
+              {m.dueOn ? <span className="text-xs text-base-content/60">{m.dueOn}</span> : null}
             </button>
           ))}
           {current ? (
             <button
               type="button"
-              className={`${menuItemClass} border-t border-gray-200 dark:border-gray-600`}
+              className={`${menuItemClass} border-t border-base-300`}
               onClick={() => { apply((d) => setMilestone(d, issue.number)); close(); }}
             >
               Clear milestone

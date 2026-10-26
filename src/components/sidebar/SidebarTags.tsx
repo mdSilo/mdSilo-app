@@ -106,28 +106,28 @@ const SidebarTag = (
   return (
     <SidebarItem
       ref={forwardedRef}
-      className={`relative flex items-center justify-between overflow-x-hidden group focus:outline-none ${className}`}
+      className={`relative flex items-center justify-between overflow-x-hidden group focus:outline-hidden ${className}`}
       isHighlighted={isHighlighted}
       style={style}
       {...otherProps}
     >
       <div
         role="button"
-        className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
+        className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none text-ellipsis whitespace-nowrap"
         onClick={onClickTag}
         style={{ paddingLeft: `16px` }}
         draggable={false}
       >
         <div
-          className="p-1 rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
+          className="p-1 rounded-sm hover:bg-base-content/15 active:bg-base-content/25"
         >
           <IconHash 
-            className="flex-shrink-0 text-gray-500 dark:text-gray-100"
+            className="shrink-0 text-base-content/60"
             size={16}
             color={`${['purple','cyan','green','red','orange','blue','yellow'][node.num % 7]}`}
           />
         </div>
-        <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
+        <span className="overflow-hidden text-ellipsis whitespace-nowrap">
           {node.name}
         </span>
       </div>

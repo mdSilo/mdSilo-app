@@ -6,40 +6,46 @@
   "homepage": "https://mdsilo.com",
   "scripts": {
     "start": "vite --host 0.0.0.0 --port 3000",
-    "build": "yarn workspace mdsmirror build && vite build",
-    "start:web": "vite --config vite.web.config.ts --host 0.0.0.0",
-    "build:web": "yarn workspace mdsmirror build && vite build --config vite.web.config.ts",
-    "preview:web": "vite preview --config vite.web.config.ts",
+    "build": "pnpm --filter mdsmirror build && vite build",
+    "start:web": "vite --config vite.web.config.mts --host 0.0.0.0",
+    "build:web": "pnpm --filter mdsmirror build && vite build --config vite.web.config.mts",
+    "preview:web": "vite preview --config vite.web.config.mts",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint src packages/mdsmirror --ignore-pattern packages/mdsmirror/dist --ext .tsx,.ts",
     "lint-ignore": "ESLINT_USE_FLAT_CONFIG=false eslint src packages/mdsmirror --ignore-pattern packages/mdsmirror/dist --ext .tsx,.ts || true",
     "fix": "prettier --write src",
-    "tc": "yarn workspace mdsmirror build && tsc",
+    "tc": "pnpm --filter mdsmirror build && tsc",
     "tauri": "tauri"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.12.4",
     "@codemirror/language-data": "^6.5.2",
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "^6.43.13",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@headlessui/react": "^1.7.19",
+    "@lezer/highlight": "^1.2.5",
     "@lezer/markdown": "^1.7.2",
     "@popperjs/core": "^2.11.8",
     "@react-spring/web": "^10.1.2",
-    "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/typography": "^0.5.12",
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "^4.3.3",
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-dialog": "^2.8.3",
     "codemirror": "^6.0.2",
+    "copy-to-clipboard": "^3.3.3",
     "d3-drag": "^3.0.0",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
+    "daisyui": "^5.7.50",
     "fuse.js": "^7.5.0",
     "html2canvas": "1.4.1",
     "immer": "^11.2.9",
@@ -48,7 +54,7 @@
     "markmap-common": "^0.18.9",
     "markmap-lib": "0.18.12",
     "markmap-view": "0.18.12",
-    "mdsmirror": "^0.1.0",
+    "mdsmirror": "workspace:*",
     "prosemirror-utils": "^1.2.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -59,7 +65,7 @@
     "react-virtual": "^2.10.4",
     "react-virtualized": "^9.22.6",
     "styled-components": "^6.1.19",
-    "tailwindcss": "^3.4.3",
+    "tailwindcss": "^4.3.3",
     "tippy.js": "^6.3.7",
     "zustand": "^5.0.16"
   },
@@ -81,12 +87,10 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-highlight-words": "^0.16.7",
     "@types/react-virtualized": "^9.21.29",
-    "@types/tailwindcss": "^3.1.0",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "2.1.9",
-    "autoprefixer": "^10.4.17",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.1",
@@ -105,20 +109,6 @@
     "vite": "^5.4.10",
     "vitest": "^2.1.8"
   },
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ]
-  },
-  "resolutions": {
-    "@types/node": "22.13.1",
-    "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3",
-    "prosemirror-model": "1.25.11",
-    "prosemirror-state": "1.4.4",
-    "prosemirror-transform": "1.11.0",
-    "prosemirror-view": "1.42.3"
-  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -131,5 +121,5 @@
       "last 1 safari version"
     ]
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "pnpm@10.28.2"
 }

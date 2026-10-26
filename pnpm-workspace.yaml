@@ -1,0 +1,22 @@
+packages:
+  - packages/*
+
+# native binaries; core-js only prints a banner
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@swc/core'
+  - esbuild
+  - unrs-resolver
+ignoredBuiltDependencies:
+  - core-js
+  - core-js-pure
+
+# one copy of each, shared by the app and mdsmirror
+overrides:
+  '@types/node': 22.13.1
+  '@types/react': 19.2.14
+  '@types/react-dom': 19.2.3
+  prosemirror-model: 1.25.11
+  prosemirror-state: 1.4.4
+  prosemirror-transform: 1.11.0
+  prosemirror-view: 1.42.3

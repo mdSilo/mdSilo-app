@@ -16,7 +16,7 @@ Before you start contributing, please take a moment to read and understand this 
 
 Before you can start contributing to mdSilo, make sure you have the following prerequisites:
 
-- [Node.js](https://nodejs.org/en/download) and npm or yarn installed
+- [Node.js](https://nodejs.org/en/download) and [pnpm](https://pnpm.io/installation) installed (`corepack enable` sets up the version in `package.json`)
 - [Rust](https://www.rust-lang.org/tools/install) and Cargo Installed
 - [Git](https://git-scm.com/downloads) installed
 - Familiarity with [Tauri](https://tauri.app/) and [React](https://react.dev/)
@@ -25,8 +25,8 @@ Now, follow these steps:
 
 1. Fork the [mdSilo repository](https://github.com/mdsilo/mdSilo-app) on GitHub.
 2. Clone your forked repository to your local machine.
-3. Install project dependencies by running `npm run tauri dev` or `yarn install` in the project root.
-4. Start the development server with `npm run tauri dev` or `yarn run tauri dev`.
+3. Install project dependencies by running `pnpm install` in the project root.
+4. Start the development server with `pnpm tauri dev`.
 5. Make your changes, create new features, or fix bugs.
 
 ## How Can I Contribute?
@@ -45,6 +45,7 @@ Please follow these guidelines when contributing code to mdSilo:
 - Write clear and concise code with appropriate comments where necessary.
 - Ensure your changes do not introduce linting errors or break existing functionality.
 - Test your changes thoroughly before submitting a pull request.
+- Tests sit next to the code they test (`foo.ts` and `foo.test.ts`), fixtures in a `__fixtures__` folder nearby. Tests of a package in `packages/` stay in that package. `pnpm test` runs them all with Vitest (jsdom, setup in `src/setupTests.ts`).
 
 ## Submitting Changes
 

@@ -35,7 +35,7 @@ export function CorsProxySetting() {
     <div className="flex flex-col items-center mb-2">
       <div className="mb-2 text-center">
         <h1 className="text-base font-semibold">RSS CORS Proxy</h1>
-        <p className="mt-1 text-sm text-gray-700">
+        <p className="mt-1 text-sm text-base-content/80">
           Used when a feed can not be fetched directly. <code>{'{url}'}</code> is replaced
           by the feed url, or the url is appended. <code>none</code> to disable.
           Empty for default: the proxy of this site if any, otherwise a public proxy
@@ -45,7 +45,7 @@ export function CorsProxySetting() {
       <input
         type="text"
         aria-label="RSS CORS Proxy"
-        className="w-full p-1 rounded border-none outline-none text-sm"
+        className="w-full p-1 rounded-sm border-none outline-hidden text-sm"
         style={{ maxWidth: '24em' }}
         placeholder="https://proxy.example.com/?url={url}"
         value={proxy}

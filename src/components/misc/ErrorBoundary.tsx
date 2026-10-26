@@ -31,7 +31,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         fallback ?? (
-          <div className="flex items-center justify-center flex-1 flex-shrink-0 w-full h-full">
+          <div className="flex items-center justify-center flex-1 shrink-0 w-full h-full">
             <p>An unexpected error occurred.</p>
           </div>
         )

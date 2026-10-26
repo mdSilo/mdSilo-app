@@ -6,10 +6,10 @@ A local-first mind silo for storing ideas, thought, knowledge with a powerful al
 You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/releases) or build from the source code: 
 
 - install Rust: https://www.rust-lang.org/tools/install 
-- install Node js: https://nodejs.org
+- install Node js: https://nodejs.org, and pnpm: `corepack enable` (or see https://pnpm.io/installation)
 - `git clone https://github.com/mdSilo/mdSilo-app.git`
 - `cd mdSilo-app`
-- `yarn && yarn tauri build` or `npm install && npm run tauri build` 
+- `pnpm install && pnpm tauri build` 
 
 Then you can find the app in `./src-tauri/target/release` folder.
 
@@ -17,18 +17,18 @@ Then you can find the app in `./src-tauri/target/release` folder.
 
 The web version shares the frontend code in `./src` with the desktop app, files are stored in the browser (IndexedDB) instead of the disk. No Rust is needed: 
 
-- `yarn start:web`: dev server on http://localhost:3001
-- `yarn build:web`: build to `./dist-web`, a static site that can be served by any web server (set `MDSILO_WEB_BASE=/sub/path/` to serve from a sub path)
+- `pnpm start:web`: dev server on http://localhost:3001
+- `pnpm build:web`: build to `./dist-web`, a static site that can be served by any web server (set `MDSILO_WEB_BASE=/sub/path/` to serve from a sub path)
 
-How it works: `vite.web.config.ts` replaces the Tauri APIs (`@tauri-apps/api/*`, `@tauri-apps/plugin-dialog`) with the stand-ins in `./src/platform/web`, which handle the same commands as the Rust end (`src-tauri/src/lib.rs`) on a virtual file system in IndexedDB. A service worker (`./web/public/fs-sw.js`) serves the stored files by URL, so images and attachments can be displayed. Folders and files on your device can be imported via the Open Folder / Open File dialog, exported files are downloaded by the browser.
+How it works: `vite.web.config.mts` replaces the Tauri APIs (`@tauri-apps/api/*`, `@tauri-apps/plugin-dialog`) with the stand-ins in `./src/platform/web`, which handle the same commands as the Rust end (`src-tauri/src/lib.rs`) on a virtual file system in IndexedDB. A service worker (`./web/public/fs-sw.js`) serves the stored files by URL, so images and attachments can be displayed. Folders and files on your device can be imported via the Open Folder / Open File dialog, exported files are downloaded by the browser.
 
 Backup: clearing the site data of the browser deletes the notes, so back up regularly via the **mdSilo** menu (top of sidebar) > **Export Backup**, which downloads all files as a zip. To restore, unzip it and import the folder via Open Folder > Import Folder.
 
 RSS feeds: browsers block most feeds by CORS, so a feed is fetched directly first, then via a CORS proxy. The proxy in use, in order:
 
 1. Settings > RSS CORS Proxy, e.g. `https://proxy.example.com/?url={url}` (`{url}` is replaced by the encoded feed url, otherwise the url is appended); `none` to disable
-2. build time default: `MDSILO_WEB_CORS_PROXY=https://proxy.example.com/?url={url} yarn build:web`
-3. the built-in proxy `/__cors_proxy__` of `yarn start:web` / `yarn preview:web`, if detected
+2. build time default: `MDSILO_WEB_CORS_PROXY=https://proxy.example.com/?url={url} pnpm build:web`
+3. the built-in proxy `/__cors_proxy__` of `pnpm start:web` / `pnpm preview:web`, if detected
 4. a public proxy ([allorigins](https://allorigins.win)) on static hosting, which can see the feed urls
 
 To run your own proxy (same API, GET to public http(s) addresses only):

@@ -111,7 +111,7 @@ describe('HeatMap', () => {
     const { container } = render(<HeatMap noteList={notes} onClickCell={vi.fn()} />);
     expect(container.querySelectorAll('rect')).toHaveLength(53 * 7);
     // 6 created + 6 updated today => 12 activities
-    expect(container.querySelectorAll('rect.fill-green-500')).toHaveLength(1);
+    expect(container.querySelectorAll('rect.fill-primary')).toHaveLength(1);
     expect(screen.getByText(/Activity: 12/)).toBeInTheDocument();
     expect(store.getState().activities[today()]).toEqual({ activityNum: 12, createNum: 6, updateNum: 6 });
   });
@@ -120,8 +120,8 @@ describe('HeatMap', () => {
     store.getState().setActivities({ [today()]: { activityNum: 7, createNum: 3, updateNum: 4 } });
     const onClickCell = vi.fn();
     const { container } = render(<HeatMap noteList={[]} onClickCell={onClickCell} />);
-    expect(container.querySelectorAll('rect.fill-cyan-500')).toHaveLength(1);
-    const todayRect = container.querySelector('rect.fill-cyan-500') as SVGRectElement;
+    expect(container.querySelectorAll('rect.fill-primary\\/60')).toHaveLength(1);
+    const todayRect = container.querySelector('rect.fill-primary\\/60') as SVGRectElement;
     await userEvent.click(todayRect);
     expect(onClickCell).toHaveBeenCalledWith(today());
   });

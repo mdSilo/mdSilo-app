@@ -61,7 +61,7 @@ export function Mindmap(props: Props) {
   }, [initDir, title]);
 
   return (
-    <div className={`w-full h-full bg-slate-100 ${className}`}>
+    <div className={`w-full h-full bg-base-200 ${className}`}>
       <svg
         id="mindmap"
         ref={svgRef}
@@ -71,7 +71,7 @@ export function Mindmap(props: Props) {
         width="100%" 
       />
       <div className="flex items-center justify-center mt-2">
-        <button className="text-xs hover:bg-gray-300 dark:hover:bg-gray-700" onClick={saveSVG}>
+        <button className="text-xs hover:bg-base-content/15" onClick={saveSVG}>
           SAVE RAW SVG
         </button>
       </div>

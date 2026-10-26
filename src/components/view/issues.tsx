@@ -16,7 +16,7 @@ import type { IssueState } from 'components/issue/types';
 import type { IssuesTab as Tab } from 'context/viewReducer';
 
 const selectClass =
-  'py-1 pl-2 pr-8 text-sm bg-transparent border-gray-300 rounded dark:border-gray-600 dark:bg-gray-800';
+  'py-1 pl-2 pr-8 text-sm bg-transparent border-base-300 rounded-sm';
 
 export default function Issues() {
   const { data, isLoaded, initDir } = useIssueData();
@@ -56,15 +56,15 @@ export default function Issues() {
   };
 
   if (!initDir) {
-    return <p className="p-8 text-gray-500">Open a folder to track issues.</p>;
+    return <p className="p-8 text-base-content/60">Open a folder to track issues.</p>;
   }
 
   const tabClass = (t: Tab) =>
-    `flex items-center gap-1 px-3 py-1 rounded ${tab === t ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`;
+    `flex items-center gap-1 px-3 py-1 rounded-sm ${tab === t ? 'bg-base-300 font-semibold' : 'hover:bg-base-content/5'}`;
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col w-full h-full overflow-y-auto bg-white dark:bg-black dark:text-gray-200">
+      <div className="flex flex-col w-full h-full overflow-y-auto bg-base-100">
         <div className="w-full max-w-5xl px-6 py-4 mx-auto">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <button type="button" className={tabClass('issues')} onClick={() => setTab('issues')}>
@@ -74,10 +74,10 @@ export default function Issues() {
               <IconTasks size={16} /> Tasks
             </button>
             <button type="button" className={tabClass('labels')} onClick={() => setTab('labels')}>
-              <IconTag size={16} /> Labels <span className="text-xs text-gray-500">{data.labels.length}</span>
+              <IconTag size={16} /> Labels <span className="text-xs text-base-content/60">{data.labels.length}</span>
             </button>
             <button type="button" className={tabClass('milestones')} onClick={() => setTab('milestones')}>
-              <IconFlag size={16} /> Milestones <span className="text-xs text-gray-500">{data.milestones.length}</span>
+              <IconFlag size={16} /> Milestones <span className="text-xs text-base-content/60">{data.milestones.length}</span>
             </button>
             <span className="flex-1" />
             <button type="button" className={btnClass} onClick={() => dispatch({ view: 'project' })}>Projects</button>
@@ -87,7 +87,7 @@ export default function Issues() {
           </div>
 
           {!isLoaded ? (
-            <p className="text-gray-500">Loading issues…</p>
+            <p className="text-base-content/60">Loading issues…</p>
           ) : tab === 'tasks' ? (
             <NoteTaskList data={data} />
           ) : tab === 'labels' ? (
@@ -97,7 +97,7 @@ export default function Issues() {
           ) : (
             <>
               {creating ? (
-                <div className="p-3 mb-4 border border-gray-200 rounded dark:border-gray-700" data-testid="new-issue-form">
+                <div className="p-3 mb-4 border border-base-300 rounded-sm" data-testid="new-issue-form">
                   <input
                     aria-label="New issue title"
                     className={`${inputClass} w-full mb-2 text-lg`}
@@ -107,7 +107,7 @@ export default function Issues() {
                     onChange={(e) => setNewTitle(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') submitNew(); }}
                   />
-                  <div className="px-2 py-1 border border-gray-200 rounded min-h-[6rem] dark:border-gray-700">
+                  <div className="px-2 py-1 border border-base-300 rounded-sm min-h-24">
                     <IssueEditor defaultValue="" placeholder="Add a description… [[Note]] links a note" onChange={setNewBody} />
                   </div>
                   <div className="flex justify-end gap-2 mt-2">
@@ -127,14 +127,14 @@ export default function Issues() {
                 onChange={(e) => setQuery(e.target.value)}
               />
 
-              <div className="border border-gray-200 rounded dark:border-gray-700">
-                <div className="flex flex-wrap items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-800">
+              <div className="border border-base-300 rounded-sm">
+                <div className="flex flex-wrap items-center gap-3 px-4 py-2 bg-base-200">
                   {(['open', 'closed'] as IssueState[]).map((s) => (
                     <button
                       type="button"
                       key={s}
                       aria-pressed={parsed.state === s}
-                      className={`flex items-center gap-1 text-sm ${parsed.state === s ? 'font-semibold' : 'text-gray-500'}`}
+                      className={`flex items-center gap-1 text-sm ${parsed.state === s ? 'font-semibold' : 'text-base-content/60'}`}
                       onClick={() => update({ state: parsed.state === s ? undefined : s })}
                     >
                       <StateIcon state={s} size={16} />

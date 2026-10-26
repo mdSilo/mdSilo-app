@@ -3,6 +3,7 @@ import { invoke , convertFileSrc } from '@tauri-apps/api/core';
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
 import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
+import { EDITOR_THEME } from 'lib/themes';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
 import RawMarkdown from 'components/md/Markdown';
@@ -303,12 +304,13 @@ function Note(props: Props) {
   );
 
   const customTheme = {
+    ...EDITOR_THEME,
     fontFamily: `${font}`,
     fontScale: [fontSize / 1.1, lineHt / 1.6, fontWt / 400],
   };
 
   const noteContainerClassName =
-    'flex flex-col w-full bg-white dark:bg-black dark:text-gray-200';
+    'flex flex-col w-full bg-base-100';
   const errorContainerClassName =
     `${noteContainerClassName} items-center justify-center h-full p-4`;
 
@@ -336,7 +338,7 @@ function Note(props: Props) {
           <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col flex-1 w-full mx-auto px-8 md:px-12">
               <div
-                className="px-2 pb-1 text-slate-500 text-sm cursor-pointer"
+                className="px-2 pb-1 text-base-content/60 text-sm cursor-pointer"
                 onClick={async (e) => {
                   e.preventDefault();
                   const parentDir: string = await getParentDir(notePath);
@@ -410,13 +412,13 @@ function Note(props: Props) {
                 }}
               >
                 <IconCaretRight
-                  className={`mr-1 text-gray-500 dark:text-gray-200 ${showBacklink ? 'rotate-90' : ''}`}
+                  className={`mr-1 text-base-content/60 ${showBacklink ? 'rotate-90' : ''}`}
                   size={16}
                   fill="currentColor"
                 />
                   BackLinks
               </button>
-              <div className="pt-2 border-t-2 border-gray-200 dark:border-gray-600">
+              <div className="pt-2 border-t-2 border-base-300">
                 {showBacklink ? (<Backlinks className="mx-4 mb-8" isCollapse={false} />) : null}
               </div>
               <IssueRefs noteId={noteId} title={title} className="mb-8" />

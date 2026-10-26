@@ -32,18 +32,18 @@ export default function ProjectCard({ issue, data, status, onOpen, overlay = fal
       {...attributes}
       {...listeners}
       data-testid="project-card"
-      className={`p-2 bg-white border border-gray-200 rounded shadow-sm cursor-grab dark:bg-gray-900 dark:border-gray-700 ${isDragging ? 'opacity-40' : ''} ${overlay ? 'shadow-lg' : ''}`}
+      className={`p-2 bg-base-100 border border-base-300 rounded-sm shadow-xs cursor-grab ${isDragging ? 'opacity-40' : ''} ${overlay ? 'shadow-lg' : ''}`}
       onClick={() => onOpen?.(issue.number)}
     >
-      <div className="flex items-center gap-1 text-xs text-gray-500">
+      <div className="flex items-center gap-1 text-xs text-base-content/60">
         <StateIcon state={issue.state} size={14} />#{issue.number}
       </div>
-      <div className="my-1 text-sm font-medium break-words">{issue.title}</div>
+      <div className="my-1 text-sm font-medium wrap-break-word">{issue.title}</div>
       {labels.length || milestone ? (
         <div className="flex flex-wrap items-center gap-1">
           {labels.map((l) => <LabelChip key={l.id} label={l} />)}
           {milestone ? (
-            <span className="flex items-center gap-1 text-xs text-gray-500"><IconFlag size={12} />{milestone.title}</span>
+            <span className="flex items-center gap-1 text-xs text-base-content/60"><IconFlag size={12} />{milestone.title}</span>
           ) : null}
         </div>
       ) : null}

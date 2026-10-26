@@ -54,7 +54,7 @@ export default function ProjectColumn(props: Props) {
       ref={setNodeRef}
       style={style}
       data-testid="project-column"
-      className={`flex flex-col flex-shrink-0 w-72 max-h-full bg-gray-100 rounded dark:bg-gray-800 ${isDragging ? 'opacity-40' : ''} ${isOver ? 'ring-2 ring-primary-400' : ''}`}
+      className={`flex flex-col shrink-0 w-72 max-h-full bg-base-200 rounded-sm ${isDragging ? 'opacity-40' : ''} ${isOver ? 'ring-2 ring-primary' : ''}`}
     >
       <div
         {...attributes}
@@ -77,14 +77,14 @@ export default function ProjectColumn(props: Props) {
             {status.name}
           </button>
         )}
-        <span className="text-xs text-gray-500">{issues.length}</span>
+        <span className="text-xs text-base-content/60">{issues.length}</span>
         <span className="flex-1" />
         <button
           type="button"
           aria-label={`Moving here closes issues: ${status.closes ? 'on' : 'off'}`}
           aria-pressed={!!status.closes}
           title={status.closes ? 'Moving an item here closes it' : 'Click: moving an item here closes it'}
-          className={status.closes ? 'text-purple-600' : 'text-gray-400 opacity-0 group-hover:opacity-100'}
+          className={status.closes ? 'text-purple-600' : 'text-base-content/50 opacity-0 group-hover:opacity-100'}
           onClick={onToggleCloses}
         >
           <IconCloses size={16} />
@@ -92,7 +92,7 @@ export default function ProjectColumn(props: Props) {
         <button
           type="button"
           aria-label={`Delete column ${status.name}`}
-          className="text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-600"
+          className="text-base-content/50 opacity-0 group-hover:opacity-100 hover:text-error/80"
           onClick={() => {
             if (window.confirm(`Delete column "${status.name}"? Its items move to the first column.`)) onDelete();
           }}
@@ -100,7 +100,7 @@ export default function ProjectColumn(props: Props) {
           <IconTrash size={16} />
         </button>
       </div>
-      <div className="flex flex-col flex-1 gap-2 px-2 pb-2 overflow-y-auto min-h-[3rem]">
+      <div className="flex flex-col flex-1 gap-2 px-2 pb-2 overflow-y-auto min-h-12">
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {issues.map((issue) => (
             <ProjectCard key={issue.number} issue={issue} data={data} status={status.id} onOpen={onOpen} />
@@ -131,7 +131,7 @@ export default function ProjectColumn(props: Props) {
         ) : (
           <button
             type="button"
-            className="flex items-center w-full gap-1 px-2 py-1 text-sm text-gray-500 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="flex items-center w-full gap-1 px-2 py-1 text-sm text-base-content/60 rounded-sm hover:bg-base-content/10"
             onClick={() => setAdding(true)}
           >
             <IconPlus size={14} /> Add item

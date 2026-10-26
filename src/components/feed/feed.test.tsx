@@ -102,7 +102,7 @@ describe('ChannelList', () => {
     render(<ChannelList {...p} />);
     await userEvent.click(screen.getByText('Pod Show'));
     expect(p.onClickFeed).toHaveBeenCalledWith('https://pod.example/rss');
-    expect(screen.getByText('Pod Show').closest('.cursor-pointer')).toHaveClass('border-green-500');
+    expect(screen.getByText('Pod Show').closest('.cursor-pointer')).toHaveClass('border-primary');
     await userEvent.click(screen.getByText('Starred'));
     expect(p.onClickStar).toHaveBeenCalled();
     const [refresh, manage] = screen.getAllByRole('button');
@@ -155,7 +155,7 @@ describe('Channel', () => {
     expect(item.querySelector('svg')).toBeInTheDocument();
     await userEvent.click(item);
     expect(p.onClickArticle).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
-    expect(item).toHaveClass('bg-blue-200');
+    expect(item).toHaveClass('bg-info/15');
     expect(item.querySelector('svg')).not.toBeInTheDocument();
 
     const [markAll, refresh] = screen.getAllByRole('button');
@@ -208,7 +208,7 @@ describe('ArticleView', () => {
     expect(hideChannelCol).toHaveBeenCalled();
     await userEvent.click(clickable[1]);
     expect(starArticle).toHaveBeenCalledWith('https://tech.example/1', 1);
-    expect(clickable[1].querySelector('svg')).toHaveClass('fill-red-500');
+    expect(clickable[1].querySelector('svg')).toHaveClass('fill-error');
     await userEvent.click(clickable[2]);
     expect(store.getState().currentPod).toMatchObject({ title: 'Article One', url: 'ep.mp3', article_url: 'https://tech.example/1' });
   });

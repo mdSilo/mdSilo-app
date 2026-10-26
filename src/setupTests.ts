@@ -83,4 +83,7 @@ afterEach(async () => {
   vi.mocked(dialog.save).mockReset().mockImplementation(async () => null);
   localStorage.clear();
   resetStore();
+  // the theme is applied on <html> (useTheme)
+  delete document.documentElement.dataset.theme;
+  document.documentElement.classList.remove('dark');
 });

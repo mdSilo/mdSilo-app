@@ -31,12 +31,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: pnpm
 
-      - run: yarn --cwd packages/mdsmirror install
-      - run: yarn install --frozen-lockfile --network-timeout 1000000
+      - run: pnpm install --frozen-lockfile
 
       - name: Check Cloudflare secrets
         id: cf
@@ -69,7 +70,7 @@ jobs:
           MDSILO_WEB_CORS_PROXY: ${{ vars.MDSILO_WEB_CORS_PROXY || (steps.proxy.outputs.url && format('{0}/?url={1}', steps.proxy.outputs.url, '{url}')) || '' }}
         run: |
           echo "base: $MDSILO_WEB_BASE, cors proxy: ${MDSILO_WEB_CORS_PROXY:-<public fallback>}"
-          yarn build:web
+          pnpm build:web
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

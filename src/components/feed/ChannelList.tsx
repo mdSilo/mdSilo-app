@@ -26,7 +26,7 @@ export function ChannelList(props: Props) {
         {channelList.map((channel: ChannelType, idx: number) => {
           const { unread = 0, title, ty, link } = channel;
           const ico = getFavicon(link);
-          const activeClass = `${highlighted?.link === link ? 'border-l-2 border-green-500' : ''}`;
+          const activeClass = `${highlighted?.link === link ? 'border-l-2 border-primary' : ''}`;
           
           return (
             <div 
@@ -40,12 +40,12 @@ export function ChannelList(props: Props) {
               <Tooltip content={channel.link} placement="top">
                 <div className="flex flex-row items-center justify-start mr-1">
                   <img src={ico} className="flex-none h-4 w-4 mx-1" alt=">" />
-                  <span className="text-sm text-black dark:text-white">{title}</span>
+                  <span className="text-sm text-base-content">{title}</span>
                 </div>
               </Tooltip>
               {/* stick to the visible right edge when the list scrolls horizontally */}
-              <span className="sticky right-0 flex flex-none items-center justify-between pl-1 bg-white dark:bg-gray-900">
-                <span className="text-sm dark:text-white">{unread}</span>
+              <span className="sticky right-0 flex flex-none items-center justify-between pl-1 bg-base-100">
+                <span className="text-sm">{unread}</span>
                 {ty === 'rss' 
                   ? <IconRss size={12} className="ml-1 text-orange-500" /> 
                   : <IconHeadphones size={12} className="ml-1 text-purple-500" />
@@ -64,12 +64,12 @@ export function ChannelList(props: Props) {
         <div className="flex flex-end">
           <Tooltip content="Refresh All" placement="bottom">
             <button className="cursor-pointer" onClick={refreshList}>
-              <IconRefresh size={24} className="m-1 dark:text-white" />
+              <IconRefresh size={24} className="m-1" />
             </button>
           </Tooltip>
           <Tooltip content="Manage Channel" placement="bottom">
             <button className="cursor-pointer" onClick={onShowManager}>
-              <IconSettings size={24} className="m-1 dark:text-white" />
+              <IconSettings size={24} className="m-1" />
             </button>
           </Tooltip>
         </div>
@@ -77,7 +77,7 @@ export function ChannelList(props: Props) {
       {refreshing && (
         <div className="flex flex-col items-center justify-center">
           <Spinner className="w-4 h-4" />
-          <span className="dark:text-white">{doneNum}/{channelList.length}</span>
+          <span className="">{doneNum}/{channelList.length}</span>
         </div>
       )}
       {/* long feed titles do not wrap: the list scrolls horizontally */}
@@ -89,8 +89,8 @@ export function ChannelList(props: Props) {
           onClick={onClickStar}
         >
           <div className="flex flex-row items-center justify-start">
-            <IconStar size={18} className="m-1 fill-yellow-500 text-yellow-500" />
-            <span className="m-1 dark:text-white">Starred</span>
+            <IconStar size={18} className="m-1 fill-warning text-warning" />
+            <span className="m-1">Starred</span>
           </div>
         </div>
         {renderFeedList()}

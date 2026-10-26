@@ -44,18 +44,18 @@ export function ArticleView(props: ViewProps) {
   return (
     <div className="h-full ">
       <div className="px-2 mb-1">
-        <div className="m-1 text-3xl font-bold dark:text-white">{title}</div>
+        <div className="m-1 text-3xl font-bold">{title}</div>
         <div className="flex items-center justify-start">
           <span className="mr-2 my-1 cursor-pointer" onClick={hideChannelCol}>
-            <IconChevronLeft size={20} className="dark:text-slate-400" />
+            <IconChevronLeft size={20} className="" />
           </span>
           <Tooltip content={feed_link} placement="top">
             <span className="h-4 w-4 m-1"><img src={ico} alt="#"/></span>
           </Tooltip>
-          <span className="m-1 dark:text-slate-400">{fmtDatetime(published || '')}</span>
-          <span className="m-1 dark:text-slate-400">{author}</span>
+          <span className="m-1">{fmtDatetime(published || '')}</span>
+          <span className="m-1">{author}</span>
           <a
-            className="m-1 dark:text-slate-400"
+            className="m-1"
             target="_blank"
             rel="noreferrer"
             href={url}
@@ -69,7 +69,7 @@ export function ArticleView(props: ViewProps) {
               setIsStar(!isStar);
             }}
           >
-            <IconStar size={20} className={`text-red-500 ${isStar ? 'fill-red-500' : ''}`} />
+            <IconStar size={20} className={`text-error ${isStar ? 'fill-error' : ''}`} />
           </span>
           {article.audio_url.trim() && (
             <span 
@@ -85,7 +85,7 @@ export function ArticleView(props: ViewProps) {
       </div>
       <div className="p-2">
         <div
-          className="text-lg p-2 mt-2 content text-black dark:text-slate-400"
+          className="text-lg p-2 mt-2 content text-base-content"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{__html: pageContent}}
         />

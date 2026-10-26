@@ -1,6 +1,7 @@
 import { useStore } from 'lib/store';
 import type { SideMenuOrientation } from 'lib/userSettings';
 import { isWeb } from 'file/util';
+import { SYSTEM_THEME, THEMES } from 'lib/themes';
 import { BaseModal } from './BaseModal';
 import { SettingsToggle } from './SettingsToggle';
 import { CorsProxySetting } from './CorsProxySetting';
@@ -15,8 +16,8 @@ type Props = {
 
 export default function SettingsModal({ isOpen, handleClose }: Props) {
 
-  const darkMode = useStore((state) => state.darkMode);
-  const setDarkMode = useStore((state) => state.setDarkMode);
+  const theme = useStore((state) => state.theme);
+  const setTheme = useStore((state) => state.setTheme);
   const useAsset = useStore((state) => state.useAsset);
   const setUseAsset = useStore((state) => state.setUseAsset);
   const isRTL = useStore((state) => state.isRTL);
@@ -45,14 +46,26 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
 
   return (
     <BaseModal title="Settings" isOpen={isOpen} handleClose={handleClose}>
-      <div className="flex-1 p-2 bg-gray-100">
-        <SettingsToggle
-          name="Theme" 
-          check={darkMode}
-          handleCheck={setDarkMode}
-          optionLeft="Light Mode" 
-          optionRight="Dark Mode"
-        />
+      <div className="flex-1 p-2 bg-base-200">
+        <div className="flex flex-col items-center mb-2">
+          <label htmlFor="select-theme" className="mb-2 text-base font-semibold">
+            Theme
+          </label>
+          <select
+            id="select-theme"
+            className="w-full p-1 rounded-sm text-primary border-none"
+            style={{ width: '12em' }}
+            value={theme}
+            onChange={(event) => setTheme(event.target.value)}
+          >
+            <option value={SYSTEM_THEME}>Follow System</option>
+            {THEMES.map((t) => (
+              <option key={t.name} value={t.name}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <SettingsToggle
           name="Use Assets Folder" 
           descript="To store images, files and support relative path"
@@ -81,7 +94,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           </label>
           <select
             id="side-menu-orientation"
-            className="w-full p-1 rounded text-primary-500 border-none"
+            className="w-full p-1 rounded-sm text-primary border-none"
             style={{ width: '12em' }}
             value={sideMenuOrientation}
             onChange={(event) => {
@@ -105,7 +118,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             <select 
               name="select-font" 
               id="select-font"
-              className="w-full p-1 rounded text-primary-500 border-none"
+              className="w-full p-1 rounded-sm text-primary border-none"
               style={{width: '8em'}}
               value={font || 'Default'}
               onChange={(ev) => {
@@ -123,18 +136,18 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
         </div>
         <div className="flex flex-col items-center">
           <div className="flex flex-row items-center justify-center m-1">
-            <span className="text-sm text-gray-600 mr-2">Font Size: </span>
-            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={fontSize.toFixed(1)} step="0.1" onChange={e => setSize(Number(e.target.value) || 1.1)} />
-            <span className="text-sm text-gray-600">em</span>
+            <span className="text-sm text-base-content/70 mr-2">Font Size: </span>
+            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={fontSize.toFixed(1)} step="0.1" onChange={e => setSize(Number(e.target.value) || 1.1)} />
+            <span className="text-sm text-base-content/70">em</span>
           </div>
           <div className="flex flex-row items-center justify-center m-1">
-            <span className="text-sm text-gray-600 mr-2">Line Height: </span>
-            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={lineHeight.toFixed(1)} step="0.1" onChange={e => setHeight(Number(e.target.value) || 1.6)} />
-            <span className="text-sm text-gray-600">em</span>
+            <span className="text-sm text-base-content/70 mr-2">Line Height: </span>
+            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={lineHeight.toFixed(1)} step="0.1" onChange={e => setHeight(Number(e.target.value) || 1.6)} />
+            <span className="text-sm text-base-content/70">em</span>
           </div>
           <div className="flex flex-row items-center justify-center m-1">
-            <span className="text-sm text-gray-600 mr-2">Font Weight: </span>
-            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={fontWt.toFixed()} step="100" onChange={e => setWt(Number(e.target.value) || 400)} />
+            <span className="text-sm text-base-content/70 mr-2">Font Weight: </span>
+            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={fontWt.toFixed()} step="100" onChange={e => setWt(Number(e.target.value) || 400)} />
           </div>
         </div>
       </div>

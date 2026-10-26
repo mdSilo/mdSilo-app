@@ -41,17 +41,17 @@ const SidebarNoteLinkDropdown = (props: NoteProps) => {
           <>
             <Menu.Button
               ref={containerRef}
-              className={`rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500 ${className}`}
+              className={`rounded-sm hover:bg-base-content/15 active:bg-base-content/25 ${className}`}
             >
               <span className="flex items-center justify-center w-8 h-8">
-                <IconDots className="text-gray-600 dark:text-gray-200" />
+                <IconDots className="text-base-content/70" />
               </span>
             </Menu.Button>
             {open && (
               <Portal>
                 <Menu.Items
                   ref={setPopperElement}
-                  className="z-20 w-56 overflow-hidden bg-white rounded shadow-popover dark:bg-gray-800 focus:outline-none"
+                  className="z-20 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                   static
                   style={styles.popper}
                   {...attributes.popper}
@@ -130,15 +130,15 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
           <>
             <Menu.Button
               ref={containerRef}
-              className={`rounded hover:bg-gray-300 dark:hover:bg-gray-600 ${className}`}
+              className={`rounded-sm hover:bg-base-content/15 ${className}`}
             >
               {menuBtn ? (
-                <span className="px-2 text-sm bg-blue-500 text-white rounded overflow-hidden">
+                <span className="px-2 text-sm bg-secondary text-secondary-content rounded-sm overflow-hidden">
                   {menuBtn}
                 </span>
               ) : (
                 <span className="flex items-center justify-center w-8 h-8">
-                  <IconDotsDiagonal className="text-gray-600 dark:text-gray-200" />
+                  <IconDotsDiagonal className="text-base-content/70" />
                 </span>
               )}
             </Menu.Button>
@@ -146,7 +146,7 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
               <Portal>
                 <Menu.Items
                   ref={setPopperElement}
-                  className="z-20 w-56 overflow-hidden bg-white rounded shadow-popover dark:bg-gray-800 focus:outline-none"
+                  className="z-20 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                   static
                   style={styles.popper}
                   {...attributes.popper}

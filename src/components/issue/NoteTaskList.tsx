@@ -10,9 +10,9 @@ import { StateIcon, btnClass } from './common';
 import type { IssueData } from './types';
 
 const TAG_CLASS: Record<TaskTag, string> = {
-  todo: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  doing: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  done: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  todo: 'bg-info/15 text-info',
+  doing: 'bg-error/15 text-error',
+  done: 'bg-success/15 text-success',
 };
 
 type Filter = 'all' | TaskTag;
@@ -50,7 +50,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
 
   return (
     <div data-testid="note-tasks">
-      <p className="mb-3 text-sm text-gray-500">
+      <p className="mb-3 text-sm text-base-content/60">
         Tasks written in notes with <code>#todo#</code>, <code>#doing#</code>, <code>#done#</code> or as
         checkboxes (<code>- [ ]</code>, <code>- [x]</code>). Create an issue from a task to track it here:
         the issue links back to its note and follows the task when it changes or is removed.
@@ -61,10 +61,10 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
             type="button"
             key={f}
             aria-pressed={filter === f}
-            className={`px-2 py-1 text-sm rounded ${filter === f ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+            className={`px-2 py-1 text-sm rounded-sm ${filter === f ? 'bg-base-300 font-semibold' : 'hover:bg-base-content/5'}`}
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? 'All' : f[0].toUpperCase() + f.slice(1)} <span className="text-xs text-gray-500">{count(f)}</span>
+            {f === 'all' ? 'All' : f[0].toUpperCase() + f.slice(1)} <span className="text-xs text-base-content/60">{count(f)}</span>
           </button>
         ))}
         <label className="flex items-center gap-1 ml-2 text-sm">
@@ -77,30 +77,30 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
         </button>
       </div>
       {shown.length === 0 ? (
-        <p className="p-8 text-center text-gray-500">No tasks in notes.</p>
+        <p className="p-8 text-center text-base-content/60">No tasks in notes.</p>
       ) : (
-        <ul className="border border-gray-200 rounded dark:border-gray-700">
+        <ul className="border border-base-300 rounded-sm">
           {shown.map((task) => {
             const issue = issueOfTask(data.issues, task);
             return (
               <li
                 key={task.id}
-                className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 last:border-b-0 dark:border-gray-700"
+                className="flex items-center gap-2 px-3 py-2 border-b border-base-300 last:border-b-0"
                 data-testid="note-task"
               >
                 <span className={`px-2 text-xs rounded-full whitespace-nowrap ${TAG_CLASS[task.tag]}`}>
                   {task.kind === 'checkbox' ? (task.tag === 'done' ? '[x]' : '[ ]') : `#${task.tag}`}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="break-words">{task.text || <i className="text-gray-500">(no text)</i>}</div>
-                  <button type="button" className="text-xs link" title={task.noteId} onClick={() => openNote(task.noteId)}>
+                  <div className="wrap-break-word">{task.text || <i className="text-base-content/60">(no text)</i>}</div>
+                  <button type="button" className="text-xs ms-link" title={task.noteId} onClick={() => openNote(task.noteId)}>
                     {task.noteTitle}
                   </button>
                 </div>
                 {issue ? (
                   <button
                     type="button"
-                    className="flex items-center gap-1 text-sm hover:text-primary-500"
+                    className="flex items-center gap-1 text-sm hover:text-primary/75"
                     onClick={() => dispatch({ view: 'issue', number: issue.number })}
                   >
                     <StateIcon state={issue.state} size={16} />#{issue.number}

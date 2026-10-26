@@ -19,7 +19,7 @@ export default function DirRenameModal(props: Props) {
         <div className={`flex flex-col flex-1 overflow-y-auto`}>
           <input
             type="text"
-            className="block py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+            className="block py-1 mx-4 my-2 bg-base-200 border-base-300 rounded-sm"
             placeholder="Rename folder"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}

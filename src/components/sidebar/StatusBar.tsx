@@ -26,14 +26,14 @@ function Statusbar(props: Props) {
   }, [dispatch])
 
   return (
-    <div className={`flex items-center justify-between w-full bg-gray-50 dark:bg-gray-800 dark:text-white ${className}`}>
+    <div className={`flex items-center justify-between w-full bg-base-200 ${className}`}>
       <button className='mx-1' onClick={() => setHide(!hide)}>
-        <IconHeadphones size={12} className="dark:text-slate-300" />
+        <IconHeadphones size={12} className="" />
       </button>
       {currentPod && (
         <div className={`py-1 flex flex-row items-center justify-center ${hide ? 'hidden' : ''}`}>
           <span 
-            className="mx-1 text-xs break-words cursor-pointer" 
+            className="mx-1 text-xs wrap-break-word cursor-pointer" 
             onClick={async () => await toArticle(currentPod.article_url)}
           >
             {currentPod.title}

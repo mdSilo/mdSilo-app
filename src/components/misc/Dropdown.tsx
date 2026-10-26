@@ -70,7 +70,7 @@ export default function Dropdown(props: Props) {
             <Portal>
               <Menu.Items
                 ref={setPopperElement}
-                className={`z-20 w-52 overflow-hidden text-sm bg-white rounded shadow-popover dark:bg-gray-800 focus:outline-none ${itemsClassName}`}
+                className={`z-20 w-52 overflow-hidden text-sm bg-base-200 rounded-sm shadow-popover focus:outline-hidden ${itemsClassName}`}
                 static
                 style={styles.popper}
                 {...attributes.popper}
@@ -113,8 +113,8 @@ export function DropdownItem(props: DropdownItemProps) {
 
   const itemClassName = useCallback(
     (active: boolean) =>
-      `flex w-full items-center px-4 py-2 text-left text-sm text-gray-800 dark:text-gray-200 select-none ${
-        active ? 'bg-gray-100 dark:bg-gray-700' : ''
+      `flex w-full items-center px-4 py-2 text-left text-sm text-base-content select-none ${
+        active ? 'bg-base-content/10' : ''
       } ${className}`,
     [className]
   );

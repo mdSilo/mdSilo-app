@@ -15,7 +15,7 @@ type Props = {
 
 export default function IssueList({ issues, data, onOpen, onClickLabel, onClickMilestone, empty }: Props) {
   if (issues.length === 0) {
-    return <p className="p-8 text-center text-gray-500">{empty ?? 'No results.'}</p>;
+    return <p className="p-8 text-center text-base-content/60">{empty ?? 'No results.'}</p>;
   }
   const labelOf = new Map(data.labels.map((l) => [l.id, l]));
   return (
@@ -26,7 +26,7 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
         return (
           <li
             key={issue.number}
-            className="flex items-start gap-2 px-4 py-2 border-b border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+            className="flex items-start gap-2 px-4 py-2 border-b border-base-300 hover:bg-base-content/5"
             data-testid="issue-row"
           >
             <span className="mt-1"><StateIcon state={issue.state} /></span>
@@ -34,7 +34,7 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
               <div className="flex flex-wrap items-center gap-1">
                 <button
                   type="button"
-                  className="mr-1 font-semibold text-left hover:text-primary-500"
+                  className="mr-1 font-semibold text-left hover:text-primary/75"
                   onClick={() => onOpen(issue.number)}
                 >
                   {issue.title}
@@ -46,7 +46,7 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
                   ) : null;
                 })}
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-base-content/60">
                 <span>
                   #{issue.number} {issue.state === 'open' ? 'opened' : 'closed'}{' '}
                   <TimeAgo iso={issue.state === 'closed' && issue.closedAt ? issue.closedAt : issue.createdAt} />
@@ -54,7 +54,7 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
                 {milestone ? (
                   <button
                     type="button"
-                    className="flex items-center gap-1 hover:text-primary-500"
+                    className="flex items-center gap-1 hover:text-primary/75"
                     onClick={() => onClickMilestone?.(milestone.title)}
                   >
                     <IconFlag size={12} />{milestone.title}
@@ -64,7 +64,7 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
               </div>
             </div>
             {comments > 0 ? (
-              <span className="flex items-center gap-1 text-sm text-gray-500" title={`${comments} comments`}>
+              <span className="flex items-center gap-1 text-sm text-base-content/60" title={`${comments} comments`}>
                 <IconComment size={16} />{comments}
               </span>
             ) : null}

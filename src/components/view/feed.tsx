@@ -159,7 +159,7 @@ export default function Feed() {
     <ErrorBoundary>
       <div className="flex flex-row overflow-y-auto h-full">
         <div
-          className={`relative flex-none border-r-2 border-gray-200 dark:border-gray-800 ${hideCol ? 'hidden' : ''}`}
+          className={`relative flex-none border-r-2 border-base-300 ${hideCol ? 'hidden' : ''}`}
           style={{ width: channelCol.width }}
         >
           <div className="h-full p-1 overflow-hidden">
@@ -215,7 +215,7 @@ export default function Feed() {
                 onResizeEnd={articleCol.onResizeEnd}
               />
             </div>
-            <div className="flex-1 overflow-y-auto border-l-2 border-gray-200 dark:border-gray-800">
+            <div className="flex-1 overflow-y-auto border-l-2 border-base-300">
               <ArticleView 
                 article={currentArticle || storeArticle} 
                 starArticle={updateStarStatus} 

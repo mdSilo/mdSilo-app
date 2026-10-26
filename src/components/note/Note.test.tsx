@@ -118,6 +118,7 @@ describe('Note', () => {
   });
 
   test('switches to raw markdown and mindmap modes', () => {
+    store.getState().setDarkMode(true);
     setup();
     act(() => store.getState().setRawMode('raw'));
     expect(screen.queryByTestId('ms-editor')).not.toBeInTheDocument();

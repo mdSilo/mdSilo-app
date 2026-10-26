@@ -23,8 +23,8 @@ export default function NoteSumList(props: Props) {
     {
       id: anchor,
       labelNode: (
-        <div className="flex w-full mt-2 p-1 bg-gray-100 dark:bg-gray-800">
-          <span className="py-1 text-xl text-gray-800 dark:text-gray-100">{anchor}</span>
+        <div className="flex w-full mt-2 p-1 bg-base-200">
+          <span className="py-1 text-xl text-base-content">{anchor}</span>
           {isDate ? (
             <Tooltip content={`Recap: ${anchor}`}>
               <button className="px-2" onClick={onClick ? () => onClick(anchor) : undefined}>
@@ -59,13 +59,13 @@ const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
     labelNode: (
       <div className="flex flex-col w-full mx-auto overlfow-y-auto">
         <button 
-          className="link flex items-center py-2" 
+          className="ms-link flex items-center py-2" 
           onClick={async () => {
             await openFilePath(note.id, true);
             dispatch({view: 'md', params: { noteId: note.id }});
           }}
         >
-          <span className="text-2xl font-semibold overflow-x-hidden overflow-ellipsis whitespace-nowrap">
+          <span className="text-2xl font-semibold overflow-x-hidden text-ellipsis whitespace-nowrap">
             {note.title}
           </span>
         </button>

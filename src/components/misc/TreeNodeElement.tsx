@@ -32,7 +32,7 @@ const TreeNodeElement = (props: Props, forwardedRef: ForwardedRef<HTMLDivElement
     >
       {node.showArrow ? (
         <IconCaretRight
-          className={`flex-shrink-0 mr-1 text-gray-500 dark:text-gray-100 transform transition-transform ${
+          className={`shrink-0 mr-1 text-base-content/60 transform transition-transform ${
             !node.collapsed ? 'rotate-90' : ''
           }`}
           size={16}

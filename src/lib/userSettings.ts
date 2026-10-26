@@ -1,5 +1,6 @@
 import { Draft } from 'immer';
 import { setter, Setter, Store } from './store';
+import { isSystemDark, SYSTEM_THEME } from './themes';
 
 export enum Sort {
   TitleAscending = 'TITLE_ASCENDING',
@@ -24,7 +25,9 @@ export const ReadableNameBySort = {
 export type UserSettings = {
   userId: string,
   setUserId: Setter<string>;
-  darkMode: boolean;
+  theme: string; // daisyUI theme name, or 'system'
+  setTheme: Setter<string>;
+  darkMode: boolean; // the applied theme is dark, follows `theme`
   setDarkMode: Setter<boolean>;
   font: string;
   setFont: Setter<string>;
@@ -84,7 +87,10 @@ const userSettingsSlice = (
 ) => ({
   userId: '',
   setUserId: setter(set, 'userId'),
-  darkMode: true,
+  theme: SYSTEM_THEME,
+  setTheme: setter(set, 'theme'),
+  // as the system theme, not to re-render the editors on start
+  darkMode: isSystemDark(),
   setDarkMode: setter(set, 'darkMode'),
   font: '',
   setFont: setter(set, 'font'),

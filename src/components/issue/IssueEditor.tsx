@@ -1,5 +1,6 @@
 import { MouseEvent, useRef, useState } from 'react';
 import MsEditor, { embeds } from 'mdsmirror';
+import { EDITOR_THEME } from 'lib/themes';
 import { useStore } from 'lib/store';
 import useLinkHandlers from 'editor/hooks/useLinkHandlers';
 
@@ -59,6 +60,7 @@ export default function IssueEditor(props: Props) {
       <MsEditor
         value={initial}
         dark={darkMode}
+        theme={EDITOR_THEME}
         readOnly={readOnly}
         placeholder={placeholder}
         autoFocus={autoFocus}

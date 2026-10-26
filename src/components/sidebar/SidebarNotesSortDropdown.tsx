@@ -27,14 +27,14 @@ const SidebarNotesSortDropdown = (props: Props) => {
       {({ open }) => (
         <>
           <Menu.Button
-            className="rounded hover:bg-gray-200 active:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600"
+            className="rounded-sm hover:bg-base-content/10 active:bg-base-content/15"
             ref={buttonRef}
           >
             <Tooltip content="Sort">
               <span className="flex items-center justify-center w-6 h-6">
                 <IconSortDescending
                   size={16}
-                  className="text-gray-600 dark:text-gray-300"
+                  className="text-base-content/70"
                 />
               </span>
             </Tooltip>
@@ -42,7 +42,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
           {open && (
             <Portal>
               <Menu.Items
-                className="z-20 w-56 overflow-hidden bg-white rounded dark:bg-gray-800 shadow-popover focus:outline-none"
+                className="z-20 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                 static
                 ref={setPopperElement}
                 style={styles.popper}
@@ -56,15 +56,15 @@ const SidebarNotesSortDropdown = (props: Props) => {
                     <Menu.Item key={sort}>
                       {({ active }) => (
                         <button
-                          className={`flex w-full items-center px-4 py-2 text-left text-gray-800 dark:text-gray-200 text-sm ${
-                            showDivider ? 'border-b dark:border-gray-700' : ''
-                          } ${active ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                          className={`flex w-full items-center px-4 py-2 text-left text-base-content text-sm ${
+                            showDivider ? 'border-b border-base-300' : ''
+                          } ${active ? 'bg-base-content/10' : ''}`}
                           onClick={() => setCurrentSort(sort)}
                         >
                           <span
                             className={
                               isActive
-                                ? 'text-primary-600 dark:text-primary-400'
+                                ? 'text-primary'
                                 : undefined
                             }
                           >
@@ -73,7 +73,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
                           {isActive ? (
                             <IconCheck
                               size={18}
-                              className="ml-1 text-primary-600 dark:text-primary-400"
+                              className="ml-1 text-primary"
                             />
                           ) : null}
                         </button>

@@ -152,14 +152,14 @@ describe('useStore', () => {
 
 describe('persistence', () => {
   test('persists user settings but not session state', async () => {
-    store.getState().setDarkMode(false);
+    store.getState().setTheme('nord');
     store.getState().setCurrentNoteId('/a.md');
     await new Promise((r) => setTimeout(r, 0));
     const saved = JSON.parse(JSON.parse(localStorage.getItem('mdsilo-storage') as string));
-    expect(saved.state.darkMode).toBe(false);
+    expect(saved.state.theme).toBe('nord');
     expect(saved.state).not.toHaveProperty('currentNoteId');
     expect(saved.state).not.toHaveProperty('notes');
-    expect(saved.version).toBe(1);
+    expect(saved.version).toBe(2);
   });
 
   test('writes storage only when persisted settings change', async () => {
@@ -187,6 +187,8 @@ describe('persistence', () => {
     const persist = (store as unknown as { persist: { rehydrate: () => Promise<void> } }).persist;
     await persist.rehydrate();
     expect(store.getState().darkMode).toBe(false);
+    // the dark mode switch of v1 becomes the mdSilo theme
+    expect(store.getState().theme).toBe('mdsilo-light');
     expect(store.getState().fontSize).toBe(1.3);
     expect(store.getState().sidebarWidth).toBe(320);
     // unknown or broken data is ignored

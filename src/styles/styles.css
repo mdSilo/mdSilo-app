@@ -1,6 +1,290 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss' source(none);
+@source '../../src';
+@source '../../public';
+
+@plugin '@tailwindcss/typography';
+@plugin '@tailwindcss/forms';
+/*
+  Themes, applied as data-theme on <html> (useTheme), listed in lib/themes.ts.
+  Components use the theme colors: base-100/200/300 (surfaces), base-content
+  (text), primary, info, success, warning, error...
+*/
+@plugin 'daisyui' {
+  themes: cupcake, nord, retro, lemonade, dracula, forest, dim, night;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'mdsilo-light';
+  default: true;
+  color-scheme: light;
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98.5% 0 0);
+  --color-base-300: oklch(92.2% 0 0);
+  --color-base-content: oklch(20.5% 0 0);
+  --color-primary: oklch(59.6% 0.145 163.225);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(62.3% 0.214 259.815);
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: oklch(85.2% 0.199 91.936);
+  --color-accent-content: oklch(20.5% 0 0);
+  --color-neutral: oklch(37.1% 0 0);
+  --color-neutral-content: oklch(97% 0 0);
+  --color-info: oklch(68.5% 0.169 237.323);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(62.7% 0.194 149.214);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(79.5% 0.184 86.047);
+  --color-warning-content: oklch(20.5% 0 0);
+  --color-error: oklch(57.7% 0.245 27.325);
+  --color-error-content: oklch(100% 0 0);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'mdsilo-dark';
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: oklch(20.5% 0 0);
+  --color-base-200: oklch(26.9% 0 0);
+  --color-base-300: oklch(37.1% 0 0);
+  --color-base-content: oklch(92.2% 0 0);
+  --color-primary: oklch(76.5% 0.177 163.223);
+  --color-primary-content: oklch(20.5% 0 0);
+  --color-secondary: oklch(70.7% 0.165 254.624);
+  --color-secondary-content: oklch(20.5% 0 0);
+  --color-accent: oklch(85.2% 0.199 91.936);
+  --color-accent-content: oklch(20.5% 0 0);
+  --color-neutral: oklch(87% 0 0);
+  --color-neutral-content: oklch(20.5% 0 0);
+  --color-info: oklch(74.6% 0.16 232.661);
+  --color-info-content: oklch(20.5% 0 0);
+  --color-success: oklch(72.3% 0.219 149.579);
+  --color-success-content: oklch(20.5% 0 0);
+  --color-warning: oklch(85.2% 0.199 91.936);
+  --color-warning-content: oklch(20.5% 0 0);
+  --color-error: oklch(70.4% 0.191 22.216);
+  --color-error-content: oklch(20.5% 0 0);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* dark mode follows the `dark` class, set by the app */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary-50: var(--color-emerald-50);
+  --color-primary-100: var(--color-emerald-100);
+  --color-primary-200: var(--color-emerald-200);
+  --color-primary-300: var(--color-emerald-300);
+  --color-primary-400: var(--color-emerald-400);
+  --color-primary-500: var(--color-emerald-500);
+  --color-primary-600: var(--color-emerald-600);
+  --color-primary-700: var(--color-emerald-700);
+  --color-primary-800: var(--color-emerald-800);
+  --color-primary-900: var(--color-emerald-900);
+  --color-primary-950: var(--color-emerald-950);
+
+  /* gray is neutral */
+  --color-gray-50: var(--color-neutral-50);
+  --color-gray-100: var(--color-neutral-100);
+  --color-gray-200: var(--color-neutral-200);
+  --color-gray-300: var(--color-neutral-300);
+  --color-gray-400: var(--color-neutral-400);
+  --color-gray-500: var(--color-neutral-500);
+  --color-gray-600: var(--color-neutral-600);
+  --color-gray-700: var(--color-neutral-700);
+  --color-gray-800: var(--color-neutral-800);
+  --color-gray-900: var(--color-neutral-900);
+  --color-gray-950: var(--color-neutral-950);
+
+  --spacing-screen-10: 10vh;
+  --spacing-screen-80: 80vh;
+
+  --shadow-popover: rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
+
+  --animate-bounce-x: bounce-x 1s infinite;
+  @keyframes bounce-x {
+    0%,
+    100% {
+      transform: translateX(0);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateX(25%);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-base-300, currentcolor);
+  }
+
+  /* as Tailwind CSS v3: muted placeholders and pointer cursor on buttons */
+  input::placeholder,
+  textarea::placeholder {
+    color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* @tailwindcss/forms: theme colors instead of white and gray */
+  :root
+    :is(
+      [type='text'], input:where(:not([type])), [type='email'], [type='url'], [type='password'],
+      [type='number'], [type='date'], [type='datetime-local'], [type='month'], [type='search'],
+      [type='tel'], [type='time'], [type='week'], [multiple], textarea, select,
+      [type='checkbox'], [type='radio']
+    ) {
+    background-color: var(--color-base-100);
+    border-color: color-mix(in oklab, var(--color-base-content) 35%, transparent);
+    --tw-ring-color: var(--color-primary);
+  }
+  :root :is([type='checkbox'], [type='radio']) {
+    color: var(--color-primary);
+  }
+  :root :is([type='checkbox'], [type='radio']):checked {
+    background-color: currentColor;
+  }
+}
+
+@utility pop-btn {
+  @apply px-2 py-2 text-sm text-base-content rounded-sm shadow-sm bg-primary/25 hover:bg-primary/15;
+}
+
+@utility m-btn0 {
+  @apply px-2 py-1 text-xs text-base-content rounded-sm shadow-sm bg-success/25 hover:bg-success/15;
+}
+
+@utility m-btn1 {
+  @apply px-2 py-1 text-xs text-base-content rounded-sm shadow-sm bg-info/25 hover:bg-info/15;
+}
+
+@utility m-btn2 {
+  @apply px-2 py-1 text-xs text-base-content rounded-sm shadow-sm bg-warning/25 hover:bg-warning/15;
+}
+
+@utility ms-link {
+  @apply cursor-pointer text-primary hover:text-primary/75;
+}
+
+@utility splash-bg {
+  background: linear-gradient(55deg, #414b61 0 45%, #2d3343 45% 100%);
+}
+
+@utility img-effect {
+  --m:
+    radial-gradient(circle farthest-side at right, #000 99%, #0000) 0 100%/46%
+      92% no-repeat,
+    radial-gradient(circle farthest-side at left, #000 99%, #0000) 100% 0/46%
+      92% no-repeat;
+  -webkit-mask: var(--m);
+  mask: var(--m);
+}
+
+@utility content {
+  line-height: 1.8;
+  & a {
+    color: var(--color-primary);
+  }
+  & a:hover {
+    text-decoration: underline;
+  }
+  & h1 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & h2 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & h3 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & h4 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & h5 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & pre {
+    white-space: break-spaces;
+  }
+  & img {
+    display: block;
+    max-width: 100% !important;
+    height: auto;
+    margin: 10px auto;
+  }
+  & video {
+    display: block;
+    max-width: 100% !important;
+    height: auto;
+    margin: 10px auto;
+  }
+  & blockquote {
+    font-weight: 400;
+    margin: 2rem 0;
+    padding-left: 1rem;
+    border-left: 6px solid var(--color-primary);
+  }
+  & p {
+    line-height: 1.6;
+    font-weight: 400;
+    font-size: 18px;
+    margin: 1.2rem 0;
+  }
+  & table {
+    border: 1px solid;
+    padding: 6px;
+  }
+  & th {
+    border: 1px solid;
+    padding: 6px;
+  }
+  & td {
+    border: 1px solid;
+    padding: 6px;
+  }
+  & hr {
+    margin: 2.4rem 0;
+  }
+  & figcaption {
+    text-align: center;
+    color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+  }
+}
 
 @layer base {
   h1 {
@@ -17,108 +301,13 @@
   }
 }
 
-@layer components {
-  .btn {
-    @apply px-5 py-3 font-medium text-white transition duration-200 ease-in-out rounded shadow bg-primary-600 hover:bg-opacity-75;
-  }
-
-  .pop-btn {
-    @apply px-2 py-2 text-sm text-black rounded shadow bg-green-200 hover:bg-green-100;
-  }
-
-  .m-btn0 {
-    @apply px-2 py-1 text-xs text-black rounded shadow bg-green-200 hover:bg-green-100;
-  }
-
-  .m-btn1 {
-    @apply px-2 py-1 text-xs text-black rounded shadow bg-blue-200 hover:bg-blue-100;
-  }
-
-  .m-btn2 {
-    @apply px-2 py-1 text-xs text-black rounded shadow bg-orange-200 hover:bg-orange-100;
-  }
-
-  .card {
-    @apply max-w-md p-8 overflow-hidden bg-white rounded shadow-md;
-  }
-
-  .input {
-    @apply block py-1 text-gray-500 border-gray-300 rounded shadow-sm focus:ring-yellow-300 focus:border-primary-50;
-  }
-
-  .link {
-    @apply cursor-pointer text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300;
-  }
-  .splash-bg {
-    background: linear-gradient(55deg, #414b61 0 45%, #2d3343 45% 100%);
-  }
-  .img-effect {
-    --m:
-      radial-gradient(circle farthest-side at right,#000 99%,#0000) 0 100%/46% 92% no-repeat,
-      radial-gradient(circle farthest-side at left,#000 99%,#0000) 100% 0/46% 92% no-repeat;
-    -webkit-mask: var(--m);
-            mask: var(--m);
-  }
-
-  .content {
-    line-height: 1.8;
-  }
-  .content a {
-    color: green;
-  }
-  .content a:hover {
-    text-decoration: underline;
-  }
-  .content h1, .content h2, .content h3, .content h4, .content h5 {
-    padding: 12px 0;
-    line-height: 1.2em;
-  }
-  .content pre {
-    white-space: break-spaces;
-  }
-  .content img, .content video {
-    display: block;
-    max-width: 100% !important;
-    height: auto;
-    margin: 10px auto;
-  }
-  .content blockquote {
-    font-weight: 400;
-    margin: 2rem 0;
-    padding-left: 1rem;
-    border-left: 6px solid greenyellow;
-  }
-  .content p {
-    line-height: 1.6;
-    font-weight: 400;
-    font-size: 18px;
-    margin: 1.2rem 0;
-  }
-  .content table, .content th, .content td {
-    border: 1px solid;
-    padding: 6px;
-  }
-  .content hr {
-    margin: 2.4rem 0;
-  }
-  .content figcaption {
-    text-align: center;
-    color: #f4f4f5;
-  }
-}
-
-:root {
-  /* This is used for the spinner and progress bar */
-  --color-primary-500: #00bfd8;
-}
-
 * {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
 
 *:hover {
-  scrollbar-color: rgb(156 163 175 / 70%) transparent;
+  scrollbar-color: color-mix(in oklab, var(--color-base-content) 35%, transparent) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -136,9 +325,9 @@
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background-color: rgb(156 163 175 / 70%);
+  background-color: color-mix(in oklab, var(--color-base-content) 35%, transparent);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(107 114 128 / 85%);
+  background-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
 }

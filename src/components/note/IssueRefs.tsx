@@ -20,19 +20,19 @@ export default function IssueRefs({ noteId, title, className = '' }: Props) {
 
   return (
     <div className={`pt-2 ${className}`} data-testid="issue-refs">
-      <p className="p-1 text-gray-600 dark:text-gray-300">Referenced by issues</p>
+      <p className="p-1 text-base-content/70">Referenced by issues</p>
       <ul className="mx-4">
         {refs.map(({ issue, explicit }) => (
           <li key={issue.number} className="flex items-center gap-2 py-1">
             <StateIcon state={issue.state} size={16} />
             <button
               type="button"
-              className="text-left link"
+              className="text-left ms-link"
               onClick={() => dispatch({ view: 'issue', number: issue.number })}
             >
               #{issue.number} {issue.title}
             </button>
-            {explicit ? null : <span className="text-xs text-gray-500">mentioned</span>}
+            {explicit ? null : <span className="text-xs text-base-content/60">mentioned</span>}
           </li>
         ))}
       </ul>

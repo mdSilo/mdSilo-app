@@ -46,17 +46,17 @@ function SidebarHistory(props: Props) {
       {pinnedDir ? (
         <div
           role="button"
-          className="text-center py-1 border-b dark:border-gray-700"
+          className="text-center py-1 border-b border-base-300"
           onClick={async (e) => await openRecentDir(e, pinnedDir)}
         >
           <Tooltip content={pinnedDir}>
-            <p className="text-green-500 text-lg overflow-hidden overflow-ellipsis whitespace-nowrap">
+            <p className="text-success text-lg overflow-hidden text-ellipsis whitespace-nowrap">
               {subDirPath(pinnedDir)}
             </p>
           </Tooltip>
         </div>
       ) : (
-        <p className="text-slate-500 text-center">No Pinned Folder</p>
+        <p className="text-base-content/60 text-center">No Pinned Folder</p>
       )}
       <b className="text-center m-2">Recent History</b>
       {[...history].reverse().map((item, idx) => (
@@ -69,7 +69,7 @@ function SidebarHistory(props: Props) {
         />
       ))}
       <button 
-        className="p-1 m-4 rounded text-slate-500 hover:text-red-500" 
+        className="p-1 m-4 rounded-sm text-base-content/60 hover:text-error/80" 
         onClick={() => setRecentDir([])}
       >
         Clear History
@@ -92,38 +92,38 @@ function HistoryItem(props: ItemProps) {
   const {setPinnedDir, deleteRecentDir, openRecentDir, dir} = props;
   
   return (
-    <div className="flex items-center justify-between p-1 border-t dark:border-gray-700">
+    <div className="flex items-center justify-between p-1 border-t border-base-300">
       <Tooltip content="Pin">
         <button
-          className="mx-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="mx-1 rounded-sm hover:bg-base-content/10"
           onClick={async (e) => {
             e.preventDefault();
             setPinnedDir(dir);
           }}
         >
-          <IconPin size={16} className="text-gray-600 dark:text-gray-300" />
+          <IconPin size={16} className="text-base-content/70" />
         </button>
       </Tooltip>
       <div
         role="button"
-        className="text-center px-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+        className="text-center px-1 hover:bg-base-content/10"
         onClick={async (e) => await openRecentDir(e, dir)}
       >
         <Tooltip content={dir}>
-          <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap">
             {subDirPath(dir)}
           </span>
         </Tooltip>
       </div>
       <Tooltip content="Delete">
         <button
-          className="mx-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="mx-1 rounded-sm hover:bg-base-content/10"
           onClick={async (e) => {
             e.preventDefault();
             deleteRecentDir(dir);
           }}
         >
-          <IconTrash size={16} className="text-gray-600 dark:text-gray-300" />
+          <IconTrash size={16} className="text-base-content/70" />
         </button>
       </Tooltip>
     </div>
