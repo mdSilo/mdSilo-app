@@ -1,13 +1,13 @@
 import { invoke } from '@tauri-apps/api/core';
-import { jsPDF } from "jspdf";
-import html2canvas from 'html2canvas';
+
+// html2canvas and jspdf are big (~0.55MB): loaded on export, not on start
 
 export function ExportAs(as: string, filePath: string) {
   const pixelRatio = window.devicePixelRatio;
   const note = document.getElementById("note-content");
   if (!note) return;
 
-  html2canvas(note).then(async function (canvas) {
+  import('html2canvas').then(({ default: html2canvas }) => html2canvas(note)).then(async function (canvas) {
     const imgData = canvas.toDataURL("image/png");
     requestAnimationFrame(() => {
       if (as === 'pdf') {
@@ -35,6 +35,7 @@ async function handlePdf(
   pixelRatio: number, 
   filePath: string,
 ) {
+  const { jsPDF } = await import('jspdf');
   const orientation = canvas.width > canvas.height ? "l" : "p";
   const pdf = new jsPDF(orientation, "pt", [
     canvas.width / pixelRatio,

@@ -1,10 +1,10 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { parser } from "mdsmirror";
 import { NoteMap, useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
 import { isUrl } from 'utils/helper';
 import { hrefToTitle, linkTitlesOf } from 'utils/mdlink';
-import { loadDir } from 'file/open';
+import useLoadNotes from 'editor/hooks/useLoadNotes';
 
 const DEBOUNCE_MS = 1000;
 
@@ -28,14 +28,7 @@ export type Backlinks = {
 };
 
 export default function useBacklinks(noteId: string): Backlinks {
-  const isLoaded = useStore((state) => state.isLoaded);
-  const initDir = useStore((state) => state.initDir);
-  // load all notes with content, isLoaded is set once loaded
-  useEffect(() => {
-    if (!isLoaded && initDir) {
-      void loadDir(initDir);
-    }
-  }, [initDir, isLoaded]);
+  useLoadNotes();
 
   // the title is not debounced: be right at once on switching or renaming note
   const noteTitle = useStore((state) => state.notes.get(noteId)?.title) || '';

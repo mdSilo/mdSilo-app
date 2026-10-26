@@ -9,7 +9,7 @@ import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentVie
 import type { ViewAction } from 'context/viewReducer';
 import { getStrDate } from 'utils/helper';
 import { MD_LINK_REGEX, WIKI_LINK_REGEX } from 'utils/mdlink';
-import { makeFileMeta, makeNote, mockInvoke, mockLayout } from '../../testUtils';
+import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '../../testUtils';
 import MainView from './MainView';
 import HeatMap from './HeatMap';
 import Chronicle from './chronicle';
@@ -41,6 +41,7 @@ const go = async (action: ViewAction) => {
   await act(async () => {
     fireEvent.click(btn);
   });
+  await waitForView();
 };
 const viewState = () => JSON.parse(screen.getByTestId('view').textContent as string);
 

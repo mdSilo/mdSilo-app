@@ -1,7 +1,7 @@
 /* Shared helpers for unit tests. Not imported by app code. */
 import { vi, type Mock } from 'vitest';
 import type { ReactElement, ReactNode } from 'react';
-import { render } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { store } from 'lib/store';
 import { ProvideCurrentView } from 'context/useCurrentView';
 import type { Note } from 'types/model';
@@ -103,5 +103,12 @@ export function mockLayout() {
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
     const height = size(this);
     return { width: 300, height, top: 0, left: 0, bottom: height, right: 300, x: 0, y: 0, toJSON: () => ({}) };
+  });
+}
+
+/** Wait for the view loaded on first use (MainView, React.lazy) to show. */
+export async function waitForView() {
+  await waitFor(() => {
+    if (screen.queryByTestId('view-loading')) throw new Error('view loading');
   });
 }

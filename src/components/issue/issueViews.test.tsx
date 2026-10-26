@@ -5,7 +5,7 @@ import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import MainView from 'components/view/MainView';
-import { makeNote, renderWithView } from '../../testUtils';
+import { makeNote, renderWithView, waitForView } from '../../testUtils';
 import * as ops from './issueOps';
 import { issueStore, resetIssueStore } from './issueStore';
 import { boardColumns, dragEndOp, dropTarget } from './project/ProjectBoard';
@@ -65,6 +65,7 @@ async function go(view: object) {
   const btn = screen.getByTestId('goto');
   btn.dataset.view = JSON.stringify(view);
   await act(async () => { fireEvent.click(btn); });
+  await waitForView();
 }
 const data = () => issueStore.getState().data;
 const labelId = (name: string) => data().labels.find((l) => l.name === name)!.id;

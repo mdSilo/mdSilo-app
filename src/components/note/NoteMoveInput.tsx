@@ -1,5 +1,5 @@
 import type { ForwardedRef } from 'react';
-import { forwardRef, useCallback, useMemo, useState, useEffect } from 'react';
+import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { TbChevronsUp as IconChevronsUp, TbFolderPlus as IconFolderPlus, TbSearch as IconSearch } from 'react-icons/tb';
 import type { IconType as Icon } from 'react-icons';
 import useNoteSearch from 'editor/hooks/useNoteSearch';
@@ -7,7 +7,7 @@ import { store, useStore } from 'lib/store';
 import type { Note } from 'types/model';
 import { ciStringCompare } from 'utils/helper';
 import FileAPI from 'file/files';
-import { loadDir } from 'file/open';
+import useLoadNotes from 'editor/hooks/useLoadNotes';
 import { createDirRecursive, joinPaths } from 'file/util';
 
 enum OptionType {
@@ -36,15 +36,9 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
     className = '',
   } = props;
 
-  const isLoaded = useStore((state) => state.isLoaded);
+  useLoadNotes();
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
-  // console.log("loaded?", isLoaded);
-  useEffect(() => {
-    if (!isLoaded && initDir) {
-      void loadDir(initDir);
-    }
-  }, [initDir, isLoaded]);
 
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
