@@ -17,6 +17,9 @@ import { checkFileIsMd, getFileExt } from 'file/process';
 import { listDir, openUrl } from 'file/open';
 import { joinPath, normalizeSlash } from 'file/util';
 import { READING_DIR, WRITING_DIR } from 'workspace/layout';
+import { isBookFile } from 'reader/document';
+import { bookPathOfAnnotations } from 'reader/annotations';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
 
@@ -43,6 +46,9 @@ const SidebarNoteLink = (
   const toggleExpandedDir = useStore((state) => state.toggleExpandedDir);
   // console.log("isLoading", isLoading, node.id);
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
+  const { dispatch } = useCurrentViewContext();
+  // a book of a workspace: read in the app
+  const isBook = useStore((state) => state.layout === 'workspace') && isBookFile(node.id);
   const isDir = node.is_dir; 
   const isNonMd = !isDir && !checkFileIsMd(node.id);
   const isImage = imageExtensions.includes(getFileExt(node.id).toLowerCase());
@@ -65,6 +71,8 @@ const SidebarNoteLink = (
       }
       toggleExpandedDir(dirPath, !isExpanded);
       return;
+    } else if (isBook) {
+      dispatch({ view: 'book', path: node.id });
     } else if (isNonMd) {
       await openUrl(node.id)
     } else {
@@ -73,7 +81,10 @@ const SidebarNoteLink = (
     if (isMobile()) {
       setIsSidebarOpen(false);
     }
-  }, [isDir, isExpanded, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen, toggleExpandedDir]);
+  }, [
+    dispatch, isBook, isDir, isExpanded, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen,
+    toggleExpandedDir,
+  ]);
   
   // add 16px for every level of nesting, plus 8px base padding
   const leftPadding = depth * INDENT_PER_LEVEL + 8;
@@ -128,6 +139,10 @@ const SidebarNoteLink = (
           ) : (
             <span className="overflow-hidden text-ellipsis whitespace-nowrap">
               {node.title}
+              {/* the annotations of a book, named after it */}
+              {!isDir && bookPathOfAnnotations(node.id) ? (
+                <span className="ml-1 text-xs text-base-content/50">notes</span>
+              ) : null}
             </span>
           )}
         </Tooltip>

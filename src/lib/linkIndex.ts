@@ -1,6 +1,5 @@
 import { parser } from 'mdsmirror';
-import { isUrl } from 'utils/helper';
-import { findNoteLinks, HASHTAG_REGEX, hrefToTitle } from 'utils/mdlink';
+import { findNoteLinks, HASHTAG_REGEX, hrefToTitle, isNoteHref } from 'utils/mdlink';
 import type { NoteMap } from './noteMap';
 
 // [#12](issue:12)
@@ -34,7 +33,7 @@ export const getMarkdownTextBlocks = (content: string): TextBlock[] => {
       if (child.type === 'link_open') {
         const href = child.attrGet('href') || '';
         // '' for the links not to note, e.g. url
-        link = href && !isUrl(href) ? hrefToTitle(href) : '';
+        link = isNoteHref(href) ? hrefToTitle(href) : '';
       } else if (child.type === 'link_close') {
         link = undefined;
       } else if (child.type === 'text' || child.type === 'code_inline') {

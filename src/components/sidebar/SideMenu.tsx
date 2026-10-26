@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { 
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
   TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
-  TbPizza, TbInfoCircle, TbCurrentLocation, TbDatabaseExport,
+  TbPizza, TbInfoCircle, TbCurrentLocation, TbDatabaseExport, TbBooks,
 } from 'react-icons/tb';
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
@@ -68,12 +68,18 @@ export default function SideMenu() {
         hotkey: 'mod+shift+i',
         callback: () => dispatchView({view: 'issues'}),
       },
+      {
+        hotkey: 'mod+shift+l',
+        callback: () => dispatchView({view: 'library'}),
+      },
     ],
     [dispatchView]
   );
   useHotkeys(hotkeys);
 
   const currentDir = useStore((state) => state.currentDir);
+  // books are in the workspace layout only
+  const hasReading = useStore((state) => state.layout === 'workspace');
   const orientation = useStore((state) => state.sideMenuOrientation);
   const menuClassName = orientation === 'horizontal'
     ? 'flex flex-row items-center w-full px-1 bg-base-200'
@@ -98,6 +104,9 @@ export default function SideMenu() {
           <LogoMenu />
           <OpenButton />
           <FeedButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'feed'})} />
+          {hasReading ? (
+            <LibraryButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'library'})} />
+          ) : null}
           {currentDir ? (
           <>
             <NewButton />
@@ -253,6 +262,21 @@ const FeedButton = (props: ButtonProps) => {
       >
         <button className={btnClass} onClick={onViewFeed}>
           <TbRss size={24} className="shrink-0 mx-1 text-orange-600" />
+        </button>
+      </Tooltip>
+    </SidebarItem>
+  );
+}
+
+const LibraryButton = (props: ButtonProps) => {
+  const tooltipPlacement = useTooltipPlacement();
+  const { viewTy, onClick, onDispatch } = props;
+
+  return (
+    <SidebarItem isHighlighted={viewTy === 'library' || viewTy === 'book'} onClick={onClick}>
+      <Tooltip content="Library (Ctrl/⌘+Shift+L)" placement={tooltipPlacement}>
+        <button className={btnClass} onClick={onDispatch}>
+          <TbBooks size={24} className="shrink-0 mx-1 text-base-content/70" />
         </button>
       </Tooltip>
     </SidebarItem>

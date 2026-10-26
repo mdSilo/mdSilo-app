@@ -144,7 +144,7 @@ type PersistedState = Pick<Store,
   | 'userId' | 'theme' | 'darkMode' | 'font' | 'fontSize' | 'fontWt' | 'lineHeight'
   | 'isRTL' | 'isCheckSpellOn' | 'isOpenPreOn' | 'noteSort' | 'recentDir'
   | 'pinnedDir' | 'sidebarWidth' | 'sideMenuOrientation' | 'feedChannelWidth' | 'feedArticleWidth'
-  | 'useAsset' | 'activities'
+  | 'useAsset' | 'activities' | 'readerSettings'
 >;
 
 type FunctionPropertyNames<T> = {
@@ -325,6 +325,7 @@ export const store = createStore<Store>()(
         feedArticleWidth: state.feedArticleWidth,
         useAsset: state.useAsset,
         activities: state.activities,
+        readerSettings: state.readerSettings,
       }),
     }
   )

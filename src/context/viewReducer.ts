@@ -15,6 +15,10 @@ export interface ViewState {
   issueNumber?: number;
   issuesTab?: IssuesTab;
   projectId?: string;
+  /** the book file read, see reader */
+  bookPath?: string;
+  /** the place to open the book at, a CFI */
+  bookCfi?: string;
 }
 
 export type ViewAction = 
@@ -26,6 +30,8 @@ export type ViewAction =
   | { view: 'issues'; tab?: IssuesTab }
   | { view: 'issue'; number: number }
   | { view: 'project'; projectId?: string }
+  | { view: 'library' }
+  | { view: 'book'; path: string; cfi?: string }
   | {
       view: 'md';
       params: ViewParams;
@@ -62,6 +68,11 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return {view: 'issue', issueNumber: action.number};
     case 'project':
       return {view: 'project', projectId: action.projectId};
+    case 'library':
+      return {view: 'library'};
+    case 'book':
+      setWindowTitle(`: ${action.path.split('/').pop()} - mdSilo`);
+      return {view: 'book', bookPath: action.path, bookCfi: action.cfi};
     case 'md':
       return {view: 'md', params: action.params};
     case 'tag':

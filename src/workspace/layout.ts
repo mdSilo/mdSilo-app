@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
 import { joinPath } from 'file/util';
+import { updateGitignore } from './gitignore';
 
 /**
  * The workspace layout:
@@ -51,6 +52,11 @@ export async function initLayout(ws: string): Promise<void> {
   const gitignore = joinPath(ws, DATA_DIR, '.gitignore');
   if (!(await invoke<boolean>('file_exist', { filePath: gitignore }))) {
     await invoke('write_file', { filePath: gitignore, text: DATA_GITIGNORE });
+  }
+  // the book files are not synced unless chosen, see reader/library
+  const readingGitignore = joinPath(ws, READING_DIR, '.gitignore');
+  if (!(await invoke<boolean>('file_exist', { filePath: readingGitignore }))) {
+    await invoke('write_file', { filePath: readingGitignore, text: updateGitignore('', []) });
   }
   // the marker last: a layout half created is still legacy
   const marker = joinPath(ws, DATA_DIR, WORKSPACE_FILE);

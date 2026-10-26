@@ -1,4 +1,5 @@
 import { Draft } from 'immer';
+import { DEFAULT_READER_SETTINGS, type ReaderSettings } from 'reader/settings';
 import { setter, Setter, Store } from './store';
 import { isSystemDark, SYSTEM_THEME } from './themes';
 
@@ -75,6 +76,8 @@ export type UserSettings = {
   setFeedChannelWidth: Setter<number>;
   feedArticleWidth: number;
   setFeedArticleWidth: Setter<number>;
+  readerSettings: ReaderSettings; // how books show, see reader/settings
+  setReaderSettings: Setter<ReaderSettings>;
 };
 
 // resizable panel widths in px
@@ -157,6 +160,8 @@ const userSettingsSlice = (
   setFeedChannelWidth: setter(set, 'feedChannelWidth'),
   feedArticleWidth: FEED_ARTICLE_WIDTH.default as number,
   setFeedArticleWidth: setter(set, 'feedArticleWidth'),
+  readerSettings: DEFAULT_READER_SETTINGS,
+  setReaderSettings: setter(set, 'readerSettings'),
 });
 
 export default userSettingsSlice;

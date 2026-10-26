@@ -577,6 +577,7 @@ pub async fn listen_dir(
     .flatten()
     .filter(|real| real.as_path() != Path::new(&dir));
   let dir_path = Path::new(&dir).to_path_buf();
+  let watched = dir_path.clone();
   let to_dir_path = move |path: &Path| -> String {
     let path = match &real_dir {
       Some(real) => match path.strip_prefix(real) {
@@ -613,11 +614,16 @@ pub async fn listen_dir(
     }) => {
       // not the temp files of atomic writes, nor the files as the app wrote
       // them: the app has their content already
+      // nor the hidden files and dirs: .git/, .mdsilo/... are never listed
       let paths: Vec<String> = paths
         .iter()
         .map(|path| to_dir_path(path))
+        .filter(|path| !is_hidden_in(&watched, Path::new(path)))
         .filter(|path| !is_temp(Path::new(path)) && !is_self_write(Path::new(path)))
         .collect();
+      if paths.is_empty() {
+        return;
+      }
       match kind {
         // EventKind::Access(_) => "access",
         EventKind::Create(_) => emit("create", paths),
@@ -664,6 +670,16 @@ pub async fn listen_dir(
       Err(format!("lock watcher on listen err: {}", e))
     }
   }
+}
+
+/// A path in the dir with a hidden file or dir on the way: `.git/HEAD`;
+/// the dir itself may be in a hidden one
+fn is_hidden_in(dir: &Path, path: &Path) -> bool {
+  path.strip_prefix(dir).is_ok_and(|rel| {
+    rel
+      .components()
+      .any(|c| c.as_os_str().to_str().is_some_and(|name| name.starts_with('.')))
+  })
 }
 
 // Stop watching the directory, if any
@@ -815,6 +831,15 @@ mod tests {
       [("a.md", "A"), ("b.txt", "B"), ("sub", "")].map(|(n, t)| (n.to_string(), t.to_string()))
     );
     fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[test]
+  fn hidden_paths_in_the_dir() {
+    let dir = Path::new("/home/me/.notes/ws");
+    assert!(is_hidden_in(dir, Path::new("/home/me/.notes/ws/.git/HEAD")));
+    assert!(is_hidden_in(dir, Path::new("/home/me/.notes/ws/reading/.gitignore")));
+    assert!(!is_hidden_in(dir, Path::new("/home/me/.notes/ws/writing/a.md")));
+    assert!(!is_hidden_in(dir, Path::new("/elsewhere/.x")));
   }
 
   #[test]

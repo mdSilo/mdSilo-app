@@ -4,6 +4,7 @@
 )]
 
 mod atomic;
+mod books;
 mod db;
 mod feed;
 mod files;
@@ -102,6 +103,8 @@ pub fn run() {
       storage::get_log,
       storage::del_log,
       json::load_notes,
+      books::book_hash,
+      books::read_file_bytes,
     ])
     .setup(|app| {
       tray::setup(app)?;

@@ -1,11 +1,14 @@
 import { useCallback } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { issueStore } from 'components/issue/issueStore';
 import { issueHref, parseIssueHref } from 'components/issue/refs';
 import { openFilePath, openUrl } from 'file/open';
 import { isUrl } from 'utils/helper';
+import { fromWorkspacePath } from 'file/util';
 import { encodeHref, hrefToTitle, legacyLinkTitle } from 'utils/mdlink';
+import { parseBookHref } from 'reader/annotations';
 import useNoteSearch from './useNoteSearch';
 
 export type LinkSearchResult = { title: string; url: string };
@@ -30,9 +33,25 @@ export function searchIssues(text: string, limit = 10): LinkSearchResult[] {
     .map((i) => ({ title: `#${i.number} ${i.title}`, url: issueHref(i.number) }));
 }
 
+/** The book file of an id in the open workspace, if it is on this device. */
+async function findBookPath(hash: string): Promise<string | undefined> {
+  const ws = store.getState().initDir;
+  if (!ws) return undefined;
+  const { readLibrary, refreshLibrary } = await import('reader/library');
+  const pathOf = async (lib: Awaited<ReturnType<typeof readLibrary>>) => {
+    const entry = lib.books[hash];
+    if (!entry) return undefined;
+    const path = fromWorkspacePath(ws, entry.file);
+    return (await invoke<boolean>('file_exist', { filePath: path })) ? path : undefined;
+  };
+  // moved or new since: look for it
+  return (await pathOf(await readLibrary(ws))) ?? (await pathOf(await refreshLibrary(ws)));
+}
+
 /**
  * Link handlers shared by every MsEditor: the note editor and the issue
- * body/comment editors. Links can be URLs, note titles or `issue:N`.
+ * body/comment editors. Links can be URLs, note titles, `issue:N` or
+ * `book:<id>#<cfi>`.
  */
 export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Options = {}) {
   const { dispatch } = useCurrentViewContext();
@@ -58,6 +77,12 @@ export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Op
       const issueNum = parseIssueHref(href);
       if (issueNum !== undefined) {
         dispatch({ view: 'issue', number: issueNum });
+        return;
+      }
+      const bookLink = parseBookHref(href);
+      if (bookLink) {
+        const path = await findBookPath(bookLink.hash);
+        if (path) dispatch({ view: 'book', path, cfi: bookLink.cfi });
         return;
       }
       // find the note per title

@@ -3,6 +3,7 @@
  * Web implementations of the Rust commands in src-tauri/src/lib.rs,
  * files are stored in IndexedDB instead of the disk.
  */
+import { partialMd5 } from '../../utils/partialMd5';
 import * as fs from './fs';
 import * as feed from './feed';
 import { KV, del, get, put } from './idb';
@@ -201,6 +202,9 @@ export const commands: Record<string, Command> = {
   },
   // json
   load_notes: ({ dir }) => loadNotes(dir),
+  // books, src-tauri/src/books.rs
+  book_hash: ({ filePath }) => fs.readBlob(filePath).then(partialMd5).catch(() => ''),
+  read_file_bytes: async ({ filePath }) => (await fs.readBlob(filePath)).arrayBuffer(),
   // web only: back up notes in IndexedDB to a zip file
   export_backup: ({ dir }) => exportBackup(dir ?? '/'),
 };

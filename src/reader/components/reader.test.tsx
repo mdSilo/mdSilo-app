@@ -1,0 +1,233 @@
+import { Blob as NodeBlob } from 'node:buffer';
+import type { ReactNode } from 'react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { invoke } from '@tauri-apps/api/core';
+import * as dialog from '@tauri-apps/plugin-dialog';
+import { store } from 'lib/store';
+import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
+import type { ViewAction } from 'context/viewReducer';
+import MainView from 'components/view/MainView';
+import useLinkHandlers from 'editor/hooks/useLinkHandlers';
+import { useWebFs, waitForView } from '../../testUtils';
+import { writeFile } from '../../platform/web/fs';
+import { makeEpub } from '../testBook';
+import { bookHref } from '../annotations';
+import { resetReaderStore, useReaderStore } from '../readerStore';
+import { usePopups } from '../popups';
+import { setView, type FoliateView } from '../view';
+
+// no rendering of the pages in jsdom: a view the panels can drive
+const view = vi.hoisted(() => ({
+  goTo: vi.fn(async () => undefined),
+  goLeft: vi.fn(async () => undefined),
+  goRight: vi.fn(async () => undefined),
+  goToFraction: vi.fn(async () => undefined),
+  deselect: vi.fn(),
+}));
+vi.mock('./FoliateViewer', () => ({
+  default: () => <div data-testid="foliate-viewer" />,
+}));
+
+const WS = '/mdSilo';
+
+// a binary file in the (fake) IndexedDB: jsdom Blobs do not survive its
+// structured clone, Node's do
+const writeBook = async (path: string, file: File) =>
+  writeFile(path, new NodeBlob([new Uint8Array(await file.arrayBuffer())]) as unknown as Blob);
+const BOOK = `${WS}/reading/Tiny Book.epub`;
+
+const Controls = ({ children }: { children: ReactNode }) => {
+  const { state, dispatch } = useCurrentViewContext();
+  return (
+    <>
+      <p data-testid="view">{JSON.stringify(state)}</p>
+      <button data-testid="go" onClick={(e) => dispatch(JSON.parse((e.target as HTMLElement).dataset.action as string))} />
+      {children}
+    </>
+  );
+};
+
+const renderMain = () =>
+  render(
+    <ProvideCurrentView>
+      <Controls><MainView /></Controls>
+    </ProvideCurrentView>
+  );
+
+const go = async (action: ViewAction) => {
+  const btn = screen.getByTestId('go');
+  btn.dataset.action = JSON.stringify(action);
+  await act(async () => {
+    fireEvent.click(btn);
+  });
+  await waitForView();
+};
+
+const viewState = () => JSON.parse(screen.getByTestId('view').textContent as string);
+
+beforeEach(async () => {
+  await useWebFs();
+  store.setState({ initDir: WS, layout: 'workspace' });
+  await writeBook(BOOK, makeEpub());
+  setView(view as unknown as FoliateView);
+});
+
+afterEach(() => {
+  resetReaderStore();
+  usePopups.getState().clear();
+  setView(null);
+});
+
+describe('reader', () => {
+  test('shows a book with its contents', async () => {
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    expect(screen.getByText('Tiny Book')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Chapter Two'));
+    expect(view.goTo).toHaveBeenCalledWith('OEBPS/c2.xhtml');
+
+    act(() => {
+      useReaderStore.getState().setLocation({ cfi: 'epubcfi(/6/4!/4/2)', fraction: 0.25, tocLabel: 'Chapter One' });
+    });
+    expect(screen.getByTestId('reader-progress')).toHaveTextContent('25%');
+    expect(screen.getByText('· Chapter One')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTitle('Next page'));
+    expect(view.goRight).toHaveBeenCalled();
+    fireEvent.click(screen.getByTitle('Library'));
+    await waitForView();
+    expect(viewState().view).toBe('library');
+  });
+
+  test('highlights the text selected, with a note', async () => {
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    act(() => {
+      useReaderStore.getState().setLocation({ cfi: 'epubcfi(/6/4!/4/2)', fraction: 0.1, tocLabel: 'Chapter One' });
+      usePopups.getState().setSelection({
+        text: 'a bright cold day', cfi: 'epubcfi(/6/4!/4/4,/1:9,/1:26)', index: 1,
+        box: { left: 10, top: 10, right: 50, bottom: 20 },
+      });
+    });
+    fireEvent.click(await screen.findByLabelText('Highlight green'));
+    expect(screen.queryByTestId('selection-popup')).not.toBeInTheDocument();
+    const [note] = useReaderStore.getState().notes;
+    expect(note).toMatchObject({ text: 'a bright cold day', color: 'green', chapter: 'Chapter One' });
+
+    // its note, in the panel
+    fireEvent.click(screen.getByRole('tab', { name: /Notes/ }));
+    expect(screen.getByTestId('reader-notes')).toHaveTextContent('a bright cold day');
+    fireEvent.click(screen.getByTitle('Edit the note'));
+    const textarea = document.querySelector('[data-testid="reader-notes"] textarea')!;
+    fireEvent.change(textarea, { target: { value: 'See [[1984]]' } });
+    fireEvent.blur(textarea);
+    expect(useReaderStore.getState().notes[0].note).toBe('See [[1984]]');
+
+    await act(async () => { await useReaderStore.getState().flush(); });
+    const md = await invoke<string>('read_file', { filePath: `${BOOK}.md` });
+    expect(md).toContain('> a bright cold day\n\nSee [[1984]]');
+
+    // a bookmark
+    fireEvent.click(screen.getByTitle('Bookmark this page'));
+    expect(useReaderStore.getState().notes.map((n) => n.type)).toEqual(['annotation', 'bookmark']);
+    fireEvent.click(screen.getByTitle('Bookmark this page'));
+    expect(useReaderStore.getState().notes.map((n) => n.type)).toEqual(['annotation']);
+  });
+
+  test('edits an annotation clicked', async () => {
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    const now = new Date().toISOString();
+    act(() => {
+      useReaderStore.getState().addNote({
+        id: 'x', type: 'annotation', cfi: 'epubcfi(/6/4!/4/4,/1:0,/1:2)', text: 'It', note: '',
+        color: 'yellow', style: 'highlight', createdAt: now, updatedAt: now,
+      });
+      usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 } });
+    });
+    expect(screen.getByTestId('annotation-popup')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Highlight blue'));
+    fireEvent.change(screen.getByLabelText('Style'), { target: { value: 'underline' } });
+    expect(useReaderStore.getState().notes[0]).toMatchObject({ color: 'blue', style: 'underline' });
+    fireEvent.click(screen.getByText('Delete'));
+    expect(useReaderStore.getState().notes).toEqual([]);
+    expect(screen.queryByTestId('annotation-popup')).not.toBeInTheDocument();
+  });
+
+  test('a book that does not open', async () => {
+    await invoke('write_file', { filePath: `${WS}/reading/Broken.epub`, text: 'not a zip' });
+    const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    renderMain();
+    await go({ view: 'book', path: `${WS}/reading/Broken.epub` });
+    expect(await screen.findByText('Could not open the book')).toBeInTheDocument();
+    err.mockRestore();
+  });
+});
+
+describe('library', () => {
+  test('lists the books, opens one, syncs it or not', async () => {
+    renderMain();
+    await go({ view: 'library' });
+    const card = await screen.findByText('Tiny Book');
+    expect(screen.getByText('EPUB')).toBeInTheDocument();
+    fireEvent.click(screen.getByTitle(/click to sync the book file too/));
+    await waitFor(() => expect(screen.getByTitle(/click to stop/)).toBeInTheDocument());
+    expect(await invoke<string>('read_file', { filePath: `${WS}/reading/.gitignore` })).toContain('!/Tiny Book.epub');
+
+    fireEvent.click(card);
+    await waitForView();
+    expect(viewState()).toMatchObject({ view: 'book', bookPath: BOOK });
+  });
+
+  test('adds books from the device', async () => {
+    await writeBook('/downloads/Other.epub', makeEpub('Other'));
+    vi.mocked(dialog.open).mockResolvedValueOnce(['/downloads/Other.epub']);
+    renderMain();
+    await go({ view: 'library' });
+    await screen.findByText('Tiny Book');
+    await act(async () => {
+      fireEvent.click(screen.getByText('Add books'));
+    });
+    await waitForView();
+    // one book added: read
+    await waitFor(() => expect(viewState()).toMatchObject({ view: 'book', bookPath: `${WS}/reading/Other.epub` }));
+  });
+});
+
+describe('links to books', () => {
+  const LinkOpener = ({ href }: { href: string }) => {
+    const { onOpenLink } = useLinkHandlers();
+    return <button onClick={() => void onOpenLink(href)}>open link</button>;
+  };
+
+  test('open the book at the place', async () => {
+    const hash = await invoke<string>('book_hash', { filePath: BOOK });
+    render(
+      <ProvideCurrentView>
+        <Controls><LinkOpener href={bookHref(hash, 'epubcfi(/6/4!/4/2)')} /></Controls>
+      </ProvideCurrentView>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByText('open link'));
+    });
+    // not in the library yet: found in reading/
+    await waitFor(() => expect(viewState()).toMatchObject({
+      view: 'book', bookPath: BOOK, bookCfi: 'epubcfi(/6/4!/4/2)',
+    }));
+  });
+
+  test('a book not on this device', async () => {
+    render(
+      <ProvideCurrentView>
+        <Controls><LinkOpener href={bookHref('f'.repeat(32))} /></Controls>
+      </ProvideCurrentView>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByText('open link'));
+    });
+    expect(viewState().view).toBe('default');
+  });
+});

@@ -48,6 +48,14 @@ interface EventPayload {
   event: string;
 }
 
+/** A path in the dir with a hidden file or dir on the way: `.mdsilo/x` */
+export function isHiddenIn(dir: string, path: string): boolean {
+  const root = normalizeSlash(dir);
+  const p = normalizeSlash(path);
+  const rel = p.startsWith(`${root}/`) ? p.slice(root.length + 1) : p;
+  return rel.split('/').some((part) => part.startsWith('.'));
+}
+
 // the only listener of dir changes: listening again replaces it
 let listener: UnlistenFn | undefined;
 let listenSeq = 0;
@@ -151,8 +159,11 @@ class DirectoryAPI {
         // sync the change on listen
         const payload: EventPayload = e.payload;
         const event = payload.event;
-        // FULL PATH; skip mdsilo.json, the data of Save As / Import JSON
-        const filePaths = payload.paths.filter((f) => !f.endsWith('/mdsilo.json'));
+        // FULL PATH; skip mdsilo.json, the data of Save As / Import JSON, and
+        // the hidden files and dirs (.mdsilo/, .git/...), never listed
+        const filePaths = payload.paths.filter(
+          (f) => !f.endsWith('/mdsilo.json') && !isHiddenIn(this.dirPath, f)
+        );
         if (filePaths.length === 0 && payload.paths.length > 0) return;
         // console.log("event kind: ", event);
         // console.log("file paths: ", filePaths);

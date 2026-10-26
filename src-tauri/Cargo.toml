@@ -31,6 +31,8 @@ open = "5.4.5"
 bincode = { version = "2.0.1", features = ["serde"] }
 chrono = "0.4.41"
 whatlang = "0.18.0"
+# book ids, see books.rs
+md5 = { package = "md-5", version = "0.11.0" }
 # walk dir
 crossbeam = "0.8.4"
 ignore = "0.4.33"

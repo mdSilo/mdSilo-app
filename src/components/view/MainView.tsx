@@ -17,6 +17,8 @@ const ProjectView = lazy(() => import('./project'));
 const Graph = lazy(() => import('./graph'));
 const Journals = lazy(() => import('./journals'));
 const HashTags = lazy(() => import('./hashtags'));
+const Library = lazy(() => import('reader/components/Library'));
+const Reader = lazy(() => import('reader/components/ReaderView'));
 
 /** the view of each view type; any other type is a note */
 const VIEWS: Record<string, ComponentType> = {
@@ -29,6 +31,8 @@ const VIEWS: Record<string, ComponentType> = {
   graph: Graph,
   journal: Journals,
   tag: HashTags,
+  library: Library,
+  book: Reader,
 };
 
 export default function MainView() {
