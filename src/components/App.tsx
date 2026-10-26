@@ -86,7 +86,7 @@ const App = () => {
 
   return (
     <ProvideCurrentView>
-      <div id="app-container" className={appContainerClassName}>
+      <div id="app-container" className={appContainerClassName} data-theme={darkMode ? 'dark' : 'light'}>
         <div className={`flex w-full h-full dark:bg-gray-900 ${
           sideMenuOrientation === 'horizontal'
             ? 'flex-col'

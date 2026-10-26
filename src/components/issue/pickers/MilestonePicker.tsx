@@ -16,8 +16,8 @@ export default function MilestonePicker({ issue, data }: { issue: Issue; data: I
         current && progress ? (
           <div>
             <div className="font-medium">{current.title}</div>
-            <div className="h-1.5 mt-1 bg-gray-200 rounded dark:bg-gray-700">
-              <div className="h-1.5 bg-green-600 rounded" style={{ width: `${progress.percent}%` }} />
+            <div className="h-1.5 mt-1 bg-gray-200 rounded-sm dark:bg-gray-700">
+              <div className="h-1.5 bg-green-600 rounded-sm" style={{ width: `${progress.percent}%` }} />
             </div>
           </div>
         ) : (<span className="text-gray-500">No milestone</span>)

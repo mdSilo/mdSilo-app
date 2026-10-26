@@ -61,7 +61,7 @@ export default function ProjectView() {
               type="button"
               key={p.id}
               aria-pressed={p.id === project?.id}
-              className={`px-2 py-1 rounded ${p.id === project?.id ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+              className={`px-2 py-1 rounded-sm ${p.id === project?.id ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
               onClick={() => select(p.id)}
             >
               {p.title}
@@ -88,7 +88,7 @@ export default function ProjectView() {
               <h1 className="text-xl font-semibold">{project.title}</h1>
               <button
                 type="button"
-                className="text-sm link"
+                className="text-sm ms-link"
                 onClick={() => {
                   const title = window.prompt('Project name', project.title);
                   if (title) apply((d) => updateProject(d, project.id, { title }));
@@ -109,7 +109,7 @@ export default function ProjectView() {
                 Delete
               </button>
               <span className="flex-1" />
-              <div className="flex overflow-hidden border border-gray-300 rounded dark:border-gray-600" role="group" aria-label="Layout">
+              <div className="flex overflow-hidden border border-gray-300 rounded-sm dark:border-gray-600" role="group" aria-label="Layout">
                 {(['board', 'table'] as const).map((layout) => (
                   <button
                     type="button"
@@ -140,11 +140,11 @@ export default function ProjectView() {
           title=""
           isOpen={openIssue !== null}
           handleClose={() => setOpenIssue(null)}
-          panelClassName={`max-w-5xl ${darkMode ? '!bg-black' : ''}`}
+          panelClassName={`max-w-5xl ${darkMode ? 'bg-black!' : ''}`}
         >
           {openIssue !== null ? (
             // the modal is portaled outside #app-container, so re-apply dark mode here
-            <div className={`h-[75vh] text-left ${darkMode ? 'dark' : ''}`}>
+            <div className={`h-[75vh] text-left ${darkMode ? 'dark' : ''}`} data-theme={darkMode ? 'dark' : 'light'}>
               <IssueDetail number={openIssue} onClose={() => setOpenIssue(null)} />
             </div>
           ) : null}

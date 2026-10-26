@@ -16,7 +16,7 @@ import type { IssueState } from 'components/issue/types';
 import type { IssuesTab as Tab } from 'context/viewReducer';
 
 const selectClass =
-  'py-1 pl-2 pr-8 text-sm bg-transparent border-gray-300 rounded dark:border-gray-600 dark:bg-gray-800';
+  'py-1 pl-2 pr-8 text-sm bg-transparent border-gray-300 rounded-sm dark:border-gray-600 dark:bg-gray-800';
 
 export default function Issues() {
   const { data, isLoaded, initDir } = useIssueData();
@@ -60,7 +60,7 @@ export default function Issues() {
   }
 
   const tabClass = (t: Tab) =>
-    `flex items-center gap-1 px-3 py-1 rounded ${tab === t ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`;
+    `flex items-center gap-1 px-3 py-1 rounded-sm ${tab === t ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`;
 
   return (
     <ErrorBoundary>
@@ -97,7 +97,7 @@ export default function Issues() {
           ) : (
             <>
               {creating ? (
-                <div className="p-3 mb-4 border border-gray-200 rounded dark:border-gray-700" data-testid="new-issue-form">
+                <div className="p-3 mb-4 border border-gray-200 rounded-sm dark:border-gray-700" data-testid="new-issue-form">
                   <input
                     aria-label="New issue title"
                     className={`${inputClass} w-full mb-2 text-lg`}
@@ -107,7 +107,7 @@ export default function Issues() {
                     onChange={(e) => setNewTitle(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') submitNew(); }}
                   />
-                  <div className="px-2 py-1 border border-gray-200 rounded min-h-[6rem] dark:border-gray-700">
+                  <div className="px-2 py-1 border border-gray-200 rounded-sm min-h-24 dark:border-gray-700">
                     <IssueEditor defaultValue="" placeholder="Add a description… [[Note]] links a note" onChange={setNewBody} />
                   </div>
                   <div className="flex justify-end gap-2 mt-2">
@@ -127,7 +127,7 @@ export default function Issues() {
                 onChange={(e) => setQuery(e.target.value)}
               />
 
-              <div className="border border-gray-200 rounded dark:border-gray-700">
+              <div className="border border-gray-200 rounded-sm dark:border-gray-700">
                 <div className="flex flex-wrap items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-800">
                   {(['open', 'closed'] as IssueState[]).map((s) => (
                     <button

@@ -103,7 +103,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                 <td className="px-2 py-1">
                   <select
                     aria-label={`Status of #${issue.number}`}
-                    className="py-0 pl-1 text-sm border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600"
+                    className="py-0 pl-1 text-sm border-gray-300 rounded-sm dark:bg-gray-800 dark:border-gray-600"
                     value={status}
                     onChange={(e) => {
                       const sid = e.target.value;

@@ -12,7 +12,7 @@ function LabelForm({ initial, submitText, onSubmit, onCancel }: {
 }) {
   const [draft, setDraft] = useState<Draft>(initial);
   return (
-    <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded dark:bg-gray-800">
+    <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-sm dark:bg-gray-800">
       <LabelChip label={{ id: 'preview', ...draft, name: draft.name || 'Label preview' }} className="self-start" />
       <div className="flex flex-wrap gap-2">
         <input
@@ -62,7 +62,7 @@ export default function LabelManager({ data, onFilter }: { data: IssueData; onFi
           onSubmit={(d) => { apply((x) => createLabel(x, d)); setCreating(null); }}
         />
       ) : null}
-      <ul className="mt-2 border border-gray-200 rounded dark:border-gray-700">
+      <ul className="mt-2 border border-gray-200 rounded-sm dark:border-gray-700">
         {data.labels.map((label) => (
           <li key={label.id} className="px-3 py-2 border-b border-gray-200 last:border-b-0 dark:border-gray-700">
             {editing === label.id ? (
@@ -77,7 +77,7 @@ export default function LabelManager({ data, onFilter }: { data: IssueData; onFi
                 <div className="w-40"><LabelChip label={label} onClick={onFilter ? () => onFilter(label.name) : undefined} /></div>
                 <span className="flex-1 text-sm text-gray-500">{label.description}</span>
                 <span className="text-xs text-gray-500">{counts(label.id)} open</span>
-                <button type="button" className="text-sm link" onClick={() => setEditing(label.id)}>Edit</button>
+                <button type="button" className="text-sm ms-link" onClick={() => setEditing(label.id)}>Edit</button>
                 <button
                   type="button"
                   className="text-sm text-red-600 hover:underline"

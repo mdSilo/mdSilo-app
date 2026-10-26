@@ -27,7 +27,7 @@ export default function IssueRefs({ noteId, title, className = '' }: Props) {
             <StateIcon state={issue.state} size={16} />
             <button
               type="button"
-              className="text-left link"
+              className="text-left ms-link"
               onClick={() => dispatch({ view: 'issue', number: issue.number })}
             >
               #{issue.number} {issue.title}

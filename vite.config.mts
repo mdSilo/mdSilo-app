@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -46,7 +47,7 @@ function mdsmirrorBuildId(): string {
 }
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   // Workspace packages are symlinked outside node_modules. mdsmirror is emitted as
   // CommonJS, so Rollup's default CommonJS include rule would otherwise skip it
   // during production builds.

@@ -70,47 +70,47 @@ const SidebarNoteLink = (
   return (
     <SidebarItem
       ref={forwardedRef}
-      className={`relative flex items-center justify-between !overflow-x-visible group focus:outline-none ${className}`}
+      className={`relative flex items-center justify-between overflow-x-visible! group focus:outline-hidden ${className}`}
       isHighlighted={isHighlighted}
       style={style}
       {...otherProps}
     >
       <div
         role="button"
-        className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none overflow-ellipsis whitespace-nowrap"
+        className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none text-ellipsis whitespace-nowrap"
         onClick={onClickFile}
         style={{ paddingLeft: `${leftPadding}px` }}
         draggable={false}
       >
-        <div className="p-1 mr-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
+        <div className="p-1 mr-1 rounded-sm hover:bg-gray-300 dark:hover:bg-gray-600">
           {isDir ? (
             <IconCaretRight
-              className={`flex-shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              className={`shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
               size={16}
               fill="currentColor"
             />
           ) : isImage ? (
             <IconPhoto 
-              className="flex-shrink-0 text-gray-500 dark:text-gray-100"
+              className="shrink-0 text-gray-500 dark:text-gray-100"
               size={16} 
               color="orange"
             />
           ) : !isNonMd ? (
             <IconMarkdown 
-              className="flex-shrink-0 text-gray-500 dark:text-gray-100"
+              className="shrink-0 text-gray-500 dark:text-gray-100"
               size={16}
               color="green"
             />
           ) : (
             <IconNote 
-              className="flex-shrink-0 text-gray-500 dark:text-gray-100"
+              className="shrink-0 text-gray-500 dark:text-gray-100"
               size={16}
               color="purple"
             />
           )}
         </div>
         <Tooltip content={filePath} disabled={!filePath}>
-          <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap">
             {node.title}
           </span>
         </Tooltip>
@@ -120,12 +120,12 @@ const SidebarNoteLink = (
         {isDir ? (
           <SidebarDirDropdown
             dirPath={node.id}
-            className="opacity-0.1 group-hover:opacity-100"
+            className="opacity-[0.001] group-hover:opacity-100"
           />
         ) : !isNonMd ? (
           <SidebarNoteDropdown
             noteId={node.id}
-            className="opacity-0.1 group-hover:opacity-100"
+            className="opacity-[0.001] group-hover:opacity-100"
           />
         ) : null}
       </div>

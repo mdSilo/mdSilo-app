@@ -126,7 +126,7 @@ const LogoMenu = () => {
   return (
     <Dropdown
       buttonChildren={<Logo />}
-      buttonClassName="block focus:outline-none"
+      buttonClassName="block focus:outline-hidden"
       itemsClassName="w-56"
       placement={isHorizontal ? 'bottom-start' : 'right-start'}
       tooltipContent="mdSilo"
@@ -179,7 +179,7 @@ const LogoMenu = () => {
 };
 
 const btnClass = 'title flex items-center text-lg p-2';
-const btnIconClass = 'flex-shrink-0 mx-1 text-gray-600 dark:text-gray-400';
+const btnIconClass = 'shrink-0 mx-1 text-gray-600 dark:text-gray-400';
 
 const OpenButton = () => {
   const tooltipPlacement = useTooltipPlacement();
@@ -221,7 +221,7 @@ const NewButton = () => {
           className={btnClass}
           onClick={onCreateNoteClick}
         >
-          <TbFeather size={25} className="flex-shrink-0 mx-1 text-primary-600" />
+          <TbFeather size={25} className="shrink-0 mx-1 text-primary-600" />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -252,7 +252,7 @@ const FeedButton = (props: ButtonProps) => {
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onViewFeed}>
-          <TbRss size={24} className="flex-shrink-0 mx-1 text-orange-600" />
+          <TbRss size={24} className="shrink-0 mx-1 text-orange-600" />
         </button>
       </Tooltip>
     </SidebarItem>
@@ -413,7 +413,7 @@ const FileButton = () => {
             <Portal>
               <Menu.Items
                 ref={setPopperElement}
-                className="z-20 w-42 overflow-hidden bg-white rounded shadow-popover dark:bg-gray-800 focus:outline-none"
+                className="z-20 w-42 overflow-hidden bg-white rounded-sm shadow-popover dark:bg-gray-800 focus:outline-hidden"
                 static
                 style={styles.popper}
                 {...attributes.popper}

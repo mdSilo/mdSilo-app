@@ -47,7 +47,7 @@ function Markdown(props: Props) {
       onChange={onValueChange}
       onFocus={onFocus}
       extensions={extensions}
-      className={`border-none focus:outline-none p-0 break-words ${className}`}
+      className={`border-none focus:outline-hidden p-0 wrap-break-word ${className}`}
       theme={dark ? 'dark' : 'light'}
       editable={!readMode}
     />

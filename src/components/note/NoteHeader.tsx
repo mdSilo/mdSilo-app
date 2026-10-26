@@ -46,7 +46,7 @@ export default function NoteHeader(
   const onDelClick = useCallback(() => setIsNoteDelModalOpen(true), []);
 
   const buttonClassName =
-    'rounded hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-700 dark:active:bg-gray-600';
+    'rounded-sm hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-700 dark:active:bg-gray-600';
   const iconClass = 'text-gray-600 dark:text-gray-300';
   const switchClass = `px-1 ${buttonClassName}`; 
 
@@ -84,7 +84,7 @@ export default function NoteHeader(
                 <Portal>
                   <Menu.Items
                     ref={setPopperElement}
-                    className="z-10 w-56 overflow-hidden bg-white rounded shadow-popover dark:bg-gray-800 focus:outline-none"
+                    className="z-10 w-56 overflow-hidden bg-white rounded-sm shadow-popover dark:bg-gray-800 focus:outline-hidden"
                     static
                     style={styles.popper}
                     {...attributes.popper}

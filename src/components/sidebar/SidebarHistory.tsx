@@ -50,7 +50,7 @@ function SidebarHistory(props: Props) {
           onClick={async (e) => await openRecentDir(e, pinnedDir)}
         >
           <Tooltip content={pinnedDir}>
-            <p className="text-green-500 text-lg overflow-hidden overflow-ellipsis whitespace-nowrap">
+            <p className="text-green-500 text-lg overflow-hidden text-ellipsis whitespace-nowrap">
               {subDirPath(pinnedDir)}
             </p>
           </Tooltip>
@@ -69,7 +69,7 @@ function SidebarHistory(props: Props) {
         />
       ))}
       <button 
-        className="p-1 m-4 rounded text-slate-500 hover:text-red-500" 
+        className="p-1 m-4 rounded-sm text-slate-500 hover:text-red-500" 
         onClick={() => setRecentDir([])}
       >
         Clear History
@@ -95,7 +95,7 @@ function HistoryItem(props: ItemProps) {
     <div className="flex items-center justify-between p-1 border-t dark:border-gray-700">
       <Tooltip content="Pin">
         <button
-          className="mx-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="mx-1 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={async (e) => {
             e.preventDefault();
             setPinnedDir(dir);
@@ -110,14 +110,14 @@ function HistoryItem(props: ItemProps) {
         onClick={async (e) => await openRecentDir(e, dir)}
       >
         <Tooltip content={dir}>
-          <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap">
             {subDirPath(dir)}
           </span>
         </Tooltip>
       </div>
       <Tooltip content="Delete">
         <button
-          className="mx-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="mx-1 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={async (e) => {
             e.preventDefault();
             deleteRecentDir(dir);

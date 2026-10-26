@@ -36,13 +36,13 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
         )}
         <div className="flex justify-center px-2">
           <button 
-            className="link m-2"
+            className="ms-link m-2"
             onClick={async () => { await clearLog(); }}
           >
             Clear Log
           </button>
           <button 
-            className="link m-2"
+            className="ms-link m-2"
             onClick={async () => { 
               await navigator.clipboard.writeText(`App: ${appVersion} \n Tauri: ${tauriVersion}`);
             }}
@@ -50,7 +50,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
             Copy About
           </button>
           <button 
-            className="link m-2"
+            className="ms-link m-2"
             onClick={async () => { 
               const log = await getLog();
               // console.log("log", log);

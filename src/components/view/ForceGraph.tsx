@@ -8,7 +8,13 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import colors from 'tailwindcss/colors';
+// hex, as canvas may not parse the oklch() colors of tailwind (Tailwind CSS v3 palette)
+const colors = {
+  blue: { 400: '#60a5fa', 600: '#2563eb' },
+  green: { 300: '#86efac' },
+  yellow: { 400: '#facc15', 600: '#ca8a04' },
+  neutral: { 100: '#f5f5f5', 200: '#e5e5e5', 600: '#525252', 700: '#404040' },
+};
 import {
   forceCenter,
   forceCollide,

@@ -59,19 +59,19 @@ export default function Chronicle() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-1 flex-col flex-shrink-0 py-6 px-12 w-full mx-auto bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
+      <div className="flex flex-1 flex-col shrink-0 py-6 px-12 w-full mx-auto bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
         <div className="flex justify-center my-6">
           {initDir ? (
             <FindOrCreateInput
-              className="w-full bg-white rounded shadow-popover dark:bg-gray-800"
+              className="w-full bg-white rounded-sm shadow-popover dark:bg-gray-800"
             />
           ) : null}
         </div>
-        <div className="my-1 p-1 rounded text-center">
-          <button onClick={() => dispatch({view: 'journal'})} className="link text-2xl">
+        <div className="my-1 p-1 rounded-sm text-center">
+          <button onClick={() => dispatch({view: 'journal'})} className="ms-link text-2xl">
             Journals
           </button>
-          <button className="link w-full mt-2" onClick={() => onNewDailyNote(today)}>
+          <button className="ms-link w-full mt-2" onClick={() => onNewDailyNote(today)}>
             Today : {today}
           </button>
         </div>

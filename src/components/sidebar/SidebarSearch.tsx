@@ -31,7 +31,7 @@ export default function SidebarSearch(props: Props) {
       <div className={`flex flex-col flex-1 overflow-y-auto ${className}`}>
         <input
           type="text"
-          className="block py-1 mx-4 my-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+          className="block py-1 mx-4 my-2 bg-white border-gray-200 rounded-sm dark:bg-gray-700 dark:border-gray-700"
           placeholder="Search..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
@@ -111,7 +111,7 @@ const SidebarSearchBranch = memo(function SidebarSearchBranch(
 ) {
   const { text } = props;
   return (
-    <p className="py-1 overflow-hidden overflow-ellipsis text-lg font-semibol dark:text-gray-200">
+    <p className="py-1 overflow-hidden text-ellipsis text-lg font-semibol dark:text-gray-200">
       {text}
     </p>
   );
@@ -135,7 +135,7 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
 
   return (
     <button
-      className="w-full text-left rounded hover:bg-gray-200 active:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600"
+      className="w-full text-left rounded-sm hover:bg-gray-200 active:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600"
       onClick={async () => {
         const hash = block ? `0-${block.path}` : '';
         // close Sidebar before go to note page on small screen
@@ -148,7 +148,7 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
       }}
     >
       <Highlighter
-        className={`block px-1 py-2 text-gray-600 break-words dark:text-gray-300 ${className}`}
+        className={`block px-1 py-2 text-gray-600 wrap-break-word dark:text-gray-300 ${className}`}
         highlightClassName="bg-yellow-200 text-gray-600 dark:bg-yellow-800 dark:text-gray-300"
         searchWords={searchQuery.split(' ')}
         autoEscape={true}

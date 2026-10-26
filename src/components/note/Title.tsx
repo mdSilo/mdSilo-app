@@ -39,7 +39,7 @@ function Title(props: Props) {
   return (
     <div
       ref={titleRef}
-      className={`title text-3xl md:text-4xl font-semibold border-none focus:outline-none p-0 leading-tight cursor-text ${className}`}
+      className={`title text-3xl md:text-4xl font-semibold border-none focus:outline-hidden p-0 leading-tight cursor-text ${className}`}
       role="textbox"
       onKeyPress={(event) => {
         // Disallow newlines in the title field

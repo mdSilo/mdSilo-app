@@ -45,7 +45,7 @@ export function CorsProxySetting() {
       <input
         type="text"
         aria-label="RSS CORS Proxy"
-        className="w-full p-1 rounded border-none outline-none text-sm"
+        className="w-full p-1 rounded-sm border-none outline-hidden text-sm"
         style={{ maxWidth: '24em' }}
         placeholder="https://proxy.example.com/?url={url}"
         value={proxy}

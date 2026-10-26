@@ -18,11 +18,11 @@ export default function Journals() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-1 flex-col flex-shrink-0 md:flex-shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
+      <div className="flex flex-1 flex-col shrink-0 md:shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
         <div className="flex justify-center my-6">
         {initDir ? (
           <FindOrCreateInput
-            className="w-full bg-white rounded shadow-popover dark:bg-gray-800"
+            className="w-full bg-white rounded-sm shadow-popover dark:bg-gray-800"
           />
         ) : null}
         </div>
@@ -52,7 +52,7 @@ function NoteItem(props: NoteItemProps) {
           await openFilePath(note.id, true);
           dispatch({view: 'md', params: { noteId: note.id }});
         }}
-        className="flex items-center link text-lg py-2 pl-4"
+        className="flex items-center ms-link text-lg py-2 pl-4"
       >
         <span className="title text-2xl text-yellow-500 font-semibold mt-4">
           {note.title}

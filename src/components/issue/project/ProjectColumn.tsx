@@ -54,7 +54,7 @@ export default function ProjectColumn(props: Props) {
       ref={setNodeRef}
       style={style}
       data-testid="project-column"
-      className={`flex flex-col flex-shrink-0 w-72 max-h-full bg-gray-100 rounded dark:bg-gray-800 ${isDragging ? 'opacity-40' : ''} ${isOver ? 'ring-2 ring-primary-400' : ''}`}
+      className={`flex flex-col shrink-0 w-72 max-h-full bg-gray-100 rounded-sm dark:bg-gray-800 ${isDragging ? 'opacity-40' : ''} ${isOver ? 'ring-2 ring-primary-400' : ''}`}
     >
       <div
         {...attributes}
@@ -100,7 +100,7 @@ export default function ProjectColumn(props: Props) {
           <IconTrash size={16} />
         </button>
       </div>
-      <div className="flex flex-col flex-1 gap-2 px-2 pb-2 overflow-y-auto min-h-[3rem]">
+      <div className="flex flex-col flex-1 gap-2 px-2 pb-2 overflow-y-auto min-h-12">
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {issues.map((issue) => (
             <ProjectCard key={issue.number} issue={issue} data={data} status={status.id} onOpen={onOpen} />
@@ -131,7 +131,7 @@ export default function ProjectColumn(props: Props) {
         ) : (
           <button
             type="button"
-            className="flex items-center w-full gap-1 px-2 py-1 text-sm text-gray-500 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="flex items-center w-full gap-1 px-2 py-1 text-sm text-gray-500 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-700"
             onClick={() => setAdding(true)}
           >
             <IconPlus size={14} /> Add item

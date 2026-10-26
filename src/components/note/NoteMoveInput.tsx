@@ -146,7 +146,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
 
   return (
     <div className={`flex flex-col ${className}`}>
-      <div className="flex items-center flex-shrink-0 w-full">
+      <div className="flex items-center shrink-0 w-full">
         <IconSearch className="ml-4 text-gray-500" size={20} />
         <input
           ref={ref}
@@ -199,9 +199,9 @@ const OptionItem = (props: OptionProps) => {
       onClick={onClick}
     >
       {option.icon ? (
-        <option.icon size={18} className="flex-shrink-0 mr-1" />
+        <option.icon size={18} className="shrink-0 mr-1" />
       ) : null}
-      <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
+      <span className="overflow-hidden text-ellipsis whitespace-nowrap">
         {option.text}
       </span>
     </button>

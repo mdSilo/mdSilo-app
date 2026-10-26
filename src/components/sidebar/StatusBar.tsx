@@ -33,7 +33,7 @@ function Statusbar(props: Props) {
       {currentPod && (
         <div className={`py-1 flex flex-row items-center justify-center ${hide ? 'hidden' : ''}`}>
           <span 
-            className="mx-1 text-xs break-words cursor-pointer" 
+            className="mx-1 text-xs wrap-break-word cursor-pointer" 
             onClick={async () => await toArticle(currentPod.article_url)}
           >
             {currentPod.title}

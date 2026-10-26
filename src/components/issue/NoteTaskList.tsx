@@ -61,7 +61,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
             type="button"
             key={f}
             aria-pressed={filter === f}
-            className={`px-2 py-1 text-sm rounded ${filter === f ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+            className={`px-2 py-1 text-sm rounded-sm ${filter === f ? 'bg-gray-200 dark:bg-gray-700 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
             onClick={() => setFilter(f)}
           >
             {f === 'all' ? 'All' : f[0].toUpperCase() + f.slice(1)} <span className="text-xs text-gray-500">{count(f)}</span>
@@ -79,7 +79,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
       {shown.length === 0 ? (
         <p className="p-8 text-center text-gray-500">No tasks in notes.</p>
       ) : (
-        <ul className="border border-gray-200 rounded dark:border-gray-700">
+        <ul className="border border-gray-200 rounded-sm dark:border-gray-700">
           {shown.map((task) => {
             const issue = issueOfTask(data.issues, task);
             return (
@@ -92,8 +92,8 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
                   {task.kind === 'checkbox' ? (task.tag === 'done' ? '[x]' : '[ ]') : `#${task.tag}`}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="break-words">{task.text || <i className="text-gray-500">(no text)</i>}</div>
-                  <button type="button" className="text-xs link" title={task.noteId} onClick={() => openNote(task.noteId)}>
+                  <div className="wrap-break-word">{task.text || <i className="text-gray-500">(no text)</i>}</div>
+                  <button type="button" className="text-xs ms-link" title={task.noteId} onClick={() => openNote(task.noteId)}>
                     {task.noteTitle}
                   </button>
                 </div>

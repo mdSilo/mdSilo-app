@@ -37,7 +37,7 @@ export const BaseModal = ({ title, children, isOpen, handleClose, panelClassName
             leaveTo="opacity-0"
           >
             <Dialog.Overlay 
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+              className="fixed inset-0 bg-gray-500/75 transition-opacity" 
             />
           </Transition.Child>
           <span
@@ -55,7 +55,7 @@ export const BaseModal = ({ title, children, isOpen, handleClose, panelClassName
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className={`inline-block bg-white rounded p-4 overflow-hidden shadow-xl transform transition-all w-full ${panelClassName}`}>
+            <div className={`relative inline-block bg-white rounded-sm p-4 overflow-hidden shadow-xl transform transition-all w-full ${panelClassName}`}>
               <div className="absolute right-4 top-4">
                 <IconX 
                   size={24} 

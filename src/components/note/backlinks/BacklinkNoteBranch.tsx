@@ -12,7 +12,7 @@ const BacklinkNoteBranch = (props: BacklinkNoteBranchProps) => {
 
   return (
     <button
-      className="py-1 link"
+      className="py-1 ms-link"
       onClick={(e) => {
         e.stopPropagation();
         onNoteLinkClick(backlink.id);

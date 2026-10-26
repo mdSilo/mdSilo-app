@@ -11,7 +11,7 @@ function MilestoneForm({ initial, submitText, onSubmit, onCancel }: {
 }) {
   const [draft, setDraft] = useState<Draft>(initial);
   return (
-    <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded dark:bg-gray-800">
+    <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-sm dark:bg-gray-800">
       <div className="flex flex-wrap gap-2">
         <input
           aria-label="Milestone title"
@@ -81,7 +81,7 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
           onSubmit={(d) => { apply((x) => createMilestone(x, d)); setCreating(false); }}
         />
       ) : null}
-      <ul className="mt-2 border border-gray-200 rounded dark:border-gray-700">
+      <ul className="mt-2 border border-gray-200 rounded-sm dark:border-gray-700">
         {shown.length === 0 ? <li className="p-4 text-center text-gray-500">No {tab} milestones.</li> : null}
         {shown.map((m) => {
           const p = milestoneProgress(data, m.id);
@@ -107,22 +107,22 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
                   </div>
                   <div className="w-full md:w-72">
                     <div
-                      className="h-2 bg-gray-200 rounded dark:bg-gray-700"
+                      className="h-2 bg-gray-200 rounded-sm dark:bg-gray-700"
                       role="progressbar"
                       aria-valuenow={p.percent}
                       aria-valuemin={0}
                       aria-valuemax={100}
                     >
-                      <div className="h-2 bg-green-600 rounded" style={{ width: `${p.percent}%` }} />
+                      <div className="h-2 bg-green-600 rounded-sm" style={{ width: `${p.percent}%` }} />
                     </div>
                     <div className="flex gap-3 mt-1 text-xs text-gray-500">
                       <span>{p.percent}% complete</span><span>{p.open} open</span><span>{p.closed} closed</span>
                     </div>
                     <div className="flex gap-3 mt-1 text-sm">
-                      <button type="button" className="link" onClick={() => setEditing(m.id)}>Edit</button>
+                      <button type="button" className="ms-link" onClick={() => setEditing(m.id)}>Edit</button>
                       <button
                         type="button"
-                        className="link"
+                        className="ms-link"
                         onClick={() => apply((x) => updateMilestone(x, m.id, { state: m.state === 'open' ? 'closed' : 'open' }))}
                       >
                         {m.state === 'open' ? 'Close' : 'Reopen'}

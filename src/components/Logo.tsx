@@ -7,7 +7,7 @@ type Props = {
 };
 
 export default function Logo(props: Props) {
-  const { width = 32, height = 32, className = 'rounded img-effect' } = props;
+  const { width = 32, height = 32, className = 'rounded-sm img-effect' } = props;
   return (
     <div className="text-center p-2">
       <img

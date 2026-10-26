@@ -24,7 +24,7 @@ function SidebarNotesBar(props: Props) {
   const currentFolder = currentDir 
     ? normalizeSlash(currentDir).split('/').pop() || '/'
     : 'md';
-  const barClass = `px-2 text-sm bg-blue-500 text-white rounded overflow-hidden`; 
+  const barClass = `px-2 text-sm bg-blue-500 text-white rounded-sm overflow-hidden`; 
   
   return (
     <div className="flex items-center justify-between border-t dark:border-gray-700">
@@ -54,7 +54,7 @@ function SidebarNotesBar(props: Props) {
       </Tooltip>
       <Tooltip content={checkInit ? "" : "Go Upper Folder"}>
         <button
-          className="p-1 mx-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="p-1 mx-2 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={async (e) => {
             e.preventDefault();
             if (!currentDir || currentDir === initDir) return;

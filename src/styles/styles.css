@@ -1,6 +1,199 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss' source(none);
+@source '../../src';
+@source '../../public';
+
+@plugin '@tailwindcss/typography';
+@plugin '@tailwindcss/forms';
+/* light by default; dark on the element with data-theme="dark" (see App) */
+@plugin 'daisyui' {
+  themes: light --default, dark;
+}
+
+/* dark mode follows the `dark` class, set by the app */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary-50: var(--color-emerald-50);
+  --color-primary-100: var(--color-emerald-100);
+  --color-primary-200: var(--color-emerald-200);
+  --color-primary-300: var(--color-emerald-300);
+  --color-primary-400: var(--color-emerald-400);
+  --color-primary-500: var(--color-emerald-500);
+  --color-primary-600: var(--color-emerald-600);
+  --color-primary-700: var(--color-emerald-700);
+  --color-primary-800: var(--color-emerald-800);
+  --color-primary-900: var(--color-emerald-900);
+  --color-primary-950: var(--color-emerald-950);
+
+  /* gray is neutral */
+  --color-gray-50: var(--color-neutral-50);
+  --color-gray-100: var(--color-neutral-100);
+  --color-gray-200: var(--color-neutral-200);
+  --color-gray-300: var(--color-neutral-300);
+  --color-gray-400: var(--color-neutral-400);
+  --color-gray-500: var(--color-neutral-500);
+  --color-gray-600: var(--color-neutral-600);
+  --color-gray-700: var(--color-neutral-700);
+  --color-gray-800: var(--color-neutral-800);
+  --color-gray-900: var(--color-neutral-900);
+  --color-gray-950: var(--color-neutral-950);
+
+  --spacing-screen-10: 10vh;
+  --spacing-screen-80: 80vh;
+
+  --shadow-popover: rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
+
+  --animate-bounce-x: bounce-x 1s infinite;
+  @keyframes bounce-x {
+    0%,
+    100% {
+      transform: translateX(0);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateX(25%);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* as Tailwind CSS v3: gray placeholders and pointer cursor on buttons */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility pop-btn {
+  @apply px-2 py-2 text-sm text-black rounded-sm shadow-sm bg-green-200 hover:bg-green-100;
+}
+
+@utility m-btn0 {
+  @apply px-2 py-1 text-xs text-black rounded-sm shadow-sm bg-green-200 hover:bg-green-100;
+}
+
+@utility m-btn1 {
+  @apply px-2 py-1 text-xs text-black rounded-sm shadow-sm bg-blue-200 hover:bg-blue-100;
+}
+
+@utility m-btn2 {
+  @apply px-2 py-1 text-xs text-black rounded-sm shadow-sm bg-orange-200 hover:bg-orange-100;
+}
+
+@utility ms-link {
+  @apply cursor-pointer text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300;
+}
+
+@utility splash-bg {
+  background: linear-gradient(55deg, #414b61 0 45%, #2d3343 45% 100%);
+}
+
+@utility img-effect {
+  --m:
+    radial-gradient(circle farthest-side at right, #000 99%, #0000) 0 100%/46%
+      92% no-repeat,
+    radial-gradient(circle farthest-side at left, #000 99%, #0000) 100% 0/46%
+      92% no-repeat;
+  -webkit-mask: var(--m);
+  mask: var(--m);
+}
+
+@utility content {
+  line-height: 1.8;
+  & a {
+    color: green;
+  }
+  & a:hover {
+    text-decoration: underline;
+  }
+  & h1 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & h2 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & h3 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & h4 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & h5 {
+    padding: 12px 0;
+    line-height: 1.2em;
+  }
+  & pre {
+    white-space: break-spaces;
+  }
+  & img {
+    display: block;
+    max-width: 100% !important;
+    height: auto;
+    margin: 10px auto;
+  }
+  & video {
+    display: block;
+    max-width: 100% !important;
+    height: auto;
+    margin: 10px auto;
+  }
+  & blockquote {
+    font-weight: 400;
+    margin: 2rem 0;
+    padding-left: 1rem;
+    border-left: 6px solid greenyellow;
+  }
+  & p {
+    line-height: 1.6;
+    font-weight: 400;
+    font-size: 18px;
+    margin: 1.2rem 0;
+  }
+  & table {
+    border: 1px solid;
+    padding: 6px;
+  }
+  & th {
+    border: 1px solid;
+    padding: 6px;
+  }
+  & td {
+    border: 1px solid;
+    padding: 6px;
+  }
+  & hr {
+    margin: 2.4rem 0;
+  }
+  & figcaption {
+    text-align: center;
+    color: #f4f4f5;
+  }
+}
 
 @layer base {
   h1 {
@@ -15,101 +208,6 @@
   h4 {
     font-size: 1.2em;
   }
-}
-
-@layer components {
-  .btn {
-    @apply px-5 py-3 font-medium text-white transition duration-200 ease-in-out rounded shadow bg-primary-600 hover:bg-opacity-75;
-  }
-
-  .pop-btn {
-    @apply px-2 py-2 text-sm text-black rounded shadow bg-green-200 hover:bg-green-100;
-  }
-
-  .m-btn0 {
-    @apply px-2 py-1 text-xs text-black rounded shadow bg-green-200 hover:bg-green-100;
-  }
-
-  .m-btn1 {
-    @apply px-2 py-1 text-xs text-black rounded shadow bg-blue-200 hover:bg-blue-100;
-  }
-
-  .m-btn2 {
-    @apply px-2 py-1 text-xs text-black rounded shadow bg-orange-200 hover:bg-orange-100;
-  }
-
-  .card {
-    @apply max-w-md p-8 overflow-hidden bg-white rounded shadow-md;
-  }
-
-  .input {
-    @apply block py-1 text-gray-500 border-gray-300 rounded shadow-sm focus:ring-yellow-300 focus:border-primary-50;
-  }
-
-  .link {
-    @apply cursor-pointer text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300;
-  }
-  .splash-bg {
-    background: linear-gradient(55deg, #414b61 0 45%, #2d3343 45% 100%);
-  }
-  .img-effect {
-    --m:
-      radial-gradient(circle farthest-side at right,#000 99%,#0000) 0 100%/46% 92% no-repeat,
-      radial-gradient(circle farthest-side at left,#000 99%,#0000) 100% 0/46% 92% no-repeat;
-    -webkit-mask: var(--m);
-            mask: var(--m);
-  }
-
-  .content {
-    line-height: 1.8;
-  }
-  .content a {
-    color: green;
-  }
-  .content a:hover {
-    text-decoration: underline;
-  }
-  .content h1, .content h2, .content h3, .content h4, .content h5 {
-    padding: 12px 0;
-    line-height: 1.2em;
-  }
-  .content pre {
-    white-space: break-spaces;
-  }
-  .content img, .content video {
-    display: block;
-    max-width: 100% !important;
-    height: auto;
-    margin: 10px auto;
-  }
-  .content blockquote {
-    font-weight: 400;
-    margin: 2rem 0;
-    padding-left: 1rem;
-    border-left: 6px solid greenyellow;
-  }
-  .content p {
-    line-height: 1.6;
-    font-weight: 400;
-    font-size: 18px;
-    margin: 1.2rem 0;
-  }
-  .content table, .content th, .content td {
-    border: 1px solid;
-    padding: 6px;
-  }
-  .content hr {
-    margin: 2.4rem 0;
-  }
-  .content figcaption {
-    text-align: center;
-    color: #f4f4f5;
-  }
-}
-
-:root {
-  /* This is used for the spinner and progress bar */
-  --color-primary-500: #00bfd8;
 }
 
 * {

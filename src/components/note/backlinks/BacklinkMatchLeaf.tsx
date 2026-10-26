@@ -17,7 +17,7 @@ const BacklinkMatchLeaf = (props: BacklinkMatchLeafProps) => {
   const { noteId, matches, className } = props;
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
 
-  const containerClassName = `block text-left text-xs rounded p-2 my-1 w-full break-words ${className}`;
+  const containerClassName = `block text-left text-xs rounded-sm p-2 my-1 w-full wrap-break-word ${className}`;
 
   return (
     <button

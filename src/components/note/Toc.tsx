@@ -38,7 +38,7 @@ export default function Toc(props: Props) {
           {headings.map((heading) => (
             <div
               key={heading.id}
-              className="flex items-center select-none link"
+              className="flex items-center select-none ms-link"
               style={{ 
                 paddingLeft: `${heading.level * 12}px`, 
                 fontSize: `${Math.max((12 - heading.level) * 2, 16)}px` 

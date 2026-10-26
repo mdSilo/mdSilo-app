@@ -74,13 +74,13 @@ export function FeedManager(props: Props) {
   return (
     <div className="flex flex-col items-start justify-center p-2">
       {showAdd && (
-        <div className="flex flex-col w-full p-4 outline outline-2 outline-offset-2 outline-green-500">
+        <div className="flex flex-col w-full p-4 outline-solid outline-2 outline-offset-2 outline-green-500">
           <div className="flex flex-row items-center justify-start w-full">
             <div className="mr-2 dark:text-white">URL</div>
             <div className="w-full">
               <input
                 type="text"
-                className="w-full p-1 mx-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+                className="w-full p-1 mx-2 bg-white border-gray-200 rounded-sm dark:bg-gray-700 dark:border-gray-700"
                 placeholder="Feed URL"
                 value={feedUrl}
                 onChange={(e) => setFeedUrl(e.target.value)}
@@ -93,7 +93,7 @@ export function FeedManager(props: Props) {
             <div className="w-full">
               <input
                 type="text"
-                className="w-full p-1 m-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+                className="w-full p-1 m-2 bg-white border-gray-200 rounded-sm dark:bg-gray-700 dark:border-gray-700"
                 placeholder="Feed Title"
                 value={feedTitle}
                 onChange={(e) => setFeedTitle(e.target.value)}
@@ -135,7 +135,7 @@ export function FeedManager(props: Props) {
       <div className="flex flex-row items-center justify-between w-full mt-2">
         <Tooltip content="Add Feed" placement="bottom">
           <button
-            className="px-2 py-1 text-sm text-black rounded bg-primary-200 hover:bg-primary-100"
+            className="px-2 py-1 text-sm text-black rounded-sm bg-primary-200 hover:bg-primary-100"
             onClick={() => setShowAdd(!showAdd)}
           >
             <IconPlus size={15} className="" />
@@ -144,7 +144,7 @@ export function FeedManager(props: Props) {
         <div className="">
           <input
             type="text"
-            className="p-2 m-2 bg-white border-gray-200 rounded dark:bg-gray-700 dark:border-gray-700"
+            className="p-2 m-2 bg-white border-gray-200 rounded-sm dark:bg-gray-700 dark:border-gray-700"
             placeholder="Search Feed"
             value={searchText}
             onChange={(e) => {

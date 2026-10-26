@@ -12,7 +12,7 @@
  */
 import { defineConfig, mergeConfig, Plugin } from 'vite';
 import path from 'path';
-import baseConfig from './vite.config';
+import baseConfig from './vite.config.mts';
 import pkg from './package.json';
 import { createCorsProxyHandler } from './web/cors-proxy.mjs';
 

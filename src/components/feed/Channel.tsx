@@ -32,7 +32,7 @@ export function Channel(props: Props) {
 
   return (
     <div className="flex flex-col items-between justify-center">
-      <div className="flex flex-row items-center justify-between p-2 bg-slate-500 rounded">
+      <div className="flex flex-row items-center justify-between p-2 bg-slate-500 rounded-sm">
         <div className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</div>
         {(channel) && (
           <div className="flex flex-row items-center justify-end">

@@ -81,7 +81,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           </label>
           <select
             id="side-menu-orientation"
-            className="w-full p-1 rounded text-primary-500 border-none"
+            className="w-full p-1 rounded-sm text-primary-500 border-none"
             style={{ width: '12em' }}
             value={sideMenuOrientation}
             onChange={(event) => {
@@ -105,7 +105,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             <select 
               name="select-font" 
               id="select-font"
-              className="w-full p-1 rounded text-primary-500 border-none"
+              className="w-full p-1 rounded-sm text-primary-500 border-none"
               style={{width: '8em'}}
               value={font || 'Default'}
               onChange={(ev) => {
@@ -124,17 +124,17 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
         <div className="flex flex-col items-center">
           <div className="flex flex-row items-center justify-center m-1">
             <span className="text-sm text-gray-600 mr-2">Font Size: </span>
-            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={fontSize.toFixed(1)} step="0.1" onChange={e => setSize(Number(e.target.value) || 1.1)} />
+            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={fontSize.toFixed(1)} step="0.1" onChange={e => setSize(Number(e.target.value) || 1.1)} />
             <span className="text-sm text-gray-600">em</span>
           </div>
           <div className="flex flex-row items-center justify-center m-1">
             <span className="text-sm text-gray-600 mr-2">Line Height: </span>
-            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={lineHeight.toFixed(1)} step="0.1" onChange={e => setHeight(Number(e.target.value) || 1.6)} />
+            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={lineHeight.toFixed(1)} step="0.1" onChange={e => setHeight(Number(e.target.value) || 1.6)} />
             <span className="text-sm text-gray-600">em</span>
           </div>
           <div className="flex flex-row items-center justify-center m-1">
             <span className="text-sm text-gray-600 mr-2">Font Weight: </span>
-            <input type="number" className="p-1 border-none outline-none" style={{width: '5em'}} value={fontWt.toFixed()} step="100" onChange={e => setWt(Number(e.target.value) || 400)} />
+            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={fontWt.toFixed()} step="100" onChange={e => setWt(Number(e.target.value) || 400)} />
           </div>
         </div>
       </div>

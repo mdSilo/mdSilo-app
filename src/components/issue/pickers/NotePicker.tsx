@@ -44,7 +44,7 @@ export default function NotePicker({ issue }: { issue: Issue }) {
               return (
                 <li key={p} className="flex items-center gap-1">
                   {note ? (
-                    <button type="button" className="flex-1 text-left truncate link" title={p} onClick={() => openNote(p)}>
+                    <button type="button" className="flex-1 text-left truncate ms-link" title={p} onClick={() => openNote(p)}>
                       {note.title}
                     </button>
                   ) : (
@@ -66,7 +66,7 @@ export default function NotePicker({ issue }: { issue: Issue }) {
             {mentioned.map(({ title, id }) => (
               <li key={`m-${title}`} className="flex items-center gap-1" data-testid="mentioned-note">
                 {id ? (
-                  <button type="button" className="flex-1 text-left truncate link" title={id} onClick={() => openNote(id)}>
+                  <button type="button" className="flex-1 text-left truncate ms-link" title={id} onClick={() => openNote(id)}>
                     {title}
                   </button>
                 ) : (

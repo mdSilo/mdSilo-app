@@ -46,7 +46,7 @@ export default function Picker({ title, summary, children }: Props) {
         <div
           role="menu"
           aria-label={title}
-          className="absolute right-0 z-20 w-64 mt-1 overflow-y-auto bg-white border border-gray-200 rounded shadow-lg max-h-80 dark:bg-gray-800 dark:border-gray-600"
+          className="absolute right-0 z-20 w-64 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-sm shadow-lg max-h-80 dark:bg-gray-800 dark:border-gray-600"
         >
           {children(() => setOpen(false))}
         </div>

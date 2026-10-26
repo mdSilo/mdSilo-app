@@ -58,7 +58,7 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
   const [version, setVersion] = useState(0);
 
   return (
-    <li className="my-3 border border-gray-200 rounded dark:border-gray-700" data-testid="timeline-comment">
+    <li className="my-3 border border-gray-200 rounded-sm dark:border-gray-700" data-testid="timeline-comment">
       <div className="flex items-center justify-between px-3 py-1 text-xs text-gray-500 bg-gray-50 dark:bg-gray-800">
         <span>
           commented <TimeAgo iso={item.createdAt} />

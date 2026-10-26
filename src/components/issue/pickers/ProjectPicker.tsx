@@ -20,14 +20,14 @@ export default function ProjectPicker({ issue, data }: { issue: Issue; data: Iss
               <li key={project.id} className="flex items-center gap-1">
                 <button
                   type="button"
-                  className="link truncate"
+                  className="ms-link truncate"
                   onClick={() => dispatch({ view: 'project', projectId: project.id })}
                 >
                   {project.title}
                 </button>
                 <select
                   aria-label={`Status in ${project.title}`}
-                  className="flex-1 py-0 pl-1 text-xs border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600"
+                  className="flex-1 py-0 pl-1 text-xs border-gray-300 rounded-sm dark:bg-gray-800 dark:border-gray-600"
                   value={status?.id ?? ''}
                   onChange={(e) => {
                     const sid = e.target.value;

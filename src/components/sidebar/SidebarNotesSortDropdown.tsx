@@ -27,7 +27,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
       {({ open }) => (
         <>
           <Menu.Button
-            className="rounded hover:bg-gray-200 active:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600"
+            className="rounded-sm hover:bg-gray-200 active:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600"
             ref={buttonRef}
           >
             <Tooltip content="Sort">
@@ -42,7 +42,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
           {open && (
             <Portal>
               <Menu.Items
-                className="z-20 w-56 overflow-hidden bg-white rounded dark:bg-gray-800 shadow-popover focus:outline-none"
+                className="z-20 w-56 overflow-hidden bg-white rounded-sm dark:bg-gray-800 shadow-popover focus:outline-hidden"
                 static
                 ref={setPopperElement}
                 style={styles.popper}
