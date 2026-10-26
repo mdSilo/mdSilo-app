@@ -1,6 +1,6 @@
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
-import { Notes, store } from 'lib/store';
+import { NoteMap, Notes, store } from 'lib/store';
 import { defaultNote, Note } from 'types/model';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
@@ -315,16 +315,37 @@ export async function openJSONFilePath(filePath: string) {
 // NoteMoveToInput: search dir to move to, so need to upsert dir to notes 
 // backlinks(useBacklinks, updateBacklinks)
 
+// the load in progress: loading the same dir again waits for it
+let loading: { dir: string; promise: Promise<void> } | undefined;
+
 /**
- * load dir / sub-dirs and write to json on rust end 
- * @returns void 
+ * Load all the notes with content in dir / sub-dirs into the store, then
+ * `isLoaded` is set. Dropped if another folder is opened meanwhile.
  */
-export async function loadDir(dir: string) {
-  const isLoading = store.getState().isLoading;
-  if (isLoading) return;
-  invoke<boolean>('write_json', { dir });
-  // console.log("trigger loadDir", dir, isLoading);
+export function loadDir(dir: string): Promise<void> {
+  // a reset (e.g. another folder opened) forgets the load
+  if (loading?.dir === dir && store.getState().isLoading) return loading.promise;
   store.getState().setIsLoading(true);
+  const promise = loadNotes(dir).finally(() => {
+    if (loading?.promise !== promise) return; // a newer load
+    loading = undefined;
+    store.getState().setIsLoading(false);
+  });
+  loading = { dir, promise };
+  return promise;
+}
+
+async function loadNotes(dir: string) {
+  try {
+    const notes = await invoke<Notes | undefined>('load_notes', { dir });
+    if (!notes) return;
+    const initDir = store.getState().initDir;
+    if (initDir && initDir !== dir) return;
+    store.getState().setNotes(NoteMap.from(notes));
+    store.getState().setIsLoaded(true);
+  } catch (e) {
+    console.error('Failed to load notes:', e);
+  }
 }
 
 /**

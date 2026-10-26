@@ -110,21 +110,15 @@ describe('web invoke: files', () => {
     unlisten();
   });
 
-  it('writes mdsilo.json and emits loaded', async () => {
+  it('loads the notes of a dir, without writing into it', async () => {
     await invoke('write_file', { filePath: '/w/a.md', text: '# A' });
     await invoke('write_file', { filePath: '/w/sub/b.md', text: '# B' });
     await invoke('write_file', { filePath: '/w/.git/c.md', text: '' });
-    const events: unknown[] = [];
-    const unlisten = await getCurrentWindow().listen('changes', (e) => events.push(e.payload));
-    expect(await invoke('write_json', { dir: '/w' })).toBe(true);
-    await flush();
-    expect(events).toContainEqual({ paths: ['/w'], event: 'loaded' });
-    const json = JSON.parse(await invoke<string>('read_file', { filePath: '/w/mdsilo.json' }));
-    expect(Object.keys(json.notesobj).sort()).toEqual(['/w/a.md', '/w/sub', '/w/sub/b.md']);
-    expect(json.notesobj['/w/a.md']).toMatchObject({ title: 'a', content: '# A', is_dir: false });
-    expect(json.notetree['/w'].map((i: { id: string }) => i.id)).toEqual(['/w/a.md', '/w/sub']);
-    expect(json.notetree['/w/sub'].map((i: { id: string }) => i.id)).toEqual(['/w/sub/b.md']);
-    unlisten();
+    const notes = await invoke<Record<string, { title: string }>>('load_notes', { dir: '/w' });
+    expect(Object.keys(notes).sort()).toEqual(['/w/a.md', '/w/sub', '/w/sub/b.md']);
+    expect(notes['/w/a.md']).toMatchObject({ title: 'a', content: '# A', is_dir: false });
+    expect(await invoke('file_exist', { filePath: '/w/mdsilo.json' })).toBe(false);
+    expect(await invoke('load_notes', { dir: '/none' })).toEqual({});
   });
 
   it('converts file path to url', () => {

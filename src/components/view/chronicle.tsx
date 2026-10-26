@@ -13,14 +13,13 @@ import { checkFileIsMd } from 'file/process';
 
 export default function Chronicle() {
   const isLoaded = useStore((state) => state.isLoaded);
-  const setIsLoaded = useStore((state) => state.setIsLoaded);
   const initDir = useStore((state) => state.initDir);
   // console.log("c loaded?", isLoaded);
   useEffect(() => {
     if (!isLoaded && initDir) {
-      loadDir(initDir).then(() => setIsLoaded(true));
+      void loadDir(initDir);
     }
-  }, [initDir, isLoaded, setIsLoaded]);
+  }, [initDir, isLoaded]);
 
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;

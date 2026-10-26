@@ -33,7 +33,7 @@ export default function useBacklinks(noteId: string): Backlinks {
   // load all notes with content, isLoaded is set once loaded
   useEffect(() => {
     if (!isLoaded && initDir) {
-      loadDir(initDir);
+      void loadDir(initDir);
     }
   }, [initDir, isLoaded]);
 

@@ -37,15 +37,14 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   } = props;
 
   const isLoaded = useStore((state) => state.isLoaded);
-  const setIsLoaded = useStore((state) => state.setIsLoaded);
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
   // console.log("loaded?", isLoaded);
   useEffect(() => {
     if (!isLoaded && initDir) {
-      loadDir(initDir).then(() => setIsLoaded(true));
+      void loadDir(initDir);
     }
-  }, [initDir, isLoaded, setIsLoaded]);
+  }, [initDir, isLoaded]);
 
   const [inputText, setInputText] = useState('');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);

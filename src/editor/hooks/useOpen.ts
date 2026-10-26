@@ -62,8 +62,8 @@ export const listInitDir = async (dirPath: string) => {
   store.getState().upsertRecentDir(dirPath);
   // listen on init dir only
   await listDir(dirPath);
-  // load dir/sub-dirs to json on rust end 
-  loadDir(dirPath);
+  // all notes with content, e.g. for backlinks and search
+  void loadDir(dirPath);
 };
 
 let isWebWorkspaceOpening = false;

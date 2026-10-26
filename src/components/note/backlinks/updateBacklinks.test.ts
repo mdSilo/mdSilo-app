@@ -38,16 +38,9 @@ describe('updateBacklinks', () => {
   test('triggers a full load when needed and waits for it', async () => {
     store.getState().setInitDir('/n');
     const linker = makeNote({ id: '/n/linker.md', title: 'linker', content: 'see [[x]]' });
-    // the loaded notes arrive after write_json
-    mockInvoke(invoke, {
-      write_json: () => {
-        store.getState().setNotes(NoteMap.from([linker]));
-        store.getState().setIsLoaded(true);
-        return true;
-      },
-    });
+    mockInvoke(invoke, { load_notes: { [linker.id]: linker } });
     await updateBacklinks('x', 'y');
-    expect(invoke).toHaveBeenCalledWith('write_json', { dir: '/n' });
+    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/n' });
     expect(store.getState().notes.get(linker.id)?.content).toBe('see [[y]]');
   });
 

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, type Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import { NoteMap } from 'lib/noteMap';
 import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '../../testUtils';
 
@@ -38,6 +38,7 @@ describe('useOpen (tauri)', () => {
       list_directory: files,
       read_directory: { files, number_of_files: files.length },
       join_paths: joinPaths,
+      load_notes: {},
     });
     useOpen = await import('./useOpen');
     store = (await import('lib/store')).store;
@@ -94,8 +95,10 @@ describe('useOpen (tauri)', () => {
     expect(s.initDir).toBe('/picked');
     expect(s.noteTree['/picked']).toHaveLength(2);
     expect(invoke).toHaveBeenCalledWith('list_directory', { dir: '/picked' });
-    expect(invoke).toHaveBeenCalledWith('write_json', { dir: '/picked' });
-    expect(s.isLoading).toBe(true);
+    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/picked' });
+    // in the background: the notes with content come after the listing
+    await vi.waitFor(() => expect(store.getState().isLoaded).toBe(true));
+    expect(store.getState().isLoading).toBe(false);
   });
 
   test('onOpenDir and onListDir ignore cancel', async () => {

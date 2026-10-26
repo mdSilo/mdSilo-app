@@ -32,52 +32,26 @@ async function getLog(): Promise<LogItem[]> {
 }
 
 // # json, src-tauri/src/json.rs, src-tauri/src/tree/mod.rs
-interface NoteTreeItem {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-  is_dir: boolean;
-}
-
-async function writeJson(dir: string): Promise<boolean> {
+// all the notes in the dir and its sub-dirs, with content
+async function loadNotes(dir: string): Promise<Record<string, unknown>> {
   const root = normalize(dir);
   const rootEntry = await fs.stat(root);
   const notesobj: Record<string, unknown> = {};
-  const notetree: Record<string, NoteTreeItem[]> = {};
-  if (rootEntry?.is_dir) {
-    notetree[root] = [];
-    const entries = await fs.walk(root, true);
-    for (const e of entries) {
-      if (e.is_dir) notetree[e.path] ??= [];
-    }
-    for (const e of entries) {
-      const title = fileStem(e.name);
-      const created_at = new Date(e.created).toISOString();
-      const updated_at = new Date(e.modified).toISOString();
-      notesobj[e.path] = {
-        id: e.path,
-        title,
-        content: !e.is_dir && isTextNote(e.path) && typeof e.data === 'string' ? e.data : '',
-        file_path: e.path,
-        cover: '',
-        created_at,
-        updated_at,
-        is_daily: false,
-        is_dir: e.is_dir,
-      };
-      notetree[e.parent]?.push({ id: e.path, title, created_at, updated_at, is_dir: e.is_dir });
-    }
-    for (const items of Object.values(notetree)) {
-      items.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-    }
+  if (!rootEntry?.is_dir) return notesobj;
+  for (const e of await fs.walk(root, true)) {
+    notesobj[e.path] = {
+      id: e.path,
+      title: fileStem(e.name),
+      content: !e.is_dir && isTextNote(e.path) && typeof e.data === 'string' ? e.data : '',
+      file_path: e.path,
+      cover: '',
+      created_at: new Date(e.created).toISOString(),
+      updated_at: new Date(e.modified).toISOString(),
+      is_daily: false,
+      is_dir: e.is_dir,
+    };
   }
-  const activities = (await getData('activities')).data ?? {};
-  const json = JSON.stringify({ isloaded: true, notesobj, notetree, activities });
-  const res = rootEntry?.is_dir ? await fs.writeFile(join(root, 'mdsilo.json'), json) : false;
-  // listen loaded event on frontend: src/file/directory.ts DirectoryAPI.listen
-  emitChanges(res ? 'loaded' : 'unloaded', [root]);
-  return res;
+  return notesobj;
 }
 
 // # files, src-tauri/src/files.rs
@@ -204,7 +178,7 @@ export const commands: Record<string, Command> = {
     return true;
   },
   // json
-  write_json: ({ dir }) => writeJson(dir),
+  load_notes: ({ dir }) => loadNotes(dir),
   // web only: back up notes in IndexedDB to a zip file
   export_backup: ({ dir }) => exportBackup(dir ?? '/'),
 };

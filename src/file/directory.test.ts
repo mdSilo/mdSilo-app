@@ -154,27 +154,6 @@ describe('DirectoryAPI (tauri)', () => {
       expect(tauriInvoke).toHaveBeenCalledWith('file_exist', { filePath: '/notes/c.md' });
     });
 
-    test('loaded imports mdsilo.json into the store', async () => {
-      const note = makeNote({ id: '/notes/a.md' });
-      mockInvoke(tauriInvoke, {
-        join_paths: '/notes/mdsilo.json',
-        file_exist: true,
-        read_file: JSON.stringify({ isloaded: true, notesobj: { [note.id]: note }, notetree: {} }),
-      });
-      store.getState().setIsLoading(true);
-      const { emit } = await startListening();
-      await emit('loaded', ['/notes']);
-      expect(store.getState().notes.toRecord()).toEqual({ [note.id]: note });
-      expect(store.getState().isLoaded).toBe(true);
-      expect(store.getState().isLoading).toBe(false);
-    });
-
-    test('loaded without paths is ignored', async () => {
-      const { callback, emit } = await startListening();
-      await emit('loaded', []);
-      expect(callback).not.toHaveBeenCalled();
-    });
-
     test('listening again replaces the previous listener', async () => {
       const unlisten = vi.fn();
       win.listen.mockResolvedValueOnce(unlisten);
@@ -191,11 +170,11 @@ describe('DirectoryAPI (tauri)', () => {
       expect(callback).not.toHaveBeenCalled();
     });
 
-    test('unloaded resets isLoaded', async () => {
-      store.getState().setIsLoaded(true);
-      const { emit } = await startListening();
-      await emit('unloaded', []);
-      expect(store.getState().isLoaded).toBe(false);
+    test('ignores mdsilo.json, the data of Save As', async () => {
+      const { callback, emit } = await startListening();
+      await emit('create', ['/notes/mdsilo.json']);
+      expect(callback).not.toHaveBeenCalled();
+      expect(tauriInvoke).not.toHaveBeenCalledWith('file_exist', { filePath: '/notes/mdsilo.json' });
     });
 
     test('unknown events are re-emitted as DOM events', async () => {

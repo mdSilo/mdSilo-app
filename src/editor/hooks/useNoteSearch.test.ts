@@ -84,6 +84,6 @@ describe('useNoteSearch', () => {
     store.getState().setInitDir('/n');
     const { result } = renderHook(() => useNoteSearch());
     result.current('x');
-    expect(invoke).toHaveBeenCalledWith('write_json', { dir: '/n' });
+    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/n' });
   });
 });

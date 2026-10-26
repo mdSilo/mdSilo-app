@@ -21,7 +21,7 @@ import { ciStringEqual, regDateStr, decodeHTMLEntity, emitCustomEvent } from 'ut
 import { imageExtensions, docExtensions } from 'utils/file-extensions';
 import { encodeHref } from 'utils/mdlink';
 import FileAPI from 'file/files';
-import { writeFile, deleteFile, writeJsonFile } from 'file/write';
+import { writeFile, deleteFile } from 'file/write';
 import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
 import {
   joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
@@ -192,13 +192,9 @@ function Note(props: Props) {
         // 5- nav to renamed note
         await openFilePath(newPath, true);
         dispatch({view: 'md', params: {noteId: newPath}});
-
-        if (initDir) {
-          await writeJsonFile(initDir);
-        }
       }
     },
-    [noteId, storeNotes, title, mdContent, deleteNote, upsertNote, upsertTree, dispatch, initDir]
+    [noteId, storeNotes, title, mdContent, deleteNote, upsertNote, upsertTree, dispatch]
   );
 
   // Search

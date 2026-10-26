@@ -23,13 +23,12 @@ type Filter = 'all' | TaskTag;
  */
 export default function NoteTaskList({ data }: { data: IssueData }) {
   const isLoaded = useStore((state) => state.isLoaded);
-  const setIsLoaded = useStore((state) => state.setIsLoaded);
   const initDir = useStore((state) => state.initDir);
   useEffect(() => {
     if (!isLoaded && initDir) {
-      loadDir(initDir).then(() => setIsLoaded(true));
+      void loadDir(initDir);
     }
-  }, [initDir, isLoaded, setIsLoaded]);
+  }, [initDir, isLoaded]);
 
   const [notes] = useDebounce(useStore((state) => state.notes), 300);
   const tasks = useMemo(() => computeNoteTasks(notes), [notes]);

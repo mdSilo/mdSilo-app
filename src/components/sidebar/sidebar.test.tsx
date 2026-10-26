@@ -245,7 +245,7 @@ describe('SidebarHistory', () => {
       render(<SidebarHistory />);
     });
     expect(store.getState().initDir).toBe('/home/me/last');
-    expect(vi.mocked(invoke).mock.calls.filter((c) => c[0] === 'write_json')).toHaveLength(1);
+    expect(vi.mocked(invoke).mock.calls.filter((c) => c[0] === 'load_notes')).toHaveLength(1);
   });
 
   test('reopens the previous folder on startup', async () => {
@@ -256,7 +256,7 @@ describe('SidebarHistory', () => {
       renderWithView(<SidebarNotes />);
     });
     expect(store.getState().initDir).toBe('/home/me/last');
-    expect(invoke).toHaveBeenCalledWith('write_json', { dir: '/home/me/last' });
+    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/home/me/last' });
   });
 });
 

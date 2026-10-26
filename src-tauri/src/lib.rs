@@ -99,7 +99,7 @@ pub fn run() {
       storage::set_log,
       storage::get_log,
       storage::del_log,
-      json::write_json,
+      json::load_notes,
     ])
     .setup(|app| {
       tray::setup(app)?;

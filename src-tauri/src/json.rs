@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 // use crate::db;
-use crate::files::{read_dir, write_file, EventPayload};
-use crate::storage::get_data;
+use crate::files::read_dir;
 use crate::tree::assemble_note_tree;
-use tauri::Emitter;
 // use crate::models::Note;
 
 #[derive(serde::Serialize, Clone, Debug, Default)]
@@ -32,23 +30,6 @@ pub struct NoteTreeItem {
 
 pub type NoteTree = HashMap<String, Vec<NoteTreeItem>>;
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-pub struct ActivityData {
-  activity_num: u32,
-  create_num: u32,
-  update_num: u32,
-}
-
-pub type ActivityRecord = HashMap<String, ActivityData>;
-
-#[derive(serde::Serialize, Clone, Debug)]
-pub struct JsonData {
-  isloaded: bool,
-  notesobj: NotesData,
-  notetree: NoteTree,
-  activities: ActivityRecord,
-}
-
 pub async fn load_dir(dir: &str) -> (NotesData, NoteTree) {
   // init data and tree
   let mut notes_data: NotesData = HashMap::new();
@@ -63,50 +44,11 @@ pub async fn load_dir(dir: &str) -> (NotesData, NoteTree) {
   return (notes_data, notes_tree);
 }
 
-// get activity in storage
-pub fn get_activity_data() -> ActivityRecord {
-  let store_data = get_data(String::from("activities")).unwrap_or_default();
-  let data = store_data.data;
-  let activities: ActivityRecord = serde_json::from_value(data).unwrap_or_default();
-
-  return activities;
-}
-
+/// All the notes in the dir and its sub-dirs, with content.
+/// Returned directly: no snapshot written into the dir and read back.
 #[tauri::command]
-pub async fn write_json(dir: String, window: tauri::Window) -> bool {
-  let notes_data = load_dir(&dir).await;
-  let activity = get_activity_data();
-  let data = JsonData {
-    isloaded: true,
-    notesobj: notes_data.0,
-    notetree: notes_data.1,
-    activities: activity,
-  };
-
-  let json = serde_json::to_string(&data).unwrap_or_default();
-  let to_dir = format!("{}/mdsilo.json", dir);
-  let res = write_file(to_dir, json).await;
-
-  // println!("loaded dir: {} ? -> {}", dir, res);
-  
-  // read files and write to json on rust end, emit event;
-  // listen loaded event on ts end, then load to store
-  // frontend: src/file/directory.ts/DirectoryAPI/listen
-  window
-    .emit(
-      "changes",
-      EventPayload {
-        paths: vec![dir],
-        event: if res {
-          String::from("loaded")
-        } else {
-          String::from("unloaded")
-        },
-      },
-    )
-    .unwrap_or(());
-
-  return res;
+pub async fn load_notes(dir: String) -> NotesData {
+  load_dir(&dir).await.0
 }
 
 // #[tauri::command]

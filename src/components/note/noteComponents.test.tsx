@@ -271,11 +271,14 @@ describe('MoveToInput', () => {
 
   test('loads the dir when not loaded', async () => {
     store.getState().setInitDir('/root');
+    const dir = makeNote({ id: '/root/sub', title: 'sub', is_dir: true });
+    mockInvoke(invoke, { load_notes: { [dir.id]: dir } });
     await act(async () => {
       render(<MoveToInput noteId="/root/file.md" />);
     });
-    expect(invoke).toHaveBeenCalledWith('write_json', { dir: '/root' });
+    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/root' });
     expect(store.getState().isLoaded).toBe(true);
+    expect(store.getState().notes.get(dir.id)).toEqual(dir);
   });
 });
 

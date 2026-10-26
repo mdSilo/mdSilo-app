@@ -1,9 +1,9 @@
 import type { Event, UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core'
-import { NoteMap, store } from 'lib/store';
+import { store } from 'lib/store';
 import { emitCustomEvent } from 'utils/helper';
-import { openFilePaths, openJSONFilePath } from './open';
-import { hasFs, normalizeSlash, joinPath, joinPaths } from './util';
+import { openFilePaths } from './open';
+import { hasFs, normalizeSlash, joinPath } from './util';
 
 interface SystemTime {
   nanos_since_epoch: number; // locale
@@ -129,8 +129,7 @@ class DirectoryAPI {
 
   /**
    * Listen to changes event in a directory emited from backend
-   * backend -1: src-tauir/src/files.rs/listen_dir 
-   * backend -2: src-tauir/src/json.rs/write_json 
+   * backend: src-tauir/src/files.rs/listen_dir 
    * @param {() => void} callbackFn - callback
    * @returns {any}
    */
@@ -152,11 +151,8 @@ class DirectoryAPI {
         // sync the change on listen
         const payload: EventPayload = e.payload;
         const event = payload.event;
-        // FULL PATH; skip the json written by the app itself on loading,
-        // reading it back on every load is wasted work
-        const filePaths = event === 'loaded' || event === 'unloaded'
-          ? payload.paths
-          : payload.paths.filter((f) => !f.endsWith('/mdsilo.json'));
+        // FULL PATH; skip mdsilo.json, the data of Save As / Import JSON
+        const filePaths = payload.paths.filter((f) => !f.endsWith('/mdsilo.json'));
         if (filePaths.length === 0 && payload.paths.length > 0) return;
         // console.log("event kind: ", event);
         // console.log("file paths: ", filePaths);
@@ -196,21 +192,6 @@ class DirectoryAPI {
           // files and dir moved into a watch folder on Linux will now be reported as rename to events instead of create events
           // open, upsert 
           await openFilePaths(filePaths);
-        } else if (event === 'loaded') {
-          // console.log("load: ", filePaths, event);
-          if (!filePaths || filePaths.length < 1) return;
-          // json to store 
-          const dir = filePaths[0];
-          const jsonPath = await joinPaths(dir, ['mdsilo.json']);
-          const jsonData = await openJSONFilePath(jsonPath);
-          if (jsonData) {
-            store.getState().setNotes(NoteMap.from(jsonData.notesobj));
-            //store.getState().setNoteTree(jsonData.notetree);
-            store.getState().setIsLoaded(true);
-            store.getState().setIsLoading(false);
-          }
-        } else if (event === 'unloaded') {
-          store.getState().setIsLoaded(false);
         } else {
           // CANNOT LISTEN on load
           // console.log("custom event: ", filePaths, event);

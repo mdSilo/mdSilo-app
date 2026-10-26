@@ -54,7 +54,7 @@ export default function useNoteSearch({
     const initDir = store.getState().initDir;
     // console.log("s loaded?", isLoaded);
     if (!isLoaded && initDir) {
-      loadDir(initDir).then(() => store.getState().setIsLoaded(true));
+      void loadDir(initDir);
     }
 
     const query = searchText.trim();

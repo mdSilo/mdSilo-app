@@ -25,7 +25,7 @@ export const ensureNotesLoaded = async (timeout = LOAD_TIMEOUT_MS) => {
     unsubscribe = store.subscribe((state) => {
       if (state.isLoaded) done();
     });
-    loadDir(initDir);
+    void loadDir(initDir);
   });
 };
 

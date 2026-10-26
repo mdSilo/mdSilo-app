@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, describe, expect, test, type Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
-import { enterTauri, leaveTauri, makeFileMeta, mockInvoke } from '../testUtils';
+import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '../testUtils';
 import * as open from './open';
 
 const parentOf = (p: string) => p.substring(0, p.lastIndexOf('/')) || '/';
@@ -71,12 +71,53 @@ describe('open (web)', () => {
     expect(dialog.save).toHaveBeenLastCalledWith(expect.objectContaining({ defaultPath: '/recent' }));
   });
 
-  test('loadDir triggers write_json once while loading', async () => {
-    await open.loadDir('/notes');
-    await open.loadDir('/notes');
-    expect(invoke).toHaveBeenCalledTimes(1);
-    expect(invoke).toHaveBeenCalledWith('write_json', { dir: '/notes' });
+  test('loadDir loads the notes into the store, once while loading', async () => {
+    const note = makeNote({ id: '/notes/a.md' });
+    mockInvoke(invoke as Mock, { load_notes: { [note.id]: note } });
+    const first = open.loadDir('/notes');
+    const second = open.loadDir('/notes');
     expect(store.getState().isLoading).toBe(true);
+    await Promise.all([first, second]);
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/notes' });
+    expect(store.getState().notes.toRecord()).toEqual({ [note.id]: note });
+    expect(store.getState().isLoaded).toBe(true);
+    expect(store.getState().isLoading).toBe(false);
+  });
+
+  test('loadDir drops the notes of a folder no longer open', async () => {
+    mockInvoke(invoke as Mock, { load_notes: { '/notes/a.md': makeNote({ id: '/notes/a.md' }) } });
+    store.getState().setInitDir('/other');
+    await open.loadDir('/notes');
+    expect(store.getState().notes.toRecord()).toEqual({});
+    expect(store.getState().isLoaded).toBe(false);
+    expect(store.getState().isLoading).toBe(false);
+  });
+
+  test('loadDir of another folder does not wait for the current load', async () => {
+    let resolveFirst: (v: unknown) => void = () => {};
+    (invoke as Mock)
+      .mockImplementationOnce(() => new Promise((r) => { resolveFirst = r; }))
+      .mockResolvedValueOnce({ '/b/x.md': makeNote({ id: '/b/x.md' }) });
+    store.getState().setInitDir('/b');
+    const first = open.loadDir('/a');
+    await open.loadDir('/b');
+    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/b' });
+    expect(store.getState().notes.get('/b/x.md')).toBeDefined();
+    // the late result of /a is dropped
+    resolveFirst({ '/a/y.md': makeNote({ id: '/a/y.md' }) });
+    await first;
+    expect(store.getState().notes.get('/a/y.md')).toBeUndefined();
+  });
+
+  test('loadDir failing leaves the notes unloaded', async () => {
+    (invoke as Mock).mockRejectedValueOnce(new Error('boom'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await open.loadDir('/notes');
+    expect(store.getState().isLoaded).toBe(false);
+    expect(store.getState().isLoading).toBe(false);
+    expect(error).toHaveBeenCalled();
+    error.mockRestore();
   });
 
   test('openUrl invokes open_url', async () => {
