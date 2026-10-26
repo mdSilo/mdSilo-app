@@ -3,6 +3,7 @@
   windows_subsystem = "windows"
 )]
 
+mod atomic;
 mod db;
 mod feed;
 mod files;

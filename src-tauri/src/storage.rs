@@ -1,3 +1,4 @@
+use crate::atomic::write_atomic;
 use chrono::offset::Local;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -75,7 +76,7 @@ pub fn set_data(key: String, value: Value) -> bool {
     }
   };
 
-  fs::write(storage_dir.join(key), bin_value).is_ok()
+  write_atomic(&storage_dir.join(key), &bin_value).is_ok()
 }
 
 #[tauri::command]
