@@ -139,6 +139,7 @@ export const commands: Record<string, Command> = {
   update_article_star_status: ({ url, status }) => feed.updateArticleStarStatus(url, status),
   get_unread_num: () => feed.getUnreadNum(),
   update_all_read_status: ({ feedLink, readStatus }) => feed.updateAllReadStatus(feedLink, readStatus),
+  add_starred_articles: ({ articles }) => feed.addStarredArticles(articles ?? []),
   // files
   read_directory: async ({ dir }) => {
     const entries = await fs.readDir(dir);

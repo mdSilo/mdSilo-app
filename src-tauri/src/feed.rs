@@ -226,6 +226,12 @@ pub async fn add_channel(url: String, ty: String, title: Option<String>) -> usiz
   }
 }
 
+/// Starred articles synced from another device, see src/components/feed/feedSync.ts
+#[command]
+pub fn add_starred_articles(articles: Vec<NewArticle>) -> usize {
+  db::add_starred_articles(articles)
+}
+
 #[command]
 pub async fn import_channels(url_list: Vec<String>) -> usize {
   let mut import_num = 0;

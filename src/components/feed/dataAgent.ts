@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { ChannelType, ArticleType } from "types/model";
+import { scheduleFeedSync } from "./feedSync";
 
 type FeedResult = {
   channel: ChannelType;
@@ -10,14 +11,20 @@ export const fetchFeed = async (url: string): Promise<FeedResult> => {
   return await invoke('fetch_feed', { url })
 }
 
+// the subscriptions and starred articles sync with the workspace, see feedSync
+
 export const addChannel = async (
   url: string, ty: string, title: string | null
 ): Promise<number> => {
-  return await invoke('add_channel', { url, ty, title })
+  const added = await invoke<number>('add_channel', { url, ty, title });
+  scheduleFeedSync();
+  return added;
 }
 
 export const importChannels = async (list: string[]) => {
-  return await invoke('import_channels', { list })
+  const imported = await invoke('import_channels', { list });
+  scheduleFeedSync();
+  return imported;
 }
 
 export const getChannels = async (): Promise<ChannelType[]> => {
@@ -25,7 +32,9 @@ export const getChannels = async (): Promise<ChannelType[]> => {
 }
 
 export const deleteChannel = async (link: string) => {
-  return await invoke('delete_channel', { link })
+  const deleted = await invoke('delete_channel', { link });
+  scheduleFeedSync();
+  return deleted;
 };
 
 export const getArticleList = async (
@@ -48,10 +57,12 @@ export const updateArticleStarStatus = async (
   articleUrl: string, 
   star_status: number, // 0 || 1
 ): Promise<number> => {
-  return await invoke('update_article_star_status', {
+  const updated = await invoke<number>('update_article_star_status', {
     url: articleUrl,
     status: star_status,
-  })
+  });
+  scheduleFeedSync();
+  return updated;
 }
 
 export const updateArticleReadStatus = async (

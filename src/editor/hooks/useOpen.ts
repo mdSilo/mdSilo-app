@@ -8,6 +8,7 @@ import DirectoryAPI from 'file/directory';
 import { writeAllFile, writeFile } from 'file/write';
 import { rmFileNameExt } from 'file/process';
 import { READING_DIR, WRITING_DIR, resolveLayout } from 'workspace/layout';
+import { syncFeeds } from 'components/feed/feedSync';
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);
@@ -46,6 +47,8 @@ async function setWorkspace(dir: string) {
   const layout = await resolveLayout(dir);
   store.getState().setLayout(layout);
   store.getState().setInitDir(dir);
+  // the feeds of the workspace, e.g. subscribed on another device
+  if (layout === 'workspace') void syncFeeds();
 }
 
 /** In the workspace layout, the sidebar shows reading/ and writing/ expanded. */

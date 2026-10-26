@@ -69,6 +69,7 @@ pub fn run() {
       feed::update_article_star_status,
       feed::get_unread_num,
       feed::update_all_read_status,
+      feed::add_starred_articles,
       files::read_directory,
       files::is_dir,
       files::is_file,

@@ -276,6 +276,16 @@ export async function deleteChannel(link: string): Promise<number> {
   });
 }
 
+/** Insert the articles (kept if there) and star them all; synced from elsewhere. */
+export async function addStarredArticles(articles: NewArticle[]): Promise<number> {
+  await addArticles(articles);
+  let num = 0;
+  for (const { url } of articles) {
+    if (url && (await updateArticleStarStatus(url, 1))) num += 1;
+  }
+  return num;
+}
+
 export async function addArticlesWithChannel(link: string): Promise<number> {
   const channel = await get<Channel>(CHANNELS, link);
   if (!channel) return 0;
