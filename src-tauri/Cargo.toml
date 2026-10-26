@@ -33,6 +33,12 @@ chrono = "0.4.41"
 whatlang = "0.18.0"
 # book ids, see books.rs
 md5 = { package = "md-5", version = "0.11.0" }
+# the index of a workspace, see index/
+fancy-regex = "0.20.0"
+regex = "1"
+percent-encoding = "2.3.2"
+tantivy = "0.27.0"
+tantivy-jieba = "0.21.0"
 # walk dir
 crossbeam = "0.8.4"
 ignore = "0.4.33"

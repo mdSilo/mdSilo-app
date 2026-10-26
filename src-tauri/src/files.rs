@@ -1,4 +1,5 @@
-use crate::atomic::{is_self_write, is_temp, write_atomic};
+use crate::atomic::{is_self_write, is_temp};
+use crate::wsfs::{LocalFs, WorkspaceFs};
 use crate::paths::{PathBufExt, PathExt};
 use crate::storage::log_error;
 use crate::tree::node::{from_node, Node};
@@ -415,7 +416,7 @@ pub async fn create_file(file_path: String) -> bool {
 // read file to string
 #[tauri::command]
 pub async fn read_file(file_path: String) -> String {
-  fs::read_to_string(&file_path)
+  LocalFs.read_to_string(Path::new(&file_path))
     .map_err(|e| {
       log_error(format!(
           "Error on [read_file: read_to_string, {}]: {:?}",
@@ -428,18 +429,18 @@ pub async fn read_file(file_path: String) -> String {
 // write to a file
 #[tauri::command]
 pub async fn write_file(file_path: String, text: String) -> bool {
-  write_atomic(Path::new(&file_path), text.as_bytes()).is_ok()
+  LocalFs.write_atomic(Path::new(&file_path), text.as_bytes()).is_ok()
 }
 
 #[tauri::command]
 pub async fn download_file(file_path: String, blob: Vec<u8>) -> bool {
-  write_atomic(Path::new(&file_path), &blob).is_ok()
+  LocalFs.write_atomic(Path::new(&file_path), &blob).is_ok()
 }
 
 // rename the file
 #[tauri::command]
 pub async fn rename_file(from_path: String, to_path: String) -> bool {
-  fs::rename(from_path, to_path).is_ok()
+  LocalFs.rename(Path::new(&from_path), Path::new(&to_path)).is_ok()
 }
 
 // copy the file
@@ -612,15 +613,20 @@ pub async fn listen_dir(
       kind,   // EventKind: Access,Create,Modify,Remove
       ..      // attrs,  // EventAttributes: tracker, flag...
     }) => {
-      // not the temp files of atomic writes, nor the files as the app wrote
-      // them: the app has their content already
-      // nor the hidden files and dirs: .git/, .mdsilo/... are never listed
+      // not the temp files of atomic writes, nor the hidden files and dirs:
+      // .git/, .mdsilo/... are never listed
       let paths: Vec<String> = paths
         .iter()
         .map(|path| to_dir_path(path))
-        .filter(|path| !is_hidden_in(&watched, Path::new(path)))
-        .filter(|path| !is_temp(Path::new(path)) && !is_self_write(Path::new(path)))
+        .filter(|path| !is_hidden_in(&watched, Path::new(path)) && !is_temp(Path::new(path)))
         .collect();
+      // the index follows all the changes, the app's too (see index/)
+      if matches!(kind, EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)) {
+        let changed: Vec<std::path::PathBuf> = paths.iter().map(std::path::PathBuf::from).collect();
+        crate::index::on_changes(&changed);
+      }
+      // nor the files as the app wrote them: the app has their content already
+      let paths: Vec<String> = paths.into_iter().filter(|path| !is_self_write(Path::new(path))).collect();
       if paths.is_empty() {
         return;
       }

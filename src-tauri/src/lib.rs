@@ -8,6 +8,7 @@ mod books;
 mod db;
 mod feed;
 mod files;
+mod index;
 #[cfg(target_os = "linux")]
 mod input_method;
 mod json;
@@ -20,6 +21,7 @@ mod tree;
 mod window;
 mod plugins;
 mod tray;
+mod wsfs;
 
 extern crate diesel;
 extern crate diesel_migrations;
@@ -106,6 +108,11 @@ pub fn run() {
       books::book_hash,
       books::read_file_bytes,
       books::write_file_bytes,
+      index::index_open,
+      index::index_update,
+      index::index_search,
+      index::index_book,
+      index::index_book_indexed,
     ])
     .setup(|app| {
       tray::setup(app)?;
