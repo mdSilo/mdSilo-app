@@ -189,7 +189,33 @@ describe('ArticleView', () => {
     expect(screen.getByText('Article One')).toBeInTheDocument();
     expect(screen.getByText('Ann')).toBeInTheDocument();
     expect(screen.getByText('link')).toHaveAttribute('target', '_blank');
-    expect(screen.getByText('keep')).toHaveAttribute('target', '_self');
+    // _self would navigate the app window away
+    expect(screen.getByText('keep')).toHaveAttribute('target', '_blank');
+    expect(screen.getByText('keep')).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  test('sanitizes the content of the feed', () => {
+    const { container } = render(
+      <ArticleView
+        article={article({
+          content:
+            '<p class="fixed inset-0" style="position:fixed">Safe text</p>' +
+            '<img src="x" onerror="window.__feedXss = 1">' +
+            '<script>window.__feedXss = 1</script>' +
+            '<a href="javascript:window.__feedXss = 1">js link</a>' +
+            '<form action="https://evil"><input name="password"></form>',
+        })}
+        starArticle={vi.fn()}
+        hideChannelCol={vi.fn()}
+      />
+    );
+    const content = container.querySelector('.content') as HTMLElement;
+    expect(screen.getByText('Safe text')).not.toHaveAttribute('class');
+    expect(screen.getByText('Safe text')).not.toHaveAttribute('style');
+    expect(content.querySelector('img')).not.toHaveAttribute('onerror');
+    expect(content.querySelector('script, form, input')).toBeNull();
+    expect(screen.getByText('js link')).not.toHaveAttribute('href');
+    expect((window as { __feedXss?: number }).__feedXss).toBeUndefined();
   });
 
   test('falls back to the description', () => {

@@ -106,6 +106,8 @@ const mermaidWidget =
     import("mermaid").then((module) => {
       const config: any = {
         startOnLoad: true,
+        // the default, explicit: HTML in labels encoded, no click handlers
+        securityLevel: "strict",
         flowchart: { htmlLabels: false },
         fontFamily: "inherit",
       };

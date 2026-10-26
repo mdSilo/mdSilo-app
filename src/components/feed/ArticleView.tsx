@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TbChevronLeft as IconChevronLeft, TbHeadphones as IconHeadphones, TbLink as IconLink, TbStar as IconStar } from "react-icons/tb";
 import { useStore } from "lib/store";
 import { getFavicon, fmtDatetime } from "utils/helper";
+import { sanitizeHtml } from "utils/sanitize";
 import { ArticleType } from "types/model";
 import Tooltip from "components/misc/Tooltip";
 
@@ -20,14 +21,8 @@ export function ArticleView(props: ViewProps) {
 
   useEffect(() => {
     if (article) {
-      const content = (article.content || article.description || "").replace(
-        /<a[^>]+>/gi,
-        (a: string) => {
-          return (!/\starget\s*=/gi.test(a)) ? a.replace(/^<a\s/, '<a target="_blank"') : a;
-        }
-      );
-
-      setPageContent(content);
+      // from the feed: sanitize, links open outside the app
+      setPageContent(sanitizeHtml(article.content || article.description || ""));
       setIsStar(article.star_status === 1);
     }
   }, [article]);

@@ -82,6 +82,14 @@ describe('decodeHTMLEntity', () => {
   test('decodes numeric entities and leaves plain text alone', () => {
     expect(decodeHTMLEntity('a&#169;b')).toBe('a©b');
     expect(decodeHTMLEntity('plain text')).toBe('plain text');
+    expect(decodeHTMLEntity('a&#x263A;b')).toBe('a\u263Ab');
+  });
+
+  test('never parses markup between & and ;', async () => {
+    const payload = 'x &<img src="x" onerror="window.__entityXss = 1">; y';
+    expect(decodeHTMLEntity(payload)).toBe(payload);
+    await new Promise((r) => setTimeout(r, 0));
+    expect((window as { __entityXss?: number }).__entityXss).toBeUndefined();
   });
 });
 

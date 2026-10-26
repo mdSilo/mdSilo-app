@@ -36,12 +36,14 @@ export function fmtDatetime(date: string | number | Date) {
 }
 
 export function decodeHTMLEntity(text: string) {
-  const dummy = document.createElement("div");
+  // a textarea decodes entities but never parses tags: no <img onerror>...
+  const dummy = document.createElement("textarea");
   const txt = text.replace(
-    /(&(?!(amp|gt|lt|quot|apos))[^;]+;)/g, // excerpt these html entities
+    // entities only, except these: &name; &#123; &#x1F;
+    /&(?!(?:amp|gt|lt|quot|apos);)(?:[a-z][a-z0-9]*|#\d+|#x[0-9a-f]+);/gi,
     (a: string) => {
       dummy.innerHTML = a;
-      return dummy.textContent || ' '; // real value
+      return dummy.value || ' '; // real value
     }
   );
 
