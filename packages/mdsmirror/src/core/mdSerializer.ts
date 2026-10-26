@@ -418,14 +418,16 @@ export class MarkdownSerializerState {
     const prevTable = this.inTable;
     this.inTable = true;
 
-    // ensure there is an empty newline above all tables
+    // ensure there is an empty newline above all tables, in the block of the
+    // table: the prefix of a blockquote, a list item...
+    this.write();
     this.append("\n");
 
     // rows
     node.forEach((row, _, i) => {
       // cols
       row.forEach((cell, _, j) => {
-        this.append(j === 0 ? "| " : " | ");
+        this.append(j === 0 ? `${this.delim}| ` : " | ");
 
         cell.forEach((cellNode) => {
           // just padding the output so that empty cells take up the same space
@@ -460,7 +462,7 @@ export class MarkdownSerializerState {
       this.append(" |\n");
 
       if (headerBuffer) {
-        this.append(`${headerBuffer}|\n`);
+        this.append(`${this.delim}${headerBuffer}|\n`);
         headerBuffer = undefined;
       }
     });

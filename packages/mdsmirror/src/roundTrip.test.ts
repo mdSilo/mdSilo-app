@@ -108,6 +108,16 @@ describe("markdown round trip", () => {
     expect(roundTrip(md)).toBe(md);
   });
 
+  // the table used to be written out of its block, without the prefix
+  test.each([
+    ["a blockquote", "> para\n>\n> | a | b |\n> |---|---|\n> | 1 | 2 |"],
+    ["a list item", "- item\n\n  | a | b |\n  |---|---|\n  | 1 | 2 |\n- next"],
+  ])("a table stays in %s", (_, md) => {
+    const doc = parser.parse(md);
+    const out = serializer.serialize(doc);
+    expect(parser.parse(out).eq(doc)).toBe(true);
+  });
+
   test("a table at the top level", () => {
     expect(roundTrip("text\n\n| a | b |\n|:--|--:|\n| 1 | 2 |")).toBe(
       "text\n\n| a | b |\n|:---|---:|\n| 1 | 2 |\n"
