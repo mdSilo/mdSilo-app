@@ -1,12 +1,19 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { invoke } from '@tauri-apps/api/core';
 import { NoteMap } from 'lib/noteMap';
 import { store } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
+import { writeFile } from 'file/write';
+import { scheduleSave, hasPendingSave, MAX_WAIT_MS } from 'file/pendingSaves';
 import { makeNote } from '../../testUtils';
 import useDeleteNote, { doDeleteNote } from './useDeleteNote';
+
+vi.mock('file/write', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('file/write')>()),
+  writeFile: vi.fn(async () => undefined),
+}));
 
 const wrapper = ({ children }: { children: ReactNode }) => <ProvideCurrentView>{children}</ProvideCurrentView>;
 
@@ -21,6 +28,23 @@ describe('doDeleteNote', () => {
     expect(store.getState().notes.get(target.id)).toBeUndefined();
     expect(store.getState().notes.get(linker.id)?.content).toBe('see target');
     expect(invoke).toHaveBeenCalledWith('delete_files', { paths: ['/n/target.md'] });
+  });
+
+  test('a save still waiting does not write the deleted file again', async () => {
+    vi.useFakeTimers();
+    try {
+      const note = makeNote({ id: '/n/typed.md', title: 'typed' });
+      store.getState().setNotes(NoteMap.from({ [note.id]: note }));
+      scheduleSave(note.id, 'typed just before');
+
+      await doDeleteNote(note.id, note.title);
+      await vi.advanceTimersByTimeAsync(MAX_WAIT_MS);
+
+      expect(hasPendingSave(note.id)).toBe(false);
+      expect(writeFile).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

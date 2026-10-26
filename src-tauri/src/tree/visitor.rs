@@ -4,6 +4,8 @@ use ignore::{
   DirEntry, Error as IgnoreError, ParallelVisitor, ParallelVisitorBuilder, WalkState,
 };
 
+// a node per file goes through the channel: boxing it would allocate per file
+#[allow(clippy::large_enum_variant)]
 pub enum TraversalState {
   Ongoing(Node),
   Done,

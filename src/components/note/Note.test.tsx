@@ -9,6 +9,7 @@ import { NoteMap } from 'lib/noteMap';
 import { store, SidebarTab } from 'lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
 import { writeFile, deleteFile } from 'file/write';
+import { SAVE_DELAY_MS } from 'file/pendingSaves';
 import * as issueOps from 'components/issue/issueOps';
 import { issueStore, resetIssueStore } from 'components/issue/issueStore';
 import { makeFileMeta, makeNote, mockInvoke } from '../../testUtils';
@@ -128,13 +129,29 @@ describe('Note', () => {
     expect(await screen.findByTestId('mindmap')).toHaveTextContent('My Note');
   });
 
-  test('writes content changes to disk', async () => {
-    setup();
-    await callEditor('onChange', 'new text', {});
-    // the file ends with a newline
-    expect(writeFile).toHaveBeenCalledWith(note.id, 'new text\n');
+  test('writes content changes to disk once the typing pauses', async () => {
+    vi.useFakeTimers();
+    try {
+      setup();
+      await callEditor('onChange', 'new', {});
+      await callEditor('onChange', 'new text', {});
+      expect(writeFile).not.toHaveBeenCalled();
+      await act(async () => { vi.advanceTimersByTime(SAVE_DELAY_MS); });
+      // the last text only, the file ends with a newline
+      expect(writeFile).toHaveBeenCalledTimes(1);
+      expect(writeFile).toHaveBeenCalledWith(note.id, 'new text\n');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('writes the last changes at once when the note is closed', async () => {
+    const { unmount } = setup();
     await callEditor('onChange', 'line\n', {});
-    expect(writeFile).toHaveBeenLastCalledWith(note.id, 'line\n');
+    expect(writeFile).not.toHaveBeenCalled();
+    unmount();
+    await act(async () => {});
+    expect(writeFile).toHaveBeenCalledWith(note.id, 'line\n');
   });
 
   test('edits reach the notes in the store, debounced and on leaving', async () => {

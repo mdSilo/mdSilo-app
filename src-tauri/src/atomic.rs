@@ -15,8 +15,8 @@ const SELF_WRITE_TTL: Duration = Duration::from_secs(60);
 
 /// the files written by the app: path -> (len, modified) as written, and when;
 /// modified is None while being written (the watcher may see it before)
-static SELF_WRITES: LazyLock<Mutex<HashMap<PathBuf, (u64, Option<SystemTime>, Instant)>>> =
-  LazyLock::new(|| Mutex::new(HashMap::new()));
+type SelfWrites = HashMap<PathBuf, (u64, Option<SystemTime>, Instant)>;
+static SELF_WRITES: LazyLock<Mutex<SelfWrites>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// A temp file of `write_atomic`.
 pub fn is_temp(path: &Path) -> bool {

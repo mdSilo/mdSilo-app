@@ -1,10 +1,8 @@
 use crate::atomic::{is_self_write, is_temp, write_atomic};
 use crate::paths::{PathBufExt, PathExt};
-use crate::storage::do_log;
+use crate::storage::log_error;
 use crate::tree::node::{from_node, Node};
 use crate::tree::Tree;
-use chrono::offset::Local;
-use chrono::DateTime;
 use ignore::WalkBuilder;
 use notify::{
   event::{EventKind, ModifyKind, RenameMode},
@@ -52,7 +50,7 @@ pub struct FileMetaData {
 
 #[derive(serde::Serialize, Default)]
 pub struct FolderData {
-  pub number_of_files: u16,
+  pub number_of_files: usize,
   pub files: Vec<FileMetaData>,
 }
 
@@ -121,11 +119,7 @@ pub fn get_basename(file_path: &str) -> (String, bool) {
     match basename.to_str() {
       Some(n) => return (n.to_string(), is_file),
       None => {
-        do_log(
-          "Error".to_string(),
-          format!("Err on [get_basename: convert basename OsStr to str]"),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
+        log_error("Err on [get_basename: convert basename OsStr to str]");
 
         return (String::new(), is_file);
       }
@@ -142,7 +136,7 @@ pub fn get_dirpath(path: &str) -> String {
   let is_dir = path.is_dir();
   let is_file = path.is_file();
   if is_dir {
-    return Path::new(file_path).normalize_slash().unwrap_or_default();
+    Path::new(file_path).normalize_slash().unwrap_or_default()
   } else if is_file {
     let dir_path = path.parent().unwrap_or(path);
     dir_path.normalize_slash().unwrap_or_default()
@@ -181,16 +175,29 @@ pub fn join_paths(root: &str, parts: Vec<&str>) -> String {
   root_path.normalize_slash().unwrap_or_default()
 }
 
+/// The name of the file or dir of the path, without checking it
+fn file_name_of(file_path: &str) -> String {
+  Path::new(file_path)
+    .file_name()
+    .and_then(|name| name.to_str())
+    .unwrap_or_default()
+    .to_string()
+}
+
+/// A time of the metadata, now if the platform does not have it
+fn time_or_now(time: std::io::Result<SystemTime>, what: &str) -> SystemTime {
+  time.unwrap_or_else(|e| {
+    log_error(format!("Error on [get_simple_meta: get file {what}]: {e:?}"));
+    SystemTime::now()
+  })
+}
+
 // get file metadate without content
 pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   let metadata = match fs::metadata(file_path) {
     Ok(data) => data,
     Err(e) => {
-      do_log(
-        "Error".to_string(),
-        format!("Err on [get_simple_meta: read meatadata]: {:?}", e),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
+      log_error(format!("Err on [get_simple_meta: read meatadata]: {:?}", e));
       return Err(format!("Err on read meatadata: {:?}", e));
     }
   };
@@ -198,68 +205,21 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   let normalized_path = match Path::new(file_path).normalize_slash() {
     Some(normalized) => normalized,
     None => {
-      do_log(
-        "Error".to_string(),
-        format!("Err on [get_simple_meta: normalized_path]: {}", file_path),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
+      log_error(format!("Err on [get_simple_meta: normalized_path]: {}", file_path));
       return Err(format!("Err on normalize Path: {}", file_path));
     }
   };
 
   // name.ext
-  let file_name = get_basename(file_path).0;
-  // let file_type = metadata.file_type();
+  let file_name = file_name_of(file_path);
   let is_dir = metadata.is_dir();
   let is_file = metadata.is_file();
-  let is_hidden = check_hidden(file_path);
+  let is_hidden = check_hidden_meta(file_path, &metadata);
   let size = metadata.len();
   let readonly = metadata.permissions().readonly();
-
-  let last_modified = match metadata.modified() {
-    Ok(result) => result,
-    Err(e) => {
-      let now = SystemTime::now();
-      let datetime: DateTime<Local> = now.into();
-      do_log(
-        "Error".to_string(),
-        format!("Error on [get_simple_meta: get file modified]: {:?}", e),
-        format!("{}", datetime.format("%m/%d/%Y %H:%M:%S")),
-      );
-      now
-    }
-  };
-
-  let last_accessed = match metadata.accessed() {
-    Ok(result) => result,
-    Err(e) => {
-      let now = SystemTime::now();
-      let datetime: DateTime<Local> = now.into();
-      do_log(
-        "Error".to_string(),
-        format!(
-          "Error on [get_simple_meta: get file last accessed]: {:?}",
-          e
-        ),
-        format!("{}", datetime.format("%m/%d/%Y %H:%M:%S")),
-      );
-      now
-    }
-  };
-
-  let created = match metadata.created() {
-    Ok(result) => result,
-    Err(e) => {
-      let now = SystemTime::now();
-      let datetime: DateTime<Local> = now.into();
-      do_log(
-        "Error".to_string(),
-        format!("Error on [get_simple_meta: get file created]: {:?}", e),
-        format!("{}", datetime.format("%m/%d/%Y %H:%M:%S")),
-      );
-      now
-    }
-  };
+  let last_modified = time_or_now(metadata.modified(), "modified");
+  let last_accessed = time_or_now(metadata.accessed(), "last accessed");
+  let created = time_or_now(metadata.created(), "created");
 
   Ok(SimpleFileMeta {
     file_path: normalized_path,
@@ -282,14 +242,10 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
   let meta_data = match get_simple_meta(file_path) {
     Ok(data) => data,
     Err(e) => {
-      do_log(
-        "Error".to_string(),
-        format!(
+      log_error(format!(
           "Error on [get_file_meta: get_simple_meta, {}]: {:?}",
           file_path, e
-        ),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
+        ));
       return Err(e);
     }
   };
@@ -299,14 +255,10 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     match fs::read_to_string(file_path) {
       Ok(text) => text,
       Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!(
+        log_error(format!(
             "Error on [get_file_meta: read_to_string, {}]: {:?}",
             file_path, e
-          ),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
+          ));
         String::new()
       }
     }
@@ -335,19 +287,12 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
 // Return false if not exist or it isn't a directory
 #[tauri::command]
 pub fn is_dir(path: &Path) -> Result<bool, String> {
-  if !Path::new(path).exists() {
-    Ok(false)
-  } else {
-    match fs::metadata(path) {
-      Ok(meta) => Ok(meta.is_dir()),
-      Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!("Error on [is_dir: fs::metadata]: {:?}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
-        Ok(false)
-      }
+  match fs::metadata(path) {
+    Ok(meta) => Ok(meta.is_dir()),
+    Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(false),
+    Err(e) => {
+      log_error(format!("Error on [is_dir: fs::metadata]: {:?}", e));
+      Ok(false)
     }
   }
 }
@@ -357,19 +302,12 @@ pub fn is_dir(path: &Path) -> Result<bool, String> {
 // Return false if not exist or it isn't
 #[tauri::command]
 pub fn is_file(path: &Path) -> Result<bool, String> {
-  if !Path::new(path).exists() {
-    Ok(false)
-  } else {
-    match fs::metadata(path) {
-      Ok(meta) => Ok(meta.is_file()),
-      Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!("Error on [is_file: fs::metadata]: {:?}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
-        Ok(false)
-      }
+  match fs::metadata(path) {
+    Ok(meta) => Ok(meta.is_file()),
+    Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(false),
+    Err(e) => {
+      log_error(format!("Error on [is_file: fs::metadata]: {:?}", e));
+      Ok(false)
     }
   }
 }
@@ -380,44 +318,29 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
   let paths = match fs::read_dir(dir) {
     Ok(res) => res,
     Err(e) => {
-      do_log(
-        "Error".to_string(),
-        format!("Error on [read_directory: dir {}]: {:?}", dir, e),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
+      log_error(format!("Error on [read_directory: dir {}]: {:?}", dir, e));
       return Ok(FolderData::default());
     }
   };
 
-  let mut number_of_files: u16 = 0;
   let mut files = Vec::new();
 
   for path in paths {
     let file_path = match path {
       Ok(p) => p.path().display().to_string(),
       Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!("Error on [read_directory: check path]: {:?}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
+        log_error(format!("Error on [read_directory: check path]: {:?}", e));
         continue;
       }
     };
 
-    let file_info = get_file_meta(&file_path).await;
-    if let Ok(file) = file_info {
+    if let Ok(file) = get_file_meta(&file_path).await {
       files.push(file);
-      number_of_files += 1;
-    } else {
-      continue;
     }
   }
 
-  // println!("num: {}, files: {:?}", number_of_files, files);
-
   Ok(FolderData {
-    number_of_files,
+    number_of_files: files.len(),
     files,
   })
 }
@@ -474,14 +397,19 @@ pub async fn create_dir_recursive(dir_path: String) -> bool {
 // copy
 // delete
 
-// Create a file
+// Create a file if it does not exist: an existing one is kept as is
 #[tauri::command]
 pub async fn create_file(file_path: String) -> bool {
   if let Some(p) = Path::new(&file_path).parent() {
     create_dir_recursive(p.display().to_string()).await;
   }
 
-  fs::write(file_path, "").is_ok()
+  fs::OpenOptions::new()
+    .write(true)
+    .create(true)
+    .truncate(false)
+    .open(file_path)
+    .is_ok()
 }
 
 // read file to string
@@ -489,14 +417,10 @@ pub async fn create_file(file_path: String) -> bool {
 pub async fn read_file(file_path: String) -> String {
   fs::read_to_string(&file_path)
     .map_err(|e| {
-      do_log(
-        "Error".to_string(),
-        format!(
+      log_error(format!(
           "Error on [read_file: read_to_string, {}]: {:?}",
           file_path, e
-        ),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      )
+        ))
     })
     .unwrap_or_else(|_| String::from("")) // nothing
 }
@@ -528,40 +452,81 @@ pub async fn copy_file(src_path: String, to_path: String) -> bool {
   fs::copy(src_path, to_path).is_ok()
 }
 
-// copy the assets(image...) to given work dir
-// return (absolute_path, relative_path_to_work_dir )
+/// The same content, compared without reading the files whole
+fn same_content(a: &Path, b: &Path) -> bool {
+  use std::io::Read;
+  let (Ok(meta_a), Ok(meta_b)) = (fs::metadata(a), fs::metadata(b)) else {
+    return false;
+  };
+  if meta_a.len() != meta_b.len() {
+    return false;
+  }
+  let (Ok(mut file_a), Ok(mut file_b)) = (fs::File::open(a), fs::File::open(b)) else {
+    return false;
+  };
+  let (mut buf_a, mut buf_b) = ([0u8; 8192], [0u8; 8192]);
+  loop {
+    let Ok(n) = file_a.read(&mut buf_a) else { return false };
+    if n == 0 {
+      return true;
+    }
+    if file_b.read_exact(&mut buf_b[..n]).is_err() || buf_a[..n] != buf_b[..n] {
+      return false;
+    }
+  }
+}
+
+/// Where to put `src` in `dir`, by its name: (path, already there). Never
+/// replace another file: `name-1.ext`, `name-2.ext`... are tried.
+fn asset_target(src: &Path, dir: &Path, file_name: &str) -> (std::path::PathBuf, bool) {
+  let name = Path::new(file_name);
+  let stem = name.file_stem().and_then(|s| s.to_str()).unwrap_or(file_name);
+  let ext = name.extension().and_then(|e| e.to_str());
+  let src_real = fs::canonicalize(src).ok();
+  let mut i = 0;
+  loop {
+    let candidate = match (i, ext) {
+      (0, _) => dir.join(file_name),
+      (_, Some(ext)) => dir.join(format!("{stem}-{i}.{ext}")),
+      (_, None) => dir.join(format!("{stem}-{i}")),
+    };
+    if !candidate.exists() {
+      return (candidate, false);
+    }
+    // the file itself, or a copy of it
+    if src_real.is_some() && fs::canonicalize(&candidate).ok() == src_real
+      || same_content(src, &candidate)
+    {
+      return (candidate, true);
+    }
+    i += 1;
+  }
+}
+
+// copy the assets(image...) to the `assets` dir of the given work dir
+// return (absolute_path, relative_path_to_work_dir), empty on failure
 #[tauri::command]
-pub async fn copy_file_to_assets(
-  src_path: String,
-  work_dir: String,
-) -> (String, String) {
-  let basename = get_basename(&src_path);
-  let is_file = basename.1;
-  if !is_file {
+pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> (String, String) {
+  let src = Path::new(&src_path);
+  if !src.is_file() {
+    return (String::new(), String::new());
+  }
+  let file_name = file_name_of(&src_path);
+  let assets = Path::new(&work_dir).join("assets");
+  if fs::create_dir_all(&assets).is_err() {
     return (String::new(), String::new());
   }
 
-  let file_name = basename.0;
-  let to_path = Path::new(&work_dir)
-    .join("assets")
-    .join(&file_name)
-    .normalize_slash()
-    .unwrap_or_default();
-
+  let (target, in_place) = asset_target(src, &assets, &file_name);
+  let target_name = file_name_of(&target.display().to_string());
+  let to_path = target.normalize_slash().unwrap_or_default();
   let relative_to_path = Path::new("./assets")
-    .join(&file_name)
+    .join(&target_name)
     .normalize_slash()
     .unwrap_or_default();
 
-  if to_path.is_empty() {
-    return (to_path, relative_to_path);
-  }
-
-  if let Some(p) = Path::new(&to_path).parent() {
-    create_dir_recursive(p.display().to_string()).await;
-  }
-
-  if fs::copy(src_path, to_path.clone()).is_ok() {
+  // copying a file onto itself would empty it
+  if in_place || fs::copy(src, &target).is_ok() {
     (to_path, relative_to_path)
   } else {
     (String::new(), String::new())
@@ -589,11 +554,7 @@ pub fn detect_lang(text: String) -> String {
 static DIR_WATCHER: Mutex<Option<RecommendedWatcher>> = Mutex::new(None);
 
 fn log_watch_err(info: String) {
-  do_log(
-    "Error".to_string(),
-    info,
-    format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-  );
+  log_error(info);
 }
 
 // Listen to change events in a directory, emit them to the window.
@@ -743,4 +704,125 @@ pub async fn watch_event(
     },
   )
   .unwrap_or(());
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use std::path::PathBuf;
+
+  fn temp_dir(name: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("mdsilo-files-{}-{}", name, std::process::id()));
+    let _ = fs::remove_dir_all(&dir);
+    fs::create_dir_all(&dir).unwrap();
+    dir
+  }
+
+  fn s(path: &Path) -> String {
+    path.normalize_slash().unwrap()
+  }
+
+  #[tokio::test]
+  async fn an_asset_never_replaces_another_file() {
+    let dir = temp_dir("assets");
+    let work = dir.join("work");
+    fs::write(dir.join("pic.png"), b"first").unwrap();
+    let (abs, rel) = copy_file_to_assets(s(&dir.join("pic.png")), s(&work)).await;
+    assert_eq!((abs.as_str(), rel.as_str()), (s(&work.join("assets/pic.png")).as_str(), "./assets/pic.png"));
+
+    // another picture of the same name
+    fs::create_dir_all(dir.join("other")).unwrap();
+    fs::write(dir.join("other/pic.png"), b"second").unwrap();
+    let (abs, rel) = copy_file_to_assets(s(&dir.join("other/pic.png")), s(&work)).await;
+    assert_eq!(rel, "./assets/pic-1.png");
+    assert_eq!(fs::read(&abs).unwrap(), b"second");
+    assert_eq!(fs::read(work.join("assets/pic.png")).unwrap(), b"first");
+
+    // the same picture again: no new copy
+    let (_, rel) = copy_file_to_assets(s(&dir.join("other/pic.png")), s(&work)).await;
+    assert_eq!(rel, "./assets/pic-1.png");
+    assert_eq!(fs::read_dir(work.join("assets")).unwrap().count(), 2);
+    fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[tokio::test]
+  async fn an_asset_already_in_place_is_kept_as_is() {
+    let dir = temp_dir("in-place");
+    fs::create_dir_all(dir.join("assets")).unwrap();
+    let pic = dir.join("assets/pic.png");
+    fs::write(&pic, b"image bytes").unwrap();
+    // copied onto itself, it would be emptied
+    let (abs, rel) = copy_file_to_assets(s(&pic), s(&dir)).await;
+    assert_eq!((abs, rel.as_str()), (s(&pic), "./assets/pic.png"));
+    assert_eq!(fs::read(&pic).unwrap(), b"image bytes");
+    fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[tokio::test]
+  async fn assets_without_extension_and_missing_sources() {
+    let dir = temp_dir("no-ext");
+    fs::write(dir.join("LICENSE"), b"a").unwrap();
+    fs::create_dir_all(dir.join("assets")).unwrap();
+    fs::write(dir.join("assets/LICENSE"), b"b").unwrap();
+    let (_, rel) = copy_file_to_assets(s(&dir.join("LICENSE")), s(&dir)).await;
+    assert_eq!(rel, "./assets/LICENSE-1");
+    let missing = copy_file_to_assets(s(&dir.join("nope.png")), s(&dir)).await;
+    assert_eq!(missing, (String::new(), String::new()));
+    fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[test]
+  fn compares_the_content() {
+    let dir = temp_dir("content");
+    let (a, b, c) = (dir.join("a"), dir.join("b"), dir.join("c"));
+    let big: Vec<u8> = (0..20_000u32).map(|i| (i % 251) as u8).collect();
+    fs::write(&a, &big).unwrap();
+    fs::write(&b, &big).unwrap();
+    let mut other = big.clone();
+    other[19_999] ^= 1;
+    fs::write(&c, &other).unwrap();
+    assert!(same_content(&a, &b));
+    assert!(!same_content(&a, &c));
+    assert!(!same_content(&a, &dir.join("missing")));
+    fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[tokio::test]
+  async fn create_file_keeps_an_existing_file() {
+    let dir = temp_dir("create");
+    let file = dir.join("sub/new.md");
+    assert!(create_file(s(&file)).await);
+    assert_eq!(fs::read_to_string(&file).unwrap(), "");
+    fs::write(&file, "content").unwrap();
+    assert!(create_file(s(&file)).await);
+    assert_eq!(fs::read_to_string(&file).unwrap(), "content");
+    fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[tokio::test]
+  async fn reads_a_directory_with_its_count() {
+    let dir = temp_dir("read-dir");
+    fs::write(dir.join("a.md"), "A").unwrap();
+    fs::write(dir.join("b.txt"), "B").unwrap();
+    fs::create_dir_all(dir.join("sub")).unwrap();
+    let data = read_directory(&s(&dir)).await.unwrap();
+    assert_eq!(data.number_of_files, 3);
+    let mut texts: Vec<(String, String)> =
+      data.files.into_iter().map(|f| (f.file_name, f.file_text)).collect();
+    texts.sort();
+    assert_eq!(
+      texts,
+      [("a.md", "A"), ("b.txt", "B"), ("sub", "")].map(|(n, t)| (n.to_string(), t.to_string()))
+    );
+    fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[test]
+  fn kinds_of_missing_paths() {
+    let missing = Path::new("/no/such/mdsilo/path");
+    assert!(!is_dir(missing).unwrap());
+    assert!(!is_file(missing).unwrap());
+    let meta = get_simple_meta(file!());
+    assert!(meta.is_err() || meta.unwrap().is_file);
+  }
 }

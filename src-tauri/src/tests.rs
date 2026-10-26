@@ -1,8 +1,9 @@
 #[cfg(test)]
+// the tests of the app, beside the ones of each module
+#[allow(clippy::module_inception)]
 mod tests {
   use crate::files::*;
   use crate::paths::{PathBufExt, PathExt};
-  use crate::storage::*;
   use std::path::{Path, PathBuf};
   use std::sync::Mutex;
 
@@ -27,10 +28,9 @@ mod tests {
 
   #[test]
   fn test_is_dir() {
-    assert_eq!(is_dir(Path::new(env!("CARGO_MANIFEST_DIR"))).unwrap(), true);
-    assert_eq!(
-      is_dir(&Path::new(env!("CARGO_MANIFEST_DIR")).join("cargo.toml")).unwrap(),
-      false
+    assert!(is_dir(Path::new(env!("CARGO_MANIFEST_DIR"))).unwrap());
+    assert!(
+      !is_dir(&Path::new(env!("CARGO_MANIFEST_DIR")).join("cargo.toml")).unwrap()
     );
   }
 
@@ -120,27 +120,24 @@ mod tests {
 
   #[test]
   fn test_file_exist() {
-    assert_eq!(
-      file_exist(Path::new(env!("CARGO_MANIFEST_DIR")).to_str().unwrap()),
-      true
+    assert!(
+      file_exist(Path::new(env!("CARGO_MANIFEST_DIR")).to_str().unwrap())
     );
-    assert_eq!(
+    assert!(
       file_exist(
         Path::new(env!("CARGO_MANIFEST_DIR"))
           .join("Cargo.toml")
           .to_str()
           .unwrap()
-      ),
-      true
+      )
     );
-    assert_eq!(
-      file_exist(
+    assert!(
+      !file_exist(
         Path::new(env!("CARGO_MANIFEST_DIR"))
           .join("cargo.toml.bak")
           .to_str()
           .unwrap()
-      ),
-      false
+      )
     );
   }
 
@@ -208,8 +205,8 @@ mod tests {
       .to_string();
     // create dir
     create_dir_recursive(dir.clone()).await;
-    assert_eq!(is_dir(Path::new(dir.as_str())).unwrap(), true);
-    assert_eq!(file_exist(&dir), true);
+    assert!(is_dir(Path::new(dir.as_str())).unwrap());
+    assert!(file_exist(&dir));
 
     let file = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp/md/silo/app.txt")
@@ -218,8 +215,8 @@ mod tests {
       .to_string();
     // create file
     create_file(file.clone()).await;
-    assert_eq!(file_exist(&file), true);
-    assert_eq!(is_dir(Path::new(file.as_str())).unwrap(), false);
+    assert!(file_exist(&file));
+    assert!(!is_dir(Path::new(file.as_str())).unwrap());
 
     // write and read file
     let to_write_text = String::from("Test Hello World");
@@ -234,8 +231,8 @@ mod tests {
       .unwrap()
       .to_string();
     let copied = copy_file(file.clone(), to_path.clone()).await;
-    assert_eq!(copied, true);
-    assert_eq!(file_exist(&to_path), true);
+    assert!(copied);
+    assert!(file_exist(&to_path));
 
     // copy file to assets
     let work_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -245,9 +242,9 @@ mod tests {
     let asset_path = copy_file_to_assets(to_path.clone(), work_dir.clone()).await;
     let abs_path = asset_path.0;
     let rel_path = asset_path.1;
-    assert_eq!(is_dir(Path::new(work_dir.as_str())).unwrap(), true);
+    assert!(is_dir(Path::new(work_dir.as_str())).unwrap());
     assert_eq!(abs_path, format!("{}/assets/app.txt", work_dir.clone()));
-    assert_eq!(file_exist(&abs_path), true);
+    assert!(file_exist(&abs_path));
     assert_eq!(rel_path, "./assets/app.txt");
     // override copy
     let asset_path_1 =
@@ -255,7 +252,7 @@ mod tests {
     let abs_path_1 = asset_path_1.0;
     let rel_path_1 = asset_path_1.1;
     assert_eq!(abs_path_1, format!("{}/assets/app.txt", work_dir.clone()));
-    assert_eq!(file_exist(&abs_path_1), true);
+    assert!(file_exist(&abs_path_1));
     assert_eq!(rel_path_1, "./assets/app.txt");
 
     // rename file
@@ -270,23 +267,23 @@ mod tests {
       .unwrap()
       .to_string();
     create_dir_recursive(from_dir.clone()).await;
-    assert_eq!(file_exist(&from_dir), true);
+    assert!(file_exist(&from_dir));
     // rename
     rename_file(from_dir.clone(), to_dir.clone()).await;
-    assert_eq!(file_exist(&from_dir), false);
-    assert_eq!(file_exist(&to_dir), true);
+    assert!(!file_exist(&from_dir));
+    assert!(file_exist(&to_dir));
 
     // del files or dir
     let to_del_files = vec![file.clone(), to_path.clone(), to_dir.clone()];
     // files.push(file.clone());
     // del src file
     delete_files(to_del_files).await;
-    assert_eq!(file_exist(&file), false);
-    assert_eq!(file_exist(&to_path), false);
-    assert_eq!(file_exist(&to_dir), false);
+    assert!(!file_exist(&file));
+    assert!(!file_exist(&to_path));
+    assert!(!file_exist(&to_dir));
 
     #[cfg(not(target_os = "macos"))]
-    assert_eq!(file_exist(&abs_path_1), true); // ci test failed on win, but OK on Win10
+    assert!(file_exist(&abs_path_1)); // ci test failed on win, but OK on Win10
                                                // on macOS:
     #[cfg(target_os = "macos")]
     assert_eq!(file_exist(&abs_path_1), false);
@@ -298,79 +295,16 @@ mod tests {
       .to_string();
     let to_del_dirs = vec![dir.clone()];
     delete_files(to_del_dirs.clone()).await;
-    assert_eq!(file_exist(&abs_path_1), false);
-    assert_eq!(file_exist(&dir), false);
+    assert!(!file_exist(&abs_path_1));
+    assert!(!file_exist(&dir));
 
     let to_del_files_1 = vec![abs_path_1.clone()];
     // can exec del on non-existing on macOS
     delete_files(to_del_files_1).await;
-    assert_eq!(file_exist(&abs_path_1), false);
+    assert!(!file_exist(&abs_path_1));
     // now no file in it, dir deleted
     delete_files(to_del_dirs).await;
-    assert_eq!(file_exist(&dir), false);
-  }
-
-  #[tokio::test]
-  #[ignore = "on my computer only"]
-  async fn test_copy_file_operation() {
-    // copy file
-    delete_files(vec![String::from("/home/uu/Documents/temple.jpg")]).await;
-    let copied = copy_file(
-      String::from("/home/uu/Pictures/temple.jpg"),
-      String::from("/home/uu/Documents/temple.jpg"),
-    )
-    .await;
-    assert_eq!(copied, true);
-    assert_eq!(file_exist("/home/uu/Documents/temple.jpg"), true);
-
-    // copy file to assets
-    delete_files(vec![String::from("/home/uu/Documents/assets/temple.jpg")]).await;
-    let asset_path = copy_file_to_assets(
-      String::from("/home/uu/Pictures/temple.jpg"),
-      String::from("/home/uu/Documents"),
-    )
-    .await;
-    let to_path = asset_path.0;
-    let relative_path = asset_path.1;
-    assert_eq!(to_path, "/home/uu/Documents/assets/temple.jpg");
-    assert_eq!(file_exist("/home/uu/Documents/assets/temple.jpg"), true);
-    assert_eq!(relative_path, "./assets/temple.jpg");
-
-    delete_files(vec![String::from("/home/uu/Documents/assets/beauty.jpg")]).await;
-    let asset_path_1 = copy_file_to_assets(
-      String::from("/home/uu/Pictures/beauty.jpg"),
-      String::from("/home/uu/Documents/"),
-    )
-    .await;
-    let to_path_1 = asset_path_1.0;
-    let relative_path_1 = asset_path_1.1;
-    assert_eq!(to_path_1, "/home/uu/Documents/assets/beauty.jpg");
-    assert_eq!(file_exist("/home/uu/Documents/assets/beauty.jpg"), true);
-    assert_eq!(relative_path_1, "./assets/beauty.jpg");
-  }
-
-  #[test]
-  fn test_storage_operation() {
-    let key = String::from("test_key");
-    let value: serde_json::Value = serde_json::from_str(
-      "{
-            \"id\": \"0X520\",
-            \"name\": \"mdsilo\"
-        }",
-    )
-    .unwrap();
-
-    // set
-    set_data(key.clone(), value.clone());
-    // get
-    let store_data = get_data(key.clone()).unwrap();
-    assert_eq!(value, store_data.data);
-    assert_eq!(true, store_data.status);
-    // del
-    delete_data(key.clone());
-    let store_data_0 = get_data(key).unwrap();
-    assert_eq!(serde_json::Value::Null, store_data_0.data);
-    assert_eq!(false, store_data_0.status);
+    assert!(!file_exist(&dir));
   }
 
   #[tokio::test]

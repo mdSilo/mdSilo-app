@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BaseModal } from 'components/settings/BaseModal';
 import { renameFile, joinPaths, getParentDir } from 'file/util';
+import { flushSave } from 'file/pendingSaves';
 
 type Props = {
   dirPath: string;
@@ -32,6 +33,8 @@ export default function DirRenameModal(props: Props) {
             e.preventDefault();
             const parentDir = await getParentDir(dirPath);
             const newDir = await joinPaths(parentDir, [inputText]);
+            // the notes of the dir are moved with all their changes
+            await flushSave();
             await renameFile(dirPath, newDir);
             handleClose();
           }}

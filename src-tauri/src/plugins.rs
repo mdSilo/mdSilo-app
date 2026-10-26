@@ -31,13 +31,11 @@ pub fn inject_script(script_path: Option<String>) -> String {
     let file_path = Path::new(&script_path);
     if file_path.is_dir() {
       if let Ok(paths) = std::fs::read_dir(file_path) {
-        for path in paths {
-          if let Ok(file_path_) = path {
-            let file = file_path_.path().display().to_string();
-            let script_content =
-              std::fs::read_to_string(&file).unwrap_or_default();
-            script += &format!("{script_content}\n");
-          }
+        for file_path_ in paths.flatten() {
+          let file = file_path_.path().display().to_string();
+          let script_content =
+            std::fs::read_to_string(&file).unwrap_or_default();
+          script += &format!("{script_content}\n");
         }
       }
     } else if file_path.is_file() {

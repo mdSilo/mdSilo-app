@@ -88,10 +88,7 @@ impl From<(&DirEntry, bool)> for Node {
       match metadata.clone() {
         Some(meta) => {
           if meta.is_file() && check_md(&path.display().to_string()) {
-            match fs::read_to_string(path) {
-              Ok(text) => Some(text),
-              Err(_e) => None,
-            }
+            fs::read_to_string(path).ok()
           } else {
             None
           }
@@ -113,19 +110,13 @@ impl From<(NodeId, &mut Arena<Self>)> for &Node {
 }
 
 pub fn from_node(node: &Node) -> Option<FileMetaData> {
-  let metadata = match node.file_meta.as_ref() {
-    Some(meta) => meta,
-    None => return None,
-  };
+  let metadata = node.file_meta.as_ref()?;
 
   let created = metadata.created().unwrap_or_else(|_| SystemTime::now());
   let last_modified = metadata.modified().unwrap_or_else(|_| SystemTime::now());
   let last_accessed = metadata.accessed().unwrap_or_else(|_| SystemTime::now());
 
-  let normalized_path = match node.path().normalize_slash() {
-    Some(normalized) => normalized,
-    None => return None,
-  };
+  let normalized_path = node.path().normalize_slash()?;
   let is_hidden = check_hidden_meta(&normalized_path, metadata);
 
   let data = FileMetaData {

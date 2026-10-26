@@ -37,14 +37,13 @@ pub fn setup<R: Runtime>(app: &mut App<R>) -> tauri::Result<()> {
       }
     })
     .on_tray_icon_event(|tray, event| {
-      if let TrayIconEvent::Click { button, .. } = event {
-        if button == tauri::tray::MouseButton::Left {
-          if let Some(window) = tray.app_handle().get_webview_window(MAIN_WIN) {
-            let _ = window.set_focus();
-            let _ = window.unminimize();
-            let _ = window.show();
-          }
-        }
+      if let TrayIconEvent::Click { button, .. } = event
+        && button == tauri::tray::MouseButton::Left
+        && let Some(window) = tray.app_handle().get_webview_window(MAIN_WIN)
+      {
+        let _ = window.set_focus();
+        let _ = window.unminimize();
+        let _ = window.show();
       }
     })
     .build(app)?;

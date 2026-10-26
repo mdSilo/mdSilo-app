@@ -2,7 +2,7 @@ import React, { lazy, memo, Suspense, useCallback, useMemo, useEffect, useRef, u
 import { invoke , convertFileSrc } from '@tauri-apps/api/core';
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
-import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
+import MsEditor, { Attach, embeds } from "mdsmirror";
 import { EDITOR_THEME } from 'lib/themes';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
@@ -21,6 +21,7 @@ import { imageExtensions, docExtensions } from 'utils/file-extensions';
 import { encodeHref } from 'utils/mdlink';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile } from 'file/write';
+import { scheduleSave, flushSave } from 'file/pendingSaves';
 import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
 import {
   joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
@@ -51,13 +52,11 @@ function Note(props: Props) {
   const [showBacklink, setShowBacklink] = useState(false);
   const [headings, setHeadings] = useState<Heading[]>([]);
   const editorInstance = useRef<MsEditor>(null);
-  const getHeading = () => {
-    const hdings = editorInstance.current?.getHeadings();
-    // console.log(hdings);
-    setHeadings(hdings ?? []);
-  };
+  const getHeading = useCallback(() => {
+    setHeadings(editorInstance.current?.getHeadings() ?? []);
+  }, []);
 
-  useEffect(() => { getHeading(); }, [noteId]); // to trigger change on dep change
+  useEffect(() => { getHeading(); }, [noteId, getHeading]); // to trigger change on dep change
 
   useEffect(() => {
     emitCustomEvent("PageLoaded", noteId);
@@ -124,8 +123,10 @@ function Note(props: Props) {
     if (pendingContent.current !== null) {
       store.getState().updateNote({ id: noteId, content: pendingContent.current });
       pendingContent.current = null;
+      // update TOC if any
+      getHeading();
     }
-  }, [noteId]);
+  }, [noteId, getHeading]);
   const syncContent = useCallback((text: string) => {
     pendingContent.current = text;
     if (contentTimer.current) clearTimeout(contentTimer.current);
@@ -133,27 +134,29 @@ function Note(props: Props) {
   }, [flushContent]);
   useEffect(() => flushContent, [flushContent]);
 
-  // write to local file
+  // write to local file, once the typing pauses
   const onContentChange = useCallback(
-    async (text: string, json: JSONContent) => {
-      // console.log("on content change", text.length, json);
+    (text: string) => {
+      if (!notePath) return;
       // end the file with a newline, as a text file should
-      await writeFile(notePath, text && !text.endsWith('\n') ? `${text}\n` : text);
+      scheduleSave(notePath, text && !text.endsWith('\n') ? `${text}\n` : text);
       syncContent(text);
-      // update TOC if any
-      getHeading();
     },
     [notePath, syncContent]
   );
 
   const onMarkdownChange = useCallback(
-    async (text: string) => {
-      // console.log("on markdown content change", text);
-      await writeFile(notePath, text);
+    (text: string) => {
+      if (!notePath) return;
+      scheduleSave(notePath, text);
       syncContent(text);
     },
     [notePath, syncContent]
   );
+  // the note is closed or another one is opened: save it now
+  useEffect(() => () => {
+    if (notePath) void flushSave(notePath);
+  }, [notePath]);
 
   setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
   // update locally
@@ -166,6 +169,8 @@ function Note(props: Props) {
         return notesArr.findIndex((n) => (n.title === newTitle)) === -1;
       };
       if (isTitleUnique()) {
+        // the file is read again, then moved: with all the changes
+        await flushSave(noteId);
         await updateBacklinks(title, newTitle);
         // on rename file:
         // 0- reload the old note to store.

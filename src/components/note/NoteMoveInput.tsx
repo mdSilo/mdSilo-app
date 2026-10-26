@@ -7,6 +7,7 @@ import { store, useStore } from 'lib/store';
 import type { Note } from 'types/model';
 import { ciStringCompare } from 'utils/helper';
 import FileAPI from 'file/files';
+import { flushSave } from 'file/pendingSaves';
 import useLoadNotes from 'editor/hooks/useLoadNotes';
 import { createDirRecursive, joinPaths } from 'file/util';
 
@@ -108,6 +109,8 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       }
       // move file in disk and store
       if (tarDir) {
+        // move the file with all the changes
+        await flushSave(noteId);
         const thisFile = new FileAPI(noteId);
         const tarPath = await thisFile.moveFile(tarDir);
         const oldNote = notes.get(noteId);

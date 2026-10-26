@@ -67,14 +67,35 @@ async function getDirpath(path: string): Promise<string> {
   return entry.is_dir ? entry.path : entry.parent;
 }
 
+async function sameContent(a: string, b: string): Promise<boolean> {
+  const [blobA, blobB] = await Promise.all([fs.readBlob(a), fs.readBlob(b)]);
+  if (blobA.size !== blobB.size) return false;
+  const [bytesA, bytesB] = await Promise.all([blobA.arrayBuffer(), blobB.arrayBuffer()]);
+  const viewB = new Uint8Array(bytesB);
+  return new Uint8Array(bytesA).every((byte, i) => byte === viewB[i]);
+}
+
+/**
+ * Copy to the `assets` dir of the work dir, as the desktop app: never replace
+ * another file of the same name, `name-1.ext`, `name-2.ext`... are tried; the
+ * file itself or a copy of it is used as is.
+ */
 async function copyFileToAssets(srcPath: string, workDir: string): Promise<[string, string]> {
   if (!(await fs.isFile(srcPath))) return ['', ''];
+  const src = normalize(srcPath);
   const name = basename(srcPath);
-  const toPath = join(workDir, 'assets', name);
-  if (normalize(srcPath) !== toPath && !(await fs.copyFile(srcPath, toPath))) {
-    return ['', ''];
+  const dot = name.lastIndexOf('.');
+  const [stem, ext] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ''];
+  for (let i = 0; ; i++) {
+    const candidate = i === 0 ? name : `${stem}-${i}${ext}`;
+    const toPath = join(workDir, 'assets', candidate);
+    if (!(await fs.exists(toPath))) {
+      return (await fs.copyFile(src, toPath)) ? [toPath, `./assets/${candidate}`] : ['', ''];
+    }
+    if (src === toPath || (await sameContent(src, toPath))) {
+      return [toPath, `./assets/${candidate}`];
+    }
   }
-  return [toPath, `./assets/${name}`];
 }
 
 async function openUrl(url: string): Promise<boolean> {

@@ -90,6 +90,24 @@ describe('web invoke: files', () => {
     expect(await invoke('file_exist', { filePath: '/w/c/a.md' })).toBe(true);
   });
 
+  it('copies assets without replacing another file', async () => {
+    await invoke('write_file', { filePath: '/w/x/pic.png', text: 'first' });
+    await invoke('write_file', { filePath: '/w/y/pic.png', text: 'second' });
+    expect(await invoke('copy_file_to_assets', { srcPath: '/w/x/pic.png', workDir: '/w' }))
+      .toEqual(['/w/assets/pic.png', './assets/pic.png']);
+    // another file of the same name
+    expect(await invoke('copy_file_to_assets', { srcPath: '/w/y/pic.png', workDir: '/w' }))
+      .toEqual(['/w/assets/pic-1.png', './assets/pic-1.png']);
+    expect(await invoke('read_file', { filePath: '/w/assets/pic.png' })).toBe('first');
+    expect(await invoke('read_file', { filePath: '/w/assets/pic-1.png' })).toBe('second');
+    // the same file again, or the asset itself: no new copy
+    expect(await invoke('copy_file_to_assets', { srcPath: '/w/y/pic.png', workDir: '/w' }))
+      .toEqual(['/w/assets/pic-1.png', './assets/pic-1.png']);
+    expect(await invoke('copy_file_to_assets', { srcPath: '/w/assets/pic.png', workDir: '/w' }))
+      .toEqual(['/w/assets/pic.png', './assets/pic.png']);
+    expect(await invoke('read_file', { filePath: '/w/assets/pic.png' })).toBe('first');
+  });
+
   it('emits changes on watched dir', async () => {
     const events: unknown[] = [];
     const unlisten = await getCurrentWindow().listen('changes', (e) => events.push(e.payload));

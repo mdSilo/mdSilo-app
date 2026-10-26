@@ -3,6 +3,7 @@ import { useCurrentViewContext } from 'context/useCurrentView';
 import { store } from 'lib/store';
 import updateBacklinks from 'components/note/backlinks/updateBacklinks';
 import { deleteFile } from 'file/write';
+import { cancelSave } from 'file/pendingSaves';
 
 export default function useDeleteNote(noteId: string, noteTitle: string) {
   const currentView = useCurrentViewContext();
@@ -17,6 +18,8 @@ export default function useDeleteNote(noteId: string, noteTitle: string) {
 }
 
 export async function doDeleteNote(noteId: string, noteTitle: string) {
+  // a save still waiting would write the file again
+  cancelSave(noteId);
   // delete in store
   store.getState().deleteNote(noteId);
   // delete backlinks

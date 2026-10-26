@@ -1,13 +1,11 @@
 use bytes::Bytes;
-use chrono::offset::Local;
-use reqwest;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tauri::command;
 
 use crate::db;
 use crate::models::{Article, Channel, NewArticle, NewChannel};
-use crate::storage::do_log;
+use crate::storage::log_error;
 
 // # process rss or atom feed #
 //
@@ -30,11 +28,7 @@ pub async fn get_feed_content(url: &str) -> Option<Bytes> {
   let response = match client {
     Ok(cl) => cl.get(url).send().await,
     Err(e) => {
-      do_log(
-        "Error".to_string(),
-        format!("Err on [process_feed: reqwest {}]: {:?}", url, e),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
+      log_error(format!("Err on [process_feed: reqwest {}]: {:?}", url, e));
       return None;
     }
   };
@@ -45,11 +39,7 @@ pub async fn get_feed_content(url: &str) -> Option<Bytes> {
         let content = match response.bytes().await {
           Ok(ctn) => ctn,
           Err(e) => {
-            do_log(
-              "Error".to_string(),
-              format!("Err on [get_feed_content: process response bytes]: {:?}", e),
-              format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-            );
+            log_error(format!("Err on [get_feed_content: process response bytes]: {:?}", e));
             return None;
           }
         };
@@ -57,21 +47,13 @@ pub async fn get_feed_content(url: &str) -> Option<Bytes> {
         Some(content)
       }
       _status => {
-        do_log(
-          "Error".to_string(),
-          format!("Err on [get_feed_content], response status: {}", _status),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
+        log_error(format!("Err on [get_feed_content], response status: {}", _status));
 
         None
       }
     },
     Err(e) => {
-      do_log(
-        "Error".to_string(),
-        format!("Err on [get_feed_content: get response]: {:?}", e),
-        format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-      );
+      log_error(format!("Err on [get_feed_content: get response]: {:?}", e));
 
       None
     }
@@ -85,14 +67,14 @@ async fn process_rss(
   title: Option<String>,
 ) -> Option<(NewChannel, Vec<NewArticle>)> {
   if let Some(content) = get_feed_content(url).await {
-    match rss::Channel::read_from(&content[..]).map(|channel| channel) {
+    match rss::Channel::read_from(&content[..]) {
       Ok(channel) => {
         let date = match &channel.pub_date {
           Some(t) => String::from(t),
           None => String::from(""),
         };
         let channel_title = match title {
-          Some(t) if t.trim().len() > 0 => String::from(t.trim()),
+          Some(t) if !t.trim().is_empty() => String::from(t.trim()),
           _ => channel.title.to_string(),
         };
         let rss_channel = NewChannel {
@@ -123,9 +105,9 @@ async fn process_rss(
             feed_link: url.to_string(),
             audio_url,
             description,
-            published: String::from(item.pub_date().clone().unwrap_or("")),
+            published: String::from(item.pub_date().unwrap_or("")),
             content,
-            author: String::from(item.author().clone().unwrap_or("")),
+            author: String::from(item.author().unwrap_or("")),
             image: String::from(""),
           };
 
@@ -134,11 +116,7 @@ async fn process_rss(
         Some((rss_channel, articles))
       }
       Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!("Err on [process_rss: read from content]: {:?}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
+        log_error(format!("Err on [process_rss: read from content]: {:?}", e));
         None
       }
     }
@@ -157,7 +135,7 @@ async fn process_atom(
     match atom_syndication::Feed::read_from(&content[..]) {
       Ok(atom) => {
         let channel_title = match title {
-          Some(t) if t.trim().len() > 0 => String::from(t.trim()),
+          Some(t) if !t.trim().is_empty() => String::from(t.trim()),
           _ => atom.title.to_string(),
         };
         let atom_channel = NewChannel {
@@ -199,11 +177,7 @@ async fn process_atom(
         Some((atom_channel, feeds))
       }
       Err(e) => {
-        do_log(
-          "Error".to_string(),
-          format!("Err on [process_atom: read from content]: {:?}", e),
-          format!("{}", Local::now().format("%m/%d/%Y %H:%M:%S")),
-        );
+        log_error(format!("Err on [process_atom: read from content]: {:?}", e));
         None
       }
     }
@@ -260,14 +234,14 @@ pub async fn import_channels(url_list: Vec<String>) -> usize {
     import_num += res;
   }
 
-  return import_num;
+  import_num
 }
 
 #[command]
 pub async fn get_channels() -> Vec<Channel> {
-  let results = db::get_channels();
+  
 
-  return results;
+  db::get_channels()
 }
 
 #[command]
@@ -286,9 +260,9 @@ pub async fn add_articles_with_channel(link: String) -> usize {
       };
       let articles = res.1;
 
-      let result = db::add_articles(String::from(&link), articles);
+      
 
-      result
+      db::add_articles(String::from(&link), articles)
     }
     None => 0,
   }
@@ -310,12 +284,12 @@ pub fn get_articles(
 #[command]
 pub fn get_unread_num() -> HashMap<String, i32> {
   let record = db::get_unread_num();
-  let result = record
-    .into_iter()
-    .map(|r| (r.feed_link.clone(), r.unread_count.clone()))
-    .collect::<HashMap<String, i32>>();
+  
 
-  result
+  record
+    .into_iter()
+    .map(|r| (r.feed_link.clone(), r.unread_count))
+    .collect::<HashMap<String, i32>>()
 }
 
 #[command]
