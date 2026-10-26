@@ -4,7 +4,7 @@ import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import { TbHash as IconHash } from 'react-icons/tb';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { NoteMap, useStore } from 'lib/store';
-import { HASHTAG_REGEX } from 'components/view/ForceGraph';
+import { indexOf } from 'lib/linkIndex';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import SidebarItem from './SidebarItem';
 
@@ -142,15 +142,11 @@ const Tag = memo(forwardRef(SidebarTag));
 const computeTags = (notes: NoteMap) => {
   const notesArr = notes.values().filter(n => !n.is_dir);
   const tagNames: Record<string, number> = {};
-  // Search for links in each note 
+  // the tags of each note, from the index: found once per content
+  const index = indexOf(notes);
   for (const note of notesArr) {
-    // HashTag
-    const tag_array: RegExpMatchArray[] = [...note.content.matchAll(HASHTAG_REGEX)];
-    for (const match of tag_array) {
-      const tag = match[1]?.trim();
-      if (tag && !tag.includes('#')) {
-        tagNames[tag] = tagNames[tag] ? tagNames[tag] + 1 : 1;
-      }
+    for (const tag of index.tags(note.id)) {
+      tagNames[tag] = tagNames[tag] ? tagNames[tag] + 1 : 1;
     }
   }
   const res : TagTreeItem[] = [];

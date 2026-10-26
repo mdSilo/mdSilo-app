@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from 'lib/store';
-import { loadDir } from 'file/open';
+import useLoadNotes from 'editor/hooks/useLoadNotes';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useDebounce from 'editor/hooks/useDebounce';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
@@ -22,13 +22,7 @@ type Filter = 'all' | TaskTag;
  * note and can be turned into an issue linked to that note.
  */
 export default function NoteTaskList({ data }: { data: IssueData }) {
-  const isLoaded = useStore((state) => state.isLoaded);
-  const initDir = useStore((state) => state.initDir);
-  useEffect(() => {
-    if (!isLoaded && initDir) {
-      void loadDir(initDir);
-    }
-  }, [initDir, isLoaded]);
+  useLoadNotes();
 
   const [notes] = useDebounce(useStore((state) => state.notes), 300);
   const tasks = useMemo(() => computeNoteTasks(notes), [notes]);

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useCurrentViewContext } from 'context/useCurrentView';
 import { store, useStore } from 'lib/store';
 import { ArticleType, ChannelType } from 'types/model';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -11,6 +12,8 @@ import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
 import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from 'lib/userSettings';
 
 export default function Feed() {
+  const dispatch = useCurrentViewContext().dispatch;
+  const openNote = useCallback((noteId: string) => dispatch({ view: 'md', params: { noteId } }), [dispatch]);
   // channel list
   const [channelList, setChannelList] = useState<ChannelType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<ChannelType | null>(null);
@@ -220,6 +223,7 @@ export default function Feed() {
                 article={currentArticle || storeArticle} 
                 starArticle={updateStarStatus} 
                 hideChannelCol={hideChannelCol}
+                onOpenNote={openNote}
               />
             </div>
           </>

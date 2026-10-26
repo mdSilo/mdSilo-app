@@ -4,6 +4,10 @@ mod tests {
   use crate::paths::{PathBufExt, PathExt};
   use crate::storage::*;
   use std::path::{Path, PathBuf};
+  use std::sync::Mutex;
+
+  // the tests using ../temp delete it at the end: one at a time
+  static TEMP_DIR: Mutex<()> = Mutex::new(());
 
   #[test]
   fn test_get_basename() {
@@ -50,7 +54,9 @@ mod tests {
   }
 
   #[tokio::test]
+  #[allow(clippy::await_holding_lock)] // a runtime per test: no other task waits
   async fn test_get_dirpath() {
+    let _temp = TEMP_DIR.lock().unwrap_or_else(|e| e.into_inner());
     let file = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp/mdsilo/mdSilo_app.deb")
       .to_str()
@@ -192,7 +198,9 @@ mod tests {
   }
 
   #[tokio::test]
+  #[allow(clippy::await_holding_lock)] // a runtime per test: no other task waits
   async fn test_file_operation() {
+    let _temp = TEMP_DIR.lock().unwrap_or_else(|e| e.into_inner());
     let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
       .join("../temp/md/silo")
       .to_str()

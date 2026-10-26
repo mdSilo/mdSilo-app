@@ -9,7 +9,7 @@ import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentVie
 import type { ViewAction } from 'context/viewReducer';
 import { getStrDate } from 'utils/helper';
 import { MD_LINK_REGEX, WIKI_LINK_REGEX } from 'utils/mdlink';
-import { makeFileMeta, makeNote, mockInvoke, mockLayout } from '../../testUtils';
+import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '../../testUtils';
 import MainView from './MainView';
 import HeatMap from './HeatMap';
 import Chronicle from './chronicle';
@@ -41,6 +41,7 @@ const go = async (action: ViewAction) => {
   await act(async () => {
     fireEvent.click(btn);
   });
+  await waitForView();
 };
 const viewState = () => JSON.parse(screen.getByTestId('view').textContent as string);
 
@@ -124,6 +125,21 @@ describe('HeatMap', () => {
     const todayRect = container.querySelector('rect.fill-primary\\/60') as SVGRectElement;
     await userEvent.click(todayRect);
     expect(onClickCell).toHaveBeenCalledWith(today());
+  });
+
+  test('saves new activities once, out of render', () => {
+    const now = new Date().toISOString();
+    const notes = [makeNote({ id: '/n/a.md', created_at: now, updated_at: now })];
+    let saves = 0;
+    const unsubscribe = store.subscribe((state, prev) => {
+      if (state.activities !== prev.activities) saves += 1;
+    });
+    const { rerender } = render(<HeatMap noteList={notes} onClickCell={vi.fn()} />);
+    rerender(<HeatMap noteList={[...notes]} onClickCell={vi.fn()} />);
+    unsubscribe();
+    // saved once; the same counts again change nothing
+    expect(saves).toBe(1);
+    expect(store.getState().activities[today()]).toEqual({ activityNum: 2, createNum: 1, updateNum: 1 });
   });
 
   test('labels twelve months', () => {

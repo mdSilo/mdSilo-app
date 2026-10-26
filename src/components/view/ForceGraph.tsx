@@ -26,7 +26,8 @@ import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
-import { findNoteLinks, noteTitleMap } from 'utils/mdlink';
+import { noteTitleMap } from 'utils/mdlink';
+import { indexOf } from 'lib/linkIndex';
 import { openFilePath } from 'file/open';
 import { checkFileIsMd } from 'file/process';
 
@@ -82,8 +83,7 @@ function useThemeColors(): GraphColors {
   return colors;
 }
 
-// non-greedy per tag; the trailing space is a lookahead so adjacent tags share it
-export const HASHTAG_REGEX = /\s#([^#\n]+)#(?=\s)/g;
+export { HASHTAG_REGEX } from 'utils/mdlink';
 
 export type NodeDatum = {
   id: string;
@@ -139,11 +139,12 @@ export default function ForceGraph(props: Props) {
     // link title (including legacy `a_b` for `a b`) to note title
     const titleOf = noteTitleMap(idByTitle.keys());
 
-    // Search for links in each note 
+    // links and tags of each note, from the index: parsed once per content
+    const index = indexOf(notes);
     for (const note of notesArr) {
       // CASE []() and [[]]
-      for (const link of findNoteLinks(note.content)) {
-        const linkedTitle = titleOf.get(link.title);
+      for (const link of index.rawLinks(note.id)) {
+        const linkedTitle = titleOf.get(link);
         const linkedId = linkedTitle !== undefined ? idByTitle.get(linkedTitle) : undefined;
         if (linkedId && linkedId !== note.id) {
           linksByNoteId[note.id].add(linkedId);
@@ -151,14 +152,10 @@ export default function ForceGraph(props: Props) {
         }
       }
       // HashTag
-      const tag_array: RegExpMatchArray[] = [...note.content.matchAll(HASHTAG_REGEX)];
-      for (const match of tag_array) {
-        const tag = match[1]?.trim();
-        if (tag && !tag.includes('#')) {
-          tagNames.add(tag);
-          // Add the tag to each note set
-          linksByNoteId[note.id].add(tag);
-        }
+      for (const tag of index.tags(note.id)) {
+        tagNames.add(tag);
+        // Add the tag to each note set
+        linksByNoteId[note.id].add(tag);
       }
     }
 

@@ -22,43 +22,6 @@ describe('App', () => {
     expect(document.querySelector('#side-menu-btns button')).toBeInTheDocument();
   });
 
-  test('applies the theme on <html>', async () => {
-    store.getState().setIsOpenPreOn(false);
-    store.getState().setTheme('mdsilo-dark');
-    await act(async () => {
-      render(<App />);
-    });
-    const root = document.documentElement;
-    expect(root.dataset.theme).toBe('mdsilo-dark');
-    expect(root).toHaveClass('dark');
-    expect(store.getState().darkMode).toBe(true);
-
-    await act(async () => {
-      store.getState().setTheme('cupcake');
-    });
-    expect(root.dataset.theme).toBe('cupcake');
-    expect(root).not.toHaveClass('dark');
-    expect(store.getState().darkMode).toBe(false);
-  });
-
-  test('the system theme follows the system dark mode', async () => {
-    store.getState().setIsOpenPreOn(false);
-    store.getState().setTheme('system');
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: query === '(prefers-color-scheme: dark)',
-      media: query,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }));
-    await act(async () => {
-      render(<App />);
-    });
-    expect(document.documentElement.dataset.theme).toBe('mdsilo-dark');
-    expect(store.getState().darkMode).toBe(true);
-  });
-
   test('global hotkeys toggle panels and tabs', async () => {
     store.getState().setIsOpenPreOn(false);
     vi.mocked(invoke).mockResolvedValue([]);

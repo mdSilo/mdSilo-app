@@ -1,19 +1,41 @@
-import React, { useEffect, useState } from "react";
-import { TbChevronLeft as IconChevronLeft, TbHeadphones as IconHeadphones, TbLink as IconLink, TbStar as IconStar } from "react-icons/tb";
+import React, { useEffect, useRef, useState } from "react";
+import { TbChevronLeft as IconChevronLeft, TbHeadphones as IconHeadphones, TbLink as IconLink, TbStar as IconStar, TbClipboardText as IconClip } from "react-icons/tb";
 import { useStore } from "lib/store";
 import { getFavicon, fmtDatetime } from "utils/helper";
 import { sanitizeHtml } from "utils/sanitize";
 import { ArticleType } from "types/model";
 import Tooltip from "components/misc/Tooltip";
+import { clipArticle } from "./clip";
 
 type ViewProps = {
   article: ArticleType | null;
   starArticle: (url: string, status: number) => Promise<void>;
   hideChannelCol: () => void;
+  /** open a note, e.g. the clip of the article */
+  onOpenNote?: (noteId: string) => void;
 };
 
+/** The HTML of the selection if it is in the element. */
+function selectionHtmlIn(el: HTMLElement | null): string | undefined {
+  const sel = window.getSelection();
+  if (!el || !sel || sel.isCollapsed || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  if (!el.contains(range.commonAncestorContainer)) return;
+  const div = document.createElement('div');
+  div.append(range.cloneContents());
+  return div.innerHTML;
+}
+
 export function ArticleView(props: ViewProps) {
-  const { article, starArticle, hideChannelCol } = props;
+  const { article, starArticle, hideChannelCol, onOpenNote } = props;
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [clipMsg, setClipMsg] = useState("");
+
+  useEffect(() => {
+    if (!clipMsg) return;
+    const timer = setTimeout(() => setClipMsg(""), 3000);
+    return () => clearTimeout(timer);
+  }, [clipMsg]);
   const [isStar, setIsStar] = useState(article?.star_status === 1);
   const [pageContent, setPageContent] = useState("");
 
@@ -66,6 +88,29 @@ export function ArticleView(props: ViewProps) {
           >
             <IconStar size={20} className={`text-error ${isStar ? 'fill-error' : ''}`} />
           </span>
+          <Tooltip content="Save as a note, or add the selected text to it" placement="top">
+            <button
+              type="button"
+              aria-label="Clip"
+              className="m-1"
+              // keep the selection in the article
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={async () => {
+                const selection = selectionHtmlIn(contentRef.current);
+                const notePath = await clipArticle(article, selection);
+                if (!notePath) {
+                  setClipMsg("Open a folder to save clips");
+                } else if (selection === undefined) {
+                  onOpenNote?.(notePath);
+                } else {
+                  setClipMsg(`Clipped to ${notePath.split('/').pop()}`);
+                }
+              }}
+            >
+              <IconClip size={20} />
+            </button>
+          </Tooltip>
+          {clipMsg && <span className="m-1 text-sm text-success">{clipMsg}</span>}
           {article.audio_url.trim() && (
             <span 
               className="m-1 cursor-pointer" 
@@ -80,6 +125,7 @@ export function ArticleView(props: ViewProps) {
       </div>
       <div className="p-2">
         <div
+          ref={contentRef}
           className="text-lg p-2 mt-2 content text-base-content"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{__html: pageContent}}

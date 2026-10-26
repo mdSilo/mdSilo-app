@@ -1,48 +1,53 @@
+import { lazy, Suspense, type ComponentType } from 'react';
 import MsEditor from "mdsmirror";
 import { useStore } from 'lib/store';
 import { EDITOR_THEME } from 'lib/themes';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
+import Spinner from 'components/misc/Spinner';
 import useNoteTaskSync from 'components/issue/useNoteTaskSync';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import Chronicle from './chronicle';
-import Journals from './journals';
-import Graph from './graph';
 import NotePage from './md';
-import HashTags from "./hashtags";
-import Feed from "./feed";
-import Issues, { IssuePage } from "./issues";
-import ProjectView from "./project";
+
+// loaded on first use: their code (d3, dnd-kit...) is not needed on start
+const Feed = lazy(() => import('./feed'));
+const Chronicle = lazy(() => import('./chronicle'));
+const Issues = lazy(() => import('./issues'));
+const IssuePage = lazy(() => import('./issues').then((m) => ({ default: m.IssuePage })));
+const ProjectView = lazy(() => import('./project'));
+const Graph = lazy(() => import('./graph'));
+const Journals = lazy(() => import('./journals'));
+const HashTags = lazy(() => import('./hashtags'));
+
+/** the view of each view type; any other type is a note */
+const VIEWS: Record<string, ComponentType> = {
+  default: DefaultView,
+  feed: Feed,
+  chronicle: Chronicle,
+  issues: Issues,
+  issue: IssuePage,
+  project: ProjectView,
+  graph: Graph,
+  journal: Journals,
+  tag: HashTags,
+};
 
 export default function MainView() {
   // issues created from note tasks follow their tasks, whatever the view
   useNoteTaskSync();
-  const currentView = useCurrentViewContext();
-  const viewTy = currentView.state.view;
-  // 
+  const viewTy = useCurrentViewContext().state.view;
+  const View = VIEWS[viewTy] ?? NotePage;
   return (
-    <>
-      {viewTy === 'default' ? ( 
-        <DefaultView /> 
-      ) : viewTy === 'feed' ? (
-        <Feed />
-      ) : viewTy === 'chronicle' ? (
-        <Chronicle />
-      ) : viewTy === 'issues' ? (
-        <Issues />
-      ) : viewTy === 'issue' ? (
-        <IssuePage />
-      ) : viewTy === 'project' ? (
-        <ProjectView />
-      ) : viewTy === 'graph' ? (
-        <Graph />
-      ) : viewTy === 'journal' ? (
-        <Journals />
-      ) : viewTy === 'tag' ? (
-        <HashTags />
-      ) : (
-        <NotePage />
-      )}
-    </>
+    <Suspense fallback={<ViewLoading />}>
+      <View />
+    </Suspense>
+  );
+}
+
+function ViewLoading() {
+  return (
+    <div className="flex items-center justify-center w-full h-full" data-testid="view-loading">
+      <Spinner className="w-8 h-8" />
+    </div>
   );
 }
 

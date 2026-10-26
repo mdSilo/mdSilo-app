@@ -54,6 +54,25 @@ export const normalizeSlash = (path: string): string => {
  * @param {string[]} ...args paths
  * @returns {string}
  */
+/** an absolute path: /a, C:/a, C:\\a, //host/a */
+export const isAbsolutePath = (path: string): boolean =>
+  /^([a-zA-Z]:)?[\\/]/.test(path);
+
+/**
+ * The path relative to dir, with `/`, if in it; others as they are.
+ * Stored in the workspace (e.g. issues.json), so it moves with it.
+ */
+export const toWorkspacePath = (dir: string, path: string): string => {
+  const root = normalizeSlash(dir);
+  const p = normalizeSlash(path);
+  const prefix = root === '/' ? '/' : `${root}/`;
+  return p.startsWith(prefix) && p.length > prefix.length ? p.slice(prefix.length) : path;
+};
+
+/** The absolute path of a path stored relative to dir; absolute as is. */
+export const fromWorkspacePath = (dir: string, path: string): string =>
+  !path || isAbsolutePath(path) ? path : `${trimSlash(normalizeSlash(dir), 'end')}/${path}`;
+
 export const joinPath = (...args: string[]): string => {
   if (args.length === 0) { return '.'; }
 

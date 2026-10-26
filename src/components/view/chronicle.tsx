@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore, store, Notes } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -8,18 +8,13 @@ import HeatMap from 'components/view/HeatMap';
 import { dateCompare, getStrDate, regDateStr } from 'utils/helper';
 import { joinPaths } from 'file/util';
 import { defaultNote, Note } from 'types/model';
-import { loadDir, openFilePath } from 'file/open';
+import { openFilePath } from 'file/open';
+import useLoadNotes from 'editor/hooks/useLoadNotes';
 import { checkFileIsMd } from 'file/process';
 
 export default function Chronicle() {
-  const isLoaded = useStore((state) => state.isLoaded);
+  useLoadNotes();
   const initDir = useStore((state) => state.initDir);
-  // console.log("c loaded?", isLoaded);
-  useEffect(() => {
-    if (!isLoaded && initDir) {
-      void loadDir(initDir);
-    }
-  }, [initDir, isLoaded]);
 
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;

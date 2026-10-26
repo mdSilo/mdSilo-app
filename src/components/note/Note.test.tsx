@@ -117,14 +117,15 @@ describe('Note', () => {
     expect((handler.mock.calls[0][0] as CustomEvent).detail).toEqual({ id: note.id });
   });
 
-  test('switches to raw markdown and mindmap modes', () => {
+  test('switches to raw markdown and mindmap modes', async () => {
     store.getState().setDarkMode(true);
     setup();
     act(() => store.getState().setRawMode('raw'));
+    // loaded on use; the editor stays hidden meanwhile
+    await waitFor(() => expect(document.querySelector('.cm-theme-dark')).toBeInTheDocument());
     expect(screen.queryByTestId('ms-editor')).not.toBeInTheDocument();
-    expect(document.querySelector('.cm-theme-dark')).toBeInTheDocument();
     act(() => store.getState().setRawMode('mindmap'));
-    expect(screen.getByTestId('mindmap')).toHaveTextContent('My Note');
+    expect(await screen.findByTestId('mindmap')).toHaveTextContent('My Note');
   });
 
   test('writes content changes to disk', async () => {

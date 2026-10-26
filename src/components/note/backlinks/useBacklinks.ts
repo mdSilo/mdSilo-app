@@ -1,10 +1,9 @@
-import { useMemo, useEffect } from 'react';
-import { parser } from "mdsmirror";
+import { useMemo } from 'react';
 import { NoteMap, useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
-import { isUrl } from 'utils/helper';
-import { hrefToTitle, linkTitlesOf } from 'utils/mdlink';
-import { loadDir } from 'file/open';
+import { linkTitlesOf } from 'utils/mdlink';
+import { getMarkdownTextBlocks, indexOf, type TextBlock } from 'lib/linkIndex';
+import useLoadNotes from 'editor/hooks/useLoadNotes';
 
 const DEBOUNCE_MS = 1000;
 
@@ -28,14 +27,7 @@ export type Backlinks = {
 };
 
 export default function useBacklinks(noteId: string): Backlinks {
-  const isLoaded = useStore((state) => state.isLoaded);
-  const initDir = useStore((state) => state.initDir);
-  // load all notes with content, isLoaded is set once loaded
-  useEffect(() => {
-    if (!isLoaded && initDir) {
-      void loadDir(initDir);
-    }
-  }, [initDir, isLoaded]);
+  useLoadNotes();
 
   // the title is not debounced: be right at once on switching or renaming note
   const noteTitle = useStore((state) => state.notes.get(noteId)?.title) || '';
@@ -51,7 +43,8 @@ export default function useBacklinks(noteId: string): Backlinks {
 }
 
 /**
- * Searches the notes linking to (linked) or mentioning (unlinked) the title
+ * Searches the notes linking to (linked) or mentioning (unlinked) the title.
+ * The index tells the notes to look in: only those are read, parsed once.
  * @param notes all notes
  * @param noteTitle title of the note to search backlinks for
  * @param noteId id of the note to search backlinks for, excluded in result
@@ -68,36 +61,32 @@ export const computeBacklinks = (
     return { linkedBacklinks, unlinkedBacklinks };
   }
 
+  const index = indexOf(notes);
   // the titles a link to the note may have, including the legacy one
-  const linkTitles = linkTitlesOf(title, (t) =>
-    notes.values().some((n) => !n.is_dir && n.title === t)
-  );
-  const nextCache: ParseCache = new Map();
-  for (const note of notes.values()) {
-    if (note.id === noteId || note.is_dir || !note.content) {
-      continue;
-    }
-    // quick check to not parse the notes having no link or mention for sure
-    if (!mayLinkOrMention(note.content, title)) {
-      continue;
-    }
+  const linkTitles = linkTitlesOf(title, (t) => index.hasTitle(t));
+  const candidates = index.linking(linkTitles);
+  for (const id of index.mentioning(title)) candidates.add(id);
 
-    const blocks = getBlocks(note.id, note.content, nextCache);
+  // in the order of the notes
+  for (const note of notes.values()) {
+    if (note.id === noteId || !candidates.has(note.id)) {
+      continue;
+    }
     const linked: BacklinkMatch[] = [];
     const unlinked: BacklinkMatch[] = [];
-    blocks.forEach((block, index) => {
+    index.blocks(note.id).forEach((block, blockIndex) => {
       for (const run of block.runs) {
         if (run.link !== undefined) {
           // linked: href is the title
           if (linkTitles.includes(run.link)) {
-            linked.push(toMatch(block, index, run.from, run.text.length));
+            linked.push(toMatch(block, blockIndex, run.from, run.text.length));
           }
           continue;
         }
         // unlinked: title in text, not in a link
         let at = run.text.indexOf(title);
         while (at >= 0) {
-          unlinked.push(toMatch(block, index, run.from + at, title.length));
+          unlinked.push(toMatch(block, blockIndex, run.from + at, title.length));
           at = run.text.indexOf(title, at + title.length);
         }
       }
@@ -110,13 +99,6 @@ export const computeBacklinks = (
       unlinkedBacklinks.push({ id: note.id, title: note.title, matches: unlinked });
     }
   }
-  // keep the parsed notes still existing only
-  for (const [id, parsed] of parseCache) {
-    if (!nextCache.has(id) && notes.get(id)?.content === parsed.content) {
-      nextCache.set(id, parsed);
-    }
-  }
-  parseCache = nextCache;
 
   return { linkedBacklinks, unlinkedBacklinks };
 };
@@ -148,71 +130,4 @@ const toMatch = (
   block: index,
 });
 
-// a link maybe `[`, a mention may be escaped `\` or an html entity `&`
-const mayLinkOrMention = (content: string, title: string) =>
-  content.includes('[') ||
-  content.includes('\\') ||
-  content.includes('&') ||
-  content.includes(title);
-
-type TextRun = {
-  text: string;
-  from: number; // offset in the block text
-  link?: string; // title of the linked note, if the run is in a link to note
-};
-
-type TextBlock = {
-  text: string; // plain text of the block
-  runs: TextRun[];
-};
-
-type ParseCache = Map<string, { content: string; blocks: TextBlock[] }>;
-
-// Parsing markdown is the costly part: parse a note again only if changed
-let parseCache: ParseCache = new Map();
-
-const getBlocks = (id: string, content: string, nextCache: ParseCache) => {
-  const cached = parseCache.get(id);
-  const blocks =
-    cached && cached.content === content
-      ? cached.blocks
-      : getMarkdownTextBlocks(content);
-  nextCache.set(id, { content, blocks });
-  return blocks;
-};
-
-export const getMarkdownTextBlocks = (content: string): TextBlock[] => {
-  const blocks: TextBlock[] = [];
-
-  for (const token of parser.tokenizer.parse(content, {})) {
-    if (token.type !== 'inline' || !token.children?.length) {
-      continue;
-    }
-
-    let text = '';
-    let link: string | undefined;
-    const runs: TextRun[] = [];
-
-    for (const child of token.children) {
-      if (child.type === 'link_open') {
-        const href = child.attrGet('href') || '';
-        // '' for the links not to note, e.g. url
-        link = href && !isUrl(href) ? hrefToTitle(href) : '';
-      } else if (child.type === 'link_close') {
-        link = undefined;
-      } else if (child.type === 'text' || child.type === 'code_inline') {
-        if (!child.content) continue;
-        runs.push({ text: child.content, from: text.length, link });
-        text += child.content;
-      } else if (child.type === 'softbreak' || child.type === 'hardbreak') {
-        text += ' ';
-      }
-    }
-
-    if (runs.length > 0) {
-      blocks.push({ text, runs });
-    }
-  }
-
-  return blocks;
-};
+export { getMarkdownTextBlocks };

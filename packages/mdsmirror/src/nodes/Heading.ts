@@ -39,7 +39,9 @@ export default class Heading extends Node {
       parseDOM: this.options.levels.map((level: number) => ({
         tag: `h${level}`,
         attrs: { level },
-        contentElement: ".heading-content",
+        // the editor's own heading, or any <hN> (pasted, imported HTML)
+        contentElement: (node: HTMLElement) =>
+          node.querySelector<HTMLElement>(".heading-content") ?? node,
       })),
       toDOM: (node) => {
         const anchor = document.createElement("button");

@@ -1,3 +1,4 @@
+use crate::atomic::{is_self_write, is_temp, write_atomic};
 use crate::paths::{PathBufExt, PathExt};
 use crate::storage::do_log;
 use crate::tree::node::{from_node, Node};
@@ -503,19 +504,12 @@ pub async fn read_file(file_path: String) -> String {
 // write to a file
 #[tauri::command]
 pub async fn write_file(file_path: String, text: String) -> bool {
-  if let Some(p) = Path::new(&file_path).parent() {
-    create_dir_recursive(p.display().to_string()).await;
-  }
-
-  fs::write(file_path, text).is_ok()
+  write_atomic(Path::new(&file_path), text.as_bytes()).is_ok()
 }
 
 #[tauri::command]
 pub async fn download_file(file_path: String, blob: Vec<u8>) -> bool {
-  if let Some(p) = Path::new(&file_path).parent() {
-    create_dir_recursive(p.display().to_string()).await;
-  }
-  fs::write(&file_path, blob).is_ok()
+  write_atomic(Path::new(&file_path), &blob).is_ok()
 }
 
 // rename the file
@@ -656,7 +650,13 @@ pub async fn listen_dir(
       kind,   // EventKind: Access,Create,Modify,Remove
       ..      // attrs,  // EventAttributes: tracker, flag...
     }) => {
-      let paths: Vec<String> = paths.iter().map(|path| to_dir_path(path)).collect();
+      // not the temp files of atomic writes, nor the files as the app wrote
+      // them: the app has their content already
+      let paths: Vec<String> = paths
+        .iter()
+        .map(|path| to_dir_path(path))
+        .filter(|path| !is_temp(Path::new(path)) && !is_self_write(Path::new(path)))
+        .collect();
       match kind {
         // EventKind::Access(_) => "access",
         EventKind::Create(_) => emit("create", paths),

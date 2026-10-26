@@ -117,3 +117,24 @@ describe('tauri mode', () => {
     expect(() => tauriUtil.setWindowTitle('x')).not.toThrow();
   });
 });
+
+describe('workspace paths', () => {
+  test('toWorkspacePath: relative with / in the dir, others as they are', () => {
+    expect(util.toWorkspacePath('/w', '/w/a.md')).toBe('a.md');
+    expect(util.toWorkspacePath('/w/', '/w/sub/b.md')).toBe('sub/b.md');
+    expect(util.toWorkspacePath('C:\\w', 'C:\\w\\sub\\b.md')).toBe('sub/b.md');
+    expect(util.toWorkspacePath('/w', '/wx/a.md')).toBe('/wx/a.md');
+    expect(util.toWorkspacePath('/w', '/w')).toBe('/w');
+    expect(util.toWorkspacePath('/', '/a.md')).toBe('a.md');
+  });
+
+  test('fromWorkspacePath: absolute again, absolute as is', () => {
+    expect(util.fromWorkspacePath('/w', 'a.md')).toBe('/w/a.md');
+    expect(util.fromWorkspacePath('/w/', 'sub/b.md')).toBe('/w/sub/b.md');
+    expect(util.fromWorkspacePath('C:\\w', 'sub/b.md')).toBe('C:/w/sub/b.md');
+    expect(util.fromWorkspacePath('/w', '/elsewhere/c.md')).toBe('/elsewhere/c.md');
+    expect(util.fromWorkspacePath('/w', 'D:/c.md')).toBe('D:/c.md');
+    expect(util.fromWorkspacePath('/', 'a.md')).toBe('/a.md');
+    expect(util.fromWorkspacePath('/w', '')).toBe('');
+  });
+});

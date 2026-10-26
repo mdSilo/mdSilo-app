@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from 'react';
+import React, { lazy, memo, Suspense, useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import { invoke , convertFileSrc } from '@tauri-apps/api/core';
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
@@ -6,8 +6,7 @@ import MsEditor, { JSONContent, Attach, embeds } from "mdsmirror";
 import { EDITOR_THEME } from 'lib/themes';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
-import RawMarkdown from 'components/md/Markdown';
-import { Mindmap } from 'components/mindmap/mindmap';
+import Spinner from 'components/misc/Spinner';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { updateIssueNoteLinks } from 'components/issue/issueStore';
 import { SidebarTab, store, useStore } from 'lib/store';
@@ -31,6 +30,10 @@ import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import IssueRefs from './IssueRefs';
 import updateBacklinks from './backlinks/updateBacklinks';
+
+// the raw markdown (CodeMirror) and mindmap (markmap) modes, loaded on use
+const RawMarkdown = lazy(() => import('components/md/Markdown'));
+const Mindmap = lazy(() => import('components/mindmap/mindmap').then((m) => ({ default: m.Mindmap })));
 
 
 const CONTENT_SYNC_MS = 800;
@@ -355,6 +358,7 @@ function Note(props: Props) {
                 : null
               }
               <div className="flex-1 px-2 pt-2 pb-8" id="note-content">
+                <Suspense fallback={<Spinner className="w-8 h-8 mx-auto" />}>
                 {rawMode === 'raw' ? (
                   <RawMarkdown
                     key={`raw-${noteId}`}
@@ -399,6 +403,7 @@ function Note(props: Props) {
                     resolveSrc={convertFileSrc}
                   />
                 )}
+                </Suspense>
               </div>
               <button
                 className="inline-flex items-center p-1 mt-2 group"
