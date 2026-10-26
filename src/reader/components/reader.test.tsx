@@ -172,7 +172,7 @@ describe('library', () => {
     renderMain();
     await go({ view: 'library' });
     const card = await screen.findByText('Tiny Book');
-    expect(screen.getByText('EPUB')).toBeInTheDocument();
+    expect(screen.getAllByText('EPUB').length).toBeGreaterThan(0);
     fireEvent.click(screen.getByTitle(/click to sync the book file too/));
     await waitFor(() => expect(screen.getByTitle(/click to stop/)).toBeInTheDocument());
     expect(await invoke<string>('read_file', { filePath: `${WS}/reading/.gitignore` })).toContain('!/Tiny Book.epub');
@@ -180,6 +180,16 @@ describe('library', () => {
     fireEvent.click(card);
     await waitForView();
     expect(viewState()).toMatchObject({ view: 'book', bookPath: BOOK });
+  });
+
+  test('reads the titles of the books never opened', async () => {
+    await writeBook(`${WS}/reading/sub/file-name.epub`, makeEpub('Real Title'));
+    renderMain();
+    await go({ view: 'library' });
+    expect(await screen.findByText('Real Title')).toBeInTheDocument();
+    expect(screen.getAllByText('Jane Doe').length).toBeGreaterThan(0);
+    const lib = JSON.parse(await invoke<string>('read_file', { filePath: `${WS}/.mdsilo/books.json` }));
+    expect(Object.values(lib.books).map((b) => (b as { title: string }).title).sort()).toEqual(['Real Title', 'Tiny Book']);
   });
 
   test('adds books from the device', async () => {
@@ -229,5 +239,72 @@ describe('links to books', () => {
       fireEvent.click(screen.getByText('open link'));
     });
     expect(viewState().view).toBe('default');
+  });
+});
+
+describe('reader, the second part', () => {
+  const openBook = async () => {
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('searches the book', async () => {
+    const search = vi.fn(async function* () {
+      yield { progress: 0.5 };
+      yield { index: 1, label: 'Chapter One', subitems: [{ cfi: 'epubcfi(/6/4!/4/4,/1:2,/1:7)', excerpt: { pre: 'It ', match: 'was a', post: ' bright' } }] };
+      yield 'done' as const;
+    });
+    Object.assign(view, { search, clearSearch: vi.fn() });
+    await openBook();
+    fireEvent.click(screen.getByRole('tab', { name: 'Search' }));
+    fireEvent.change(screen.getByLabelText('Search in the book'), { target: { value: 'was a' } });
+    fireEvent.click(screen.getByLabelText('Match case'));
+    await act(async () => {
+      fireEvent.submit(screen.getByLabelText('Search in the book').closest('form')!);
+    });
+    expect(search).toHaveBeenCalledWith({ query: 'was a', matchCase: true, matchWholeWords: false });
+    expect(await screen.findByText('1 found')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('was a'));
+    expect(view.goTo).toHaveBeenCalledWith('epubcfi(/6/4!/4/4,/1:2,/1:7)');
+    // the highlights of the matches go with the tab
+    fireEvent.click(screen.getByRole('tab', { name: 'Contents' }));
+    expect((view as unknown as { clearSearch: () => void }).clearSearch).toHaveBeenCalled();
+  });
+
+  test('looks up the text selected, and keeps it as a note', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true, status: 200, json: async () => [[['un jour froid', 'a cold day']], null, 'en'],
+    })));
+    await openBook();
+    act(() => {
+      usePopups.getState().setSelection({
+        text: 'a bright cold day', cfi: 'epubcfi(/6/4!/4/4,/1:9,/1:26)', index: 1,
+        box: { left: 10, top: 10, right: 50, bottom: 20 },
+      });
+    });
+    // more than a few words: no dictionary
+    expect(screen.queryByText('Define')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Translate'));
+    expect(await screen.findByText('un jour froid')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Keep as note'));
+    expect(useReaderStore.getState().notes[0]).toMatchObject({ text: 'a bright cold day', note: 'un jour froid' });
+    expect(screen.queryByTestId('lookup-popup')).not.toBeInTheDocument();
+  });
+
+  test('a lookup failing', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline'); }));
+    await openBook();
+    act(() => {
+      usePopups.getState().setSelection({
+        text: 'cold', cfi: 'epubcfi(/6/4!/4/4,/1:9,/1:13)', index: 1, box: { left: 10, top: 10, right: 50, bottom: 20 },
+      });
+    });
+    fireEvent.click(screen.getByText('Define'));
+    expect(await screen.findByText('Could not look it up: offline')).toBeInTheDocument();
   });
 });

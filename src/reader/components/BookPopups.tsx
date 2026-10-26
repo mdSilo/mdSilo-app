@@ -12,26 +12,28 @@ import { annotateSelection, copyLink, copyQuote } from '../actions';
 const POPUP_WIDTH = 288;
 
 /** Where to show a popup for a box: under it, or above if no room. */
-function placeOf(box: Box, root: DOMRect, height: number) {
+export function placeOf(box: Box, root: DOMRect, height: number, width: number) {
   const left = Math.min(
-    Math.max(8, (box.left + box.right) / 2 - root.left - POPUP_WIDTH / 2),
-    Math.max(8, root.width - POPUP_WIDTH - 8),
+    Math.max(8, (box.left + box.right) / 2 - root.left - width / 2),
+    Math.max(8, root.width - width - 8),
   );
   const below = box.bottom - root.top + 8;
   const top = below + height > root.height ? Math.max(8, box.top - root.top - height - 8) : below;
   return { left, top };
 }
 
-function Popup({ box, rootRef, children, testId }: {
+/** A popup over the book, at a box: under it, or above if no room. */
+export function Popup({ box, rootRef, children, testId, height = 140, width = POPUP_WIDTH }: {
   box: Box; rootRef: RefObject<HTMLDivElement | null>; children: ReactNode; testId: string;
+  height?: number; width?: number;
 }) {
   const root = rootRef.current?.getBoundingClientRect();
   if (!root) return null;
-  const { left, top } = placeOf(box, root, 140);
+  const { left, top } = placeOf(box, root, height, width);
   return (
     <div
       className="absolute z-30 p-2 border rounded-md shadow-lg bg-base-100 border-base-300"
-      style={{ left, top, width: POPUP_WIDTH }}
+      style={{ left, top, width }}
       data-testid={testId}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -67,6 +69,7 @@ function BookPopups({ rootRef, actions }: {
 }) {
   const selection = usePopups((state) => state.selection);
   const annotation = usePopups((state) => state.annotation);
+
   const notes = useReaderStore((state) => state.notes);
   const updateNote = useReaderStore((state) => state.updateNote);
   const removeNote = useReaderStore((state) => state.removeNote);

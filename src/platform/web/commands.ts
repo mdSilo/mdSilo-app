@@ -205,6 +205,7 @@ export const commands: Record<string, Command> = {
   // books, src-tauri/src/books.rs
   book_hash: ({ filePath }) => fs.readBlob(filePath).then(partialMd5).catch(() => ''),
   read_file_bytes: async ({ filePath }) => (await fs.readBlob(filePath)).arrayBuffer(),
+  write_file_bytes: ({ filePath, data }) => fs.writeFile(filePath, new Blob([new Uint8Array(data ?? [])])),
   // web only: back up notes in IndexedDB to a zip file
   export_backup: ({ dir }) => exportBackup(dir ?? '/'),
 };

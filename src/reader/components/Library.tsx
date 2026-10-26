@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { TbBookUpload, TbCloud, TbCloudOff } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -8,9 +8,13 @@ import { listDir, openFileDilog } from 'file/open';
 import { fromWorkspacePath, joinPath } from 'file/util';
 import { useStore } from 'lib/store';
 import { READING_DIR } from 'workspace/layout';
-import { BOOK_EXTS } from '../document';
+import { BOOK_EXTS, formatContributors, formatLanguageMap, openBook } from '../document';
+import { formatDuration, totalSeconds } from '../stats';
+import { cacheCover, coverUrl } from '../covers';
+import { readBookFile } from '../readerStore';
 import {
-  importBookFile, readBookState, refreshLibrary, setBookSynced, type BookEntry, type BookState,
+  importBookFile, readBookState, refreshLibrary, saveBookEntry, setBookSynced, titleOfFile,
+  type BookEntry, type BookState,
 } from '../library';
 
 type Row = BookEntry & { path: string; here: boolean; state?: BookState };
@@ -23,6 +27,9 @@ export default function Library() {
   const [rows, setRows] = useState<Row[] | undefined>();
   const [filter, setFilter] = useState('');
   const [busy, setBusy] = useState(false);
+  const covers = useCovers(initDir, rows, (hash, meta) => {
+    setRows((list) => list?.map((r) => (r.hash === hash ? { ...r, ...meta } : r)));
+  });
 
   const load = useCallback(async () => {
     if (!initDir || layout !== 'workspace') return;
@@ -112,13 +119,22 @@ export default function Library() {
               <li key={row.hash} className={`card card-border bg-base-200/40 ${row.here ? '' : 'opacity-60'}`}>
                 <div className="p-3 card-body">
                   <button
-                    className="text-left disabled:cursor-not-allowed"
+                    className="flex gap-3 text-left disabled:cursor-not-allowed"
                     disabled={!row.here}
                     title={row.here ? row.file : 'Not on this device: the book file is not synced'}
                     onClick={() => dispatch({ view: 'book', path: row.path })}
                   >
-                    <div className="font-semibold line-clamp-2">{row.title}</div>
-                    <div className="text-sm text-base-content/60 truncate">{row.author || ' '}</div>
+                    {covers[row.hash] ? (
+                      <img src={covers[row.hash]} alt="" className="object-cover w-16 rounded-sm shadow-sm h-24 shrink-0" />
+                    ) : (
+                      <div className="flex items-center justify-center w-16 h-24 text-xs rounded-sm shrink-0 bg-base-300 text-base-content/50">
+                        {row.format}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="font-semibold line-clamp-3">{row.title}</div>
+                      <div className="text-sm text-base-content/60 line-clamp-2">{row.author || ' '}</div>
+                    </div>
                   </button>
                   <progress
                     className="w-full progress progress-primary"
@@ -127,7 +143,10 @@ export default function Library() {
                   />
                   <div className="flex items-center justify-between text-xs text-base-content/60">
                     <span className="badge badge-ghost badge-xs">{row.format}</span>
-                    <span>{Math.round((row.state?.fraction ?? 0) * 100)}%</span>
+                    <span>
+                      {Math.round((row.state?.fraction ?? 0) * 100)}%
+                      {totalSeconds(row.state?.time) > 0 ? ` · ${formatDuration(totalSeconds(row.state?.time))}` : ''}
+                    </span>
                     <button
                       className="btn btn-ghost btn-xs"
                       title={row.synced
@@ -150,4 +169,66 @@ export default function Library() {
       </div>
     </ErrorBoundary>
   );
+}
+
+type Meta = { title: string; author: string };
+
+/**
+ * The covers of the books, as cached; the missing ones made one book at a
+ * time, the books here only, their title and author read on the way.
+ */
+function useCovers(ws: string | undefined, rows: Row[] | undefined, onMeta: (hash: string, meta: Meta) => void) {
+  const onMetaRef = useRef(onMeta);
+  onMetaRef.current = onMeta;
+  // once per book in the library, not per change of the rows
+  const hashes = rows?.map((r) => r.hash).join(',');
+  const [covers, setCovers] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!ws || !rows) return;
+    let cancelled = false;
+    const urls: string[] = [];
+    (async () => {
+      const missing: Row[] = [];
+      for (const row of rows) {
+        const url = await coverUrl(ws, row.hash).catch(() => undefined);
+        if (cancelled) return;
+        if (url) {
+          urls.push(url);
+          setCovers((c) => ({ ...c, [row.hash]: url }));
+        } else if (row.here) {
+          missing.push(row);
+        }
+      }
+      for (const row of missing) {
+        if (cancelled) return;
+        try {
+          const { book } = await openBook(await readBookFile(row.path));
+          const made = await cacheCover(ws, row.hash, book);
+          // a book never opened: named by its file until now
+          const meta = {
+            title: formatLanguageMap(book.metadata?.title) || row.title,
+            author: formatContributors(book.metadata?.author),
+          };
+          await book.destroy?.();
+          if (row.title === titleOfFile(row.path) && (meta.title !== row.title || meta.author !== row.author)) {
+            await saveBookEntry(ws, { hash: row.hash, ...meta });
+            if (!cancelled) onMetaRef.current(row.hash, meta);
+          }
+          const url = made ? await coverUrl(ws, row.hash) : undefined;
+          if (url) {
+            urls.push(url);
+            if (!cancelled) setCovers((c) => ({ ...c, [row.hash]: url }));
+          }
+        } catch {
+          // no cover for a book failing to open
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ws, hashes]);
+  return covers;
 }

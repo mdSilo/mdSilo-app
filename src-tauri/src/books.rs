@@ -53,6 +53,12 @@ pub async fn read_file_bytes(file_path: String) -> Result<tauri::ipc::Response, 
   Ok(tauri::ipc::Response::new(bytes))
 }
 
+/// Write bytes to a file, e.g. the cover of a book cached.
+#[tauri::command]
+pub async fn write_file_bytes(file_path: String, data: Vec<u8>) -> bool {
+  crate::atomic::write_atomic(std::path::Path::new(&file_path), &data).is_ok()
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

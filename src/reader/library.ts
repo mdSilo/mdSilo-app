@@ -37,6 +37,8 @@ export type BookState = {
   location?: string;
   /** 0 to 1 */
   fraction?: number;
+  /** seconds read per day, `yyyy-m-d` */
+  time?: Record<string, number>;
   updatedAt: string;
 };
 
@@ -58,6 +60,16 @@ async function readJson<T>(path: string): Promise<T | undefined> {
 async function writeJson(path: string, data: unknown) {
   const text = `${JSON.stringify(data, null, 2)}\n`;
   await invoke('write_file', { filePath: path, text });
+}
+
+// the changes of the library one at a time: each reads it, then writes it
+let queue: Promise<unknown> = Promise.resolve();
+
+/** Change the library: after the changes in progress, not over them. */
+function changeLibrary<T>(fn: () => Promise<T>): Promise<T> {
+  const next = queue.then(fn, fn);
+  queue = next.catch(() => undefined);
+  return next;
 }
 
 export async function readLibrary(ws: string): Promise<Library> {
@@ -111,7 +123,11 @@ export const titleOfFile = (path: string) =>
  * moved or renamed ones (same id) followed. Books not here (not synced to
  * this device) are kept. Written only if it changed.
  */
-export async function refreshLibrary(ws: string): Promise<Library> {
+export function refreshLibrary(ws: string): Promise<Library> {
+  return changeLibrary(() => refresh(ws));
+}
+
+async function refresh(ws: string): Promise<Library> {
   const lib = await readLibrary(ws);
   const byFile = new Map(Object.values(lib.books).map((b) => [b.file, b]));
   let changed = false;
@@ -144,12 +160,21 @@ export async function refreshLibrary(ws: string): Promise<Library> {
   return lib;
 }
 
-/** Add or update a book entry. */
-export async function saveBookEntry(ws: string, entry: BookEntry) {
+/**
+ * Add a book entry, or update the fields given of one: the others as they
+ * are now (e.g. synced, set meanwhile).
+ */
+export function saveBookEntry(ws: string, patch: Partial<BookEntry> & Pick<BookEntry, 'hash'>) {
+  return changeLibrary(() => saveEntry(ws, patch));
+}
+
+async function saveEntry(ws: string, patch: Partial<BookEntry> & Pick<BookEntry, 'hash'>) {
   const lib = await readLibrary(ws);
-  const old = lib.books[entry.hash];
+  const old = lib.books[patch.hash];
+  const entry = { ...old, ...patch } as BookEntry;
+  if (!entry.file) return;
   if (old && JSON.stringify(old) === JSON.stringify(entry)) return;
-  lib.books[entry.hash] = entry;
+  lib.books[patch.hash] = entry;
   await writeLibrary(ws, lib);
 }
 
@@ -188,11 +213,13 @@ export async function writeReadingGitignore(ws: string, lib: Library) {
 }
 
 /** Sync a book file with the workspace, or not. */
-export async function setBookSynced(ws: string, hash: string, synced: boolean) {
-  const lib = await readLibrary(ws);
-  const entry = lib.books[hash];
-  if (!entry) return;
-  lib.books[hash] = { ...entry, synced };
-  await writeLibrary(ws, lib);
-  await writeReadingGitignore(ws, lib);
+export function setBookSynced(ws: string, hash: string, synced: boolean) {
+  return changeLibrary(async () => {
+    const lib = await readLibrary(ws);
+    const entry = lib.books[hash];
+    if (!entry) return;
+    lib.books[hash] = { ...entry, synced };
+    await writeLibrary(ws, lib);
+    await writeReadingGitignore(ws, lib);
+  });
 }

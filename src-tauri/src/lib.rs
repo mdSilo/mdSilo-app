@@ -105,6 +105,7 @@ pub fn run() {
       json::load_notes,
       books::book_hash,
       books::read_file_bytes,
+      books::write_file_bytes,
     ])
     .setup(|app| {
       tray::setup(app)?;

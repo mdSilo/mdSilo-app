@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import {
-  TbArrowLeft, TbBookmark, TbBookmarkFilled, TbChevronLeft, TbChevronRight, TbLayoutSidebar,
-  TbLink, TbTypography,
+  TbArrowLeft, TbBookmark, TbBookmarkFilled, TbChevronLeft, TbChevronRight, TbLanguage,
+  TbLayoutSidebar, TbLink, TbTypography, TbVocabulary, TbVolume, TbWorld,
 } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import Spinner from 'components/misc/Spinner';
@@ -10,13 +10,17 @@ import { openFilePath } from 'file/open';
 import { annotationsPathOf } from '../annotations';
 import { useReaderStore } from '../readerStore';
 import { bookmarkAt, copyLink, toggleBookmark } from '../actions';
-import { usePopups } from '../popups';
+import { usePopups, type LookupKind } from '../popups';
+import { stopTTS } from '../tts';
 import { getView } from '../view';
 import FoliateViewer from './FoliateViewer';
 import TocView from './TocView';
 import NotesView from './NotesView';
 import BookPopups from './BookPopups';
 import ReaderSettingsMenu from './ReaderSettingsMenu';
+import SearchView from './SearchView';
+import LookupPopup from './LookupPopup';
+import TTSBar, { canReadAloud, readAloud } from './TTSBar';
 
 export type SidebarTab = { id: string; label: string; render: () => ReactNode };
 
@@ -28,7 +32,7 @@ type Props = {
   /** more buttons in the header */
   headerButtons?: ReactNode;
   /** over the book, e.g. the panel of text-to-speech */
-  overlay?: ReactNode;
+  overlay?: (rootRef: RefObject<HTMLDivElement | null>) => ReactNode;
 };
 
 /** A book read, with its table of contents and annotations. */
@@ -53,7 +57,10 @@ export function Reader({ extraTabs = [], selectionActions, headerButtons, overla
   }, [path, cfi]);
 
   // the book is closed when another view shows
-  useEffect(() => () => { void useReaderStore.getState().close(); }, []);
+  useEffect(() => () => {
+    stopTTS();
+    void useReaderStore.getState().close();
+  }, []);
 
   const tabs: SidebarTab[] = [
     { id: 'toc', label: 'Contents', render: () => <TocView toc={book?.toc ?? []} current={location?.tocLabel} /> },
@@ -157,7 +164,7 @@ export function Reader({ extraTabs = [], selectionActions, headerButtons, overla
               <div className="flex items-center justify-center h-full"><Spinner className="w-8 h-8" /></div>
             )}
             <BookPopups rootRef={rootRef} actions={selectionActions} />
-            {overlay}
+            {overlay?.(rootRef)}
           </div>
         </div>
 
@@ -188,6 +195,62 @@ export function Reader({ extraTabs = [], selectionActions, headerButtons, overla
   );
 }
 
+const LOOKUPS: { kind: LookupKind; label: string; icon: ReactNode; title: string }[] = [
+  { kind: 'dictionary', label: 'Define', icon: <TbVocabulary />, title: 'Look it up in Wiktionary' },
+  { kind: 'wikipedia', label: 'Wiki', icon: <TbWorld />, title: 'Look it up in Wikipedia' },
+  { kind: 'translate', label: 'Translate', icon: <TbLanguage />, title: 'Translate it' },
+];
+
+/** The actions on the text selected: look up, translate, read aloud. */
+function selectionActions() {
+  const selection = usePopups.getState().selection;
+  if (!selection) return null;
+  // a word or a few: a dictionary entry
+  const words = selection.text.trim().split(/\s+/).length;
+  return (
+    <>
+      {LOOKUPS.filter((l) => l.kind !== 'dictionary' || words <= 3).map((l) => (
+        <button
+          key={l.kind}
+          className="btn btn-ghost btn-xs"
+          title={l.title}
+          onClick={() => usePopups.getState().setLookup({ kind: l.kind, selection })}
+        >
+          {l.icon} {l.label}
+        </button>
+      ))}
+      {canReadAloud() ? (
+        <button
+          className="btn btn-ghost btn-xs"
+          title="Read aloud from here"
+          onClick={() => {
+            usePopups.getState().clear();
+            void readAloud(selection.range);
+          }}
+        >
+          <TbVolume /> Read
+        </button>
+      ) : null}
+    </>
+  );
+}
+
 export default function ReaderView() {
-  return <Reader />;
+  return (
+    <Reader
+      extraTabs={[{ id: 'search', label: 'Search', render: () => <SearchView /> }]}
+      selectionActions={selectionActions}
+      headerButtons={canReadAloud() ? (
+        <button className="btn btn-ghost btn-xs" title="Read aloud" onClick={() => void readAloud()}>
+          <TbVolume size={16} />
+        </button>
+      ) : null}
+      overlay={(rootRef) => (
+        <>
+          <LookupPopup rootRef={rootRef} />
+          <TTSBar />
+        </>
+      )}
+    />
+  );
 }

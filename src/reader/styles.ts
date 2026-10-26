@@ -1,4 +1,5 @@
 import type { ReaderSettings } from './settings';
+import { ttsStyles } from './tts';
 
 /**
  * The CSS set in the pages of a book (foliate-js renderer `setStyles`),
@@ -83,6 +84,7 @@ export function bookStyles(settings: ReaderSettings, colors: ThemeColors): strin
       display: none;
     }
     ::selection { background: color-mix(in srgb, ${primary} 35%, transparent); }
+    ${ttsStyles(primary)}
   `;
 }
 

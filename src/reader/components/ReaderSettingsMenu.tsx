@@ -2,7 +2,13 @@ import { memo } from 'react';
 import { useStore } from 'lib/store';
 import { DEFAULT_READER_SETTINGS, withDefaults, type ReaderSettings } from '../settings';
 
-/** How the books show: font, spacing, layout. */
+const LANGUAGES = [
+  ['en', 'English'], ['zh-CN', '简体中文'], ['zh-TW', '繁體中文'], ['ja', '日本語'], ['ko', '한국어'],
+  ['fr', 'Français'], ['de', 'Deutsch'], ['es', 'Español'], ['pt', 'Português'], ['it', 'Italiano'],
+  ['ru', 'Русский'], ['ar', 'العربية'],
+];
+
+/** How the books show: font, spacing, layout; and the language to translate to. */
 function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const setReaderSettings = useStore((state) => state.setReaderSettings);
@@ -93,6 +99,17 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           </label>
         </>
       )}
+      <label className="flex items-center justify-between gap-2">
+        <span>Translate to</span>
+        <select
+          className="select select-xs w-36"
+          value={settings.translateTo}
+          onChange={(e) => update({ translateTo: e.target.value })}
+        >
+          <option value="">App language</option>
+          {LANGUAGES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+        </select>
+      </label>
       <button
         className="self-end btn btn-ghost btn-xs"
         onClick={() => setReaderSettings({

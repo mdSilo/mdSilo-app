@@ -11,12 +11,14 @@ import { Note } from 'types/model';
 
 type HeatMapProps = {
   noteList: readonly Note[];
+  /** seconds read per day, `yyyy-m-d` */
+  reading?: Record<string, number>;
   onClickCell: (date: string) => void;
   className?: string;
 };
 
 export default function HeatMap(props: HeatMapProps) {
-  const { noteList, onClickCell } = props;
+  const { noteList, reading, onClickCell } = props;
 
   // the stored record keeps the activities of notes since changed or deleted
   const stored = useStore((state) => state.activities);
@@ -31,7 +33,7 @@ export default function HeatMap(props: HeatMapProps) {
     }
   }, [activeRecord]);
 
-  const weeks = useMemo(() => buildWeeks(activeRecord), [activeRecord]);
+  const weeks = useMemo(() => buildWeeks(activeRecord, reading), [activeRecord, reading]);
 
   const onDayClick = useCallback((date: string) => onClickCell(date), [onClickCell]);
 
@@ -97,8 +99,11 @@ function WeekHeatMap({ days, weekIdx, onClick }: WeekProps) {
   );
 }
 
+/** a quarter of an hour read counts as one activity */
+export const READING_UNIT_SECONDS = 15 * 60;
+
 /** 53 weeks to this week, 7 days each: computed once, not per cell */
-function buildWeeks(data: ActivityRecord): DayCell[][] {
+export function buildWeeks(data: ActivityRecord, reading: Record<string, number> = {}): DayCell[][] {
   const today = new Date();
   const weekDay = today.getDay();
   return Array.from({ length: 53 }, (_, weekIdx) =>
@@ -106,10 +111,14 @@ function buildWeeks(data: ActivityRecord): DayCell[][] {
       const date = getDate(today, weekIdx, dayIdx);
       const aData: ActivityData | undefined = data[date];
       const isAfterToday = weekIdx >= 52 && dayIdx > weekDay;
+      const read = reading[date] ?? 0;
+      const readUnits = Math.ceil(read / READING_UNIT_SECONDS);
+      const activity = (aData?.activityNum ?? 0) + readUnits;
       return {
         date,
-        style: getDayStyle(aData?.activityNum ?? 0, isAfterToday),
-        tip: `${date}:\nActivity: ${aData?.activityNum || 0}\nCreated: ${aData?.createNum || 0}\nUpdated: ${aData?.updateNum || 0}`,
+        style: getDayStyle(activity, isAfterToday),
+        tip: `${date}:\nActivity: ${activity}\nCreated: ${aData?.createNum || 0}\nUpdated: ${aData?.updateNum || 0}`
+          + (read > 0 ? `\nRead: ${Math.round(read / 60)} min` : ''),
       };
     })
   );

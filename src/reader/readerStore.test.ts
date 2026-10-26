@@ -1,9 +1,15 @@
+import { Blob as NodeBlob } from 'node:buffer';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
+import { getStrDate } from 'utils/helper';
 import { useWebFs } from '../testUtils';
+import { writeFile } from '../platform/web/fs';
 import { serializeAnnotations, type BookNote } from './annotations';
 import { readBookState, readLibrary } from './library';
-import { readBookFile, resetReaderStore, useReaderStore } from './readerStore';
+import { IDLE_MS, readBookFile, resetReaderStore, TICK_MS, useReaderStore } from './readerStore';
+import { formatDuration, readingTimeByDay, totalSeconds } from './stats';
+import { cacheCover, coverPathOf, coverUrl } from './covers';
+import type { BookDoc } from './document';
 
 const book = vi.hoisted(() => ({
   destroy: vi.fn(),
@@ -108,5 +114,57 @@ describe('readerStore', () => {
     await useReaderStore.getState().open(BOOK);
     expect(err).toHaveBeenCalled();
     expect(useReaderStore.getState()).toMatchObject({ status: 'error', error: 'Unsupported book format' });
+  });
+});
+
+describe('the time read', () => {
+  test('is counted while reading, and kept', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'Date'] });
+    try {
+      await useReaderStore.getState().open(BOOK);
+      const hash = useReaderStore.getState().hash!;
+      await vi.advanceTimersByTimeAsync(TICK_MS * 2);
+      const day = getStrDate(new Date().toString());
+      expect(useReaderStore.getState().time[day]).toBe(60);
+      // away: no page turned for long
+      await vi.advanceTimersByTimeAsync(IDLE_MS + TICK_MS * 2);
+      const away = useReaderStore.getState().time[day];
+      await vi.advanceTimersByTimeAsync(TICK_MS * 2);
+      expect(useReaderStore.getState().time[day]).toBe(away);
+      // back
+      useReaderStore.getState().touch();
+      await vi.advanceTimersByTimeAsync(TICK_MS);
+      expect(useReaderStore.getState().time[day]).toBe(away + 30);
+      await useReaderStore.getState().close();
+      expect((await readBookState(WS, hash))?.time?.[day]).toBe(away + 30);
+      expect(await readingTimeByDay(WS)).toEqual({ [day]: away + 30 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('formats', () => {
+    expect(formatDuration(20)).toBe('<1m');
+    expect(formatDuration(300)).toBe('5m');
+    expect(formatDuration(4800)).toBe('1h 20m');
+    expect(formatDuration(7200)).toBe('2h');
+    expect(totalSeconds({ a: 60, b: 30, c: -5 })).toBe(90);
+  });
+});
+
+describe('covers', () => {
+  test('cached on this device, if the browser can draw them', async () => {
+    const hash = 'a'.repeat(32);
+    const fake = { getCover: async () => new Blob(['img']) } as unknown as BookDoc;
+    // no createImageBitmap in jsdom
+    expect(await cacheCover(WS, hash, fake)).toBe(false);
+    expect(await coverUrl(WS, hash)).toBeUndefined();
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:cover') }));
+    // as write_file_bytes does, with a Blob the fake IndexedDB keeps
+    await writeFile(coverPathOf(WS, hash), new NodeBlob([new Uint8Array([1, 2, 3])]) as unknown as Blob);
+    expect(coverPathOf(WS, hash)).toBe(`${WS}/.mdsilo/local/covers/${hash}.jpg`);
+    expect(await cacheCover(WS, hash, fake)).toBe(true);
+    expect(await coverUrl(WS, hash)).toBe('blob:cover');
+    vi.unstubAllGlobals();
   });
 });
