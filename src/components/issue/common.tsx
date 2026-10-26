@@ -6,18 +6,18 @@ type IconProps = { state: IssueState; size?: number; className?: string };
 
 export function StateIcon({ state, size = 18, className }: IconProps) {
   return state === 'open' ? (
-    <IconOpen size={size} className={`shrink-0 ${className ?? 'text-green-600'}`} aria-label="open" />
+    <IconOpen size={size} className={`shrink-0 ${className ?? 'text-success'}`} aria-label="open" />
   ) : (
     <IconClosed size={size} className={`shrink-0 ${className ?? 'text-purple-600'}`} aria-label="closed" />
   );
 }
 
 export function StateBadge({ state }: { state: IssueState }) {
-  const cls = state === 'open' ? 'bg-green-600' : 'bg-purple-600';
+  const cls = state === 'open' ? 'bg-success text-success-content' : 'bg-purple-600 text-white';
   return (
-    <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm text-white rounded-full ${cls}`}>
-      <StateIcon state={state} size={16} className="text-white" />
-      <span className="text-white">{state === 'open' ? 'Open' : 'Closed'}</span>
+    <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full ${cls}`}>
+      <StateIcon state={state} size={16} className="text-current" />
+      <span>{state === 'open' ? 'Open' : 'Closed'}</span>
     </span>
   );
 }
@@ -41,8 +41,8 @@ export function TimeAgo({ iso }: { iso: string }) {
 }
 
 export const inputClass =
-  'px-2 py-1 text-sm border border-gray-300 rounded-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200';
+  'px-2 py-1 text-sm bg-base-100 border border-base-300 rounded-sm';
 export const btnClass =
-  'px-3 py-1 text-sm border border-gray-300 rounded-sm hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 disabled:opacity-50';
+  'px-3 py-1 text-sm border border-base-300 rounded-sm hover:bg-base-content/5 disabled:opacity-50';
 export const primaryBtnClass =
-  'px-3 py-1 text-sm text-white rounded-sm bg-green-600 hover:bg-green-700 disabled:opacity-50';
+  'px-3 py-1 text-sm text-success-content rounded-sm bg-success hover:bg-success/85 disabled:opacity-50';

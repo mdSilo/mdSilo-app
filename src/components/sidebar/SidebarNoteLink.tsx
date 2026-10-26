@@ -82,28 +82,28 @@ const SidebarNoteLink = (
         style={{ paddingLeft: `${leftPadding}px` }}
         draggable={false}
       >
-        <div className="p-1 mr-1 rounded-sm hover:bg-gray-300 dark:hover:bg-gray-600">
+        <div className="p-1 mr-1 rounded-sm hover:bg-base-content/15">
           {isDir ? (
             <IconCaretRight
-              className={`shrink-0 text-gray-500 dark:text-gray-100 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              className={`shrink-0 text-base-content/60 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
               size={16}
               fill="currentColor"
             />
           ) : isImage ? (
             <IconPhoto 
-              className="shrink-0 text-gray-500 dark:text-gray-100"
+              className="shrink-0 text-base-content/60"
               size={16} 
               color="orange"
             />
           ) : !isNonMd ? (
             <IconMarkdown 
-              className="shrink-0 text-gray-500 dark:text-gray-100"
+              className="shrink-0 text-base-content/60"
               size={16}
               color="green"
             />
           ) : (
             <IconNote 
-              className="shrink-0 text-gray-500 dark:text-gray-100"
+              className="shrink-0 text-base-content/60"
               size={16}
               color="purple"
             />

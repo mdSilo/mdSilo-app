@@ -56,7 +56,7 @@ export default function HeatMap(props: HeatMapProps) {
     onClickCell(date);
   }, [onClickCell]);
 
-  const hmLabelClass = "text-xs fill-gray-500";
+  const hmLabelClass = "text-xs fill-base-content/60";
 
   return (
     <div className="overflow-auto p-1 m-1">
@@ -158,12 +158,12 @@ function getDayStyle(data: ActivityRecord, weekIdx: number, dayIdx: number) {
   const anStyle = isAfterToday 
     ? 'fill-transparent' 
     : an === 0 
-      ? 'fill-gray-200 dark:fill-gray-600'
+      ? 'fill-base-300'
       : an >= 12 
-        ? 'fill-green-500'
+        ? 'fill-primary'
         : an >= 6 
-          ? 'fill-cyan-500'
-          : 'fill-primary-200 dark:fill-primary-900';
+          ? 'fill-primary/60'
+          : 'fill-primary/30';
 
   return `${anStyle} cursor-pointer`;
 }

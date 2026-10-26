@@ -65,7 +65,7 @@ export function ColorPicker({ value, onChange }: ColorProps) {
           type="button"
           key={c}
           aria-label={`color ${c}`}
-          className={`w-5 h-5 rounded-full border-2 ${c === value ? 'border-gray-800 dark:border-white' : 'border-transparent'}`}
+          className={`w-5 h-5 rounded-full border-2 ${c === value ? 'border-base-content' : 'border-transparent'}`}
           style={{ backgroundColor: c }}
           onClick={() => onChange(c)}
         />

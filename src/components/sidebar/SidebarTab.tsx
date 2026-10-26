@@ -16,15 +16,15 @@ const SidebarTab = (
   return (
     <button
       ref={forwardedRef}
-      className={`flex justify-center flex-1 py-1.5 px-4 rounded-t hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600 border-b-2  dark:border-gray-700 ${
-        isActive ? 'border-b-green-700 dark:border-b-green-600' : ''
+      className={`flex justify-center flex-1 py-1.5 px-4 rounded-t hover:bg-base-content/5 active:bg-base-content/10 border-b-2 border-base-300 ${
+        isActive ? 'border-b-primary' : ''
       } ${className}`}
       onClick={setActive}
     >
       <Icon
         size={24}
         className={
-          isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500'
+          isActive ? 'text-base-content' : 'text-base-content/60'
         }
       />
     </button>

@@ -119,10 +119,10 @@ const SidebarTag = (
         draggable={false}
       >
         <div
-          className="p-1 rounded-sm hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-600 dark:active:bg-gray-500"
+          className="p-1 rounded-sm hover:bg-base-content/15 active:bg-base-content/25"
         >
           <IconHash 
-            className="shrink-0 text-gray-500 dark:text-gray-100"
+            className="shrink-0 text-base-content/60"
             size={16}
             color={`${['purple','cyan','green','red','orange','blue','yellow'][node.num % 7]}`}
           />

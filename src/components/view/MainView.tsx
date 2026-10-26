@@ -1,4 +1,6 @@
 import MsEditor from "mdsmirror";
+import { useStore } from 'lib/store';
+import { EDITOR_THEME } from 'lib/themes';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import useNoteTaskSync from 'components/issue/useNoteTaskSync';
 import { useCurrentViewContext } from 'context/useCurrentView';
@@ -45,13 +47,14 @@ export default function MainView() {
 }
 
 function DefaultView() {
+  const darkMode = useStore((state) => state.darkMode);
   return (
     <ErrorBoundary>
-      <div className="flex flex-col p-8 w-full h-full mx-auto bg-white overflow-auto">
-        <p className="text-2xl py-3 text-center text-primary-500">
+      <div className="flex flex-col p-8 w-full h-full mx-auto bg-base-100 overflow-auto">
+        <p className="text-2xl py-3 text-center text-primary">
           Hello, welcome to mdSilo.
         </p>
-        <MsEditor value={defaultValue} dark={false} />
+        <MsEditor value={defaultValue} dark={darkMode} theme={EDITOR_THEME} />
       </div>
     </ErrorBoundary>
   );

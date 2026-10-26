@@ -74,13 +74,13 @@ export function FeedManager(props: Props) {
   return (
     <div className="flex flex-col items-start justify-center p-2">
       {showAdd && (
-        <div className="flex flex-col w-full p-4 outline-solid outline-2 outline-offset-2 outline-green-500">
+        <div className="flex flex-col w-full p-4 outline-solid outline-2 outline-offset-2 outline-primary">
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="mr-2 dark:text-white">URL</div>
+            <div className="mr-2">URL</div>
             <div className="w-full">
               <input
                 type="text"
-                className="w-full p-1 mx-2 bg-white border-gray-200 rounded-sm dark:bg-gray-700 dark:border-gray-700"
+                className="w-full p-1 mx-2 bg-base-200 border-base-300 rounded-sm"
                 placeholder="Feed URL"
                 value={feedUrl}
                 onChange={(e) => setFeedUrl(e.target.value)}
@@ -89,11 +89,11 @@ export function FeedManager(props: Props) {
             </div>
           </div>
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="mr-2 dark:text-white">Title</div>
+            <div className="mr-2">Title</div>
             <div className="w-full">
               <input
                 type="text"
-                className="w-full p-1 m-2 bg-white border-gray-200 rounded-sm dark:bg-gray-700 dark:border-gray-700"
+                className="w-full p-1 m-2 bg-base-200 border-base-300 rounded-sm"
                 placeholder="Feed Title"
                 value={feedTitle}
                 onChange={(e) => setFeedTitle(e.target.value)}
@@ -102,7 +102,7 @@ export function FeedManager(props: Props) {
             </div>
           </div>
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="mr-2 dark:text-white">Type</div>
+            <div className="mr-2">Type</div>
             <div className="w-full flex flex-row items-center justify-start">
               <input 
                 type="radio" 
@@ -112,7 +112,7 @@ export function FeedManager(props: Props) {
                 value="RSS" 
                 onChange={() => setFeedType('rss')} 
               />
-              <label className="mr-4 text-sm dark:text-white" htmlFor="feedType1">RSS</label>
+              <label className="mr-4 text-sm" htmlFor="feedType1">RSS</label>
               <input 
                 type="radio" 
                 className="m-1 text-sm"
@@ -121,10 +121,10 @@ export function FeedManager(props: Props) {
                 value="Podcast" 
                 onChange={() => setFeedType('podcast')} 
               />
-              <label className="text-sm dark:text-white" htmlFor="feedType2">Podcast</label>
+              <label className="text-sm" htmlFor="feedType2">Podcast</label>
             </div>
           </div>
-          <div className="w-full m-1 dark:text-white">{description}</div>
+          <div className="w-full m-1">{description}</div>
           <div className="my-1 flex flex-row items-center justify-center">
             <button className="mr-3 m-btn0" onClick={handleLoad}>{loading ? 'Loading...' : 'Load'}</button>
             <button className="mx-3 m-btn1" onClick={handleCancel}>Cancel</button>
@@ -135,7 +135,7 @@ export function FeedManager(props: Props) {
       <div className="flex flex-row items-center justify-between w-full mt-2">
         <Tooltip content="Add Feed" placement="bottom">
           <button
-            className="px-2 py-1 text-sm text-black rounded-sm bg-primary-200 hover:bg-primary-100"
+            className="px-2 py-1 text-sm text-base-content rounded-sm bg-primary/25 hover:bg-primary/15"
             onClick={() => setShowAdd(!showAdd)}
           >
             <IconPlus size={15} className="" />
@@ -144,7 +144,7 @@ export function FeedManager(props: Props) {
         <div className="">
           <input
             type="text"
-            className="p-2 m-2 bg-white border-gray-200 rounded-sm dark:bg-gray-700 dark:border-gray-700"
+            className="p-2 m-2 bg-base-200 border-base-300 rounded-sm"
             placeholder="Search Feed"
             value={searchText}
             onChange={(e) => {
@@ -160,7 +160,7 @@ export function FeedManager(props: Props) {
           />
         </div>
       </div>
-      <div className="w-full flex flex-col items-between justify-center border-t-2 border-gray-500 my-4">
+      <div className="w-full flex flex-col items-between justify-center border-t-2 border-base-content/40 my-4">
         {realList.map((channel: ChannelType, idx: number) => {
           return (
             <div key={idx} className="flex items-center justify-between m-1">
@@ -169,11 +169,11 @@ export function FeedManager(props: Props) {
                   ? <IconRss size={12} className="mr-1 text-orange-500" /> 
                   : <IconHeadphones size={12} className="mr-1 text-purple-500" />
                 }
-                <span className="text-sm dark:text-white">{channel.title}</span>
+                <span className="text-sm">{channel.title}</span>
               </span>
-              <span className="text-sm dark:text-white">{channel.link}</span>
+              <span className="text-sm">{channel.link}</span>
               <button className="cursor-pointer" onClick={async () => await handleDelete(channel)}>
-                <IconTrash size={18} className="m-1 dark:text-white" />
+                <IconTrash size={18} className="m-1" />
               </button>
             </div>
           )

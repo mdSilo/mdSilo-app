@@ -52,7 +52,7 @@ export const highlightContext = (matches: BacklinkMatch[]): ReactNode[] => {
     if (from > pos) nodes.push(context.slice(pos, from));
     const hiEnd = Math.min(to, end);
     nodes.push(
-      <mark key={from} className="bg-yellow-200 dark:bg-yellow-700 dark:text-gray-100">
+      <mark key={from} className="bg-warning/40">
         {context.slice(from, hiEnd)}
       </mark>
     );

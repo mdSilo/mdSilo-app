@@ -11,7 +11,7 @@ function MilestoneForm({ initial, submitText, onSubmit, onCancel }: {
 }) {
   const [draft, setDraft] = useState<Draft>(initial);
   return (
-    <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-sm dark:bg-gray-800">
+    <div className="flex flex-col gap-2 p-3 bg-base-200 rounded-sm">
       <div className="flex flex-wrap gap-2">
         <input
           aria-label="Milestone title"
@@ -64,7 +64,7 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
             <button
               type="button"
               key={s}
-              className={tab === s ? 'font-semibold' : 'text-gray-500'}
+              className={tab === s ? 'font-semibold' : 'text-base-content/60'}
               onClick={() => setTab(s)}
             >
               {count(s)} {s === 'open' ? 'Open' : 'Closed'}
@@ -81,12 +81,12 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
           onSubmit={(d) => { apply((x) => createMilestone(x, d)); setCreating(false); }}
         />
       ) : null}
-      <ul className="mt-2 border border-gray-200 rounded-sm dark:border-gray-700">
-        {shown.length === 0 ? <li className="p-4 text-center text-gray-500">No {tab} milestones.</li> : null}
+      <ul className="mt-2 border border-base-300 rounded-sm">
+        {shown.length === 0 ? <li className="p-4 text-center text-base-content/60">No {tab} milestones.</li> : null}
         {shown.map((m) => {
           const p = milestoneProgress(data, m.id);
           return (
-            <li key={m.id} className="px-3 py-3 border-b border-gray-200 last:border-b-0 dark:border-gray-700" data-testid="milestone-row">
+            <li key={m.id} className="px-3 py-3 border-b border-base-300 last:border-b-0" data-testid="milestone-row">
               {editing === m.id ? (
                 <MilestoneForm
                   initial={m}
@@ -97,25 +97,25 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
               ) : (
                 <div className="flex flex-col gap-2 md:flex-row">
                   <div className="flex-1">
-                    <button type="button" className="text-lg font-semibold hover:text-primary-500" onClick={() => onFilter?.(m.title)}>
+                    <button type="button" className="text-lg font-semibold hover:text-primary/75" onClick={() => onFilter?.(m.title)}>
                       {m.title}
                     </button>
-                    <div className={`text-xs ${isOverdue(m) ? 'text-red-600' : 'text-gray-500'}`}>
+                    <div className={`text-xs ${isOverdue(m) ? 'text-error' : 'text-base-content/60'}`}>
                       {m.dueOn ? `${isOverdue(m) ? 'Past due by' : 'Due by'} ${m.dueOn}` : 'No due date'}
                     </div>
-                    {m.description ? <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{m.description}</p> : null}
+                    {m.description ? <p className="mt-1 text-sm text-base-content/70">{m.description}</p> : null}
                   </div>
                   <div className="w-full md:w-72">
                     <div
-                      className="h-2 bg-gray-200 rounded-sm dark:bg-gray-700"
+                      className="h-2 bg-base-300 rounded-sm"
                       role="progressbar"
                       aria-valuenow={p.percent}
                       aria-valuemin={0}
                       aria-valuemax={100}
                     >
-                      <div className="h-2 bg-green-600 rounded-sm" style={{ width: `${p.percent}%` }} />
+                      <div className="h-2 bg-success rounded-sm" style={{ width: `${p.percent}%` }} />
                     </div>
-                    <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                    <div className="flex gap-3 mt-1 text-xs text-base-content/60">
                       <span>{p.percent}% complete</span><span>{p.open} open</span><span>{p.closed} closed</span>
                     </div>
                     <div className="flex gap-3 mt-1 text-sm">
@@ -129,7 +129,7 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
                       </button>
                       <button
                         type="button"
-                        className="text-red-600 hover:underline"
+                        className="text-error hover:underline"
                         onClick={() => {
                           if (window.confirm(`Delete milestone "${m.title}"?`)) apply((x) => deleteMilestone(x, m.id));
                         }}

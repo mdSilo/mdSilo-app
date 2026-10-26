@@ -120,11 +120,11 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   return (
     <div className={`flex flex-col ${className}`}>
       <div className="flex items-center shrink-0 w-full">
-        <IconSearch className="ml-4 text-gray-500" size={20} />
+        <IconSearch className="ml-4 text-base-content/60" size={20} />
         <input
           ref={ref}
           type="text"
-          className={`w-full py-4 px-2 text-xl border-none rounded-tl rounded-tr focus:ring-0 dark:bg-gray-800 dark:text-gray-200 ${
+          className={`w-full py-4 px-2 text-xl border-none rounded-tl rounded-tr focus:ring-0 bg-base-200 ${
             options.length <= 0 ? 'rounded-bl rounded-br' : ''
           }`}
           placeholder="new or find"
@@ -141,7 +141,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         />
       </div>
       {options.length > 0 ? (
-        <div className="flex-1 w-full overflow-y-auto bg-white border-t rounded-bl rounded-br dark:bg-gray-800 dark:border-gray-700">
+        <div className="flex-1 w-full overflow-y-auto bg-base-200 border-t rounded-bl rounded-br border-base-300">
           {options.map((option, index) => (
             <OptionItem
               key={option.id}
@@ -167,8 +167,8 @@ const OptionItem = (props: OptionProps) => {
 
   return (
     <button
-      className={`flex flex-row w-full items-center px-4 py-2 text-gray-800 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600 ${
-        isSelected ? 'bg-gray-100 dark:bg-gray-900' : ''}`}
+      className={`flex flex-row w-full items-center px-4 py-2 text-base-content hover:bg-base-content/5 active:bg-base-content/10 ${
+        isSelected ? 'bg-base-content/10' : ''}`}
       onClick={onClick}
     >
       {option.icon ? (

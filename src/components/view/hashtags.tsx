@@ -10,7 +10,7 @@ export default function HashTags() {
   return (
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-y-auto p-8 ${className}`}>
-        <b className="text-3xl font-semibold border-none p-1 text-black dark:text-white">
+        <b className="text-3xl font-semibold border-none p-1 text-base-content">
           {`#${tag}`}
         </b>
         <SearchTree keyword={tag} ty="hashtag" />

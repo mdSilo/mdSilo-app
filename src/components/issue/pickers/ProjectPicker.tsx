@@ -27,7 +27,7 @@ export default function ProjectPicker({ issue, data }: { issue: Issue; data: Iss
                 </button>
                 <select
                   aria-label={`Status in ${project.title}`}
-                  className="flex-1 py-0 pl-1 text-xs border-gray-300 rounded-sm dark:bg-gray-800 dark:border-gray-600"
+                  className="flex-1 py-0 pl-1 text-xs border-base-300 rounded-sm bg-base-100"
                   value={status?.id ?? ''}
                   onChange={(e) => {
                     const sid = e.target.value;
@@ -42,12 +42,12 @@ export default function ProjectPicker({ issue, data }: { issue: Issue; data: Iss
               </li>
             ))}
           </ul>
-        ) : (<span className="text-gray-500">None yet</span>)
+        ) : (<span className="text-base-content/60">None yet</span>)
       }
     >
       {() => (
         data.projects.length === 0 ? (
-          <p className="px-3 py-2 text-sm text-gray-500">No projects.</p>
+          <p className="px-3 py-2 text-sm text-base-content/60">No projects.</p>
         ) : data.projects.map((p) => {
           const checked = inProjects.some((x) => x.project.id === p.id);
           return (

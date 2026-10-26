@@ -32,18 +32,18 @@ export function Channel(props: Props) {
 
   return (
     <div className="flex flex-col items-between justify-center">
-      <div className="flex flex-row items-center justify-between p-2 bg-slate-500 rounded-sm">
+      <div className="flex flex-row items-center justify-between p-2 bg-base-300 rounded-sm">
         <div className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</div>
         {(channel) && (
           <div className="flex flex-row items-center justify-end">
             <Tooltip content="Mark All Read" placement="bottom">
               <button className="" onClick={async () => await updateAllReadStatus(channel.link, 1)}>
-                <IconCircleCheck size={18} className="m-1 dark:text-white" />
+                <IconCircleCheck size={18} className="m-1" />
               </button>
             </Tooltip>
             <Tooltip content="Refresh Channel" placement="bottom">
               <button className="" onClick={handleRefresh}>
-                <IconRefresh size={18} className="m-1 dark:text-white" />
+                <IconRefresh size={18} className="m-1" />
               </button>
             </Tooltip>
           </div>
@@ -118,7 +118,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
 
   useEffect(() => { setReadStatus(article.read_status); }, [article.read_status])
 
-  const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-200 dark:hover:bg-gray-800 ${highlight ? 'bg-blue-200 dark:bg-blue-800' : ''}`;
+  const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-base-content/10 ${highlight ? 'bg-info/15' : ''}`;
 
   return (
     <div
@@ -127,11 +127,11 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
       aria-hidden="true"
     >
       <div className="flex flex-row items-center justify-start">
-        {(readStatus === 0) && <IconCircle className="w-2 h-2 m-1 text-blue-500 fill-blue-500" />}
-        <div className="flex-1 font-bold m-1 dark:text-white">{article.title}</div>
+        {(readStatus === 0) && <IconCircle className="w-2 h-2 m-1 text-info fill-info" />}
+        <div className="flex-1 font-bold m-1">{article.title}</div>
       </div>
       <div className="flex flex-row items-center justify-center">
-        <span className="m-1 pl-2 text-sm dark:text-slate-400">
+        <span className="m-1 pl-2 text-sm">
           {fmtDatetime(article.published || '')}
         </span>
       </div>

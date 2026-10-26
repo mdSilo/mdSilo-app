@@ -34,7 +34,7 @@ function SidebarNotes(props: SidebarNotesProps) {
 
   // console.log("tree", numOfNotes, sortedNoteTree, currentDir)
   
-  const btnClass = "p-1 mt-4 mx-4 text-white rounded-sm bg-blue-500 hover:bg-blue-800";
+  const btnClass = "p-1 mt-4 mx-4 text-secondary-content rounded-sm bg-secondary hover:bg-secondary/85";
 
   return (
     <ErrorBoundary>

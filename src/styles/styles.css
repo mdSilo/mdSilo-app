@@ -4,9 +4,81 @@
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/forms';
-/* light by default; dark on the element with data-theme="dark" (see App) */
+/*
+  Themes, applied as data-theme on <html> (useTheme), listed in lib/themes.ts.
+  Components use the theme colors: base-100/200/300 (surfaces), base-content
+  (text), primary, info, success, warning, error...
+*/
 @plugin 'daisyui' {
-  themes: light --default, dark;
+  themes: cupcake, nord, retro, lemonade, dracula, forest, dim, night;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'mdsilo-light';
+  default: true;
+  color-scheme: light;
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98.5% 0 0);
+  --color-base-300: oklch(92.2% 0 0);
+  --color-base-content: oklch(20.5% 0 0);
+  --color-primary: oklch(59.6% 0.145 163.225);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(62.3% 0.214 259.815);
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: oklch(85.2% 0.199 91.936);
+  --color-accent-content: oklch(20.5% 0 0);
+  --color-neutral: oklch(37.1% 0 0);
+  --color-neutral-content: oklch(97% 0 0);
+  --color-info: oklch(68.5% 0.169 237.323);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(62.7% 0.194 149.214);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(79.5% 0.184 86.047);
+  --color-warning-content: oklch(20.5% 0 0);
+  --color-error: oklch(57.7% 0.245 27.325);
+  --color-error-content: oklch(100% 0 0);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'mdsilo-dark';
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: oklch(20.5% 0 0);
+  --color-base-200: oklch(26.9% 0 0);
+  --color-base-300: oklch(37.1% 0 0);
+  --color-base-content: oklch(92.2% 0 0);
+  --color-primary: oklch(76.5% 0.177 163.223);
+  --color-primary-content: oklch(20.5% 0 0);
+  --color-secondary: oklch(70.7% 0.165 254.624);
+  --color-secondary-content: oklch(20.5% 0 0);
+  --color-accent: oklch(85.2% 0.199 91.936);
+  --color-accent-content: oklch(20.5% 0 0);
+  --color-neutral: oklch(87% 0 0);
+  --color-neutral-content: oklch(20.5% 0 0);
+  --color-info: oklch(74.6% 0.16 232.661);
+  --color-info-content: oklch(20.5% 0 0);
+  --color-success: oklch(72.3% 0.219 149.579);
+  --color-success-content: oklch(20.5% 0 0);
+  --color-warning: oklch(85.2% 0.199 91.936);
+  --color-warning-content: oklch(20.5% 0 0);
+  --color-error: oklch(70.4% 0.191 22.216);
+  --color-error-content: oklch(20.5% 0 0);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
 }
 
 /* dark mode follows the `dark` class, set by the app */
@@ -71,38 +143,57 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--color-base-300, currentcolor);
   }
 
-  /* as Tailwind CSS v3: gray placeholders and pointer cursor on buttons */
+  /* as Tailwind CSS v3: muted placeholders and pointer cursor on buttons */
   input::placeholder,
   textarea::placeholder {
-    color: var(--color-gray-400);
+    color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
   }
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+
+  /* @tailwindcss/forms: theme colors instead of white and gray */
+  :root
+    :is(
+      [type='text'], input:where(:not([type])), [type='email'], [type='url'], [type='password'],
+      [type='number'], [type='date'], [type='datetime-local'], [type='month'], [type='search'],
+      [type='tel'], [type='time'], [type='week'], [multiple], textarea, select,
+      [type='checkbox'], [type='radio']
+    ) {
+    background-color: var(--color-base-100);
+    border-color: color-mix(in oklab, var(--color-base-content) 35%, transparent);
+    --tw-ring-color: var(--color-primary);
+  }
+  :root :is([type='checkbox'], [type='radio']) {
+    color: var(--color-primary);
+  }
+  :root :is([type='checkbox'], [type='radio']):checked {
+    background-color: currentColor;
+  }
 }
 
 @utility pop-btn {
-  @apply px-2 py-2 text-sm text-black rounded-sm shadow-sm bg-green-200 hover:bg-green-100;
+  @apply px-2 py-2 text-sm text-base-content rounded-sm shadow-sm bg-primary/25 hover:bg-primary/15;
 }
 
 @utility m-btn0 {
-  @apply px-2 py-1 text-xs text-black rounded-sm shadow-sm bg-green-200 hover:bg-green-100;
+  @apply px-2 py-1 text-xs text-base-content rounded-sm shadow-sm bg-success/25 hover:bg-success/15;
 }
 
 @utility m-btn1 {
-  @apply px-2 py-1 text-xs text-black rounded-sm shadow-sm bg-blue-200 hover:bg-blue-100;
+  @apply px-2 py-1 text-xs text-base-content rounded-sm shadow-sm bg-info/25 hover:bg-info/15;
 }
 
 @utility m-btn2 {
-  @apply px-2 py-1 text-xs text-black rounded-sm shadow-sm bg-orange-200 hover:bg-orange-100;
+  @apply px-2 py-1 text-xs text-base-content rounded-sm shadow-sm bg-warning/25 hover:bg-warning/15;
 }
 
 @utility ms-link {
-  @apply cursor-pointer text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300;
+  @apply cursor-pointer text-primary hover:text-primary/75;
 }
 
 @utility splash-bg {
@@ -122,7 +213,7 @@
 @utility content {
   line-height: 1.8;
   & a {
-    color: green;
+    color: var(--color-primary);
   }
   & a:hover {
     text-decoration: underline;
@@ -166,7 +257,7 @@
     font-weight: 400;
     margin: 2rem 0;
     padding-left: 1rem;
-    border-left: 6px solid greenyellow;
+    border-left: 6px solid var(--color-primary);
   }
   & p {
     line-height: 1.6;
@@ -191,7 +282,7 @@
   }
   & figcaption {
     text-align: center;
-    color: #f4f4f5;
+    color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
   }
 }
 
@@ -216,7 +307,7 @@
 }
 
 *:hover {
-  scrollbar-color: rgb(156 163 175 / 70%) transparent;
+  scrollbar-color: color-mix(in oklab, var(--color-base-content) 35%, transparent) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -234,9 +325,9 @@
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background-color: rgb(156 163 175 / 70%);
+  background-color: color-mix(in oklab, var(--color-base-content) 35%, transparent);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(107 114 128 / 85%);
+  background-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
 }

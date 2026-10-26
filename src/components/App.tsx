@@ -4,6 +4,7 @@ import '../styles/styles.css';
 import 'tippy.js/dist/tippy.css';
 import { ProvideCurrentView } from 'context/useCurrentView';
 import useHotkeys from 'editor/hooks/useHotkeys';
+import useTheme from 'editor/hooks/useTheme';
 import { useStore, onStoreHydrated, SidebarTab } from 'lib/store';
 import { isWeb } from 'file/util';
 import { openWebWorkspace } from 'editor/hooks/useOpen';
@@ -19,7 +20,7 @@ const App = () => {
   const isFindOrCreateModalOpen= useStore((state) => state.isFindOrCreateModalOpen);
   const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
 
-  const darkMode = useStore((state) => state.darkMode);
+  useTheme();
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
@@ -82,12 +83,11 @@ const App = () => {
     });
   }, []);
 
-  const appContainerClassName = `h-screen flex flex-col ${darkMode ? 'dark' : ''}`;
 
   return (
     <ProvideCurrentView>
-      <div id="app-container" className={appContainerClassName} data-theme={darkMode ? 'dark' : 'light'}>
-        <div className={`flex w-full h-full dark:bg-gray-900 ${
+      <div id="app-container" className="h-screen flex flex-col">
+        <div className={`flex w-full h-full bg-base-100 ${
           sideMenuOrientation === 'horizontal'
             ? 'flex-col'
             : sideMenuOrientation === 'vertical'

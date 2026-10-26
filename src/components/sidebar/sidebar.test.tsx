@@ -54,7 +54,7 @@ afterEach(() => {
 describe('SidebarItem', () => {
   test('highlights and forwards props', () => {
     render(<SidebarItem isHighlighted data-testid="item">x</SidebarItem>);
-    expect(screen.getByTestId('item')).toHaveClass('bg-gray-300');
+    expect(screen.getByTestId('item')).toHaveClass('bg-base-300');
   });
 });
 
@@ -63,7 +63,7 @@ describe('SidebarTab', () => {
     const setActive = vi.fn();
     render(<SidebarTab isActive setActive={setActive} Icon={TbFolder} />);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('border-b-green-700');
+    expect(btn.className).toContain('border-b-primary');
     await userEvent.click(btn);
     expect(setActive).toHaveBeenCalled();
   });

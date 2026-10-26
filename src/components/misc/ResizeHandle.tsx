@@ -94,7 +94,7 @@ function ResizeHandle(props: Props) {
       aria-valuemax={bounds.max}
       tabIndex={0}
       title="Drag to resize, double click to reset"
-      className={`absolute top-0 bottom-0 z-10 w-1.5 -right-0.5 cursor-col-resize select-none hover:bg-blue-500/50 active:bg-blue-500/70 focus:outline-hidden focus-visible:bg-blue-500/50 ${className}`}
+      className={`absolute top-0 bottom-0 z-10 w-1.5 -right-0.5 cursor-col-resize select-none hover:bg-secondary/50 active:bg-secondary/70 focus:outline-hidden focus-visible:bg-secondary/50 ${className}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

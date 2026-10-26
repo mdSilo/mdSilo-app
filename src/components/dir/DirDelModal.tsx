@@ -18,7 +18,7 @@ export default function DirDelModal(props: Props) {
           Cancel Delete
         </button>
         <button 
-          className="mt-4 font-bold text-red-600 pop-btn" 
+          className="mt-4 font-bold text-error pop-btn" 
           onClick={async (e) => {
             e.preventDefault();
             await deleteFiles([dirPath]);

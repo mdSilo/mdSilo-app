@@ -9,6 +9,7 @@ import type { ActivityRecord } from 'components/view/HeatMap';
 import * as Storage from 'file/storage';
 import userSettingsSlice, { UserSettings } from './userSettings';
 import { NoteMap } from './noteMap';
+import { DARK_THEME, LIGHT_THEME } from './themes';
 
 export { NoteMap } from './noteMap';
 
@@ -137,7 +138,7 @@ export type Store = {
 
 // user settings kept in LOCAL_DATA_DIR, see partialize
 type PersistedState = Pick<Store,
-  | 'userId' | 'darkMode' | 'font' | 'fontSize' | 'fontWt' | 'lineHeight'
+  | 'userId' | 'theme' | 'darkMode' | 'font' | 'fontSize' | 'fontWt' | 'lineHeight'
   | 'isRTL' | 'isCheckSpellOn' | 'isOpenPreOn' | 'noteSort' | 'recentDir'
   | 'pinnedDir' | 'sidebarWidth' | 'sideMenuOrientation' | 'feedChannelWidth' | 'feedArticleWidth'
   | 'useAsset' | 'activities'
@@ -288,11 +289,20 @@ export const store = createStore<Store>()(
     })),
     {
       name: 'mdsilo-storage',
-      version: 1,
+      version: 2,
       storage,
+      // v1 had a dark mode switch only: keep the mode as the mdSilo theme
+      migrate: (persisted, version) => {
+        const state = (persisted ?? {}) as Partial<PersistedState>;
+        if (version < 2 && state.theme === undefined && typeof state.darkMode === 'boolean') {
+          state.theme = state.darkMode ? DARK_THEME.name : LIGHT_THEME.name;
+        }
+        return state as PersistedState;
+      },
       partialize: (state): PersistedState => ({
         // user setting related
         userId: state.userId,
+        theme: state.theme,
         darkMode: state.darkMode,
         font: state.font,
         fontSize: state.fontSize,

@@ -18,12 +18,12 @@ export default function LabelPicker({ issue, labels }: { issue: Issue; labels: L
               <LabelChip key={l.id} label={l} onRemove={() => apply((d) => removeLabel(d, issue.number, l.id))} />
             ))}
           </div>
-        ) : (<span className="text-gray-500">None yet</span>)
+        ) : (<span className="text-base-content/60">None yet</span>)
       }
     >
       {() => (
         labels.length === 0 ? (
-          <p className="px-3 py-2 text-sm text-gray-500">No labels. Create some in Issues &gt; Labels.</p>
+          <p className="px-3 py-2 text-sm text-base-content/60">No labels. Create some in Issues &gt; Labels.</p>
         ) : labels.map((l) => {
           const checked = issue.labels.includes(l.id);
           return (

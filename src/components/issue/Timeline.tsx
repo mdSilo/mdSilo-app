@@ -41,12 +41,12 @@ export function eventText(e: EventItem) {
 
 function EventRow({ item }: { item: EventItem }) {
   const Icon = EVENT_ICONS[item.event] ?? IconOpened;
-  const color = item.event === 'closed' ? 'text-purple-600' : item.event === 'opened' || item.event === 'reopened' ? 'text-green-600' : 'text-gray-500';
+  const color = item.event === 'closed' ? 'text-purple-600' : item.event === 'opened' || item.event === 'reopened' ? 'text-success' : 'text-base-content/60';
   return (
-    <li className="flex items-center gap-2 py-2 pl-4 text-sm text-gray-600 dark:text-gray-400" data-testid="timeline-event">
+    <li className="flex items-center gap-2 py-2 pl-4 text-sm text-base-content/70" data-testid="timeline-event">
       <Icon size={16} className={color} />
       <span>{eventText(item)}</span>
-      <span className="text-xs text-gray-400"><TimeAgo iso={item.createdAt} /></span>
+      <span className="text-xs text-base-content/50"><TimeAgo iso={item.createdAt} /></span>
     </li>
   );
 }
@@ -58,21 +58,21 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
   const [version, setVersion] = useState(0);
 
   return (
-    <li className="my-3 border border-gray-200 rounded-sm dark:border-gray-700" data-testid="timeline-comment">
-      <div className="flex items-center justify-between px-3 py-1 text-xs text-gray-500 bg-gray-50 dark:bg-gray-800">
+    <li className="my-3 border border-base-300 rounded-sm" data-testid="timeline-comment">
+      <div className="flex items-center justify-between px-3 py-1 text-xs text-base-content/60 bg-base-200">
         <span>
           commented <TimeAgo iso={item.createdAt} />
           {item.updatedAt ? <span title={item.updatedAt}> · edited</span> : null}
         </span>
         {editing ? null : (
           <span className="flex gap-2">
-            <button type="button" aria-label="Edit comment" className="hover:text-primary-500" onClick={() => { setDraft(item.body); setEditing(true); }}>
+            <button type="button" aria-label="Edit comment" className="hover:text-primary/75" onClick={() => { setDraft(item.body); setEditing(true); }}>
               <IconPencil size={14} />
             </button>
             <button
               type="button"
               aria-label="Delete comment"
-              className="hover:text-red-600"
+              className="hover:text-error/80"
               onClick={() => { if (window.confirm('Delete this comment?')) apply((d) => deleteComment(d, issue.number, item.id)); }}
             >
               <IconTrash size={14} />
@@ -110,7 +110,7 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
 
 export default function Timeline({ issue }: { issue: Issue }) {
   return (
-    <ol className="border-l-2 border-gray-200 dark:border-gray-700 ml-2">
+    <ol className="border-l-2 border-base-300 ml-2">
       {issue.timeline.map((item) => (
         item.kind === 'comment'
           ? <CommentRow key={item.id} issue={issue} item={item} />

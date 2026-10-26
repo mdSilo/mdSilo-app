@@ -47,7 +47,7 @@ export default function AudioPlayer(props: Props) {
   return (
     <div className={`flex flex-row items-center justify-center ${className}`}>
       <button className='mx-1' onClick={TriggerPlaylist}>
-        <IconPlaylist size={24} className="dark:text-slate-300" />
+        <IconPlaylist size={24} className="" />
       </button>
       <audio 
         autoPlay 

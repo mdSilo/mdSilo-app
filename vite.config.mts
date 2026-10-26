@@ -47,7 +47,8 @@ function mdsmirrorBuildId(): string {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  // no CSS needed in tests (jsdom): skip compiling Tailwind CSS and daisyUI
+  plugins: [react(), ...(process.env.VITEST ? [] : [tailwindcss()])],
   // Workspace packages are symlinked outside node_modules. mdsmirror is emitted as
   // CommonJS, so Rollup's default CommonJS include rule would otherwise skip it
   // during production builds.

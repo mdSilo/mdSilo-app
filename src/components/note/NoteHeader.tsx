@@ -46,8 +46,8 @@ export default function NoteHeader(
   const onDelClick = useCallback(() => setIsNoteDelModalOpen(true), []);
 
   const buttonClassName =
-    'rounded-sm hover:bg-gray-300 active:bg-gray-400 dark:hover:bg-gray-700 dark:active:bg-gray-600';
-  const iconClass = 'text-gray-600 dark:text-gray-300';
+    'rounded-sm hover:bg-base-content/15 active:bg-base-content/25';
+  const iconClass = 'text-base-content/70';
   const switchClass = `px-1 ${buttonClassName}`; 
 
   return (
@@ -55,17 +55,17 @@ export default function NoteHeader(
       <div className="flex items-center" id="note-header-btns">
         <Tooltip content="WYSIWYG">
           <button className={switchClass} onClick={() => setRaw('wysiwyg')}>
-            <IconFileText className={`${rawMode === 'wysiwyg' ? 'text-green-500' :iconClass}`} />
+            <IconFileText className={`${rawMode === 'wysiwyg' ? 'text-success' :iconClass}`} />
           </button>
         </Tooltip>
         <Tooltip content="Markdown">
           <button className={switchClass} onClick={() => setRaw('raw')}>
-            <IconMarkdown className={`${rawMode === 'raw' ? 'text-green-500' : iconClass}`} />
+            <IconMarkdown className={`${rawMode === 'raw' ? 'text-success' : iconClass}`} />
           </button>
         </Tooltip>
         <Tooltip content="MindMap">
           <button className={switchClass} onClick={() => setRaw('mindmap')}>
-            <IconTournament className={`rotate-180 ${rawMode === 'mindmap' ? 'text-green-500' : iconClass}`} />
+            <IconTournament className={`rotate-180 ${rawMode === 'mindmap' ? 'text-success' : iconClass}`} />
           </button>
         </Tooltip>
       </div>
@@ -84,28 +84,28 @@ export default function NoteHeader(
                 <Portal>
                   <Menu.Items
                     ref={setPopperElement}
-                    className="z-10 w-56 overflow-hidden bg-white rounded-sm shadow-popover dark:bg-gray-800 focus:outline-hidden"
+                    className="z-10 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                     static
                     style={styles.popper}
                     {...attributes.popper}
                   >
                     <DropdownItem
                       onClick={onDelClick}
-                      className="border-t dark:border-gray-700"
+                      className="border-t border-base-300"
                     >
                       <IconTrash className="mr-1" />
                       <span>Delete Permanently</span>
                     </DropdownItem>
                     <DropdownItem
                       onClick={() => ExportAs('pdf', `${currentNote.id}.pdf`)}
-                      className="border-t dark:border-gray-700"
+                      className="border-t border-base-300"
                     >
                       <IconFile className="mr-1" />
                       <span>Export PDF</span>
                     </DropdownItem>
                     <DropdownItem
                       onClick={() => ExportAs('png', `${currentNote.id}.png`)}
-                      className="border-t dark:border-gray-700"
+                      className="border-t border-base-300"
                     >
                       <IconPhoto className="mr-1" />
                       <span>Export PNG</span>

@@ -1,4 +1,5 @@
 import MsEditor from "mdsmirror";
+import { EDITOR_THEME } from 'lib/themes';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
 import { Note } from 'types/model';
@@ -18,11 +19,11 @@ export default function Journals() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-1 flex-col shrink-0 md:shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-white dark:bg-black dark:text-gray-200 overlfow-y-auto">
+      <div className="flex flex-1 flex-col shrink-0 md:shrink p-6 w-full mx-auto md:w-128 lg:w-160 xl:w-192 bg-base-100 overlfow-y-auto">
         <div className="flex justify-center my-6">
         {initDir ? (
           <FindOrCreateInput
-            className="w-full bg-white rounded-sm shadow-popover dark:bg-gray-800"
+            className="w-full bg-base-200 rounded-sm shadow-popover"
           />
         ) : null}
         </div>
@@ -54,11 +55,11 @@ function NoteItem(props: NoteItemProps) {
         }}
         className="flex items-center ms-link text-lg py-2 pl-4"
       >
-        <span className="title text-2xl text-yellow-500 font-semibold mt-4">
+        <span className="title text-2xl text-warning font-semibold mt-4">
           {note.title}
         </span>
       </button>
-      <MsEditor value={note.content} dark={darkMode} dir={isRTL ? 'rtl' : 'ltr'} />
+      <MsEditor value={note.content} dark={darkMode} theme={EDITOR_THEME} dir={isRTL ? 'rtl' : 'ltr'} />
     </div>
   );
 }

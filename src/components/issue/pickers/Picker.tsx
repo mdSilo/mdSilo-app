@@ -30,12 +30,12 @@ export default function Picker({ title, summary, children }: Props) {
   }, [open]);
 
   return (
-    <div ref={ref} className="relative py-3 border-b border-gray-200 dark:border-gray-700">
+    <div ref={ref} className="relative py-3 border-b border-base-300">
       <button
         type="button"
         aria-label={`Edit ${title}`}
         aria-expanded={open}
-        className="flex items-center justify-between w-full mb-1 text-xs font-semibold text-gray-500 hover:text-primary-500 dark:text-gray-400"
+        className="flex items-center justify-between w-full mb-1 text-xs font-semibold text-base-content/60 hover:text-primary/75"
         onClick={() => setOpen(!open)}
       >
         {title}
@@ -46,7 +46,7 @@ export default function Picker({ title, summary, children }: Props) {
         <div
           role="menu"
           aria-label={title}
-          className="absolute right-0 z-20 w-64 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-sm shadow-lg max-h-80 dark:bg-gray-800 dark:border-gray-600"
+          className="absolute right-0 z-20 w-64 mt-1 overflow-y-auto bg-base-200 border border-base-300 rounded-sm shadow-lg max-h-80"
         >
           {children(() => setOpen(false))}
         </div>
@@ -56,4 +56,4 @@ export default function Picker({ title, summary, children }: Props) {
 }
 
 export const menuItemClass =
-  'flex items-center w-full gap-2 px-3 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700';
+  'flex items-center w-full gap-2 px-3 py-2 text-sm text-left hover:bg-base-content/5';

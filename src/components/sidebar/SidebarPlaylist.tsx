@@ -93,37 +93,37 @@ function Playlist(props: TreeProps) {
   return (
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
-        <div className="flex items-center justify-between border-t dark:border-gray-700">
+        <div className="flex items-center justify-between border-t border-base-300">
           <Tooltip content="Title: A-Z">
             <button
-              className="p-1 mx-2 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.TitleAscending)}
             >
-              <span className={podSort === Sort.TitleAscending ? 'text-primary-600 dark:text-primary-400' : ''}>A-Z</span>
+              <span className={podSort === Sort.TitleAscending ? 'text-primary' : ''}>A-Z</span>
             </button>
           </Tooltip>
           <Tooltip content="Title: Z-A">
             <button
-              className="p-1 mx-2 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.TitleDescending)}
             >
-              <span className={podSort === Sort.TitleDescending ? 'text-primary-600 dark:text-primary-400' : ''}>Z-A</span>
+              <span className={podSort === Sort.TitleDescending ? 'text-primary' : ''}>Z-A</span>
             </button>
           </Tooltip>
           <Tooltip content="Publish: Old-New">
             <button
-              className="p-1 mx-2 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.DateCreatedAscending)}
             >
-              <span className={podSort === Sort.DateCreatedAscending ? 'text-primary-600 dark:text-primary-400' : ''}>Old</span>
+              <span className={podSort === Sort.DateCreatedAscending ? 'text-primary' : ''}>Old</span>
             </button>
           </Tooltip>
           <Tooltip content="Publish: New-Old">
             <button
-              className="p-1 mx-2 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.DateCreatedDescending)}
             >
-              <span className={podSort === Sort.DateCreatedDescending ? 'text-primary-600 dark:text-primary-400' : ''}>New</span>
+              <span className={podSort === Sort.DateCreatedDescending ? 'text-primary' : ''}>New</span>
             </button>
           </Tooltip>
         </div>

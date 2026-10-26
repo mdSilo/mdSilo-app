@@ -19,11 +19,11 @@ export default function Toggle(props: Props) {
         <span className="relative">
           <span
             className={`block w-10 h-4 rounded-full shadow-inner transition-colors ${
-              isChecked ? 'bg-primary-500' : 'bg-gray-400'
+              isChecked ? 'bg-primary' : 'bg-base-content/30'
             }`}
           ></span>
           <span
-            className={`absolute inset-y-0 left-0 block w-4 h-2 mt-1 ml-1 transition-transform duration-300 ease-in-out transform bg-white rounded-full shadow focus-within:shadow-outline ${
+            className={`absolute inset-y-0 left-0 block w-4 h-2 mt-1 ml-1 transition-transform duration-300 ease-in-out transform bg-base-100 rounded-full shadow focus-within:shadow-outline ${
               isChecked ? 'translate-x-full' : null
             }`}
           >

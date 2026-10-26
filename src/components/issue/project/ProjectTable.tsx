@@ -69,8 +69,8 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
         onChange={(e) => setQuery(e.target.value)}
       />
       <div className="overflow-x-auto">
-        <table className="w-full text-sm border border-gray-200 dark:border-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+        <table className="w-full text-sm border border-base-300">
+          <thead className="bg-base-200">
             <tr>
               {COLS.map((c) => (
                 <th key={c.key} className="px-2 py-1 text-left">
@@ -80,7 +80,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                     onClick={() => setSort({ key: c.key, asc: sort.key === c.key ? !sort.asc : true })}
                   >
                     {c.name}
-                    <IconSort size={12} className={sort.key === c.key ? 'text-primary-500' : 'text-gray-400'} />
+                    <IconSort size={12} className={sort.key === c.key ? 'text-primary' : 'text-base-content/50'} />
                   </button>
                 </th>
               ))}
@@ -89,21 +89,21 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <tr><td colSpan={7} className="p-4 text-center text-gray-500">No items.</td></tr>
+              <tr><td colSpan={7} className="p-4 text-center text-base-content/60">No items.</td></tr>
             ) : rows.map(({ issue, status, milestone }) => (
-              <tr key={issue.number} className="border-t border-gray-200 dark:border-gray-700" data-testid="project-row">
-                <td className="px-2 py-1 text-gray-500 whitespace-nowrap">
+              <tr key={issue.number} className="border-t border-base-300" data-testid="project-row">
+                <td className="px-2 py-1 text-base-content/60 whitespace-nowrap">
                   <span className="flex items-center gap-1"><StateIcon state={issue.state} size={14} />{issue.number}</span>
                 </td>
                 <td className="px-2 py-1">
-                  <button type="button" className="text-left hover:text-primary-500" onClick={() => onOpen(issue.number)}>
+                  <button type="button" className="text-left hover:text-primary/75" onClick={() => onOpen(issue.number)}>
                     {issue.title}
                   </button>
                 </td>
                 <td className="px-2 py-1">
                   <select
                     aria-label={`Status of #${issue.number}`}
-                    className="py-0 pl-1 text-sm border-gray-300 rounded-sm dark:bg-gray-800 dark:border-gray-600"
+                    className="py-0 pl-1 text-sm border-base-300 rounded-sm bg-base-100"
                     value={status}
                     onChange={(e) => {
                       const sid = e.target.value;
@@ -119,13 +119,13 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                     {data.labels.filter((l) => issue.labels.includes(l.id)).map((l) => <LabelChip key={l.id} label={l} />)}
                   </div>
                 </td>
-                <td className="px-2 py-1 text-gray-500">{milestone}</td>
-                <td className="px-2 py-1 text-gray-500 whitespace-nowrap"><TimeAgo iso={issue.updatedAt} /></td>
+                <td className="px-2 py-1 text-base-content/60">{milestone}</td>
+                <td className="px-2 py-1 text-base-content/60 whitespace-nowrap"><TimeAgo iso={issue.updatedAt} /></td>
                 <td className="px-2 py-1">
                   <button
                     type="button"
                     aria-label={`Remove #${issue.number} from project`}
-                    className="text-xs text-gray-400 hover:text-red-600"
+                    className="text-xs text-base-content/50 hover:text-error/80"
                     onClick={() => apply((d) => removeProjectItem(d, project.id, issue.number))}
                   >
                     Remove

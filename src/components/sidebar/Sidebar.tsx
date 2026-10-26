@@ -101,7 +101,7 @@ function Sidebar(props: Props) {
             }}
           >
             <div
-              className={`flex flex-col flex-none h-full border-r border-lime-900 bg-gray-50 dark:bg-gray-800 dark:text-gray-300 ${className}`}
+              className={`flex flex-col flex-none h-full border-r border-base-300 bg-base-200 ${className}`}
             >
               <SidebarContent className="flex-1 overflow-x-hidden overflow-y-auto" />
             </div>
