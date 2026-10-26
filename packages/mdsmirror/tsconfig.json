@@ -8,7 +8,7 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "target": "es2018",
     "lib": ["dom", "es2020"],
     "jsx": "react",

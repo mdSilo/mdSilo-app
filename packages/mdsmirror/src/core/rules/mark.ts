@@ -58,7 +58,7 @@ export default function (options: { delim: string; mark: string }) {
     //
     function postProcess(
       state: StateInline,
-      delimiters: StateInline.Delimiter[]
+      delimiters: StateInline["delimiters"]
     ) {
       let i = 0,
         j,
