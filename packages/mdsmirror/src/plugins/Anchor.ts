@@ -4,90 +4,61 @@ import { Decoration, DecorationSet } from "prosemirror-view";
 import copy from "copy-to-clipboard";
 import textToSlug from "../core/queries/textToSlug";
 
+/** Unique ids from the slugs of the text: `slug`, then `slug-1`... */
+const uniqueIds = (prefix?: string) => {
+  const seen: Record<string, number> = {};
+  return (text: string) => {
+    const slug = textToSlug(text, 0, prefix);
+    const count = seen[slug] || 0;
+    seen[slug] = count + 1;
+    return count > 0 ? textToSlug(text, count, prefix) : slug;
+  };
+};
+
+const anchorWidget = (pos: number, id: string, className: string) =>
+  Decoration.widget(
+    pos,
+    () => {
+      const anchor = document.createElement("a");
+      anchor.id = id;
+      anchor.className = className;
+      return anchor;
+    },
+    { side: -1, key: id }
+  );
+
+/** An anchor before each node of type `name` */
 const getNodeAnchors = (doc: PmNode, name: string, className: string) => {
   const decorations: Decoration[] = [];
-  const previouslySeen = {};
+  const idOf = uniqueIds();
 
   doc.descendants((node, pos) => {
     if (node.type.name !== name) {
-      return;
+      // no such node in inline content
+      return !node.isTextblock;
     }
-
-    // calculate the optimal id
-    const slug = textToSlug(node.textContent);
-    let id = slug;
-
-    // check if we've already used it, and if so how many times?
-    // Make the new id based on that number ensuring that we have
-    // unique ID's even when headings are identical
-    if (previouslySeen[slug] > 0) {
-      id = textToSlug(node.textContent, previouslySeen[slug]);
-    }
-
-    // record that we've seen this slug for the next loop
-    previouslySeen[slug] =
-      previouslySeen[slug] !== undefined ? previouslySeen[slug] + 1 : 1;
-
-    decorations.push(
-      Decoration.widget(
-        pos,
-        () => {
-          const anchor = document.createElement("a");
-          anchor.id = id;
-          anchor.className = className;
-          return anchor;
-        },
-        {
-          side: -1,
-          key: id,
-        }
-      )
-    );
+    decorations.push(anchorWidget(pos, idOf(node.textContent), className));
+    return false;
   });
 
   return DecorationSet.create(doc, decorations);
 };
 
+/** An anchor before the textblock of each text with mark `name` */
 const getMarkAnchors = (doc: PmNode, name: string, className: string) => {
   const decorations: Decoration[] = [];
-  const previouslySeen = {};
+  const idOf = uniqueIds("t");
 
   doc.descendants((node, pos) => {
+    if (!node.isTextblock) {
+      return true;
+    }
     node.forEach((child) => {
-      const hashs = child.marks.filter((m) => m.type.name === name);
-      if (hashs.length > 0) {
-        // calculate the optimal id
-        const slug = textToSlug(child.textContent, 0, "t");
-        let id = slug;
-
-        // check if we've already used it, and if so how many times?
-        // Make the new id based on that number ensuring that we have
-        // unique ID's even when headings are identical
-        if (previouslySeen[slug] > 0) {
-          id = textToSlug(child.textContent, previouslySeen[slug], "t");
-        }
-
-        // record that we've seen this slug for the next loop
-        previouslySeen[slug] =
-          previouslySeen[slug] !== undefined ? previouslySeen[slug] + 1 : 1;
-
-        decorations.push(
-          Decoration.widget(
-            pos,
-            () => {
-              const anchor = document.createElement("a");
-              anchor.id = id;
-              anchor.className = className;
-              return anchor;
-            },
-            {
-              side: -1,
-              key: id,
-            }
-          )
-        );
+      if (child.marks.some((mark) => mark.type.name === name)) {
+        decorations.push(anchorWidget(pos, idOf(child.textContent), className));
       }
     });
+    return false;
   });
 
   return DecorationSet.create(doc, decorations);
@@ -137,7 +108,6 @@ export function copyAnchor(event: MouseEvent, className: string, onCopy?: any) {
 }
 
 export function copyHashtag(anchor: HTMLElement, onCopy?: any) {
-  // console.log("target", anchor)
   const hash = `#${anchor.id}`;
   if (onCopy) {
     onCopy(hash);

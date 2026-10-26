@@ -1,7 +1,5 @@
-import { flattenDeep, padStart } from "lodash";
 import { Node } from "prosemirror-model";
 import { Plugin, PluginKey, Transaction } from "prosemirror-state";
-import { findBlockNodes } from "prosemirror-utils";
 import { Decoration, DecorationSet } from "prosemirror-view";
 import { refractor } from "refractor/core";
 
@@ -40,12 +38,66 @@ export const LANGUAGES = {
 /** The hast nodes refractor highlights a code block into */
 type RefractorNode = ReturnType<typeof refractor.highlight>["children"][number];
 
-type ParsedNode = {
-  text: string;
-  classes: string[];
+/** A highlighted range, relative to the start of the code */
+type Highlight = { from: number; to: number; className: string };
+
+/** The highlighting of a code block, wherever it is in the doc */
+type BlockHighlight = {
+  highlights: Highlight[];
+  lineNumbers?: { text: string; gutterWidth: number; lineCount: number };
 };
 
-const cache: Record<number, { node: Node; decorations: Decoration[] }> = {};
+/** Flatten the highlighted tree into the ranges of text with classes */
+function collectHighlights(
+  nodes: RefractorNode[],
+  classNames: string[],
+  out: Highlight[],
+  offset: number
+): number {
+  for (const node of nodes) {
+    if (node.type === "element") {
+      const className = (node.properties.className || []) as string[];
+      offset = collectHighlights(
+        node.children,
+        [...classNames, ...className],
+        out,
+        offset
+      );
+    } else if (node.type === "text") {
+      const to = offset + node.value.length;
+      if (classNames.length) {
+        out.push({ from: offset, to, className: classNames.join(" ") });
+      }
+      offset = to;
+    }
+  }
+  return offset;
+}
+
+function highlightBlock(
+  node: Node,
+  language: string,
+  lineNumbers?: boolean
+): BlockHighlight {
+  const code = node.textContent;
+  const highlights: Highlight[] = [];
+  collectHighlights(
+    refractor.highlight(code, language).children,
+    [],
+    highlights,
+    0
+  );
+
+  if (!lineNumbers) {
+    return { highlights };
+  }
+  const lineCount = (code.match(/\n/g) || []).length + 1;
+  const gutterWidth = String(lineCount).length;
+  const text = Array.from({ length: lineCount }, (_, i) =>
+    `${i + 1}`.padStart(gutterWidth, " ")
+  ).join(" \n");
+  return { highlights, lineNumbers: { text, gutterWidth, lineCount } };
+}
 
 type DecorProps = {
   /** The prosemirror document */
@@ -54,110 +106,54 @@ type DecorProps = {
   name: string;
   /** Whether to include line numbers */
   lineNumbers?: boolean;
+  /**
+   * The highlighting of the code blocks by node: the nodes not changed by a
+   * transaction are the same objects, wherever they moved to
+   */
+  cache: WeakMap<Node, BlockHighlight>;
 };
 
-function getDecorations({ doc, name, lineNumbers }: DecorProps) {
+export function getDecorations({ doc, name, lineNumbers, cache }: DecorProps) {
   const decorations: Decoration[] = [];
-  const blocks: { node: Node; pos: number }[] = findBlockNodes(
-    doc,
-    true
-  ).filter((item) => item.node.type.name === name);
 
-  function parseNodes(
-    nodes: RefractorNode[],
-    classNames: string[] = []
-  ): {
-    text: string;
-    classes: string[];
-  }[] {
-    return flattenDeep(
-      nodes.map((node) => {
-        if (node.type === "element") {
-          const className = (node.properties.className || []) as string[];
-          return parseNodes(node.children, [...classNames, ...className]);
-        }
-
-        return {
-          text: node.type === "text" ? node.value : "",
-          classes: classNames,
-        };
-      })
-    );
-  }
-
-  blocks.forEach((block) => {
-    let startPos = block.pos + 1;
-    const language = block.node.attrs.language;
+  doc.descendants((node, pos) => {
+    if (node.type.name !== name) {
+      // no code blocks in inline content
+      return !node.isTextblock;
+    }
+    const language = node.attrs.language;
     if (!language || language === "none" || !refractor.registered(language)) {
-      return;
+      return false;
     }
 
-    const lineDecorations: any[] = [];
+    let block = cache.get(node);
+    if (!block) {
+      block = highlightBlock(node, language, lineNumbers);
+      cache.set(node, block);
+    }
 
-    if (!cache[block.pos] || !cache[block.pos].node.eq(block.node)) {
-      if (lineNumbers) {
-        const lineCount =
-          (block.node.textContent.match(/\n/g) || []).length + 1;
-        const gutterWidth = String(lineCount).length;
-
-        const lineCountText = new Array(lineCount)
-          .fill(0)
-          .map((_, i) => padStart(`${i + 1}`, gutterWidth, " "))
-          .join(" \n");
-
-        lineDecorations.push(
-          Decoration.node(
-            block.pos,
-            block.pos + block.node.nodeSize,
-            {
-              "data-line-numbers": `${lineCountText} `,
-              style: `--line-number-gutter-width: ${gutterWidth};`,
-            },
-            {
-              key: `line-${lineCount}-gutter`,
-            }
-          )
-        );
-      }
-
-      const nodes = refractor.highlight(block.node.textContent, language);
-      const newDecorations = parseNodes(nodes.children)
-        .map((node: ParsedNode) => {
-          const from = startPos;
-          const to = from + node.text.length;
-
-          startPos = to;
-
-          return {
-            ...node,
-            from,
-            to,
-          };
-        })
-        .filter((node) => node.classes && node.classes.length)
-        .map((node) =>
-          Decoration.inline(node.from, node.to, {
-            class: node.classes.join(" "),
-          })
+    const start = pos + 1;
+    for (const { from, to, className } of block.highlights) {
+      decorations.push(
+        Decoration.inline(start + from, start + to, { class: className })
+      );
+    }
+    if (block.lineNumbers) {
+      const { text, gutterWidth, lineCount } = block.lineNumbers;
+      decorations.push(
+        Decoration.node(
+          pos,
+          pos + node.nodeSize,
+          {
+            "data-line-numbers": `${text} `,
+            style: `--line-number-gutter-width: ${gutterWidth};`,
+          },
+          { key: `line-${lineCount}-gutter` }
         )
-        .concat(lineDecorations);
-
-      cache[block.pos] = {
-        node: block.node,
-        decorations: newDecorations,
-      };
+      );
     }
-
-    cache[block.pos].decorations.forEach((decoration) => {
-      decorations.push(decoration);
-    });
+    return false;
   });
-
-  Object.keys(cache)
-    .filter((pos) => !blocks.find((block) => block.pos === Number(pos)))
-    .forEach((pos) => {
-      delete cache[Number(pos)];
-    });
 
   return DecorationSet.create(doc, decorations);
 }
@@ -170,6 +166,7 @@ export default function Prism({
   lineNumbers?: boolean;
 }) {
   let highlighted = false;
+  const cache = new WeakMap<Node, BlockHighlight>();
 
   return new Plugin({
     key: new PluginKey("prism"),
@@ -184,7 +181,12 @@ export default function Prism({
 
         if (!highlighted || codeBlockChanged || ySyncEdit) {
           highlighted = true;
-          return getDecorations({ doc: transaction.doc, name, lineNumbers });
+          return getDecorations({
+            doc: transaction.doc,
+            name,
+            lineNumbers,
+            cache,
+          });
         }
 
         return decorationSet.map(transaction.mapping, transaction.doc);

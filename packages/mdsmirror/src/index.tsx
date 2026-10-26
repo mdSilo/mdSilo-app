@@ -1,6 +1,5 @@
 /* global window File Promise */
 import * as React from "react";
-import memoize from "lodash/memoize";
 import { EditorState, Selection, Plugin } from "prosemirror-state";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
@@ -100,6 +99,7 @@ import QuickAction from "./plugins/QuickAction";
 import TrailingNode from "./plugins/TrailingNode";
 import PasteHandler from "./plugins/PasteHandler";
 import { resolveImageSrc } from "./lib/resolveImageSrc";
+import { firstStrongDir } from "./lib/textDirection";
 
 // re-export
 export {
@@ -119,6 +119,10 @@ export { HashTag, getHashtags } from "./core/queries/getHashtags";
 export { Task, getTasks } from "./core/queries/getTasks";
 
 export const theme = lightTheme;
+
+// ProseMirror renders the content: only the theme and the props below change
+// the editor element, not the transactions which re-render MsEditor
+const EditorElement = React.memo(StyledEditor);
 
 export type Props = {
   /** An optional identifier */
@@ -272,6 +276,17 @@ class MsEditor extends React.PureComponent<Props, State> {
 
   isInited = false;
   isBlurred: boolean;
+  // the direction of the first strong character of the doc, see calculateDir
+  contentDir?: "rtl" | "ltr";
+  dictionaryCache?: {
+    provided?: Partial<typeof baseDictionary>;
+    value: typeof baseDictionary;
+  };
+  themeCache?: {
+    dark?: boolean;
+    custom?: Partial<typeof theme>;
+    value: typeof theme;
+  };
   extensionManager: ExtensionManager;
   // element?: HTMLElement | null;
   elementRef = React.createRef<HTMLDivElement>();
@@ -296,6 +311,7 @@ class MsEditor extends React.PureComponent<Props, State> {
       this.scrollToAnchor(this.props.scrollTo);
     }
 
+    this.contentDir = firstStrongDir(this.view.state.doc);
     this.calculateDir();
 
     if (this.props.readOnly) return;
@@ -310,6 +326,8 @@ class MsEditor extends React.PureComponent<Props, State> {
     if (this.props.value && prevProps.value !== this.props.value) {
       const newState = this.createState(this.props.value);
       this.view.updateState(newState);
+      this.contentDir = firstStrongDir(newState.doc);
+      this.calculateDir();
     }
 
     // pass readOnly changes through to underlying editor instance
@@ -652,8 +670,9 @@ class MsEditor extends React.PureComponent<Props, State> {
         // If any of the transactions being dispatched resulted in the doc
         // changing then call our own change handler to let the outside world
         // know
+        const docChanged = transactions.some((tr) => tr.docChanged);
         if (
-          transactions.some((tr) => tr.docChanged) &&
+          docChanged &&
           (!self.props.readOnly ||
             (self.props.readOnlyWriteCheckboxes &&
               transactions.some(isEditingCheckbox)))
@@ -661,7 +680,15 @@ class MsEditor extends React.PureComponent<Props, State> {
           self.handleChange();
         }
 
-        self.calculateDir();
+        // getComputedStyle forces a style recalc: only call it when the
+        // direction of dir="auto" can have changed
+        if (docChanged) {
+          const contentDir = firstStrongDir(state.doc);
+          if (contentDir !== self.contentDir) {
+            self.contentDir = contentDir;
+            self.calculateDir();
+          }
+        }
 
         // Because Prosemirror and React are not linked we must tell React that
         // a render is needed whenever the Prosemirror state changes.
@@ -813,17 +840,33 @@ class MsEditor extends React.PureComponent<Props, State> {
     return getTasks(this.view.state.doc);
   };
 
+  // the same object while the props do not change: a new one would re-render
+  // every styled component under the ThemeProvider
   theme = () => {
-    const givenTheme: typeof theme = this.props.dark ? darkTheme : lightTheme;
-    const customeTheme = this.props.theme || {};
-    return { ...givenTheme, ...customeTheme };
+    const { dark, theme: custom } = this.props;
+    const cache = this.themeCache;
+    if (!cache || cache.dark !== dark || cache.custom !== custom) {
+      const givenTheme: typeof theme = dark ? darkTheme : lightTheme;
+      this.themeCache = {
+        dark,
+        custom,
+        value: { ...givenTheme, ...custom },
+      };
+    }
+    return (this.themeCache as NonNullable<typeof cache>).value;
   };
 
-  dictionary = memoize(
-    (providedDictionary?: Partial<typeof baseDictionary>) => {
-      return { ...baseDictionary, ...providedDictionary };
+  // the last one only: memoizing every dictionary object passed in would
+  // keep them all
+  dictionary = (provided?: Partial<typeof baseDictionary>) => {
+    if (!this.dictionaryCache || this.dictionaryCache.provided !== provided) {
+      this.dictionaryCache = {
+        provided,
+        value: { ...baseDictionary, ...provided },
+      };
     }
-  );
+    return this.dictionaryCache.value;
+  };
 
   render() {
     const {
@@ -846,7 +889,7 @@ class MsEditor extends React.PureComponent<Props, State> {
       >
         <ThemeProvider theme={this.theme()}>
           <React.Fragment>
-            <StyledEditor
+            <EditorElement
               dir={dir}
               rtl={isRTL ? 1 : 0}
               readOnly={readOnly}

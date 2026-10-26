@@ -5,8 +5,18 @@ import { Decoration, DecorationSet } from "prosemirror-view";
 
 type PluginState = {
   decorationSet: DecorationSet;
-  diagramVisibility: Record<number, boolean>;
+  diagramVisibility: Record<string, boolean>;
 };
+
+type SaveDiagram = (svg: string, ty: string) => void;
+
+// the libraries are loaded on the first diagram of their kind, once
+let mermaidModule: Promise<typeof import("mermaid")> | undefined;
+let echartsModule: Promise<typeof import("echarts")> | undefined;
+let abcjsModule: Promise<typeof import("abcjs")> | undefined;
+const loadMermaid = () => (mermaidModule ??= import("mermaid"));
+const loadEcharts = () => (echartsModule ??= import("echarts"));
+const loadAbcjs = () => (abcjsModule ??= import("abcjs"));
 
 type StateProps = {
   doc: Node;
@@ -14,7 +24,7 @@ type StateProps = {
   dark: boolean;
   pluginState: PluginState;
   pluginKey: string; // 'mermaid' | 'echats' | 'abcjs';
-  onSave?: (svg: string) => void;
+  onSave?: SaveDiagram;
 };
 
 function getNewState({
@@ -52,6 +62,7 @@ function getNewState({
       pluginState.diagramVisibility[diagramId] = !!block.node.textContent;
     }
 
+    const visible = pluginState.diagramVisibility[diagramId] !== false;
     const diagramDecoration = Decoration.widget(
       block.pos + block.node.nodeSize,
       pluginKey === "mermaid"
@@ -59,7 +70,12 @@ function getNewState({
         : pluginKey === "echarts"
           ? echartsWidget(pluginState, diagramId, block, dark, onSave)
           : abcWidget(pluginState, diagramId, block, dark, onSave),
-      { diagramId }
+      {
+        diagramId,
+        // what the widget is drawn from: keep the drawn diagram while it is
+        // the same, instead of drawing all of them again on every edit
+        key: `${diagramId}:${visible}:${block.node.textContent}`,
+      }
     );
 
     const attributes = { "data-diagram-id": "" + diagramId };
@@ -90,7 +106,7 @@ const mermaidWidget =
     diagramId: string,
     block: any,
     dark: boolean,
-    onSave?: (svg: string, ty: string) => void
+    onSave?: SaveDiagram
   ) =>
   () => {
     const mainWrapper = document.createElement("div");
@@ -103,7 +119,7 @@ const mermaidWidget =
       return mainWrapper;
     }
 
-    import("mermaid").then((module) => {
+    loadMermaid().then((module) => {
       const config: any = {
         startOnLoad: true,
         // the default, explicit: HTML in labels encoded, no click handlers
@@ -137,7 +153,7 @@ const mermaidWidget =
           }
         })
         .catch((error) => {
-          console.log(error);
+          console.error(error);
           // mermaid removes its error diagram once render rejects
           diagramWrapper.textContent = `Mermaid: ${error?.message ?? error}`;
         });
@@ -152,7 +168,7 @@ const echartsWidget =
     diagramId: string,
     block: any,
     dark: boolean,
-    onSave?: (svg: string, ty: string) => void
+    onSave?: SaveDiagram
   ) =>
   () => {
     const mainWrapper = document.createElement("div");
@@ -166,11 +182,10 @@ const echartsWidget =
       return mainWrapper;
     }
 
-    import("echarts").then((Echartsjs) => {
+    loadEcharts().then((Echartsjs) => {
       try {
         const text = block.node.textContent;
         const echartsData = JSON.parse(text);
-        // console.log("chart data", echartsData, text)
         Echartsjs.init(diagramWrapper, dark ? "dark" : undefined, {
           renderer: "svg",
           height: 600,
@@ -194,7 +209,7 @@ const echartsWidget =
           mainWrapper.append(saveDiagramButton);
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
         const errorNode = document.getElementById(
           `echarts-diagram-${diagramId}`
         );
@@ -213,7 +228,7 @@ const abcWidget =
     diagramId: string,
     block: any,
     dark: boolean,
-    onSave?: (svg: string, ty: string) => void
+    onSave?: SaveDiagram
   ) =>
   () => {
     const mainWrapper = document.createElement("div");
@@ -226,7 +241,7 @@ const abcWidget =
       return mainWrapper;
     }
 
-    import("abcjs").then((ABCJS) => {
+    loadAbcjs().then((ABCJS) => {
       try {
         const text = block.node.textContent;
         const visualObj = ABCJS.renderAbc(diagramWrapper, text, {});
@@ -285,10 +300,10 @@ const abcWidget =
               });
             });
         } else {
-          console.log("audio is not supported on this browser");
+          console.warn("audio is not supported on this browser");
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
         const errorNode = document.getElementById(`abcjs-diagram-${diagramId}`);
         if (errorNode) {
           diagramWrapper.appendChild(errorNode);
@@ -303,7 +318,7 @@ type PluginProps = {
   pluginKey: string;
   name: string;
   dark: boolean;
-  onSave: (svg: string) => void;
+  onSave?: SaveDiagram;
 };
 
 export default function Diagram({
@@ -314,7 +329,7 @@ export default function Diagram({
 }: PluginProps) {
   let diagramShown = false;
 
-  return new Plugin({
+  return new Plugin<PluginState>({
     key: new PluginKey(pluginKey),
     state: {
       init: (_, { doc }) => {
@@ -346,7 +361,6 @@ export default function Diagram({
         if (!diagramShown || codeBlockChanged || diagramToggled || ySyncEdit) {
           diagramShown = true;
           return getNewState({
-            // @ts-ignore
             doc: transaction.doc,
             name,
             dark,
@@ -378,9 +392,7 @@ export default function Diagram({
       return {};
     },
     props: {
-      // @ts-ignore
       decorations(state) {
-        // @ts-ignore
         return this.getState(state)?.decorationSet;
       },
     },

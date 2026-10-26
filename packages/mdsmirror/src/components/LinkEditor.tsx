@@ -241,7 +241,7 @@ class LinkEditor extends React.Component<Props, State> {
     if (onOpenLink) {
       onOpenLink(this.href);
     } else {
-      console.log("fail open: ", this.href, onOpenLink);
+      console.warn("no onOpenLink to open", this.href);
     }
   };
 

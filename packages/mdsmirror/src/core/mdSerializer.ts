@@ -93,6 +93,8 @@ export class MarkdownSerializerState {
   inTightList = false;
   closed = false;
   delim = "";
+  // the output is empty or ends with a newline
+  blank = true;
   options: Options;
 
   constructor(nodes, marks, options) {
@@ -117,7 +119,7 @@ export class MarkdownSerializerState {
   flushClose(size) {
     if (this.closed) {
       if (!this.atBlank()) {
-        this.out += "\n";
+        this.append("\n");
       }
       if (size === null || size === undefined) {
         size = 2;
@@ -129,7 +131,7 @@ export class MarkdownSerializerState {
           delimMin = delimMin.slice(0, delimMin.length - trim[0].length);
         }
         for (let i = 1; i < size; i++) {
-          this.out += delimMin + "\n";
+          this.append(delimMin + "\n");
         }
       }
       this.closed = false;
@@ -150,15 +152,25 @@ export class MarkdownSerializerState {
     this.closeBlock(node);
   }
 
+  // :: (string)
+  // Add to the output. Whether it ends with a newline is kept here: reading
+  // the output, a rope of all the pieces, would flatten it on every check.
+  append(text: string) {
+    if (text) {
+      this.out += text;
+      this.blank = text.endsWith("\n");
+    }
+  }
+
   atBlank() {
-    return /(^|\n)$/.test(this.out);
+    return this.blank;
   }
 
   // :: ()
   // Ensure the current content ends with a newline.
   ensureNewLine() {
     if (!this.atBlank()) {
-      this.out += "\n";
+      this.append("\n");
     }
   }
 
@@ -169,10 +181,10 @@ export class MarkdownSerializerState {
   write(content) {
     this.flushClose();
     if (this.delim && this.atBlank()) {
-      this.out += this.delim;
+      this.append(this.delim);
     }
     if (content) {
-      this.out += content;
+      this.append(content);
     }
   }
 
@@ -190,9 +202,11 @@ export class MarkdownSerializerState {
     for (let i = 0; i < lines.length; i++) {
       const startOfLine = this.atBlank() || this.closed;
       this.write();
-      this.out += escape !== false ? this.esc(lines[i], startOfLine) : lines[i];
+      this.append(
+        escape !== false ? this.esc(lines[i], startOfLine) : lines[i]
+      );
       if (i !== lines.length - 1) {
-        this.out += "\n";
+        this.append("\n");
       }
     }
   }
@@ -405,13 +419,13 @@ export class MarkdownSerializerState {
     this.inTable = true;
 
     // ensure there is an empty newline above all tables
-    this.out += "\n";
+    this.append("\n");
 
     // rows
     node.forEach((row, _, i) => {
       // cols
       row.forEach((cell, _, j) => {
-        this.out += j === 0 ? "| " : " | ";
+        this.append(j === 0 ? "| " : " | ");
 
         cell.forEach((cellNode) => {
           // just padding the output so that empty cells take up the same space
@@ -423,7 +437,7 @@ export class MarkdownSerializerState {
             cellNode.content.size === 0 &&
             cellNode.type.name === "paragraph"
           ) {
-            this.out += "  ";
+            this.append("  ");
           } else {
             this.closed = false;
             this.render(cellNode, row, j);
@@ -443,10 +457,10 @@ export class MarkdownSerializerState {
         }
       });
 
-      this.out += " |\n";
+      this.append(" |\n");
 
       if (headerBuffer) {
-        this.out += `${headerBuffer}|\n`;
+        this.append(`${headerBuffer}|\n`);
         headerBuffer = undefined;
       }
     });

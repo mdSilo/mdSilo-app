@@ -26,7 +26,6 @@ export default function Widget(props: Props) {
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
-        // console.log("click", e);
         if (!props.onClickAnchor) return;
         props.onClickAnchor(props.href);
       }}

@@ -20,14 +20,8 @@ export default function (options: { delim: string; mark: string }) {
         return false;
       }
 
-      // console.log(">> markRule, marker: ", marker);
-
       const scanned = state.scanDelims(state.pos, true);
       const len = scanned.length;
-
-      // console.log(">> markRule, scanned: ", scanned);
-      // console.log(">> markRule, ch: ", ch);
-      // console.log(">> markRule, scanned len: ", len);
 
       if (len !== delimLen) {
         return false;
@@ -47,8 +41,6 @@ export default function (options: { delim: string; mark: string }) {
       });
 
       state.pos += scanned.length;
-
-      // console.log(">> markRule, state: ", state);
 
       return true;
     }

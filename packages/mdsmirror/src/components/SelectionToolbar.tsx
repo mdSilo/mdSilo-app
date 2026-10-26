@@ -257,11 +257,7 @@ export default class SelectionToolbar extends React.Component<Props> {
       return null;
     }
 
-    const onSearchText = () => {
-      onSearchSelectText
-        ? onSearchSelectText(selectionText)
-        : console.log(selectionText);
-    };
+    const onSearchText = () => onSearchSelectText?.(selectionText);
 
     return (
       <FloatingToolbar

@@ -77,7 +77,6 @@ export default class Itemcard extends Node {
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          // console.log("click", e);
           const handleClick = this.editor.props.onOpenLink;
           if (!handleClick) return;
           handleClick(node.attrs.href);

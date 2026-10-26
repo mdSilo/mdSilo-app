@@ -1,7 +1,18 @@
+import { Node as PmNode } from "prosemirror-model";
 import { Plugin } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 import Extension from "../core/Extension";
 import findCollapsedNodes from "../core/queries/findCollapsedNodes";
+
+const foldedDecorations = (doc: PmNode) =>
+  DecorationSet.create(
+    doc,
+    findCollapsedNodes(doc).map((block) =>
+      Decoration.node(block.pos, block.pos + block.node.nodeSize, {
+        class: "folded-content",
+      })
+    )
+  );
 
 export default class Folding extends Extension {
   get name() {
@@ -9,26 +20,16 @@ export default class Folding extends Extension {
   }
 
   get plugins() {
-    return [
-      new Plugin({
-        view: (view) => {
-          view.dispatch(view.state.tr.setMeta("folding", { loaded: true }));
-          return {};
-        },
-        props: {
-          decorations: (state) => {
-            const { doc } = state;
-            const decorations: Decoration[] = findCollapsedNodes(doc).map(
-              (block) =>
-                Decoration.node(block.pos, block.pos + block.node.nodeSize, {
-                  class: "folded-content",
-                })
-            );
-
-            return DecorationSet.create(doc, decorations);
-          },
-        },
-      }),
-    ];
+    const plugin: Plugin<DecorationSet> = new Plugin({
+      // the folded content only changes with the doc (heading collapsed attr)
+      state: {
+        init: (_, { doc }) => foldedDecorations(doc),
+        apply: (tr, set) => (tr.docChanged ? foldedDecorations(tr.doc) : set),
+      },
+      props: {
+        decorations: (state) => plugin.getState(state),
+      },
+    });
+    return [plugin];
   }
 }

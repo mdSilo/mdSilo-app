@@ -16,7 +16,6 @@ export function SlashMenu(props: SlashMenuProps) {
     const parent = findParentNode((node) => !!node)(state.selection);
 
     if (parent) {
-      // console.log("parentNode", parent.pos, state.selection.to, parent, state.selection)
       dispatch(
         state.tr.insertText(
           "",

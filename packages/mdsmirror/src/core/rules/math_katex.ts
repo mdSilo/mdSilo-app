@@ -196,7 +196,7 @@ export default function math_plugin(options: KatexOptions | undefined) {
       return katex.renderToString(latex, options);
     } catch (error) {
       if (options?.throwOnError) {
-        console.log(error);
+        console.error(error);
       }
       return latex;
     }
@@ -212,7 +212,7 @@ export default function math_plugin(options: KatexOptions | undefined) {
       return "<p>" + katex.renderToString(latex, options) + "</p>";
     } catch (error) {
       if (options?.throwOnError) {
-        console.log(error);
+        console.error(error);
       }
       return latex;
     }

@@ -18,30 +18,25 @@ export default class Placeholder extends Extension {
     return [
       new Plugin({
         props: {
+          // called on every view update: check the doc in constant time
           decorations: (state) => {
             const { doc } = state;
-            const decorations: Decoration[] = [];
-            const completelyEmpty =
-              doc.textContent === "" &&
-              doc.childCount <= 1 &&
-              doc.content.size <= 2;
+            const first = doc.firstChild;
+            // completely empty: a single empty paragraph
+            if (
+              doc.childCount !== 1 ||
+              first?.type.name !== "paragraph" ||
+              first.content.size !== 0
+            ) {
+              return DecorationSet.empty;
+            }
 
-            doc.descendants((node, pos) => {
-              if (!completelyEmpty) {
-                return;
-              }
-              if (pos !== 0 || node.type.name !== "paragraph") {
-                return;
-              }
-
-              const decoration = Decoration.node(pos, pos + node.nodeSize, {
+            return DecorationSet.create(doc, [
+              Decoration.node(0, first.nodeSize, {
                 class: this.options.emptyNodeClass,
                 "data-empty-text": this.options.placeholder,
-              });
-              decorations.push(decoration);
-            });
-
-            return DecorationSet.create(doc, decorations);
+              }),
+            ]);
           },
         },
       }),

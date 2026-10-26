@@ -5,7 +5,7 @@ import * as ReactDOM from "react-dom/client";
 import { ThemeProvider } from "styled-components";
 import Extension from "../core/Extension";
 import { ComponentProps } from "./types";
-import { lightTheme, darkTheme } from "../styles/theme";
+import { lightTheme } from "../styles/theme";
 import Editor from "../index";
 
 type Component = (props: ComponentProps) => React.ReactElement;
@@ -60,12 +60,8 @@ export default class ComponentView {
   }
 
   renderElement = () => {
-    const { dark } = this.editor.props;
-    // Ensure theme is a complete DefaultTheme object
-    const theme: typeof lightTheme = {
-      ...(dark ? darkTheme : lightTheme),
-      ...(this.editor.props.theme || {}),
-    };
+    // the editor's theme: the same object while its props do not change
+    const theme = this.editor.theme();
 
     const children = this.component({
       theme,

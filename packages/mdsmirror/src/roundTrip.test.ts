@@ -93,4 +93,24 @@ describe("markdown round trip", () => {
     const md = "line one\nline two\n\n- item\n  next line";
     expect(roundTrip(md)).toBe(md);
   });
+
+  test("keeps the prefixes of nested blocks", () => {
+    const md = [
+      "> a",
+      ">",
+      "> > nested",
+      "> >",
+      "> > - item",
+      "> >   more",
+      ">",
+      "> after",
+    ].join("\n");
+    expect(roundTrip(md)).toBe(md);
+  });
+
+  test("a table at the top level", () => {
+    expect(roundTrip("text\n\n| a | b |\n|:--|--:|\n| 1 | 2 |")).toBe(
+      "text\n\n| a | b |\n|:---|---:|\n| 1 | 2 |\n"
+    );
+  });
 });
