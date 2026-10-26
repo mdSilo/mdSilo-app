@@ -1,5 +1,6 @@
 import { isUrl } from 'utils/helper';
 import type { NoteMap } from 'lib/store';
+import { indexOf } from 'lib/linkIndex';
 import type { Issue } from './types';
 
 // [[title]] or [[title|alias]]
@@ -79,8 +80,9 @@ export function computeIssueRefs(issues: Issue[], noteId: string, title: string)
 
 /** Notes whose content links the issue via `issue:N`. */
 export function computeNoteMentions(notes: NoteMap, num: number) {
+  const index = indexOf(notes);
   return notes.values()
-    .filter((n) => !n.is_dir && n.content && linkedIssueNumbers(n.content).has(num))
+    .filter((n) => !n.is_dir && n.content && index.issues(n.id).has(num))
     .map((n) => ({ id: n.id, title: n.title }));
 }
 

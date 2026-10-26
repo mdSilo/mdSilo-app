@@ -13,6 +13,9 @@ export const MD_LINK_REGEX =
 // groups: 1-target, 2-alias
 export const WIKI_LINK_REGEX = /\[\[([^[|\]\n]+)(?:\|([^[|\]\n]+))?\]\]/g;
 
+// #tag#: non-greedy per tag; the trailing space is a lookahead so adjacent tags share it
+export const HASHTAG_REGEX = /\s#([^#\n]+)#(?=\s)/g;
+
 // fenced code blocks: ``` or ~~~
 const FENCE_REGEX = /^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^ {0,3}\1[`~]*[ \t]*$|(?![\s\S]))/gm;
 // inline code: a backtick run closed by a run of the same length
