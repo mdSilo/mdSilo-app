@@ -3,6 +3,18 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import { createRequire } from 'module';
+
+/**
+ * CommonJS entry of rope-sequence, as required by prosemirror-history.
+ * pnpm keeps it out of the root node_modules (not a direct dependency):
+ * resolve it from where mdsmirror finds prosemirror-history.
+ */
+function ropeSequenceCjs(): string {
+  const fromMdsmirror = createRequire(path.resolve(__dirname, 'packages/mdsmirror/package.json'));
+  const history = fromMdsmirror.resolve('prosemirror-history');
+  return createRequire(history).resolve('rope-sequence');
+}
 
 /**
  * Fingerprint of the mdsmirror build (packages/mdsmirror/dist).
@@ -35,7 +47,7 @@ function mdsmirrorBuildId(): string {
 
 export default defineConfig({
   plugins: [react()],
-  // Yarn workspaces are symlinked outside node_modules. mdsmirror is emitted as
+  // Workspace packages are symlinked outside node_modules. mdsmirror is emitted as
   // CommonJS, so Rollup's default CommonJS include rule would otherwise skip it
   // during production builds.
   build: {
@@ -94,7 +106,7 @@ export default defineConfig({
       // prosemirror-history's CommonJS build does `require('rope-sequence')`,
       // which resolves to the ES module (no default interop) and breaks the
       // undo history on typing. Point it to the CommonJS entry instead.
-      'rope-sequence': path.resolve(__dirname, './node_modules/rope-sequence/dist/index.js'),
+      'rope-sequence': ropeSequenceCjs(),
     },
   },
 });

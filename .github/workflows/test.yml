@@ -12,15 +12,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v4
     - uses: actions/setup-node@v6
       with:
         node-version: 22
+        cache: pnpm
 
-    - run: yarn --cwd packages/mdsmirror install
-    - run: yarn --cwd packages/mdsmirror build
-    - run: yarn
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm --filter mdsmirror build
     - name: Lint (non-blocking)
-      run: yarn lint
+      run: pnpm lint
       continue-on-error: true
-    - run: yarn tc
-    - run: yarn test
+    - run: pnpm tc
+    - run: pnpm test

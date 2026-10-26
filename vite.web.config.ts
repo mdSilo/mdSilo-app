@@ -3,8 +3,8 @@
  * Tauri app. Tauri APIs are replaced with the stand-ins in `src/platform/web`,
  * which keep files in IndexedDB instead of the disk.
  *
- *   yarn start:web   # dev server
- *   yarn build:web   # output to dist-web
+ *   pnpm start:web   # dev server
+ *   pnpm build:web   # output to dist-web
  *
  * Env:
  *   MDSILO_WEB_BASE        serve from a sub path, e.g. `/mdsilo/`

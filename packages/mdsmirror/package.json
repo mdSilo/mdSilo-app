@@ -8,10 +8,10 @@
   "scripts": {
     "test": "jest",
     "lint": "tsc --noEmit && ESLINT_USE_FLAT_CONFIG=false eslint '*/**/*.{js,ts,tsx}' --quiet",
-    "tc": "yarn tsc -p tsconfig.json",
-    "build": "yarn tsc -p tsconfig.json",
-    "preversion": "yarn build",
-    "watch": "yarn tsc-watch",
+    "tc": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
+    "preversion": "pnpm build",
+    "watch": "tsc-watch",
     "start": "NODE_OPTIONS=--openssl-legacy-provider storybook dev -p 6006",
     "storybook": "storybook dev -p 6006"
   },
@@ -103,12 +103,6 @@
     "prosemirror-utils": "1.2.2",
     "prosemirror-view": "1.42.3"
   },
-  "resolutions": {
-    "prosemirror-model": "1.25.11",
-    "prosemirror-state": "1.4.4",
-    "prosemirror-transform": "1.11.0",
-    "prosemirror-view": "1.42.3"
-  },
   "repository": {
     "type": "git",
     "url": ""
@@ -118,6 +112,5 @@
     "markdown",
     "text",
     "wysiwyg"
-  ],
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  ]
 }
