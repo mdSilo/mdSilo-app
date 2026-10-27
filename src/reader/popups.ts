@@ -13,6 +13,8 @@ export type TextSelection = {
   range?: Range;
 };
 
+export type Footnote = { box: Box; size: { width: number; height: number } };
+
 export type LookupKind = 'dictionary' | 'wikipedia' | 'translate';
 
 export type AnnotationTarget = {
@@ -29,12 +31,12 @@ type Popups = {
   annotation?: AnnotationTarget;
   /** the text selected looked up */
   lookup?: { kind: LookupKind; selection: TextSelection };
-  /** a footnote shown, at its link (rendered by FoliateViewer) */
-  footnote?: { box: Box };
+  /** a footnote shown, at its link, of the size of the note (rendered by FoliateViewer) */
+  footnote?: Footnote;
   setSelection: (selection?: TextSelection) => void;
   setAnnotation: (annotation?: AnnotationTarget) => void;
   setLookup: (lookup?: { kind: LookupKind; selection: TextSelection }) => void;
-  setFootnote: (footnote?: { box: Box }) => void;
+  setFootnote: (footnote?: Footnote) => void;
   clear: () => void;
 };
 

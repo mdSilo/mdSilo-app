@@ -161,7 +161,8 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
 
   return (
     <ErrorBoundary>
-      <div className="flex w-full h-full bg-base-100" data-testid="reader">
+      {/* min-h-0: shrinks to the room left by the status bar, no scrollbar around the pages */}
+      <div className="flex w-full h-full min-h-0 bg-base-100" data-testid="reader">
         {/* a click outside the menu closes it, also over the book (an iframe).
             Not in the header: its transform would make fixed = the header */}
         {settingsOpen ? (

@@ -43,6 +43,45 @@ function applyLayout(view: FoliateView, settings: ReaderSettings) {
   for (const side of ['top', 'bottom']) renderer.setAttribute(`margin-${side}`, `${margin}px`);
 }
 
+/** px, the largest popup of a footnote: a longer note scrolls in it */
+const NOTE_MAX = { width: 380, height: 320 };
+
+/** After the layout of the changes made now: two frames. */
+const afterLayout = () =>
+  new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+/**
+ * The size of the popup of a footnote, to fit the note laid out in it:
+ * as wide as its lines, as tall as its text, up to NOTE_MAX and the page.
+ */
+function noteSize(doc: Document, host: HTMLElement, note: HTMLElement) {
+  const html = doc.documentElement;
+  const style = getComputedStyle(html);
+  // the lines of the note, its text and images: not the blocks around them
+  let left = Infinity;
+  let right = -Infinity;
+  const range = doc.createRange();
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.nodeType === Node.TEXT_NODE ? !node.textContent?.trim() : !(node as Element).matches('img, svg, video, table')) continue;
+    range.selectNode(node);
+    for (const rect of Array.from(range.getClientRects())) {
+      left = Math.min(left, rect.left);
+      right = Math.max(right, rect.right);
+    }
+  }
+  const available = html.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  const lines = right > left ? Math.min(right - left, available) : available;
+  // the room around the note: the padding and border of the popup, the margins of the page
+  const width = host.offsetWidth - available + lines;
+  const height = host.offsetHeight - note.offsetHeight + html.getBoundingClientRect().height;
+  const page = host.offsetParent?.getBoundingClientRect();
+  return {
+    width: Math.ceil(Math.min(width + 1, NOTE_MAX.width, (page?.width ?? Infinity) - 16)),
+    height: Math.ceil(Math.min(height + 1, NOTE_MAX.height, (page?.height ?? Infinity) - 16)),
+  };
+}
+
 /** Typing there: the keys are not for turning pages. */
 const isEditable = (target: EventTarget | null) => {
   const el = target as HTMLElement | null;
@@ -282,13 +321,27 @@ function FoliateViewer({ book, initialCfi }: Props) {
         note.style.height = '100%';
         host.replaceChildren(note);
         note.renderer.setAttribute('flow', 'scrolled');
-        note.renderer.setAttribute('margin-top', '0px');
-        note.renderer.setAttribute('margin-bottom', '0px');
+        // the section of the note only: no sections around it, each with a note of the same id
+        note.renderer.setAttribute('no-preload', '');
+        note.renderer.setAttribute('no-continuous-scroll', '');
+        // the popup has its padding: no margins of a page around the note
+        for (const side of ['top', 'bottom', 'left', 'right']) note.renderer.setAttribute(`margin-${side}`, '0px');
+        note.renderer.setAttribute('gap', '0%');
         const settings = withDefaults(store.getState().readerSettings);
         // smaller, as notes are
         const noteSettings = { ...settings, fontSize: Math.round(settings.fontSize * 0.8), justify: false };
         note.renderer.setStyles?.(bookStyles(noteSettings, themeColors(store.getState().darkMode, settings.pageTheme)));
-        usePopups.getState().setFootnote({ box: footnoteBox ?? { left: 0, top: 0, right: 0, bottom: 0 } });
+      });
+      // the note cut out of its section: the popup of its size, shown
+      handler.addEventListener('render', (e: Event) => {
+        const { view: note } = (e as CustomEvent).detail as { view: FoliateView };
+        const box = footnoteBox ?? { left: 0, top: 0, right: 0, bottom: 0 };
+        void afterLayout().then(() => {
+          const host = footnoteRef.current;
+          const doc = note.renderer.getContents()[0]?.doc;
+          if (cancelled || !host || !doc || note.parentElement !== host) return;
+          usePopups.getState().setFootnote({ box, size: noteSize(doc, host, note) });
+        });
       });
       footnotes = handler as unknown as typeof footnotes;
       const view = document.createElement('foliate-view') as FoliateView;
@@ -397,7 +450,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
   }, [footnote]);
 
   const root = containerRef.current?.getBoundingClientRect();
-  const place = footnote && root ? placeOf(footnote.box, root, 220, 380) : undefined;
+  const place = footnote && root ? placeOf(footnote.box, root, footnote.size.height, footnote.size.width) : undefined;
   const paper = settings.pageTheme === 'auto' ? undefined : themeColors(darkMode, settings.pageTheme);
   const dark = paper ? paper.dark : darkMode;
   // the text would go under the chapter and the progress: the view is between them
@@ -414,10 +467,10 @@ function FoliateViewer({ book, initialCfi }: Props) {
       />
       <div
         ref={footnoteRef}
-        className={`absolute z-30 h-52 p-2 border rounded-md shadow-lg bg-base-100 border-base-300 ${place ? '' : 'invisible'}`}
+        className={`absolute z-30 px-3 py-2 border rounded-md shadow-lg bg-base-100 border-base-300 ${place ? '' : 'invisible'}`}
         style={{
-          ...(place ? { left: place.left, top: place.top } : { left: 0, top: 0 }),
-          width: 380,
+          // not shown yet: the note laid out in the widest popup, to be measured
+          ...(place && footnote ? { left: place.left, top: place.top, ...footnote.size } : { left: 0, top: 0, width: NOTE_MAX.width, height: NOTE_MAX.height }),
           ...(paper ? { background: paper.bg, color: paper.fg } : {}),
         }}
         data-testid="footnote-popup"

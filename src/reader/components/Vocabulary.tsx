@@ -165,7 +165,8 @@ export default function Vocabulary() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col w-full h-full bg-base-100" data-testid="vocabulary">
+      {/* min-h-0: shrinks to the room left by the status bar */}
+      <div className="flex flex-col w-full h-full min-h-0 bg-base-100" data-testid="vocabulary">
         <div className="flex items-center gap-2 px-4 py-2 border-b border-base-300">
           <button className="btn btn-ghost btn-xs" title="Library" aria-label="Library" onClick={() => dispatch({ view: 'library' })}>
             <TbArrowLeft size={18} />
