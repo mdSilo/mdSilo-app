@@ -105,6 +105,7 @@ pub fn run() {
       books::book_hash,
       books::read_file_bytes,
       books::write_file_bytes,
+      books::write_file_raw,
       index::index_open,
       index::index_update,
       index::index_search,

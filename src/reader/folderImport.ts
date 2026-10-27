@@ -3,6 +3,7 @@ import { fromWorkspacePath } from 'file/util';
 import {
   bookHashOf, importBookFile, normalizeGroup, readLibrary, refreshLibrary, setBooksGroup,
 } from './library';
+import { convertibleFormatOf } from './document';
 
 /**
  * Books imported from a folder of the device, as in readup: the files of the
@@ -17,6 +18,11 @@ export const FORMAT_GROUPS = [
   { id: 'mobi', label: 'MOBI/AZW/AZW3', exts: ['mobi', 'azw', 'azw3'] },
   { id: 'fb2', label: 'FB2/FBZ', exts: ['fb2', 'fbz'] },
   { id: 'cbz', label: 'CBZ', exts: ['cbz'] },
+  // converted to EPUB, see convert/
+  { id: 'txt', label: 'TXT', exts: ['txt'] },
+  { id: 'md', label: 'Markdown', exts: ['md', 'markdown'] },
+  { id: 'html', label: 'HTML', exts: ['html', 'htm', 'xhtml'] },
+  { id: 'zip', label: 'ZIP', exts: ['zip'] },
 ] as const;
 
 export type FolderImportOptions = {
@@ -105,6 +111,21 @@ export async function importFolder(
   const seen = new Set<string>();
   for (const [i, book] of books.entries()) {
     onProgress?.(i, books.length);
+    // a text file: its book made first, the same EPUB if there already
+    if (convertibleFormatOf(book.path)) {
+      const path = await importBookFile(ws, book.path);
+      const hash = path ? await bookHashOf(path).catch(() => '') : '';
+      if (!hash) {
+        result.failed.push(book.path);
+        continue;
+      }
+      if (seen.has(hash) || lib.books[hash]) result.existing += 1;
+      else result.added += 1;
+      seen.add(hash);
+      const group = normalizeGroup(options.flatten ? options.group ?? '' : book.folder);
+      groups.set(group, [...(groups.get(group) ?? []), hash]);
+      continue;
+    }
     const hash = await bookHashOf(book.path).catch(() => '');
     if (!hash) {
       result.failed.push(book.path);

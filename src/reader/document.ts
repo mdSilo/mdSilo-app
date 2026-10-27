@@ -28,6 +28,22 @@ export const isBookFile = (path: string) => extOf(path) in BOOK_EXTS;
 
 export const bookFormatOf = (path: string): BookFormat | undefined => BOOK_EXTS[extOf(path)];
 
+/** The text files made books when imported: converted to EPUB, see convert/. */
+export type TextFormat = 'TXT' | 'Markdown' | 'HTML' | 'ZIP';
+
+export const CONVERTIBLE_EXTS: Record<string, TextFormat> = {
+  txt: 'TXT',
+  md: 'Markdown',
+  markdown: 'Markdown',
+  html: 'HTML',
+  htm: 'HTML',
+  xhtml: 'HTML',
+  zip: 'ZIP',
+};
+
+/** A file converted to a book when imported, by its extension. */
+export const convertibleFormatOf = (path: string): TextFormat | undefined => CONVERTIBLE_EXTS[extOf(path)];
+
 export type LanguageMap = Record<string, string>;
 export type Contributor = string | { name?: string | LanguageMap } | Contributor[];
 

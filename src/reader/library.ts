@@ -1,10 +1,11 @@
 import { invoke } from '@tauri-apps/api/core';
-import { fromWorkspacePath, joinPath, toWorkspacePath } from 'file/util';
-import { DATA_DIR, READING_DIR } from 'workspace/layout';
+import { fromWorkspacePath, isTauri, joinPath, toWorkspacePath } from 'file/util';
+import { DATA_DIR, READING_DIR, WRITING_DIR } from 'workspace/layout';
 import { updateGitignore } from 'workspace/gitignore';
 import {
-  bookFormatOf, formatContributors, formatLanguageMap, isBookFile, type BookDoc, type BookFormat, type Contributor,
+  BOOK_EXTS, bookFormatOf, CONVERTIBLE_EXTS, convertibleFormatOf, formatContributors, formatLanguageMap, isBookFile, type BookDoc, type BookFormat, type Contributor,
 } from './document';
+import { convertToBook } from './convert';
 
 /**
  * The books of a workspace, by their id: the partial MD5 of the file, so a
@@ -259,6 +260,21 @@ async function saveEntry(ws: string, patch: Partial<BookEntry> & Pick<BookEntry,
  * @returns the path of the book in the workspace, undefined on failure
  */
 export async function importBookFile(ws: string, src: string): Promise<string | undefined> {
+  // a text file (TXT, Markdown, HTML, ZIP): its book, an EPUB
+  if (convertibleFormatOf(src)) {
+    try {
+      const book = await convertToBook(src, await readBytes(src), {
+        path: src,
+        // `./` paths of the notes: in writing/, or the root of a legacy workspace
+        notesRoots: [joinPath(ws, WRITING_DIR), ws],
+        readFile: (path) => readBytes(path).catch(() => undefined),
+      });
+      return await importBookData(ws, book.name, book.data);
+    } catch (e) {
+      console.warn('Failed to convert to a book', src, e);
+      return undefined;
+    }
+  }
   const readingDir = joinPath(ws, READING_DIR);
   if (toWorkspacePath(readingDir, src) !== src) return src;
   const name = src.split(/[\\/]/).pop() ?? 'book';
@@ -381,19 +397,53 @@ export function deleteBooks(ws: string, hashes: string[], withNotes = false) {
   });
 }
 
+/** The extensions of the files imported as books: the books, and the text files converted. */
+export const IMPORT_EXTS = [...Object.keys(BOOK_EXTS), ...Object.keys(CONVERTIBLE_EXTS)];
+
+/** A file imported as a book: a book file, or a text file converted. */
+export const isImportable = (path: string) => isBookFile(path) || Boolean(convertibleFormatOf(path));
+
+const readBytes = async (path: string) => {
+  const data = await invoke<ArrayBuffer | Uint8Array | number[]>('read_file_bytes', { filePath: path });
+  return data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+};
+
+/**
+ * Write the bytes of a file: on the desktop sent as binary, a book of some
+ * MB being slow as a JSON array of numbers; on the web kept as they are.
+ */
+const writeBytes = (path: string, data: Uint8Array) => (isTauri
+  ? invoke<boolean>('write_file_raw', data, { headers: { 'file-path': encodeURIComponent(path) } })
+  : invoke<boolean>('write_file_bytes', { filePath: path, data }));
+
+const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((x, i) => x === b[i]);
+
 /**
  * Write a book file dropped in, by its name and bytes, into reading/ (or a
- * folder in it): not over another file.
- * @returns the path written, undefined on failure
+ * folder in it): not over another file. A text file (TXT, Markdown, HTML,
+ * ZIP) is converted to its book, an EPUB.
+ * @returns the path written, or of the same book there already; undefined on failure
  */
 export async function importBookData(ws: string, name: string, data: Uint8Array): Promise<string | undefined> {
+  if (convertibleFormatOf(name)) {
+    try {
+      ({ name, data } = await convertToBook(name, data));
+    } catch (e) {
+      console.warn('Failed to convert to a book', name, e);
+      return undefined;
+    }
+  }
   const readingDir = joinPath(ws, READING_DIR);
   const dot = name.lastIndexOf('.');
   const [stem, ext] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ''];
   for (let i = 0; i < 100; i++) {
     const target = joinPath(readingDir, i === 0 ? name : `${stem}-${i}${ext}`);
-    if (await invoke<boolean>('file_exist', { filePath: target })) continue;
-    return (await invoke<boolean>('write_file_bytes', { filePath: target, data: Array.from(data) })) ? target : undefined;
+    if (await invoke<boolean>('file_exist', { filePath: target })) {
+      // the same book there already, e.g. a text file imported again
+      if (sameBytes(await readBytes(target).catch(() => new Uint8Array()), data)) return target;
+      continue;
+    }
+    return (await writeBytes(target, data)) ? target : undefined;
   }
   return undefined;
 }

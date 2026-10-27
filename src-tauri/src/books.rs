@@ -57,6 +57,24 @@ pub async fn write_file_bytes(file_path: String, data: Vec<u8>) -> bool {
   LocalFs.write_atomic(Path::new(&file_path), &data).is_ok()
 }
 
+/// Write the bytes of the request, sent as binary (a big book), to the file
+/// of its `file-path` header, percent encoded: not as a JSON array of numbers.
+#[tauri::command]
+pub async fn write_file_raw(request: tauri::ipc::Request<'_>) -> Result<bool, String> {
+  let tauri::ipc::InvokeBody::Raw(data) = request.body() else {
+    return Err("expected the bytes of the file".into());
+  };
+  let path = request
+    .headers()
+    .get("file-path")
+    .and_then(|v| v.to_str().ok())
+    .ok_or("no file-path")?;
+  let path = percent_encoding::percent_decode_str(path)
+    .decode_utf8()
+    .map_err(|e| e.to_string())?;
+  Ok(LocalFs.write_atomic(Path::new(path.as_ref()), data).is_ok())
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

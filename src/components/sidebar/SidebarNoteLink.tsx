@@ -18,6 +18,7 @@ import { listDir, openUrl } from 'file/open';
 import { joinPath, normalizeSlash } from 'file/util';
 import { READING_DIR, WRITING_DIR } from 'workspace/layout';
 import { isBookFile } from 'reader/document';
+import BookIcon, { bookIconOf } from 'reader/components/BookIcon';
 import { bookPathOfAnnotations } from 'reader/annotations';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import SidebarItem from './SidebarItem';
@@ -111,6 +112,8 @@ const SidebarNoteLink = (
               size={16}
               fill="currentColor"
             />
+          ) : bookIconOf(node.id) ? (
+            <BookIcon path={node.id} />
           ) : isImage ? (
             <IconPhoto 
               className="shrink-0 text-base-content/60"

@@ -430,7 +430,7 @@ describe('library', () => {
     const synced = async () => Object.fromEntries(Object.values((await readLibrary(WS)).books).map((b) => [b.title, Boolean(b.synced)]));
 
     // selected: a click on a book, not reading it
-    fireEvent.click(screen.getByText('Select'));
+    fireEvent.click(screen.getByTitle('Select Books'));
     fireEvent.click(await bookItem('Tiny Book'));
     fireEvent.click(await bookItem('Second'));
     expect(viewState().view).toBe('library');
@@ -462,7 +462,7 @@ describe('library', () => {
     await waitFor(async () => expect(await synced()).toEqual({ 'Tiny Book': false, Second: false, Third: false }));
 
     // the checkbox of a group selects its books; a click elsewhere opens it
-    fireEvent.click(screen.getByText('Select'));
+    fireEvent.click(screen.getByTitle('Select Books'));
     fireEvent.click(screen.getByLabelText('Select Mine'));
     expect(screen.getByRole('toolbar', { name: 'Selected books' })).toHaveTextContent('2 selected');
     fireEvent.click(group);
@@ -477,7 +477,7 @@ describe('library', () => {
     renderMain();
     await go({ view: 'library' });
     await bookItem('Third');
-    fireEvent.click(screen.getByText('Select'));
+    fireEvent.click(screen.getByTitle('Select Books'));
     fireEvent.click(await bookItem('Tiny Book'));
     fireEvent.click(await bookItem('Second'));
     const bar = screen.getByRole('toolbar', { name: 'Selected books' });
@@ -516,7 +516,7 @@ describe('library', () => {
     renderMain();
     await go({ view: 'library' });
     await bookItem('Tiny Book');
-    fireEvent.click(screen.getByText('Add folder'));
+    fireEvent.click(screen.getByTitle('Import the books of a folder and its sub folders'));
     expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled();
     await act(async () => {
       fireEvent.click(screen.getByLabelText('Choose a folder'));
@@ -534,7 +534,7 @@ describe('library', () => {
     expect(store.getState().librarySettings.folderImport).toMatchObject({ dir: '/downloads/books', minSizeKB: 0, flatten: false });
 
     // the choices of the last time
-    fireEvent.click(screen.getByText('Add folder'));
+    fireEvent.click(screen.getByTitle('Import the books of a folder and its sub folders'));
     expect(screen.getByText('/downloads/books')).toBeInTheDocument();
     expect(screen.getByLabelText('Minimum file size (KB)')).toHaveValue(0);
   });
@@ -756,7 +756,7 @@ describe('vocabulary', () => {
     });
     renderMain();
     await go({ view: 'library' });
-    fireEvent.click(await screen.findByText('Vocabulary'));
+    fireEvent.click(await screen.findByTitle('Vocabulary'));
     await waitForView();
     expect(viewState().view).toBe('vocabulary');
     expect(await screen.findByTestId('vocabulary-card')).toHaveTextContent('cold');

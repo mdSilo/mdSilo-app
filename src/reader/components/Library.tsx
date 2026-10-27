@@ -15,9 +15,9 @@ import { listDir, openFileDilog } from 'file/open';
 import { fromWorkspacePath, joinPath } from 'file/util';
 import { useStore } from 'lib/store';
 import { READING_DIR } from 'workspace/layout';
-import { BOOK_EXTS } from '../document';
+import { BOOK_EXTS, CONVERTIBLE_EXTS } from '../document';
 import {
-  bookHashOf, importBookData, importBookFile, readBookState, refreshLibrary, setBooksGroup, setBooksSynced,
+  bookHashOf, IMPORT_EXTS, importBookData, importBookFile, readBookState, refreshLibrary, setBooksGroup, setBooksSynced,
 } from '../library';
 import {
   breadcrumbs, countBooks, dropResult, filterBooks, hasGroup, isGroup, shelfItems, sortShelf,
@@ -138,16 +138,19 @@ export default function Library() {
 
   const onAdd = async () => {
     if (!initDir) return;
-    const picked = await openFileDilog(Object.keys(BOOK_EXTS), true);
+    const picked = await openFileDilog(IMPORT_EXTS, true);
     const paths = typeof picked === 'string' ? [picked] : picked ?? [];
     if (paths.length === 0) return;
     setBusy(true);
     try {
       const added: string[] = [];
+      const failed: string[] = [];
       for (const src of paths) {
         const path = await importBookFile(initDir, src);
         if (path) added.push(path);
+        else failed.push(src.split(/[\\/]/).pop() ?? src);
       }
+      setMessage(failed.length ? `Could not add: ${failed.join(', ')}` : '', failed.length > 0);
       await addBooks(added);
       // one book added: to read
       if (added.length === 1) dispatch({ view: 'book', path: added[0] });
@@ -159,7 +162,7 @@ export default function Library() {
   const onDropFiles = async (dropped: DroppedBook[], skipped: number) => {
     if (!initDir) return;
     setMessage(dropped.length === 0
-      ? `No books: ${Object.values(BOOK_EXTS).filter((f, i, all) => all.indexOf(f) === i).join(', ')} files can be added`
+      ? `No books: ${[...new Set([...Object.values(BOOK_EXTS), ...Object.values(CONVERTIBLE_EXTS)])].join(', ')} files can be added`
       : skipped > 0 ? `${skipped} file${skipped === 1 ? '' : 's'} not a book, left out` : '');
     if (dropped.length === 0) return;
     setBusy(true);

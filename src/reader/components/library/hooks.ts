@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { isTauri } from 'file/util';
 import { cacheCover, coverUrl } from '../../covers';
-import { isBookFile, openBook } from '../../document';
-import { bookMetaOf, META_FIELDS, saveBookEntry, withBookMeta, type BookEntry } from '../../library';
+import { openBook } from '../../document';
+import { bookMetaOf, isImportable, META_FIELDS, saveBookEntry, withBookMeta, type BookEntry } from '../../library';
 import { readBookFile } from '../../readerStore';
 import type { ShelfBook } from '../../shelf';
 
@@ -99,7 +99,7 @@ export function useBookDrop(
             setDragging(true);
           } else if (payload.type === 'drop') {
             setDragging(false);
-            const books = payload.paths.filter(isBookFile);
+            const books = payload.paths.filter(isImportable);
             if (payload.paths.length) onDropRef.current(books.map((path) => ({ path })), payload.paths.length - books.length);
           } else {
             setDragging(false);
@@ -131,7 +131,7 @@ export function useBookDrop(
       e.preventDefault();
       setDragging(false);
       const files = Array.from(e.dataTransfer?.files ?? []);
-      const books = files.filter((f) => isBookFile(f.name));
+      const books = files.filter((f) => isImportable(f.name));
       const data = await Promise.all(books.map(async (f) => ({ name: f.name, data: new Uint8Array(await f.arrayBuffer()) })));
       if (files.length) onDropRef.current(data, files.length - books.length);
     };

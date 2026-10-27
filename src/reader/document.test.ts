@@ -29,6 +29,21 @@ describe('book files', () => {
     expect(doc.body.textContent).toContain('striking thirteen');
   });
 
+  test('the text files made books when imported; the icons of the formats', async () => {
+    const { convertibleFormatOf } = await import('./document');
+    const { bookIconOf } = await import('./components/BookIcon');
+    expect(convertibleFormatOf('/r/a.TXT')).toBe('TXT');
+    expect(convertibleFormatOf('/r/a.markdown')).toBe('Markdown');
+    expect(convertibleFormatOf('/r/a.epub')).toBeUndefined();
+    const icons = ['a.epub', 'a.pdf', 'a.azw3', 'a.fb2', 'a.cbz', 'a.txt', 'a.html', 'a.zip'].map((p) => bookIconOf(p));
+    expect(icons.map((i) => i?.label)).toEqual(['EPUB', 'PDF', 'AZW3', 'FB2', 'CBZ', 'TXT', 'HTML', 'ZIP']);
+    // each its own
+    expect(new Set(icons.map((i) => i?.icon)).size).toBe(icons.length);
+    // the notes and images as they are
+    expect(bookIconOf('a.md')).toBeUndefined();
+    expect(bookIconOf('a.png')).toBeUndefined();
+  });
+
   test('refuses what is not a book', async () => {
     await expect(openBook(new File([], 'a.epub'))).rejects.toThrow('empty');
     await expect(openBook(new File(['just text'], 'a.txt'))).rejects.toThrow('Unsupported');
