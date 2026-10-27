@@ -1,7 +1,11 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { getView, type SearchMatch } from '../view';
+import { useReaderChrome } from '../chrome';
 
 type Group = { label: string; matches: SearchMatch[] };
+
+// the last search asked from the toolbar: run once, not again as the tab shows again
+let requestRun = 0;
 
 /** Search in the book: the matches by chapter, highlighted in the pages. */
 function SearchView() {
@@ -19,9 +23,9 @@ function SearchView() {
     getView()?.clearSearch();
   }, []);
 
-  const search = async () => {
+  const search = async (text = query) => {
     const view = getView();
-    const q = query.trim();
+    const q = text.trim();
     const run = ++runRef.current;
     setGroups([]);
     setSearched(q);
@@ -52,6 +56,17 @@ function SearchView() {
     }
     if (run === runRef.current) setProgress(undefined);
   };
+
+  // the text selected, searched from the toolbar
+  const request = useReaderChrome((state) => state.searchRequest);
+  useEffect(() => {
+    if (!request || request.seq === requestRun) return;
+    requestRun = request.seq;
+    setQuery(request.query);
+    void search(request.query);
+    // a new request only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request?.seq]);
 
   const count = groups.reduce((n, g) => n + g.matches.length, 0);
 

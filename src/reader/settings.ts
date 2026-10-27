@@ -1,3 +1,8 @@
+import type { HighlightColor, HighlightStyle } from './annotations';
+
+/** The colors of the pages: of the app theme, or of paper. */
+export type PageTheme = 'auto' | 'light' | 'sepia' | 'gray' | 'dark';
+
 /** How books are shown, for all books; kept with the user settings. */
 export type ReaderSettings = {
   /** px */
@@ -15,6 +20,23 @@ export type ReaderSettings = {
   maxInlineSize: number;
   /** % of the width, between the columns and on the sides */
   gap: number;
+  /** px, above and below the text */
+  margin: number;
+  pageTheme: PageTheme;
+  /** the pages slide as they turn */
+  animated: boolean;
+  /** a click on the left or right of the page turns it */
+  clickToTurn: boolean;
+  /** a click on the left goes forward */
+  swapClickArea: boolean;
+  /** the chapter above the text, the progress below it */
+  showHeader: boolean;
+  showFooter: boolean;
+  /** the panel of contents and notes */
+  showSidebar: boolean;
+  /** the highlight made by the toolbar, and the color of each style */
+  highlightStyle: HighlightStyle;
+  highlightColors: Record<HighlightStyle, HighlightColor>;
   /** text-to-speech: voice name, rate */
   ttsVoice: string;
   ttsRate: number;
@@ -32,13 +54,29 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   maxColumns: 2,
   maxInlineSize: 720,
   gap: 6,
+  margin: 44,
+  pageTheme: 'auto',
+  animated: true,
+  clickToTurn: true,
+  swapClickArea: false,
+  showHeader: true,
+  showFooter: true,
+  showSidebar: false,
+  highlightStyle: 'highlight',
+  highlightColors: { highlight: 'yellow', underline: 'green', squiggly: 'blue' },
   ttsVoice: '',
   ttsRate: 1,
   translateTo: '',
 };
 
+/** The settings not about the look of the pages, kept on a reset. */
+export const KEPT_ON_RESET = [
+  'showSidebar', 'highlightStyle', 'highlightColors', 'ttsVoice', 'ttsRate', 'translateTo',
+] as const;
+
 /** The settings stored, completed with the defaults (new settings, older versions). */
 export const withDefaults = (settings?: Partial<ReaderSettings>): ReaderSettings => ({
   ...DEFAULT_READER_SETTINGS,
   ...(settings ?? {}),
+  highlightColors: { ...DEFAULT_READER_SETTINGS.highlightColors, ...(settings?.highlightColors ?? {}) },
 });

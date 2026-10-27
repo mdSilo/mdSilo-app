@@ -6,7 +6,9 @@ import { bookStyles, HIGHLIGHT_CSS, themeColors } from '../styles';
 import { useReaderStore } from '../readerStore';
 import { boxOfRange, usePopups } from '../popups';
 import { setView, type FoliateView } from '../view';
-import type { BookNote } from '../annotations';
+import { useReaderChrome } from '../chrome';
+import { clickAction, keyAction, runKeyAction, turn, wheelGesture } from '../pagination';
+import { sectionOf, type BookNote } from '../annotations';
 import type { BookDoc } from '../document';
 import { placeOf } from './BookPopups';
 
@@ -20,10 +22,14 @@ type Overlayer = Record<'highlight' | 'underline' | 'squiggly', unknown>;
 /** The annotation drawn for a note: the value is its CFI. */
 export const toAnnotation = (note: BookNote) => ({ value: note.cfi, id: note.id });
 
-const isFixedLayout = (book: BookDoc) => book.rendition?.layout === 'pre-paginated';
+/** ms between the clicks of a double click: a single click waits as long */
+export const DOUBLE_CLICK_MS = 250;
+/** ms: a press so long is not a click */
+const LONG_PRESS_MS = 500;
 
 function applyLayout(view: FoliateView, settings: ReaderSettings) {
   const { renderer } = view;
+  renderer.toggleAttribute('animated', settings.animated);
   if (view.isFixedLayout) {
     renderer.setAttribute('flow', settings.flow === 'scrolled' ? 'scrolled' : 'paginated');
     return;
@@ -32,8 +38,21 @@ function applyLayout(view: FoliateView, settings: ReaderSettings) {
   renderer.setAttribute('max-column-count', String(settings.maxColumns));
   renderer.setAttribute('max-inline-size', `${settings.maxInlineSize}px`);
   renderer.setAttribute('gap', `${settings.gap}%`);
-  for (const side of ['top', 'bottom']) renderer.setAttribute(`margin-${side}`, '32px');
+  // room for the chapter and the progress, in the margins; scrolled, the view is between them
+  const margin = settings.flow === 'scrolled' ? 0 : settings.margin;
+  for (const side of ['top', 'bottom']) renderer.setAttribute(`margin-${side}`, `${margin}px`);
 }
+
+/** Typing there: the keys are not for turning pages. */
+const isEditable = (target: EventTarget | null) => {
+  const el = target as HTMLElement | null;
+  if (!el?.closest) return false;
+  return Boolean(el.isContentEditable || el.closest('input, textarea, select, [contenteditable="true"]'));
+};
+
+/** Not a click on the page: on a link, a note mark, a control. */
+const isActive = (target: EventTarget | null) =>
+  Boolean((target as Element | null)?.closest?.('a[href], sup, audio, video, button, input, select, textarea, label'));
 
 /**
  * The pages of a book, rendered by foliate-js. Reports where the reader is,
@@ -61,14 +80,92 @@ function FoliateViewer({ book, initialCfi }: Props) {
     const onRelocate = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail?.cfi) return;
-      usePopups.getState().clear();
+      if (detail.reason !== 'selection') usePopups.getState().clear();
+      const renderer = viewRef.current?.renderer;
+      const paged = renderer && !viewRef.current?.isFixedLayout && !renderer.scrolled;
       useReaderStore.getState().setLocation({
         cfi: detail.cfi,
         fraction: detail.fraction ?? 0,
         tocLabel: detail.tocItem?.label,
+        tocHref: detail.tocItem?.href,
         // the page of the printed book, if the book has a page list
         pageLabel: detail.pageItem?.label,
+        section: detail.section,
+        location: detail.location,
+        time: detail.time,
+        ...(paged ? { page: renderer.page, pages: renderer.pages } : {}),
       });
+    };
+
+    // a click on the page: on the sides turns it, in the middle shows the bars
+    let lastClickAt = 0;
+    let downAt = 0;
+    let pressed = false;
+    let popupAtDown = false;
+    let annotationAt = 0;
+    let clickTimer: ReturnType<typeof setTimeout> | undefined;
+    const onPointerDown = () => {
+      useReaderStore.getState().touch();
+      downAt = Date.now();
+      pressed = true;
+      const popups = usePopups.getState();
+      popupAtDown = Boolean(popups.selection || popups.annotation || popups.lookup || popups.footnote);
+      if (popupAtDown) popups.clear();
+    };
+    const onPointerUp = () => {
+      pressed = false;
+    };
+    const singleClick = (x: number, doc?: Document) => {
+      // a selection made, an annotation shown, a popup closed: not a page turn
+      const sel = doc?.getSelection();
+      if (sel && !sel.isCollapsed) return;
+      if (Date.now() - annotationAt < DOUBLE_CLICK_MS * 2 || popupAtDown) return;
+      const chrome = useReaderChrome.getState();
+      const settings = withDefaults(store.getState().readerSettings);
+      const box = container.getBoundingClientRect();
+      const action = clickAction(x, box, { clickToTurn: settings.clickToTurn, swap: settings.swapClickArea });
+      if (action === 'bars') {
+        chrome.setBarsVisible(!chrome.barsVisible);
+        return;
+      }
+      if (chrome.barsVisible && !chrome.menuOpen) {
+        chrome.setBarsVisible(false);
+        return;
+      }
+      void turn(viewRef.current, action);
+    };
+    const onClick = (e: MouseEvent, doc?: Document) => {
+      const now = Date.now();
+      if (clickTimer) clearTimeout(clickTimer);
+      // the second click of a double click: a word selected
+      if (now - lastClickAt < DOUBLE_CLICK_MS) {
+        lastClickAt = now;
+        return;
+      }
+      lastClickAt = now;
+      if (e.button !== 0 || isActive(e.target) || pressed || now - downAt > LONG_PRESS_MS) return;
+      // in the window, not in the frame of the section
+      const frame = doc?.defaultView?.frameElement?.getBoundingClientRect();
+      const x = e.clientX + (frame?.left ?? 0);
+      clickTimer = setTimeout(() => singleClick(x, doc), DOUBLE_CLICK_MS);
+    };
+
+    // a gesture of the wheel turns a page, but in scrolled flow
+    const onWheelGesture = wheelGesture();
+    const onWheel = (e: WheelEvent) => {
+      useReaderStore.getState().touch();
+      const view = viewRef.current;
+      if (!view || view.renderer.scrolled || e.ctrlKey) return;
+      const side = onWheelGesture({ deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, timeStamp: e.timeStamp });
+      if (side) void turn(view, side);
+    };
+
+    // the back and forward buttons of a mouse
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button === 3) viewRef.current?.history.back();
+      else if (e.button === 4) viewRef.current?.history.forward();
+      else return;
+      e.preventDefault();
     };
 
     const onDraw = (e: Event) => {
@@ -83,7 +180,9 @@ function FoliateViewer({ book, initialCfi }: Props) {
     const onShow = (e: Event) => {
       const { value, range } = (e as CustomEvent).detail;
       const note = drawnRef.current.get(value);
-      if (note && range) usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range) });
+      if (!note || !range) return;
+      annotationAt = Date.now();
+      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range) });
     };
 
     // the annotations of a section, once it shows
@@ -126,8 +225,11 @@ function FoliateViewer({ book, initialCfi }: Props) {
       };
       doc.addEventListener('pointerup', reportSelection);
       // reading: for the time read, see readerStore
-      doc.addEventListener('pointerdown', () => useReaderStore.getState().touch());
-      doc.addEventListener('wheel', () => useReaderStore.getState().touch(), { passive: true });
+      doc.addEventListener('pointerdown', onPointerDown);
+      doc.addEventListener('pointerup', onPointerUp);
+      doc.addEventListener('click', (ev) => onClick(ev, doc));
+      doc.addEventListener('mouseup', onMouseUp);
+      doc.addEventListener('wheel', onWheel, { passive: true });
       doc.addEventListener('keyup', (ev) => {
         if (ev.shiftKey) reportSelection();
       });
@@ -142,14 +244,24 @@ function FoliateViewer({ book, initialCfi }: Props) {
     const onKeydown = (e: KeyboardEvent) => {
       useReaderStore.getState().touch();
       const view = viewRef.current;
-      if (!view || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key === 'ArrowLeft' || e.key === 'h') void view.goLeft();
-      else if (e.key === 'ArrowRight' || e.key === 'l') void view.goRight();
-      else if (e.key === 'PageUp') void view.prev();
-      else if (e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey)) void view.next();
-      else return;
+      if (!view || e.defaultPrevented || isEditable(e.target)) return;
+      if (e.key === 'Escape') {
+        // the keys in a page of the book do not reach the window: the popups closed here too
+        usePopups.getState().clear();
+        useReaderChrome.getState().setBarsVisible(false);
+        return;
+      }
+      // a button pressed by the keys
+      if ((e.key === ' ' || e.key === 'Enter') && (e.target as Element | null)?.closest?.('button, a[href]')) return;
+      // the slider of the progress moves by the arrows
+      if ((e.target as Element | null)?.closest?.('[role="slider"], input[type="range"]')) return;
+      const action = keyAction(e);
+      if (!action) return;
       e.preventDefault();
+      void runKeyAction(view, action);
     };
+    // the margins around the pages; the pages are in frames, their clicks do not come here
+    const onContainerClick = (e: MouseEvent) => onClick(e);
 
     (async () => {
       const [, { Overlayer }, { FootnoteHandler }] = await Promise.all([
@@ -175,7 +287,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
         const settings = withDefaults(store.getState().readerSettings);
         // smaller, as notes are
         const noteSettings = { ...settings, fontSize: Math.round(settings.fontSize * 0.8), justify: false };
-        note.renderer.setStyles?.(bookStyles(noteSettings, themeColors(store.getState().darkMode)));
+        note.renderer.setStyles?.(bookStyles(noteSettings, themeColors(store.getState().darkMode, settings.pageTheme)));
         usePopups.getState().setFootnote({ box: footnoteBox ?? { left: 0, top: 0, right: 0, bottom: 0 } });
       });
       footnotes = handler as unknown as typeof footnotes;
@@ -196,7 +308,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
       // the settings now, not of the render that opened the book
       const current = withDefaults(store.getState().readerSettings);
       applyLayout(view, current);
-      view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode)));
+      view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme)));
       setView(view);
       // the notes to draw
       drawnRef.current = new Map(state.notes.filter((n) => n.text).map((n) => [n.cfi, n]));
@@ -210,10 +322,21 @@ function FoliateViewer({ book, initialCfi }: Props) {
       if (!cancelled) container.focus({ preventScroll: true });
     })().catch((e) => console.error('Failed to show the book', e));
 
-    container.addEventListener('keydown', onKeydown);
+    window.addEventListener('keydown', onKeydown);
+    container.addEventListener('pointerdown', onPointerDown);
+    container.addEventListener('pointerup', onPointerUp);
+    container.addEventListener('click', onContainerClick);
+    container.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('wheel', onWheel, { passive: true });
     return () => {
       cancelled = true;
-      container.removeEventListener('keydown', onKeydown);
+      if (clickTimer) clearTimeout(clickTimer);
+      window.removeEventListener('keydown', onKeydown);
+      container.removeEventListener('pointerdown', onPointerDown);
+      container.removeEventListener('pointerup', onPointerUp);
+      container.removeEventListener('click', onContainerClick);
+      container.removeEventListener('mouseup', onMouseUp);
+      container.removeEventListener('wheel', onWheel);
       const view = viewRef.current;
       viewRef.current = null;
       setView(null);
@@ -239,7 +362,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
     const view = viewRef.current;
     if (!view?.renderer) return;
     applyLayout(view, settings);
-    view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode)));
+    view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(settings), darkMode, theme]);
 
@@ -275,31 +398,33 @@ function FoliateViewer({ book, initialCfi }: Props) {
 
   const root = containerRef.current?.getBoundingClientRect();
   const place = footnote && root ? placeOf(footnote.box, root, 220, 380) : undefined;
+  const paper = settings.pageTheme === 'auto' ? undefined : themeColors(darkMode, settings.pageTheme);
+  const dark = paper ? paper.dark : darkMode;
+  // the text would go under the chapter and the progress: the view is between them
+  const inset = settings.flow === 'scrolled' || book.rendition?.layout === 'pre-paginated' ? settings.margin : 0;
 
   return (
     <>
       <div
         ref={containerRef}
-        className="absolute inset-0 focus:outline-none"
+        className="absolute inset-x-0 focus:outline-none"
         tabIndex={-1}
         data-testid="foliate-viewer"
-        style={{ ['--overlayer-highlight-opacity' as string]: darkMode ? '0.4' : '0.35' }}
+        style={{ top: inset, bottom: inset, ['--overlayer-highlight-opacity' as string]: dark ? '0.4' : '0.35' }}
       />
       <div
         ref={footnoteRef}
         className={`absolute z-30 h-52 p-2 border rounded-md shadow-lg bg-base-100 border-base-300 ${place ? '' : 'invisible'}`}
-        style={place ? { left: place.left, top: place.top, width: 380 } : { left: 0, top: 0, width: 380 }}
+        style={{
+          ...(place ? { left: place.left, top: place.top } : { left: 0, top: 0 }),
+          width: 380,
+          ...(paper ? { background: paper.bg, color: paper.fg } : {}),
+        }}
         data-testid="footnote-popup"
         onPointerDown={(e) => e.stopPropagation()}
       />
     </>
   );
-}
-
-/** The section of a CFI, `epubcfi(/6/4!...)` is the second item (index 1). */
-export function sectionOf(cfi: string): number {
-  const match = cfi.match(/^epubcfi\(\/6\/(\d+)/);
-  return match ? Number(match[1]) / 2 - 1 : -1;
 }
 
 export default memo(FoliateViewer);

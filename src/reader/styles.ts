@@ -1,4 +1,4 @@
-import type { ReaderSettings } from './settings';
+import type { PageTheme, ReaderSettings } from './settings';
 import { ttsStyles } from './tts';
 
 /**
@@ -9,8 +9,17 @@ import { ttsStyles } from './tts';
 
 export type ThemeColors = { bg: string; fg: string; primary: string; dark: boolean };
 
-/** The colors of the daisyUI theme applied on <html>. */
-export function themeColors(dark: boolean): ThemeColors {
+/** The colors of paper, for the page themes not of the app. */
+const PAGE_THEMES: Record<Exclude<PageTheme, 'auto'>, ThemeColors> = {
+  light: { bg: '#ffffff', fg: '#1f2328', primary: '#2563eb', dark: false },
+  sepia: { bg: '#f4ecd8', fg: '#5b4636', primary: '#9a5b13', dark: false },
+  gray: { bg: '#e6e6e6', fg: '#262626', primary: '#2563eb', dark: false },
+  dark: { bg: '#1c1c1e', fg: '#cfcfcf', primary: '#93c5fd', dark: true },
+};
+
+/** The colors of the pages: of the page theme, or of the daisyUI theme applied on <html>. */
+export function themeColors(dark: boolean, pageTheme: PageTheme = 'auto'): ThemeColors {
+  if (pageTheme !== 'auto') return PAGE_THEMES[pageTheme];
   const style = getComputedStyle(document.documentElement);
   const color = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
   return {

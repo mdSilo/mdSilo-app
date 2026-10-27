@@ -15,17 +15,24 @@ export type TextSelection = {
 
 export type LookupKind = 'dictionary' | 'wikipedia' | 'translate';
 
+export type AnnotationTarget = {
+  id: string;
+  box: Box;
+  /** its note edited: of a highlight made for it (gone if cancelled), or there before */
+  edit?: 'new' | 'existing';
+};
+
 type Popups = {
   /** the text selected in the book */
   selection?: TextSelection;
-  /** the annotation clicked */
-  annotation?: { id: string; box: Box };
+  /** the annotation clicked, or just made */
+  annotation?: AnnotationTarget;
   /** the text selected looked up */
   lookup?: { kind: LookupKind; selection: TextSelection };
   /** a footnote shown, at its link (rendered by FoliateViewer) */
   footnote?: { box: Box };
   setSelection: (selection?: TextSelection) => void;
-  setAnnotation: (annotation?: { id: string; box: Box }) => void;
+  setAnnotation: (annotation?: AnnotationTarget) => void;
   setLookup: (lookup?: { kind: LookupKind; selection: TextSelection }) => void;
   setFootnote: (footnote?: { box: Box }) => void;
   clear: () => void;

@@ -5,8 +5,19 @@ export interface FoliateRenderer extends HTMLElement {
   setStyles?: (css: string) => void;
   getContents: () => { doc: Document; index?: number }[];
   primaryIndex: number;
-  next: () => Promise<void>;
-  prev: () => Promise<void>;
+  next: (distance?: number) => Promise<void>;
+  prev: (distance?: number) => Promise<void>;
+  prevSection?: () => Promise<unknown>;
+  nextSection?: () => Promise<unknown>;
+  /** flow="scrolled" */
+  scrolled?: boolean;
+  /** px, the size of a page */
+  size?: number;
+  /** the page in the section shown, and its pages; not in a fixed layout */
+  page?: number;
+  pages?: number;
+  atStart?: boolean;
+  atEnd?: boolean;
   scrollToAnchor?: (anchor: Range | number, smooth?: boolean) => void;
 }
 
@@ -41,8 +52,8 @@ export interface FoliateView extends HTMLElement {
   goToFraction: (fraction: number) => Promise<void>;
   goLeft: () => Promise<void>;
   goRight: () => Promise<void>;
-  prev: () => Promise<void>;
-  next: () => Promise<void>;
+  prev: (distance?: number) => Promise<void>;
+  next: (distance?: number) => Promise<void>;
   getCFI: (index: number, range?: Range) => string;
   addAnnotation: (annotation: { value: string; [key: string]: unknown }, remove?: boolean) => Promise<unknown>;
   deleteAnnotation: (annotation: { value: string }) => Promise<unknown>;

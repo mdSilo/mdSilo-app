@@ -53,6 +53,12 @@ export type AnnotationsDoc = {
   notes: BookNote[];
 };
 
+/** The section of a CFI, `epubcfi(/6/4!...)` is the second item (index 1). */
+export function sectionOf(cfi: string): number {
+  const match = cfi.match(/^epubcfi\(\/6\/(\d+)/);
+  return match ? Number(match[1]) / 2 - 1 : -1;
+}
+
 const BOOK_MARK = 'mdsilo:book';
 const NOTE_MARK = 'mdsilo:note';
 const MARKER_REGEX = /^<!--\s*(mdsilo:book|mdsilo:note)\s+(\{.*\})\s*-->\s*$/;

@@ -45,7 +45,7 @@ function TTSBar() {
 
   return (
     <div
-      className="absolute z-20 flex items-center gap-1 px-2 py-1 -translate-x-1/2 border rounded-full shadow-md bottom-3 left-1/2 bg-base-100 border-base-300"
+      className="absolute z-20 flex items-center gap-1 px-2 py-1 -translate-x-1/2 border rounded-full shadow-md bottom-14 left-1/2 bg-base-100 border-base-300"
       data-testid="tts-bar"
     >
       <button className="btn btn-ghost btn-xs btn-circle" title="Previous" onClick={() => void tts?.skip(false)}>

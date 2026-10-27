@@ -17,13 +17,13 @@ import {
 } from './library';
 import { cacheCover } from './covers';
 import { indexBookText } from './bookIndex';
+import type { Progress } from './pagination';
 
-export type ReaderLocation = {
+export type ReaderLocation = Progress & {
   cfi: string;
-  /** 0 to 1, of the book */
-  fraction: number;
-  /** the label of the chapter */
+  /** the label of the chapter, and its place */
   tocLabel?: string;
+  tocHref?: string;
   /** the page of the printed book, if it has a page list */
   pageLabel?: string;
 };
