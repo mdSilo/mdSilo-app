@@ -183,10 +183,18 @@ describe('useOpen (tauri)', () => {
       expect(await useOpen.openWebWorkspace()).toBe('/pinned');
 
       store.getState().setInitDir(undefined);
-      store.getState().setIsOpenPreOn(false);
+      store.getState().setOpenOnStartup('none');
       store.getState().setRecentDir(['/work']);
       store.getState().setPinnedDir('');
       expect(await useOpen.openWebWorkspace()).toBe('/mdSilo');
+    });
+
+    test('opens the pinned folder if set so', async () => {
+      withDirs(['/mdSilo', '/work', '/pinned']);
+      store.getState().setRecentDir(['/work']);
+      store.getState().setPinnedDir('/pinned');
+      store.getState().setOpenOnStartup('pinned');
+      expect(await useOpen.openWebWorkspace()).toBe('/pinned');
     });
 
     test('does nothing if a folder is open', async () => {

@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, store } from 'lib/store';
+import { NoteMap, store, type Store } from 'lib/store';
 import { 
   openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir, openJSONFilePath 
 } from 'file/open';
@@ -95,22 +95,32 @@ export const reopenWorkspace = async (dirPath: string) => {
   await listInitDir(dirPath);
 };
 
+/** The folder to open on startup as the setting says, '' for none. */
+export const startupDir = (
+  state: Pick<Store, 'openOnStartup' | 'recentDir' | 'pinnedDir'>
+): string => {
+  if (state.openOnStartup === 'previous') {
+    const recent = state.recentDir ?? [];
+    return recent[recent.length - 1] ?? '';
+  }
+  return state.openOnStartup === 'pinned' ? state.pinnedDir : '';
+};
+
 let isWebWorkspaceOpening = false;
 
 /**
  * Web: notes live in IndexedDB, there is always a folder to work in. Open the
- * previous folder (if enabled), the pinned folder, or the default workspace
- * `/mdSilo`, so the views depending on a folder (issues, chronicle, graph...)
- * are available on startup.
+ * folder of the setting (previous or pinned), the pinned folder, or the
+ * default workspace `/mdSilo`, so the views depending on a folder (issues,
+ * chronicle, graph...) are available on startup.
  */
 export const openWebWorkspace = async (): Promise<string | undefined> => {
   const state = store.getState();
   if (state.initDir || isWebWorkspaceOpening) return;
   isWebWorkspaceOpening = true;
   try {
-    const recent = state.recentDir ?? [];
     const candidates = [
-      state.isOpenPreOn ? recent[recent.length - 1] : '',
+      startupDir(state),
       state.pinnedDir,
     ].filter((d): d is string => Boolean(d));
     for (const dir of candidates) {

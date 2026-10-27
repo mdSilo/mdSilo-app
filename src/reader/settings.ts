@@ -32,7 +32,7 @@ export type ReaderSettings = {
   /** the chapter above the text, the progress below it */
   showHeader: boolean;
   showFooter: boolean;
-  /** the panel of contents and notes */
+  /** the panel of contents and notes; on mobile it starts hidden */
   showSidebar: boolean;
   /** the highlight made by the toolbar, and the color of each style */
   highlightStyle: HighlightStyle;
@@ -61,7 +61,7 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   swapClickArea: false,
   showHeader: true,
   showFooter: true,
-  showSidebar: false,
+  showSidebar: true,
   highlightStyle: 'highlight',
   highlightColors: { highlight: 'yellow', underline: 'green', squiggly: 'blue' },
   ttsVoice: '',

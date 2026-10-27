@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { Menu } from '@headlessui/react';
 import { 
   TbDots as IconDots, TbFile as IconFile, TbFileText as IconFileText, TbMarkdown as IconMarkdown,
-  TbPhoto as IconPhoto, TbTournament as IconTournament, TbTrash as IconTrash
+  TbPhoto as IconPhoto, TbSettings as IconSettings, TbTournament as IconTournament, TbTrash as IconTrash
 } from 'react-icons/tb';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from 'context/useCurrentMd';
@@ -14,6 +14,7 @@ import Portal from 'components/misc/Portal';
 import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';
 import NoteDelModal from 'components/note/NoteDelModal';
+import EditorSettings from 'components/settings/EditorSettings';
 
 export default function NoteHeader(
   {setShowBacklink} : {setShowBacklink : (show: boolean) => void}
@@ -44,6 +45,7 @@ export default function NoteHeader(
 
   const [isNoteDelModalOpen, setIsNoteDelModalOpen] = useState(false);
   const onDelClick = useCallback(() => setIsNoteDelModalOpen(true), []);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const buttonClassName =
     'rounded-sm hover:bg-base-content/15 active:bg-base-content/25';
@@ -69,7 +71,26 @@ export default function NoteHeader(
           </button>
         </Tooltip>
       </div>
-      <div>
+      <div className="flex items-center">
+        <div className="relative">
+          <Tooltip content="Editor Settings">
+            <button
+              aria-label="Editor Settings"
+              className={`flex items-center justify-center w-8 h-8 ${buttonClassName}`}
+              onClick={() => setSettingsOpen(!settingsOpen)}
+            >
+              <IconSettings size={18} className={settingsOpen ? 'text-primary' : iconClass} />
+            </button>
+          </Tooltip>
+          {settingsOpen ? (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setSettingsOpen(false)} />
+              <div className="absolute right-0 z-40 mt-1 text-left border rounded-md shadow-lg bg-base-100 border-base-300">
+                <EditorSettings />
+              </div>
+            </>
+          ) : null}
+        </div>
         <Menu>
           {({ open }) => (
             <>

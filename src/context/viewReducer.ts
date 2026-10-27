@@ -69,8 +69,11 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
     case 'project':
       return {view: 'project', projectId: action.projectId};
     case 'library':
+      // the books take the room of the note tree
+      store.getState().setIsSidebarOpen(false);
       return {view: 'library'};
     case 'book':
+      store.getState().setIsSidebarOpen(false);
       setWindowTitle(`: ${action.path.split('/').pop()} - mdSilo`);
       return {view: 'book', bookPath: action.path, bookCfi: action.cfi};
     case 'md':

@@ -142,8 +142,8 @@ export type Store = {
 // user settings kept in LOCAL_DATA_DIR, see partialize
 type PersistedState = Pick<Store,
   | 'userId' | 'theme' | 'darkMode' | 'font' | 'fontSize' | 'fontWt' | 'lineHeight'
-  | 'isRTL' | 'isCheckSpellOn' | 'isOpenPreOn' | 'noteSort' | 'recentDir'
-  | 'pinnedDir' | 'sidebarWidth' | 'sideMenuOrientation' | 'feedChannelWidth' | 'feedArticleWidth'
+  | 'isRTL' | 'isCheckSpellOn' | 'openOnStartup' | 'startupView' | 'noteSort' | 'recentDir'
+  | 'pinnedDir' | 'sidebarWidth' | 'sideMenuOrientation' | 'feedChannelWidth' | 'feedArticleWidth' | 'readerSidebarWidth'
   | 'useAsset' | 'activities' | 'readerSettings'
 >;
 
@@ -296,13 +296,23 @@ export const store = createStore<Store>()(
     })),
     {
       name: 'mdsilo-storage',
-      version: 2,
+      version: 4,
       storage,
       // v1 had a dark mode switch only: keep the mode as the mdSilo theme
+      // v2 had a switch to open the previous folder: keep it as openOnStartup
+      // v3 hid the contents of the reader by default: shown now, as the default
       migrate: (persisted, version) => {
-        const state = (persisted ?? {}) as Partial<PersistedState>;
+        const state = (persisted ?? {}) as Partial<PersistedState> & { isOpenPreOn?: boolean };
         if (version < 2 && state.theme === undefined && typeof state.darkMode === 'boolean') {
           state.theme = state.darkMode ? DARK_THEME.name : LIGHT_THEME.name;
+        }
+        if (version < 3 && state.openOnStartup === undefined && typeof state.isOpenPreOn === 'boolean') {
+          state.openOnStartup = state.isOpenPreOn ? 'previous' : 'none';
+        }
+        delete state.isOpenPreOn;
+        if (version < 4 && state.readerSettings) {
+          const { showSidebar: _hidden, ...readerSettings } = state.readerSettings;
+          state.readerSettings = readerSettings as PersistedState['readerSettings'];
         }
         return state as PersistedState;
       },
@@ -317,7 +327,8 @@ export const store = createStore<Store>()(
         lineHeight: state.lineHeight,
         isRTL: state.isRTL,
         isCheckSpellOn: state.isCheckSpellOn,
-        isOpenPreOn: state.isOpenPreOn,
+        openOnStartup: state.openOnStartup,
+        startupView: state.startupView,
         noteSort: state.noteSort,
         recentDir: state.recentDir,
         pinnedDir: state.pinnedDir,
@@ -325,6 +336,7 @@ export const store = createStore<Store>()(
         sideMenuOrientation: state.sideMenuOrientation,
         feedChannelWidth: state.feedChannelWidth,
         feedArticleWidth: state.feedArticleWidth,
+        readerSidebarWidth: state.readerSidebarWidth,
         useAsset: state.useAsset,
         activities: state.activities,
         readerSettings: state.readerSettings,

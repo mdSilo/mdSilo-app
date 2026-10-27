@@ -1,155 +1,114 @@
+import type { ReactNode } from 'react';
 import { useStore } from 'lib/store';
-import type { SideMenuOrientation } from 'lib/userSettings';
-import { isWeb } from 'file/util';
+import {
+  STARTUP_VIEWS, type OpenOnStartup, type SideMenuOrientation, type StartupView,
+} from 'lib/userSettings';
 import { SYSTEM_THEME, THEMES } from 'lib/themes';
 import { BaseModal } from './BaseModal';
-import { SettingsToggle } from './SettingsToggle';
-import { CorsProxySetting } from './CorsProxySetting';
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
   value === 'auto' || value === 'vertical' || value === 'horizontal';
+
+const isOpenOnStartup = (value: string): value is OpenOnStartup =>
+  value === 'previous' || value === 'pinned' || value === 'none';
+
+const isStartupView = (value: string): value is StartupView =>
+  STARTUP_VIEWS.some(([view]) => view === value);
+
+const selectClass = 'w-full p-1 rounded-sm text-primary border-none';
+
+function Select(
+  { id, label, value, onChange, children }:
+  { id: string; label: string; value: string; onChange: (value: string) => void; children: ReactNode }
+) {
+  return (
+    <div className="flex flex-col items-center mb-2">
+      <label htmlFor={id} className="mb-2 text-base font-semibold">
+        {label}
+      </label>
+      <select
+        id={id}
+        className={selectClass}
+        style={{ width: '12em' }}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {children}
+      </select>
+    </div>
+  );
+}
 
 type Props = {
   isOpen: boolean;
   handleClose: () => void;
 }
 
+/**
+ * The settings of the whole app. The editor, the reader and the feed reader
+ * have their own settings, in their views.
+ */
 export default function SettingsModal({ isOpen, handleClose }: Props) {
 
   const theme = useStore((state) => state.theme);
   const setTheme = useStore((state) => state.setTheme);
-  const useAsset = useStore((state) => state.useAsset);
-  const setUseAsset = useStore((state) => state.setUseAsset);
-  const isRTL = useStore((state) => state.isRTL);
-  const setIsRTL = useStore((state) => state.setIsRTL);
-  const isOpenPreOn = useStore((state) => state.isOpenPreOn);
-  const setIsOpenPreOn = useStore((state) => state.setIsOpenPreOn);
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
   const setSideMenuOrientation = useStore((state) => state.setSideMenuOrientation);
-  
-  const fontSize = useStore((state) => state.fontSize);
-  const setSize = useStore((state) => state.setFontSize);
-  const fontWt = useStore((state) => state.fontWt);
-  const setWt = useStore((state) => state.setFontWt);
-  const lineHeight = useStore((state) => state.lineHeight);
-  const setHeight = useStore((state) => state.setLineHeight);
-
-  const font = useStore((state) => state.font);
-  const setFont = useStore((state) => state.setFont);
-  const fonts = [
-    {name: 'Default', font: ''}, 
-    {name: 'Sniglet', font: 'Sniglet'}, 
-    {name: 'RobotoMono', font: 'RobotoMono'}, 
-    {name: 'Serif', font: 'IBMPlexSerif'},
-    {name: 'SansSerif', font: 'KaTeX_SansSerif'}
-  ];
+  const openOnStartup = useStore((state) => state.openOnStartup);
+  const setOpenOnStartup = useStore((state) => state.setOpenOnStartup);
+  const startupView = useStore((state) => state.startupView);
+  const setStartupView = useStore((state) => state.setStartupView);
 
   return (
     <BaseModal title="Settings" isOpen={isOpen} handleClose={handleClose}>
       <div className="flex-1 p-2 bg-base-200">
-        <div className="flex flex-col items-center mb-2">
-          <label htmlFor="select-theme" className="mb-2 text-base font-semibold">
-            Theme
-          </label>
-          <select
-            id="select-theme"
-            className="w-full p-1 rounded-sm text-primary border-none"
-            style={{ width: '12em' }}
-            value={theme}
-            onChange={(event) => setTheme(event.target.value)}
-          >
-            <option value={SYSTEM_THEME}>Follow System</option>
-            {THEMES.map((t) => (
-              <option key={t.name} value={t.name}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <SettingsToggle
-          name="Use Assets Folder" 
-          descript="To store images, files and support relative path"
-          check={useAsset}
-          handleCheck={setUseAsset}
-          optionLeft="No" 
-          optionRight="Yes"
-        />
-        <SettingsToggle
-          name="Open Previous Folder on Startup" 
-          check={isOpenPreOn}
-          handleCheck={setIsOpenPreOn}
-          optionLeft="No" 
-          optionRight="Yes"
-        /> 
-        <SettingsToggle
-          name="Text Direction" 
-          check={isRTL}
-          handleCheck={setIsRTL}
-          optionLeft="Left To Right" 
-          optionRight="Right To Left"
-        />
-        <div className="flex flex-col items-center mb-2">
-          <label htmlFor="side-menu-orientation" className="mb-2 text-base font-semibold">
-            Side Menu Orientation
-          </label>
-          <select
-            id="side-menu-orientation"
-            className="w-full p-1 rounded-sm text-primary border-none"
-            style={{ width: '12em' }}
-            value={sideMenuOrientation}
-            onChange={(event) => {
-              const orientation = event.target.value;
-              if (isSideMenuOrientation(orientation)) {
-                setSideMenuOrientation(orientation);
-              }
-            }}
-          >
-            <option value="auto">Auto (responsive)</option>
-            <option value="vertical">Vertical</option>
-            <option value="horizontal">Horizontal</option>
-          </select>
-        </div>
-        {isWeb ? <CorsProxySetting /> : null}
-        <div className="flex flex-col items-center mb-2">
-          <div className="mb-2">
-            <label htmlFor="select-font" className="text-base font-semibold">Editor Font Family</label>
-          </div>
-          <div className="flex flex-row items-center">
-            <select 
-              name="select-font" 
-              id="select-font"
-              className="w-full p-1 rounded-sm text-primary border-none"
-              style={{width: '8em'}}
-              value={font || 'Default'}
-              onChange={(ev) => {
-                const ft = ev.target.value;
-                setFont(ft);
-              }}
-            >
-              {fonts.map((font, index) => (
-                <option key={`font-${index}`} value={font.font}>
-                  {font.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="flex flex-col items-center">
-          <div className="flex flex-row items-center justify-center m-1">
-            <span className="text-sm text-base-content/70 mr-2">Font Size: </span>
-            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={fontSize.toFixed(1)} step="0.1" onChange={e => setSize(Number(e.target.value) || 1.1)} />
-            <span className="text-sm text-base-content/70">em</span>
-          </div>
-          <div className="flex flex-row items-center justify-center m-1">
-            <span className="text-sm text-base-content/70 mr-2">Line Height: </span>
-            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={lineHeight.toFixed(1)} step="0.1" onChange={e => setHeight(Number(e.target.value) || 1.6)} />
-            <span className="text-sm text-base-content/70">em</span>
-          </div>
-          <div className="flex flex-row items-center justify-center m-1">
-            <span className="text-sm text-base-content/70 mr-2">Font Weight: </span>
-            <input type="number" className="p-1 border-none outline-hidden" style={{width: '5em'}} value={fontWt.toFixed()} step="100" onChange={e => setWt(Number(e.target.value) || 400)} />
-          </div>
-        </div>
+        <Select id="select-theme" label="Theme" value={theme} onChange={setTheme}>
+          <option value={SYSTEM_THEME}>Follow System</option>
+          {THEMES.map((t) => (
+            <option key={t.name} value={t.name}>
+              {t.label}
+            </option>
+          ))}
+        </Select>
+        <Select
+          id="side-menu-orientation"
+          label="Side Menu Orientation"
+          value={sideMenuOrientation}
+          onChange={(value) => {
+            if (isSideMenuOrientation(value)) setSideMenuOrientation(value);
+          }}
+        >
+          <option value="auto">Auto (responsive)</option>
+          <option value="vertical">Vertical</option>
+          <option value="horizontal">Horizontal</option>
+        </Select>
+        <Select
+          id="open-on-startup"
+          label="Open on Startup"
+          value={openOnStartup}
+          onChange={(value) => {
+            if (isOpenOnStartup(value)) setOpenOnStartup(value);
+          }}
+        >
+          <option value="previous">Previous Folder</option>
+          <option value="pinned">Pinned Folder</option>
+          <option value="none">Nothing</option>
+        </Select>
+        <Select
+          id="startup-view"
+          label="View on Startup"
+          value={startupView}
+          onChange={(value) => {
+            if (isStartupView(value)) setStartupView(value);
+          }}
+        >
+          {STARTUP_VIEWS.map(([view, name]) => (
+            <option key={view} value={view}>{name}</option>
+          ))}
+        </Select>
+        <p className="mt-4 text-sm text-center text-base-content/70">
+          The editor, the reader and the feed reader have their own settings, in their views.
+        </p>
       </div>
     </BaseModal>
   );

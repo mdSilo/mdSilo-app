@@ -94,9 +94,16 @@ describe('reader', () => {
     await go({ view: 'book', path: BOOK });
     await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
     expect(screen.getAllByText('Tiny Book').length).toBeGreaterThan(0);
-    // the sidebar, closed at first
-    expect(screen.queryByTestId('reader-toc')).not.toBeInTheDocument();
+    // the sidebar, open at first (not on mobile), toggled and resized
+    expect(screen.getByTestId('reader-toc')).toBeInTheDocument();
     fireEvent.click(screen.getByTitle('Contents and notes'));
+    expect(screen.queryByTestId('reader-toc')).not.toBeInTheDocument();
+    expect(store.getState().readerSettings.showSidebar).toBe(false);
+    fireEvent.click(screen.getByTitle('Contents and notes'));
+    const handle = screen.getByLabelText('Resize contents');
+    fireEvent.keyDown(handle, { key: 'ArrowRight' });
+    expect(store.getState().readerSidebarWidth).toBe(304);
+    expect(screen.getByTestId('reader-sidebar')).toHaveStyle({ width: '304px' });
     fireEvent.click(screen.getByText('Chapter Two'));
     expect(view.goTo).toHaveBeenCalledWith('OEBPS/c2.xhtml');
 
@@ -153,7 +160,6 @@ describe('reader', () => {
     expect(store.getState().readerSettings.highlightColors.highlight).toBe('green');
 
     // its note, in the panel
-    fireEvent.click(screen.getByTitle('Contents and notes'));
     fireEvent.click(screen.getByRole('tab', { name: /Notes/ }));
     expect(screen.getByTestId('reader-notes')).toHaveTextContent('a bright cold day');
     fireEvent.click(screen.getByTitle('Edit the note'));
@@ -251,6 +257,53 @@ describe('reader', () => {
   });
 });
 
+describe('reader settings menu', () => {
+  const openMenu = () => fireEvent.click(screen.getByTitle('Font and layout'));
+  const menu = () => screen.queryByTestId('reader-settings');
+
+  test('closes on a click outside, also over the book', async () => {
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+
+    // over the book: the backdrop takes the click
+    openMenu();
+    expect(menu()).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByTestId('reader-menu-backdrop'));
+    expect(menu()).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('reader-menu-backdrop'));
+    expect(menu()).not.toBeInTheDocument();
+
+    // on the bars or the sidebar, above the backdrop
+    openMenu();
+    fireEvent.pointerDown(screen.getByTestId('reader-sidebar'));
+    expect(menu()).not.toBeInTheDocument();
+
+    // not inside the menu
+    openMenu();
+    fireEvent.pointerDown(screen.getByText('Scroll'));
+    fireEvent.click(screen.getByText('Scroll'));
+    expect(menu()).toBeInTheDocument();
+  });
+});
+
+describe('reader on mobile', () => {
+  afterEach(() => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024 });
+  });
+
+  test('hides the sidebar at first, w/o changing the setting', async () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 500 });
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    expect(screen.queryByTestId('reader-sidebar')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTitle('Contents and notes'));
+    expect(screen.getByTestId('reader-toc')).toBeInTheDocument();
+    expect(store.getState().readerSettings.showSidebar).toBe(true);
+  });
+});
+
 describe('library', () => {
   test('lists the books, opens one, syncs it or not', async () => {
     renderMain();
@@ -345,7 +398,6 @@ describe('reader, the second part', () => {
     });
     Object.assign(view, { search, clearSearch: vi.fn() });
     await openBook();
-    fireEvent.click(screen.getByTitle('Contents and notes'));
     fireEvent.click(screen.getByRole('tab', { name: 'Search' }));
     fireEvent.change(screen.getByLabelText('Search in the book'), { target: { value: 'was a' } });
     fireEvent.click(screen.getByLabelText('Match case'));

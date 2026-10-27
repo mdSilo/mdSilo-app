@@ -72,6 +72,7 @@ function Note(props: Props) {
   const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
   const useAsset = useStore((state) => state.useAsset);
+  const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
 
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
@@ -364,7 +365,7 @@ function Note(props: Props) {
                 ? (<Toc headings={headings} />)
                 : null
               }
-              <div className="flex-1 px-2 pt-2 pb-8" id="note-content">
+              <div className="flex-1 px-2 pt-2 pb-8" id="note-content" spellCheck={isCheckSpellOn}>
                 <Suspense fallback={<Spinner className="w-8 h-8 mx-auto" />}>
                 {rawMode === 'raw' ? (
                   <RawMarkdown

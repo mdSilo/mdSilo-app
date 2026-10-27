@@ -13,6 +13,15 @@ describe('viewReducer', () => {
     }
   );
 
+  test.each([
+    { view: 'library' },
+    { view: 'book', path: '/ws/reading/a.epub' },
+  ] as ViewAction[])('$view hides the note tree', (action) => {
+    store.getState().setIsSidebarOpen(true);
+    viewReducer(initialState, action);
+    expect(store.getState().isSidebarOpen).toBe(false);
+  });
+
   test('md view sets params and the current note', () => {
     const params = { noteId: '/a.md', hash: '0-1' };
     expect(viewReducer(initialState, { view: 'md', params })).toEqual({ view: 'md', params });

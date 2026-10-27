@@ -36,9 +36,12 @@ export const BaseModal = ({ title, children, isOpen, handleClose, panelClassName
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
+            {/* a click outside the panel closes: by the backdrop itself, not
+                only by Dialog's outside click, which some webviews miss */}
             <div
               className="fixed inset-0 bg-gray-500/75 transition-opacity"
               aria-hidden="true"
+              onClick={() => handleClose()}
             />
           </Transition.Child>
           <span

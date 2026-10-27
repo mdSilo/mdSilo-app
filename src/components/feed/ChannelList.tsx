@@ -67,7 +67,7 @@ export function ChannelList(props: Props) {
               <IconRefresh size={24} className="m-1" />
             </button>
           </Tooltip>
-          <Tooltip content="Manage Channel" placement="bottom">
+          <Tooltip content="Manage Channels and Settings" placement="bottom">
             <button className="cursor-pointer" onClick={onShowManager}>
               <IconSettings size={24} className="m-1" />
             </button>

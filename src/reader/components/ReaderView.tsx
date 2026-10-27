@@ -5,10 +5,13 @@ import {
   TbTypography, TbVocabulary, TbVolume, TbWorld,
 } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
+import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
 import Spinner from 'components/misc/Spinner';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { openFilePath } from 'file/open';
 import { store, useStore } from 'lib/store';
+import { READER_SIDEBAR_WIDTH } from 'lib/userSettings';
+import { isMobile } from 'utils/helper';
 import { annotationsPathOf } from '../annotations';
 import { useReaderStore } from '../readerStore';
 import { bookmarkAt, copyLink, toggleBookmark } from '../actions';
@@ -82,6 +85,16 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   const searchRequest = useReaderChrome((s) => s.searchRequest);
   const rootRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // on mobile the sidebar covers the book: hidden at first, and not kept
+  const [mobile] = useState(() => isMobile(768));
+  const [mobileSidebar, setMobileSidebar] = useState(false);
+  const showSidebar = mobile ? mobileSidebar : settings.showSidebar;
+  const toggleSidebar = mobile ? setMobileSidebar : setSidebar;
+  const sidebarCol = useResizableWidth(
+    useStore((s) => s.readerSidebarWidth),
+    useStore((s) => s.setReaderSidebarWidth),
+    READER_SIDEBAR_WIDTH,
+  );
 
   useEffect(() => {
     if (path) void useReaderStore.getState().open(path, cfi);
@@ -96,11 +109,25 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
 
   // a search of the text selected: in the sidebar
   useEffect(() => {
-    if (searchRequest) setSidebar(true);
-  }, [searchRequest]);
+    if (searchRequest) toggleSidebar(true);
+  }, [searchRequest, toggleSidebar]);
 
   useEffect(() => {
     useReaderChrome.getState().setMenuOpen(settingsOpen);
+  }, [settingsOpen]);
+
+  // a press outside the menu closes it, e.g. on the bars above the backdrop;
+  // the backdrop closes it on its click, not to let that click reach the book
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (menuRef.current?.contains(target) || target.dataset?.testid === 'reader-menu-backdrop') return;
+      setSettingsOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
   }, [settingsOpen]);
 
   const tabs: SidebarTab[] = [
@@ -135,8 +162,17 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   return (
     <ErrorBoundary>
       <div className="flex w-full h-full bg-base-100" data-testid="reader">
-        {settings.showSidebar ? (
-          <div className="flex flex-col border-r w-72 shrink-0 border-base-300 bg-base-200/50" data-testid="reader-sidebar">
+        {/* a click outside the menu closes it, also over the book (an iframe).
+            Not in the header: its transform would make fixed = the header */}
+        {settingsOpen ? (
+          <div className="fixed inset-0 z-20" data-testid="reader-menu-backdrop" onClick={() => setSettingsOpen(false)} />
+        ) : null}
+        {showSidebar ? (
+          <div
+            className="relative flex flex-col border-r shrink-0 border-base-300 bg-base-200/50"
+            style={{ width: sidebarCol.width }}
+            data-testid="reader-sidebar"
+          >
             <div className="flex items-center gap-1 px-1 pt-1">
               <div role="tablist" className="flex-1 tabs tabs-border tabs-sm">
                 {tabs.map((t) => (
@@ -152,6 +188,13 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
               </div>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto">{activeTab.render()}</div>
+            <ResizeHandle
+              width={sidebarCol.width}
+              bounds={READER_SIDEBAR_WIDTH}
+              label="Resize contents"
+              onResize={sidebarCol.onResize}
+              onResizeEnd={sidebarCol.onResizeEnd}
+            />
           </div>
         ) : null}
 
@@ -215,7 +258,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
             <BarButton title="Library" onClick={() => dispatch({ view: 'library' })}>
               <TbArrowLeft size={18} />
             </BarButton>
-            <BarButton title="Contents and notes" active={settings.showSidebar} onClick={() => setSidebar(!settings.showSidebar)}>
+            <BarButton title="Contents and notes" active={showSidebar} onClick={() => toggleSidebar(!showSidebar)}>
               <TbLayoutSidebar size={18} />
             </BarButton>
             <BarButton title="Bookmark this page" onClick={toggleBookmark} disabled={!location}>
@@ -229,17 +272,14 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
             <BarButton title="Copy a link to this page" disabled={!location} onClick={() => location && copyLink(location.cfi)}>
               <TbLink size={18} />
             </BarButton>
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <BarButton title="Font and layout" active={settingsOpen} onClick={() => setSettingsOpen(!settingsOpen)}>
                 <TbTypography size={18} />
               </BarButton>
               {settingsOpen ? (
-                <>
-                  <div className="fixed inset-0 z-30" onClick={() => setSettingsOpen(false)} />
-                  <div className="absolute right-0 z-40 mt-1 overflow-y-auto border rounded-md shadow-lg bg-base-100 border-base-300 max-h-[75vh]">
-                    <ReaderSettingsMenu fixedLayout={fixedLayout} />
-                  </div>
-                </>
+                <div className="absolute right-0 z-40 mt-1 overflow-y-auto border rounded-md shadow-lg bg-base-100 border-base-300 max-h-[75vh]">
+                  <ReaderSettingsMenu fixedLayout={fixedLayout} />
+                </div>
               ) : null}
             </div>
           </div>

@@ -6,6 +6,7 @@ import ErrorBoundary from 'components/misc/ErrorBoundary';
 import Spinner from 'components/misc/Spinner';
 import useNoteTaskSync from 'components/issue/useNoteTaskSync';
 import { useCurrentViewContext } from 'context/useCurrentView';
+import useStartupView from 'context/useStartupView';
 import NotePage from './md';
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
@@ -38,6 +39,7 @@ const VIEWS: Record<string, ComponentType> = {
 export default function MainView() {
   // issues created from note tasks follow their tasks, whatever the view
   useNoteTaskSync();
+  useStartupView();
   const viewTy = useCurrentViewContext().state.view;
   const View = VIEWS[viewTy] ?? NotePage;
   return (

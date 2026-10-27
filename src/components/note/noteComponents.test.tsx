@@ -359,6 +359,16 @@ describe('NoteHeader', () => {
     await waitFor(() => expect(store.getState().rawMode).toBe('mindmap'));
   });
 
+  test('opens and closes the editor settings', async () => {
+    renderHeader();
+    await userEvent.click(screen.getByLabelText('Editor Settings'));
+    expect(screen.getByTestId('editor-settings')).toBeInTheDocument();
+    await userEvent.click(screen.getByLabelText('Spell Check'));
+    expect(store.getState().isCheckSpellOn).toBe(false);
+    await userEvent.click(screen.getByLabelText('Editor Settings'));
+    expect(screen.queryByTestId('editor-settings')).not.toBeInTheDocument();
+  });
+
   test('opens the options menu and the delete modal', async () => {
     renderHeader();
     const menuBtn = screen.getAllByRole('button').find((b) => b.getAttribute('aria-haspopup')) as HTMLElement;

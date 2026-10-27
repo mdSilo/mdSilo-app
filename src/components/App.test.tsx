@@ -12,7 +12,7 @@ const press = (key: string, keyCode: number, mods: Record<string, boolean>) =>
 
 describe('App', () => {
   test('renders the shell and closes the splashscreen', async () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     await act(async () => {
       render(<App />);
     });
@@ -23,7 +23,7 @@ describe('App', () => {
   });
 
   test('global hotkeys toggle panels and tabs', async () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     vi.mocked(invoke).mockResolvedValue([]);
     await act(async () => {
       render(<App />);
@@ -47,13 +47,13 @@ describe('App', () => {
   });
 
   test('opens settings and about modals from the store', async () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     await act(async () => {
       render(<App />);
     });
     await userEvent.click(document.querySelector('#side-menu-btns button') as HTMLElement);
     await userEvent.click(screen.getByText('Settings'));
-    expect(await screen.findByText('Editor Font Family')).toBeInTheDocument();
+    expect(await screen.findByText('View on Startup')).toBeInTheDocument();
     act(() => store.getState().setIsSettingsOpen(false));
     act(() => store.getState().setIsAboutOpen(true));
     expect(await screen.findByText('mdSilo Desktop')).toBeInTheDocument();
