@@ -9,12 +9,23 @@ const PAGE_THEMES: [PageTheme, string][] = [
   ['auto', 'As the app'], ['light', 'White'], ['sepia', 'Sepia'], ['gray', 'Gray'], ['dark', 'Dark'],
 ];
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle(
+  { label, checked, onChange }: { 
+    label: string; 
+    checked: boolean; 
+    onChange: (v: boolean) => void 
+  }
+) {
   return (
     <label className="flex items-center justify-between">
       <span>{label}</span>
-      <input type="checkbox" className="toggle toggle-xs" checked={checked} aria-label={label}
-        onChange={(e) => onChange(e.target.checked)} />
+      <input 
+        type="checkbox" 
+        className="toggle toggle-success h-5" 
+        checked={checked} 
+        aria-label={label}
+        onChange={(e) => onChange(e.target.checked)} 
+      />
     </label>
   );
 }
@@ -137,8 +148,8 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           </label>
           <Toggle label="Justify" checked={settings.justify} onChange={(justify) => update({ justify })} />
           <Toggle label="Hyphenate" checked={settings.hyphenate} onChange={(hyphenate) => update({ hyphenate })} />
-          <Toggle label="Chapter above the text" checked={settings.showHeader} onChange={(showHeader) => update({ showHeader })} />
-          <Toggle label="Progress below the text" checked={settings.showFooter} onChange={(showFooter) => update({ showFooter })} />
+          <Toggle label="Chapter above" checked={settings.showHeader} onChange={(showHeader) => update({ showHeader })} />
+          <Toggle label="Progress below" checked={settings.showFooter} onChange={(showFooter) => update({ showFooter })} />
         </>
       )}
       <div className="divider my-0" />

@@ -131,7 +131,11 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   }, [settingsOpen]);
 
   const tabs: SidebarTab[] = [
-    { id: 'toc', label: 'Contents', render: () => <TocView toc={book?.toc ?? []} current={location?.tocHref} /> },
+    { 
+      id: 'toc', 
+      label: 'Contents', 
+      render: () => <TocView toc={book?.toc ?? []} current={location?.tocHref} /> 
+    },
     {
       id: 'notes',
       label: `Notes${notes.length ? ` ${notes.length}` : ''}`,
@@ -249,8 +253,16 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
           ) : null}
 
           {/* the bars: shown on hover, on a click in the middle */}
-          <div className="absolute inset-x-0 top-0 z-10 h-6" onMouseEnter={() => setBars(true)} onClick={() => setBars(true)} />
-          <div className="absolute inset-x-0 bottom-0 z-10 h-6" onMouseEnter={() => setBars(true)} onClick={() => setBars(true)} />
+          <div 
+            className="absolute inset-x-0 top-0 z-10 h-6" 
+            onMouseEnter={() => setBars(true)} 
+            onClick={() => setBars(true)} 
+          />
+          <div 
+            className="absolute inset-x-0 bottom-0 z-10 h-6" 
+            onMouseEnter={() => setBars(true)} 
+            onClick={() => setBars(true)} 
+          />
           <div
             className={`absolute inset-x-0 top-0 z-30 flex items-center gap-1 px-2 h-11 border-b shadow-sm bg-base-100 text-base-content border-base-300 transition-[opacity,transform] duration-200 ${showBars ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}
             onMouseLeave={leaveBars}
@@ -259,18 +271,29 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
             <BarButton title="Library" onClick={() => dispatch({ view: 'library' })}>
               <TbArrowLeft size={18} />
             </BarButton>
-            <BarButton title="Contents and notes" active={showSidebar} onClick={() => toggleSidebar(!showSidebar)}>
+            <BarButton 
+              title="Contents and notes" 
+              active={showSidebar} 
+              onClick={() => toggleSidebar(!showSidebar)}
+            >
               <TbLayoutSidebar size={18} />
             </BarButton>
             <BarButton title="Bookmark this page" onClick={toggleBookmark} disabled={!location}>
-              {bookmarked ? <TbBookmarkFilled size={18} className="text-error" /> : <TbBookmark size={18} />}
+              {bookmarked 
+                ? <TbBookmarkFilled size={18} className="text-error" /> 
+                : <TbBookmark size={18} />
+              }
             </BarButton>
             <div className="flex-1 min-w-0 px-2 text-sm text-center truncate">
               <span className="font-semibold">{title}</span>
               {entry?.author ? <span className="opacity-60"> · {entry.author}</span> : null}
             </div>
             {headerButtons}
-            <BarButton title="Copy a link to this page" disabled={!location} onClick={() => location && copyLink(location.cfi)}>
+            <BarButton 
+              title="Copy a link to this page" 
+              disabled={!location} 
+              onClick={() => location && copyLink(location.cfi)}
+            >
               <TbLink size={18} />
             </BarButton>
             <div className="relative" ref={menuRef}>
@@ -295,7 +318,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
                 aria-label="Previous page"
                 onClick={() => void turn(getView(), 'left')}
               >
-                <TbChevronLeft size={24} />
+                <TbChevronLeft size={20} />
               </button>
               <button
                 className="absolute z-20 flex items-center justify-center w-12 h-12 -translate-y-1/2 rounded-full shadow-lg right-3 top-1/2 bg-base-100/90 text-base-content active:scale-95"
@@ -303,7 +326,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
                 aria-label="Next page"
                 onClick={() => void turn(getView(), 'right')}
               >
-                <TbChevronRight size={24} />
+                <TbChevronRight size={20} />
               </button>
             </>
           ) : null}
@@ -316,8 +339,14 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   );
 }
 
+type FooterBarProps = {
+  visible: boolean; 
+  onLeave: () => void; 
+  fixedLayout: boolean;
+};
+
 /** The bar below the book: back and forward, the chapters, the pages, the progress. */
-function FooterBar({ visible, onLeave, fixedLayout }: { visible: boolean; onLeave: () => void; fixedLayout: boolean }) {
+function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
   const location = useReaderStore((s) => s.location);
   const fraction = location?.fraction ?? 0;
   // the place dragged to, before the book goes there
@@ -385,9 +414,9 @@ function FooterBar({ visible, onLeave, fixedLayout }: { visible: boolean; onLeav
 }
 
 const LOOKUPS = [
-  { kind: 'dictionary', icon: <TbVocabulary size={18} />, title: 'Dictionary' },
-  { kind: 'wikipedia', icon: <TbBrandWikipedia size={18} />, title: 'Wikipedia' },
   { kind: 'translate', icon: <TbLanguage size={18} />, title: 'Translate' },
+  { kind: 'wikipedia', icon: <TbBrandWikipedia size={18} />, title: 'Wikipedia' },
+  { kind: 'dictionary', icon: <TbVocabulary size={18} />, title: 'Dictionary' },
 ] as const;
 
 /** The tools on the text selected: search, look up, translate, read aloud. */

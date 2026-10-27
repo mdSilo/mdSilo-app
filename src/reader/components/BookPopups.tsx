@@ -285,7 +285,12 @@ function BookPopups({ rootRef, tools }: {
       usePopups.getState().setAnnotation({ id: created.id, box: selection.box });
     };
     const list: Tool[] = [
-      { id: 'copy', title: 'Copy', icon: <TbCopy size={18} />, onClick: () => { copy(text, { format: 'text/plain' }); clear(); } },
+      { 
+        id: 'copy', 
+        title: 'Copy', 
+        icon: <TbCopy size={18} />, 
+        onClick: () => { copy(text, { format: 'text/plain' }); clear(); } 
+      },
       {
         id: 'highlight',
         title: highlighted ? 'Delete the highlight' : 'Highlight',
@@ -302,8 +307,18 @@ function BookPopups({ rootRef, tools }: {
         },
       },
       ...(tools?.(selection) ?? []),
-      { id: 'quote', title: 'Copy as a quote with a link to here, to paste in a note', icon: <TbQuote size={18} />, onClick: () => copyQuote(text, cfi) },
-      { id: 'link', title: 'Copy a link to here', icon: <TbLink size={18} />, onClick: () => copyLink(cfi) },
+      { 
+        id: 'quote', 
+        title: 'Copy as a quote with a link to here, to paste in a note', 
+        icon: <TbQuote size={18} />, 
+        onClick: () => copyQuote(text, cfi) 
+      },
+      { 
+        id: 'link', 
+        title: 'Copy a link to here', 
+        icon: <TbLink size={18} />, 
+        onClick: () => copyLink(cfi) 
+      },
     ];
     return (
       <AnchoredBox anchor={anchorOf(selection.box, root, width, TOOLBAR_HEIGHT)} width={width} testId="selection-popup">
@@ -339,17 +354,38 @@ function BookPopups({ rootRef, tools }: {
     : undefined;
   const list: Tool[] = [
     {
-      id: 'copy', title: 'Copy', icon: <TbCopy size={18} />, hidden: !note.text,
+      id: 'copy', 
+      title: 'Copy', 
+      icon: <TbCopy size={18} />, 
+      hidden: !note.text,
       onClick: () => { copy(note.text ?? '', { format: 'text/plain' }); clear(); },
     },
     {
-      id: 'highlight', title: 'Delete the highlight', icon: <TbHighlightOff size={18} />,
+      id: 'highlight', 
+      title: 'Delete the highlight', 
+      icon: <TbHighlightOff size={18} />,
       onClick: () => { useReaderStore.getState().removeNote(note.id); clear(); },
     },
-    { id: 'note', title: note.note ? 'Edit the note' : 'Write a note', icon: <TbPencil size={18} />, onClick: () => setEditing(true) },
+    { 
+      id: 'note', 
+      title: note.note ? 'Edit the note' : 'Write a note', 
+      icon: <TbPencil size={18} />, 
+      onClick: () => setEditing(true) 
+    },
     ...(asSelection ? tools?.(asSelection) ?? [] : []),
-    { id: 'quote', title: 'Copy as a quote with a link to here', icon: <TbQuote size={18} />, hidden: !note.text, onClick: () => copyQuote(note.text ?? '', note.cfi) },
-    { id: 'link', title: 'Copy a link to here', icon: <TbLink size={18} />, onClick: () => copyLink(note.cfi) },
+    { 
+      id: 'quote', 
+      title: 'Copy as a quote with a link to here', 
+      icon: <TbQuote size={18} />, 
+      hidden: !note.text, 
+      onClick: () => copyQuote(note.text ?? '', note.cfi) 
+    },
+    { 
+      id: 'link', 
+      title: 'Copy a link to here', 
+      icon: <TbLink size={18} />, 
+      onClick: () => copyLink(note.cfi) 
+    },
   ];
   return (
     <AnchoredBox anchor={anchor} width={width} testId="annotation-popup">

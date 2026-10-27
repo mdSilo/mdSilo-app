@@ -20,7 +20,7 @@ const openFolder = (layout: 'workspace' | 'legacy' = 'workspace') => act(() => {
 });
 
 describe('useStartupView', () => {
-  test('shows the note tree by default', () => {
+  test('shows the explorer by default', () => {
     store.getState().setSidebarTab(SidebarTab.Search);
     const { result } = renderStartup();
     expect(result.current.state.view).toBe('default');

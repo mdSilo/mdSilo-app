@@ -18,12 +18,12 @@ export type SideMenuOrientation = 'auto' | 'vertical' | 'horizontal';
 /** the folder opened on startup */
 export type OpenOnStartup = 'previous' | 'pinned' | 'none';
 
-/** the view shown on startup; notes: the note tree in the sidebar */
+/** the view shown on startup; explorer: the explorer in the sidebar */
 export type StartupView =
   | 'notes' | 'library' | 'feed' | 'issues' | 'project' | 'chronicle' | 'graph' | 'journal';
 
 export const STARTUP_VIEWS: [StartupView, string][] = [
-  ['notes', 'Note Tree'],
+  ['notes', 'Explorer'],
   ['library', 'Library'],
   ['feed', 'Feed Reader'],
   ['issues', 'Issues'],

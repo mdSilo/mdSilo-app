@@ -18,7 +18,7 @@ describe('viewReducer', () => {
     { view: 'library' },
     { view: 'book', path: '/ws/reading/a.epub' },
     { view: 'vocabulary' },
-  ] as ViewAction[])('$view hides the note tree', (action) => {
+  ] as ViewAction[])('$view hides the explorer', (action) => {
     store.getState().setIsSidebarOpen(true);
     viewEffects(action);
     expect(store.getState().isSidebarOpen).toBe(false);

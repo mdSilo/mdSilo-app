@@ -44,7 +44,7 @@ export type ViewAction =
 
 /**
  * What goes with a view, outside of its state: the current note, the window
- * title, the note tree hidden. Run on dispatch, not in the reducer: a reducer
+ * title, the explorer hidden. Run on dispatch, not in the reducer: a reducer
  * runs while React renders, where other components must not be updated.
  */
 export function viewEffects(action: ViewAction) {
@@ -54,9 +54,9 @@ export function viewEffects(action: ViewAction) {
     return;
   }
   store.getState().setCurrentNoteId('');
-  if (view === 'issue') setWindowTitle(`: #${action.number} - mdSilo`);
-  else if (view === 'book') setWindowTitle(`: ${action.path.split('/').pop()} - mdSilo`);
-  else setWindowTitle(`: ${view} - mdSilo`);
+  if (view === 'issue') setWindowTitle(`#${action.number} - mdSilo`);
+  else if (view === 'book') setWindowTitle(`${action.path.split('/').pop()} - mdSilo`);
+  else setWindowTitle(`${view} - mdSilo`);
   // the books take the room of the note tree
   if (view === 'library' || view === 'book' || view === 'vocabulary') store.getState().setIsSidebarOpen(false);
 }
