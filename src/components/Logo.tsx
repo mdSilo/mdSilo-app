@@ -4,12 +4,15 @@ type Props = {
   width?: number;
   height?: number;
   className?: string;
+  wrapperClassName?: string;
 };
 
 export default function Logo(props: Props) {
-  const { width = 32, height = 32, className = 'rounded-sm img-effect' } = props;
+  const {
+    width = 32, height = 32, className = 'rounded-sm img-effect', wrapperClassName = 'text-center p-2',
+  } = props;
   return (
-    <div className="text-center p-2">
+    <div className={wrapperClassName}>
       <img
         src={logo}
         width={width}

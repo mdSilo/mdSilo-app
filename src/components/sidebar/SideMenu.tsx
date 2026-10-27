@@ -1,4 +1,4 @@
-import { createContext, useMemo, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, type ReactNode, useMemo, useCallback, useContext, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { 
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
@@ -20,7 +20,6 @@ import Dropdown, { DropdownItem } from 'components/misc/Dropdown';
 import Tooltip from 'components/misc/Tooltip';
 import Portal from 'components/misc/Portal';
 import Logo from '../Logo';
-import SidebarItem from './SidebarItem';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
 
@@ -134,7 +133,7 @@ const LogoMenu = () => {
 
   return (
     <Dropdown
-      buttonChildren={<Logo />}
+      buttonChildren={<Logo width={24} height={24} wrapperClassName="text-center p-1.5" />}
       buttonClassName="block focus:outline-hidden"
       itemsClassName="w-56"
       placement={isHorizontal ? 'bottom-start' : 'right-start'}
@@ -187,8 +186,31 @@ const LogoMenu = () => {
   );
 };
 
-const btnClass = 'title flex items-center text-lg p-2';
-const btnIconClass = 'shrink-0 mx-1 text-base-content/70';
+const btnClass = 'title flex items-center text-lg p-1.5';
+const btnIconClass = 'shrink-0 mx-px text-base-content/70';
+
+type MenuItemProps = {
+  isHighlighted?: boolean;
+  onClick?: () => void;
+  children: ReactNode;
+};
+
+const MenuItem = ({ isHighlighted, onClick, children }: MenuItemProps) => {
+  const isHorizontal = useIsHorizontalMenu();
+  // a tint plus an accent bar on the edge facing the content
+  const highlightClass = isHorizontal
+    ? 'bg-primary/20 shadow-[inset_0_-2px_0_var(--color-primary)]'
+    : 'bg-primary/20 shadow-[inset_2px_0_0_var(--color-primary)]';
+
+  return (
+    <div
+      className={`text-base-content ${isHighlighted ? highlightClass : 'hover:bg-base-content/10'}`}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
+};
 
 const OpenButton = () => {
   const tooltipPlacement = useTooltipPlacement();
@@ -196,17 +218,17 @@ const OpenButton = () => {
   const isSidebarOpen: boolean = useStore((state) => state.isSidebarOpen);
 
   return (
-    <SidebarItem isHighlighted={isSidebarOpen}>
-      <Tooltip content="Toggle Sidebar (Alt+X)" placement={tooltipPlacement}>
+    <MenuItem isHighlighted={isSidebarOpen}>
+      <Tooltip content="Toggle Explorer (Alt+X)" placement={tooltipPlacement}>
         <button
-          aria-label="Toggle Sidebar"
+          aria-label="Toggle Explorer"
           className={btnClass}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          <TbMenu2 size={24} className={btnIconClass} />
+          <TbMenu2 size={22} className={btnIconClass} />
         </button>
       </Tooltip>
-    </SidebarItem>
+    </MenuItem>
   );
 }
 
@@ -224,16 +246,16 @@ const NewButton = () => {
   }, [setIsSidebarOpen, setIsFindOrCreateModalOpen]);
 
   return (
-    <SidebarItem isHighlighted={isFindOrCreateModalOpen}>
+    <MenuItem isHighlighted={isFindOrCreateModalOpen}>
       <Tooltip content="New Writing" placement={tooltipPlacement}>
         <button
           className={btnClass}
           onClick={onCreateNoteClick}
         >
-          <TbFeather size={25} className="shrink-0 mx-1 text-primary" />
+          <TbFeather size={22} className="shrink-0 mx-px text-primary" />
         </button>
       </Tooltip>
-    </SidebarItem>
+    </MenuItem>
   );
 }
 
@@ -255,16 +277,16 @@ const FeedButton = (props: ButtonProps) => {
   }, [setIsSidebarOpen, onDispatch]);
 
   return (
-    <SidebarItem isHighlighted={viewTy === 'feed'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === 'feed'} onClick={onClick}>
       <Tooltip
         content="Feed Reader (Ctrl/⌘+Shift+R)"
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onViewFeed}>
-          <TbRss size={24} className="shrink-0 mx-1 text-orange-600" />
+          <TbRss size={22} className="shrink-0 mx-px text-orange-600" />
         </button>
       </Tooltip>
-    </SidebarItem>
+    </MenuItem>
   );
 }
 
@@ -273,13 +295,13 @@ const LibraryButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem isHighlighted={viewTy === 'library' || viewTy === 'book' || viewTy === 'vocabulary'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === 'library' || viewTy === 'book' || viewTy === 'vocabulary'} onClick={onClick}>
       <Tooltip content="Library (Ctrl/⌘+Shift+L)" placement={tooltipPlacement}>
         <button className={btnClass} onClick={onDispatch}>
-          <TbBooks size={24} className="shrink-0 mx-1 text-base-content/70" />
+          <TbBooks size={22} className="shrink-0 mx-px text-base-content/70" />
         </button>
       </Tooltip>
-    </SidebarItem>
+    </MenuItem>
   );
 }
 
@@ -288,16 +310,16 @@ const GraphButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
       <Tooltip
         content="Graph View (Ctrl/⌘+Shift+G)"
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onDispatch}>
-          <TbDna size={24} className={btnIconClass} />
+          <TbDna size={22} className={btnIconClass} />
         </button>
       </Tooltip>
-    </SidebarItem>
+    </MenuItem>
   );
 };
 
@@ -306,16 +328,16 @@ const ChronButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem isHighlighted={viewTy === 'chronicle'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === 'chronicle'} onClick={onClick}>
       <Tooltip
         content="Chronicle View (Ctrl/⌘+Shift+C)"
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onDispatch}>
-          <TbCalendar size={24} className={btnIconClass} />
+          <TbCalendar size={22} className={btnIconClass} />
         </button>
       </Tooltip>
-    </SidebarItem>
+    </MenuItem>
   );
 };
 
@@ -324,16 +346,16 @@ const IssuesButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem isHighlighted={viewTy === 'issues' || viewTy === 'issue'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === 'issues' || viewTy === 'issue'} onClick={onClick}>
       <Tooltip
         content="Issues (Ctrl/⌘+Shift+I), Tasks (Ctrl/⌘+Shift+T)"
         placement={tooltipPlacement}
       >
         <button aria-label="Issues" className={btnClass} onClick={onDispatch}>
-          <TbCircleDot size={24} className={btnIconClass} />
+          <TbCircleDot size={22} className={btnIconClass} />
         </button>
       </Tooltip>
-    </SidebarItem>
+    </MenuItem>
   );
 };
 
@@ -342,16 +364,16 @@ const ProjectButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem isHighlighted={viewTy === 'project'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === 'project'} onClick={onClick}>
       <Tooltip
         content="Projects (Ctrl/⌘+Shift+K)"
         placement={tooltipPlacement}
       >
         <button aria-label="Projects" className={btnClass} onClick={onDispatch}>
-          <TbLayoutKanban size={24} className={btnIconClass} />
+          <TbLayoutKanban size={22} className={btnIconClass} />
         </button>
       </Tooltip>
-    </SidebarItem>
+    </MenuItem>
   );
 };
 
@@ -429,7 +451,7 @@ const FileButton = () => {
           <Menu.Button ref={btnRef} className="hover:bg-base-content/10">
             <Tooltip content="File Menu" placement={tooltipPlacement}>
               <span className={btnClass}>
-                <MdFolderOpen size={24} className={btnIconClass} />
+                <MdFolderOpen size={22} className={btnIconClass} />
               </span>
             </Tooltip>
           </Menu.Button>
@@ -468,7 +490,7 @@ const SettingsButton = () => {
   return (
     <Tooltip content="Preferences" placement={tooltipPlacement}>
       <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
-        <TbSettings size={24} className={btnIconClass} />
+        <TbSettings size={22} className={btnIconClass} />
         </button>
     </Tooltip>
   )

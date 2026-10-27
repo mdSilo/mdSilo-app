@@ -660,7 +660,7 @@ describe('SideMenu', () => {
     const btns = Array.from(document.querySelectorAll('#side-menu-btns button')) as HTMLElement[];
     // logo, toggle, feed, new, issues, projects, chronicle, graph, file
     expect(btns).toHaveLength(9);
-    await userEvent.click(screen.getByRole('button', { name: 'Toggle Sidebar' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle Explorer' }));
     expect(store.getState().isSidebarOpen).toBe(false);
     await userEvent.click(btns[2]);
     expect(viewState().view).toBe('feed');
