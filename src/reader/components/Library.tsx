@@ -297,12 +297,12 @@ export default function Library() {
           <button
             className={`btn btn-sm btn-ghost ${selecting ? 'btn-active' : ''}`}
             onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
-            title="Select books, e.g. to sync their files"
+            title="Select Books"
           >
-            <TbChecks size={16} /> Select
+            <TbChecks size={16} />
           </button>
-          <button className="btn btn-sm btn-ghost" onClick={() => dispatch({ view: 'vocabulary' })} title="The words to learn">
-            <TbVocabulary size={16} /> Vocabulary
+          <button className="btn btn-sm btn-ghost" onClick={() => dispatch({ view: 'vocabulary' })} title="Vocabulary">
+            <TbVocabulary size={16} /> 
           </button>
           <button
             className="btn btn-sm btn-ghost"
@@ -310,7 +310,7 @@ export default function Library() {
             disabled={busy}
             title="Import the books of a folder and its sub folders"
           >
-            <TbFolderPlus size={16} /> Add folder
+            <TbFolderPlus size={16} /> 
           </button>
           <button className="btn btn-sm btn-primary" onClick={onAdd} disabled={busy}>
             <TbBookUpload size={16} /> Add books

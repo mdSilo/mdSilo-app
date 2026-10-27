@@ -51,16 +51,35 @@ export const usePopups = create<Popups>((set) => ({
   clear: () => set(NONE),
 }));
 
-/** The box of a range or an element in a page of the book, in the window. */
-export function boxOfRange(range: Range | Element): Box {
-  const rect = range.getBoundingClientRect();
+/**
+ * The box of a range or an element in a page of the book, in the window.
+ * With the page in view (`area`): of its lines in it only, as a range over
+ * pages goes off it; all of it, if none is.
+ */
+export function boxOfRange(range: Range | Element, area?: Box): Box {
   const node = 'startContainer' in range ? range.startContainer : range;
   const frame = node.ownerDocument?.defaultView?.frameElement;
   const offset = frame ? frame.getBoundingClientRect() : { left: 0, top: 0 };
-  return {
+  const inWindow = (rect: Box): Box => ({
     left: rect.left + offset.left,
     top: rect.top + offset.top,
     right: rect.right + offset.left,
     bottom: rect.bottom + offset.top,
-  };
+  });
+  if (area) {
+    const lines = Array.from(range.getClientRects()).map(inWindow).filter((r) => {
+      const x = (r.left + r.right) / 2;
+      const y = (r.top + r.bottom) / 2;
+      return x > area.left && x < area.right && y > area.top && y < area.bottom;
+    });
+    if (lines.length) {
+      return {
+        left: Math.min(...lines.map((r) => r.left)),
+        top: Math.min(...lines.map((r) => r.top)),
+        right: Math.max(...lines.map((r) => r.right)),
+        bottom: Math.max(...lines.map((r) => r.bottom)),
+      };
+    }
+  }
+  return inWindow(range.getBoundingClientRect());
 }

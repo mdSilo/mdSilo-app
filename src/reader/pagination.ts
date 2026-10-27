@@ -1,4 +1,5 @@
 import type { FoliateView } from './view';
+import type { Box } from './popups';
 
 /**
  * Turning the pages, as readup does: by a click on the sides of the page, the
@@ -83,6 +84,90 @@ export function clickAction(
   if (!options.clickToTurn || (at >= 0.375 && at <= 0.625)) return 'bars';
   const left = at < 0.5;
   return left !== options.swap ? 'left' : 'right';
+}
+
+/** ms a selection dragged rests at a corner of the page before the page turns */
+export const DWELL_MS = 500;
+/** the corners: a quarter of an ellipse, of this part of the page, up to CORNER_MAX_PX */
+const CORNER_FRACTION = 0.15;
+const CORNER_MAX_PX = 50;
+
+/** The corner a selection is dragged to: at the 'end' of the page it turns forward, at the 'start' back. */
+export type Corner = 'end' | 'start';
+/** The corner armed, for its mark; `turned` once the page has turned. */
+export type TurnHint = { corner: Corner; turned: boolean };
+
+/**
+ * The corner of the text of the page (`area`, in the window) a point of a
+ * selection dragged is at, as readup does: the bottom right ends the page
+ * (the bottom left, in a book written right to left), the top left starts it.
+ * A point dragged out of the page, past an edge, is at that end of it.
+ */
+export function cornerAt(
+  point: { x: number; y: number },
+  area: Box,
+  rtl = false,
+  view = { width: window.innerWidth, height: window.innerHeight },
+): Corner | undefined {
+  const width = area.right - area.left;
+  const height = area.bottom - area.top;
+  if (width <= 0 || height <= 0) return undefined;
+  const local = point.x - area.left;
+  const x = rtl ? width - local : local;
+  const y = point.y - area.top;
+  if (x < 0 || x > width || y < 0 || y > height) {
+    // out of the window: not a pointer
+    if (point.x < 0 || point.x > view.width || point.y < 0 || point.y > view.height) return undefined;
+    return x > width || y > height ? 'end' : 'start';
+  }
+  const rx = Math.min(width * CORNER_FRACTION, CORNER_MAX_PX);
+  const ry = Math.min(height * CORNER_FRACTION, CORNER_MAX_PX);
+  const inCorner = (dx: number, dy: number) => (dx / rx) ** 2 + (dy / ry) ** 2 <= 1;
+  if (inCorner(width - x, height - y)) return 'end';
+  if (inCorner(x, y)) return 'start';
+  return undefined;
+}
+
+/**
+ * The page turned by a selection dragged to a corner, so it goes on in the
+ * next page: once it rests there DWELL_MS, and once a stay; dragged out of
+ * the corner and back, it turns again.
+ */
+export function cornerTurner(
+  turnTo: (corner: Corner) => Promise<unknown> | void,
+  onHint: (hint?: TurnHint) => void,
+) {
+  let engaged: Corner | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let turning = false;
+  const stop = () => {
+    clearTimeout(timer);
+    timer = undefined;
+  };
+  return {
+    /** the corner the selection is dragged at now, if any */
+    note(corner?: Corner) {
+      if (turning || corner === engaged) return;
+      stop();
+      engaged = corner;
+      onHint(corner && { corner, turned: false });
+      if (!corner) return;
+      timer = setTimeout(() => {
+        timer = undefined;
+        turning = true;
+        onHint({ corner, turned: true });
+        void Promise.resolve(turnTo(corner)).finally(() => {
+          turning = false;
+        });
+      }, DWELL_MS);
+    },
+    /** the drag is over */
+    cancel() {
+      stop();
+      if (engaged) onHint(undefined);
+      engaged = undefined;
+    },
+  };
 }
 
 export type WheelSample = { deltaX: number; deltaY: number; deltaMode: number; timeStamp: number };

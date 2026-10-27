@@ -1,13 +1,15 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { openUrl } from 'file/open';
 import { store, useStore } from 'lib/store';
 import { withDefaults, type ReaderSettings } from '../settings';
 import { bookStyles, HIGHLIGHT_CSS, themeColors } from '../styles';
 import { useReaderStore } from '../readerStore';
-import { boxOfRange, usePopups } from '../popups';
+import { boxOfRange, usePopups, type Box } from '../popups';
 import { setView, type FoliateView } from '../view';
 import { useReaderChrome } from '../chrome';
-import { clickAction, keyAction, runKeyAction, turn, wheelGesture } from '../pagination';
+import {
+  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, wheelGesture, type TurnHint,
+} from '../pagination';
 import { sectionOf, type BookNote } from '../annotations';
 import type { BookDoc } from '../document';
 import { placeOf } from './BookPopups';
@@ -82,6 +84,18 @@ function noteSize(doc: Document, host: HTMLElement, note: HTMLElement) {
   };
 }
 
+/**
+ * The text of the pages, in the window: the pages of the renderer, less the
+ * margins above and below them, of the chapter and the progress.
+ */
+function readingArea(view: FoliateView | null): Box | undefined {
+  if (!view) return undefined;
+  const rect = (view.renderer.shadowRoot?.querySelector('#container') ?? view).getBoundingClientRect();
+  const { margin, flow } = withDefaults(store.getState().readerSettings);
+  const inset = flow === 'scrolled' ? 0 : margin;
+  return { left: rect.left, top: rect.top + inset, right: rect.right, bottom: rect.bottom - inset };
+}
+
 /** Typing there: the keys are not for turning pages. */
 const isEditable = (target: EventTarget | null) => {
   const el = target as HTMLElement | null;
@@ -107,6 +121,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
   const theme = useStore((state) => state.theme);
   const notes = useReaderStore((state) => state.notes);
   const drawnRef = useRef(new Map<string, BookNote>());
+  const [turnHint, setTurnHint] = useState<TurnHint>();
 
   // open the book, once per book
   useEffect(() => {
@@ -153,6 +168,27 @@ function FoliateViewer({ book, initialCfi }: Props) {
     };
     const onPointerUp = () => {
       pressed = false;
+      turner.cancel();
+    };
+
+    // a selection dragged to a corner of the page turns it, and goes on in the next one
+    const turner = cornerTurner(
+      (corner) => (corner === 'end' ? viewRef.current?.next() : viewRef.current?.prev()),
+      setTurnHint,
+    );
+    const onSelectDrag = (e: PointerEvent, doc: Document) => {
+      const view = viewRef.current;
+      const area = readingArea(view);
+      // the pages of a chapter only: in scrolled flow the selection scrolls them
+      const selecting = (e.buttons & 1) === 1 && doc.getSelection()?.isCollapsed === false;
+      if (!view || !area || view.isFixedLayout || view.renderer.scrolled || !selecting) {
+        turner.cancel();
+        return;
+      }
+      // in the window, not in the frame of the section
+      const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+      const point = { x: e.clientX + (frame?.left ?? 0), y: e.clientY + (frame?.top ?? 0) };
+      turner.note(cornerAt(point, area, view.book?.dir === 'rtl'));
     };
     const singleClick = (x: number, doc?: Document) => {
       // a selection made, an annotation shown, a popup closed: not a page turn
@@ -221,7 +257,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
       const note = drawnRef.current.get(value);
       if (!note || !range) return;
       annotationAt = Date.now();
-      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range) });
+      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range, readingArea(viewRef.current)) });
     };
 
     // the annotations of a section, once it shows
@@ -258,7 +294,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
           const view = viewRef.current;
           if (!text || !view) return;
           usePopups.getState().setSelection({
-            text, index, cfi: view.getCFI(index, range), box: boxOfRange(range), range,
+            text, index, cfi: view.getCFI(index, range), box: boxOfRange(range, readingArea(view)), range,
           });
         }, 0);
       };
@@ -266,6 +302,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
       // reading: for the time read, see readerStore
       doc.addEventListener('pointerdown', onPointerDown);
       doc.addEventListener('pointerup', onPointerUp);
+      doc.addEventListener('pointermove', (ev) => onSelectDrag(ev, doc));
       doc.addEventListener('click', (ev) => onClick(ev, doc));
       doc.addEventListener('mouseup', onMouseUp);
       doc.addEventListener('wheel', onWheel, { passive: true });
@@ -384,6 +421,7 @@ function FoliateViewer({ book, initialCfi }: Props) {
     return () => {
       cancelled = true;
       if (clickTimer) clearTimeout(clickTimer);
+      turner.cancel();
       window.removeEventListener('keydown', onKeydown);
       container.removeEventListener('pointerdown', onPointerDown);
       container.removeEventListener('pointerup', onPointerUp);
@@ -476,7 +514,41 @@ function FoliateViewer({ book, initialCfi }: Props) {
         data-testid="footnote-popup"
         onPointerDown={(e) => e.stopPropagation()}
       />
+      {turnHint ? <TurnMark key={turnHint.corner} hint={turnHint} area={readingArea(viewRef.current)} rtl={book.dir === 'rtl'} /> : null}
     </>
+  );
+}
+
+/**
+ * The edge of the page a selection dragged will turn, as readup marks it: a
+ * bar along it runs the length of the wait, to keep holding there.
+ */
+function TurnMark({ hint, area, rtl }: { hint: TurnHint; area?: Box; rtl: boolean }) {
+  const [grown, setGrown] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setGrown(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  if (!area) return null;
+  const end = hint.corner === 'end';
+  // the end of a page written right to left is at its bottom left
+  const right = end !== rtl;
+  const bar = (horizontal: boolean) => ({
+    opacity: hint.turned ? 0.75 : 0.35,
+    transform: `scale${horizontal ? 'X' : 'Y'}(${grown || hint.turned ? 1 : 0})`,
+    transformOrigin: horizontal ? (right ? 'right' : 'left') : (end ? 'bottom' : 'top'),
+    transition: `transform ${hint.turned ? 120 : DWELL_MS}ms linear`,
+  });
+  return (
+    <div
+      className="fixed z-40 pointer-events-none"
+      style={{ left: area.left, top: area.top, width: area.right - area.left, height: area.bottom - area.top }}
+      data-testid="turn-mark"
+      aria-hidden
+    >
+      <div className={`absolute inset-y-0 w-[3px] rounded-full bg-base-content ${right ? 'right-0' : 'left-0'}`} style={bar(false)} />
+      <div className={`absolute inset-x-0 h-[3px] rounded-full bg-base-content ${end ? 'bottom-0' : 'top-0'}`} style={bar(true)} />
+    </div>
   );
 }
 

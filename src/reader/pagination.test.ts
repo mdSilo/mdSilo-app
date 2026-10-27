@@ -1,5 +1,6 @@
 import {
-  clickAction, formatMinutes, formatProgress, keyAction, runKeyAction, turn, wheelGesture,
+  clickAction, cornerAt, cornerTurner, DWELL_MS, formatMinutes, formatProgress, keyAction, runKeyAction, turn,
+  wheelGesture,
 } from './pagination';
 import { bookmarkAt } from './actions';
 import { withDefaults } from './settings';
@@ -71,6 +72,63 @@ describe('turning pages', () => {
     const view = viewOf();
     runKeyAction(view, { go: 'end' });
     expect(view.goToFraction).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('a selection dragged over pages', () => {
+  const area = { left: 100, top: 50, right: 900, bottom: 650 };
+  const screen = { width: 1000, height: 700 };
+
+  test('the corners of the text turn it: the end forward, the start back', () => {
+    expect(cornerAt({ x: 890, y: 640 }, area, false, screen)).toBe('end');
+    expect(cornerAt({ x: 110, y: 60 }, area, false, screen)).toBe('start');
+    // the end of a line, or of the page, is not a corner
+    expect(cornerAt({ x: 890, y: 300 }, area, false, screen)).toBeUndefined();
+    expect(cornerAt({ x: 500, y: 640 }, area, false, screen)).toBeUndefined();
+    // written right to left, the page ends at its bottom left
+    expect(cornerAt({ x: 110, y: 640 }, area, true, screen)).toBe('end');
+  });
+
+  test('dragged out of the page, at the edge left', () => {
+    expect(cornerAt({ x: 950, y: 300 }, area, false, screen)).toBe('end');
+    expect(cornerAt({ x: 500, y: 680 }, area, false, screen)).toBe('end');
+    expect(cornerAt({ x: 50, y: 300 }, area, false, screen)).toBe('start');
+    // out of the window: not a pointer
+    expect(cornerAt({ x: 1500, y: 300 }, area, false, screen)).toBeUndefined();
+  });
+
+  test('a page turned once it rests at a corner, once a stay', async () => {
+    vi.useFakeTimers();
+    const turnTo = vi.fn();
+    const hints: unknown[] = [];
+    const turner = cornerTurner(turnTo, (hint) => hints.push(hint));
+    // passing by
+    turner.note('end');
+    await vi.advanceTimersByTimeAsync(DWELL_MS / 2);
+    turner.note(undefined);
+    await vi.advanceTimersByTimeAsync(DWELL_MS);
+    expect(turnTo).not.toHaveBeenCalled();
+    // resting
+    turner.note('end');
+    turner.note('end');
+    await vi.advanceTimersByTimeAsync(DWELL_MS);
+    expect(turnTo).toHaveBeenCalledWith('end');
+    expect(hints.at(-1)).toEqual({ corner: 'end', turned: true });
+    await vi.advanceTimersByTimeAsync(DWELL_MS * 3);
+    expect(turnTo).toHaveBeenCalledTimes(1);
+    // out and back: again
+    turner.note(undefined);
+    turner.note('end');
+    await vi.advanceTimersByTimeAsync(DWELL_MS);
+    expect(turnTo).toHaveBeenCalledTimes(2);
+    // the drag over: no turn, no mark
+    turner.note(undefined);
+    turner.note('start');
+    turner.cancel();
+    await vi.advanceTimersByTimeAsync(DWELL_MS);
+    expect(turnTo).toHaveBeenCalledTimes(2);
+    expect(hints.at(-1)).toBeUndefined();
+    vi.useRealTimers();
   });
 });
 
