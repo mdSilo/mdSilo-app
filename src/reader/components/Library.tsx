@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { TbBookUpload, TbCloud, TbCloudOff } from 'react-icons/tb';
+import { TbBookUpload, TbCloud, TbCloudOff, TbVocabulary } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import Spinner from 'components/misc/Spinner';
 import { useCurrentViewContext } from 'context/useCurrentView';
@@ -103,6 +103,9 @@ export default function Library() {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
+          <button className="btn btn-sm btn-ghost" onClick={() => dispatch({ view: 'vocabulary' })} title="The words to learn">
+            <TbVocabulary size={16} /> Vocabulary
+          </button>
           <button className="btn btn-sm btn-primary" onClick={onAdd} disabled={busy}>
             <TbBookUpload size={16} /> Add books
           </button>

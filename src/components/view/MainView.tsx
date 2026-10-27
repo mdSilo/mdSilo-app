@@ -20,6 +20,7 @@ const Journals = lazy(() => import('./journals'));
 const HashTags = lazy(() => import('./hashtags'));
 const Library = lazy(() => import('reader/components/Library'));
 const Reader = lazy(() => import('reader/components/ReaderView'));
+const Vocabulary = lazy(() => import('reader/components/Vocabulary'));
 
 /** the view of each view type; any other type is a note */
 const VIEWS: Record<string, ComponentType> = {
@@ -34,6 +35,7 @@ const VIEWS: Record<string, ComponentType> = {
   tag: HashTags,
   library: Library,
   book: Reader,
+  vocabulary: Vocabulary,
 };
 
 export default function MainView() {

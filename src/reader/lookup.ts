@@ -1,3 +1,5 @@
+import type { MouseEvent } from 'react';
+import { openUrl } from 'file/open';
 import { sanitizeHtml } from 'utils/sanitize';
 
 /**
@@ -12,6 +14,16 @@ export type DictionaryEntry = { language: string; meanings: Definition[] };
 export type DictionaryResult = { word: string; entries: DictionaryEntry[]; url: string };
 export type WikipediaResult = { title: string; extract: string; url: string; thumbnail?: string };
 export type TranslationResult = { text: string; from?: string; to: string; url: string };
+
+/** A click on a link of a definition: the page opened in the browser, not in the app. */
+export function openLinkOutside(e: MouseEvent) {
+  const a = (e.target as Element | null)?.closest?.('a[href]');
+  if (!a) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const href = a.getAttribute('href') ?? '';
+  if (/^https?:\/\//.test(href)) void openUrl(href);
+}
 
 /** The language code of a book language, e.g. `en` of `en-US`, `zh` of `zh-Hans`. */
 export const baseLanguage = (lang?: string) => (lang || 'en').split(/[-_]/)[0].toLowerCase() || 'en';
@@ -45,7 +57,8 @@ export async function lookupWiktionary(word: string, lang?: string): Promise<Dic
       .map((item) => ({
         partOfSpeech: item.partOfSpeech ?? '',
         definitions: (item.definitions ?? [])
-          .map((d) => sanitizeHtml(d.definition ?? '').trim())
+          // the links of Wiktionary, to its pages, not of the app
+          .map((d) => sanitizeHtml((d.definition ?? '').replace(/href="\/(?!\/)/g, 'href="https://en.wiktionary.org/')).trim())
           .filter(Boolean),
       }))
       .filter((m) => m.definitions.length > 0);

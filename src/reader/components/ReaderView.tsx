@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import {
-  TbArrowBackUp, TbArrowForwardUp, TbArrowLeft, TbBookmark, TbBookmarkFilled, TbChevronLeft,
+  TbArrowBackUp, TbArrowForwardUp, TbArrowLeft, TbBookmark, TbBookmarkFilled, TbChevronLeft, TbBrandWikipedia,
   TbChevronRight, TbChevronsLeft, TbChevronsRight, TbLanguage, TbLayoutSidebar, TbLink, TbSearch,
-  TbTypography, TbVocabulary, TbVolume, TbWorld,
+  TbTypography, TbVocabulary, TbVolume, 
 } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
@@ -384,9 +384,9 @@ function FooterBar({ visible, onLeave, fixedLayout }: { visible: boolean; onLeav
 }
 
 const LOOKUPS = [
-  { kind: 'dictionary', icon: <TbVocabulary size={18} />, title: 'Look it up in Wiktionary' },
-  { kind: 'wikipedia', icon: <TbWorld size={18} />, title: 'Look it up in Wikipedia' },
-  { kind: 'translate', icon: <TbLanguage size={18} />, title: 'Translate it' },
+  { kind: 'dictionary', icon: <TbVocabulary size={18} />, title: 'Dictionary' },
+  { kind: 'wikipedia', icon: <TbBrandWikipedia size={18} />, title: 'Wikipedia' },
+  { kind: 'translate', icon: <TbLanguage size={18} />, title: 'Translate' },
 ] as const;
 
 /** The tools on the text selected: search, look up, translate, read aloud. */

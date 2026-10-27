@@ -1,16 +1,17 @@
 import { memo, useEffect, useState, type RefObject } from 'react';
-import { TbExternalLink, TbNote } from 'react-icons/tb';
+import { TbCheck, TbExternalLink, TbNote, TbVocabulary } from 'react-icons/tb';
 import { openUrl } from 'file/open';
 import { useStore } from 'lib/store';
 import Spinner from 'components/misc/Spinner';
 import {
-  lookupWikipedia, lookupWiktionary, targetLanguage, translate, translateUrl, wikipediaSearchUrl,
+  lookupWikipedia, lookupWiktionary, openLinkOutside, targetLanguage, translate, translateUrl, wikipediaSearchUrl,
   type DictionaryResult, type TranslationResult, type WikipediaResult,
 } from '../lookup';
 import { usePopups } from '../popups';
 import { annotateSelection } from '../actions';
 import { useReaderStore } from '../readerStore';
 import { getView } from '../view';
+import { definitionOf, sameWord, sentenceAround, useVocabulary } from '../vocabulary';
 import { Popup } from './BookPopups';
 
 type Result =
@@ -26,6 +27,14 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
   const translateTo = useStore((state) => state.readerSettings?.translateTo);
   const [result, setResult] = useState<Result | undefined>();
   const [error, setError] = useState('');
+  const ws = useReaderStore((state) => state.ws);
+  const vocabulary = useVocabulary((state) => state.entries);
+  const vocabularyWs = useVocabulary((state) => state.ws);
+
+  // the words kept, to tell if this one is
+  useEffect(() => {
+    if (lookup?.kind === 'dictionary' && ws && vocabularyWs !== ws) void useVocabulary.getState().load(ws);
+  }, [lookup, ws, vocabularyWs]);
 
   useEffect(() => {
     if (!lookup) return;
@@ -69,7 +78,7 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
           <TbExternalLink />
         </button>
       </div>
-      <div className="overflow-y-auto text-sm max-h-60">
+      <div className="overflow-y-auto text-sm max-h-60" onClick={openLinkOutside}>
         {error ? (
           <p className="text-error">Could not look it up: {error}</p>
         ) : !result ? (
@@ -109,7 +118,12 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
         )}
       </div>
       {result && !error && (result.kind !== 'wikipedia' || result.data) ? (
-        <div className="flex justify-end mt-1">
+        <div className="flex justify-end gap-1 mt-1">
+          {result.kind === 'dictionary' && result.data.entries.length > 0 && ws ? (
+            <AddWord ws={ws} result={result.data} kept={vocabulary.some((e) => sameWord(e, {
+              word: result.data.word, language: definitionOf(result.data).language,
+            }))} />
+          ) : null}
           <button
             className="btn btn-ghost btn-xs"
             title="Highlight the text, with this as its note"
@@ -120,6 +134,37 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
         </div>
       ) : null}
     </Popup>
+  );
+}
+
+/** Keep the word looked up in the vocabulary, with the sentence it is in and where. */
+function AddWord({ ws, result, kept }: { ws: string; result: DictionaryResult; kept: boolean }) {
+  const lookup = usePopups((state) => state.lookup);
+  if (kept) {
+    return (
+      <span className="flex items-center gap-1 px-2 text-xs text-success" data-testid="word-kept">
+        <TbCheck /> In vocabulary
+      </span>
+    );
+  }
+  const add = () => {
+    const { hash, entry } = useReaderStore.getState();
+    const selection = lookup?.selection;
+    void useVocabulary.getState().add(ws, {
+      word: result.word,
+      ...definitionOf(result),
+      source: 'wiktionary',
+      context: {
+        sentence: sentenceAround(selection?.range),
+        ...(hash ? { book: hash, title: entry?.title } : {}),
+        ...(selection?.cfi ? { cfi: selection.cfi } : {}),
+      },
+    });
+  };
+  return (
+    <button className="btn btn-ghost btn-xs" title="Add the word to the vocabulary, to learn it" onClick={add}>
+      <TbVocabulary /> Add to vocabulary
+    </button>
   );
 }
 

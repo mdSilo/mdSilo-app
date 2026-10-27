@@ -273,7 +273,7 @@ const LibraryButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <SidebarItem isHighlighted={viewTy === 'library' || viewTy === 'book'} onClick={onClick}>
+    <SidebarItem isHighlighted={viewTy === 'library' || viewTy === 'book' || viewTy === 'vocabulary'} onClick={onClick}>
       <Tooltip content="Library (Ctrl/⌘+Shift+L)" placement={tooltipPlacement}>
         <button className={btnClass} onClick={onDispatch}>
           <TbBooks size={24} className="shrink-0 mx-1 text-base-content/70" />

@@ -16,6 +16,7 @@ import { resetReaderStore, useReaderStore } from '../readerStore';
 import { usePopups } from '../popups';
 import { resetReaderChrome, useReaderChrome } from '../chrome';
 import { DEFAULT_READER_SETTINGS } from '../settings';
+import { resetVocabulary, useVocabulary } from '../vocabulary';
 import { setView, type FoliateView } from '../view';
 
 // no rendering of the pages in jsdom: a view the panels can drive
@@ -84,6 +85,7 @@ beforeEach(async () => {
 afterEach(() => {
   resetReaderStore();
   resetReaderChrome();
+  resetVocabulary();
   usePopups.getState().clear();
   setView(null);
 });
@@ -443,5 +445,83 @@ describe('reader, the second part', () => {
     });
     fireEvent.click(screen.getByLabelText('Look it up in Wiktionary'));
     expect(await screen.findByText('Could not look it up: offline')).toBeInTheDocument();
+  });
+});
+
+describe('vocabulary', () => {
+  const COLD = { en: [{ partOfSpeech: 'Adjective', language: 'English', definitions: [{ definition: 'Having a low temperature.' }] }] };
+
+  test('a word looked up, added from the dictionary', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, status: 200, json: async () => COLD })));
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    // the word in its paragraph, selected
+    document.body.insertAdjacentHTML('beforeend', '<p id="page">It was a bright cold day in April. Then</p>');
+    const range = document.createRange();
+    range.setStart(document.getElementById('page')!.firstChild!, 16);
+    range.setEnd(document.getElementById('page')!.firstChild!, 20);
+    act(() => {
+      usePopups.getState().setSelection({
+        text: 'cold', cfi: 'epubcfi(/6/4!/4/4,/1:16,/1:20)', index: 1, range, box: { left: 10, top: 10, right: 50, bottom: 20 },
+      });
+    });
+    fireEvent.click(screen.getByLabelText('Look it up in Wiktionary'));
+    await act(async () => {
+      fireEvent.click(await screen.findByText('Add to vocabulary'));
+    });
+    expect(await screen.findByTestId('word-kept')).toBeInTheDocument();
+    const [entry] = useVocabulary.getState().entries;
+    const hash = await invoke<string>('book_hash', { filePath: BOOK });
+    expect(entry).toMatchObject({
+      word: 'cold', language: 'English', source: 'wiktionary',
+      definition: '<p><i>Adjective</i> Having a low temperature.</p>',
+      context: { sentence: 'It was a bright cold day in April.', book: hash, title: 'Tiny Book', cfi: 'epubcfi(/6/4!/4/4,/1:16,/1:20)' },
+    });
+    document.getElementById('page')!.remove();
+    vi.unstubAllGlobals();
+  });
+
+  test('the words studied by cards, seen all, deleted', async () => {
+    const hash = await invoke<string>('book_hash', { filePath: BOOK });
+    const add = useVocabulary.getState().add;
+    await add(WS, { word: 'bright', definition: '<p>shining</p>' });
+    await add(WS, {
+      word: 'cold', definition: '<p><i>Adjective</i> chilly<img src=x onerror="alert(1)"></p>',
+      context: { sentence: 'a bright cold day', book: hash, title: 'Tiny Book', cfi: 'epubcfi(/6/4!/4/2)' },
+    });
+    renderMain();
+    await go({ view: 'library' });
+    fireEvent.click(await screen.findByText('Vocabulary'));
+    await waitForView();
+    expect(viewState().view).toBe('vocabulary');
+    expect(await screen.findByTestId('vocabulary-card')).toHaveTextContent('cold');
+    expect(screen.getByTestId('vocabulary-position')).toHaveTextContent('1 / 2');
+    // the definition sanitized
+    expect(document.querySelector('[data-testid="vocabulary"] img[onerror]')).toBeNull();
+
+    // a card gone through: reviewed
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'ArrowRight' });
+    });
+    await waitFor(() => expect(screen.getByTestId('vocabulary-position')).toHaveTextContent('2 / 2'));
+    await waitFor(() => expect(useVocabulary.getState().entries.find((e) => e.word === 'cold')?.reviewCount).toBe(1));
+
+    // all of them; one deleted from the selection
+    fireEvent.click(screen.getByLabelText('All the words'));
+    expect(screen.getByText('Reviewed 1×')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Select words to delete'));
+    fireEvent.click(screen.getByLabelText('bright'));
+    await act(async () => {
+      fireEvent.click(screen.getByText('Delete 1'));
+    });
+    await waitFor(() => expect(useVocabulary.getState().entries.map((e) => e.word)).toEqual(['cold']));
+
+    // back to the book where the word was met
+    fireEvent.click(screen.getByLabelText('Study the cards'));
+    await act(async () => {
+      fireEvent.click(screen.getByText('Tiny Book'));
+    });
+    await waitFor(() => expect(viewState()).toMatchObject({ view: 'book', bookPath: BOOK, bookCfi: 'epubcfi(/6/4!/4/2)' }));
   });
 });
