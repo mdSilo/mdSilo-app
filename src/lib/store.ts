@@ -144,7 +144,7 @@ type PersistedState = Pick<Store,
   | 'userId' | 'theme' | 'darkMode' | 'font' | 'fontSize' | 'fontWt' | 'lineHeight'
   | 'isRTL' | 'isCheckSpellOn' | 'openOnStartup' | 'startupView' | 'noteSort' | 'recentDir'
   | 'pinnedDir' | 'sidebarWidth' | 'sideMenuOrientation' | 'feedChannelWidth' | 'feedArticleWidth' | 'readerSidebarWidth'
-  | 'useAsset' | 'activities' | 'readerSettings'
+  | 'useAsset' | 'activities' | 'readerSettings' | 'librarySettings'
 >;
 
 type FunctionPropertyNames<T> = {
@@ -340,6 +340,7 @@ export const store = createStore<Store>()(
         useAsset: state.useAsset,
         activities: state.activities,
         readerSettings: state.readerSettings,
+        librarySettings: state.librarySettings,
       }),
     }
   )

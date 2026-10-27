@@ -60,13 +60,9 @@ export const BaseModal = ({ title, children, isOpen, handleClose, panelClassName
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
             <Dialog.Panel className={`relative inline-block bg-base-100 rounded-sm p-4 overflow-hidden shadow-xl transform transition-all w-full ${panelClassName}`}>
-              <div className="absolute right-4 top-4">
-                <IconX 
-                  size={24} 
-                  className="cursor-pointer text-base-content/60"
-                  onClick={() => handleClose()}
-                />
-              </div>
+              <button className="absolute right-4 top-4" aria-label="Close" onClick={() => handleClose()}>
+                <IconX size={24} className="text-base-content/60" />
+              </button>
               <div>
                 <div className="text-center">
                   <Dialog.Title

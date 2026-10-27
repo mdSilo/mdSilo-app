@@ -1,5 +1,6 @@
 import { Draft } from 'immer';
 import { DEFAULT_READER_SETTINGS, type ReaderSettings } from 'reader/settings';
+import { DEFAULT_LIBRARY_SETTINGS, type LibrarySettings } from 'reader/shelf';
 import { setter, Setter, Store } from './store';
 import { isSystemDark, SYSTEM_THEME } from './themes';
 
@@ -100,6 +101,8 @@ export type UserSettings = {
   setReaderSidebarWidth: Setter<number>;
   readerSettings: ReaderSettings; // how books show, see reader/settings
   setReaderSettings: Setter<ReaderSettings>;
+  librarySettings: LibrarySettings; // how the library shows, see reader/shelf
+  setLibrarySettings: Setter<LibrarySettings>;
 };
 
 // resizable panel widths in px
@@ -189,6 +192,8 @@ const userSettingsSlice = (
   setReaderSidebarWidth: setter(set, 'readerSidebarWidth'),
   readerSettings: DEFAULT_READER_SETTINGS,
   setReaderSettings: setter(set, 'readerSettings'),
+  librarySettings: DEFAULT_LIBRARY_SETTINGS,
+  setLibrarySettings: setter(set, 'librarySettings'),
 });
 
 export default userSettingsSlice;

@@ -9,11 +9,9 @@ import {
   annotationsPathOf, parseAnnotations, serializeAnnotations, sortNotes,
   type BookHeader, type BookNote,
 } from './annotations';
+import { openBook, type BookDoc, type BookFormat } from './document';
 import {
-  formatContributors, formatLanguageMap, openBook, type BookDoc, type BookFormat,
-} from './document';
-import {
-  readBookState, readLibrary, saveBookEntry, titleOfFile, writeBookState, type BookEntry,
+  bookMetaOf, readBookState, readLibrary, saveBookEntry, titleOfFile, withBookMeta, writeBookState, type BookEntry,
 } from './library';
 import { cacheCover } from './covers';
 import { indexBookText } from './bookIndex';
@@ -157,14 +155,13 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       let time: Record<string, number> = {};
       if (ws && hash) {
         const lib = await readLibrary(ws);
-        entry = {
-          ...(lib.books[hash] ?? { addedAt: new Date().toISOString() }),
+        // the metadata of the file, unless edited in the library
+        entry = withBookMeta({
+          ...(lib.books[hash] ?? { addedAt: new Date().toISOString(), title: '', author: '' }),
           hash,
           file: toWorkspacePath(ws, path),
-          title: formatLanguageMap(book.metadata?.title) || titleOfFile(path),
-          author: formatContributors(book.metadata?.author),
           format,
-        };
+        }, bookMetaOf(book, path));
         await saveBookEntry(ws, entry);
         const state = await readBookState(ws, hash);
         if (!initialCfi) initialCfi = state?.location;

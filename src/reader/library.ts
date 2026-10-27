@@ -2,7 +2,9 @@ import { invoke } from '@tauri-apps/api/core';
 import { fromWorkspacePath, joinPath, toWorkspacePath } from 'file/util';
 import { DATA_DIR, READING_DIR } from 'workspace/layout';
 import { updateGitignore } from 'workspace/gitignore';
-import { bookFormatOf, isBookFile, type BookFormat } from './document';
+import {
+  bookFormatOf, formatContributors, formatLanguageMap, isBookFile, type BookDoc, type BookFormat, type Contributor,
+} from './document';
 
 /**
  * The books of a workspace, by their id: the partial MD5 of the file, so a
@@ -28,7 +30,39 @@ export type BookEntry = {
   addedAt: string;
   /** the book file is synced with the workspace (git) */
   synced?: boolean;
+  // the metadata, as the book says or as edited
+  subtitle?: string;
+  series?: string;
+  seriesIndex?: number;
+  seriesTotal?: number;
+  publisher?: string;
+  /** e.g. 2001, 2001-09-11 */
+  published?: string;
+  /** codes, e.g. en, zh-CN */
+  language?: string[];
+  identifier?: string;
+  subjects?: string[];
+  /** HTML, as in the book: sanitized to show */
+  description?: string;
+  /** the metadata of the book file read, at least once */
+  metaRead?: boolean;
+  /** the metadata edited by the user: not taken from the book file any more */
+  edited?: boolean;
+  /** the cover: of the book (cached), chosen (synced, see covers.ts), or none */
+  cover?: 'custom' | 'none';
+  /** the group of the library, nested by `/`, e.g. Fiction/Classics */
+  group?: string;
+  /** e.g. Todo, Doing, Done */
+  status?: string;
 };
+
+/** The fields of the metadata, edited together. */
+export const META_FIELDS = [
+  'title', 'subtitle', 'author', 'series', 'seriesIndex', 'seriesTotal', 'publisher', 'published',
+  'language', 'identifier', 'subjects', 'description',
+] as const;
+
+export type BookMeta = Pick<BookEntry, (typeof META_FIELDS)[number]>;
 
 export type Library = { version: number; books: Record<string, BookEntry> };
 
@@ -41,6 +75,48 @@ export type BookState = {
   time?: Record<string, number>;
   updatedAt: string;
 };
+
+const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
+const strings = (value: unknown): string[] =>
+  (Array.isArray(value) ? value : value ? [value] : []).map(text).filter(Boolean);
+
+type FoliateMetadata = BookDoc['metadata'] & {
+  subtitle?: string;
+  subject?: Contributor;
+  belongsTo?: { series?: { name?: string; position?: string | number } | { name?: string; position?: string | number }[] | null };
+};
+
+/** The metadata of a book, as the book file says; title by the file name if none. */
+export function bookMetaOf(book: BookDoc, path: string): BookMeta {
+  const meta = (book.metadata ?? {}) as FoliateMetadata;
+  const series = [meta.belongsTo?.series ?? []].flat()[0];
+  const index = Number.parseFloat(String(series?.position ?? ''));
+  const subjects = [meta.subject ?? []].flat().map((s) => formatContributors(s).trim()).filter(Boolean);
+  const identifier = text(meta.identifier).replace(/^urn:(isbn|uuid|doi):/i, '');
+  return {
+    title: formatLanguageMap(meta.title) || titleOfFile(path),
+    author: formatContributors(meta.author),
+    subtitle: text(meta.subtitle) || undefined,
+    series: text(series?.name) || undefined,
+    seriesIndex: Number.isFinite(index) ? index : undefined,
+    publisher: formatContributors(meta.publisher as Contributor) || undefined,
+    published: text(meta.published) || undefined,
+    language: strings(meta.language).length ? strings(meta.language) : undefined,
+    identifier: identifier || undefined,
+    subjects: subjects.length ? subjects : undefined,
+    description: text(meta.description) || undefined,
+  };
+}
+
+/**
+ * The entry with the metadata of its book file: unless edited by the user,
+ * then as it is. Undefined fields of the book are not written.
+ */
+export function withBookMeta(entry: BookEntry, meta: BookMeta): BookEntry {
+  if (entry.edited) return { ...entry, metaRead: true };
+  const defined = Object.fromEntries(Object.entries(meta).filter(([, v]) => v !== undefined));
+  return { ...entry, ...defined, metaRead: true };
+}
 
 export const emptyLibrary = (): Library => ({ version: LIBRARY_VERSION, books: {} });
 
@@ -214,11 +290,16 @@ export async function writeReadingGitignore(ws: string, lib: Library) {
 
 /** Sync a book file with the workspace, or not. */
 export function setBookSynced(ws: string, hash: string, synced: boolean) {
+  return setBooksSynced(ws, [hash], synced);
+}
+
+/** Sync the files of some books with the workspace, or not: written once. */
+export function setBooksSynced(ws: string, hashes: string[], synced: boolean) {
   return changeLibrary(async () => {
     const lib = await readLibrary(ws);
-    const entry = lib.books[hash];
-    if (!entry) return;
-    lib.books[hash] = { ...entry, synced };
+    const changed = hashes.filter((hash) => lib.books[hash] && Boolean(lib.books[hash].synced) !== synced);
+    if (changed.length === 0) return;
+    for (const hash of changed) lib.books[hash] = { ...lib.books[hash], synced };
     await writeLibrary(ws, lib);
     await writeReadingGitignore(ws, lib);
   });
@@ -233,4 +314,86 @@ export async function findBookPath(ws: string, hash: string): Promise<string | u
     return (await invoke<boolean>('file_exist', { filePath: path })) ? path : undefined;
   };
   return (await pathOf(await readLibrary(ws))) ?? (await pathOf(await refreshLibrary(ws)));
+}
+
+/** Change some books of the library by a function; those it returns changed. */
+function changeBooks(ws: string, fn: (lib: Library) => BookEntry[]) {
+  return changeLibrary(async () => {
+    const lib = await readLibrary(ws);
+    const changed = fn(lib);
+    for (const entry of changed) lib.books[entry.hash] = entry;
+    if (changed.length > 0) await writeLibrary(ws, lib);
+    return lib;
+  });
+}
+
+/** Put the books in a group, '' for none. */
+export function setBooksGroup(ws: string, hashes: string[], group: string) {
+  const name = normalizeGroup(group);
+  return changeBooks(ws, (lib) => hashes
+    .map((hash) => lib.books[hash])
+    .filter((entry): entry is BookEntry => Boolean(entry) && (entry.group ?? '') !== name)
+    .map((entry) => ({ ...entry, group: name || undefined })));
+}
+
+/**
+ * Rename a group, its sub groups with it: `A` to `B` makes `A/C` `B/C`.
+ * To '' the books go up to the parent of the group.
+ */
+export function renameGroup(ws: string, from: string, to: string) {
+  const parent = from.includes('/') ? from.slice(0, from.lastIndexOf('/')) : '';
+  const target = normalizeGroup(to) || parent;
+  return changeBooks(ws, (lib) => Object.values(lib.books).flatMap((entry) => {
+    const group = entry.group ?? '';
+    if (group !== from && !group.startsWith(`${from}/`)) return [];
+    const renamed = normalizeGroup(target + group.slice(from.length));
+    return [{ ...entry, group: renamed || undefined }];
+  }));
+}
+
+/** `a / b/` as `a/b`: the parts trimmed, the empty ones dropped. */
+export const normalizeGroup = (group: string) =>
+  group.split('/').map((part) => part.trim()).filter(Boolean).join('/');
+
+/**
+ * Remove a book from the library: its file, its reading state; its notes too
+ * if asked (the md next to the book). The covers are removed by covers.ts.
+ */
+export function deleteBook(ws: string, hash: string, withNotes = false) {
+  return deleteBooks(ws, [hash], withNotes);
+}
+
+/** Remove some books from the library, as deleteBook: written once. */
+export function deleteBooks(ws: string, hashes: string[], withNotes = false) {
+  return changeLibrary(async () => {
+    const lib = await readLibrary(ws);
+    const entries = hashes.map((hash) => lib.books[hash]).filter((entry): entry is BookEntry => Boolean(entry));
+    if (entries.length === 0) return lib;
+    const paths = entries.flatMap((entry) => {
+      const path = fromWorkspacePath(ws, entry.file);
+      return [path, statePath(ws, entry.hash), ...(withNotes ? [`${path}.md`] : [])];
+    });
+    await invoke('delete_files', { paths });
+    for (const entry of entries) delete lib.books[entry.hash];
+    await writeLibrary(ws, lib);
+    await writeReadingGitignore(ws, lib);
+    return lib;
+  });
+}
+
+/**
+ * Write a book file dropped in, by its name and bytes, into reading/ (or a
+ * folder in it): not over another file.
+ * @returns the path written, undefined on failure
+ */
+export async function importBookData(ws: string, name: string, data: Uint8Array): Promise<string | undefined> {
+  const readingDir = joinPath(ws, READING_DIR);
+  const dot = name.lastIndexOf('.');
+  const [stem, ext] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ''];
+  for (let i = 0; i < 100; i++) {
+    const target = joinPath(readingDir, i === 0 ? name : `${stem}-${i}${ext}`);
+    if (await invoke<boolean>('file_exist', { filePath: target })) continue;
+    return (await invoke<boolean>('write_file_bytes', { filePath: target, data: Array.from(data) })) ? target : undefined;
+  }
+  return undefined;
 }

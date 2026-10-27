@@ -1,8 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
 import { gitignoreBlock, updateGitignore } from 'workspace/gitignore';
 import { useWebFs } from '../testUtils';
+import type { BookDoc } from './document';
 import {
-  importBookFile, readBookState, readLibrary, refreshLibrary, setBookSynced, writeBookState,
+  bookMetaOf, deleteBook, deleteBooks, importBookData, importBookFile, readBookState, readLibrary, refreshLibrary,
+  renameGroup, saveBookEntry, setBookSynced, setBooksGroup, setBooksSynced, withBookMeta, writeBookState, type BookEntry,
 } from './library';
 
 const WS = '/mdSilo';
@@ -90,5 +92,107 @@ describe('gitignore', () => {
     expect(once).toBe(`${gitignoreBlock(['a.epub'])}\n`);
     const edited = `top\n${once}bottom\n`;
     expect(updateGitignore(edited, [])).toBe(`top\n${gitignoreBlock([])}\nbottom\n`);
+  });
+
+  test('the metadata of a book file, unless edited', () => {
+    const book = {
+      metadata: {
+        title: { en: 'Dune' }, author: [{ name: 'Frank Herbert' }], subtitle: 'A novel',
+        publisher: { name: 'Chilton' }, published: '1965', language: ['en'], identifier: 'urn:isbn:9780441013593',
+        subject: [{ name: 'Science fiction' }, 'Deserts, arid'], description: '<p>Arrakis</p>',
+        belongsTo: { series: [{ name: 'Dune Chronicles', position: '1' }] },
+      },
+    } as unknown as BookDoc;
+    const meta = bookMetaOf(book, '/ws/reading/file.epub');
+    expect(meta).toEqual({
+      title: 'Dune', author: 'Frank Herbert', subtitle: 'A novel', series: 'Dune Chronicles', seriesIndex: 1,
+      publisher: 'Chilton', published: '1965', language: ['en'], identifier: '9780441013593',
+      subjects: ['Science fiction', 'Deserts, arid'], description: '<p>Arrakis</p>',
+    });
+    expect(bookMetaOf({ metadata: {} } as BookDoc, '/ws/reading/file.epub').title).toBe('file');
+    const entry: BookEntry = { hash: 'h', file: 'reading/file.epub', title: 'file', author: '', format: 'EPUB', addedAt: '', group: 'G' };
+    expect(withBookMeta(entry, meta)).toMatchObject({ title: 'Dune', group: 'G', metaRead: true });
+    // the edits of the user kept
+    const edited = { ...entry, title: 'My Dune', edited: true };
+    expect(withBookMeta(edited, meta)).toEqual({ ...edited, metaRead: true });
+  });
+
+  test('groups: set, renamed with the sub groups, removed', async () => {
+    await write(`${WS}/reading/A.epub`, 'a');
+    await write(`${WS}/reading/B.epub`, 'b');
+    await write(`${WS}/reading/C.epub`, 'c');
+    const [a, b, c] = await Promise.all(['A', 'B', 'C'].map((n) => hashOf(`${WS}/reading/${n}.epub`)));
+    await refreshLibrary(WS);
+    await setBooksGroup(WS, [a, b], ' Fiction / Old ');
+    await setBooksGroup(WS, [c], 'Fiction');
+    const groups = async () => {
+      const lib = await readLibrary(WS);
+      return [a, b, c].map((h) => lib.books[h].group);
+    };
+    expect(await groups()).toEqual(['Fiction/Old', 'Fiction/Old', 'Fiction']);
+    await renameGroup(WS, 'Fiction', 'Novels');
+    expect(await groups()).toEqual(['Novels/Old', 'Novels/Old', 'Novels']);
+    // ungrouped: up to the parent
+    await renameGroup(WS, 'Novels/Old', '');
+    expect(await groups()).toEqual(['Novels', 'Novels', 'Novels']);
+    await setBooksGroup(WS, [a], '');
+    expect((await readLibrary(WS)).books[a].group).toBeUndefined();
+  });
+
+  test('deletes a book, its notes if asked', async () => {
+    await write(`${WS}/reading/A.epub`, 'a');
+    await write(`${WS}/reading/A.epub.md`, 'notes');
+    await write(`${WS}/reading/B.epub`, 'b');
+    await write(`${WS}/reading/B.epub.md`, 'notes');
+    const [a, b] = await Promise.all(['A', 'B'].map((n) => hashOf(`${WS}/reading/${n}.epub`)));
+    await refreshLibrary(WS);
+    await setBookSynced(WS, a, true);
+    await writeBookState(WS, a, { location: 'x', updatedAt: '' });
+    await deleteBook(WS, a);
+    await deleteBook(WS, b, true);
+    const exists = (p: string) => invoke<boolean>('file_exist', { filePath: `${WS}/${p}` });
+    expect(await exists('reading/A.epub')).toBe(false);
+    expect(await exists('reading/A.epub.md')).toBe(true);
+    expect(await exists(`.mdsilo/books/${a}.json`)).toBe(false);
+    expect(await exists('reading/B.epub.md')).toBe(false);
+    expect(Object.keys((await readLibrary(WS)).books)).toEqual([]);
+    expect(await read(`${WS}/reading/.gitignore`)).not.toContain('A.epub');
+  });
+
+  test('writes a book dropped in, not over another one', async () => {
+    await write(`${WS}/reading/A.epub`, 'a');
+    expect(await importBookData(WS, 'A.epub', new Uint8Array([1, 2]))).toBe(`${WS}/reading/A-1.epub`);
+    await saveBookEntry(WS, { hash: 'x', file: 'reading/A-1.epub', title: 'A', author: '', format: 'EPUB', addedAt: '' });
+    expect((await readLibrary(WS)).books.x.title).toBe('A');
+  });
+
+  test('the files of some books synced at once', async () => {
+    await write(`${WS}/reading/A.epub`, 'a');
+    await write(`${WS}/reading/B.epub`, 'b');
+    await write(`${WS}/reading/C.epub`, 'c');
+    const [a, b, c] = await Promise.all(['A', 'B', 'C'].map((n) => hashOf(`${WS}/reading/${n}.epub`)));
+    await refreshLibrary(WS);
+    await setBooksSynced(WS, [a, b, 'gone'], true);
+    const gitignore = await read(`${WS}/reading/.gitignore`);
+    expect(gitignore).toContain('!/A.epub');
+    expect(gitignore).toContain('!/B.epub');
+    expect(gitignore).not.toContain('!/C.epub');
+    await setBooksSynced(WS, [a, c], false);
+    const lib = await readLibrary(WS);
+    expect([a, b, c].map((h) => Boolean(lib.books[h].synced))).toEqual([false, true, false]);
+  });
+
+  test('deletes some books at once', async () => {
+    for (const n of ['A', 'B', 'C']) {
+      await write(`${WS}/reading/${n}.epub`, n);
+      await write(`${WS}/reading/${n}.epub.md`, 'notes');
+    }
+    const [a, b, c] = await Promise.all(['A', 'B', 'C'].map((n) => hashOf(`${WS}/reading/${n}.epub`)));
+    await refreshLibrary(WS);
+    await deleteBooks(WS, [a, b, 'gone'], true);
+    const exists = (p: string) => invoke<boolean>('file_exist', { filePath: `${WS}/reading/${p}` });
+    expect(await Promise.all(['A.epub', 'A.epub.md', 'B.epub', 'C.epub', 'C.epub.md'].map(exists)))
+      .toEqual([false, false, false, true, true]);
+    expect(Object.keys((await readLibrary(WS)).books)).toEqual([c]);
   });
 });

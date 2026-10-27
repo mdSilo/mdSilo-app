@@ -1,6 +1,7 @@
 import { Blob as NodeBlob } from 'node:buffer';
 import type { ReactNode } from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { store } from 'lib/store';
@@ -16,6 +17,8 @@ import { resetReaderStore, useReaderStore } from '../readerStore';
 import { usePopups } from '../popups';
 import { resetReaderChrome, useReaderChrome } from '../chrome';
 import { DEFAULT_READER_SETTINGS } from '../settings';
+import { DEFAULT_LIBRARY_SETTINGS } from '../shelf';
+import { readLibrary, refreshLibrary, setBooksGroup } from '../library';
 import { resetVocabulary, useVocabulary } from '../vocabulary';
 import { setView, type FoliateView } from '../view';
 
@@ -77,7 +80,9 @@ const viewState = () => JSON.parse(screen.getByTestId('view').textContent as str
 
 beforeEach(async () => {
   await useWebFs();
-  store.setState({ initDir: WS, layout: 'workspace', readerSettings: DEFAULT_READER_SETTINGS });
+  store.setState({
+    initDir: WS, layout: 'workspace', readerSettings: DEFAULT_READER_SETTINGS, librarySettings: DEFAULT_LIBRARY_SETTINGS,
+  });
   await writeBook(BOOK, makeEpub());
   setView(view as unknown as FoliateView);
 });
@@ -307,11 +312,14 @@ describe('reader on mobile', () => {
 });
 
 describe('library', () => {
+  const bookItem = (title: string) => screen.findByRole('button', { name: title });
+  const libraryEntry = async (title: string) =>
+    Object.values((await readLibrary(WS)).books).find((b) => b.title === title);
+
   test('lists the books, opens one, syncs it or not', async () => {
     renderMain();
     await go({ view: 'library' });
-    const card = await screen.findByText('Tiny Book');
-    expect(screen.getAllByText('EPUB').length).toBeGreaterThan(0);
+    const card = await bookItem('Tiny Book');
     fireEvent.click(screen.getByTitle(/click to sync the book file too/));
     await waitFor(() => expect(screen.getByTitle(/click to stop/)).toBeInTheDocument());
     expect(await invoke<string>('read_file', { filePath: `${WS}/reading/.gitignore` })).toContain('!/Tiny Book.epub');
@@ -321,14 +329,14 @@ describe('library', () => {
     expect(viewState()).toMatchObject({ view: 'book', bookPath: BOOK });
   });
 
-  test('reads the titles of the books never opened', async () => {
+  test('reads the metadata of the books never opened', async () => {
     await writeBook(`${WS}/reading/sub/file-name.epub`, makeEpub('Real Title'));
     renderMain();
     await go({ view: 'library' });
-    expect(await screen.findByText('Real Title')).toBeInTheDocument();
-    expect(screen.getAllByText('Jane Doe').length).toBeGreaterThan(0);
-    const lib = JSON.parse(await invoke<string>('read_file', { filePath: `${WS}/.mdsilo/books.json` }));
-    expect(Object.values(lib.books).map((b) => (b as { title: string }).title).sort()).toEqual(['Real Title', 'Tiny Book']);
+    expect(await bookItem('Real Title')).toBeInTheDocument();
+    const lib = await readLibrary(WS);
+    expect(Object.values(lib.books).map((b) => b.title).sort()).toEqual(['Real Title', 'Tiny Book']);
+    expect(Object.values(lib.books).every((b) => b.metaRead && b.author === 'Jane Doe')).toBe(true);
   });
 
   test('adds books from the device', async () => {
@@ -336,13 +344,269 @@ describe('library', () => {
     vi.mocked(dialog.open).mockResolvedValueOnce(['/downloads/Other.epub']);
     renderMain();
     await go({ view: 'library' });
-    await screen.findByText('Tiny Book');
+    await bookItem('Tiny Book');
     await act(async () => {
       fireEvent.click(screen.getByText('Add books'));
     });
     await waitForView();
     // one book added: read
     await waitFor(() => expect(viewState()).toMatchObject({ view: 'book', bookPath: `${WS}/reading/Other.epub` }));
+    // opened, not writing to the library of the next test
+    await waitFor(() => expect(useReaderStore.getState().status).toBe('ready'));
+  });
+
+  test('as a list, grouped by author, searched', async () => {
+    await writeBook(`${WS}/reading/Second.epub`, makeEpub('Second'));
+    // where the menus go
+    const container = document.createElement('div');
+    container.id = 'app-container';
+    document.body.append(container);
+    renderMain();
+    await go({ view: 'library' });
+    await bookItem('Second');
+    await waitFor(() => expect(screen.getByLabelText('Search books')).toHaveAttribute('placeholder', 'Search in 2 books'));
+    fireEvent.change(screen.getByLabelText('Search books'), { target: { value: '^sec' } });
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Tiny Book' })).not.toBeInTheDocument());
+    fireEvent.click(screen.getByLabelText('Clear the search'));
+    await bookItem('Tiny Book');
+
+    await userEvent.click(screen.getByTestId('dropdown-button'));
+    await userEvent.click(screen.getByText('List'));
+    expect(store.getState().librarySettings.view).toBe('list');
+    await userEvent.click(screen.getByTestId('dropdown-button'));
+    await userEvent.click(screen.getByText('Authors'));
+    expect(store.getState().librarySettings.groupBy).toBe('author');
+    fireEvent.click(await bookItem('Jane Doe'));
+    expect(await screen.findByText('Author:')).toBeInTheDocument();
+    expect(await bookItem('Second')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Back to the library'));
+    expect(await bookItem('Jane Doe')).toBeInTheDocument();
+    container.remove();
+  });
+
+  test('a book put in a group, the group opened, renamed, ungrouped', async () => {
+    renderMain();
+    await go({ view: 'library' });
+    fireEvent.click(await screen.findByLabelText('Book details'));
+    fireEvent.click(await screen.findByLabelText('Group and status'));
+    fireEvent.change(screen.getByLabelText('Group'), { target: { value: 'Fiction / Short' } });
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'Doing' } });
+    await act(async () => {
+      fireEvent.click(screen.getByText('Save'));
+    });
+    await waitFor(async () => expect(await libraryEntry('Tiny Book')).toMatchObject({ group: 'Fiction/Short', status: 'Doing' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByTestId('book-details')).not.toBeInTheDocument());
+
+    // the groups, nested
+    fireEvent.click(await bookItem('Fiction'));
+    fireEvent.click(await bookItem('Short'));
+    expect(await bookItem('Tiny Book')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Groups' })).toHaveTextContent('AllFictionShort');
+
+    fireEvent.click(screen.getByLabelText('Rename the group'));
+    fireEvent.change(screen.getByLabelText('Group name'), { target: { value: 'Novels' } });
+    await act(async () => {
+      fireEvent.click(screen.getByText('Rename'));
+    });
+    await waitFor(async () => expect((await libraryEntry('Tiny Book'))?.group).toBe('Novels'));
+    await waitFor(() => expect(screen.getByRole('navigation', { name: 'Groups' })).toHaveTextContent('AllNovels'));
+
+    fireEvent.click(screen.getByLabelText('Rename the group'));
+    await act(async () => {
+      fireEvent.click(screen.getByText('Ungroup'));
+    });
+    await waitFor(async () => expect((await libraryEntry('Tiny Book'))?.group).toBeUndefined());
+    await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Groups' })).not.toBeInTheDocument());
+    expect(await bookItem('Tiny Book')).toBeInTheDocument();
+  });
+
+  test('the files of a group, of the books selected, synced', async () => {
+    await writeBook(`${WS}/reading/Second.epub`, makeEpub('Second'));
+    await writeBook(`${WS}/reading/Third.epub`, makeEpub('Third'));
+    renderMain();
+    await go({ view: 'library' });
+    await bookItem('Third');
+    const synced = async () => Object.fromEntries(Object.values((await readLibrary(WS)).books).map((b) => [b.title, Boolean(b.synced)]));
+
+    // selected: a click on a book, not reading it
+    fireEvent.click(screen.getByText('Select'));
+    fireEvent.click(await bookItem('Tiny Book'));
+    fireEvent.click(await bookItem('Second'));
+    expect(viewState().view).toBe('library');
+    const bar = screen.getByRole('toolbar', { name: 'Selected books' });
+    expect(bar).toHaveTextContent('2 selected · 0 files synced');
+    await act(async () => {
+      fireEvent.click(within(bar).getByText('Sync files'));
+    });
+    await waitFor(async () => expect(await synced()).toEqual({ 'Tiny Book': true, Second: true, Third: false }));
+    await waitFor(() => expect(bar).toHaveTextContent('2 selected · 2 files synced'));
+    fireEvent.click(within(bar).getByText('Select all'));
+    expect(bar).toHaveTextContent('3 selected');
+    await act(async () => {
+      fireEvent.click(within(bar).getByText('Stop syncing'));
+    });
+    await waitFor(async () => expect(await synced()).toEqual({ 'Tiny Book': false, Second: false, Third: false }));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('toolbar', { name: 'Selected books' })).not.toBeInTheDocument();
+
+    // a group: all its books at once
+    const lib = await readLibrary(WS);
+    await setBooksGroup(WS, Object.keys(lib.books).filter((h) => lib.books[h].title !== 'Third'), 'Mine');
+    await go({ view: 'vocabulary' });
+    await go({ view: 'library' });
+    const group = await bookItem('Mine');
+    fireEvent.click(within(group).getByTitle('0 of 2 book files synced: click to sync them all'));
+    await waitFor(async () => expect(await synced()).toEqual({ 'Tiny Book': true, Second: true, Third: false }));
+    fireEvent.click(await within(group).findByTitle(/All 2 book files synced/));
+    await waitFor(async () => expect(await synced()).toEqual({ 'Tiny Book': false, Second: false, Third: false }));
+
+    // the checkbox of a group selects its books; a click elsewhere opens it
+    fireEvent.click(screen.getByText('Select'));
+    fireEvent.click(screen.getByLabelText('Select Mine'));
+    expect(screen.getByRole('toolbar', { name: 'Selected books' })).toHaveTextContent('2 selected');
+    fireEvent.click(group);
+    expect(await screen.findByRole('navigation', { name: 'Groups' })).toHaveTextContent('AllMine');
+    expect(screen.getByLabelText('Select Tiny Book')).toBeChecked();
+  });
+
+  test('the books selected moved to a group, deleted', async () => {
+    await writeBook(`${WS}/reading/Second.epub`, makeEpub('Second'));
+    await writeBook(`${WS}/reading/Third.epub`, makeEpub('Third'));
+    await invoke('write_file', { filePath: `${WS}/reading/Second.epub.md`, text: '# notes' });
+    renderMain();
+    await go({ view: 'library' });
+    await bookItem('Third');
+    fireEvent.click(screen.getByText('Select'));
+    fireEvent.click(await bookItem('Tiny Book'));
+    fireEvent.click(await bookItem('Second'));
+    const bar = screen.getByRole('toolbar', { name: 'Selected books' });
+
+    fireEvent.click(within(bar).getByText('Move to group'));
+    fireEvent.change(screen.getByLabelText('Group'), { target: { value: 'Shelf/Top ' } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Move' }));
+    });
+    await waitFor(async () => expect((await libraryEntry('Second'))?.group).toBe('Shelf/Top'));
+    expect((await libraryEntry('Tiny Book'))?.group).toBe('Shelf/Top');
+    expect((await libraryEntry('Third'))?.group).toBeUndefined();
+    // in the group they went to, still selected
+    await waitFor(() => expect(screen.getByRole('navigation', { name: 'Groups' })).toHaveTextContent('AllShelfTop'));
+    expect(screen.getByLabelText('Select Second')).toBeChecked();
+
+    fireEvent.click(within(bar).getByText('Delete'));
+    expect(screen.getByText(/Delete the 2 books selected/)).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Delete 2 books' }));
+    });
+    await waitFor(async () => expect(Object.values((await readLibrary(WS)).books).map((b) => b.title)).toEqual(['Third']));
+    expect(await invoke<boolean>('file_exist', { filePath: `${WS}/reading/Second.epub` })).toBe(false);
+    // the notes kept unless asked
+    expect(await invoke<boolean>('file_exist', { filePath: `${WS}/reading/Second.epub.md` })).toBe(true);
+    await waitFor(() => expect(bar).toHaveTextContent('0 selected'));
+    // the group gone: up to all the books
+    await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Groups' })).not.toBeInTheDocument());
+    expect(await bookItem('Third')).toBeInTheDocument();
+  });
+
+  test('books imported from a folder, grouped by their folders', async () => {
+    await writeBook('/downloads/books/Sub/Other.epub', makeEpub('Other'));
+    await writeBook('/downloads/books/Again.epub', makeEpub());
+    vi.mocked(dialog.open).mockResolvedValueOnce('/downloads/books');
+    renderMain();
+    await go({ view: 'library' });
+    await bookItem('Tiny Book');
+    fireEvent.click(screen.getByText('Add folder'));
+    expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled();
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Choose a folder'));
+    });
+    expect(await screen.findByText('/downloads/books')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Minimum file size (KB)'), { target: { value: '0' } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Import' }));
+    });
+    // the same content as Tiny Book: not copied again
+    expect(await screen.findByText('1 book added · 1 in the library already')).toBeInTheDocument();
+    expect((await libraryEntry('Other'))?.group).toBe('books/Sub');
+    expect((await libraryEntry('Tiny Book'))?.group).toBe('books');
+    expect(await bookItem('books')).toBeInTheDocument();
+    expect(store.getState().librarySettings.folderImport).toMatchObject({ dir: '/downloads/books', minSizeKB: 0, flatten: false });
+
+    // the choices of the last time
+    fireEvent.click(screen.getByText('Add folder'));
+    expect(screen.getByText('/downloads/books')).toBeInTheDocument();
+    expect(screen.getByLabelText('Minimum file size (KB)')).toHaveValue(0);
+  });
+
+  test('the covers of a group in the list scrolled by arrows', async () => {
+    await writeBook(`${WS}/reading/Second.epub`, makeEpub('Second'));
+    await refreshLibrary(WS);
+    await setBooksGroup(WS, Object.keys((await readLibrary(WS)).books), 'Mine');
+    store.setState({ librarySettings: { ...DEFAULT_LIBRARY_SETTINGS, view: 'list' } });
+    renderMain();
+    await go({ view: 'library' });
+    await bookItem('Mine');
+    const row = screen.getByTestId('cover-row').firstElementChild as HTMLElement;
+    expect(screen.queryByLabelText('Scroll right')).not.toBeInTheDocument();
+    // wider than shown: jsdom lays nothing out
+    Object.defineProperty(row, 'scrollWidth', { value: 600, configurable: true });
+    Object.defineProperty(row, 'clientWidth', { value: 200, configurable: true });
+    const scrollBy = vi.fn();
+    row.scrollBy = scrollBy as unknown as typeof row.scrollBy;
+    fireEvent.scroll(row);
+    expect(screen.queryByLabelText('Scroll left')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Scroll right'));
+    expect(scrollBy).toHaveBeenCalledWith({ left: 100, behavior: 'smooth' });
+    // not opening the group
+    expect(screen.queryByRole('navigation', { name: 'Groups' })).not.toBeInTheDocument();
+    row.scrollLeft = 400;
+    fireEvent.scroll(row);
+    expect(screen.getByLabelText('Scroll left')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Scroll right')).not.toBeInTheDocument();
+  });
+
+  test('the metadata of a book edited, kept when the book is opened', async () => {
+    renderMain();
+    await go({ view: 'library' });
+    fireEvent.click(await screen.findByLabelText('Book details'));
+    expect((await within(await screen.findByTestId('book-details')).findAllByText('Jane Doe')).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByLabelText('Edit metadata'));
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: '' } });
+    expect(screen.getByText('A title is needed')).toBeInTheDocument();
+    expect(screen.getByText('Save')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'My Tiny Book' } });
+    fireEvent.change(screen.getByLabelText('Series'), { target: { value: 'Tiny' } });
+    fireEvent.change(screen.getByLabelText('Series index'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Subjects'), { target: { value: 'Tests; Books' } });
+    await act(async () => {
+      fireEvent.click(screen.getByText('Save'));
+    });
+    await waitFor(async () => expect(await libraryEntry('My Tiny Book')).toMatchObject({
+      series: 'Tiny', seriesIndex: 2, subjects: ['Tests', 'Books'], edited: true,
+    }));
+    expect(await within(screen.getByTestId('book-details')).findByText('Tiny #2')).toBeInTheDocument();
+
+    // not taken from the book file any more
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(useReaderStore.getState().status).toBe('ready'));
+    expect(useReaderStore.getState().entry?.title).toBe('My Tiny Book');
+    expect((await libraryEntry('My Tiny Book'))?.title).toBe('My Tiny Book');
+  });
+
+  test('a book deleted', async () => {
+    await invoke('write_file', { filePath: `${BOOK}.md`, text: '# Tiny Book' });
+    renderMain();
+    await go({ view: 'library' });
+    fireEvent.click(await screen.findByLabelText('Book details'));
+    fireEvent.click(await screen.findByLabelText('Delete'));
+    fireEvent.click(screen.getByLabelText(/Delete its notes too/));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    });
+    expect(await screen.findByText(/No books yet/)).toBeInTheDocument();
+    expect(await invoke<boolean>('file_exist', { filePath: BOOK })).toBe(false);
+    expect(await invoke<boolean>('file_exist', { filePath: `${BOOK}.md` })).toBe(false);
   });
 });
 
@@ -427,8 +691,8 @@ describe('reader, the second part', () => {
       });
     });
     // more than a few words: no dictionary
-    expect(screen.queryByLabelText('Look it up in Wiktionary')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText('Translate it'));
+    expect(screen.queryByLabelText('Dictionary')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Translate'));
     expect(await screen.findByText('un jour froid')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Keep as note'));
     expect(useReaderStore.getState().notes[0]).toMatchObject({ text: 'a bright cold day', note: 'un jour froid' });
@@ -443,7 +707,7 @@ describe('reader, the second part', () => {
         text: 'cold', cfi: 'epubcfi(/6/4!/4/4,/1:9,/1:13)', index: 1, box: { left: 10, top: 10, right: 50, bottom: 20 },
       });
     });
-    fireEvent.click(screen.getByLabelText('Look it up in Wiktionary'));
+    fireEvent.click(screen.getByLabelText('Dictionary'));
     expect(await screen.findByText('Could not look it up: offline')).toBeInTheDocument();
   });
 });
@@ -466,7 +730,7 @@ describe('vocabulary', () => {
         text: 'cold', cfi: 'epubcfi(/6/4!/4/4,/1:16,/1:20)', index: 1, range, box: { left: 10, top: 10, right: 50, bottom: 20 },
       });
     });
-    fireEvent.click(screen.getByLabelText('Look it up in Wiktionary'));
+    fireEvent.click(screen.getByLabelText('Dictionary'));
     await act(async () => {
       fireEvent.click(await screen.findByText('Add to vocabulary'));
     });
