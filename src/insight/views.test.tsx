@@ -16,7 +16,7 @@ import HeatMap from './HeatMap';
 import Chronicle from './Chronicle';
 import Journals from './Journals';
 import Graph from './Graph';
-import { buildGraphData, HASHTAG_REGEX } from './ForceGraph';
+import { buildGraphData, edgePoint, HASHTAG_REGEX } from './ForceGraph';
 
 const Controls = ({ children }: { children: ReactNode }) => {
   const { state, dispatch } = useCurrentViewContext();
@@ -111,7 +111,7 @@ describe('HeatMap', () => {
     const now = new Date().toISOString();
     const notes = Array.from({ length: 6 }, (_, i) => makeNote({ id: `/n/${i}.md`, created_at: now, updated_at: now }));
     const { container } = render(<HeatMap noteList={notes} onClickCell={vi.fn()} />);
-    expect(container.querySelectorAll('rect')).toHaveLength(53 * 7);
+    expect(container.querySelectorAll('g.cursor-pointer > rect')).toHaveLength(53 * 7);
     // 6 created + 6 updated today => 12 activities
     expect(container.querySelectorAll('rect.fill-primary')).toHaveLength(1);
     expect(screen.getByText(/Activity: 12/)).toBeInTheDocument();
@@ -122,8 +122,9 @@ describe('HeatMap', () => {
     const { container } = render(
       <HeatMap noteList={[]} reading={{ [today()]: 46 * 60 }} onClickCell={vi.fn()} />
     );
-    // 4 units: the lightest color
-    expect(container.querySelectorAll('rect.fill-primary\\/30')).toHaveLength(1);
+    // 4 units, an hour: the color of reading
+    expect(container.querySelectorAll('rect.fill-secondary\\/60')).toHaveLength(1);
+    expect(container.querySelector('[data-testid="hm-split"]')).toBeNull();
     expect(screen.getByText(/Activity: 4\s+Created: 0\s+Updated: 0\s+Read: 46 min/)).toBeInTheDocument();
   });
 
@@ -132,10 +133,18 @@ describe('HeatMap', () => {
     const notes = Array.from({ length: 6 }, (_, i) => makeNote({ id: `/n/${i}.md`, created_at: now, updated_at: now }));
     render(<HeatMap noteList={notes} reading={{ [today()]: 46 * 60 }} onClickCell={vi.fn()} />);
     expect(screen.getByText(/Activity: 16/)).toBeInTheDocument();
+    // both: split, written above the slash, read below
+    const split = () => document.querySelectorAll('[data-testid="hm-split"] polygon');
+    expect(split()).toHaveLength(1);
+    expect(split()[0]).toHaveClass('fill-secondary/60');
+    expect(document.querySelectorAll('rect.fill-primary')).toHaveLength(1);
     await userEvent.click(screen.getByRole('tab', { name: 'Writing' }));
     expect(screen.getByText(/Activity: 12/)).toBeInTheDocument();
+    expect(split()).toHaveLength(0);
+    expect(document.querySelectorAll('rect.fill-primary')).toHaveLength(1);
     await userEvent.click(screen.getByRole('tab', { name: 'Reading' }));
     expect(screen.getByText(/Activity: 4\s/)).toBeInTheDocument();
+    expect(document.querySelectorAll('rect.fill-secondary\\/60')).toHaveLength(1);
   });
 
   test('merges stored activities and reports clicked dates', async () => {
@@ -300,8 +309,21 @@ describe('Graph / ForceGraph', () => {
     const notes = makeNote({ id: '/ws/reading/Dune.epub.md', title: 'Dune.epub', content: '# Dune' });
     const data = buildGraphData(NoteMap.from({ [a.id]: a, [b.id]: b, [notes.id]: notes }), { [id]: book }, '/ws');
     expect(data.nodes.filter((n) => n.ty === 'book').map((n) => n.name)).toEqual(['Dune']);
-    const toBook = data.links.filter((l) => l.ty === 'book').map((l) => l.source);
-    expect(toBook.sort()).toEqual([notes.id, a.id]);
+    const toBook = (ty: string) => data.links.filter((l) => l.ty === ty).map((l) => l.source);
+    expect(toBook('book')).toEqual([a.id]);
+    expect(toBook('annotation')).toEqual([notes.id]);
+  });
+
+  test('lines end on the edge of the nodes', () => {
+    const note = { id: 'n', name: 'n', ty: 'link' as const, radius: 4, x: 0, y: 0 };
+    expect(edgePoint(note, 10, 0)).toEqual({ x: 4, y: 0 });
+    // a book 6 wide, 8 high: its side, or its top
+    const book = { id: 'b', name: 'b', ty: 'book' as const, radius: 4, x: 0, y: 0 };
+    expect(edgePoint(book, 10, 0)).toEqual({ x: 3, y: 0 });
+    expect(edgePoint(book, 0, -10)).toEqual({ x: 0, y: -4 });
+    const corner = edgePoint(book, 10, 10);
+    expect(corner.x).toBeCloseTo(3);
+    expect(corner.y).toBeCloseTo(3);
   });
 
   test('draws note and tag nodes with links', async () => {

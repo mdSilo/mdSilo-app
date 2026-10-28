@@ -43,6 +43,8 @@ type GraphColors = {
   tag: string;
   hoveredTag: string;
   book: string;
+  bookLink: string; // a note linking a book
+  spine: string;
   link: string;
   text: string;
 };
@@ -50,7 +52,7 @@ type GraphColors = {
 // fallbacks: no theme colors, e.g. in tests (Tailwind CSS v3 palette)
 const LIGHT_COLORS: GraphColors = {
   note: '#86efac', neighbor: '#60a5fa', hovered: '#2563eb', tag: '#facc15',
-  hoveredTag: '#ca8a04', book: '#38bdf8', link: '#e5e5e5', text: '#525252',
+  hoveredTag: '#ca8a04', book: '#38bdf8', bookLink: 'rgb(56 189 248 / 0.45)', spine: 'rgb(0 0 0 / 0.25)', link: '#e5e5e5', text: '#525252',
 };
 const DARK_COLORS: GraphColors = { ...LIGHT_COLORS, link: '#404040', text: '#f5f5f5' };
 
@@ -74,6 +76,8 @@ function themeColors(): GraphColors {
     tag: color('--color-accent') || fallback.tag,
     hoveredTag: color('--color-warning') || fallback.hoveredTag,
     book: color('--color-info') || fallback.book,
+    bookLink: color('--color-info', 0.45) || fallback.bookLink,
+    spine: color('--color-info-content', 0.5) || fallback.spine,
     link: color('--color-base-content', 0.15) || fallback.link,
     text: color('--color-base-content', 0.8) || fallback.text,
   };
@@ -99,7 +103,8 @@ export type NodeDatum = {
   ty: 'tag' | 'link' | 'book';
 } & SimulationNodeDatum;
 
-export type LinkDatum = SimulationLinkDatum<NodeDatum> & { ty: 'tag' | 'link' | 'book' };
+/** book: a note linking a book; annotation: a book and its annotations note */
+export type LinkDatum = SimulationLinkDatum<NodeDatum> & { ty: 'tag' | 'link' | 'book' | 'annotation' };
 
 const BOOK_NODE_PREFIX = 'book:';
 const bookNodeId = (hash: string) => `${BOOK_NODE_PREFIX}${hash}`;
@@ -174,16 +179,31 @@ export default function ForceGraph(props: Props) {
       const isLinkHighlighted = isSourceHovered || isTargetHovered;
       const isTag = link.ty === 'tag';
 
+      // from edge to edge: not through the nodes, filled see-through
+      const from = edgePoint(source, target.x, target.y);
+      const to = edgePoint(target, source.x, source.y);
+      const dx = target.x - source.x;
+      const dy = target.y - source.y;
+      // overlapping nodes: nothing between them to draw
+      if ((to.x - from.x) * dx + (to.y - from.y) * dy <= 0) {
+        return;
+      }
+
       context.save();
 
       context.beginPath();
-      context.moveTo(source.x, source.y);
-      context.lineWidth = 0.5;
-      context.lineTo(target.x, target.y);
+      context.moveTo(from.x, from.y);
+      context.lineWidth = link.ty === 'annotation' ? 1 : 0.5;
+      context.lineCap = 'round';
+      context.lineTo(to.x, to.y);
       if (isTag) {
         context.strokeStyle = 'transparent';
       } else if (isLinkHighlighted) {
         context.strokeStyle = colors.neighbor;
+      } else if (link.ty === 'annotation') {
+        context.strokeStyle = colors.book;
+      } else if (link.ty === 'book') {
+        context.strokeStyle = colors.bookLink;
       } else {
         context.strokeStyle = colors.link;
       }
@@ -201,18 +221,23 @@ export default function ForceGraph(props: Props) {
       }
       const isHovered = node.id === hoveredNode.current?.id;
       const isTag = node.ty === 'tag';
+      const isBook = node.ty === 'book';
 
       context.save();
 
-      // Draw node
+      // Draw node: a book is a book, standing
       context.beginPath();
-      context.moveTo(node.x + node.radius, node.y);
-      context.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+      if (isBook) {
+        bookPath(context, node.x, node.y, node.radius);
+      } else {
+        context.moveTo(node.x + node.radius, node.y);
+        context.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+      }
 
       // Fill node color
       if (isTag) {
         context.fillStyle = colors.tag;
-      } else if (node.ty === 'book') {
+      } else if (isBook) {
         context.fillStyle = colors.book;
       } else if (areNeighbors(hoveredNode.current?.id, node.id)) {
         context.fillStyle = colors.neighbor;
@@ -223,10 +248,21 @@ export default function ForceGraph(props: Props) {
       if (isHovered) {
         context.strokeStyle = colors.hovered;
         context.stroke();
-        context.fillStyle = isTag ? colors.hoveredTag : colors.neighbor;
+        context.fillStyle = isTag ? colors.hoveredTag : isBook ? colors.book : colors.neighbor;
       }
 
       context.fill();
+
+      if (isBook) {
+        // the spine
+        const { w, h } = bookSize(node.radius);
+        context.beginPath();
+        context.moveTo(node.x - w / 2 + w * 0.2, node.y - h / 2);
+        context.lineTo(node.x - w / 2 + w * 0.2, node.y + h / 2);
+        context.lineWidth = 0.6;
+        context.strokeStyle = colors.spine;
+        context.stroke();
+      }
 
       // Add node text
       if (scale > 3) {
@@ -509,12 +545,19 @@ export function buildGraphData(
   for (const note of notesArr) {
     // Populate links
     const linkedIds = linksByNoteId[note.id].values(); // including notes and tags
+    // the book of the annotations note, if it is one
+    const annotatedHash = bookOfAnnotations.get(note.id);
+    const annotated = annotatedHash ? bookNodeId(annotatedHash) : undefined;
     const numOfLinks = linksByNoteId[note.id].size;
     for (const linkedId of linkedIds) {
       data.links.push({ 
         source: note.id, 
         target: linkedId, 
-        ty: tagNames.has(linkedId) ? 'tag' : bookLinks.has(linkedId) ? 'book' : 'link',
+        ty: tagNames.has(linkedId)
+          ? 'tag'
+          : bookLinks.has(linkedId)
+            ? (annotated === linkedId ? 'annotation' : 'book')
+            : 'link',
       });
     }
     // Populate nodes
@@ -548,6 +591,50 @@ export function buildGraphData(
   }
 
   return data;
+}
+
+/** The size of a book node: a cover, taller than wide, about as big as a note. */
+const bookSize = (radius: number) => ({ w: radius * 1.5, h: radius * 2 });
+
+/** The path of a book node: a cover, its corners rounded a little. */
+function bookPath(context: CanvasRenderingContext2D, x: number, y: number, radius: number) {
+  const { w, h } = bookSize(radius);
+  const r = Math.min(w, h) * 0.12;
+  const left = x - w / 2;
+  const top = y - h / 2;
+  context.moveTo(left + r, top);
+  context.lineTo(left + w - r, top);
+  context.quadraticCurveTo(left + w, top, left + w, top + r);
+  context.lineTo(left + w, top + h - r);
+  context.quadraticCurveTo(left + w, top + h, left + w - r, top + h);
+  context.lineTo(left + r, top + h);
+  context.quadraticCurveTo(left, top + h, left, top + h - r);
+  context.lineTo(left, top + r);
+  context.quadraticCurveTo(left, top, left + r, top);
+  context.closePath();
+}
+
+/**
+ * Where the line from the node toward (x, y) leaves it: on its circle, or on
+ * the cover of a book.
+ */
+export function edgePoint(node: NodeDatum, x: number, y: number) {
+  const cx = node.x ?? 0;
+  const cy = node.y ?? 0;
+  const dx = x - cx;
+  const dy = y - cy;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return { x: cx, y: cy };
+  let distance = node.radius;
+  if (node.ty === 'book') {
+    // the side of the cover the line crosses first
+    const { w, h } = bookSize(node.radius);
+    distance = Math.min(
+      dx ? (w / 2) * (length / Math.abs(dx)) : Infinity,
+      dy ? (h / 2) * (length / Math.abs(dy)) : Infinity,
+    );
+  }
+  return { x: cx + (dx / length) * distance, y: cy + (dy / length) * distance };
 }
 
 const getRadius = (numOfLinks: number) => {

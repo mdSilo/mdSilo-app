@@ -21,6 +21,8 @@ type HeatMapProps = {
 export type HeatMapMode = 'all' | 'writing' | 'reading';
 
 const MODES: Array<[HeatMapMode, string]> = [['all', 'All'], ['writing', 'Writing'], ['reading', 'Reading']];
+// the color of each kind of activity, as in the cells
+const MODE_DOT: Record<HeatMapMode, string> = { all: '', writing: 'bg-primary', reading: 'bg-secondary' };
 
 export default function HeatMap(props: HeatMapProps) {
   const { noteList, reading, onClickCell } = props;
@@ -57,12 +59,19 @@ export default function HeatMap(props: HeatMapProps) {
               aria-selected={mode === value}
               onClick={() => setMode(value)}
             >
+              {MODE_DOT[value] ? <span className={`inline-block w-2 h-2 mr-1 rounded-xs ${MODE_DOT[value]}`} /> : null}
               {label}
             </button>
           ))}
         </div>
       ) : null}
       <svg width="828" height="128" className="hm-svg">
+        <defs>
+          {/* the rounded cell, to clip the half of a split cell */}
+          <clipPath id="hm-cell" clipPathUnits="objectBoundingBox">
+            <rect width="1" height="1" rx="0.18" ry="0.18" />
+          </clipPath>
+        </defs>
         <g transform="translate(10, 20)">
           {weeks.map((days, weekIdx) => (
             <WeekHeatMap 
@@ -94,7 +103,13 @@ export default function HeatMap(props: HeatMapProps) {
   );
 }
 
-type DayCell = { date: string; style: string; tip: string };
+/**
+ * A day: its color; or, both written and read that day (all), split by a
+ * slash: written above it, read below.
+ */
+type DayCell = { date: string; style: string; read?: string; tip: string };
+
+const CELL = 11;
 
 type WeekProps = {
   days: DayCell[];
@@ -105,17 +120,25 @@ type WeekProps = {
 function WeekHeatMap({ days, weekIdx, onClick }: WeekProps) {
   return (
     <g transform={`translate(${16 * weekIdx}, 0)`}>
-      {days.map((day, dayIdx) => (
-        <rect 
-          key={`day-${dayIdx}`} width="11" height="11" rx="2" ry="2"  
-          x={`${16 - weekIdx}`} 
-          y={`${15 * dayIdx}`} 
-          className={day.style} 
-          onClick={() => onClick(day.date)}
-        >
-          <title>{day.tip}</title>
-        </rect>
-      ))}
+      {days.map((day, dayIdx) => {
+        const x = 16 - weekIdx;
+        const y = 15 * dayIdx;
+        return (
+          <g key={`day-${dayIdx}`} className="cursor-pointer" onClick={() => onClick(day.date)}>
+            <title>{day.tip}</title>
+            <rect width={CELL} height={CELL} rx="2" ry="2" x={x} y={y} className={day.style} />
+            {day.read ? (
+              <g clipPath="url(#hm-cell)" data-testid="hm-split">
+                <polygon
+                  points={`${x + CELL},${y} ${x + CELL},${y + CELL} ${x},${y + CELL}`}
+                  className={day.read}
+                />
+                <line x1={x + CELL} y1={y} x2={x} y2={y + CELL} className="stroke-base-100" strokeWidth="1" />
+              </g>
+            ) : null}
+          </g>
+        );
+      })}
     </g>
   );
 }
@@ -137,10 +160,16 @@ export function buildWeeks(
       const read = reading[date] ?? 0;
       const readUnits = Math.ceil(read / READING_UNIT_SECONDS);
       const written = aData?.activityNum ?? 0;
-      const activity = (mode === 'reading' ? 0 : written) + (mode === 'writing' ? 0 : readUnits);
+      const writing = mode === 'reading' ? 0 : written;
+      const reads = mode === 'writing' ? 0 : readUnits;
+      const activity = writing + reads;
+      const split = !isAfterToday && writing > 0 && reads > 0;
       return {
         date,
-        style: getDayStyle(activity, isAfterToday),
+        style: isAfterToday
+          ? 'fill-transparent'
+          : writing > 0 ? writingStyle(writing) : reads > 0 ? readingStyle(reads) : 'fill-base-300',
+        ...(split ? { read: readingStyle(reads) } : {}),
         tip: `${date}:\nActivity: ${activity}\nCreated: ${aData?.createNum || 0}\nUpdated: ${aData?.updateNum || 0}`
           + (read > 0 ? `\nRead: ${Math.round(read / 60)} min` : ''),
       };
@@ -163,19 +192,13 @@ function calcMonStart() {
   return startIdx;
 }
 
-function getDayStyle(an: number, isAfterToday: boolean) {
-  const anStyle = isAfterToday 
-    ? 'fill-transparent' 
-    : an === 0 
-      ? 'fill-base-300'
-      : an >= 12 
-        ? 'fill-primary'
-        : an >= 6 
-          ? 'fill-primary/60'
-          : 'fill-primary/30';
+/** Notes created and updated: the more, the darker. */
+const writingStyle = (n: number) =>
+  n >= 12 ? 'fill-primary' : n >= 6 ? 'fill-primary/60' : 'fill-primary/30';
 
-  return `${anStyle} cursor-pointer`;
-}
+/** Quarters of an hour read: 2h and more the darkest, 1h, less. */
+const readingStyle = (units: number) =>
+  units >= 8 ? 'fill-secondary' : units >= 4 ? 'fill-secondary/60' : 'fill-secondary/30';
 
 function getMonthLabel(idx: number) {
   if (idx > 11) return;
