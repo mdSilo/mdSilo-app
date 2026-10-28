@@ -4,6 +4,7 @@ import {
   DEFAULT_READER_SETTINGS, KEPT_ON_RESET, withDefaults, type PageTheme, type ReaderSettings,
 } from '../settings';
 import { themeColors } from '../styles';
+import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
 
 const PAGE_THEMES: [PageTheme, string][] = [
   ['auto', 'As the app'], ['light', 'White'], ['sepia', 'Sepia'], ['gray', 'Gray'], ['dark', 'Dark'],
@@ -150,8 +151,23 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           <Toggle label="Hyphenate" checked={settings.hyphenate} onChange={(hyphenate) => update({ hyphenate })} />
           <Toggle label="Chapter above" checked={settings.showHeader} onChange={(showHeader) => update({ showHeader })} />
           <Toggle label="Progress below" checked={settings.showFooter} onChange={(showFooter) => update({ showFooter })} />
+          <Toggle label="Highlight code" checked={settings.codeHighlight} onChange={(codeHighlight) => update({ codeHighlight })} />
+          {settings.codeHighlight ? (
+            <label className="flex items-center justify-between gap-2">
+              <span>Code language</span>
+              <select
+                className="select select-xs w-36"
+                value={settings.codeLanguage}
+                onChange={(e) => update({ codeLanguage: e.target.value as CodeLanguage })}
+                aria-label="Code language"
+              >
+                {CODE_LANGUAGES.map((lang) => <option key={lang} value={lang}>{lang === 'auto' ? 'Detect' : lang}</option>)}
+              </select>
+            </label>
+          ) : null}
         </>
       )}
+      <Toggle label="Invert image colors" checked={settings.invertImages} onChange={(invertImages) => update({ invertImages })} />
       <div className="divider my-0" />
       <Toggle label="Page turn animation" checked={settings.animated} onChange={(animated) => update({ animated })} />
       <Toggle label="Click the sides to turn pages" checked={settings.clickToTurn} onChange={(clickToTurn) => update({ clickToTurn })} />

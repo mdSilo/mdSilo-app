@@ -1,5 +1,6 @@
 import type { PageTheme, ReaderSettings } from './settings';
 import { ttsStyles } from './tts';
+import { codeStyles } from './highlight';
 import type { FoliateView } from './view';
 
 /**
@@ -35,7 +36,7 @@ const SERIF = `'Literata', 'Georgia', 'Noto Serif', 'Songti SC', 'Noto Serif CJK
 const SANS = `'Inter', 'Helvetica Neue', 'Noto Sans', 'PingFang SC', 'Noto Sans CJK SC', sans-serif`;
 
 export function bookStyles(settings: ReaderSettings, colors: ThemeColors): string {
-  const { fontSize, lineHeight, font, justify, hyphenate } = settings;
+  const { fontSize, lineHeight, font, justify, hyphenate, invertImages, codeHighlight } = settings;
   const family = font === 'serif' ? SERIF : font === 'sans-serif' ? SANS : '';
   const { bg, fg, primary, dark } = colors;
   return `
@@ -73,7 +74,7 @@ export function bookStyles(settings: ReaderSettings, colors: ThemeColors): strin
     p:has(> img:only-child), [align="center"], .center { text-indent: initial; }
     a:any-link { color: ${dark ? primary : 'inherit'}; text-decoration: ${dark ? 'none' : 'underline'}; }
     img, svg { max-width: 100%; height: auto; object-fit: contain; }
-    ${dark ? 'img { filter: brightness(0.9); }' : ''}
+    ${invertImages ? 'img, svg image { filter: invert(1); }' : dark ? 'img { filter: brightness(0.9); }' : ''}
     pre, code { white-space: pre-wrap !important; font-size: 0.9em; }
     table { max-width: 100%; }
     td, th { overflow-wrap: break-word; }
@@ -94,6 +95,7 @@ export function bookStyles(settings: ReaderSettings, colors: ThemeColors): strin
       display: none;
     }
     ::selection { background: color-mix(in srgb, ${primary} 35%, transparent); }
+    ${codeHighlight ? codeStyles(dark) : ''}
     ${ttsStyles(primary)}
   `;
 }

@@ -1,4 +1,5 @@
 import type { HighlightColor, HighlightStyle } from './annotations';
+import type { CodeLanguage } from './highlight';
 
 /** The colors of the pages: of the app theme, or of paper. */
 export type PageTheme = 'auto' | 'light' | 'sepia' | 'gray' | 'dark';
@@ -23,6 +24,11 @@ export type ReaderSettings = {
   /** px, above and below the text */
   margin: number;
   pageTheme: PageTheme;
+  /** the images in negative, e.g. black diagrams on a dark page */
+  invertImages: boolean;
+  /** the code blocks colored, in a language or guessed */
+  codeHighlight: boolean;
+  codeLanguage: CodeLanguage;
   /** the pages slide as they turn */
   animated: boolean;
   /** a click on the left or right of the page turns it */
@@ -56,6 +62,9 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   gap: 6,
   margin: 44,
   pageTheme: 'auto',
+  invertImages: false,
+  codeHighlight: false,
+  codeLanguage: 'auto',
   animated: true,
   clickToTurn: true,
   swapClickArea: false,

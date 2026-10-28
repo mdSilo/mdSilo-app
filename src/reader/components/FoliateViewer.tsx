@@ -12,7 +12,10 @@ import {
 } from '../pagination';
 import { sectionOf, type BookNote } from '../annotations';
 import type { BookDoc } from '../document';
+import { fillsPage, imagesOf, mediaAt, type Media } from '../media';
+import { highlightCode } from '../highlight';
 import { placeOf } from './BookPopups';
+import { ImageViewer, TableViewer } from './MediaViewer';
 
 type Props = {
   book: BookDoc;
@@ -22,6 +25,11 @@ type Props = {
 };
 
 type Overlayer = Record<'highlight' | 'underline' | 'squiggly', unknown>;
+
+/** An image of the pages zoomed, among those of the chapter; or a table. */
+type Zoomed =
+  | { type: 'image'; images: Extract<Media, { type: 'image' }>[]; start: number }
+  | { type: 'table'; html: string };
 
 /** The annotation drawn for a note: the value is its CFI. */
 export const toAnnotation = (note: BookNote) => ({ value: note.cfi, id: note.id });
@@ -109,6 +117,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const notes = bookStore((state) => state.notes);
   const drawnRef = useRef(new Map<string, BookNote>());
   const [turnHint, setTurnHint] = useState<TurnHint>();
+  const [zoomed, setZoomed] = useState<Zoomed>();
 
   // open the book, once per book
   useEffect(() => {
@@ -178,11 +187,22 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       const point = { x: e.clientX + (frame?.left ?? 0), y: e.clientY + (frame?.top ?? 0) };
       turner.note(cornerAt(point, area, view.book?.dir === 'rtl'));
     };
-    const singleClick = (x: number, doc?: Document) => {
+    const singleClick = (x: number, doc?: Document, media?: Media | null) => {
       // a selection made, an annotation shown, a popup closed: not a page turn
       const sel = doc?.getSelection();
       if (sel && !sel.isCollapsed) return;
       if (Date.now() - annotationAt < DOUBLE_CLICK_MS * 2 || popupAtDown) return;
+      // an image or a table: zoomed, alone over the pages
+      if (media?.type === 'table') {
+        setZoomed({ type: 'table', html: media.html });
+        return;
+      }
+      if (media?.type === 'image') {
+        const images = imagesOf(viewRef.current?.renderer.getContents() ?? []);
+        const start = images.findIndex((image) => image.src === media.src);
+        setZoomed(start < 0 ? { type: 'image', images: [media], start: 0 } : { type: 'image', images, start });
+        return;
+      }
       const chrome = useReaderChrome.getState();
       const settings = withDefaults(store.getState().readerSettings);
       const box = container.getBoundingClientRect();
@@ -210,7 +230,9 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       // in the window, not in the frame of the section
       const frame = doc?.defaultView?.frameElement?.getBoundingClientRect();
       const x = e.clientX + (frame?.left ?? 0);
-      clickTimer = setTimeout(() => singleClick(x, doc), DOUBLE_CLICK_MS);
+      // in a reflowable book; a cover, a page of illustration turns as the text
+      const media = doc && !viewRef.current?.isFixedLayout && !fillsPage(e.target) ? mediaAt(e.target) : null;
+      clickTimer = setTimeout(() => singleClick(x, doc, media), DOUBLE_CLICK_MS);
     };
 
     // a gesture of the wheel turns a page, but in scrolled flow
@@ -304,6 +326,8 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         }
       });
       doc.addEventListener('keydown', onKeydown);
+      const { codeHighlight, codeLanguage } = withDefaults(store.getState().readerSettings);
+      if (codeHighlight) highlightCode(doc, true, codeLanguage);
     };
 
     const onKeydown = (e: KeyboardEvent) => {
@@ -450,6 +474,13 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(settings), darkMode, theme]);
 
+  // the code blocks of the sections shown; the sections loaded later, on load
+  useEffect(() => {
+    for (const { doc } of viewRef.current?.renderer?.getContents() ?? []) {
+      highlightCode(doc, settings.codeHighlight, settings.codeLanguage);
+    }
+  }, [settings.codeHighlight, settings.codeLanguage]);
+
   // the annotations: drawn as they are added, changed or removed
   useEffect(() => {
     const view = viewRef.current;
@@ -480,6 +511,12 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     host.replaceChildren();
   }, [footnote]);
 
+  // the keys back to the pages
+  const closeZoomed = () => {
+    setZoomed(undefined);
+    containerRef.current?.focus({ preventScroll: true });
+  };
+
   const root = containerRef.current?.getBoundingClientRect();
   const place = footnote && root ? placeOf(footnote.box, root, footnote.size.height, footnote.size.width) : undefined;
   const paper = settings.pageTheme === 'auto' ? undefined : themeColors(darkMode, settings.pageTheme);
@@ -507,6 +544,10 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         data-testid="footnote-popup"
         onPointerDown={(e) => e.stopPropagation()}
       />
+      {zoomed?.type === 'image' ? <ImageViewer images={zoomed.images} start={zoomed.start} onClose={closeZoomed} /> : null}
+      {zoomed?.type === 'table' ? (
+        <TableViewer html={zoomed.html} colors={themeColors(darkMode, settings.pageTheme)} onClose={closeZoomed} />
+      ) : null}
       {turnHint ? <TurnMark key={turnHint.corner} hint={turnHint} area={readingArea(viewRef.current)} rtl={book.dir === 'rtl'} /> : null}
     </>
   );

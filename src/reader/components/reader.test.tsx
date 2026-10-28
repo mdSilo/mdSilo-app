@@ -314,7 +314,8 @@ describe('parallel reading', () => {
     await waitFor(() => expect(screen.getByTestId('side-viewer')).toBeInTheDocument());
     expect(useSideStore.getState().path).toBe(OTHER);
     const pane = screen.getByTestId('parallel-pane');
-    expect(within(pane).getByText('Other Book')).toBeInTheDocument();
+    // the title, with the chapter after it
+    expect(within(pane).getByTitle('Other Book')).toHaveTextContent(/^Other Book §/);
     // in the library, as any book read
     expect(Object.values((await readLibrary(WS)).books).map((b) => b.title)).toContain('Other Book');
 

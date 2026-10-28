@@ -331,3 +331,18 @@
 ::-webkit-scrollbar-thumb:hover {
   background-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
 }
+
+/* a table of a book, zoomed: see reader/components/MediaViewer.tsx */
+.media-table table {
+  border-collapse: collapse;
+  border: 1px solid var(--table-border);
+}
+.media-table td,
+.media-table th {
+  border: 1px solid var(--table-border);
+  padding: 8px 12px;
+}
+.media-table th {
+  background-color: color-mix(in srgb, var(--table-border) 30%, transparent);
+  font-weight: 600;
+}
