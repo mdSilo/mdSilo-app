@@ -1,5 +1,5 @@
 import { TbFolder as IconFolder, TbHash as IconHash, TbPlaylist as IconPlaylist, TbSearch as IconSearch } from 'react-icons/tb';
-import { Tooltip } from '@/components/misc/ui';
+import { Tooltip } from '@/ui/ui';
 import { SidebarTab as SidebarTabType, useStore } from '@/state/store';
 import SidebarNotes from './SidebarNotes';
 import SidebarPlaylist from './SidebarPlaylist';

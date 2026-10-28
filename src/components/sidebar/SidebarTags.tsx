@@ -5,7 +5,7 @@ import { TbHash as IconHash } from 'react-icons/tb';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { NoteMap, useStore } from '@/state/store';
 import { indexOf } from '@/lib/linkIndex';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import SidebarItem from './SidebarItem';
 
 export type TagTreeItem = {

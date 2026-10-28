@@ -9,8 +9,8 @@ import { Sort } from '@/state/userSettings';
 import { ciStringCompare, dateCompare } from '@/lib/helper';
 import { PodType as PodTreeItem } from '@/types/model';
 import * as dataAgent from '@/components/feed/dataAgent';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
-import { Tooltip } from '@/components/misc/ui';
+import ErrorBoundary from '@/ui/ErrorBoundary';
+import { Tooltip } from '@/ui/ui';
 import SidebarItem from './SidebarItem';
 
 type SidebarPlaylistProps = {

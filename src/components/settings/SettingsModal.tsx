@@ -3,8 +3,8 @@ import {
   STARTUP_VIEWS, type OpenOnStartup, type SideMenuOrientation, type StartupView,
 } from '@/state/userSettings';
 import { SYSTEM_THEME, THEMES } from '@/lib/themes';
-import { Select } from '@/components/misc/ui';
-import { BaseModal } from './BaseModal';
+import { Select } from '@/ui/ui';
+import { BaseModal } from '@/ui/BaseModal';
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
   value === 'auto' || value === 'vertical' || value === 'horizontal';

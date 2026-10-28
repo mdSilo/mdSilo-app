@@ -3,7 +3,7 @@ import { useTransition, animated, SpringConfig } from '@react-spring/web';
 import { isMobile } from '@/lib/helper';
 import { useStore } from '@/state/store';
 import { SIDEBAR_WIDTH } from '@/state/userSettings';
-import ResizeHandle, { useResizableWidth } from '@/components/misc/ResizeHandle';
+import ResizeHandle, { useResizableWidth } from '@/ui/ResizeHandle';
 import SidebarContent from './SidebarContent';
 
 const SPRING_CONFIG: SpringConfig = {

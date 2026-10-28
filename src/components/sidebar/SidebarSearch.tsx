@@ -9,8 +9,8 @@ import { store, useStore } from '@/state/store';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { isMobile } from '@/lib/helper';
 import { openFilePath } from '@/workspace/open';
-import ErrorBoundary from '../misc/ErrorBoundary';
-import VirtualTree from '../misc/VirtualTree';
+import ErrorBoundary from '@/ui/ErrorBoundary';
+import VirtualTree from '@/ui/VirtualTree';
 
 const DEBOUNCE_MS = 500;
 

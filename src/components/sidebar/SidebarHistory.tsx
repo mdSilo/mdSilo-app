@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { TbPin as IconPin, TbTrash as IconTrash } from 'react-icons/tb';
 import { useStore } from '@/state/store';
-import { Tooltip } from '@/components/misc/ui';
+import { Tooltip } from '@/ui/ui';
 import { listInitDir, startupDir } from '@/workspace/useOpen';
 import { isWeb } from '@/workspace/util';
 

@@ -16,10 +16,10 @@ import { store, useStore } from '@/state/store';
 import type { SideMenuOrientation } from '@/state/userSettings';
 import { isMobile } from '@/lib/helper';
 import { ViewAction } from '@/state/viewReducer';
-import Dropdown, { DropdownItem } from '@/components/misc/Dropdown';
-import { Tooltip } from '@/components/misc/ui';
-import Portal from '@/components/misc/Portal';
-import Logo from '../Logo';
+import Dropdown, { DropdownItem } from '@/ui/Dropdown';
+import { Tooltip } from '@/ui/ui';
+import Portal from '@/ui/Portal';
+import Logo from '@/ui/Logo';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
 

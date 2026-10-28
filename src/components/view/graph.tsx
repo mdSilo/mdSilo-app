@@ -1,4 +1,4 @@
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import ForceGraph from '@/components/view/ForceGraph';
 import useLoadNotes from '@/lib/hooks/useLoadNotes';
 

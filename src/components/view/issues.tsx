@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { TbTag as IconTag, TbFlag as IconFlag, TbCircleDot as IconIssue, TbCheckbox as IconTasks } from 'react-icons/tb';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useIssueData, useIssueStore } from '@/components/issue/issueStore';
 import { filterIssues, parseQuery, stringifyQuery, SORT_KEYS, IssueQuery } from '@/components/issue/filter';

@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   TbArrowLeft, TbBook, TbCards, TbLayoutGrid, TbListCheck, TbTrash,
 } from 'react-icons/tb';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
-import { Spinner } from '@/components/misc/ui';
+import ErrorBoundary from '@/ui/ErrorBoundary';
+import { Spinner } from '@/ui/ui';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useStore } from '@/state/store';
 import { sanitizeHtml } from '@/lib/sanitize';

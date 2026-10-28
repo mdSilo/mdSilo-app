@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { TbHeadphones as IconHeadphones, TbPlus as IconPlus, TbRss as IconRss, TbTrash as IconTrash } from "react-icons/tb";
-import { Tooltip } from "@/components/misc/ui";
+import { Tooltip } from "@/ui/ui";
 import { CorsProxySetting } from "@/components/settings/CorsProxySetting";
 import { isWeb } from "@/workspace/util";
 import { ChannelType } from "@/types/model";

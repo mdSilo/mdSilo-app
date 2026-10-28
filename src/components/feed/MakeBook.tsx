@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArticleType } from '@/types/model';
-import { Spinner } from '@/components/misc/ui';
+import { Spinner } from '@/ui/ui';
 import { saveFeedBook, type FeedBookReport } from './feedToBook';
 
 type Props = {

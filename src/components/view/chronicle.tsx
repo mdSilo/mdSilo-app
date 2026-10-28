@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useStore, store, Notes } from '@/state/store';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import NoteSumList from '@/components/note/NoteSumList';
 import FindOrCreateInput from '@/components/note/NoteNewInput';
 import HeatMap from '@/components/view/HeatMap';

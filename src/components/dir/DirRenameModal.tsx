@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BaseModal } from '@/components/settings/BaseModal';
+import { BaseModal } from '@/ui/BaseModal';
 import { renameFile, joinPaths, getParentDir } from '@/workspace/util';
 import { flushSave } from '@/workspace/pendingSaves';
 

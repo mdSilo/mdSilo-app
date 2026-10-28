@@ -4,9 +4,9 @@ import {
   TbBrandWikipedia, TbChevronRight, TbChevronsLeft, TbChevronsRight, TbLanguage, TbLayoutSidebar, 
   TbLink, TbSearch, TbColumns2, TbTypography, TbVocabulary, TbVolume, 
 } from 'react-icons/tb';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
-import ResizeHandle, { useResizableWidth } from '@/components/misc/ResizeHandle';
-import { IconButton, Spinner } from '@/components/misc/ui';
+import ErrorBoundary from '@/ui/ErrorBoundary';
+import ResizeHandle, { useResizableWidth } from '@/ui/ResizeHandle';
+import { IconButton, Spinner } from '@/ui/ui';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { openFilePath } from '@/workspace/open';
 import { store, useStore } from '@/state/store';

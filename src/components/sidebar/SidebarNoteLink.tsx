@@ -12,7 +12,7 @@ import { NoteTreeItem, store, useStore } from '@/state/store';
 import { isMobile } from '@/lib/helper';
 import { imageExtensions } from '@/lib/file-extensions';
 import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
-import { Tooltip } from '@/components/misc/ui';
+import { Tooltip } from '@/ui/ui';
 import { checkFileIsMd, getFileExt } from '@/workspace/process';
 import { listDir, openUrl } from '@/workspace/open';
 import { joinPath, normalizeSlash } from '@/workspace/util';

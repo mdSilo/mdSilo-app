@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { TbBookmark, TbBookmarkFilled, TbX } from 'react-icons/tb';
-import { IconButton, Spinner } from '@/components/misc/ui';
+import { IconButton, Spinner } from '@/ui/ui';
 import { useStore } from '@/state/store';
 import { findBookPath, readLibrary, titleOfFile, type BookEntry } from '../library';
 import { useReaderStore, useSideStore } from '../readerStore';

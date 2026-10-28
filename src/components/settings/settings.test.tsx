@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
-import { BaseModal } from './BaseModal';
+import { BaseModal } from '@/ui/BaseModal';
 import SettingsModal from './SettingsModal';
 import EditorSettings from './EditorSettings';
 import AboutModal from './AboutModal';

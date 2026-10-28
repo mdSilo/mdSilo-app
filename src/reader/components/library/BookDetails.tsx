@@ -4,8 +4,8 @@ import copy from 'copy-to-clipboard';
 import {
   TbBook, TbBookmarks, TbCloud, TbCloudOff, TbLink, TbNotes, TbPencil, TbPhoto, TbPhotoOff, TbRestore, TbTrash,
 } from 'react-icons/tb';
-import { BaseModal } from '@/components/settings/BaseModal';
-import { IconButton } from '@/components/misc/ui';
+import { BaseModal } from '@/ui/BaseModal';
+import { IconButton } from '@/ui/ui';
 import { openFileDilog, openFilePath } from '@/workspace/open';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { sanitizeHtml } from '@/lib/sanitize';

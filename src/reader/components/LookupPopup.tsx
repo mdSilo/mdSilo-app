@@ -2,7 +2,7 @@ import { memo, useEffect, useState, type RefObject } from 'react';
 import { TbCheck, TbExternalLink, TbNote, TbVocabulary } from 'react-icons/tb';
 import { openUrl } from '@/workspace/open';
 import { useStore } from '@/state/store';
-import { Spinner } from '@/components/misc/ui';
+import { Spinner } from '@/ui/ui';
 import {
   lookupWikipedia, lookupWiktionary, openLinkOutside, targetLanguage, translate, translateUrl, wikipediaSearchUrl,
   type DictionaryResult, type TranslationResult, type WikipediaResult,

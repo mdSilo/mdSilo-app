@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TbHeadphones as IconHeadphones, TbRefresh as IconRefresh, TbRss as IconRss, TbSettings as IconSettings, TbStar as IconStar } from "react-icons/tb";
 import { getFavicon } from "@/lib/helper";
-import { Spinner, Tooltip } from "@/components/misc/ui";
+import { Spinner, Tooltip } from "@/ui/ui";
 import { ChannelType } from "@/types/model";
 
 type Props = {

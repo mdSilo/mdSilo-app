@@ -4,7 +4,7 @@ import { useStore } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useDebounce from '@/lib/hooks/useDebounce';
 import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import { useIssueData, useIssueStore } from './issueStore';
 import {
   addComment, commentCount, deleteIssue, getIssue, isOverdue, setDueOn, setState, updateIssue,

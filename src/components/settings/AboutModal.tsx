@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { openUrl } from '@/workspace/open';
 import { getLog, clearLog } from '@/state/storage';
 import { isWeb } from '@/workspace/util';
-import { BaseModal } from './BaseModal';
+import { BaseModal } from '@/ui/BaseModal';
 
 
 type Props = {

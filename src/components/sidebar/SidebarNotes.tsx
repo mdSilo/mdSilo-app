@@ -4,7 +4,7 @@ import { Sort } from '@/state/userSettings';
 import { ciStringCompare } from '@/lib/helper';
 import { onOpenFile, onListDir } from '@/workspace/useOpen';
 import { normalizeSlash } from '@/workspace/util';
-import ErrorBoundary from '../misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree, { NoteTreeRow } from './SidebarNotesTree';
 import SidebarHistory from './SidebarHistory';

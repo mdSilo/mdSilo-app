@@ -4,7 +4,7 @@ import {
 } from 'react-icons/tb';
 import copy from 'copy-to-clipboard';
 import { useStore } from '@/state/store';
-import { IconButton } from '@/components/misc/ui';
+import { IconButton } from '@/ui/ui';
 import {
   HIGHLIGHT_COLORS, sectionOf, type BookNote, type HighlightStyle,
 } from '../annotations';

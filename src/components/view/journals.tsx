@@ -3,7 +3,7 @@ import { EDITOR_THEME } from '@/lib/themes';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useStore } from '@/state/store';
 import { Note } from '@/types/model';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import FindOrCreateInput from '@/components/note/NoteNewInput';
 import { dateCompare, regDateStr, strToDate } from '@/lib/helper';
 import { openFilePath } from "@/workspace/open";

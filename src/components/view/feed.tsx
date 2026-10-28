@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { store, useStore } from '@/state/store';
 import { ArticleType, ChannelType } from '@/types/model';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import { ChannelList } from '@/components/feed/ChannelList';
 import { Channel } from '@/components/feed/Channel';
 import { ArticleView } from '@/components/feed/ArticleView';
 import { FeedManager } from '@/components/feed/FeedManager';
 import * as dataAgent from '@/components/feed/dataAgent';
-import ResizeHandle, { useResizableWidth } from '@/components/misc/ResizeHandle';
+import ResizeHandle, { useResizableWidth } from '@/ui/ResizeHandle';
 import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from '@/state/userSettings';
 
 export default function Feed() {

@@ -1,4 +1,4 @@
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ErrorBoundary from '@/ui/ErrorBoundary';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { SearchTree } from '@/components/sidebar/SidebarSearch';
 

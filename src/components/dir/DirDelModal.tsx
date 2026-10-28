@@ -1,4 +1,4 @@
-import { BaseModal } from '@/components/settings/BaseModal';
+import { BaseModal } from '@/ui/BaseModal';
 import { deleteFiles } from '@/workspace/util';
 
 type Props = {

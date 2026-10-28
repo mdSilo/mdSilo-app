@@ -4,8 +4,8 @@ import {
   TbCornerDownRight as IconCornerDownRight, TbDots as IconDots, TbDotsDiagonal as IconDotsDiagonal, TbFolder as IconFolder, TbId as IconId, TbPlus as IconPlus, TbTrash as IconTrash
 } from 'react-icons/tb';
 import { usePopper } from 'react-popper';
-import { DropdownItem } from '@/components/misc/Dropdown';
-import Portal from '@/components/misc/Portal';
+import { DropdownItem } from '@/ui/Dropdown';
+import Portal from '@/ui/Portal';
 import MoveToModal from '@/components/note/NoteMoveModal';
 import NoteMetadata from '@/components/note/NoteMetadata';
 import DirNewModal from '@/components/dir/DirNewModal';

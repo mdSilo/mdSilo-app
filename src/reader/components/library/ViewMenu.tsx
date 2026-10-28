@@ -1,6 +1,6 @@
 import { Menu } from '@headlessui/react';
 import { TbCheck, TbLayoutGrid, TbList, TbSortAscending, TbSortDescending } from 'react-icons/tb';
-import Dropdown, { DropdownItem } from '@/components/misc/Dropdown';
+import Dropdown, { DropdownItem } from '@/ui/Dropdown';
 import { useStore } from '@/state/store';
 import { withLibraryDefaults, type GroupBy, type LibrarySettings, type SortBy, type ViewMode } from '../../shelf';
 

@@ -8,8 +8,8 @@ import {
   TbSearch, TbTrash,
   TbVocabulary, TbX,
 } from 'react-icons/tb';
-import ErrorBoundary from '@/components/misc/ErrorBoundary';
-import { IconButton, Spinner } from '@/components/misc/ui';
+import ErrorBoundary from '@/ui/ErrorBoundary';
+import { IconButton, Spinner } from '@/ui/ui';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { listDir, openFileDilog } from '@/workspace/open';
 import { fromWorkspacePath, joinPath } from '@/workspace/util';
