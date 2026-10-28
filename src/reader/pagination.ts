@@ -278,13 +278,13 @@ export function formatProgress(p: Progress | undefined, fixedLayout: boolean): {
   }
   const parts: string[] = [];
   const minutes = p.time ? Math.round(p.time.section) : undefined;
-  if (minutes !== undefined && minutes > 0) parts.push(`${formatMinutes(minutes)} left in chapter`);
+  if (minutes !== undefined && minutes > 0) parts.push(`${formatMinutes(minutes)}`);
   if (p.pages && p.page !== undefined) {
     const left = Math.max(0, p.pages - p.page - 1);
     parts.push(left > 0 ? `${left} ${left === 1 ? 'page' : 'pages'}` : 'last page');
   }
   const loc = p.location?.total ? `${p.location.current + 1} / ${p.location.total} · ` : '';
-  return { left: parts.join(' · '), right: `${loc}${percent}` };
+  return { left: parts.join(' § '), right: `${loc}${percent}` };
 }
 
 export function formatMinutes(minutes: number): string {

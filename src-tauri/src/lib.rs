@@ -71,6 +71,7 @@ pub fn run() {
       feed::get_unread_num,
       feed::update_all_read_status,
       feed::add_starred_articles,
+      feed::fetch_url,
       files::read_directory,
       files::is_dir,
       files::is_file,

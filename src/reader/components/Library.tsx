@@ -17,7 +17,7 @@ import { useStore } from 'lib/store';
 import { READING_DIR } from 'workspace/layout';
 import { BOOK_EXTS, CONVERTIBLE_EXTS } from '../document';
 import {
-  bookHashOf, IMPORT_EXTS, importBookData, importBookFile, readBookState, refreshLibrary, setBooksGroup, setBooksSynced,
+  bookHashOf, bookIdOf, IMPORT_EXTS, importBookData, importBookFile, readBookState, readLibrary, refreshLibrary, setBooksGroup, setBooksSynced,
 } from '../library';
 import {
   breadcrumbs, countBooks, dropResult, filterBooks, hasGroup, isGroup, shelfItems, sortShelf,
@@ -130,7 +130,8 @@ export default function Library() {
     void listDir(joinPath(initDir, READING_DIR), false);
     await refreshLibrary(initDir);
     if (groupBy === 'group' && opened) {
-      const hashes = (await Promise.all(paths.map(bookHashOf))).filter(Boolean);
+      const lib = await readLibrary(initDir);
+      const hashes = (await Promise.all(paths.map(bookHashOf))).filter(Boolean).map((hash) => bookIdOf(lib, hash) ?? hash);
       await setBooksGroup(initDir, hashes, opened);
     }
     await changed();

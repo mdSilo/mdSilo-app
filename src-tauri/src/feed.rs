@@ -226,6 +226,41 @@ pub async fn add_channel(url: String, ty: String, title: Option<String>) -> usiz
   }
 }
 
+/// The most bytes of a page or an image fetched by `fetch_url`.
+const MAX_FETCH_BYTES: usize = 32 << 20;
+
+/// A browser's: some sites send the full page only to browsers.
+const PAGE_USER_AGENT: &str =
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
+
+/// The bytes of a web page or an image (http, https), sent as binary: the
+/// full text of an article and its images, for a book of a feed, see
+/// src/components/feed/fullText.ts.
+#[command]
+pub async fn fetch_url(url: String) -> Result<tauri::ipc::Response, String> {
+  let parsed = reqwest::Url::parse(&url).map_err(|e| e.to_string())?;
+  if !matches!(parsed.scheme(), "http" | "https") {
+    return Err(format!("not a web url: {url}"));
+  }
+  let client = reqwest::Client::builder()
+    .user_agent(PAGE_USER_AGENT)
+    .timeout(std::time::Duration::from_secs(30))
+    .build()
+    .map_err(|e| e.to_string())?;
+  let response = client.get(parsed).send().await.map_err(|e| e.to_string())?;
+  if !response.status().is_success() {
+    return Err(format!("{url}: {}", response.status()));
+  }
+  if response.content_length().is_some_and(|n| n as usize > MAX_FETCH_BYTES) {
+    return Err(format!("{url}: too big"));
+  }
+  let bytes = response.bytes().await.map_err(|e| e.to_string())?;
+  if bytes.len() > MAX_FETCH_BYTES {
+    return Err(format!("{url}: too big"));
+  }
+  Ok(tauri::ipc::Response::new(bytes.to_vec()))
+}
+
 /// Starred articles synced from another device, see src/components/feed/feedSync.ts
 #[command]
 pub fn add_starred_articles(articles: Vec<NewArticle>) -> usize {

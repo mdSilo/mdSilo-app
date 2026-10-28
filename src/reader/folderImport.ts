@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { fromWorkspacePath } from 'file/util';
 import {
-  bookHashOf, importBookFile, normalizeGroup, readLibrary, refreshLibrary, setBooksGroup,
+  bookHashOf, bookIdOf, importBookFile, normalizeGroup, readLibrary, refreshLibrary, setBooksGroup,
 } from './library';
 import { convertibleFormatOf } from './document';
 
@@ -109,12 +109,14 @@ export async function importFolder(
   const groups = new Map<string, string[]>();
   // the same book twice in the folder: copied once
   const seen = new Set<string>();
+  // a book written again (a feed book): by its first id
+  const idOf = (hash: string) => (hash && bookIdOf(lib, hash)) || hash;
   for (const [i, book] of books.entries()) {
     onProgress?.(i, books.length);
     // a text file: its book made first, the same EPUB if there already
     if (convertibleFormatOf(book.path)) {
       const path = await importBookFile(ws, book.path);
-      const hash = path ? await bookHashOf(path).catch(() => '') : '';
+      const hash = idOf(path ? await bookHashOf(path).catch(() => '') : '');
       if (!hash) {
         result.failed.push(book.path);
         continue;
@@ -126,7 +128,7 @@ export async function importFolder(
       groups.set(group, [...(groups.get(group) ?? []), hash]);
       continue;
     }
-    const hash = await bookHashOf(book.path).catch(() => '');
+    const hash = idOf(await bookHashOf(book.path).catch(() => ''));
     if (!hash) {
       result.failed.push(book.path);
       continue;

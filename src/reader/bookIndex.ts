@@ -63,11 +63,11 @@ export const sectionCfi = (book: BookDoc, index: number) =>
 
 let running: Promise<void> | undefined;
 
-/** Index the text of the book, unless it is already. */
-export function indexBookText(hash: string, title: string, book: BookDoc): Promise<void> {
+/** Index the text of the book, unless it is already; again if `force`, e.g. the book written again. */
+export function indexBookText(hash: string, title: string, book: BookDoc, force = false): Promise<void> {
   const run = async () => {
     if (book.rendition?.layout === 'pre-paginated') return;
-    if (await invoke<boolean>('index_book_indexed', { hash }).catch(() => true)) return;
+    if (!force && await invoke<boolean>('index_book_indexed', { hash }).catch(() => true)) return;
     const labels = sectionLabels(book);
     const sections: { cfi: string; label: string; text: string }[] = [];
     for (const [i, section] of book.sections.entries()) {

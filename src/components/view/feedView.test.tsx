@@ -64,7 +64,7 @@ describe('Feed view', () => {
     await userEvent.click(await screen.findByText('Tech'));
     await screen.findByText('Hello world');
     const header = screen.getAllByText('Tech').at(-1)?.parentElement as HTMLElement;
-    const [markAll, refresh] = Array.from(header.querySelectorAll('button'));
+    const [markAll, refresh] = Array.from(header.querySelectorAll('button:not([aria-label="Make a book"])'));
     await userEvent.click(markAll);
     expect(invoke).toHaveBeenCalledWith('update_all_read_status', { feedLink: 'https://tech/feed', readStatus: 1 });
     await userEvent.click(refresh);

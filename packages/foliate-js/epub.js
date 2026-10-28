@@ -909,10 +909,12 @@ class Resources {
         const parts = CFI.parse(cfi)
         const top = (parts.parent ?? parts).shift()
         let $itemref = CFI.toElement(this.opf, top)
-        // make sure it's an idref; if not, try again without the ID assertion
+        // make sure it's an itemref; if not, try again without the ID assertion
         // mainly because Epub.js used to generate wrong ID assertions
         // https://github.com/futurepress/epub.js/issues/1236
-        if ($itemref && $itemref.nodeName !== 'idref') {
+        // (mdSilo: was `!== 'idref'`, always true: the ID assertion never used;
+        // the feed books find an article by it wherever it is, see src/reader/feedBook.ts)
+        if ($itemref && $itemref.localName !== 'itemref') {
             top.at(-1).id = null
             $itemref = CFI.toElement(this.opf, top)
         }

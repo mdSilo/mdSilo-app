@@ -15,6 +15,13 @@ export type EpubChapter = {
   title: string;
   /** the body, XHTML */
   body: string;
+  /**
+   * the id of its place in the spine: in the CFIs of the book, which find
+   * the chapter by it wherever it is (e.g. an article of a feed book)
+   */
+  id?: string;
+  /** the page as it is, e.g. written before: not made again from body */
+  xhtml?: string;
 };
 
 export type EpubResource = { path: string; data: Uint8Array };
@@ -31,6 +38,12 @@ export type EpubBook = {
   resources?: EpubResource[];
   /** of the book, added to the base style */
   css?: string;
+  /** of the book, e.g. a uuid; by default of the content */
+  identifier?: string;
+  /** when the book was changed, ISO; by default a fixed date */
+  modified?: string;
+  /** files in the zip, not of the book, e.g. data of the app */
+  files?: EpubResource[];
 };
 
 const ROOT = 'OEBPS';
@@ -103,31 +116,33 @@ export async function buildEpub(book: EpubBook): Promise<Uint8Array> {
   const lang = escapeXml(book.language || 'en');
   const chapters = book.chapters.map((c) => ({
     ...c,
-    xhtml: page(c.title, lang, relativePath(c.path, 'style.css'), c.body),
+    xhtml: c.xhtml ?? page(c.title, lang, relativePath(c.path, 'style.css'), c.body),
   }));
   // of the content: the same text, the same book
-  const id = crc32(text(chapters.map((c) => c.xhtml).join('\n'))).toString(16).padStart(8, '0');
+  const id = book.identifier
+    ?? `mdsilo:${crc32(text(chapters.map((c) => c.xhtml).join('\n'))).toString(16).padStart(8, '0')}`;
+  const itemId = (c: EpubChapter, i: number) => (c.id ? `i-${c.id}` : `c${i}`);
   const toc = book.toc ?? chapters.map((c) => ({ label: c.title, href: hrefOf(c.path) }));
   const resources = book.resources ?? [];
   const manifest = [
     '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>',
     '<item id="css" href="style.css" media-type="text/css"/>',
-    ...chapters.map((c, i) => `<item id="c${i}" href="${escapeXml(hrefOf(c.path))}" media-type="application/xhtml+xml"/>`),
+    ...chapters.map((c, i) => `<item id="${itemId(c, i)}" href="${escapeXml(hrefOf(c.path))}" media-type="application/xhtml+xml"/>`),
     ...resources.map((r, i) => `<item id="r${i}" href="${escapeXml(hrefOf(r.path))}" media-type="${mediaTypeOf(r.path)}"/>`),
   ];
   const opf = `<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" xml:lang="${lang}">
 <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-<dc:identifier id="id">urn:mdsilo:${id}</dc:identifier>
+<dc:identifier id="id">urn:${escapeXml(id)}</dc:identifier>
 <dc:title>${escapeXml(book.title)}</dc:title>
 ${book.author ? `<dc:creator>${escapeXml(book.author)}</dc:creator>\n` : ''}<dc:language>${lang}</dc:language>
-<meta property="dcterms:modified">2000-01-01T00:00:00Z</meta>
+<meta property="dcterms:modified">${book.modified ?? '2000-01-01T00:00:00Z'}</meta>
 </metadata>
 <manifest>
 ${manifest.join('\n')}
 </manifest>
 <spine>
-${chapters.map((_, i) => `<itemref idref="c${i}"/>`).join('\n')}
+${chapters.map((c, i) => `<itemref ${c.id ? `id="${escapeXml(c.id)}" ` : ''}idref="${itemId(c, i)}"/>`).join('\n')}
 </spine>
 </package>`;
   const nav = page(book.title, lang, 'style.css', `<nav epub:type="toc" id="toc"><h1>${escapeXml(book.title)}</h1>${navList(toc)}</nav>`);
@@ -147,6 +162,7 @@ ${chapters.map((_, i) => `<itemref idref="c${i}"/>`).join('\n')}
     file(`${ROOT}/style.css`, text(BASE_CSS + (book.css ?? ''))),
     ...(await Promise.all(chapters.map((c) => deflated(`${ROOT}/${c.path}`, text(c.xhtml))))),
     ...resources.map((r) => file(`${ROOT}/${r.path}`, r.data)),
+    ...(await Promise.all((book.files ?? []).map((f) => deflated(`${ROOT}/${f.path}`, f.data)))),
   ]);
   return new Uint8Array(await zip.arrayBuffer());
 }

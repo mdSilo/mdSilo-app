@@ -32,6 +32,7 @@
     "@headlessui/react": "^2.2.10",
     "@lezer/highlight": "^1.2.5",
     "@lezer/markdown": "^1.8.1",
+    "@mozilla/readability": "^0.6.0",
     "@popperjs/core": "^2.11.8",
     "@react-spring/web": "^10.1.2",
     "@tailwindcss/forms": "^0.5.11",

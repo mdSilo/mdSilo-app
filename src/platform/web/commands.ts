@@ -107,6 +107,7 @@ export const commands: Record<string, Command> = {
   // feed
   fetch_feed: ({ url }) => feed.fetchFeed(url),
   add_channel: ({ url, ty, title }) => feed.addChannel(url, ty, title ?? null),
+  fetch_url: ({ url }) => feed.fetchUrl(url),
   import_channels: ({ list, urlList }) => feed.importChannels(list ?? urlList ?? []),
   get_channels: () => feed.getChannels(),
   delete_channel: ({ link }) => feed.deleteChannel(link),

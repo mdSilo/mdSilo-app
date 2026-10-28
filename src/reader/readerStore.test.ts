@@ -107,6 +107,29 @@ describe('readerStore', () => {
     expect(useReaderStore.getState().initialCfi).toBe('epubcfi(/6/10)');
   });
 
+  test('a book written again (a feed book) opens by its first id, its place kept', async () => {
+    const id = 'f'.repeat(32);
+    const fileHash = await invoke<string>('book_hash', { filePath: BOOK });
+    const entry = { file: 'reading/A.epub', title: 'A', author: '', format: 'EPUB', addedAt: '', feed: 'A' };
+    const writeLibrary = (extra: object) => invoke('write_file', {
+      filePath: `${WS}/.mdsilo/books.json`,
+      text: JSON.stringify({ version: 1, books: { [id]: { ...entry, ...extra } } }),
+    });
+    await invoke('write_file', { filePath: `${WS}/.mdsilo/books/${id}.json`, text: JSON.stringify({ location: 'epubcfi(/6/6)' }) });
+    await writeLibrary({ fileHash });
+    await useReaderStore.getState().open(BOOK);
+    expect(useReaderStore.getState()).toMatchObject({ hash: id, initialCfi: 'epubcfi(/6/6)' });
+    await useReaderStore.getState().close();
+
+    // its hash not up to date (the file synced, the library not yet): by its file
+    await writeLibrary({ fileHash: '0'.repeat(32) });
+    await useReaderStore.getState().open(BOOK);
+    expect(useReaderStore.getState().hash).toBe(id);
+    const lib = await readLibrary(WS);
+    expect(Object.keys(lib.books)).toEqual([id]);
+    expect(lib.books[id].fileHash).toBe(fileHash);
+  });
+
   test('a book failing to open', async () => {
     const { openBook } = await import('./document');
     vi.mocked(openBook).mockRejectedValueOnce(new Error('Unsupported book format'));

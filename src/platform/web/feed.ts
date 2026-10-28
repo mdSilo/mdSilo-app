@@ -196,6 +196,26 @@ async function fetchText(url: string): Promise<string | null> {
   }
 }
 
+async function fetchBytes(url: string): Promise<Uint8Array | null> {
+  try {
+    const resp = await fetch(url);
+    return resp.ok ? new Uint8Array(await resp.arrayBuffer()) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The bytes of a page or an image: directly, else via the CORS proxy if any. */
+export async function fetchUrl(url: string): Promise<Uint8Array> {
+  if (!/^https?:\/\//i.test(url)) throw new Error(`not a web url: ${url}`);
+  const direct = await fetchBytes(url);
+  if (direct) return direct;
+  const proxy = await getCorsProxy();
+  const proxied = proxy ? await fetchBytes(proxiedUrl(proxy, url)) : null;
+  if (proxied) return proxied;
+  throw new Error(`Failed to fetch ${url}${proxy ? ' (also via CORS proxy)' : ''}`);
+}
+
 async function processFeed(url: string, ty: string, title?: string | null): Promise<FeedResult | null> {
   // try directly first, then via the CORS proxy if any
   const direct = await fetchText(url);

@@ -10,6 +10,9 @@ import { convertToBook } from './convert';
 /**
  * The books of a workspace, by their id: the partial MD5 of the file, so a
  * book is the same book wherever it is, renamed, moved or on another device.
+ * A book the app writes again (a feed book, see feedBook.ts) keeps its first
+ * id, its file's hash now in `fileHash`: its notes, `book:` links, reading
+ * state stay with it. See bookIdOf.
  *
  *   .mdsilo/books.json        the library: file, title, author... per book
  *   .mdsilo/books/<id>.json   the reading state of a book: place, progress
@@ -55,6 +58,10 @@ export type BookEntry = {
   group?: string;
   /** e.g. Todo, Doing, Done */
   status?: string;
+  /** the partial MD5 of the file now, if not the id: the book written again by the app */
+  fileHash?: string;
+  /** a book made of feed articles: its name, to add the new articles to it (see feedBook.ts) */
+  feed?: string;
 };
 
 /** The fields of the metadata, edited together. */
@@ -174,6 +181,19 @@ export async function writeBookState(ws: string, hash: string, state: BookState)
 
 export const bookHashOf = (path: string) => invoke<string>('book_hash', { filePath: path });
 
+/**
+ * The id of a book file in the library, by its hash: the hash itself, or the
+ * book's whose file has it now (written again); else a book written again
+ * by the app at that file (its hash not up to date, e.g. the file synced, the
+ * library not yet). Undefined if a new book.
+ * @param file relative to the workspace
+ */
+export function bookIdOf(lib: Library, hash: string, file?: string): string | undefined {
+  if (lib.books[hash]) return hash;
+  const books = Object.values(lib.books);
+  return (books.find((b) => b.fileHash === hash) ?? (file ? books.find((b) => b.feed && b.file === file) : undefined))?.hash;
+}
+
 /** The book files in the dir and its sub dirs, hidden ones skipped. */
 export async function listBookFiles(dir: string): Promise<string[]> {
   const found: string[] = [];
@@ -211,8 +231,9 @@ async function refresh(ws: string): Promise<Library> {
   for (const path of await listBookFiles(joinPath(ws, READING_DIR))) {
     const file = toWorkspacePath(ws, path);
     if (byFile.has(file)) continue;
-    const hash = await bookHashOf(path);
-    if (!hash) continue;
+    const fileHash = await bookHashOf(path);
+    if (!fileHash) continue;
+    const hash = bookIdOf(lib, fileHash) ?? fileHash;
     const known = lib.books[hash];
     if (known) {
       // moved or renamed; if both files are there, the first listed stays
@@ -412,7 +433,7 @@ const readBytes = async (path: string) => {
  * Write the bytes of a file: on the desktop sent as binary, a book of some
  * MB being slow as a JSON array of numbers; on the web kept as they are.
  */
-const writeBytes = (path: string, data: Uint8Array) => (isTauri
+export const writeBytes = (path: string, data: Uint8Array) => (isTauri
   ? invoke<boolean>('write_file_raw', data, { headers: { 'file-path': encodeURIComponent(path) } })
   : invoke<boolean>('write_file_bytes', { filePath: path, data }));
 

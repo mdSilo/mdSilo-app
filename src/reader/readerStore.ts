@@ -11,7 +11,7 @@ import {
 } from './annotations';
 import { openBook, type BookDoc, type BookFormat } from './document';
 import {
-  bookMetaOf, readBookState, readLibrary, saveBookEntry, titleOfFile, withBookMeta, writeBookState, type BookEntry,
+  bookIdOf, bookMetaOf, readBookState, readLibrary, saveBookEntry, titleOfFile, withBookMeta, writeBookState, type BookEntry,
 } from './library';
 import { cacheCover } from './covers';
 import { indexBookText } from './bookIndex';
@@ -139,7 +139,7 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     const ws = store.getState().initDir;
     set({ path, ws, status: 'loading', error: undefined, initialCfi: cfi, notes: [], location: undefined, time: {} });
     try {
-      const [file, hash] = await Promise.all([
+      const [file, fileHash] = await Promise.all([
         readBookFile(path),
         invoke<string>('book_hash', { filePath: path }),
       ]);
@@ -153,14 +153,18 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       let entry: BookEntry | undefined;
       let initialCfi = cfi;
       let time: Record<string, number> = {};
-      if (ws && hash) {
+      let hash = fileHash;
+      if (ws && fileHash) {
         const lib = await readLibrary(ws);
+        // a book written again (a feed book): by its first id
+        hash = bookIdOf(lib, fileHash, toWorkspacePath(ws, path)) ?? fileHash;
         // the metadata of the file, unless edited in the library
         entry = withBookMeta({
           ...(lib.books[hash] ?? { addedAt: new Date().toISOString(), title: '', author: '' }),
           hash,
           file: toWorkspacePath(ws, path),
           format,
+          ...(hash !== fileHash ? { fileHash } : {}),
         }, bookMetaOf(book, path));
         await saveBookEntry(ws, entry);
         const state = await readBookState(ws, hash);

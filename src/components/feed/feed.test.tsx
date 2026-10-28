@@ -11,8 +11,14 @@ import { Channel } from './Channel';
 import { ArticleView } from './ArticleView';
 import { FeedManager } from './FeedManager';
 import { clipArticle } from './clip';
+import { saveFeedBook } from './feedToBook';
 
 vi.mock('./clip', () => ({ clipArticle: vi.fn(async () => '/w/clips/Article One.md') }));
+vi.mock('./feedToBook', () => ({
+  saveFeedBook: vi.fn(async () => ({
+    path: '/w/reading/Tech News.epub', hash: 'h', created: true, added: 3, fromPage: 2, partial: 1, refreshed: 0, total: 3,
+  })),
+}));
 
 const channel = (partial: Partial<ChannelType> = {}): ChannelType => ({
   id: 1,
@@ -161,7 +167,7 @@ describe('Channel', () => {
     expect(item).toHaveClass('bg-info/15');
     expect(item.querySelector('svg')).not.toBeInTheDocument();
 
-    const [markAll, refresh] = screen.getAllByRole('button');
+    const [, markAll, refresh] = screen.getAllByRole('button');
     await userEvent.click(markAll);
     expect(p.updateAllReadStatus).toHaveBeenCalledWith('https://tech.example/feed', 1);
     await userEvent.click(refresh);
@@ -171,7 +177,29 @@ describe('Channel', () => {
   test('titles the starred channel', () => {
     render(<Channel {...base()} channel={null} starChannel />);
     expect(screen.getByText('Starred')).toBeInTheDocument();
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Make a book']);
+  });
+
+  test('makes a book of the articles', async () => {
+    const p = base();
+    const onOpenBook = vi.fn();
+    render(<Channel {...p} onOpenBook={onOpenBook} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Make a book' }));
+    const name = screen.getByRole('textbox', { name: 'Name of the book' });
+    expect(name).toHaveValue('Tech News');
+    await userEvent.click(screen.getByRole('button', { name: 'Make' }));
+    expect(saveFeedBook).toHaveBeenCalledWith('Tech News', p.articles, expect.objectContaining({ source: 'Tech News' }));
+    expect(await screen.findByText(/Made, 3 article\(s\) · 2 full text from the page · 1 excerpt/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(onOpenBook).toHaveBeenCalledWith('/w/reading/Tech News.epub');
+
+    vi.mocked(saveFeedBook).mockRejectedValueOnce(new Error('The book "X" is not on this device.'));
+    await userEvent.clear(name);
+    await userEvent.type(name, 'X');
+    await userEvent.click(screen.getByRole('button', { name: 'Make' }));
+    expect(await screen.findByText('The book "X" is not on this device.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('textbox', { name: 'Name of the book' })).not.toBeInTheDocument();
   });
 });
 

@@ -157,7 +157,8 @@ async function localMedia(doc: Document, { path, notesRoots = [], readFile }: Co
 
 type ZipFile = { name: string; data: Uint8Array };
 
-async function readZip(data: Uint8Array): Promise<ZipFile[]> {
+/** The files of a zip, folders and the extras of macOS left out. */
+export async function readZip(data: Uint8Array): Promise<ZipFile[]> {
   const zip = await import('foliate-js/vendor/zip.js');
   zip.configure({ useWebWorkers: false });
   const reader = new zip.ZipReader(new zip.BlobReader(new Blob([data as BlobPart])));
