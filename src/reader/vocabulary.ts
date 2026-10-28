@@ -77,44 +77,89 @@ export function definitionOf(result: DictionaryResult): { definition: string; la
   return { definition, language: first.language };
 }
 
+/**
+ * The sentence a range is in, as offsets in the text of its block: from `start` to `end`,
+ * or of a long one the words around, from `left` to `right`.
+ */
+function sentenceOf(range: Range) {
+  const node = range.startContainer;
+  const el = (node.nodeType === 1 ? node : node.parentElement) as Element | null;
+  const block = el?.closest('p, li, blockquote, dd, td, h1, h2, h3, h4, h5, h6') ?? el;
+  if (!block) return undefined;
+  // the offset of the word in the text of the block
+  const before = range.cloneRange();
+  before.selectNodeContents(block);
+  before.setEnd(range.startContainer, range.startOffset);
+  const at = before.toString().length;
+  const text = block.textContent ?? '';
+  const ends = /[.!?。！？…]+["'”’」』)]*\s*/g;
+  let start = 0;
+  let end = text.length;
+  for (let m = ends.exec(text); m; m = ends.exec(text)) {
+    const stop = m.index + m[0].length;
+    if (stop <= at) start = stop;
+    else {
+      end = m.index + m[0].trimEnd().length;
+      break;
+    }
+  }
+  // a long sentence: the words around
+  const MAX = 160;
+  const from = Math.max(start, at - MAX);
+  const to = Math.min(end, at + MAX);
+  const cut = (i: number, back: boolean) => {
+    const space = back ? text.lastIndexOf(' ', i) : text.indexOf(' ', i);
+    return space < 0 ? i : space;
+  };
+  const left = from > start ? cut(from, false) : start;
+  const right = to < end ? cut(to, true) : end;
+  return { block, text, start, end, left, right };
+}
+
 /** The sentence of a word in the page: around the range selected. */
 export function sentenceAround(range?: Range): string | undefined {
   try {
     if (!range) return undefined;
-    const node = range.startContainer;
-    const el = (node.nodeType === 1 ? node : node.parentElement) as Element | null;
-    const block = el?.closest('p, li, blockquote, dd, td, h1, h2, h3, h4, h5, h6') ?? el;
-    if (!block) return undefined;
-    // the offset of the word in the text of the block
-    const before = range.cloneRange();
-    before.selectNodeContents(block);
-    before.setEnd(range.startContainer, range.startOffset);
-    const at = before.toString().length;
-    const text = block.textContent ?? '';
-    const ends = /[.!?。！？…]+["'”’」』)]*\s*/g;
-    let start = 0;
-    let end = text.length;
-    for (let m = ends.exec(text); m; m = ends.exec(text)) {
-      const stop = m.index + m[0].length;
-      if (stop <= at) start = stop;
-      else {
-        end = m.index + m[0].trimEnd().length;
-        break;
-      }
-    }
-    // a long sentence: the words around
-    const MAX = 160;
-    const from = Math.max(start, at - MAX);
-    const to = Math.min(end, at + MAX);
-    const cut = (i: number, back: boolean) => {
-      const space = back ? text.lastIndexOf(' ', i) : text.indexOf(' ', i);
-      return space < 0 ? i : space;
-    };
-    const left = from > start ? cut(from, false) : start;
-    const right = to < end ? cut(to, true) : end;
+    const found = sentenceOf(range);
+    if (!found) return undefined;
+    const { text, start, end, left, right } = found;
     const sentence = text.slice(left, right).replace(/\s+/g, ' ').trim();
     if (!sentence) return undefined;
     return `${left > start ? '… ' : ''}${sentence}${right < end ? ' …' : ''}`;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The range of the sentence a range is in, the text `sentenceAround` gives. */
+export function sentenceRangeAround(range: Range): Range | undefined {
+  try {
+    const found = sentenceOf(range);
+    if (!found) return undefined;
+    const { block, text } = found;
+    let { left, right } = found;
+    while (left < right && /\s/.test(text[left])) left++;
+    while (right > left && /\s/.test(text[right - 1])) right--;
+    if (left >= right) return undefined;
+    // the offsets in the text of the block, in its text nodes
+    const doc = block.ownerDocument;
+    const walker = doc.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+    const sentence = doc.createRange();
+    let offset = 0;
+    let started = false;
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const length = (node as Text).data.length;
+      if (!started && left < offset + length) {
+        sentence.setStart(node, left - offset);
+        started = true;
+      }
+      if (started && right <= offset + length) {
+        sentence.setEnd(node, right - offset);
+        return sentence;
+      }
+      offset += length;
+    }
+    return undefined;
   } catch {
     return undefined;
   }

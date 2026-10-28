@@ -40,6 +40,8 @@ type ReaderStore = {
   error?: string;
   /** where to open the book: the place last read, or of a link */
   initialCfi?: string;
+  /** the place asked for, e.g. by a link: marked for a moment once there */
+  targetCfi?: string;
   location?: ReaderLocation;
   notes: BookNote[];
   /** seconds read per day, see BookState */
@@ -92,7 +94,7 @@ async function writeNotes(path: string, header: BookHeader, notes: BookNote[]) {
 
 const empty = (): Partial<ReaderStore> => ({
   path: undefined, ws: undefined, hash: undefined, entry: undefined, book: undefined,
-  format: undefined, status: 'idle', error: undefined, initialCfi: undefined,
+  format: undefined, status: 'idle', error: undefined, initialCfi: undefined, targetCfi: undefined,
   location: undefined, notes: [], time: {},
 });
 
@@ -203,7 +205,7 @@ export function createReaderStore() {
       const current = get();
       if (current.path === path && current.status !== 'error') {
         // the same book, maybe to another place
-        if (cfi) set({ initialCfi: cfi });
+        if (cfi) set({ initialCfi: cfi, targetCfi: cfi });
         return;
       }
       // before any wait: a close or another open meanwhile is not missed
@@ -211,7 +213,7 @@ export function createReaderStore() {
       await release();
       if (seq !== openSeq) return;
       const ws = store.getState().initDir;
-      set({ path, ws, status: 'loading', error: undefined, initialCfi: cfi, notes: [], location: undefined, time: {} });
+      set({ path, ws, status: 'loading', error: undefined, initialCfi: cfi, targetCfi: cfi, notes: [], location: undefined, time: {} });
       try {
         const [file, fileHash] = await Promise.all([
           readBookFile(path),

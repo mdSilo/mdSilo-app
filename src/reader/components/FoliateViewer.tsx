@@ -14,6 +14,7 @@ import { sectionOf, type BookNote } from '../annotations';
 import type { BookDoc } from '../document';
 import { fillsPage, imagesOf, markCaptions, mediaAt, type Media } from '../media';
 import { highlightCode } from '../highlight';
+import { sentenceRangeAround } from '../vocabulary';
 import { placeOf } from './BookPopups';
 import { ImageViewer, TableViewer } from './MediaViewer';
 
@@ -33,6 +34,35 @@ type Zoomed =
 
 /** The annotation drawn for a note: the value is its CFI. */
 export const toAnnotation = (note: BookNote) => ({ value: note.cfi, id: note.id });
+
+/** The place gone to, marked for a moment: its annotation, and the timer to remove it. */
+export type Flash = { value: string; timer: ReturnType<typeof setTimeout> };
+/** ms the place gone to stays marked */
+const FLASH_MS = 2000;
+/** the prefix of the mark: drawn apart from the notes, which have their bare CFI */
+const FLASH_PREFIX = 'foliate-note:';
+const FLASH_COLOR = HIGHLIGHT_CSS.blue;
+
+function clearFlash(view: FoliateView, flash: { current?: Flash }) {
+  if (!flash.current) return;
+  clearTimeout(flash.current.timer);
+  void view.deleteAnnotation({ value: flash.current.value }).catch(() => undefined);
+  flash.current = undefined;
+}
+
+/** Mark the sentence at a place gone to for a moment, to find it on the page. */
+export async function flashPlace(view: FoliateView, cfi: string, flash: { current?: Flash }) {
+  const target = view.resolveNavigation(cfi);
+  if (!target?.anchor) return;
+  const doc = view.renderer.getContents().find((c) => c.index === target.index)?.doc;
+  const range = doc ? target.anchor(doc) : null;
+  // a range of text, not a place of a page
+  if (!range || !('collapsed' in range) || range.collapsed) return;
+  const value = FLASH_PREFIX + view.getCFI(target.index, sentenceRangeAround(range) ?? range);
+  clearFlash(view, flash);
+  flash.current = { value, timer: setTimeout(() => clearFlash(view, flash), FLASH_MS) };
+  await view.addAnnotation({ value });
+}
 
 /** ms between the clicks of a double click: a single click waits as long */
 export const DOUBLE_CLICK_MS = 250;
@@ -116,6 +146,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const theme = useStore((state) => state.theme);
   const notes = bookStore((state) => state.notes);
   const drawnRef = useRef(new Map<string, BookNote>());
+  const flashRef = useRef<Flash | undefined>(undefined);
   const [turnHint, setTurnHint] = useState<TurnHint>();
   const [zoomed, setZoomed] = useState<Zoomed>();
 
@@ -258,6 +289,10 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
 
     const onDraw = (e: Event) => {
       const { draw, annotation } = (e as CustomEvent).detail;
+      if (overlayer && annotation.value === flashRef.current?.value) {
+        draw(overlayer.highlight, { color: FLASH_COLOR });
+        return;
+      }
       const note = drawnRef.current.get(annotation.value);
       if (!note || !overlayer) return;
       const color = HIGHLIGHT_CSS[note.color ?? 'yellow'] ?? HIGHLIGHT_CSS.yellow;
@@ -433,6 +468,10 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       drawnRef.current = new Map(state.notes.filter((n) => n.text).map((n) => [n.cfi, n]));
       try {
         await view.init({ lastLocation: initialCfi, showTextStart: !initialCfi });
+        // a place asked for, not the place read last
+        if (!cancelled && initialCfi && bookStore.getState().targetCfi === initialCfi) {
+          void flashPlace(view, initialCfi, flashRef).catch(() => undefined);
+        }
       } catch (e) {
         console.error('Failed to go to the place in the book', e);
         await view.init({ showTextStart: true });
@@ -459,6 +498,8 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       container.removeEventListener('wheel', onWheel);
       const view = viewRef.current;
       viewRef.current = null;
+      if (flashRef.current) clearTimeout(flashRef.current.timer);
+      flashRef.current = undefined;
       setView(null, pane);
       usePopups.getState().clear();
       footnoteHost?.replaceChildren();
@@ -474,8 +515,13 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   // go to a place asked later, e.g. a link to the book open
   useEffect(() => {
     const view = viewRef.current;
-    if (view && initialCfi) void view.goTo(initialCfi);
-  }, [initialCfi]);
+    if (!view || !initialCfi) return;
+    void view.goTo(initialCfi).then(() => {
+      if (viewRef.current === view && bookStore.getState().targetCfi === initialCfi) {
+        return flashPlace(view, initialCfi, flashRef);
+      }
+    }).catch(() => undefined);
+  }, [initialCfi, bookStore]);
 
   // the settings and theme
   useEffect(() => {

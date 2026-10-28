@@ -129,13 +129,15 @@ describe('readerStore', () => {
 
     await useReaderStore.getState().open(BOOK);
     expect(useReaderStore.getState().initialCfi).toBe('epubcfi(/6/8)');
-    // a link to a place wins
+    // the place read last is not marked
+    expect(useReaderStore.getState().targetCfi).toBeUndefined();
+    // a link to a place wins, marked once there
     await useReaderStore.getState().close();
     await useReaderStore.getState().open(BOOK, 'epubcfi(/6/2)');
-    expect(useReaderStore.getState().initialCfi).toBe('epubcfi(/6/2)');
+    expect(useReaderStore.getState()).toMatchObject({ initialCfi: 'epubcfi(/6/2)', targetCfi: 'epubcfi(/6/2)' });
     // the same book again, to another place
     await useReaderStore.getState().open(BOOK, 'epubcfi(/6/10)');
-    expect(useReaderStore.getState().initialCfi).toBe('epubcfi(/6/10)');
+    expect(useReaderStore.getState()).toMatchObject({ initialCfi: 'epubcfi(/6/10)', targetCfi: 'epubcfi(/6/10)' });
   });
 
   test('a book written again (a feed book) opens by its first id, its place kept', async () => {

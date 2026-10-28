@@ -58,6 +58,7 @@ export interface FoliateView extends HTMLElement {
   prev: (distance?: number) => Promise<void>;
   next: (distance?: number) => Promise<void>;
   getCFI: (index: number, range?: Range) => string;
+  resolveNavigation: (target: string) => { index: number; anchor?: (doc: Document) => Range | Element | null } | undefined;
   addAnnotation: (annotation: { value: string; [key: string]: unknown }, remove?: boolean) => Promise<unknown>;
   deleteAnnotation: (annotation: { value: string }) => Promise<unknown>;
   search: (opts: { query: string; index?: number; matchCase?: boolean; matchDiacritics?: boolean; matchWholeWords?: boolean }) => AsyncGenerator<SearchResult>;

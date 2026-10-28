@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useWebFs } from '../testUtils';
 import {
-  definitionOf, readVocabulary, resetVocabulary, sameWord, sentenceAround, useVocabulary,
+  definitionOf, readVocabulary, resetVocabulary, sameWord, sentenceAround, sentenceRangeAround, useVocabulary,
 } from './vocabulary';
 
 const WS = '/mdSilo';
@@ -82,5 +82,22 @@ describe('vocabulary', () => {
     expect(around.endsWith('more …')).toBe(true);
     expect(around).toContain('target');
     expect(around.length).toBeLessThan(340);
+  });
+
+  test('the range of the sentence a word is in, across the elements', () => {
+    document.body.innerHTML = '<p>It was a bright cold day in April. The clocks were <em>striking</em> thirteen! Then</p>';
+    const text = document.querySelector('p')!.firstChild!;
+    const range = document.createRange();
+    range.setStart(text, 16);
+    range.setEnd(text, 20);
+    expect(sentenceRangeAround(range)?.toString()).toBe('It was a bright cold day in April.');
+    const em = document.querySelector('em')!.firstChild!;
+    range.setStart(em, 0);
+    range.setEnd(em, 8);
+    const sentence = sentenceRangeAround(range)!;
+    expect(sentence.toString()).toBe('The clocks were striking thirteen!');
+    expect(sentence.startContainer).toBe(text);
+    expect(sentence.endContainer).toBe(em.parentElement!.nextSibling);
+    expect(sentenceRangeAround(sentence)?.toString()).toBe(sentence.toString());
   });
 });
