@@ -1,4 +1,4 @@
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { setWindowTitle } from '@/file/util';
 
 export const initialState = {view: 'default'};

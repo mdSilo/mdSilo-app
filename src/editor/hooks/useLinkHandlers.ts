@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { store } from '@/lib/store';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { store } from '@/state/store';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import { issueStore } from '@/components/issue/issueStore';
 import { issueHref, parseIssueHref } from '@/components/issue/refs';
 import { openFilePath, openUrl } from '@/file/open';

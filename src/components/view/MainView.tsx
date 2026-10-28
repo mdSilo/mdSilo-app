@@ -1,12 +1,12 @@
 import { lazy, Suspense, type ComponentType } from 'react';
 import MsEditor from "mdsmirror";
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import { EDITOR_THEME } from '@/lib/themes';
 import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import { Spinner } from '@/components/misc/ui';
 import useNoteTaskSync from '@/components/issue/useNoteTaskSync';
-import { useCurrentViewContext } from '@/context/useCurrentView';
-import useStartupView from '@/context/useStartupView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
+import useStartupView from '@/state/useStartupView';
 import NotePage from './md';
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start

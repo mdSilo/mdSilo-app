@@ -5,14 +5,14 @@ import { produce, type Draft } from 'immer';
 import type { Note } from '@/types/model';
 import type { PickPartial } from '@/types/utils';
 import { ArticleType, PodType } from '@/types/model';
-import * as Storage from '@/file/storage';
+import * as Storage from '@/state/storage';
 import type { Layout } from '@/workspace/layout';
-import type { ActivityRecord } from './activity';
+import type { ActivityRecord } from '@/lib/activity';
+import { NoteMap } from '@/lib/noteMap';
+import { DARK_THEME, LIGHT_THEME } from '@/lib/themes';
 import userSettingsSlice, { UserSettings } from './userSettings';
-import { NoteMap } from './noteMap';
-import { DARK_THEME, LIGHT_THEME } from './themes';
 
-export { NoteMap } from './noteMap';
+export { NoteMap } from '@/lib/noteMap';
 
 export { shallow as shallowEqual } from 'zustand/shallow';
 

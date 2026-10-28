@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
-import { store, SidebarTab } from '@/lib/store';
+import { store, SidebarTab } from '@/state/store';
 import App from './App';
 
 const press = (key: string, keyCode: number, mods: Record<string, boolean>) =>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, useStore } from '@/lib/store';
+import { NoteMap, useStore } from '@/state/store';
 import useDebounce from '@/lib/hooks/useDebounce';
 import { linkTitlesOf } from '@/lib/mdlink';
 import { getMarkdownTextBlocks, indexOf, LinkIndex, type TextBlock } from '@/lib/linkIndex';

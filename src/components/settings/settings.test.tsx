@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { BaseModal } from './BaseModal';
 import SettingsModal from './SettingsModal';
 import EditorSettings from './EditorSettings';

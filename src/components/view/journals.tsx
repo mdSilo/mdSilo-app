@@ -1,7 +1,7 @@
 import MsEditor from "mdsmirror";
 import { EDITOR_THEME } from '@/lib/themes';
-import { useCurrentViewContext } from '@/context/useCurrentView';
-import { useStore } from '@/lib/store';
+import { useCurrentViewContext } from '@/state/useCurrentView';
+import { useStore } from '@/state/store';
 import { Note } from '@/types/model';
 import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import FindOrCreateInput from '@/components/note/NoteNewInput';

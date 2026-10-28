@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { mockInvoke, renderWithView } from '../../testUtils';
 import Feed from './feed';
 

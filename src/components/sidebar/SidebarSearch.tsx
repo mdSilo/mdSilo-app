@@ -1,11 +1,11 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import Highlighter from 'react-highlight-words';
 import { type FuseResultMatch } from 'fuse.js';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import { searchContent, type ContentSearch, NoteBlock } from '@/lib/hooks/useNoteSearch';
 import useDebounce from '@/lib/hooks/useDebounce';
 import useLoadNotes from '@/lib/hooks/useLoadNotes';
-import { store, useStore } from '@/lib/store';
+import { store, useStore } from '@/state/store';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { isMobile } from '@/lib/helper';
 import { openFilePath } from '@/file/open';

@@ -1,4 +1,4 @@
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import { NumberInput, Select, Toggle } from '@/components/misc/ui';
 
 const FONTS = [

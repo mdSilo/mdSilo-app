@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { useWebFs } from '../../testUtils';
 import * as ops from './issueOps';
 import { issueChanges, joinIssueData, splitIssueData } from './issueFiles';

@@ -1,8 +1,8 @@
 import { describe, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react';
+import { ProvideCurrentMd, useCurrentMdContext } from '@/writer/useCurrentMd';
 import { ProvideCurrentView, useCurrentViewContext } from './useCurrentView';
-import { ProvideCurrentMd, useCurrentMdContext } from './useCurrentMd';
 
 describe('useCurrentViewContext', () => {
   test('throws outside the provider', () => {

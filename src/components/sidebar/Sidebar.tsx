@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { useTransition, animated, SpringConfig } from '@react-spring/web';
 import { isMobile } from '@/lib/helper';
-import { useStore } from '@/lib/store';
-import { SIDEBAR_WIDTH } from '@/lib/userSettings';
+import { useStore } from '@/state/store';
+import { SIDEBAR_WIDTH } from '@/state/userSettings';
 import ResizeHandle, { useResizableWidth } from '@/components/misc/ResizeHandle';
 import SidebarContent from './SidebarContent';
 

@@ -1,5 +1,5 @@
 import { isUrl } from '@/lib/helper';
-import type { NoteMap } from '@/lib/store';
+import type { NoteMap } from '@/state/store';
 import { indexOf } from '@/lib/linkIndex';
 import type { Issue } from './types';
 

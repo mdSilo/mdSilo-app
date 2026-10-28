@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import { loadDir } from '@/file/open';
 
 /**

@@ -1,6 +1,6 @@
 import copy from 'copy-to-clipboard';
 import * as CFI from 'foliate-js/epubcfi.js';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import {
   bookHref, newNoteId, type BookNote, type HighlightColor, type HighlightStyle,
 } from './annotations';

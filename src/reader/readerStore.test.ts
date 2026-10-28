@@ -1,6 +1,6 @@
 import { Blob as NodeBlob } from 'node:buffer';
 import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { getStrDate } from '@/lib/helper';
 import { useWebFs } from '../testUtils';
 import { writeFile } from '../platform/web/fs';

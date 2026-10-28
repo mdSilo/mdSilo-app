@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef } from 'react';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 
 type Props = {
   initialTitle: string;

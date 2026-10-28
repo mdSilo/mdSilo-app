@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import useDebounce from '@/lib/hooks/useDebounce';
 import { useIssueData, useIssueStore } from './issueStore';
 import { loadNoteTasks, syncNoteTasks } from './noteTasks';

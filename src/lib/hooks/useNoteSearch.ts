@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import Fuse, { type FuseResult } from 'fuse.js';
 import { invoke } from '@tauri-apps/api/core';
 import { getJSONContent, parser } from "mdsmirror";
-import { NoteMap, store, useStore } from '@/lib/store';
+import { NoteMap, store, useStore } from '@/state/store';
 import { indexOf } from '@/lib/linkIndex';
 import { withContents } from '@/lib/contentCache';
 import { Note } from '@/types/model';

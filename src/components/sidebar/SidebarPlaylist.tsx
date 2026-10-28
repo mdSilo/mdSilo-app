@@ -4,8 +4,8 @@ import React, {
 import { List } from 'react-virtualized';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { TbHeadphones as IconHeadphones } from 'react-icons/tb';
-import { useStore } from '@/lib/store';
-import { Sort } from '@/lib/userSettings';
+import { useStore } from '@/state/store';
+import { Sort } from '@/state/userSettings';
 import { ciStringCompare, dateCompare } from '@/lib/helper';
 import { PodType as PodTreeItem } from '@/types/model';
 import * as dataAgent from '@/components/feed/dataAgent';

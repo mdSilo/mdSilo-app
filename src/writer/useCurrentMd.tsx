@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useContext, createContext, Dispatch } from 'react';
-import { ViewAction, ViewState } from './viewReducer';
+import { ViewAction, ViewState } from '@/state/viewReducer';
 
 type CurrentMd = {
   ty: string;

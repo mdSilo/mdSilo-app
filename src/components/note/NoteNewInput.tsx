@@ -2,13 +2,13 @@ import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import type { IconType as Icon } from 'react-icons';
 import { TbFilePlus as IconFilePlus, TbSearch as IconSearch } from 'react-icons/tb';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import useNoteSearch from '@/lib/hooks/useNoteSearch';
 import { ciStringEqual, regDateStr } from '@/lib/helper';
 import { joinPaths } from '@/file/util';
 import { openFilePath } from '@/file/open';
 import { writeFile } from '@/file/write';
-import { Notes, store, useStore } from '@/lib/store';
+import { Notes, store, useStore } from '@/state/store';
 import { defaultNote } from '@/types/model';
 import { newNoteDir } from '@/workspace/layout';
 

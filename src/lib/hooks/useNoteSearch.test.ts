@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { invoke } from '@tauri-apps/api/core';
 import { NoteMap } from '@/lib/noteMap';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { makeNote } from '../../testUtils';
 import useNoteSearch from './useNoteSearch';
 

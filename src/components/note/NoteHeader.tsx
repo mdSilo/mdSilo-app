@@ -5,9 +5,9 @@ import {
   TbPhoto as IconPhoto, TbSettings as IconSettings, TbTournament as IconTournament, TbTrash as IconTrash
 } from 'react-icons/tb';
 import { usePopper } from 'react-popper';
-import { useCurrentMdContext } from '@/context/useCurrentMd';
+import { useCurrentMdContext } from '@/writer/useCurrentMd';
 import { ExportAs } from '@/editor/hooks/useExport';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import { openFilePath } from '@/file/open';
 import { Tooltip } from '@/components/misc/ui';
 import Portal from '@/components/misc/Portal';

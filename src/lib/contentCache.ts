@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import type { Note } from '@/types/model';
-import { store } from './store';
+import { store } from '@/state/store';
 
 /**
  * The content of notes not loaded in the store (see Note.parsed): read on

@@ -1,9 +1,9 @@
 import { memo, useCallback, useState } from 'react';
 import { TbHeadphones as IconHeadphones } from 'react-icons/tb';
-import { store, useStore } from '@/lib/store';
+import { store, useStore } from '@/state/store';
 import AudioPlayer from '@/components/feed/AudioPlayer';
 import * as dataAgent from '@/components/feed/dataAgent';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 
 type Props = {
   className?: string;

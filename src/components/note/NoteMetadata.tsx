@@ -1,4 +1,4 @@
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import { fmtDatetime, countWords } from '@/lib/helper';
 
 type Props = {

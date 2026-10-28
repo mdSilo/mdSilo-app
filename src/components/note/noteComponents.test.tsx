@@ -4,9 +4,9 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import { NoteMap } from '@/lib/noteMap';
-import { store } from '@/lib/store';
-import { ProvideCurrentView, useCurrentViewContext } from '@/context/useCurrentView';
-import { ProvideCurrentMd } from '@/context/useCurrentMd';
+import { store } from '@/state/store';
+import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
+import { ProvideCurrentMd } from '@/writer/useCurrentMd';
 import { makeFileMeta, makeNote, mockInvoke, renderWithView } from '../../testUtils';
 import NoteMetadata from './NoteMetadata';
 import Toc from './Toc';

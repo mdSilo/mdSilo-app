@@ -2,7 +2,7 @@ import { useRef, useState, memo } from 'react';
 import { Menu } from '@headlessui/react';
 import { TbSortDescending as IconSortDescending, TbCheck as IconCheck } from 'react-icons/tb';
 import { usePopper } from 'react-popper';
-import { ReadableNameBySort, Sort } from '@/lib/userSettings';
+import { ReadableNameBySort, Sort } from '@/state/userSettings';
 import { Tooltip } from '@/components/misc/ui';
 import Portal from '@/components/misc/Portal';
 

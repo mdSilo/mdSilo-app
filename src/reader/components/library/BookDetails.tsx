@@ -7,7 +7,7 @@ import {
 import { BaseModal } from '@/components/settings/BaseModal';
 import { IconButton } from '@/components/misc/ui';
 import { openFileDilog, openFilePath } from '@/file/open';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { annotationsPathOf, bookHref } from '../../annotations';
 import { COVER_EXTS, coverUrl, deleteCovers, setCustomCover } from '../../covers';

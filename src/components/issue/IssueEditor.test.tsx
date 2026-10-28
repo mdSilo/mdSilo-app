@@ -1,8 +1,8 @@
 import { describe, expect, test, vi } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
 import { NoteMap } from '@/lib/noteMap';
-import { store } from '@/lib/store';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { store } from '@/state/store';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import { makeNote, renderWithView } from '../../testUtils';
 import IssueEditor from './IssueEditor';
 

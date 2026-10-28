@@ -1,5 +1,5 @@
 import { domToMarkdown } from 'mdsmirror';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import type { ArticleType } from '@/types/model';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { fmtDatetime } from '@/lib/helper';

@@ -1,7 +1,7 @@
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import {
   STARTUP_VIEWS, type OpenOnStartup, type SideMenuOrientation, type StartupView,
-} from '@/lib/userSettings';
+} from '@/state/userSettings';
 import { SYSTEM_THEME, THEMES } from '@/lib/themes';
 import { Select } from '@/components/misc/ui';
 import { BaseModal } from './BaseModal';

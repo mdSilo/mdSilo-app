@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { store, useStore } from '@/lib/store';
+import { store, useStore } from '@/state/store';
 import { DARK_QUERY, isSystemDark, resolveTheme } from '@/lib/themes';
 
 /**

@@ -1,5 +1,5 @@
 import { TbCheck as IconCheck } from 'react-icons/tb';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useIssueStore } from '../issueStore';
 import { addProjectItem, issueProjects, moveProjectItem, removeProjectItem } from '../issueOps';
 import type { Issue, IssueData } from '../types';

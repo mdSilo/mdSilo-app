@@ -1,6 +1,6 @@
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, Notes, store } from '@/lib/store';
+import { NoteMap, Notes, store } from '@/state/store';
 import { defaultNote, Note } from '@/types/model';
 import type { Parsed } from '@/lib/parseNote';
 import { regDateStr } from '@/lib/helper';

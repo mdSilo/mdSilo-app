@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
 import { NoteMap } from '@/lib/noteMap';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { makeNote, mockInvoke } from '../../../testUtils';
 import updateBacklinks from './updateBacklinks';
 

@@ -1,6 +1,6 @@
 import { TbPencil as IconPencil } from 'react-icons/tb';
 import { parser, serializer } from "mdsmirror";
-import { useCurrentViewContext, DispatchType } from '@/context/useCurrentView';
+import { useCurrentViewContext, DispatchType } from '@/state/useCurrentView';
 import { Note } from '@/types/model';
 import Tree from '@/components/misc/Tree';
 import { Tooltip } from '@/components/misc/ui';

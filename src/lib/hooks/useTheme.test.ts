@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import useTheme from './useTheme';
 
 describe('useTheme', () => {

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { Markmap } from 'markmap-view';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { writeFile } from '@/file/write';
 import { mockInvoke } from '../../testUtils';
 import { Mindmap } from './mindmap';

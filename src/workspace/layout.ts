@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { joinPath } from '@/file/util';
 import { updateGitignore } from './gitignore';
 

@@ -1,6 +1,6 @@
 import type { Event, UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core'
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { emitCustomEvent } from '@/lib/helper';
 import { openFilePaths } from './open';
 import { hasFs, normalizeSlash, joinPath } from './util';

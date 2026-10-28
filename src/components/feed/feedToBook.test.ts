@@ -1,6 +1,6 @@
 import { Blob as NodeBlob } from 'node:buffer';
 import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { serializeAnnotations, type BookNote } from '@/reader/annotations';
 import { readFeedBook } from '@/reader/feedBook';
 import { bookIdOf, readLibrary, refreshLibrary } from '@/reader/library';

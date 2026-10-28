@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import Tree from '@/components/misc/Tree';
 import useBacklinks from './useBacklinks';
 import type { Backlink, BacklinkMatch } from './useBacklinks';

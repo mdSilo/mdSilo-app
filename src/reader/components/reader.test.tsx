@@ -4,9 +4,9 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import * as dialog from '@tauri-apps/plugin-dialog';
-import { store } from '@/lib/store';
-import { ProvideCurrentView, useCurrentViewContext } from '@/context/useCurrentView';
-import type { ViewAction } from '@/context/viewReducer';
+import { store } from '@/state/store';
+import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
+import type { ViewAction } from '@/state/viewReducer';
 import MainView from '@/components/view/MainView';
 import useLinkHandlers from '@/editor/hooks/useLinkHandlers';
 import { useWebFs, waitForView } from '../../testUtils';

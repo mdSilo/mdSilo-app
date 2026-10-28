@@ -1,4 +1,4 @@
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { linkTitlesOf, rewriteNoteLinks } from '@/lib/mdlink';
 import { writeFile } from '@/file/write';
 import { loadDir } from '@/file/open';

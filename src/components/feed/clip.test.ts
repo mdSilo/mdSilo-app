@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import type { ArticleType } from '@/types/model';
 import { writeFile } from '@/file/write';
 import { openFilePaths } from '@/file/open';

@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
-import { NoteTree, NoteTreeItem, useStore } from '@/lib/store';
-import { Sort } from '@/lib/userSettings';
+import { NoteTree, NoteTreeItem, useStore } from '@/state/store';
+import { Sort } from '@/state/userSettings';
 import { ciStringCompare } from '@/lib/helper';
 import { onOpenFile, onListDir } from '@/editor/hooks/useOpen';
 import { normalizeSlash } from '@/file/util';

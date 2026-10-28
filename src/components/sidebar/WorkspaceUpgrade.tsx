@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import { reopenWorkspace } from '@/editor/hooks/useOpen';
 
 /**

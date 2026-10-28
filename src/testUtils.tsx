@@ -2,8 +2,8 @@
 import { vi, type Mock } from 'vitest';
 import type { ReactElement, ReactNode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { store } from '@/lib/store';
-import { ProvideCurrentView } from '@/context/useCurrentView';
+import { store } from '@/state/store';
+import { ProvideCurrentView } from '@/state/useCurrentView';
 import type { Note } from '@/types/model';
 import type { FileMetaData } from '@/file/directory';
 

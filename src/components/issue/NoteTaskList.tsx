@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import useLoadNotes from '@/lib/hooks/useLoadNotes';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import useDebounce from '@/lib/hooks/useDebounce';
 import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
 import { useIssueStore } from './issueStore';

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { TbPlaylist as IconPlaylist } from 'react-icons/tb';
-import { SidebarTab, store } from '@/lib/store';
+import { SidebarTab, store } from '@/state/store';
 import { PodType } from '@/types/model';
 import { computePlaylist } from '@/components/sidebar/SidebarPlaylist';
 

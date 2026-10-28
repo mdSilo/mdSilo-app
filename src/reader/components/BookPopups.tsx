@@ -3,7 +3,7 @@ import {
   TbCheck, TbCopy, TbHighlight, TbHighlightOff, TbLink, TbPencil, TbQuote,
 } from 'react-icons/tb';
 import copy from 'copy-to-clipboard';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import { IconButton } from '@/components/misc/ui';
 import {
   HIGHLIGHT_COLORS, sectionOf, type BookNote, type HighlightStyle,

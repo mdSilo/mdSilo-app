@@ -8,14 +8,14 @@ import {
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import useHotkeys from '@/lib/hooks/useHotkeys';
 import { onOpenFile, onListDir, onSave, openJsonFile } from '@/editor/hooks/useOpen';
 import { isWeb } from '@/file/util';
-import { store, useStore } from '@/lib/store';
-import type { SideMenuOrientation } from '@/lib/userSettings';
+import { store, useStore } from '@/state/store';
+import type { SideMenuOrientation } from '@/state/userSettings';
 import { isMobile } from '@/lib/helper';
-import { ViewAction } from '@/context/viewReducer';
+import { ViewAction } from '@/state/viewReducer';
 import Dropdown, { DropdownItem } from '@/components/misc/Dropdown';
 import { Tooltip } from '@/components/misc/ui';
 import Portal from '@/components/misc/Portal';

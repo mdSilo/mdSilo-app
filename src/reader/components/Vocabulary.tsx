@@ -4,8 +4,8 @@ import {
 } from 'react-icons/tb';
 import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import { Spinner } from '@/components/misc/ui';
-import { useCurrentViewContext } from '@/context/useCurrentView';
-import { useStore } from '@/lib/store';
+import { useCurrentViewContext } from '@/state/useCurrentView';
+import { useStore } from '@/state/store';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { findBookPath } from '../library';
 import { openLinkOutside } from '../lookup';

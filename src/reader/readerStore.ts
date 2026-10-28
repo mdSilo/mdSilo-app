@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
-import { store } from '@/lib/store';
+import { store } from '@/state/store';
 import { getStrDate } from '@/lib/helper';
 import { flushSave } from '@/file/pendingSaves';
 import { openFilePaths } from '@/file/open';

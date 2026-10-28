@@ -5,7 +5,7 @@ import { enterTauri, leaveTauri, makeNote, mockInvoke } from '../testUtils';
 describe('write (tauri)', () => {
   let write: typeof import('./write');
   let invoke: Mock;
-  let store: typeof import('@/lib/store').store;
+  let store: typeof import('@/state/store').store;
 
   beforeEach(async () => {
     enterTauri();
@@ -15,7 +15,7 @@ describe('write (tauri)', () => {
       join_paths: ({ root, parts }: Record<string, unknown>) => `${root}/${(parts as string[]).join('/')}`,
     });
     write = await import('./write');
-    store = (await import('@/lib/store')).store;
+    store = (await import('@/state/store')).store;
   });
 
   afterEach(() => {

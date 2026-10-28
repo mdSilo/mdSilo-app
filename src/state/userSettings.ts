@@ -1,8 +1,8 @@
 import { Draft } from 'immer';
 import { DEFAULT_READER_SETTINGS, type ReaderSettings } from '@/reader/settings';
 import { DEFAULT_LIBRARY_SETTINGS, type LibrarySettings } from '@/reader/shelf';
+import { isSystemDark, SYSTEM_THEME } from '@/lib/themes';
 import { setter, Setter, Store } from './store';
-import { isSystemDark, SYSTEM_THEME } from './themes';
 
 export enum Sort {
   TitleAscending = 'TITLE_ASCENDING',

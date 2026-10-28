@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, store, type Store } from '@/lib/store';
+import { NoteMap, store, type Store } from '@/state/store';
 import { 
   openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir, openJSONFilePath 
 } from '@/file/open';

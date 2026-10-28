@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { TbLayoutBoardSplit as IconBoard, TbTable as IconTable, TbPlus as IconPlus } from 'react-icons/tb';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import { BaseModal } from '@/components/settings/BaseModal';
-import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useIssueData, useIssueStore } from '@/components/issue/issueStore';
 import { createProject, deleteProject, getIssue, moveProjectItem, updateProject } from '@/components/issue/issueOps';
 import { btnClass, inputClass } from '@/components/issue/common';

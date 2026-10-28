@@ -1,7 +1,7 @@
 import { MouseEvent, useRef, useState } from 'react';
 import MsEditor, { embeds } from 'mdsmirror';
 import { EDITOR_THEME } from '@/lib/themes';
-import { useStore } from '@/lib/store';
+import { useStore } from '@/state/store';
 import useLinkHandlers from '@/editor/hooks/useLinkHandlers';
 import { useWritingRoot } from '@/workspace/useWorkspace';
 

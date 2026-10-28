@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { store, useStore } from '@/lib/store';
+import { store, useStore } from '@/state/store';
 import {
   countNoteActivities,
   mergeActivities,

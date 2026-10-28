@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { onStoreHydrated, SidebarTab, store } from '@/lib/store';
+import { onStoreHydrated, SidebarTab, store } from '@/state/store';
 import { useCurrentViewContext } from './useCurrentView';
 
 /** the startup views of a folder, shown once it is open */

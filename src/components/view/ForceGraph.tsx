@@ -24,8 +24,8 @@ import {
 import { D3DragEvent, drag } from 'd3-drag';
 import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
-import { useCurrentViewContext } from '@/context/useCurrentView';
-import { useStore } from '@/lib/store';
+import { useCurrentViewContext } from '@/state/useCurrentView';
+import { useStore } from '@/state/store';
 import { noteTitleMap } from '@/lib/mdlink';
 import { indexOf } from '@/lib/linkIndex';
 import { openFilePath } from '@/file/open';

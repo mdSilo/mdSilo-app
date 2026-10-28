@@ -7,7 +7,7 @@ const joinPaths = ({ root, parts }: Record<string, unknown>) =>
 
 describe('useOpen (tauri)', () => {
   let useOpen: typeof import('./useOpen');
-  let store: typeof import('@/lib/store').store;
+  let store: typeof import('@/state/store').store;
   let invoke: Mock;
   let dialog: { open: Mock; save: Mock };
 
@@ -41,7 +41,7 @@ describe('useOpen (tauri)', () => {
       index_open: [],
     });
     useOpen = await import('./useOpen');
-    store = (await import('@/lib/store')).store;
+    store = (await import('@/state/store')).store;
   });
 
   afterEach(() => {

@@ -3,7 +3,7 @@ import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { TbChevronsUp as IconChevronsUp, TbFolderPlus as IconFolderPlus, TbSearch as IconSearch } from 'react-icons/tb';
 import type { IconType as Icon } from 'react-icons';
 import useNoteSearch from '@/lib/hooks/useNoteSearch';
-import { store, useStore } from '@/lib/store';
+import { store, useStore } from '@/state/store';
 import type { Note } from '@/types/model';
 import { ciStringCompare } from '@/lib/helper';
 import FileAPI from '@/file/files';
