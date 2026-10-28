@@ -135,6 +135,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
+    // above the 5s of findBy*/waitFor, see setupTests.ts
+    testTimeout: 15000,
     // vitest 4+ only excludes node_modules and .git by default; mdsmirror's
     // dist has the compiled tests too
     exclude: ['**/node_modules/**', '**/.git/**', '**/dist/**', 'dist-web/**', 'src-tauri/**'],

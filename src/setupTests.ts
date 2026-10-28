@@ -4,8 +4,12 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { resetStore } from './testUtils';
+
+// findBy*/waitFor return as soon as they pass; the default 1s is too short
+// when the whole suite shares the CPU (e.g. books are parsed in the library)
+configure({ asyncUtilTimeout: 5000 });
 
 // Tauri APIs talk to the Rust backend through window.__TAURI_INTERNALS__,
 // which does not exist in jsdom. Mock them globally so every module can be

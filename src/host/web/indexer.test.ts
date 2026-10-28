@@ -1,13 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useWebFs } from '../../testUtils';
-import { resetIndexer } from './indexer';
+import { indexSettled, resetIndexer } from './indexer';
 import { SearchEngine, snippetOf, tokenize } from './searchEngine';
 
 type Indexed = { id: string; title: string; is_dir: boolean; links: string[]; tags: string[]; issues: number[]; has_tasks: boolean };
 type Hit = { id: string; path: string; kind: string; label: string; snippet: string };
 
 const write = (filePath: string, text: string) => invoke('write_file', { filePath, text });
-const settle = () => new Promise((r) => setTimeout(r, 10));
 
 beforeEach(async () => {
   await useWebFs();
@@ -59,11 +58,11 @@ describe('index of the web version', () => {
     await invoke('index_open', { dir: '/mdSilo' });
     await write('/mdSilo/writing/a.md', 'new words');
     await write('/mdSilo/writing/c.md', 'zebra note');
-    await settle();
+    await indexSettled();
     expect(await invoke<Hit[]>('index_search', { query: 'old', kind: null, limit: 10 })).toEqual([]);
     expect((await invoke<Hit[]>('index_search', { query: 'zebra', kind: null, limit: 10 })).length).toBe(1);
     await invoke('delete_files', { paths: ['/mdSilo/writing/c.md'] });
-    await settle();
+    await indexSettled();
     expect(await invoke<Hit[]>('index_search', { query: 'zebra', kind: null, limit: 10 })).toEqual([]);
     const delta = await invoke<{ updated: Indexed[]; removed: string[] }>('index_update', {
       paths: ['/mdSilo/writing/a.md', '/mdSilo/writing/gone.md', '/elsewhere/x.md'],

@@ -122,6 +122,7 @@ export const indexBookIndexed = (hash: string) => Boolean(current?.books.has(has
 // the files changed: the index follows, the changes of a moment together
 let changed = new Set<string>();
 let timer: ReturnType<typeof setTimeout> | undefined;
+const updating = new Set<Promise<unknown>>();
 onFsChange((_kind, paths) => {
   if (!current) return;
   paths.forEach((p) => changed.add(p));
@@ -130,15 +131,27 @@ onFsChange((_kind, paths) => {
     timer = undefined;
     const batch = [...changed];
     changed = new Set();
-    void indexUpdate(batch).catch((e) => console.error('Failed to update the index', e));
+    const update = indexUpdate(batch)
+      .catch((e) => console.error('Failed to update the index', e))
+      .finally(() => updating.delete(update));
+    updating.add(update);
   }, 0);
 });
+
+/** Resolves once the index follows the changes so far; for tests. */
+export async function indexSettled() {
+  while (timer || updating.size) {
+    if (timer) await new Promise((r) => setTimeout(r, 0));
+    else await Promise.all(updating);
+  }
+}
 
 /** Forget the index; for tests. */
 export function resetIndexer() {
   current = undefined;
   search = undefined;
   changed = new Set();
+  updating.clear();
   if (timer) clearTimeout(timer);
   timer = undefined;
 }
