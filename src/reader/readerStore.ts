@@ -16,6 +16,7 @@ import {
 import { cacheCover } from './covers';
 import { indexBookText } from './bookIndex';
 import type { Progress } from './pagination';
+import { activePane, usePane, type Pane } from './view';
 
 export type ReaderLocation = Progress & {
   cfi: string;
@@ -62,14 +63,7 @@ export const TICK_MS = 30_000;
 /** no page turned for so long: away, not reading */
 export const IDLE_MS = 3 * 60_000;
 
-let notesTimer: ReturnType<typeof setTimeout> | undefined;
-let stateTimer: ReturnType<typeof setTimeout> | undefined;
-let notesDirty = false;
-let stateDirty = false;
-let openSeq = 0;
-let tickTimer: ReturnType<typeof setInterval> | undefined;
-let activeAt = 0;
-// compare of CFIs, loaded with the book
+// compare of CFIs, loaded with a book
 let compareCfi: ((a: string, b: string) => number) | undefined;
 
 const nameOf = (path: string) => path.split(/[\\/]/).pop() ?? path;
@@ -96,206 +90,253 @@ async function writeNotes(path: string, header: BookHeader, notes: BookNote[]) {
   }
 }
 
-/** Count the time read, a step at a time, while the book is read. */
-function startTicking() {
-  stopTicking();
-  activeAt = Date.now();
-  tickTimer = setInterval(() => {
-    const visible = typeof document === 'undefined' || document.visibilityState !== 'hidden';
-    if (!visible || Date.now() - activeAt > IDLE_MS) return;
-    const { time, status } = useReaderStore.getState();
-    if (status !== 'ready') return;
-    const day = getStrDate(new Date().toString());
-    useReaderStore.setState({ time: { ...time, [day]: (time[day] ?? 0) + TICK_MS / 1000 } });
-    scheduleState();
-  }, TICK_MS);
-}
+const empty = (): Partial<ReaderStore> => ({
+  path: undefined, ws: undefined, hash: undefined, entry: undefined, book: undefined,
+  format: undefined, status: 'idle', error: undefined, initialCfi: undefined,
+  location: undefined, notes: [], time: {},
+});
 
-function stopTicking() {
-  if (tickTimer) clearInterval(tickTimer);
-  tickTimer = undefined;
-}
+/**
+ * The store of a book read, with its timers. One for the book read, one for
+ * the book beside it (parallel reading).
+ */
+export function createReaderStore() {
+  let notesTimer: ReturnType<typeof setTimeout> | undefined;
+  let stateTimer: ReturnType<typeof setTimeout> | undefined;
+  let notesDirty = false;
+  let stateDirty = false;
+  let openSeq = 0;
+  let tickTimer: ReturnType<typeof setInterval> | undefined;
+  let activeAt = 0;
 
-function scheduleState() {
-  stateDirty = true;
-  if (stateTimer) clearTimeout(stateTimer);
-  stateTimer = setTimeout(() => { void saveState(); }, STATE_DELAY_MS);
-}
-
-export const useReaderStore = create<ReaderStore>((set, get) => ({
-  status: 'idle',
-  notes: [],
-  time: {},
-
-  open: async (path, cfi) => {
-    const current = get();
-    if (current.path === path && current.status !== 'error') {
-      // the same book, maybe to another place
-      if (cfi) set({ initialCfi: cfi });
-      return;
-    }
-    await get().close();
-    const seq = ++openSeq;
-    const ws = store.getState().initDir;
-    set({ path, ws, status: 'loading', error: undefined, initialCfi: cfi, notes: [], location: undefined, time: {} });
-    try {
-      const [file, fileHash] = await Promise.all([
-        readBookFile(path),
-        invoke<string>('book_hash', { filePath: path }),
-      ]);
-      const { book, format } = await openBook(file);
-      const CFI = await import('foliate-js/epubcfi.js');
-      compareCfi = CFI.compare;
-      const mdPath = annotationsPathOf(path);
-      await flushSave(mdPath);
-      const mdText = await invoke<string>('read_file', { filePath: mdPath }).catch(() => '');
-      const notes = mdText ? parseAnnotations(mdText).notes : [];
-      let entry: BookEntry | undefined;
-      let initialCfi = cfi;
-      let time: Record<string, number> = {};
-      let hash = fileHash;
-      if (ws && fileHash) {
-        const lib = await readLibrary(ws);
-        // a book written again (a feed book): by its first id
-        hash = bookIdOf(lib, fileHash, toWorkspacePath(ws, path)) ?? fileHash;
-        // the metadata of the file, unless edited in the library
-        entry = withBookMeta({
-          ...(lib.books[hash] ?? { addedAt: new Date().toISOString(), title: '', author: '' }),
-          hash,
-          file: toWorkspacePath(ws, path),
-          format,
-          ...(hash !== fileHash ? { fileHash } : {}),
-        }, bookMetaOf(book, path));
-        await saveBookEntry(ws, entry);
-        const state = await readBookState(ws, hash);
-        if (!initialCfi) initialCfi = state?.location;
-        time = state?.time ?? {};
-      }
-      if (seq !== openSeq) {
-        await book.destroy?.();
-        return;
-      }
-      set({ hash, entry, book, format, notes, initialCfi, time, status: 'ready' });
-      startTicking();
-      // for the library; for the search of the workspace
-      if (ws && hash) {
-        void cacheCover(ws, hash, book);
-        void indexBookText(hash, entry?.title ?? titleOfFile(path), book);
-      }
-    } catch (e) {
-      if (seq !== openSeq) return;
-      console.error(`Failed to open the book ${path}`, e);
-      set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
-    }
-  },
-
-  close: async () => {
-    openSeq += 1;
+  /** Count the time read, a step at a time, while the book is read. */
+  function startTicking() {
     stopTicking();
-    await get().flush();
-    const { book } = get();
-    set({
-      path: undefined, ws: undefined, hash: undefined, entry: undefined, book: undefined,
-      format: undefined, status: 'idle', error: undefined, initialCfi: undefined,
-      location: undefined, notes: [], time: {},
-    });
+    activeAt = Date.now();
+    tickTimer = setInterval(() => {
+      const visible = typeof document === 'undefined' || document.visibilityState !== 'hidden';
+      if (!visible || Date.now() - activeAt > IDLE_MS) return;
+      const { time, status } = useStore.getState();
+      if (status !== 'ready') return;
+      const day = getStrDate(new Date().toString());
+      useStore.setState({ time: { ...time, [day]: (time[day] ?? 0) + TICK_MS / 1000 } });
+      scheduleState();
+    }, TICK_MS);
+  }
+
+  function stopTicking() {
+    if (tickTimer) clearInterval(tickTimer);
+    tickTimer = undefined;
+  }
+
+  function scheduleState() {
+    stateDirty = true;
+    if (stateTimer) clearTimeout(stateTimer);
+    stateTimer = setTimeout(() => { void saveState(); }, STATE_DELAY_MS);
+  }
+
+  function scheduleNotes() {
+    notesDirty = true;
+    if (notesTimer) clearTimeout(notesTimer);
+    notesTimer = setTimeout(() => { void saveNotes(); }, SAVE_DELAY_MS);
+  }
+
+  async function saveNotes() {
+    if (notesTimer) clearTimeout(notesTimer);
+    notesTimer = undefined;
+    if (!notesDirty) return;
+    notesDirty = false;
+    const { path, hash, entry, notes } = useStore.getState();
+    if (!path || !hash) return;
+    const header: BookHeader = {
+      hash,
+      title: entry?.title || titleOfFile(path),
+      ...(entry?.author ? { author: entry.author } : {}),
+      file: nameOf(path),
+    };
+    try {
+      await writeNotes(path, header, notes);
+    } catch (e) {
+      console.error('Failed to save the annotations', e);
+    }
+  }
+
+  async function saveState() {
+    if (stateTimer) clearTimeout(stateTimer);
+    stateTimer = undefined;
+    if (!stateDirty) return;
+    stateDirty = false;
+    const { ws, hash, location, time } = useStore.getState();
+    if (!ws || !hash) return;
+    try {
+      const old = location ? undefined : await readBookState(ws, hash);
+      await writeBookState(ws, hash, {
+        location: location?.cfi ?? old?.location,
+        fraction: location?.fraction ?? old?.fraction,
+        ...(Object.keys(time).length ? { time } : {}),
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error('Failed to save the reading state', e);
+    }
+  }
+
+  /** The book open, if any, saved and closed. */
+  async function release() {
+    stopTicking();
+    await Promise.all([saveNotes(), saveState()]);
+    const { book } = useStore.getState();
+    useStore.setState(empty());
     try {
       await book?.destroy?.();
     } catch (e) {
       console.error('Failed to close the book', e);
     }
-  },
+  }
 
-  setLocation: (location) => {
-    set({ location });
-    activeAt = Date.now();
-    if (!get().ws || !get().hash) return;
-    scheduleState();
-  },
+  const useStore = create<ReaderStore>((set, get) => ({
+    status: 'idle',
+    notes: [],
+    time: {},
 
-  touch: () => {
-    activeAt = Date.now();
-  },
+    open: async (path, cfi) => {
+      const current = get();
+      if (current.path === path && current.status !== 'error') {
+        // the same book, maybe to another place
+        if (cfi) set({ initialCfi: cfi });
+        return;
+      }
+      // before any wait: a close or another open meanwhile is not missed
+      const seq = ++openSeq;
+      await release();
+      if (seq !== openSeq) return;
+      const ws = store.getState().initDir;
+      set({ path, ws, status: 'loading', error: undefined, initialCfi: cfi, notes: [], location: undefined, time: {} });
+      try {
+        const [file, fileHash] = await Promise.all([
+          readBookFile(path),
+          invoke<string>('book_hash', { filePath: path }),
+        ]);
+        const { book, format } = await openBook(file);
+        const CFI = await import('foliate-js/epubcfi.js');
+        compareCfi = CFI.compare;
+        const mdPath = annotationsPathOf(path);
+        await flushSave(mdPath);
+        const mdText = await invoke<string>('read_file', { filePath: mdPath }).catch(() => '');
+        const notes = mdText ? parseAnnotations(mdText).notes : [];
+        let entry: BookEntry | undefined;
+        let initialCfi = cfi;
+        let time: Record<string, number> = {};
+        let hash = fileHash;
+        if (ws && fileHash) {
+          const lib = await readLibrary(ws);
+          // a book written again (a feed book): by its first id
+          hash = bookIdOf(lib, fileHash, toWorkspacePath(ws, path)) ?? fileHash;
+          // the metadata of the file, unless edited in the library
+          entry = withBookMeta({
+            ...(lib.books[hash] ?? { addedAt: new Date().toISOString(), title: '', author: '' }),
+            hash,
+            file: toWorkspacePath(ws, path),
+            format,
+            ...(hash !== fileHash ? { fileHash } : {}),
+          }, bookMetaOf(book, path));
+          await saveBookEntry(ws, entry);
+          const state = await readBookState(ws, hash);
+          if (!initialCfi) initialCfi = state?.location;
+          time = state?.time ?? {};
+        }
+        if (seq !== openSeq) {
+          await book.destroy?.();
+          return;
+        }
+        set({ hash, entry, book, format, notes, initialCfi, time, status: 'ready' });
+        startTicking();
+        // for the library; for the search of the workspace
+        if (ws && hash) {
+          void cacheCover(ws, hash, book);
+          void indexBookText(hash, entry?.title ?? titleOfFile(path), book);
+        }
+      } catch (e) {
+        if (seq !== openSeq) return;
+        console.error(`Failed to open the book ${path}`, e);
+        set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
+      }
+    },
 
-  addNote: (note) => {
-    set({ notes: [...get().notes, note] });
-    scheduleNotes();
-  },
+    close: async () => {
+      openSeq += 1;
+      await release();
+    },
 
-  updateNote: (id, patch) => {
-    const now = new Date().toISOString();
-    set({ notes: get().notes.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: now } : n)) });
-    scheduleNotes();
-  },
+    setLocation: (location) => {
+      set({ location });
+      activeAt = Date.now();
+      if (!get().ws || !get().hash) return;
+      scheduleState();
+    },
 
-  removeNote: (id) => {
-    set({ notes: get().notes.filter((n) => n.id !== id) });
-    scheduleNotes();
-  },
+    touch: () => {
+      activeAt = Date.now();
+    },
 
-  flush: async () => {
-    await Promise.all([saveNotes(), saveState()]);
-  },
-}));
+    addNote: (note) => {
+      set({ notes: [...get().notes, note] });
+      scheduleNotes();
+    },
 
-function scheduleNotes() {
-  notesDirty = true;
-  if (notesTimer) clearTimeout(notesTimer);
-  notesTimer = setTimeout(() => { void saveNotes(); }, SAVE_DELAY_MS);
-}
+    updateNote: (id, patch) => {
+      const now = new Date().toISOString();
+      set({ notes: get().notes.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: now } : n)) });
+      scheduleNotes();
+    },
 
-async function saveNotes() {
-  if (notesTimer) clearTimeout(notesTimer);
-  notesTimer = undefined;
-  if (!notesDirty) return;
-  notesDirty = false;
-  const { path, hash, entry, notes } = useReaderStore.getState();
-  if (!path || !hash) return;
-  const header: BookHeader = {
-    hash,
-    title: entry?.title || titleOfFile(path),
-    ...(entry?.author ? { author: entry.author } : {}),
-    file: nameOf(path),
+    removeNote: (id) => {
+      set({ notes: get().notes.filter((n) => n.id !== id) });
+      scheduleNotes();
+    },
+
+    flush: async () => {
+      await Promise.all([saveNotes(), saveState()]);
+    },
+  }));
+
+  /** Reset the state; for tests. */
+  const reset = () => {
+    stopTicking();
+    if (notesTimer) clearTimeout(notesTimer);
+    if (stateTimer) clearTimeout(stateTimer);
+    notesTimer = stateTimer = undefined;
+    notesDirty = stateDirty = false;
+    openSeq += 1;
+    useStore.setState(empty());
   };
-  try {
-    await writeNotes(path, header, notes);
-  } catch (e) {
-    console.error('Failed to save the annotations', e);
-  }
+
+  return Object.assign(useStore, { reset });
 }
 
-async function saveState() {
-  if (stateTimer) clearTimeout(stateTimer);
-  stateTimer = undefined;
-  if (!stateDirty) return;
-  stateDirty = false;
-  const { ws, hash, location, time } = useReaderStore.getState();
-  if (!ws || !hash) return;
-  try {
-    const old = location ? undefined : await readBookState(ws, hash);
-    await writeBookState(ws, hash, {
-      location: location?.cfi ?? old?.location,
-      fraction: location?.fraction ?? old?.fraction,
-      ...(Object.keys(time).length ? { time } : {}),
-      updatedAt: new Date().toISOString(),
-    });
-  } catch (e) {
-    console.error('Failed to save the reading state', e);
-  }
+export type ReaderStoreHook = ReturnType<typeof createReaderStore>;
+
+/** The book read. */
+export const useReaderStore = createReaderStore();
+/** The book beside it, in parallel reading. */
+export const useSideStore = createReaderStore();
+
+/** The store of the book of a pane. */
+export const storeOf = (pane: Pane): ReaderStoreHook => (pane === 'side' ? useSideStore : useReaderStore);
+
+/** The store of the book last used, e.g. to annotate the text selected. */
+export const activeStore = () => storeOf(activePane());
+
+/** The book last used, as a hook: for the panels of the sidebar. */
+export function useActiveStore<T>(selector: (state: ReaderStore) => T): T {
+  const pane = usePane((s) => s.active);
+  return storeOf(pane)(selector);
 }
 
 /** Reset module state; for tests. */
 export function resetReaderStore() {
-  stopTicking();
-  if (notesTimer) clearTimeout(notesTimer);
-  if (stateTimer) clearTimeout(stateTimer);
-  notesTimer = stateTimer = undefined;
-  notesDirty = stateDirty = false;
-  openSeq += 1;
+  useReaderStore.reset();
+  useSideStore.reset();
   compareCfi = undefined;
-  useReaderStore.setState({
-    path: undefined, ws: undefined, hash: undefined, entry: undefined, book: undefined,
-    format: undefined, status: 'idle', error: undefined, initialCfi: undefined,
-    location: undefined, notes: [], time: {},
-  });
+  usePane.setState({ active: 'main' });
 }

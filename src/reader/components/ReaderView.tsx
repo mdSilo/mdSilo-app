@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import {
-  TbArrowBackUp, TbArrowForwardUp, TbArrowLeft, TbBookmark, TbBookmarkFilled, TbChevronLeft, TbBrandWikipedia,
-  TbChevronRight, TbChevronsLeft, TbChevronsRight, TbLanguage, TbLayoutSidebar, TbLink, TbSearch,
-  TbTypography, TbVocabulary, TbVolume, 
+  TbArrowBackUp, TbArrowForwardUp, TbArrowLeft, TbBookmark, TbBookmarkFilled, TbChevronLeft, 
+  TbBrandWikipedia, TbChevronRight, TbChevronsLeft, TbChevronsRight, TbLanguage, TbLayoutSidebar, 
+  TbLink, TbSearch, TbColumns2, TbTypography, TbVocabulary, TbVolume, 
 } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
@@ -13,7 +13,7 @@ import { store, useStore } from 'lib/store';
 import { READER_SIDEBAR_WIDTH } from 'lib/userSettings';
 import { isMobile } from 'utils/helper';
 import { annotationsPathOf } from '../annotations';
-import { useReaderStore } from '../readerStore';
+import { useActiveStore, useReaderStore, useSideStore } from '../readerStore';
 import { bookmarkAt, copyLink, toggleBookmark } from '../actions';
 import { usePopups, type TextSelection } from '../popups';
 import { resetReaderChrome, useReaderChrome } from '../chrome';
@@ -21,7 +21,7 @@ import { formatMinutes, formatProgress, turn } from '../pagination';
 import { withDefaults } from '../settings';
 import { themeColors } from '../styles';
 import { stopTTS } from '../tts';
-import { getView } from '../view';
+import { getView, usePane } from '../view';
 import FoliateViewer from './FoliateViewer';
 import TocView from './TocView';
 import NotesView from './NotesView';
@@ -30,6 +30,7 @@ import ReaderSettingsMenu from './ReaderSettingsMenu';
 import SearchView from './SearchView';
 import LookupPopup from './LookupPopup';
 import TTSBar, { canReadAloud, readAloud } from './TTSBar';
+import ParallelPane, { ParallelBooks } from './ParallelPane';
 
 export type SidebarTab = { id: string; label: string; render: () => ReactNode };
 
@@ -84,7 +85,21 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   const tab = useReaderChrome((s) => s.tab);
   const searchRequest = useReaderChrome((s) => s.searchRequest);
   const rootRef = useRef<HTMLDivElement>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  // the book read and the book beside it: the popups over either
+  const booksRef = useRef<HTMLDivElement>(null);
+  // the menu open in the header, if any
+  const [menu, setMenu] = useState<'settings' | 'parallel'>();
+  const settingsOpen = menu === 'settings';
+  const closeMenu = () => setMenu(undefined);
+  const parallelOpen = useSideStore((s) => s.status !== 'idle');
+  // the sidebar: of the book last used, of the two read side by side
+  const activePane = usePane((s) => s.active);
+  const panelBook = useActiveStore((s) => s.book);
+  const panelPath = useActiveStore((s) => s.path);
+  const panelLocation = useActiveStore((s) => s.location);
+  const panelNotes = useActiveStore((s) => s.notes);
+  const panelTitle = useActiveStore((s) => s.entry?.title ?? s.path?.split('/').pop());
+  const format = useReaderStore((s) => s.format);
   // on mobile the sidebar covers the book: hidden at first, and not kept
   const [mobile] = useState(() => isMobile(768));
   const [mobileSidebar, setMobileSidebar] = useState(false);
@@ -104,6 +119,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   useEffect(() => () => {
     stopTTS();
     resetReaderChrome();
+    void useSideStore.getState().close();
     void useReaderStore.getState().close();
   }, []);
 
@@ -113,36 +129,36 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   }, [searchRequest, toggleSidebar]);
 
   useEffect(() => {
-    useReaderChrome.getState().setMenuOpen(settingsOpen);
-  }, [settingsOpen]);
+    useReaderChrome.getState().setMenuOpen(Boolean(menu));
+  }, [menu]);
 
   // a press outside the menu closes it, e.g. on the bars above the backdrop;
   // the backdrop closes it on its click, not to let that click reach the book
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!settingsOpen) return;
+    if (!menu) return;
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement;
       if (menuRef.current?.contains(target) || target.dataset?.testid === 'reader-menu-backdrop') return;
-      setSettingsOpen(false);
+      setMenu(undefined);
     };
     document.addEventListener('pointerdown', onPointerDown, true);
     return () => document.removeEventListener('pointerdown', onPointerDown, true);
-  }, [settingsOpen]);
+  }, [menu]);
 
   const tabs: SidebarTab[] = [
     { 
       id: 'toc', 
       label: 'Contents', 
-      render: () => <TocView toc={book?.toc ?? []} current={location?.tocHref} /> 
+      render: () => <TocView toc={panelBook?.toc ?? []} current={panelLocation?.tocHref} /> 
     },
     {
       id: 'notes',
-      label: `Notes${notes.length ? ` ${notes.length}` : ''}`,
+      label: `Notes${panelNotes.length ? ` ${panelNotes.length}` : ''}`,
       render: () => (
-        <NotesView onOpenFile={path ? async () => {
-          const mdPath = annotationsPathOf(path);
-          await useReaderStore.getState().flush();
+        <NotesView onOpenFile={panelPath ? async () => {
+          const mdPath = annotationsPathOf(panelPath);
+          await (activePane === 'side' ? useSideStore : useReaderStore).getState().flush();
           await openFilePath(mdPath, true);
           dispatch({ view: 'md', params: { noteId: mdPath } });
         } : undefined} />
@@ -156,6 +172,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   const progress = formatProgress(location, fixedLayout);
   const paper = settings.pageTheme === 'auto' ? undefined : themeColors(darkMode, settings.pageTheme);
   const title = entry?.title ?? path?.split('/').pop();
+  const sideTitle = parallelOpen ? panelTitle : title;
   const showBars = barsVisible || menuOpen;
   const setBars = (visible: boolean) => useReaderChrome.getState().setBarsVisible(visible);
   // hidden on leaving, but not to a menu of it
@@ -169,8 +186,8 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
       <div className="flex w-full h-full min-h-0 bg-base-100" data-testid="reader">
         {/* a click outside the menu closes it, also over the book (an iframe).
             Not in the header: its transform would make fixed = the header */}
-        {settingsOpen ? (
-          <div className="fixed inset-0 z-20" data-testid="reader-menu-backdrop" onClick={() => setSettingsOpen(false)} />
+        {menu ? (
+          <div className="fixed inset-0 z-20" data-testid="reader-menu-backdrop" onClick={closeMenu} />
         ) : null}
         {showSidebar ? (
           <div
@@ -178,6 +195,15 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
             style={{ width: sidebarCol.width }}
             data-testid="reader-sidebar"
           >
+            {sideTitle ? (
+              <div 
+                className="px-2 pt-2 text-xs truncate font-bold" 
+                data-testid="reader-sidebar-book" 
+                title={sideTitle}
+              >
+                {sideTitle}
+              </div>
+            ) : null}
             <div className="flex items-center gap-1 px-1 pt-1">
               <div role="tablist" className="flex-1 tabs tabs-border tabs-sm">
                 {tabs.map((t) => (
@@ -204,135 +230,150 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
         ) : null}
 
         <div
-          ref={rootRef}
-          className="relative flex-1 min-w-0 overflow-hidden"
-          style={paper ? { background: paper.bg, color: paper.fg } : undefined}
+          ref={booksRef}
+          className="relative flex flex-1 min-w-0"
           onPointerDown={() => usePopups.getState().clear()}
         >
-          {status === 'ready' && book ? (
-            <FoliateViewer book={book} initialCfi={initialCfi} />
-          ) : status === 'error' ? (
-            <div className="flex flex-col items-center justify-center h-full gap-2 p-8 text-center">
-              <p className="text-error">Could not open the book</p>
-              <p className="text-sm opacity-60">{error}</p>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full"><Spinner className="w-8 h-8" /></div>
-          )}
-
-          {/* in the margins: the chapter above, the progress below */}
-          {settings.showHeader && !showBars ? (
-            <div
-              className="absolute inset-x-0 top-0 flex items-center justify-center px-16 text-xs pointer-events-none opacity-60"
-              style={{ height: settings.margin }}
-              data-testid="reader-section"
-            >
-              <span className="truncate">{location?.tocLabel?.trim() || title}</span>
-            </div>
-          ) : null}
-          {settings.showFooter && location ? (
-            <div
-              className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-4 px-8 text-xs pointer-events-none opacity-60"
-              style={{ height: settings.margin }}
-              data-testid="reader-progress-info"
-            >
-              <span className="truncate">{progress.left}</span>
-              <span className="truncate">{progress.right}</span>
-            </div>
-          ) : null}
-          {bookmarked && !showBars ? (
-            <svg
-              className="absolute top-0 z-10 w-5 h-10 pointer-events-none right-8"
-              viewBox="0 0 100 200"
-              preserveAspectRatio="none"
-              data-testid="reader-ribbon"
-              aria-hidden
-            >
-              <polygon fill="#ef4444" points="0 0, 100 0, 100 200, 50 160, 0 200" />
-            </svg>
-          ) : null}
-
-          {/* the bars: shown on hover, on a click in the middle */}
-          <div 
-            className="absolute inset-x-0 top-0 z-10 h-6" 
-            onMouseEnter={() => setBars(true)} 
-            onClick={() => setBars(true)} 
-          />
-          <div 
-            className="absolute inset-x-0 bottom-0 z-10 h-6" 
-            onMouseEnter={() => setBars(true)} 
-            onClick={() => setBars(true)} 
-          />
           <div
-            className={`absolute inset-x-0 top-0 z-30 flex items-center gap-1 px-2 h-11 border-b shadow-sm bg-base-100 text-base-content border-base-300 transition-[opacity,transform] duration-200 ${showBars ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}
-            onMouseLeave={leaveBars}
-            data-testid="reader-header"
+            ref={rootRef}
+            className="relative flex-1 min-w-0 overflow-hidden"
+            style={paper ? { background: paper.bg, color: paper.fg } : undefined}
           >
-            <BarButton title="Library" onClick={() => dispatch({ view: 'library' })}>
-              <TbArrowLeft size={18} />
-            </BarButton>
-            <BarButton 
-              title="Contents and notes" 
-              active={showSidebar} 
-              onClick={() => toggleSidebar(!showSidebar)}
+            {status === 'ready' && book ? (
+              <FoliateViewer book={book} initialCfi={initialCfi} />
+            ) : status === 'error' ? (
+              <div className="flex flex-col items-center justify-center h-full gap-2 p-8 text-center">
+                <p className="text-error">Could not open the book</p>
+                <p className="text-sm opacity-60">{error}</p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full"><Spinner className="w-8 h-8" /></div>
+            )}
+
+            {/* in the margins: the chapter above, the progress below */}
+            {settings.showHeader && !showBars ? (
+              <div
+                className="absolute inset-x-0 top-0 flex items-center justify-center px-16 text-xs pointer-events-none opacity-60"
+                style={{ height: settings.margin }}
+                data-testid="reader-section"
+              >
+                <span className="truncate">{location?.tocLabel?.trim() || title}</span>
+              </div>
+            ) : null}
+            {settings.showFooter && location ? (
+              <div
+                className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-4 px-8 text-xs pointer-events-none opacity-60"
+                style={{ height: settings.margin }}
+                data-testid="reader-progress-info"
+              >
+                <span className="truncate">{progress.left}</span>
+                <span className="truncate">{progress.right}</span>
+              </div>
+            ) : null}
+            {bookmarked && !showBars ? (
+              <svg
+                className="absolute top-0 z-10 w-5 h-10 pointer-events-none right-8"
+                viewBox="0 0 100 200"
+                preserveAspectRatio="none"
+                data-testid="reader-ribbon"
+                aria-hidden
+              >
+                <polygon fill="#ef4444" points="0 0, 100 0, 100 200, 50 160, 0 200" />
+              </svg>
+            ) : null}
+
+            {/* the bars: shown on hover, on a click in the middle */}
+            <div 
+              className="absolute inset-x-0 top-0 z-10 h-6" 
+              onMouseEnter={() => setBars(true)} 
+              onClick={() => setBars(true)} 
+            />
+            <div 
+              className="absolute inset-x-0 bottom-0 z-10 h-6" 
+              onMouseEnter={() => setBars(true)} 
+              onClick={() => setBars(true)} 
+            />
+            <div
+              className={`absolute inset-x-0 top-0 z-30 flex items-center gap-1 px-2 h-11 border-b shadow-sm bg-base-100 text-base-content border-base-300 transition-[opacity,transform] duration-200 ${showBars ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}
+              onMouseLeave={leaveBars}
+              data-testid="reader-header"
             >
-              <TbLayoutSidebar size={18} />
-            </BarButton>
-            <BarButton title="Bookmark this page" onClick={toggleBookmark} disabled={!location}>
-              {bookmarked 
-                ? <TbBookmarkFilled size={18} className="text-error" /> 
-                : <TbBookmark size={18} />
-              }
-            </BarButton>
-            <div className="flex-1 min-w-0 px-2 text-sm text-center truncate">
-              <span className="font-semibold">{title}</span>
-              {entry?.author ? <span className="opacity-60"> · {entry.author}</span> : null}
-            </div>
-            {headerButtons}
-            <BarButton 
-              title="Copy a link to this page" 
-              disabled={!location} 
-              onClick={() => location && copyLink(location.cfi)}
-            >
-              <TbLink size={18} />
-            </BarButton>
-            <div className="relative" ref={menuRef}>
-              <BarButton title="Font and layout" active={settingsOpen} onClick={() => setSettingsOpen(!settingsOpen)}>
-                <TbTypography size={18} />
+              <BarButton title="Library" onClick={() => dispatch({ view: 'library' })}>
+                <TbArrowLeft size={18} />
               </BarButton>
-              {settingsOpen ? (
-                <div className="absolute right-0 z-40 mt-1 overflow-y-auto border rounded-md shadow-lg bg-base-100 border-base-300 max-h-[75vh]">
-                  <ReaderSettingsMenu fixedLayout={fixedLayout} />
-                </div>
-              ) : null}
+              <BarButton 
+                title="Contents and notes" 
+                active={showSidebar} 
+                onClick={() => toggleSidebar(!showSidebar)}
+              >
+                <TbLayoutSidebar size={18} />
+              </BarButton>
+              <BarButton title="Bookmark this page" onClick={() => toggleBookmark('main')} disabled={!location}>
+                {bookmarked 
+                  ? <TbBookmarkFilled size={18} className="text-error" /> 
+                  : <TbBookmark size={18} />
+                }
+              </BarButton>
+              <div className="flex-1 min-w-0 px-2 text-sm text-center truncate">
+                <span className="font-semibold">{title}</span>
+              </div>
+              {headerButtons}
+              <BarButton 
+                title="Copy a link to this page" 
+                disabled={!location} 
+                onClick={() => location && copyLink(location.cfi, 'main')}
+              >
+                <TbLink size={18} />
+              </BarButton>
+              <div className="relative flex items-center gap-1" ref={menuRef}>
+                {/* a book beside, e.g. its translation: not on a phone */}
+                {!mobile && format ? (
+                  <BarButton
+                    title="Parallel reading"
+                    active={menu === 'parallel' || parallelOpen}
+                    onClick={() => setMenu(menu === 'parallel' ? undefined : 'parallel')}
+                  >
+                    <TbColumns2 size={18} />
+                  </BarButton>
+                ) : null}
+                <BarButton title="Font and layout" active={settingsOpen} onClick={() => setMenu(settingsOpen ? undefined : 'settings')}>
+                  <TbTypography size={18} />
+                </BarButton>
+                {menu ? (
+                  <div className="absolute right-0 z-40 overflow-y-auto border rounded-md shadow-lg top-full mt-1 bg-base-100 border-base-300 max-h-[75vh]">
+                    {settingsOpen ? <ReaderSettingsMenu fixedLayout={fixedLayout} /> : <ParallelBooks onPick={closeMenu} />}
+                  </div>
+                ) : null}
+              </div>
             </div>
+
+            <FooterBar visible={showBars} onLeave={leaveBars} fixedLayout={fixedLayout} />
+
+            {showBars ? (
+              <>
+                <button
+                  className="absolute z-20 flex items-center justify-center w-12 h-12 -translate-y-1/2 rounded-full shadow-lg left-3 top-1/2 bg-base-100/90 text-base-content active:scale-95"
+                  title="Previous page"
+                  aria-label="Previous page"
+                  onClick={() => void turn(getView('main'), 'left')}
+                >
+                  <TbChevronLeft size={20} />
+                </button>
+                <button
+                  className="absolute z-20 flex items-center justify-center w-12 h-12 -translate-y-1/2 rounded-full shadow-lg right-3 top-1/2 bg-base-100/90 text-base-content active:scale-95"
+                  title="Next page"
+                  aria-label="Next page"
+                  onClick={() => void turn(getView('main'), 'right')}
+                >
+                  <TbChevronRight size={20} />
+                </button>
+              </>
+            ) : null}
+
           </div>
-
-          <FooterBar visible={showBars} onLeave={leaveBars} fixedLayout={fixedLayout} />
-
-          {showBars ? (
-            <>
-              <button
-                className="absolute z-20 flex items-center justify-center w-12 h-12 -translate-y-1/2 rounded-full shadow-lg left-3 top-1/2 bg-base-100/90 text-base-content active:scale-95"
-                title="Previous page"
-                aria-label="Previous page"
-                onClick={() => void turn(getView(), 'left')}
-              >
-                <TbChevronLeft size={20} />
-              </button>
-              <button
-                className="absolute z-20 flex items-center justify-center w-12 h-12 -translate-y-1/2 rounded-full shadow-lg right-3 top-1/2 bg-base-100/90 text-base-content active:scale-95"
-                title="Next page"
-                aria-label="Next page"
-                onClick={() => void turn(getView(), 'right')}
-              >
-                <TbChevronRight size={20} />
-              </button>
-            </>
-          ) : null}
-
-          <BookPopups rootRef={rootRef} tools={tools} />
-          {overlay?.(rootRef)}
+          <ParallelPane />
+          <BookPopups rootRef={booksRef} tools={tools} />
+          {overlay?.(booksRef)}
         </div>
       </div>
     </ErrorBoundary>
@@ -352,7 +393,7 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
   // the place dragged to, before the book goes there
   const [dragged, setDragged] = useState<number | undefined>();
   const goTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const view = getView();
+  const view = getView('main');
   const shown = dragged ?? fraction;
   const left = location?.time && !fixedLayout ? `${formatMinutes(location.time.total)} left in the book` : '';
 
@@ -370,7 +411,7 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
       <BarButton title="Go forward" disabled={!view?.history?.canGoForward} onClick={() => view?.history.forward()}>
         <TbArrowForwardUp size={18} />
       </BarButton>
-      <BarButton title="Previous chapter" onClick={() => void turn(getView(), 'left', 'section')}>
+      <BarButton title="Previous chapter" onClick={() => void turn(getView('main'), 'left', 'section')}>
         <TbChevronsLeft size={18} />
       </BarButton>
       <div className="relative flex-1 mx-1">
@@ -385,7 +426,7 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
             setDragged(value);
             clearTimeout(goTimer.current);
             goTimer.current = setTimeout(() => {
-              void getView()?.goToFraction(value);
+              void getView('main')?.goToFraction(value);
               setDragged(undefined);
             }, 150);
           }}
@@ -402,7 +443,7 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
           </span>
         ) : null}
       </div>
-      <BarButton title="Next chapter" onClick={() => void turn(getView(), 'right', 'section')}>
+      <BarButton title="Next chapter" onClick={() => void turn(getView('main'), 'right', 'section')}>
         <TbChevronsRight size={18} />
       </BarButton>
       <span className="w-28 text-xs text-right truncate opacity-70" data-testid="reader-progress" title={left}>
@@ -459,7 +500,7 @@ export default function ReaderView() {
       extraTabs={[{ id: 'search', label: 'Search', render: () => <SearchView /> }]}
       tools={lookupTools}
       headerButtons={canReadAloud() ? (
-        <BarButton title="Read aloud" onClick={() => void readAloud()}>
+        <BarButton title="Read aloud" onClick={() => void readAloud(undefined, 'main')}>
           <TbVolume size={18} />
         </BarButton>
       ) : null}

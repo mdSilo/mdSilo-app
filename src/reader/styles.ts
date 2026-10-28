@@ -1,5 +1,6 @@
 import type { PageTheme, ReaderSettings } from './settings';
 import { ttsStyles } from './tts';
+import type { FoliateView } from './view';
 
 /**
  * The CSS set in the pages of a book (foliate-js renderer `setStyles`),
@@ -105,3 +106,20 @@ export const HIGHLIGHT_CSS: Record<string, string> = {
   blue: '#60a5fa',
   violet: '#a78bfa',
 };
+
+/** The layout of the pages, as set: the flow, the columns, the margins. */
+export function applyLayout(view: FoliateView, settings: ReaderSettings) {
+  const { renderer } = view;
+  renderer.toggleAttribute('animated', settings.animated);
+  if (view.isFixedLayout) {
+    renderer.setAttribute('flow', settings.flow === 'scrolled' ? 'scrolled' : 'paginated');
+    return;
+  }
+  renderer.setAttribute('flow', settings.flow);
+  renderer.setAttribute('max-column-count', String(settings.maxColumns));
+  renderer.setAttribute('max-inline-size', `${settings.maxInlineSize}px`);
+  renderer.setAttribute('gap', `${settings.gap}%`);
+  // room for the chapter and the progress, in the margins; scrolled, the view is between them
+  const margin = settings.flow === 'scrolled' ? 0 : settings.margin;
+  for (const side of ['top', 'bottom']) renderer.setAttribute(`margin-${side}`, `${margin}px`);
+}

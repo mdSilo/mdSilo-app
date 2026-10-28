@@ -4,9 +4,9 @@ import { store } from 'lib/store';
 import {
   bookHref, newNoteId, type BookNote, type HighlightColor, type HighlightStyle,
 } from './annotations';
-import { useReaderStore } from './readerStore';
+import { activeStore, storeOf } from './readerStore';
 import { usePopups, type TextSelection } from './popups';
-import { getView } from './view';
+import { getView, type Pane } from './view';
 import { withDefaults } from './settings';
 
 /** The highlight the toolbar makes: the style last used, and its color. */
@@ -26,8 +26,9 @@ export function rememberHighlight(style: HighlightStyle, color?: HighlightColor)
 }
 
 /**
- * Annotate the text selected: a highlight, with a note to write maybe. The
- * text highlighted already: its highlight, changed if a color or style is given.
+ * Annotate the text selected, in the book last used: a highlight, with a note
+ * to write maybe. The text highlighted already: its highlight, changed if a
+ * color or style is given.
  */
 export function annotateSelection(
   selection: TextSelection,
@@ -35,7 +36,7 @@ export function annotateSelection(
   style?: HighlightStyle,
 ): BookNote {
   const now = new Date().toISOString();
-  const { notes, location, addNote, updateNote } = useReaderStore.getState();
+  const { notes, location, addNote, updateNote } = activeStore().getState();
   const existing = notes.find((n) => n.cfi === selection.cfi && n.type === 'annotation');
   if (existing) {
     const patch = { ...(color ? { color } : {}), ...(style ? { style } : {}) };
@@ -64,8 +65,8 @@ export function annotateSelection(
 }
 
 /** Bookmark the place read, or remove the bookmark there. */
-export function toggleBookmark() {
-  const { location, notes, addNote, removeNote } = useReaderStore.getState();
+export function toggleBookmark(pane: Pane = 'main') {
+  const { location, notes, addNote, removeNote } = storeOf(pane).getState();
   if (!location) return;
   const existing = bookmarkAt(notes, location.cfi);
   if (existing) {
@@ -103,7 +104,7 @@ export function bookmarkAt(notes: BookNote[], cfi: string) {
 
 /** The markdown to put the text in a note: a quote with a link back to it. */
 export function quoteMarkdown(text: string, cfi: string): string {
-  const { hash, entry } = useReaderStore.getState();
+  const { hash, entry } = activeStore().getState();
   const quote = text.split(/\r?\n/).filter((l) => l.trim()).map((l) => `> ${l.trim()}`).join('\n');
   if (!hash) return quote;
   const title = (entry?.title ?? 'book').replace(/[[\]]/g, '');
@@ -115,8 +116,9 @@ export function copyQuote(text: string, cfi: string) {
   usePopups.getState().clear();
 }
 
-export function copyLink(cfi: string) {
-  const { hash } = useReaderStore.getState();
+/** A link to a place of a book: of the book last used, or of a pane. */
+export function copyLink(cfi: string, pane?: Pane) {
+  const { hash } = (pane ? storeOf(pane) : activeStore()).getState();
   if (hash) copy(bookHref(hash, cfi), { format: 'text/plain' });
   usePopups.getState().clear();
 }

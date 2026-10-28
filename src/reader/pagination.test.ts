@@ -133,10 +133,10 @@ describe('a selection dragged over pages', () => {
 });
 
 describe('progress', () => {
-  test('of a book reflowed: what is left in the chapter, where in the book', () => {
+  test('of a book reflowed: the time and pages left in the chapter, where in the book', () => {
     expect(formatProgress({
       fraction: 0.123, location: { current: 4, total: 120 }, time: { section: 12.4, total: 300 }, page: 2, pages: 6,
-    }, false)).toEqual({ left: '12 min left in chapter · 3 pages', right: '5 / 120 · 12%' });
+    }, false)).toEqual({ left: '12 min § 3 pages', right: '5 / 120 · 12%' });
     expect(formatProgress({ fraction: 0.5, page: 5, pages: 6 }, false)).toEqual({ left: 'last page', right: '50%' });
     expect(formatProgress(undefined, false)).toEqual({ left: '', right: '' });
   });

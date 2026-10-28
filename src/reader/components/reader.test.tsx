@@ -13,14 +13,14 @@ import { useWebFs, waitForView } from '../../testUtils';
 import { writeFile } from '../../platform/web/fs';
 import { makeEpub } from '../testBook';
 import { bookHref } from '../annotations';
-import { resetReaderStore, useReaderStore } from '../readerStore';
+import { resetReaderStore, useReaderStore, useSideStore } from '../readerStore';
 import { usePopups } from '../popups';
 import { resetReaderChrome, useReaderChrome } from '../chrome';
 import { DEFAULT_READER_SETTINGS } from '../settings';
 import { DEFAULT_LIBRARY_SETTINGS } from '../shelf';
 import { readLibrary, refreshLibrary, setBooksGroup } from '../library';
 import { resetVocabulary, useVocabulary } from '../vocabulary';
-import { setView, type FoliateView } from '../view';
+import { setActivePane, setView, type FoliateView } from '../view';
 
 // no rendering of the pages in jsdom: a view the panels can drive
 const view = vi.hoisted(() => ({
@@ -38,7 +38,7 @@ const view = vi.hoisted(() => ({
   deselect: vi.fn(),
 }));
 vi.mock('./FoliateViewer', () => ({
-  default: () => <div data-testid="foliate-viewer" />,
+  default: ({ pane = 'main' }: { pane?: string }) => <div data-testid={pane === 'side' ? 'side-viewer' : 'foliate-viewer'} />,
 }));
 
 const WS = '/mdSilo';
@@ -123,7 +123,7 @@ describe('reader', () => {
     expect(screen.getByTestId('reader-progress')).toHaveTextContent('25%');
     // in the margins: the chapter, the progress
     expect(screen.getByTestId('reader-section')).toHaveTextContent('Chapter One');
-    expect(screen.getByTestId('reader-progress-info')).toHaveTextContent('3 min left in chapter · 2 pages');
+    expect(screen.getByTestId('reader-progress-info')).toHaveTextContent('3 min § 2 pages');
     expect(screen.getByTestId('reader-progress-info')).toHaveTextContent('10 / 40 · 25%');
     // the chapter read, in the contents
     expect(screen.getByTestId('reader-toc').querySelector('[aria-current]')).toHaveTextContent('Chapter One');
@@ -294,6 +294,76 @@ describe('reader settings menu', () => {
   });
 });
 
+describe('parallel reading', () => {
+  const OTHER = `${WS}/reading/Other Book.epub`;
+
+  test('a book beside, picked from the library, annotated as it is, closed', async () => {
+    await writeBook(OTHER, makeEpub('Other Book'));
+    await writeBook(`${WS}/reading/Scan.pdf`, new File(['%PDF'], 'Scan.pdf'));
+    await refreshLibrary(WS);
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTitle('Parallel reading'));
+    const list = await screen.findByTestId('parallel-books');
+    // the other books, a PDF too: not the one read
+    await waitFor(() => expect(within(list).getAllByRole('button')).toHaveLength(2));
+    fireEvent.click(within(list).getByText('Other Book'));
+    expect(screen.queryByTestId('parallel-books')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('side-viewer')).toBeInTheDocument());
+    expect(useSideStore.getState().path).toBe(OTHER);
+    const pane = screen.getByTestId('parallel-pane');
+    expect(within(pane).getByText('Other Book')).toBeInTheDocument();
+    // in the library, as any book read
+    expect(Object.values((await readLibrary(WS)).books).map((b) => b.title)).toContain('Other Book');
+
+    // the text selected in the book beside: highlighted there, not in the book read
+    fireEvent.pointerDown(pane);
+    act(() => {
+      useSideStore.getState().setLocation({ cfi: 'epubcfi(/6/4!/4/2)', fraction: 0.1, tocLabel: 'Chapter One' });
+      usePopups.getState().setSelection({
+        text: 'down the rabbit hole', cfi: 'epubcfi(/6/4!/4/4,/1:0,/1:20)', index: 1,
+        box: { left: 600, top: 10, right: 700, bottom: 20 },
+      });
+    });
+    fireEvent.click(await screen.findByLabelText('Highlight'));
+    expect(useSideStore.getState().notes[0]).toMatchObject({ text: 'down the rabbit hole', chapter: 'Chapter One' });
+    expect(useReaderStore.getState().notes).toEqual([]);
+    await act(async () => { await useSideStore.getState().flush(); });
+    expect(await invoke<string>('read_file', { filePath: `${OTHER}.md` })).toContain('> down the rabbit hole');
+
+    // the sidebar: of the book last used
+    expect(screen.getByTestId('reader-sidebar-book')).toHaveTextContent('Other Book');
+    fireEvent.click(screen.getByRole('tab', { name: /Notes/ }));
+    expect(screen.getByTestId('reader-notes')).toHaveTextContent('down the rabbit hole');
+    act(() => setActivePane('main'));
+    expect(screen.getByTestId('reader-sidebar-book')).toHaveTextContent('Tiny Book');
+    expect(screen.getByTestId('reader-notes')).not.toHaveTextContent('down the rabbit hole');
+
+    // a bookmark in the book beside
+    fireEvent.click(within(pane).getByLabelText('Bookmark this page of the book beside'));
+    expect(useSideStore.getState().notes.map((n) => n.type)).toEqual(['annotation', 'bookmark']);
+    expect(useReaderStore.getState().notes).toEqual([]);
+
+    fireEvent.click(screen.getByLabelText('Close the book beside'));
+    await waitFor(() => expect(screen.queryByTestId('parallel-pane')).not.toBeInTheDocument());
+    // the sidebar: of the book read again
+    expect(screen.getByTestId('reader-sidebar-book')).toHaveTextContent('Tiny Book');
+  });
+
+  test('closed with the book read', async () => {
+    await writeBook(OTHER, makeEpub('Other Book'));
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    await act(() => useSideStore.getState().open(OTHER));
+    expect(screen.getByTestId('parallel-pane')).toBeInTheDocument();
+    await go({ view: 'library' });
+    await waitFor(() => expect(useSideStore.getState().status).toBe('idle'));
+  });
+});
+
 describe('reader on mobile', () => {
   afterEach(() => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024 });
@@ -305,6 +375,8 @@ describe('reader on mobile', () => {
     await go({ view: 'book', path: BOOK });
     await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
     expect(screen.queryByTestId('reader-sidebar')).not.toBeInTheDocument();
+    // no room for a book beside
+    expect(screen.queryByTitle('Parallel reading')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTitle('Contents and notes'));
     expect(screen.getByTestId('reader-toc')).toBeInTheDocument();
     expect(store.getState().readerSettings.showSidebar).toBe(true);

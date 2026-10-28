@@ -4,8 +4,8 @@ import {
 } from 'react-icons/tb';
 import { store, useStore } from 'lib/store';
 import { withDefaults } from '../settings';
-import { ttsOf, useTTS, webSpeech } from '../tts';
-import { getView } from '../view';
+import { ttsOf, ttsView, useTTS, webSpeech } from '../tts';
+import { getView, type Pane } from '../view';
 
 const RATES = [0.75, 1, 1.25, 1.5, 2];
 
@@ -14,9 +14,9 @@ const ttsOptions = () => {
   return { voice: settings.ttsVoice || undefined, rate: settings.ttsRate };
 };
 
-/** Read the book aloud from a range, or the page shown. */
-export function readAloud(from?: Range) {
-  return ttsOf(getView(), ttsOptions)?.start(from);
+/** Read the book aloud from a range, or the page shown: of the book last used, or of a pane. */
+export function readAloud(from?: Range, pane?: Pane) {
+  return ttsOf(getView(pane), ttsOptions)?.start(from);
 }
 
 /** Speech synthesis is there to read aloud. */
@@ -28,7 +28,9 @@ function TTSBar() {
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const setReaderSettings = useStore((state) => state.setReaderSettings);
   const [voices, setVoices] = useState<{ name: string; lang: string }[]>([]);
-  const lang = getView()?.language?.canonical?.split('-')[0];
+  // the book read aloud, even if the other one is used meanwhile
+  const view = ttsView() ?? getView();
+  const lang = view?.language?.canonical?.split('-')[0];
 
   useEffect(() => {
     const speech = webSpeech();
@@ -40,7 +42,7 @@ function TTSBar() {
   }, []);
 
   if (status === 'idle') return null;
-  const tts = ttsOf(getView(), ttsOptions);
+  const tts = ttsOf(view, ttsOptions);
   const shown = lang ? voices.filter((v) => v.lang.toLowerCase().startsWith(lang)) : voices;
 
   return (

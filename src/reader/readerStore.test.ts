@@ -6,7 +6,7 @@ import { useWebFs } from '../testUtils';
 import { writeFile } from '../platform/web/fs';
 import { serializeAnnotations, type BookNote } from './annotations';
 import { readBookState, readLibrary } from './library';
-import { IDLE_MS, readBookFile, resetReaderStore, TICK_MS, useReaderStore } from './readerStore';
+import { IDLE_MS, readBookFile, resetReaderStore, TICK_MS, useReaderStore, useSideStore } from './readerStore';
 import { formatDuration, readingTimeByDay, totalSeconds } from './stats';
 import { cacheCover, coverPathOf, coverUrl } from './covers';
 import type { BookDoc } from './document';
@@ -48,6 +48,37 @@ describe('readerStore', () => {
     const file = await readBookFile(BOOK);
     expect(file.name).toBe('A.epub');
     expect(await file.text()).toBe('epub bytes');
+  });
+
+  test('closed while it opens: not left open', async () => {
+    const opening = useReaderStore.getState().open(BOOK);
+    await useReaderStore.getState().close();
+    await opening;
+    expect(useReaderStore.getState()).toMatchObject({ status: 'idle', path: undefined, book: undefined });
+  });
+
+  test('another book opened meanwhile: that one open', async () => {
+    const other = `${WS}/reading/B.epub`;
+    await invoke('write_file', { filePath: other, text: 'other bytes' });
+    const first = useReaderStore.getState().open(BOOK);
+    const second = useReaderStore.getState().open(other);
+    await Promise.all([first, second]);
+    expect(useReaderStore.getState()).toMatchObject({ status: 'ready', path: other });
+  });
+
+  test('the book beside: a store of its own, its own annotations', async () => {
+    const other = `${WS}/reading/B.epub`;
+    await invoke('write_file', { filePath: other, text: 'other bytes' });
+    await useReaderStore.getState().open(BOOK);
+    await useSideStore.getState().open(other);
+    useSideStore.getState().addNote(note({ id: 'side' }));
+    await useSideStore.getState().flush();
+    expect(useReaderStore.getState().notes).toEqual([]);
+    expect(await read(`${other}.md`)).toContain('> quoted');
+    expect(await read(`${BOOK}.md`).catch(() => '')).toBe('');
+    // closed alone: the book read stays
+    await useSideStore.getState().close();
+    expect(useReaderStore.getState()).toMatchObject({ status: 'ready', path: BOOK });
   });
 
   test('opens a book with its annotations and adds it to the library', async () => {

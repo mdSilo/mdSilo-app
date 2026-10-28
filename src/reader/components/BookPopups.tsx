@@ -9,7 +9,7 @@ import {
 } from '../annotations';
 import { HIGHLIGHT_CSS } from '../styles';
 import { withDefaults } from '../settings';
-import { useReaderStore } from '../readerStore';
+import { activeStore, useActiveStore } from '../readerStore';
 import { usePopups, type Box, type TextSelection } from '../popups';
 import {
   annotateSelection, copyLink, copyQuote, rememberHighlight,
@@ -145,7 +145,7 @@ function StyleSample({ style, color }: { style: HighlightStyle; color: string })
 
 /** The style and color of a highlight: the toolbar uses them from then on. */
 export function HighlightOptions({ note, onDone }: { note: BookNote; onDone: () => void }) {
-  const updateNote = useReaderStore((state) => state.updateNote);
+  const updateNote = useActiveStore((state) => state.updateNote);
   const colors = withDefaults(useStore((state) => state.readerSettings)).highlightColors;
   const style = note.style ?? 'highlight';
   const color = note.color ?? 'yellow';
@@ -250,7 +250,7 @@ function BookPopups({ rootRef, tools }: {
 }) {
   const selection = usePopups((state) => state.selection);
   const annotation = usePopups((state) => state.annotation);
-  const notes = useReaderStore((state) => state.notes);
+  const notes = useActiveStore((state) => state.notes);
   const note = annotation ? notes.find((n) => n.id === annotation.id) : undefined;
   const [editing, setEditing] = useState(false);
 
@@ -277,7 +277,7 @@ function BookPopups({ rootRef, tools }: {
     const highlighted = notes.find((n) => n.cfi === cfi && n.type === 'annotation');
     const highlight = () => {
       if (highlighted) {
-        useReaderStore.getState().removeNote(highlighted.id);
+        activeStore().getState().removeNote(highlighted.id);
         clear();
         return;
       }
@@ -332,7 +332,7 @@ function BookPopups({ rootRef, tools }: {
   if (editing) {
     const cancel = () => {
       // a highlight made to write a note on: not wanted
-      if (annotation.edit === 'new' && !note.note) useReaderStore.getState().removeNote(note.id);
+      if (annotation.edit === 'new' && !note.note) activeStore().getState().removeNote(note.id);
       clear();
     };
     return (
@@ -341,7 +341,7 @@ function BookPopups({ rootRef, tools }: {
           value={note.note}
           onCancel={cancel}
           onSave={(draft) => {
-            if (draft !== note.note) useReaderStore.getState().updateNote(note.id, { note: draft });
+            if (draft !== note.note) activeStore().getState().updateNote(note.id, { note: draft });
             clear();
           }}
         />
@@ -364,7 +364,7 @@ function BookPopups({ rootRef, tools }: {
       id: 'highlight', 
       title: 'Delete the highlight', 
       icon: <TbHighlightOff size={18} />,
-      onClick: () => { useReaderStore.getState().removeNote(note.id); clear(); },
+      onClick: () => { activeStore().getState().removeNote(note.id); clear(); },
     },
     { 
       id: 'note', 

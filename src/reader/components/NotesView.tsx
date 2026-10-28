@@ -2,13 +2,13 @@ import { memo, useState } from 'react';
 import { TbBookmark, TbCopy, TbEdit, TbTrash } from 'react-icons/tb';
 import type { BookNote } from '../annotations';
 import { HIGHLIGHT_CSS } from '../styles';
-import { useReaderStore } from '../readerStore';
+import { useActiveStore } from '../readerStore';
 import { copyQuote } from '../actions';
 import { getView } from '../view';
 
 /** The annotations and bookmarks of the book, in the order of the book. */
 function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
-  const notes = useReaderStore((state) => state.notes);
+  const notes = useActiveStore((state) => state.notes);
   const [filter, setFilter] = useState('');
   const term = filter.trim().toLowerCase();
   const shown = term
@@ -44,8 +44,8 @@ function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
 }
 
 function NoteItem({ note }: { note: BookNote }) {
-  const updateNote = useReaderStore((state) => state.updateNote);
-  const removeNote = useReaderStore((state) => state.removeNote);
+  const updateNote = useActiveStore((state) => state.updateNote);
+  const removeNote = useActiveStore((state) => state.removeNote);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(note.note);
 

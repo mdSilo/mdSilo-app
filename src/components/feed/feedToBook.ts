@@ -9,7 +9,7 @@ import {
   articleOfCfi, makeFeedBook, readFeedBook, type FeedArticleInput, type FeedBookData, type FeedBookFiles,
 } from 'reader/feedBook';
 import { bookHashOf, importBookData, readLibrary, saveBookEntry, writeBytes } from 'reader/library';
-import { useReaderStore } from 'reader/readerStore';
+import { useReaderStore, useSideStore } from 'reader/readerStore';
 import { readVocabulary } from 'reader/vocabulary';
 import type { ArticleType } from 'types/model';
 import { fetchImage, fullTextOf } from './fullText';
@@ -112,7 +112,9 @@ export async function saveFeedBook(
       throw new Error(`The book "${name}" is not on this device. Sync its file (in the library), then add to it here.`);
     }
     // the annotations being written: in the md before it is read
-    if (useReaderStore.getState().path === path) await useReaderStore.getState().flush();
+    for (const reader of [useReaderStore, useSideStore]) {
+      if (reader.getState().path === path) await reader.getState().flush();
+    }
     const bytes = await invoke<ArrayBuffer | Uint8Array | number[]>('read_file_bytes', { filePath: path });
     existing = await readFeedBook(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes as ArrayBuffer));
     if (!existing) throw new Error(`${entry.file} is not a book of feed articles`);
@@ -164,7 +166,9 @@ export async function saveFeedBook(
   }
 
   // the book open in the reader: closed, its annotations saved; opened again it is the new one
-  if (path && useReaderStore.getState().path === path) await useReaderStore.getState().close();
+  for (const reader of [useReaderStore, useSideStore]) {
+    if (path && reader.getState().path === path) await reader.getState().close();
+  }
   if (entry && path) {
     if (!(await writeBytes(path, result.epub))) throw new Error(`Failed to write ${entry.file}`);
   } else {

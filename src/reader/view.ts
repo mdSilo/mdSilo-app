@@ -1,3 +1,4 @@
+import { create } from 'zustand';
 import type { BookDoc } from './document';
 
 /** The `foliate-view` element of foliate-js (packages/foliate-js/view.js). */
@@ -9,6 +10,8 @@ export interface FoliateRenderer extends HTMLElement {
   prev: (distance?: number) => Promise<void>;
   prevSection?: () => Promise<unknown>;
   nextSection?: () => Promise<unknown>;
+  /** a section, and a place in it: a fraction of it */
+  goTo?: (target: { index: number; anchor?: number }) => Promise<void>;
   /** flow="scrolled" */
   scrolled?: boolean;
   /** px, the size of a page */
@@ -64,10 +67,22 @@ export interface FoliateView extends HTMLElement {
   history: { back: () => void; forward: () => void; canGoBack: boolean; canGoForward: boolean };
 }
 
-let current: FoliateView | null = null;
+/** The book read, or the book beside it (parallel reading). */
+export type Pane = 'main' | 'side';
 
-/** The view of the book open, for the panels to act on it. */
-export const getView = () => current;
-export const setView = (view: FoliateView | null) => {
-  current = view;
+/** The pane last used: the text selected, the keys, the sidebar act on its book. */
+export const usePane = create<{ active: Pane }>(() => ({ active: 'main' }));
+export const activePane = () => usePane.getState().active;
+export const setActivePane = (active: Pane) => {
+  if (usePane.getState().active !== active) usePane.setState({ active });
+};
+
+const views: Record<Pane, FoliateView | null> = { main: null, side: null };
+
+/** The view of a book open, for the panels to act on it: of the pane last used by default. */
+export const getView = (pane: Pane = activePane()) => views[pane];
+export const setView = (view: FoliateView | null, pane: Pane = 'main') => {
+  views[pane] = view;
+  // the book beside closed: back to the book read
+  if (!view && pane === 'side') setActivePane('main');
 };

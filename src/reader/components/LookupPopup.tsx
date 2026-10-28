@@ -9,7 +9,7 @@ import {
 } from '../lookup';
 import { usePopups } from '../popups';
 import { annotateSelection } from '../actions';
-import { useReaderStore } from '../readerStore';
+import { activeStore, useActiveStore } from '../readerStore';
 import { getView } from '../view';
 import { definitionOf, sameWord, sentenceAround, useVocabulary } from '../vocabulary';
 import { Popup } from './BookPopups';
@@ -27,7 +27,7 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
   const translateTo = useStore((state) => state.readerSettings?.translateTo);
   const [result, setResult] = useState<Result | undefined>();
   const [error, setError] = useState('');
-  const ws = useReaderStore((state) => state.ws);
+  const ws = useActiveStore((state) => state.ws);
   const vocabulary = useVocabulary((state) => state.entries);
   const vocabularyWs = useVocabulary((state) => state.ws);
 
@@ -66,7 +66,7 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
   /** Keep what was found as the note of a highlight of the text. */
   const keep = (note: string) => {
     const created = annotateSelection(selection);
-    useReaderStore.getState().updateNote(created.id, { note });
+    activeStore().getState().updateNote(created.id, { note });
     usePopups.getState().clear();
   };
 
@@ -148,7 +148,7 @@ function AddWord({ ws, result, kept }: { ws: string; result: DictionaryResult; k
     );
   }
   const add = () => {
-    const { hash, entry } = useReaderStore.getState();
+    const { hash, entry } = activeStore().getState();
     const selection = lookup?.selection;
     void useVocabulary.getState().add(ws, {
       word: result.word,

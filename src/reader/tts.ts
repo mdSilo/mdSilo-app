@@ -214,6 +214,9 @@ export function ttsOf(view: FoliateView | null, options: () => TTSOptions): TTSC
   return controller.tts;
 }
 
+/** The view read aloud, if any. */
+export const ttsView = () => controller?.view;
+
 /** Stop reading aloud, e.g. the book closed. */
 export function stopTTS() {
   controller?.tts.stop();
