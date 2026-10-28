@@ -9,7 +9,7 @@ export type Parsed = {
   /** the titles of the notes linked, in order, as many times as linked */
   links: string[];
   tags: string[];
-  /** the issues linked, [#12](issue:12), sorted */
+  /** the issues linked, [@12](issue:12), sorted */
   issues: number[];
   /** the books linked, in order, once each: see bookLinks */
   books?: string[];
@@ -17,7 +17,10 @@ export type Parsed = {
   has_tasks: boolean;
 };
 
-// [#12](issue:12)
+/** An issue as shown and linked, `@12`: `#` is of the tags. */
+export const issueLabel = (num: number) => `@${num}`;
+
+// [@12](issue:12)
 export const ISSUE_LINK_REGEX = /\(issue:(\d+)\)/g;
 // [x](book:<id>#<cfi>), [x](book:<title>)
 const BOOK_LINK_REGEX = /\]\(\s*<?book:([^\s#)>]+)/gi;

@@ -1,5 +1,6 @@
 import { commentCount, isOverdue } from './issueOps';
 import type { Issue, IssueData, IssueState } from './types';
+import { issueLabel } from './refs';
 
 export type SortKey = 'created' | 'updated' | 'comments' | 'number' | 'title' | 'due';
 export type SortDir = 'asc' | 'desc';
@@ -140,7 +141,7 @@ export function filterIssues(
     if (q.milestone && (!milestone || issue.milestone !== milestone.id)) return false;
     if (q.overdue && !isOverdue(issue)) return false;
     if (words.length > 0) {
-      const hay = ci(`#${issue.number} ${issue.title} ${issue.body}`);
+      const hay = ci(`${issueLabel(issue.number)} #${issue.number} ${issue.title} ${issue.body}`);
       if (!words.every((w) => hay.includes(w))) return false;
     }
     return true;

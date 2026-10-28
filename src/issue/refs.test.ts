@@ -3,7 +3,8 @@ import { NoteMap } from '@/lib/noteMap';
 import { makeNote } from '@/testUtils';
 import * as ops from './issueOps';
 import {
-  computeIssueRefs, computeNoteMentions, issueHref, linkedIssueNumbers, linkedNoteTitles, parseIssueHref,
+  computeIssueRefs, computeNoteMentions, issueHref, issueLabel, linkedIssueNumbers, linkedNoteTitles, parseIssueHref,
+  parseIssueLabel,
 } from './refs';
 
 describe('refs', () => {
@@ -15,11 +16,20 @@ describe('refs', () => {
     expect(parseIssueHref('Note')).toBeUndefined();
   });
 
+  test('issues shown as @12, #12 read too', () => {
+    expect(issueLabel(12)).toBe('@12');
+    expect(parseIssueLabel(' @12 ')).toBe(12);
+    expect(parseIssueLabel('#3')).toBe(3);
+    expect(parseIssueLabel('@x')).toBeUndefined();
+  });
+
   test('linked titles and issue numbers', () => {
     const text = '[[A]] [[B|b]] [c](C%20D) [u](https://x.io) [#3](issue:3) [#4](issue:4)';
     expect([...linkedNoteTitles(text)]).toEqual(['A', 'B', 'C D']);
     expect([...linkedIssueNumbers(text)]).toEqual([3, 4]);
     expect([...linkedNoteTitles('[x](%E0%A4%A)')]).toEqual(['%E0%A4%A']);
+    // links to books are not to notes
+    expect([...linkedNoteTitles(`[d](book:${'a'.repeat(32)}#epubcfi(%2F6)) [e](book:Emma) [[N]]`)]).toEqual(['N']);
   });
 
   test('computeIssueRefs finds explicit links and mentions', () => {

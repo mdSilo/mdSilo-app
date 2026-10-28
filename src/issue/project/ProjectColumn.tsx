@@ -5,6 +5,7 @@ import { TbPlus as IconPlus, TbTrash as IconTrash, TbCircleCheck as IconCloses }
 import { ConfirmModal } from '@/ui/Dialogs';
 import { inputClass } from '../common';
 import type { Issue, IssueData, ProjectStatus } from '../types';
+import { issueLabel } from '../refs';
 import ProjectCard, { cardDndId } from './ProjectCard';
 
 type Props = {
@@ -142,7 +143,7 @@ export default function ProjectColumn(props: Props) {
               }}
             />
             <datalist id={`candidates-${status.id}`}>
-              {candidates.map((i) => <option key={i.number} value={`#${i.number}`}>{i.title}</option>)}
+              {candidates.map((i) => <option key={i.number} value={issueLabel(i.number)}>{i.title}</option>)}
             </datalist>
           </>
         ) : (

@@ -11,7 +11,7 @@ describe('issueOfNoteText', () => {
     await useWebFs();
     store.getState().setInitDir('/ws');
     const link = await issueOfNoteText('fix the\n  build  ', '/ws/writing/Plan.md', 'Plan');
-    expect(link).toEqual({ title: '#1', href: 'issue:1' });
+    expect(link).toEqual({ title: '@1', href: 'issue:1' });
     const issue = issueStore.getState().data.issues[0];
     expect(issue).toMatchObject({
       title: 'fix the build',

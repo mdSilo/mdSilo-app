@@ -10,7 +10,7 @@ import { useIssueData, useIssueStore } from './issueStore';
 import {
   addComment, commentCount, deleteIssue, getIssue, isOverdue, setDueOn, setState, updateIssue,
 } from './issueOps';
-import { computeNoteMentions } from './refs';
+import { computeNoteMentions, issueLabel } from './refs';
 import { StateBadge, TimeAgo, btnClass, inputClass, primaryBtnClass } from './common';
 import IssueEditor from './IssueEditor';
 import Timeline from './Timeline';
@@ -39,7 +39,7 @@ export default function IssueDetail({ number, onClose }: Props) {
   if (!issue) {
     return (
       <div className="p-8">
-        <p className="mb-4">Issue #{number} does not exist.</p>
+        <p className="mb-4">Issue {issueLabel(number)} does not exist.</p>
         <button type="button" className="ms-link" onClick={() => dispatch({ view: 'issues' })}>Back to issues</button>
       </div>
     );
@@ -105,7 +105,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
           ) : (
             <div className="flex items-start gap-2">
               <h1 className="flex-1 text-2xl">
-                {issue.title} <span className="text-base-content/50">#{num}</span>
+                {issue.title} <span className="text-base-content/50">{issueLabel(num)}</span>
               </h1>
               <button type="button" className={btnClass} onClick={() => { setTitleDraft(issue.title); setEditingTitle(true); }}>
                 Edit
@@ -166,7 +166,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
               <IconTrash size={14} /> Delete issue
             </button>
             <ConfirmModal
-              title={`Delete issue #${num}?`}
+              title={`Delete issue ${issueLabel(num)}?`}
               message="This cannot be undone."
               confirmLabel="Confirm delete"
               danger

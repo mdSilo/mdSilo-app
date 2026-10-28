@@ -3,6 +3,7 @@ import { commentCount } from './issueOps';
 import { StateIcon, TimeAgo } from './common';
 import LabelChip from './LabelChip';
 import type { Issue, IssueData, Label } from './types';
+import { issueLabel } from './refs';
 
 type Props = {
   issues: Issue[];
@@ -48,7 +49,7 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs text-base-content/60">
                 <span>
-                  #{issue.number} {issue.state === 'open' ? 'opened' : 'closed'}{' '}
+                  {issueLabel(issue.number)} {issue.state === 'open' ? 'opened' : 'closed'}{' '}
                   <TimeAgo iso={issue.state === 'closed' && issue.closedAt ? issue.closedAt : issue.createdAt} />
                 </span>
                 {milestone ? (

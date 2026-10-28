@@ -11,6 +11,7 @@ import { btnClass, inputClass } from '@/issue/common';
 import IssueDetail from '@/issue/IssueDetail';
 import ProjectBoard from '@/issue/project/ProjectBoard';
 import ProjectTable from '@/issue/project/ProjectTable';
+import { parseIssueLabel } from './refs';
 
 export default function ProjectView() {
   const { data, isLoaded, initDir } = useIssueData();
@@ -33,8 +34,8 @@ export default function ProjectView() {
 
   const addItem = (statusId: string, text: string) => {
     if (!project) return;
-    const ref = text.match(/^#(\d+)$/);
-    const existing = ref ? getIssue(data, Number(ref[1])) : undefined;
+    const ref = parseIssueLabel(text);
+    const existing = ref !== undefined ? getIssue(data, ref) : undefined;
     if (existing) {
       const order = project.items.filter((it) => it.status === statusId).length;
       apply((d) => moveProjectItem(d, project.id, existing.number, statusId, order));

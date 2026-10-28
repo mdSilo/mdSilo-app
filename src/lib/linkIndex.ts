@@ -198,7 +198,7 @@ export class LinkIndex {
     return (entry.tags ??= noteTags(entry.content ?? ''));
   }
 
-  /** The issues a note links to, [#12](issue:12). */
+  /** The issues a note links to, [@12](issue:12). */
   issues(id: string): Set<number> {
     const entry = this.entries.get(id);
     if (!entry) return new Set();

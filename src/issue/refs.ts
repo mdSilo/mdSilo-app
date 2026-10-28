@@ -1,4 +1,4 @@
-import { isUrl } from '@/lib/helper';
+import { isNoteHref } from '@/lib/mdlink';
 import type { NoteMap } from '@/state/store';
 import { indexOf } from '@/lib/linkIndex';
 import type { Issue } from './types';
@@ -7,12 +7,20 @@ import type { Issue } from './types';
 const WIKI_REGEX = /\[\[([^[|\]\n]+)(?:\|[^[\]\n]*)?\]\]/g;
 // [text](href)
 const MD_LINK_REGEX = /\[([^\]\n]*)\]\(([^)\s]+)\)/g;
-// issue:12, as in [#12](issue:12)
+// issue:12, as in [@12](issue:12)
 const ISSUE_LINK_REGEX = /\(issue:(\d+)\)/g;
 
 export const ISSUE_HREF_PREFIX = 'issue:';
 
 export const issueHref = (num: number) => `${ISSUE_HREF_PREFIX}${num}`;
+
+export { issueLabel } from '@/lib/parseNote';
+
+/** The number of a ref to an issue, `@12` (or `#12`, as written before). */
+export function parseIssueLabel(text: string): number | undefined {
+  const match = text.trim().match(/^[@#](\d+)$/);
+  return match ? Number(match[1]) : undefined;
+}
 
 /** Parse `issue:12` into 12; undefined if href is not an issue link. */
 export function parseIssueHref(href: string): number | undefined {
@@ -38,13 +46,14 @@ export function linkedNoteTitles(text: string): Set<string> {
   }
   for (const m of text.matchAll(MD_LINK_REGEX)) {
     const href = m[2];
-    if (isUrl(href) || parseIssueHref(href) !== undefined) continue;
+    // not urls, nor links of the app: issue:, book:
+    if (!isNoteHref(href)) continue;
     titles.add(safeDecode(href).trim());
   }
   return titles;
 }
 
-/** Issue numbers linked from a markdown text, via [#12](issue:12). */
+/** Issue numbers linked from a markdown text, via [@12](issue:12). */
 export function linkedIssueNumbers(text: string): Set<number> {
   const nums = new Set<number>();
   for (const m of text.matchAll(ISSUE_LINK_REGEX)) {

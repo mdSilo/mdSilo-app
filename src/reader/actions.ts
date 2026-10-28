@@ -2,7 +2,7 @@ import copy from 'copy-to-clipboard';
 import * as CFI from 'foliate-js/epubcfi.js';
 import { store } from '@/state/store';
 import { issueStore } from '@/issue/issueStore';
-import { issueHref } from '@/issue/refs';
+import { issueHref, issueLabel } from '@/issue/refs';
 import { oneLine } from '@/issue/issueOfText';
 import {
   bookHref, newNoteId, type BookNote, type HighlightColor, type HighlightStyle,
@@ -146,6 +146,6 @@ export async function issueOfNote(note: BookNote, pane?: Pane): Promise<number |
     title: oneLine(body.split('\n')[0] || note.text || `${bookTitle}${note.chapter ? ` · ${note.chapter}` : ''}`),
     body: [place, body].filter(Boolean).join('\n\n'),
   });
-  reader.getState().updateNote(note.id, { note: `${body}${body ? '\n\n' : ''}[#${num}](${issueHref(num)})` });
+  reader.getState().updateNote(note.id, { note: `${body}${body ? '\n\n' : ''}[${issueLabel(num)}](${issueHref(num)})` });
   return num;
 }

@@ -309,8 +309,10 @@ describe('Note', () => {
       seedIssues();
       setup();
       const results = await callEditor('onSearchLink', 'Linked');
-      expect(results).toEqual([{ title: '#1 Linked bug', url: 'issue:1' }]);
-      await expect(callEditor('onSearchLink', '#3')).resolves.toEqual([{ title: '#3 Unrelated', url: 'issue:3' }]);
+      expect(results).toEqual([{ title: '@1 Linked bug', url: 'issue:1' }]);
+      await expect(callEditor('onSearchLink', '@3')).resolves.toEqual([{ title: '@3 Unrelated', url: 'issue:3' }]);
+      // as written before
+      await expect(callEditor('onSearchLink', '#3')).resolves.toEqual([{ title: '@3 Unrelated', url: 'issue:3' }]);
     });
 
     test('onOpenLink opens issue links', async () => {
@@ -325,10 +327,10 @@ describe('Note', () => {
       setup();
       const refs = await screen.findByTestId('issue-refs');
       expect(refs).toHaveTextContent('Referenced by issues');
-      expect(refs).toHaveTextContent('#1 Linked bug');
-      expect(refs).toHaveTextContent('#2 Mentions itmentioned');
+      expect(refs).toHaveTextContent('@1 Linked bug');
+      expect(refs).toHaveTextContent('@2 Mentions itmentioned');
       expect(refs).not.toHaveTextContent('Unrelated');
-      await userEvent.click(screen.getByRole('button', { name: '#1 Linked bug' }));
+      await userEvent.click(screen.getByRole('button', { name: '@1 Linked bug' }));
       expect(viewState()).toEqual({ view: 'issue', issueNumber: 1 });
     });
 

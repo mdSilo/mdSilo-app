@@ -187,7 +187,7 @@ export function sortNotes(notes: BookNote[], compare: (a: string, b: string) => 
 }
 
 /** The note of an annotation to show: without its links to issues, shown apart. */
-export const noteText = (note: string) => note.replace(/\s*\[#\d+\]\(issue:\d+\)/g, '').trim();
+export const noteText = (note: string) => note.replace(/\s*\[[@#]\d+\]\(issue:\d+\)/g, '').trim();
 
 /** A link to a place of a book, `book:<hash>#<cfi>`, to put in notes. */
 export const bookHref = (hash: string, cfi?: string) =>

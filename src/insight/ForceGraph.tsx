@@ -31,7 +31,7 @@ import { annotationsPathOf } from '@/reader/annotations';
 import { findBook, linkedBookIds } from '@/reader/bookLinks';
 import { useLibraryBooks } from '@/reader/books';
 import { useIssueData } from '@/issue/issueStore';
-import { issueTexts, linkedNoteTitles } from '@/issue/refs';
+import { issueLabel, issueTexts, linkedNoteTitles } from '@/issue/refs';
 import type { Issue } from '@/issue/types';
 import { findBookPath, type BookEntry } from '@/reader/library';
 import { noteTitleMap } from '@/lib/mdlink';
@@ -142,6 +142,8 @@ export default function ForceGraph(props: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const transform = useRef(zoomIdentity);
   const hoveredNode = useRef<NodeDatum | null>(null);
+  /** the id of the tag clicked, its notes highlighted */
+  const selectedTag = useRef<string | null>(null);
 
   const colors = useThemeColors();
   const storeNotes = useStore((state) => state.notes);
@@ -215,7 +217,7 @@ export default function ForceGraph(props: Props) {
 
       context.beginPath();
       context.moveTo(from.x, from.y);
-      context.lineWidth = link.ty === 'annotation' ? 1 : 0.5;
+      context.lineWidth = link.ty === 'annotation' ? 0.6 : 0.3;
       context.lineCap = 'round';
       context.lineTo(to.x, to.y);
       if (isTag) {
@@ -248,10 +250,20 @@ export default function ForceGraph(props: Props) {
       const isBook = node.ty === 'book';
       const isIssue = node.ty === 'issue';
       const issueColor = node.closed ? colors.closedIssue : colors.issue;
+      // the notes of the tag clicked: in its color
+      const tag = selectedTag.current;
+      const isTagged = node.ty === 'link' && !!tag && areNeighbors(tag, node.id);
 
       context.save();
 
-      // Draw node: a book is a book, standing
+      if (isTag) {
+        drawHash(context, node, isHovered || node.id === tag ? colors.hoveredTag : colors.tag);
+        drawLabel(context, node, scale, colors.text);
+        context.restore();
+        return;
+      }
+
+      // Draw node: a note a circle, a book a square, an issue a ring with a dot
       context.beginPath();
       if (isBook) {
         bookPath(context, node.x, node.y, node.radius);
@@ -261,7 +273,7 @@ export default function ForceGraph(props: Props) {
       }
 
       // Fill node color
-      if (isTag) {
+      if (isTagged) {
         context.fillStyle = colors.tag;
       } else if (isBook) {
         context.fillStyle = colors.book;
@@ -276,8 +288,8 @@ export default function ForceGraph(props: Props) {
       if (isHovered) {
         context.strokeStyle = colors.hovered;
         context.stroke();
-        context.fillStyle = isTag
-          ? colors.hoveredTag
+        context.fillStyle = isTagged
+          ? colors.tag
           : isBook ? colors.book : isIssue ? issueColor : colors.neighbor;
       }
 
@@ -306,24 +318,7 @@ export default function ForceGraph(props: Props) {
         context.stroke();
       }
 
-      // Add node text
-      if (scale > 3) {
-        context.globalAlpha = 1;
-      } else if (scale > 2) {
-        context.globalAlpha = 0.8;
-      } else {
-        context.globalAlpha = 0;
-      }
-      context.fillStyle = colors.text;
-      context.font = `4px font-sans`;
-
-      const lines = getLines(context, node.name, 50);
-      let yPos = node.y + node.radius + 5;
-      for (const line of lines) {
-        const textWidth = context.measureText(line).width;
-        context.fillText(line, node.x - textWidth / 2, yPos);
-        yPos += 5;
-      }
+      drawLabel(context, node, scale, colors.text);
 
       context.restore();
     },
@@ -432,18 +427,25 @@ export default function ForceGraph(props: Props) {
       .on('click', async (event) => {
         const { x, y } = getMousePos(context.canvas, event);
         const clickedNode = getNode(simulation, context.canvas, x, y);
+        // a tag: its notes shown in its color, until clicked again or out
+        if (clickedNode?.ty === 'tag' || !clickedNode) {
+          const id = clickedNode?.id ?? null;
+          selectedTag.current = selectedTag.current === id ? null : id;
+          renderCanvas();
+          return;
+        }
         // Redirect to note when a node is clicked
-        if (clickedNode && clickedNode.ty === 'link') {
+        if (clickedNode.ty === 'link') {
           const note = storeNotes.get(clickedNode.id);
           if (!note) return;
           await openFilePath(note.id, true);
           dispatch({view: 'md', params: { noteId: note.id }});
-        } else if (clickedNode?.ty === 'book') {
+        } else if (clickedNode.ty === 'book') {
           const ws = store.getState().initDir;
           const hash = clickedNode.id.slice(BOOK_NODE_PREFIX.length);
           const path = ws ? await findBookPath(ws, hash) : undefined;
           if (path) dispatch({ view: 'book', path });
-        } else if (clickedNode?.ty === 'issue') {
+        } else if (clickedNode.ty === 'issue') {
           dispatch({ view: 'issue', number: Number(clickedNode.id.slice(ISSUE_NODE_PREFIX.length)) });
         }
       });
@@ -593,7 +595,7 @@ export function buildGraphData(
     }
     const annotated = bookOfAnnotations.get(note.id);
     if (annotated) linkBook(note.id, annotated);
-    // Issues: [#12](issue:12)
+    // Issues: [@12](issue:12)
     for (const num of index.issues(note.id)) linkIssue(num, note.id);
   }
 
@@ -627,7 +629,7 @@ export function buildGraphData(
     const issue = issueByNum.get(Number(issueId.slice(ISSUE_NODE_PREFIX.length)));
     data.nodes.push({
       id: issueId,
-      name: `#${issue?.number} ${issue?.title ?? ''}`.trim(),
+      name: `${issue ? issueLabel(issue.number) : ''} ${issue?.title ?? ''}`.trim(),
       radius: getRadius(nodeIds.size),
       ty: 'issue',
       ...(issue?.state === 'closed' ? { closed: true } : {}),
@@ -666,7 +668,7 @@ export function buildGraphData(
     const book = books[nodeId.slice(BOOK_NODE_PREFIX.length)];
     data.nodes.push({
       id: nodeId,
-      name: book?.title ?? nodeId,
+      name: book?.title || 'Untitled book',
       radius: getRadius(noteIds.size + (issueLinksTo.get(nodeId) ?? 0)),
       ty: 'book',
     });
@@ -686,8 +688,8 @@ export function buildGraphData(
   return data;
 }
 
-/** The size of a book node: a cover, taller than wide, about as big as a note. */
-const bookSize = (radius: number) => ({ w: radius * 1.5, h: radius * 2 });
+/** The size of a book node: a square, about as big as a note. */
+const bookSize = (radius: number) => ({ w: radius * 1.8, h: radius * 1.8 });
 
 /** The path of a book node: a cover, its corners rounded a little. */
 function bookPath(context: CanvasRenderingContext2D, x: number, y: number, radius: number) {
@@ -820,25 +822,43 @@ const getDrag = (
     .on('end', dragended);
 };
 
-const getLines = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number
-) => {
-  const words = text.split(' ');
-  const lines = [];
-  let currentLine = words[0];
+/** The text cut to the width, `…` at the end if cut. */
+export function truncateText(context: CanvasRenderingContext2D, text: string, maxWidth: number) {
+  if (context.measureText(text).width <= maxWidth) return text;
+  let end = text.length;
+  while (end > 1 && context.measureText(`${text.slice(0, end)}…`).width > maxWidth) end -= 1;
+  return `${text.slice(0, end).trimEnd()}…`;
+}
 
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i];
-    const width = context.measureText(currentLine + ' ' + word).width;
-    if (width < maxWidth) {
-      currentLine += ' ' + word;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-    }
-  }
-  lines.push(currentLine);
-  return lines;
-};
+/** The name of a node, in one line under it; shown when zoomed in. */
+function drawLabel(context: CanvasRenderingContext2D, node: NodeDatum, scale: number, color: string) {
+  if (!node.x || !node.y) return;
+  context.globalAlpha = scale > 3 ? 1 : scale > 2 ? 0.8 : 0;
+  context.fillStyle = color;
+  context.font = `4px font-sans`;
+  const line = truncateText(context, node.name, 50);
+  const textWidth = context.measureText(line).width;
+  context.fillText(line, node.x - textWidth / 2, node.y + node.radius + 5);
+  context.globalAlpha = 1;
+}
+
+/** A tag: a `#`, as big as the node. */
+function drawHash(context: CanvasRenderingContext2D, node: NodeDatum, color: string) {
+  if (!node.x || !node.y) return;
+  const r = node.radius;
+  const { x, y } = node;
+  context.beginPath();
+  // two strokes leaning, two across
+  context.moveTo(x - r * 0.25, y - r);
+  context.lineTo(x - r * 0.55, y + r);
+  context.moveTo(x + r * 0.55, y - r);
+  context.lineTo(x + r * 0.25, y + r);
+  context.moveTo(x - r * 0.9, y - r * 0.35);
+  context.lineTo(x + r, y - r * 0.35);
+  context.moveTo(x - r, y + r * 0.35);
+  context.lineTo(x + r * 0.9, y + r * 0.35);
+  context.lineWidth = r * 0.28;
+  context.lineCap = 'round';
+  context.strokeStyle = color;
+  context.stroke();
+}

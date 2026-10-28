@@ -17,7 +17,7 @@ import HeatMap from './HeatMap';
 import Chronicle from './Chronicle';
 import Journals from './Journals';
 import Graph from './Graph';
-import { buildGraphData, edgePoint, HASHTAG_REGEX } from './ForceGraph';
+import { buildGraphData, edgePoint, HASHTAG_REGEX, truncateText } from './ForceGraph';
 
 const Controls = ({ children }: { children: ReactNode }) => {
   const { state, dispatch } = useCurrentViewContext();
@@ -331,23 +331,31 @@ describe('Graph / ForceGraph', () => {
     const data = buildGraphData(NoteMap.from({ [a.id]: a, [b.id]: b, [c.id]: c }), { [id]: book }, '/ws', issues);
     const issueNodes = data.nodes.filter((n) => n.ty === 'issue');
     // #9 does not exist, #3 links nothing
-    expect(issueNodes.map((n) => [n.name, Boolean(n.closed)])).toEqual([['#1 T1', false], ['#2 T2', true]]);
+    expect(issueNodes.map((n) => [n.name, Boolean(n.closed)])).toEqual([['@1 T1', false], ['@2 T2', true]]);
     const issueLinks = data.links.filter((l) => l.ty === 'issue').map((l) => `${l.source}>${l.target}`);
     expect(issueLinks.sort()).toEqual([`issue:1>${a.id}`, `issue:1>${b.id}`, `issue:1>${c.id}`, `issue:2>book:${id}`]);
     // the book linked by an issue only: a node too
     expect(data.nodes.filter((n) => n.ty === 'book').map((n) => n.name)).toEqual(['Dune']);
   });
 
+  test('labels in one line, cut', () => {
+    const context = { measureText: (t: string) => ({ width: t.length * 2 }) } as unknown as CanvasRenderingContext2D;
+    expect(truncateText(context, 'short', 50)).toBe('short');
+    const cut = truncateText(context, 'a title much too long to be shown whole', 50);
+    expect(cut.endsWith('…')).toBe(true);
+    expect(cut.length * 2).toBeLessThanOrEqual(50);
+  });
+
   test('lines end on the edge of the nodes', () => {
     const note = { id: 'n', name: 'n', ty: 'link' as const, radius: 4, x: 0, y: 0 };
     expect(edgePoint(note, 10, 0)).toEqual({ x: 4, y: 0 });
-    // a book 6 wide, 8 high: its side, or its top
+    // a book, a square 7.2 wide: its side, or its corner
     const book = { id: 'b', name: 'b', ty: 'book' as const, radius: 4, x: 0, y: 0 };
-    expect(edgePoint(book, 10, 0)).toEqual({ x: 3, y: 0 });
-    expect(edgePoint(book, 0, -10)).toEqual({ x: 0, y: -4 });
+    expect(edgePoint(book, 10, 0).x).toBeCloseTo(3.6);
+    expect(edgePoint(book, 0, -10).y).toBeCloseTo(-3.6);
     const corner = edgePoint(book, 10, 10);
-    expect(corner.x).toBeCloseTo(3);
-    expect(corner.y).toBeCloseTo(3);
+    expect(corner.x).toBeCloseTo(3.6);
+    expect(corner.y).toBeCloseTo(3.6);
   });
 
   test('draws note and tag nodes with links', async () => {

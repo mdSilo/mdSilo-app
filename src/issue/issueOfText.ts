@@ -1,7 +1,7 @@
 import { store } from '@/state/store';
 import { encodeHref } from '@/lib/mdlink';
 import { issueStore } from './issueStore';
-import { issueHref } from './refs';
+import { issueHref, issueLabel } from './refs';
 
 /** The text in one line, cut to a title. */
 export const oneLine = (text: string, max = 80) => {
@@ -28,5 +28,5 @@ export async function issueOfNoteText(text: string, noteId: string, noteTitle: s
     body: `${quote}\n>\n> — ${noteLink(noteTitle)}`,
     notes: [noteId],
   });
-  return { title: `#${num}`, href: issueHref(num) };
+  return { title: issueLabel(num), href: issueHref(num) };
 }

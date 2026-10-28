@@ -5,6 +5,7 @@ import { StateIcon } from '../common';
 import { isOverdue, subtaskProgress } from '../issueOps';
 import LabelChip from '../LabelChip';
 import type { Issue, IssueData } from '../types';
+import { issueLabel } from '../refs';
 
 type Props = {
   issue: Issue;
@@ -38,7 +39,7 @@ export default function ProjectCard({ issue, data, status, onOpen, overlay = fal
       onClick={() => onOpen?.(issue.number)}
     >
       <div className="flex items-center gap-1 text-xs text-base-content/60">
-        <StateIcon state={issue.state} size={14} />#{issue.number}
+        <StateIcon state={issue.state} size={14} />{issueLabel(issue.number)}
       </div>
       <div className="my-1 text-sm font-medium wrap-break-word">{issue.title}</div>
       {labels.length || milestone || issue.dueOn || progress ? (

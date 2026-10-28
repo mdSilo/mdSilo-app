@@ -6,10 +6,11 @@ import { filterIssues } from '../filter';
 import { StateIcon, TimeAgo, inputClass } from '../common';
 import LabelChip from '../LabelChip';
 import type { Issue, IssueData, Project } from '../types';
+import { issueLabel } from '../refs';
 
 type Col = 'number' | 'title' | 'status' | 'labels' | 'milestone' | 'due' | 'updated';
 const COLS: { key: Col; name: string }[] = [
-  { key: 'number', name: '#' },
+  { key: 'number', name: '@' },
   { key: 'title', name: 'Title' },
   { key: 'status', name: 'Status' },
   { key: 'labels', name: 'Labels' },
@@ -110,7 +111,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                 </td>
                 <td className="px-2 py-1">
                   <select
-                    aria-label={`Status of #${issue.number}`}
+                    aria-label={`Status of ${issueLabel(issue.number)}`}
                     className="py-0 pl-1 text-sm border-base-300 rounded-sm bg-base-100"
                     value={status}
                     onChange={(e) => {
@@ -135,7 +136,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                 <td className="px-2 py-1">
                   <button
                     type="button"
-                    aria-label={`Remove #${issue.number} from project`}
+                    aria-label={`Remove ${issueLabel(issue.number)} from project`}
                     className="text-xs text-base-content/50 hover:text-error/80"
                     onClick={() => apply((d) => removeProjectItem(d, project.id, issue.number))}
                   >

@@ -209,14 +209,14 @@ describe('reader', () => {
     expect(issue.title).toBe('Check this');
     expect(issue.body).toBe(`> It was\n>\n> — [${entry!.title}](${bookHref(hash!, cfi)})\n\nCheck this\nlater`);
     // the annotation links to the issue, which opens from it
-    expect(useReaderStore.getState().notes[0].note).toBe('Check this\nlater\n\n[#1](issue:1)');
-    expect(screen.getByTestId('note-issues')).toHaveTextContent('#1');
+    expect(useReaderStore.getState().notes[0].note).toBe('Check this\nlater\n\n[@1](issue:1)');
+    expect(screen.getByTestId('note-issues')).toHaveTextContent('@1');
 
     // the issue links the book: in its links
     fireEvent.click(screen.getByRole('tab', { name: 'Links' }));
     const links = await screen.findByTestId('reader-links');
-    await waitFor(() => expect(links).toHaveTextContent('#1 Check this'));
-    await act(async () => { fireEvent.click(within(links).getByText('#1 Check this')); });
+    await waitFor(() => expect(links).toHaveTextContent('@1 Check this'));
+    await act(async () => { fireEvent.click(within(links).getByText('@1 Check this')); });
     await waitFor(() => expect(viewState()).toEqual({ view: 'issue', issueNumber: 1 }));
     resetIssueStore();
   });
@@ -238,7 +238,7 @@ describe('reader', () => {
     const issue = issueStore.getState().data.issues[0];
     expect(issue.title).toBe('a bright cold day');
     expect(issue.body).toContain(`(${bookHref(useReaderStore.getState().hash!, cfi)})`);
-    expect(useReaderStore.getState().notes[0]).toMatchObject({ type: 'annotation', text: 'a bright cold day', note: '[#1](issue:1)' });
+    expect(useReaderStore.getState().notes[0]).toMatchObject({ type: 'annotation', text: 'a bright cold day', note: '[@1](issue:1)' });
     // the highlight shows the issue, not its link as a note
     const popup = screen.getByTestId('annotation-popup');
     expect(within(popup).queryByTestId('note-card')).not.toBeInTheDocument();

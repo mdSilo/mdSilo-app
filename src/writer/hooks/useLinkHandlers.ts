@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { store } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { issueStore } from '@/issue/issueStore';
-import { issueHref, parseIssueHref } from '@/issue/refs';
+import { issueHref, issueLabel, parseIssueHref } from '@/issue/refs';
 import { openFilePath, openUrl } from '@/workspace/open';
 import { isUrl } from '@/lib/helper';
 import { encodeHref, hrefToTitle, legacyLinkTitle } from '@/lib/mdlink';
@@ -20,14 +20,14 @@ type Options = {
   onMissingNote?: (title: string) => Promise<string | undefined>;
 };
 
-/** Issues matching `#12` or a title fragment, as editor link results. */
+/** Issues matching `@12` (or `#12`) or a title fragment, as editor link results. */
 export function searchIssues(text: string, limit = 10): LinkSearchResult[] {
-  const term = text.trim().toLowerCase().replace(/^#/, '');
+  const term = text.trim().toLowerCase().replace(/^[@#]/, '');
   if (!term) return [];
   return issueStore.getState().data.issues
     .filter((i) => String(i.number).startsWith(term) || i.title.toLowerCase().includes(term))
     .slice(0, limit)
-    .map((i) => ({ title: `#${i.number} ${i.title}`, url: issueHref(i.number) }));
+    .map((i) => ({ title: `${issueLabel(i.number)} ${i.title}`, url: issueHref(i.number) }));
 }
 
 /**

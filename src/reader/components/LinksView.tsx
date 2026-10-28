@@ -4,6 +4,7 @@ import { useStore } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { openFilePath } from '@/workspace/open';
 import { useIssueData } from '@/issue/issueStore';
+import { issueLabel } from '@/issue/refs';
 import { annotationsPathOf } from '../annotations';
 import { useActiveStore } from '../readerStore';
 import { useLibraryBooks } from '../books';
@@ -73,7 +74,7 @@ function LinksView({ flush }: { flush: () => Promise<void> }) {
               }}
             >
               <TbCircleDot className={`shrink-0 ${issue.state === 'open' ? 'text-success' : 'text-base-content/50'}`} />
-              <span className="truncate">#{issue.number} {issue.title}</span>
+              <span className="truncate">{issueLabel(issue.number)} {issue.title}</span>
             </button>
           ))}
         </section>
