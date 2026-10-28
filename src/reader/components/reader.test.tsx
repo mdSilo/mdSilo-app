@@ -221,6 +221,32 @@ describe('reader', () => {
     resetIssueStore();
   });
 
+  test('an issue of the text selected, from its popup', async () => {
+    resetIssueStore();
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    const cfi = 'epubcfi(/6/4!/4/4,/1:9,/1:26)';
+    act(() => {
+      usePopups.getState().setSelection({
+        text: 'a bright cold day', cfi, index: 1, box: { left: 10, top: 10, right: 50, bottom: 20 },
+      });
+    });
+    await act(async () => { fireEvent.click(await screen.findByLabelText('New issue of it')); });
+    await waitFor(() => expect(issueStore.getState().data.issues).toHaveLength(1));
+    // highlighted, linked to the issue
+    const issue = issueStore.getState().data.issues[0];
+    expect(issue.title).toBe('a bright cold day');
+    expect(issue.body).toContain(`(${bookHref(useReaderStore.getState().hash!, cfi)})`);
+    expect(useReaderStore.getState().notes[0]).toMatchObject({ type: 'annotation', text: 'a bright cold day', note: '[#1](issue:1)' });
+    // the highlight shows the issue, not its link as a note
+    const popup = screen.getByTestId('annotation-popup');
+    expect(within(popup).queryByTestId('note-card')).not.toBeInTheDocument();
+    await act(async () => { fireEvent.click(within(popup).getByTitle('Open the issue')); });
+    await waitFor(() => expect(viewState()).toEqual({ view: 'issue', issueNumber: 1 }));
+    resetIssueStore();
+  });
+
   test('edits an annotation clicked', async () => {
     renderMain();
     await go({ view: 'book', path: BOOK });

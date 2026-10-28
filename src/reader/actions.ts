@@ -3,6 +3,7 @@ import * as CFI from 'foliate-js/epubcfi.js';
 import { store } from '@/state/store';
 import { issueStore } from '@/issue/issueStore';
 import { issueHref } from '@/issue/refs';
+import { oneLine } from '@/issue/issueOfText';
 import {
   bookHref, newNoteId, type BookNote, type HighlightColor, type HighlightStyle,
 } from './annotations';
@@ -124,11 +125,6 @@ export function copyLink(cfi: string, pane?: Pane) {
   if (hash) copy(bookHref(hash, cfi), { format: 'text/plain' });
   usePopups.getState().clear();
 }
-
-const oneLine = (text: string, max = 80) => {
-  const line = text.replace(/\s+/g, ' ').trim();
-  return line.length > max ? `${line.slice(0, max - 1)}…` : line;
-};
 
 /**
  * Make an issue of an annotation or a bookmark: the quote with a link back

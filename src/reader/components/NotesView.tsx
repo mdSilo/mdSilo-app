@@ -1,12 +1,11 @@
 import { memo, useState } from 'react';
 import { TbBookmark, TbCircleDot, TbCopy, TbEdit, TbTrash } from 'react-icons/tb';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { issueLinks } from '@/lib/parseNote';
-import type { BookNote } from '../annotations';
+import { noteText, type BookNote } from '../annotations';
 import { HIGHLIGHT_CSS } from '../styles';
-import { activeStore, useActiveStore } from '../readerStore';
+import { useActiveStore } from '../readerStore';
 import { copyQuote, issueOfNote } from '../actions';
 import { getView } from '../view';
+import NoteIssues from './NoteIssues';
 
 /** The annotations and bookmarks of the book, in the order of the book. */
 function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
@@ -50,12 +49,6 @@ function NoteItem({ note }: { note: BookNote }) {
   const removeNote = useActiveStore((state) => state.removeNote);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(note.note);
-  const { dispatch } = useCurrentViewContext();
-  const issues = issueLinks(note.note);
-  const openIssue = async (number: number) => {
-    await activeStore().getState().flush();
-    dispatch({ view: 'issue', number });
-  };
 
   const save = () => {
     setEditing(false);
@@ -96,18 +89,10 @@ function NoteItem({ note }: { note: BookNote }) {
             }
           }}
         />
-      ) : note.note ? (
-        <p className="mt-1 text-sm whitespace-pre-wrap">{note.note}</p>
+      ) : noteText(note.note) ? (
+        <p className="mt-1 text-sm whitespace-pre-wrap">{noteText(note.note)}</p>
       ) : null}
-      {issues.length && !editing ? (
-        <div className="flex flex-wrap gap-1 mt-1" data-testid="note-issues">
-          {issues.map((num) => (
-            <button key={num} className="badge badge-sm badge-ghost gap-1" title="Open the issue" onClick={() => void openIssue(num)}>
-              <TbCircleDot /> #{num}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      {!editing ? <NoteIssues note={note} className="mt-1" /> : null}
       <div className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
         <button className="btn btn-ghost btn-xs" title="Edit the note" onClick={() => { setDraft(note.note); setEditing(true); }}>
           <TbEdit />
