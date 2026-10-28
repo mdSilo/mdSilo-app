@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { useIssueData } from '@/components/issue/issueStore';
-import { computeIssueRefs } from '@/components/issue/refs';
-import { StateIcon } from '@/components/issue/common';
+import { useIssueData } from '@/issue/issueStore';
+import { computeIssueRefs } from '@/issue/refs';
+import { StateIcon } from '@/issue/common';
 
 type Props = {
   noteId: string;

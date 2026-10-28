@@ -8,7 +8,7 @@ import DirectoryAPI from '@/workspace/directory';
 import { writeAllFile, writeFile } from '@/workspace/write';
 import { rmFileNameExt } from '@/workspace/process';
 import { READING_DIR, WRITING_DIR, resolveLayout } from '@/workspace/layout';
-import { syncFeeds } from '@/components/feed/feedSync';
+import { syncFeeds } from '@/feed/feedSync';
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);

@@ -3,8 +3,8 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
-import { mockInvoke, renderWithView } from '../../testUtils';
-import Feed from './feed';
+import { mockInvoke, renderWithView } from '@/testUtils';
+import Feed from './FeedView';
 
 const channels = [
   { id: 1, title: 'Tech', link: 'https://tech/feed', ty: 'rss', unread: 0 },

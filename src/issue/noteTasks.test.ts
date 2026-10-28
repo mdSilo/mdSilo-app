@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { NoteMap } from '@/lib/noteMap';
-import { makeNote } from '../../testUtils';
+import { makeNote } from '@/testUtils';
 import * as ops from './issueOps';
 import {
   computeNoteTasks, createIssueFromTask, extractTasks, issueOfTask, NoteTask, syncNoteTasks,

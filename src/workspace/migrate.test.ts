@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
-import { resetIssueStore, issueStore } from '@/components/issue/issueStore';
+import { resetIssueStore, issueStore } from '@/issue/issueStore';
 import { useWebFs } from '../testUtils';
 import {
   dataRoot, detectLayout, newNoteDir, readingRoot, resolveLayout, writingRoot,

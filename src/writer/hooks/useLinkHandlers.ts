@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { store } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { issueStore } from '@/components/issue/issueStore';
-import { issueHref, parseIssueHref } from '@/components/issue/refs';
+import { issueStore } from '@/issue/issueStore';
+import { issueHref, parseIssueHref } from '@/issue/refs';
 import { openFilePath, openUrl } from '@/workspace/open';
 import { isUrl } from '@/lib/helper';
 import { encodeHref, hrefToTitle, legacyLinkTitle } from '@/lib/mdlink';

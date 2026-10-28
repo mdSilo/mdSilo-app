@@ -4,17 +4,17 @@ import { useStore } from '@/state/store';
 import { EDITOR_THEME } from '@/lib/themes';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { Spinner } from '@/ui/ui';
-import useNoteTaskSync from '@/components/issue/useNoteTaskSync';
+import useNoteTaskSync from '@/issue/useNoteTaskSync';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useStartupView from '@/state/useStartupView';
 import NotePage from '@/writer/MdView';
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
-const Feed = lazy(() => import('./feed'));
+const Feed = lazy(() => import('@/feed/FeedView'));
 const Chronicle = lazy(() => import('./chronicle'));
-const Issues = lazy(() => import('./issues'));
-const IssuePage = lazy(() => import('./issues').then((m) => ({ default: m.IssuePage })));
-const ProjectView = lazy(() => import('./project'));
+const Issues = lazy(() => import('@/issue/IssuesView'));
+const IssuePage = lazy(() => import('@/issue/IssuesView').then((m) => ({ default: m.IssuePage })));
+const ProjectView = lazy(() => import('@/issue/ProjectView'));
 const Graph = lazy(() => import('./graph'));
 const Journals = lazy(() => import('./journals'));
 const HashTags = lazy(() => import('./hashtags'));

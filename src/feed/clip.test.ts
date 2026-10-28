@@ -4,7 +4,7 @@ import { store } from '@/state/store';
 import type { ArticleType } from '@/types/model';
 import { writeFile } from '@/workspace/write';
 import { openFilePaths } from '@/workspace/open';
-import { mockInvoke } from '../../testUtils';
+import { mockInvoke } from '@/testUtils';
 import { clipArticle, clipFileName, clipHeader, htmlToMarkdown, quote } from './clip';
 
 vi.mock('@/workspace/write', () => ({ writeFile: vi.fn(async () => undefined) }));

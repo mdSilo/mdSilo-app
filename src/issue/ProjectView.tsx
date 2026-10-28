@@ -4,12 +4,12 @@ import { useStore } from '@/state/store';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { BaseModal } from '@/ui/BaseModal';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { useIssueData, useIssueStore } from '@/components/issue/issueStore';
-import { createProject, deleteProject, getIssue, moveProjectItem, updateProject } from '@/components/issue/issueOps';
-import { btnClass, inputClass } from '@/components/issue/common';
-import IssueDetail from '@/components/issue/IssueDetail';
-import ProjectBoard from '@/components/issue/project/ProjectBoard';
-import ProjectTable from '@/components/issue/project/ProjectTable';
+import { useIssueData, useIssueStore } from '@/issue/issueStore';
+import { createProject, deleteProject, getIssue, moveProjectItem, updateProject } from '@/issue/issueOps';
+import { btnClass, inputClass } from '@/issue/common';
+import IssueDetail from '@/issue/IssueDetail';
+import ProjectBoard from '@/issue/project/ProjectBoard';
+import ProjectTable from '@/issue/project/ProjectTable';
 
 export default function ProjectView() {
   const { data, isLoaded, initDir } = useIssueData();

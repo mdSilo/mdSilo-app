@@ -8,7 +8,7 @@ import Title from '@/writer/Title';
 import Toc, { Heading } from '@/writer/Toc';
 import { Spinner } from '@/ui/ui';
 import ErrorBoundary from '@/ui/ErrorBoundary';
-import { updateIssueNoteLinks } from '@/components/issue/issueStore';
+import { updateIssueNoteLinks } from '@/issue/issueStore';
 import { SidebarTab, store, useStore } from '@/state/store';
 import type { Note as NoteType } from '@/types/model';
 import { defaultNote } from '@/types/model';

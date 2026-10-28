@@ -8,10 +8,10 @@ import { useStore } from '@/state/store';
 import { Sort } from '@/state/userSettings';
 import { ciStringCompare, dateCompare } from '@/lib/helper';
 import { PodType as PodTreeItem } from '@/types/model';
-import * as dataAgent from '@/components/feed/dataAgent';
+import * as dataAgent from '@/feed/dataAgent';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { Tooltip } from '@/ui/ui';
-import SidebarItem from './SidebarItem';
+import SidebarItem from '@/components/sidebar/SidebarItem';
 
 type SidebarPlaylistProps = {
   className?: string;

@@ -2,16 +2,16 @@ import { useMemo, useState } from 'react';
 import { TbTag as IconTag, TbFlag as IconFlag, TbCircleDot as IconIssue, TbCheckbox as IconTasks } from 'react-icons/tb';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { useIssueData, useIssueStore } from '@/components/issue/issueStore';
-import { filterIssues, parseQuery, stringifyQuery, SORT_KEYS, IssueQuery } from '@/components/issue/filter';
-import IssueList from '@/components/issue/IssueList';
-import IssueEditor from '@/components/issue/IssueEditor';
-import IssueDetail from '@/components/issue/IssueDetail';
-import LabelManager from '@/components/issue/LabelManager';
-import MilestoneManager from '@/components/issue/MilestoneManager';
-import NoteTaskList from '@/components/issue/NoteTaskList';
-import { StateIcon, btnClass, inputClass, primaryBtnClass } from '@/components/issue/common';
-import type { IssueState } from '@/components/issue/types';
+import { useIssueData, useIssueStore } from '@/issue/issueStore';
+import { filterIssues, parseQuery, stringifyQuery, SORT_KEYS, IssueQuery } from '@/issue/filter';
+import IssueList from '@/issue/IssueList';
+import IssueEditor from '@/issue/IssueEditor';
+import IssueDetail from '@/issue/IssueDetail';
+import LabelManager from '@/issue/LabelManager';
+import MilestoneManager from '@/issue/MilestoneManager';
+import NoteTaskList from '@/issue/NoteTaskList';
+import { StateIcon, btnClass, inputClass, primaryBtnClass } from '@/issue/common';
+import type { IssueState } from '@/issue/types';
 
 import type { IssuesTab as Tab } from '@/state/viewReducer';
 

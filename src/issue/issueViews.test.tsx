@@ -5,7 +5,7 @@ import { NoteMap } from '@/lib/noteMap';
 import { store } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import MainView from '@/components/view/MainView';
-import { makeNote, renderWithView, waitForView } from '../../testUtils';
+import { makeNote, renderWithView, waitForView } from '@/testUtils';
 import * as ops from './issueOps';
 import { issueStore, resetIssueStore } from './issueStore';
 import { boardColumns, dragEndOp, dropTarget } from './project/ProjectBoard';

@@ -10,8 +10,8 @@ import { store, SidebarTab } from '@/state/store';
 import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
 import { writeFile, deleteFile } from '@/workspace/write';
 import { SAVE_DELAY_MS } from '@/workspace/pendingSaves';
-import * as issueOps from '@/components/issue/issueOps';
-import { issueStore, resetIssueStore } from '@/components/issue/issueStore';
+import * as issueOps from '@/issue/issueOps';
+import { issueStore, resetIssueStore } from '@/issue/issueStore';
 import { makeFileMeta, makeNote, mockInvoke } from '@/testUtils';
 import Note from './Note';
 

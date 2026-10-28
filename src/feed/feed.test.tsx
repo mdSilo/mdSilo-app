@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import { store, SidebarTab } from '@/state/store';
 import type { ArticleType, ChannelType } from '@/types/model';
-import { mockInvoke } from '../../testUtils';
+import { mockInvoke } from '@/testUtils';
 import AudioPlayer from './AudioPlayer';
 import { ChannelList } from './ChannelList';
 import { Channel } from './Channel';

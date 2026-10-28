@@ -1,8 +1,8 @@
 import { memo, useCallback, useState } from 'react';
 import { TbHeadphones as IconHeadphones } from 'react-icons/tb';
 import { store, useStore } from '@/state/store';
-import AudioPlayer from '@/components/feed/AudioPlayer';
-import * as dataAgent from '@/components/feed/dataAgent';
+import AudioPlayer from '@/feed/AudioPlayer';
+import * as dataAgent from '@/feed/dataAgent';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 
 type Props = {
