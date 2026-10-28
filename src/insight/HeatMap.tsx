@@ -5,7 +5,7 @@ import {
   mergeActivities,
   type ActivityData,
   type ActivityRecord,
-} from '@/lib/activity';
+} from '@/insight/activity';
 import { getStrDate } from '@/lib/helper';
 import { Note } from '@/types/model';
 

@@ -11,7 +11,7 @@ import { PodType as PodTreeItem } from '@/types/model';
 import * as dataAgent from '@/feed/dataAgent';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { Tooltip } from '@/ui/ui';
-import SidebarItem from '@/components/sidebar/SidebarItem';
+import SidebarItem from '@/shell/sidebar/SidebarItem';
 
 type SidebarPlaylistProps = {
   className?: string;

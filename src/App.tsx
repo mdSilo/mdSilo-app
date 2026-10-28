@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useEffect } from 'react';
-import '../styles/styles.css';
+import '@/styles/styles.css';
 import 'tippy.js/dist/tippy.css';
 import { ProvideCurrentView } from '@/state/useCurrentView';
 import useHotkeys from '@/lib/hooks/useHotkeys';
@@ -9,12 +9,12 @@ import { useStore, onStoreHydrated, SidebarTab } from '@/state/store';
 import { isWeb } from '@/workspace/util';
 import { openWebWorkspace } from '@/workspace/useOpen';
 import FindOrCreateModal from '@/writer/NoteNewModal';
-import SideMenu from './sidebar/SideMenu';
-import Sidebar from './sidebar/Sidebar';
-import StatusBar from './sidebar/StatusBar';
-import MainView from './view/MainView';
-import SettingsModal from './settings/SettingsModal';
-import AboutModal from './settings/AboutModal';
+import SideMenu from '@/shell/SideMenu';
+import Sidebar from '@/shell/sidebar/Sidebar';
+import StatusBar from '@/shell/StatusBar';
+import MainView from '@/shell/MainView';
+import SettingsModal from '@/shell/settings/SettingsModal';
+import AboutModal from '@/shell/settings/AboutModal';
 
 const App = () => {
   const isFindOrCreateModalOpen= useStore((state) => state.isFindOrCreateModalOpen);

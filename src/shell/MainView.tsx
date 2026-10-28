@@ -11,13 +11,13 @@ import NotePage from '@/writer/MdView';
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
 const Feed = lazy(() => import('@/feed/FeedView'));
-const Chronicle = lazy(() => import('./chronicle'));
+const Chronicle = lazy(() => import('@/insight/Chronicle'));
 const Issues = lazy(() => import('@/issue/IssuesView'));
 const IssuePage = lazy(() => import('@/issue/IssuesView').then((m) => ({ default: m.IssuePage })));
 const ProjectView = lazy(() => import('@/issue/ProjectView'));
-const Graph = lazy(() => import('./graph'));
-const Journals = lazy(() => import('./journals'));
-const HashTags = lazy(() => import('./hashtags'));
+const Graph = lazy(() => import('@/insight/Graph'));
+const Journals = lazy(() => import('@/insight/Journals'));
+const HashTags = lazy(() => import('@/insight/Hashtags'));
 const Library = lazy(() => import('@/reader/components/Library'));
 const Reader = lazy(() => import('@/reader/components/ReaderView'));
 const Vocabulary = lazy(() => import('@/reader/components/Vocabulary'));

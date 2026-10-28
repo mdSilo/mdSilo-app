@@ -9,12 +9,12 @@ import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentVie
 import type { ViewAction } from '@/state/viewReducer';
 import { getStrDate } from '@/lib/helper';
 import { MD_LINK_REGEX, WIKI_LINK_REGEX } from '@/lib/mdlink';
-import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '../../testUtils';
-import MainView from './MainView';
+import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '@/testUtils';
+import MainView from '@/shell/MainView';
 import HeatMap from './HeatMap';
-import Chronicle from './chronicle';
-import Journals from './journals';
-import Graph from './graph';
+import Chronicle from './Chronicle';
+import Journals from './Journals';
+import Graph from './Graph';
 import { HASHTAG_REGEX } from './ForceGraph';
 
 const Controls = ({ children }: { children: ReactNode }) => {

@@ -14,7 +14,7 @@ import Portal from '@/ui/Portal';
 import { DropdownItem } from '@/ui/Dropdown';
 import NoteMetadata from '@/writer/NoteMetadata';
 import NoteDelModal from '@/writer/NoteDelModal';
-import EditorSettings from '@/components/settings/EditorSettings';
+import EditorSettings from '@/shell/settings/EditorSettings';
 
 export default function NoteHeader(
   {setShowBacklink} : {setShowBacklink : (show: boolean) => void}

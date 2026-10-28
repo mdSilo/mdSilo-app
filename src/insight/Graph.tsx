@@ -1,5 +1,5 @@
 import ErrorBoundary from '@/ui/ErrorBoundary';
-import ForceGraph from '@/components/view/ForceGraph';
+import ForceGraph from '@/insight/ForceGraph';
 import useLoadNotes from '@/lib/hooks/useLoadNotes';
 
 export default function Graph() {

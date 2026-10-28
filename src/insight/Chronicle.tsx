@@ -4,7 +4,7 @@ import { useStore, store, Notes } from '@/state/store';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import NoteSumList from '@/writer/NoteSumList';
 import FindOrCreateInput from '@/writer/NoteNewInput';
-import HeatMap from '@/components/view/HeatMap';
+import HeatMap from '@/insight/HeatMap';
 import { dateCompare, getStrDate, regDateStr } from '@/lib/helper';
 import { joinPaths } from '@/workspace/util';
 import { defaultNote, Note } from '@/types/model';

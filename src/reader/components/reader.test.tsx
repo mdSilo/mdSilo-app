@@ -7,7 +7,7 @@ import * as dialog from '@tauri-apps/plugin-dialog';
 import { store } from '@/state/store';
 import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
 import type { ViewAction } from '@/state/viewReducer';
-import MainView from '@/components/view/MainView';
+import MainView from '@/shell/MainView';
 import useLinkHandlers from '@/writer/hooks/useLinkHandlers';
 import { writeFile } from '@/host/web/fs';
 import { useWebFs, waitForView } from '../../testUtils';

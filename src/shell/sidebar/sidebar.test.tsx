@@ -10,6 +10,8 @@ import { Sort } from '@/state/userSettings';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import SidebarPlaylist, { computePlaylist } from '@/feed/Playlist';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout, renderWithView } from '../../testUtils';
+import StatusBar from '../StatusBar';
+import SideMenu from '../SideMenu';
 import SidebarItem from './SidebarItem';
 import SidebarTab from './SidebarTab';
 import SidebarContent from './SidebarContent';
@@ -22,8 +24,6 @@ import SidebarNotesTree, { treeContentWidth } from './SidebarNotesTree';
 import SidebarTags from './SidebarTags';
 import SidebarSearch, { matchSort, SearchTree } from './SidebarSearch';
 import Sidebar from './Sidebar';
-import StatusBar from './StatusBar';
-import SideMenu from './SideMenu';
 
 const ViewProbe = () => {
   const { state } = useCurrentViewContext();

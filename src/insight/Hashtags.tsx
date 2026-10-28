@@ -1,6 +1,6 @@
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { SearchTree } from '@/components/sidebar/SidebarSearch';
+import { SearchTree } from '@/shell/sidebar/SidebarSearch';
 
 export default function HashTags() {
   const className = '';

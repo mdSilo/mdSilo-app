@@ -8,9 +8,9 @@ import { DropdownItem } from '@/ui/Dropdown';
 import Portal from '@/ui/Portal';
 import MoveToModal from '@/writer/NoteMoveModal';
 import NoteMetadata from '@/writer/NoteMetadata';
-import DirNewModal from '@/components/dir/DirNewModal';
-import DirRenameModal from '@/components/dir/DirRenameModal';
-import DirDelModal from '@/components/dir/DirDelModal';
+import DirNewModal from '@/shell/dir/DirNewModal';
+import DirRenameModal from '@/shell/dir/DirRenameModal';
+import DirDelModal from '@/shell/dir/DirDelModal';
 import { listDirPath } from '@/workspace/useOpen';
 
 type NoteProps = {
