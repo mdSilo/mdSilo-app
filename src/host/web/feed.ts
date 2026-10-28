@@ -121,7 +121,7 @@ export function parseFeed(xml: string, url: string, ty: string, title?: string |
   return null;
 }
 
-/** KV key of the CORS proxy setting, set in src/components/settings/CorsProxySetting.tsx */
+/** KV key of the CORS proxy setting, set in src/shell/settings/CorsProxySetting.tsx */
 export const CORS_PROXY_KEY = 'cors_proxy';
 
 /**

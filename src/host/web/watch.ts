@@ -51,7 +51,7 @@ export function unwatchAll(): void {
   watchedDirs.clear();
 }
 
-// frontend: src/file/directory.ts DirectoryAPI.unlisten
+// frontend: src/workspace/directory.ts DirectoryAPI.unlisten
 on('unlisten_dir', unwatchAll);
 
 // told of all the changes, watched or not: the index (indexer.ts)

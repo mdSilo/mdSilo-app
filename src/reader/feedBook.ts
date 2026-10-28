@@ -60,7 +60,7 @@ export type FeedBookData = {
   articles: FeedBookArticle[];
 };
 
-/** An article to add, its text as fetched (see components/feed/fullText.ts). */
+/** An article to add, its text as fetched (see feed/fullText.ts). */
 export type FeedArticleInput = {
   url: string;
   title: string;

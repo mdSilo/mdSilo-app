@@ -16,7 +16,6 @@
     "moduleResolution": "bundler",
     "paths": {
         "@/*": ["./src/*"],
-        "*": ["./src/*"],
         "@lezer/highlight": ["./node_modules/@lezer/highlight/dist/highlight.d.ts"]
     },
     "resolveJsonModule": true,

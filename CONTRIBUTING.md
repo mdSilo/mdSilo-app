@@ -46,6 +46,25 @@ Please follow these guidelines when contributing code to mdSilo:
 - Ensure your changes do not introduce linting errors or break existing functionality.
 - Test your changes thoroughly before submitting a pull request.
 - Tests sit next to the code they test (`foo.ts` and `foo.test.ts`), fixtures in a `__fixtures__` folder nearby. Tests of a package in `packages/` stay in that package. `pnpm test` runs them all with Vitest (jsdom, setup in `src/setupTests.ts`).
+- Import across folders of `src/` with the `@/` alias (`@/lib/helper`), within a folder with relative paths.
+
+### Source layout
+
+| Folder | Content |
+|---|---|
+| `src/ui` | shared UI components |
+| `src/state` | global store, view state, persisted settings |
+| `src/workspace` | files on disk: read, write, process, layout, migration |
+| `src/host` | host adapters; `host/web` stands in for the Tauri APIs in the web version |
+| `src/lib` | helpers, the note model (parsing, links), shared hooks |
+| `src/shell` | app skeleton: main view, sidebar, status bar, settings |
+| `src/writer` | note editor |
+| `src/reader` | ebook reader |
+| `src/issue` | issues, milestones, projects |
+| `src/feed` | feeds and podcasts |
+| `src/insight` | views across features: graph, chronicle, heatmap, tags, journals |
+
+Shared folders (`ui`, `state`, `workspace`, `host`, `lib`) should not import from the feature folders or `shell`. Known exceptions to clean up: the settings and store in `state/` (reader settings, activity), workspace migration (issue files) and `workspace/useOpen` (feed sync).
 
 ## Submitting Changes
 
