@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { store, useStore } from '@/state/store';
 import {
   countNoteActivities,
@@ -17,8 +17,14 @@ type HeatMapProps = {
   className?: string;
 };
 
+/** What the heatmap counts: notes written, time read, or both. */
+export type HeatMapMode = 'all' | 'writing' | 'reading';
+
+const MODES: Array<[HeatMapMode, string]> = [['all', 'All'], ['writing', 'Writing'], ['reading', 'Reading']];
+
 export default function HeatMap(props: HeatMapProps) {
   const { noteList, reading, onClickCell } = props;
+  const [mode, setMode] = useState<HeatMapMode>('all');
 
   // the stored record keeps the activities of notes since changed or deleted
   const stored = useStore((state) => state.activities);
@@ -33,7 +39,7 @@ export default function HeatMap(props: HeatMapProps) {
     }
   }, [activeRecord]);
 
-  const weeks = useMemo(() => buildWeeks(activeRecord, reading), [activeRecord, reading]);
+  const weeks = useMemo(() => buildWeeks(activeRecord, reading, mode), [activeRecord, reading, mode]);
 
   const onDayClick = useCallback((date: string) => onClickCell(date), [onClickCell]);
 
@@ -41,6 +47,21 @@ export default function HeatMap(props: HeatMapProps) {
 
   return (
     <div className="overflow-auto p-1 m-1">
+      {reading ? (
+        <div role="tablist" className="tabs tabs-box tabs-xs w-fit mb-1" data-testid="heatmap-mode">
+          {MODES.map(([value, label]) => (
+            <button
+              key={value}
+              role="tab"
+              className={`tab ${mode === value ? 'tab-active' : ''}`}
+              aria-selected={mode === value}
+              onClick={() => setMode(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <svg width="828" height="128" className="hm-svg">
         <g transform="translate(10, 20)">
           {weeks.map((days, weekIdx) => (
@@ -103,7 +124,9 @@ function WeekHeatMap({ days, weekIdx, onClick }: WeekProps) {
 export const READING_UNIT_SECONDS = 15 * 60;
 
 /** 53 weeks to this week, 7 days each: computed once, not per cell */
-export function buildWeeks(data: ActivityRecord, reading: Record<string, number> = {}): DayCell[][] {
+export function buildWeeks(
+  data: ActivityRecord, reading: Record<string, number> = {}, mode: HeatMapMode = 'all'
+): DayCell[][] {
   const today = new Date();
   const weekDay = today.getDay();
   return Array.from({ length: 53 }, (_, weekIdx) =>
@@ -113,7 +136,8 @@ export function buildWeeks(data: ActivityRecord, reading: Record<string, number>
       const isAfterToday = weekIdx >= 52 && dayIdx > weekDay;
       const read = reading[date] ?? 0;
       const readUnits = Math.ceil(read / READING_UNIT_SECONDS);
-      const activity = (aData?.activityNum ?? 0) + readUnits;
+      const written = aData?.activityNum ?? 0;
+      const activity = (mode === 'reading' ? 0 : written) + (mode === 'writing' ? 0 : readUnits);
       return {
         date,
         style: getDayStyle(activity, isAfterToday),
