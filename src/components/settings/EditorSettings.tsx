@@ -1,4 +1,5 @@
 import { useStore } from 'lib/store';
+import { NumberInput, Select, Toggle } from 'components/misc/ui';
 
 const FONTS = [
   { name: 'Default', font: '' },
@@ -7,35 +8,6 @@ const FONTS = [
   { name: 'Serif', font: 'IBMPlexSerif' },
   { name: 'SansSerif', font: 'KaTeX_SansSerif' },
 ];
-
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex items-center justify-between">
-      <span>{label}</span>
-      <input type="checkbox" className="toggle toggle-xs" checked={checked} aria-label={label}
-        onChange={(e) => onChange(e.target.checked)} />
-    </label>
-  );
-}
-
-function NumberInput(
-  { label, value, step, digits, unit, onChange }:
-  { label: string; value: number; step: number; digits: number; unit?: string; onChange: (v: number) => void }
-) {
-  return (
-    <label className="flex items-center justify-between gap-2">
-      <span>{label}</span>
-      <span className="flex items-center gap-1">
-        <input
-          type="number" className="input input-xs w-20" step={step} aria-label={label}
-          value={value.toFixed(digits)}
-          onChange={(e) => onChange(Number(e.target.value))}
-        />
-        <span className="w-5 text-xs text-base-content/70">{unit}</span>
-      </span>
-    </label>
-  );
-}
 
 /** How notes are written and shown: font, spacing, direction, assets, spelling. */
 export default function EditorSettings() {
@@ -56,17 +28,9 @@ export default function EditorSettings() {
 
   return (
     <div className="flex flex-col gap-3 p-3 text-sm w-72" data-testid="editor-settings">
-      <label className="flex items-center justify-between gap-2">
-        <span>Font</span>
-        <select
-          className="select select-xs w-36"
-          aria-label="Editor Font Family"
-          value={font}
-          onChange={(e) => setFont(e.target.value)}
-        >
-          {FONTS.map((f) => <option key={f.name} value={f.font}>{f.name}</option>)}
-        </select>
-      </label>
+      <Select label="Font" ariaLabel="Editor Font Family" value={font} onChange={setFont}>
+        {FONTS.map((f) => <option key={f.name} value={f.font}>{f.name}</option>)}
+      </Select>
       <NumberInput label="Font Size" value={fontSize} step={0.1} digits={1} unit="em"
         onChange={(v) => setFontSize(v || 1.1)} />
       <NumberInput label="Line Height" value={lineHeight} step={0.1} digits={1} unit="em"

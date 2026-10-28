@@ -3,7 +3,7 @@ import MsEditor from "mdsmirror";
 import { useStore } from 'lib/store';
 import { EDITOR_THEME } from 'lib/themes';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import Spinner from 'components/misc/Spinner';
+import { Spinner } from 'components/misc/ui';
 import useNoteTaskSync from 'components/issue/useNoteTaskSync';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useStartupView from 'context/useStartupView';
@@ -54,7 +54,7 @@ export default function MainView() {
 function ViewLoading() {
   return (
     <div className="flex items-center justify-center w-full h-full" data-testid="view-loading">
-      <Spinner className="w-8 h-8" />
+      <Spinner />
     </div>
   );
 }

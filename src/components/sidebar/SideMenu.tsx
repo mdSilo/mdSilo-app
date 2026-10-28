@@ -17,7 +17,7 @@ import type { SideMenuOrientation } from 'lib/userSettings';
 import { isMobile } from 'utils/helper';
 import { ViewAction } from 'context/viewReducer';
 import Dropdown, { DropdownItem } from 'components/misc/Dropdown';
-import Tooltip from 'components/misc/Tooltip';
+import { Tooltip } from 'components/misc/ui';
 import Portal from 'components/misc/Portal';
 import Logo from '../Logo';
 

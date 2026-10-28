@@ -6,7 +6,7 @@ import {
 } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
-import Spinner from 'components/misc/Spinner';
+import { IconButton, Spinner } from 'components/misc/ui';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { openFilePath } from 'file/open';
 import { store, useStore } from 'lib/store';
@@ -49,22 +49,6 @@ const setSidebar = (showSidebar: boolean) => {
   const settings = withDefaults(store.getState().readerSettings);
   store.getState().setReaderSettings({ ...settings, showSidebar });
 };
-
-function BarButton({ title, onClick, disabled, active, children }: {
-  title: string; onClick: () => void; disabled?: boolean; active?: boolean; children: ReactNode;
-}) {
-  return (
-    <button
-      className={`btn btn-ghost btn-sm btn-square ${active ? 'btn-active' : ''}`}
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  );
-}
 
 /** A book read, with its table of contents and annotations. */
 export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props) {
@@ -247,7 +231,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
                 <p className="text-sm opacity-60">{error}</p>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full"><Spinner className="w-8 h-8" /></div>
+              <div className="flex items-center justify-center h-full"><Spinner /></div>
             )}
 
             {/* in the margins: the chapter above, the progress below */}
@@ -298,47 +282,47 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
               onMouseLeave={leaveBars}
               data-testid="reader-header"
             >
-              <BarButton title="Library" onClick={() => dispatch({ view: 'library' })}>
+              <IconButton title="Library" onClick={() => dispatch({ view: 'library' })}>
                 <TbArrowLeft size={18} />
-              </BarButton>
-              <BarButton 
+              </IconButton>
+              <IconButton 
                 title="Contents and notes" 
                 active={showSidebar} 
                 onClick={() => toggleSidebar(!showSidebar)}
               >
                 <TbLayoutSidebar size={18} />
-              </BarButton>
-              <BarButton title="Bookmark this page" onClick={() => toggleBookmark('main')} disabled={!location}>
+              </IconButton>
+              <IconButton title="Bookmark this page" onClick={() => toggleBookmark('main')} disabled={!location}>
                 {bookmarked 
                   ? <TbBookmarkFilled size={18} className="text-error" /> 
                   : <TbBookmark size={18} />
                 }
-              </BarButton>
+              </IconButton>
               <div className="flex-1 min-w-0 px-2 text-sm text-center truncate">
                 <span className="font-semibold">{title}</span>
               </div>
               {headerButtons}
-              <BarButton 
+              <IconButton 
                 title="Copy a link to this page" 
                 disabled={!location} 
                 onClick={() => location && copyLink(location.cfi, 'main')}
               >
                 <TbLink size={18} />
-              </BarButton>
+              </IconButton>
               <div className="relative flex items-center gap-1" ref={menuRef}>
                 {/* a book beside, e.g. its translation: not on a phone */}
                 {!mobile && format ? (
-                  <BarButton
+                  <IconButton
                     title="Parallel reading"
                     active={menu === 'parallel' || parallelOpen}
                     onClick={() => setMenu(menu === 'parallel' ? undefined : 'parallel')}
                   >
                     <TbColumns2 size={18} />
-                  </BarButton>
+                  </IconButton>
                 ) : null}
-                <BarButton title="Font and layout" active={settingsOpen} onClick={() => setMenu(settingsOpen ? undefined : 'settings')}>
+                <IconButton title="Font and layout" active={settingsOpen} onClick={() => setMenu(settingsOpen ? undefined : 'settings')}>
                   <TbTypography size={18} />
-                </BarButton>
+                </IconButton>
                 {menu ? (
                   <div className="absolute right-0 z-40 overflow-y-auto border rounded-md shadow-lg top-full mt-1 bg-base-100 border-base-300 max-h-[75vh]">
                     {settingsOpen ? <ReaderSettingsMenu fixedLayout={fixedLayout} /> : <ParallelBooks onPick={closeMenu} />}
@@ -405,15 +389,15 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
       onMouseLeave={onLeave}
       data-testid="reader-footer"
     >
-      <BarButton title="Go back" disabled={!view?.history?.canGoBack} onClick={() => view?.history.back()}>
+      <IconButton title="Go back" disabled={!view?.history?.canGoBack} onClick={() => view?.history.back()}>
         <TbArrowBackUp size={18} />
-      </BarButton>
-      <BarButton title="Go forward" disabled={!view?.history?.canGoForward} onClick={() => view?.history.forward()}>
+      </IconButton>
+      <IconButton title="Go forward" disabled={!view?.history?.canGoForward} onClick={() => view?.history.forward()}>
         <TbArrowForwardUp size={18} />
-      </BarButton>
-      <BarButton title="Previous chapter" onClick={() => void turn(getView('main'), 'left', 'section')}>
+      </IconButton>
+      <IconButton title="Previous chapter" onClick={() => void turn(getView('main'), 'left', 'section')}>
         <TbChevronsLeft size={18} />
-      </BarButton>
+      </IconButton>
       <div className="relative flex-1 mx-1">
         <input
           type="range"
@@ -443,9 +427,9 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
           </span>
         ) : null}
       </div>
-      <BarButton title="Next chapter" onClick={() => void turn(getView('main'), 'right', 'section')}>
+      <IconButton title="Next chapter" onClick={() => void turn(getView('main'), 'right', 'section')}>
         <TbChevronsRight size={18} />
-      </BarButton>
+      </IconButton>
       <span className="w-28 text-xs text-right truncate opacity-70" data-testid="reader-progress" title={left}>
         {location?.pageLabel ? `p. ${location.pageLabel} · ` : ''}
         {Math.round(fraction * 100)}%
@@ -500,9 +484,9 @@ export default function ReaderView() {
       extraTabs={[{ id: 'search', label: 'Search', render: () => <SearchView /> }]}
       tools={lookupTools}
       headerButtons={canReadAloud() ? (
-        <BarButton title="Read aloud" onClick={() => void readAloud(undefined, 'main')}>
+        <IconButton title="Read aloud" onClick={() => void readAloud(undefined, 'main')}>
           <TbVolume size={18} />
-        </BarButton>
+        </IconButton>
       ) : null}
       overlay={(rootRef) => (
         <>

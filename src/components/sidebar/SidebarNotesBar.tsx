@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { TbArrowBarToUp as IconArrowBarToUp } from 'react-icons/tb';
 import { useStore } from 'lib/store';
 import { Sort } from 'lib/userSettings';
-import Tooltip from 'components/misc/Tooltip';
+import { Tooltip } from 'components/misc/ui';
 import { normalizeSlash, getParentDir } from 'file/util';
 import { listDirPath } from 'editor/hooks/useOpen';
 import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';

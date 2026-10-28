@@ -168,6 +168,11 @@
     border-color: color-mix(in oklab, var(--color-base-content) 35%, transparent);
     --tw-ring-color: var(--color-primary);
   }
+  /* its vertical padding and line height clip the text of daisyUI sized fields (select-xs is 1.5rem tall) */
+  :root :is(select.select, input.input) {
+    padding-block: 0;
+    line-height: normal;
+  }
   :root :is([type='checkbox'], [type='radio']) {
     color: var(--color-primary);
   }

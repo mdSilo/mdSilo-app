@@ -9,7 +9,7 @@ import { usePopper } from 'react-popper';
 import { Menu } from '@headlessui/react';
 import { Placement } from '@popperjs/core';
 import Portal from './Portal';
-import Tooltip from './Tooltip';
+import { Tooltip } from './ui';
 
 type Props = {
   buttonChildren: ReactNode;

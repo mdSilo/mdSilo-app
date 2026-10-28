@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
 import { BaseModal } from './BaseModal';
-import { SettingsToggle } from './SettingsToggle';
 import SettingsModal from './SettingsModal';
 import EditorSettings from './EditorSettings';
 import AboutModal from './AboutModal';
@@ -39,21 +38,6 @@ describe('BaseModal', () => {
     const closeIcon = title.closest('.inline-block')?.querySelector('svg') as SVGElement;
     fireEvent.click(closeIcon);
     expect(handleClose).toHaveBeenCalled();
-  });
-});
-
-describe('SettingsToggle', () => {
-  test('renders labels and toggles', async () => {
-    const handleCheck = vi.fn();
-    render(<SettingsToggle name="Dark Theme" descript="desc" check={false} handleCheck={handleCheck} />);
-    expect(screen.getByText('Dark Theme')).toBeInTheDocument();
-    expect(screen.getByText('desc')).toBeInTheDocument();
-    expect(screen.getByText('Off')).toBeInTheDocument();
-    expect(screen.getByText('On')).toBeInTheDocument();
-    const checkbox = screen.getByRole('checkbox');
-    expect(checkbox).toHaveAttribute('id', 'Dark-Theme');
-    await userEvent.click(checkbox);
-    expect(handleCheck).toHaveBeenCalledWith(true);
   });
 });
 

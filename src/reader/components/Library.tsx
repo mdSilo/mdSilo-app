@@ -9,7 +9,7 @@ import {
   TbVocabulary, TbX,
 } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import Spinner from 'components/misc/Spinner';
+import { IconButton, Spinner } from 'components/misc/ui';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { listDir, openFileDilog } from 'file/open';
 import { fromWorkspacePath, joinPath } from 'file/util';
@@ -333,15 +333,15 @@ export default function Library() {
                       : <Crumb path={crumb.path} label={crumb.name} onOpen={setOpened} />}
                   </Fragment>
                 ))}
-                <button className="btn btn-ghost btn-xs btn-square" title="Rename the group" aria-label="Rename the group" onClick={() => setEditGroup(true)}>
+                <IconButton size="xs" title="Rename the group" onClick={() => setEditGroup(true)}>
                   <TbPencil size={14} />
-                </button>
+                </IconButton>
               </nav>
             ) : (
               <div className="flex items-center gap-2 px-6 pb-2">
-                <button className="btn btn-ghost btn-sm btn-square" aria-label="Back to the library" onClick={() => setOpened('')}>
+                <IconButton title="Back to the library" onClick={() => setOpened('')}>
                   <TbArrowLeft size={18} />
-                </button>
+                </IconButton>
                 <span className="text-sm text-base-content/60">{GROUP_LABELS[groupBy]}:</span>
                 <span className="font-medium truncate">{opened}</span>
               </div>
@@ -406,7 +406,7 @@ export default function Library() {
           ) : null}
           <div className="px-4 pb-6">
             {!rows ? (
-              <Spinner className="w-8 h-8 mx-auto" />
+              <Spinner className="mx-auto" />
             ) : items.length === 0 ? (
               <p className="px-2 text-base-content/60">
                 {rows.length === 0
@@ -442,7 +442,7 @@ export default function Library() {
             Drop the books to add them{groupBy === 'group' && opened ? ` to ${opened}` : ''}
           </div>
         ) : null}
-        {busy ? <Spinner className="fixed w-8 h-8 bottom-6 right-6" /> : null}
+        {busy ? <Spinner className="fixed bottom-6 right-6" /> : null}
       </div>
       {detailsBook && initDir ? (
         <BookDetails

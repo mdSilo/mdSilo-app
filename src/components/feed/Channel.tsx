@@ -1,7 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
 import { TbBook2 as IconBook, TbCircle as IconCircle, TbCircleCheck as IconCircleCheck, TbRefresh as IconRefresh } from "react-icons/tb";
-import Tooltip from "components/misc/Tooltip";
-import Spinner from "components/misc/Spinner";
+import { Spinner, Tooltip } from "components/misc/ui";
 import { fmtDatetime, dateCompare } from 'utils/helper';
 import { ArticleType, ChannelType } from "types/model";
 import { MakeBook } from "./MakeBook";
@@ -28,7 +27,7 @@ export function Channel(props: Props) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center"><Spinner className="w-8 h-8" /></div>
+      <div className="flex items-center justify-center"><Spinner /></div>
     );
   } else if (!articles) {
     return (<></>);
@@ -69,7 +68,7 @@ export function Channel(props: Props) {
           onClose={() => setMakingBook(false)}
         />
       )}
-      {syncing && <div className="flex items-center justify-center"><Spinner className="w-4 h-4" /></div>}
+      {syncing && <div className="flex items-center justify-center"><Spinner size="xs" /></div>}
       <ArticleList
         articles={articles}
         onClickArticle={onClickArticle}

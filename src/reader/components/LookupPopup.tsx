@@ -2,7 +2,7 @@ import { memo, useEffect, useState, type RefObject } from 'react';
 import { TbCheck, TbExternalLink, TbNote, TbVocabulary } from 'react-icons/tb';
 import { openUrl } from 'file/open';
 import { useStore } from 'lib/store';
-import Spinner from 'components/misc/Spinner';
+import { Spinner } from 'components/misc/ui';
 import {
   lookupWikipedia, lookupWiktionary, openLinkOutside, targetLanguage, translate, translateUrl, wikipediaSearchUrl,
   type DictionaryResult, type TranslationResult, type WikipediaResult,
@@ -82,7 +82,7 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
         {error ? (
           <p className="text-error">Could not look it up: {error}</p>
         ) : !result ? (
-          <Spinner className="w-5 h-5 mx-auto my-4" />
+          <Spinner size="sm" className="mx-auto my-4" />
         ) : result.kind === 'dictionary' ? (
           result.data.entries.length === 0 ? (
             <p className="text-base-content/60">No definition of “{result.data.word}”</p>

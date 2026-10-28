@@ -6,7 +6,7 @@ import MsEditor, { Attach, embeds } from "mdsmirror";
 import { EDITOR_THEME } from 'lib/themes';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
-import Spinner from 'components/misc/Spinner';
+import { Spinner } from 'components/misc/ui';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { updateIssueNoteLinks } from 'components/issue/issueStore';
 import { SidebarTab, store, useStore } from 'lib/store';
@@ -366,7 +366,7 @@ function Note(props: Props) {
                 : null
               }
               <div className="flex-1 px-2 pt-2 pb-8" id="note-content" spellCheck={isCheckSpellOn}>
-                <Suspense fallback={<Spinner className="w-8 h-8 mx-auto" />}>
+                <Suspense fallback={<Spinner className="mx-auto" />}>
                 {rawMode === 'raw' ? (
                   <RawMarkdown
                     key={`raw-${noteId}`}

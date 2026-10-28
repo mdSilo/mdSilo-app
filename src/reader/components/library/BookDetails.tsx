@@ -5,6 +5,7 @@ import {
   TbBook, TbBookmarks, TbCloud, TbCloudOff, TbLink, TbNotes, TbPencil, TbPhoto, TbPhotoOff, TbRestore, TbTrash,
 } from 'react-icons/tb';
 import { BaseModal } from 'components/settings/BaseModal';
+import { IconButton } from 'components/misc/ui';
 import { openFileDilog, openFilePath } from 'file/open';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { sanitizeHtml } from 'utils/sanitize';
@@ -416,15 +417,9 @@ function Action({ title, onClick, danger = false, children }: {
   title: string; onClick: () => void; danger?: boolean; children: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      className={`btn btn-ghost btn-sm btn-square ${danger ? 'text-error' : ''}`}
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-    >
+    <IconButton className={danger ? 'text-error' : ''} title={title} onClick={onClick}>
       {children}
-    </button>
+    </IconButton>
   );
 }
 

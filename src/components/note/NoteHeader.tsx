@@ -9,7 +9,7 @@ import { useCurrentMdContext } from 'context/useCurrentMd';
 import { ExportAs } from 'editor/hooks/useExport';
 import { useStore } from 'lib/store';
 import { openFilePath } from 'file/open';
-import Tooltip from 'components/misc/Tooltip';
+import { Tooltip } from 'components/misc/ui';
 import Portal from 'components/misc/Portal';
 import { DropdownItem } from 'components/misc/Dropdown';
 import NoteMetadata from 'components/note/NoteMetadata';

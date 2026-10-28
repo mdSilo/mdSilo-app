@@ -4,6 +4,7 @@ import {
 } from 'react-icons/tb';
 import copy from 'copy-to-clipboard';
 import { useStore } from 'lib/store';
+import { IconButton } from 'components/misc/ui';
 import {
   HIGHLIGHT_COLORS, sectionOf, type BookNote, type HighlightStyle,
 } from '../annotations';
@@ -228,9 +229,9 @@ function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
   return (
     <div className="flex gap-2 p-2 text-sm border rounded-lg shadow-xl bg-base-100 border-base-300" data-testid="note-card">
       <p className="flex-1 overflow-y-auto whitespace-pre-wrap max-h-40">{note.note}</p>
-      <button className="self-start btn btn-ghost btn-xs btn-square" title="Edit the note" onClick={onEdit}>
+      <IconButton size="xs" className="self-start" title="Edit the note" onClick={onEdit}>
         <TbPencil />
-      </button>
+      </IconButton>
     </div>
   );
 }

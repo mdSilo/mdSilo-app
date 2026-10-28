@@ -3,33 +3,106 @@ import { createRef, useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
-import Toggle from './Toggle';
-import Spinner from './Spinner';
 import Portal from './Portal';
 import ErrorBoundary from './ErrorBoundary';
 import Tree, { type TreeNode } from './Tree';
 import TreeNodeElement from './TreeNodeElement';
 import VirtualTree from './VirtualTree';
 import Dropdown, { DropdownItem } from './Dropdown';
-import Tooltip from './Tooltip';
+import {
+  IconButton, NumberInput, Range, Segmented, Select, Spinner, Toggle, Tooltip,
+} from './ui';
 
-describe('Toggle', () => {
-  test('toggles via its checkbox', async () => {
-    const setIsChecked = vi.fn();
-    const { rerender } = render(<Toggle id="t" isChecked={false} setIsChecked={setIsChecked} />);
-    await userEvent.click(screen.getByRole('checkbox'));
-    expect(setIsChecked).toHaveBeenCalledWith(true);
+describe('settings controls', () => {
+  test('Toggle reports the new state', async () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<Toggle label="Spell" checked={false} onChange={onChange} />);
+    await userEvent.click(screen.getByLabelText('Spell'));
+    expect(onChange).toHaveBeenCalledWith(true);
 
-    rerender(<Toggle id="t" isChecked={true} setIsChecked={setIsChecked} />);
-    await userEvent.click(screen.getByRole('checkbox'));
-    expect(setIsChecked).toHaveBeenLastCalledWith(false);
+    rerender(<Toggle label="Spell" checked onChange={onChange} />);
+    await userEvent.click(screen.getByLabelText('Spell'));
+    expect(onChange).toHaveBeenLastCalledWith(false);
+  });
+
+  test('Select, Range and NumberInput report values', () => {
+    const onSelect = vi.fn();
+    const onRange = vi.fn();
+    const onNumber = vi.fn();
+    render(
+      <>
+        <Select label="Font" ariaLabel="Font Family" value="a" onChange={onSelect}>
+          <option value="a">A</option>
+          <option value="b">B</option>
+        </Select>
+        <Range label="Size" min={1} max={10} value={3} format={(v) => `${v}px`} onChange={onRange} />
+        <NumberInput label="Weight" value={400} step={100} digits={0} unit="wt" onChange={onNumber} />
+      </>
+    );
+    fireEvent.change(screen.getByLabelText('Font Family'), { target: { value: 'b' } });
+    expect(onSelect).toHaveBeenCalledWith('b');
+    expect(screen.getByText('3px')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Size'), { target: { value: '5' } });
+    expect(onRange).toHaveBeenCalledWith(5);
+    fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '700' } });
+    expect(onNumber).toHaveBeenCalledWith(700);
+  });
+
+  test('take a size, a color and class names', () => {
+    render(
+      <>
+        <Toggle label="T" checked={false} onChange={vi.fn()} size="lg" color="success" className="row" />
+        <Select label="S" value="a" onChange={vi.fn()} size="sm" color="accent" width="w-60">
+          <option value="a">A</option>
+        </Select>
+        <Range label="R" min={0} max={1} value={0} onChange={vi.fn()} color="info" width="w-24" />
+        <NumberInput label="N" value={1} step={1} digits={0} onChange={vi.fn()} size="sm" width="w-16" />
+      </>
+    );
+    expect(screen.getByLabelText('T')).toHaveClass('toggle-lg', 'toggle-success');
+    expect(screen.getByLabelText('T').closest('label')).toHaveClass('row');
+    expect(screen.getByLabelText('S')).toHaveClass('select-sm', 'select-accent', 'w-60');
+    expect(screen.getByLabelText('R')).toHaveClass('range-xs', 'range-info', 'w-24');
+    expect(screen.getByLabelText('N')).toHaveClass('input-sm', 'w-16');
+  });
+
+  test('Segmented marks and picks an option', async () => {
+    const onChange = vi.fn();
+    render(<Segmented label="Columns" value={1} options={[[1, 'One'], [2, 'Two']]} onChange={onChange} />);
+    expect(screen.getByRole('button', { name: 'One' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(screen.getByRole('button', { name: 'Two' }));
+    expect(onChange).toHaveBeenCalledWith(2);
+  });
+
+  test('Segmented shows the picked option in a color', () => {
+    render(<Segmented label="C" value="b" color="primary" options={[['a', 'A'], ['b', 'B']]} onChange={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'B' })).toHaveClass('btn-primary');
+    expect(screen.getByRole('button', { name: 'A' })).not.toHaveClass('btn-primary');
+  });
+});
+
+describe('IconButton', () => {
+  test('is named by its title, and can be active or disabled', async () => {
+    const onClick = vi.fn();
+    const { rerender } = render(<IconButton title="Go" active onClick={onClick}>x</IconButton>);
+    const button = screen.getByRole('button', { name: 'Go' });
+    expect(button).toHaveClass('btn-sm', 'btn-active');
+    await userEvent.click(button);
+    expect(onClick).toHaveBeenCalled();
+
+    rerender(<IconButton title="Go" size="xs" color="error" variant="outline" disabled onClick={onClick}>x</IconButton>);
+    expect(button).toHaveClass('btn-xs', 'btn-error', 'btn-outline');
+    expect(button).not.toHaveClass('btn-ghost');
+    expect(button).toBeDisabled();
   });
 });
 
 describe('Spinner', () => {
-  test('renders with extra classes', () => {
-    render(<Spinner className="w-8" />);
-    expect(screen.getByTestId('spinner')).toHaveClass('animate-spin', 'w-8');
+  test('is medium and primary by default, sized and colored on demand', () => {
+    const { rerender } = render(<Spinner className="mx-auto" />);
+    expect(screen.getByTestId('spinner')).toHaveClass('animate-spin', 'w-8', 'border-t-primary', 'mx-auto');
+    rerender(<Spinner size="xs" color="error" />);
+    expect(screen.getByTestId('spinner')).toHaveClass('w-4', 'border-t-error');
   });
 });
 

@@ -3,7 +3,7 @@ import {
   TbArrowLeft, TbBook, TbCards, TbLayoutGrid, TbListCheck, TbTrash,
 } from 'react-icons/tb';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import Spinner from 'components/misc/Spinner';
+import { Spinner } from 'components/misc/ui';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore } from 'lib/store';
 import { sanitizeHtml } from 'utils/sanitize';
@@ -197,7 +197,7 @@ export default function Vocabulary() {
         {!ws ? (
           <p className="p-8 text-center opacity-60">Open a workspace to keep a vocabulary.</p>
         ) : !loaded ? (
-          <div className="flex items-center justify-center flex-1"><Spinner className="w-8 h-8" /></div>
+          <div className="flex items-center justify-center flex-1"><Spinner /></div>
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 gap-3 px-4 text-center">
             <TbCards size={48} className="opacity-40" />

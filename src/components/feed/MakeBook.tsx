@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArticleType } from 'types/model';
-import Spinner from 'components/misc/Spinner';
+import { Spinner } from 'components/misc/ui';
 import { saveFeedBook, type FeedBookReport } from './feedToBook';
 
 type Props = {
@@ -69,7 +69,7 @@ export function MakeBook(props: Props) {
           disabled={busy}
         />
         <button type="button" className="btn btn-sm btn-primary" onClick={make} disabled={busy || !name.trim()}>
-          {busy ? <Spinner className="w-4 h-4" /> : 'Make'}
+          {busy ? <Spinner size="xs" /> : 'Make'}
         </button>
         <button type="button" className="btn btn-sm btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
       </div>

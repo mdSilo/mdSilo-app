@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { TbHeadphones as IconHeadphones, TbRefresh as IconRefresh, TbRss as IconRss, TbSettings as IconSettings, TbStar as IconStar } from "react-icons/tb";
 import { getFavicon } from "utils/helper";
-import Tooltip from "components/misc/Tooltip";
-import Spinner from "components/misc/Spinner";
+import { Spinner, Tooltip } from "components/misc/ui";
 import { ChannelType } from "types/model";
 
 type Props = {
@@ -76,7 +75,7 @@ export function ChannelList(props: Props) {
       </div>
       {refreshing && (
         <div className="flex flex-col items-center justify-center">
-          <Spinner className="w-4 h-4" />
+          <Spinner size="xs" />
           <span className="">{doneNum}/{channelList.length}</span>
         </div>
       )}

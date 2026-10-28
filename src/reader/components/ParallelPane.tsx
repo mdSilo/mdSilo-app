@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { TbBookmark, TbBookmarkFilled, TbX } from 'react-icons/tb';
-import Spinner from 'components/misc/Spinner';
+import { IconButton, Spinner } from 'components/misc/ui';
 import { useStore } from 'lib/store';
 import { findBookPath, readLibrary, titleOfFile, type BookEntry } from '../library';
 import { useReaderStore, useSideStore } from '../readerStore';
@@ -50,7 +50,7 @@ export function ParallelBooks({ onPick }: { onPick: () => void }) {
     <div className="w-72" data-testid="parallel-books">
       <p className="px-3 pt-2 pb-1 text-xs opacity-60">Read beside</p>
       {!books ? (
-        <div className="flex justify-center p-3"><Spinner className="w-5 h-5" /></div>
+        <div className="flex justify-center p-3"><Spinner size="sm" /></div>
       ) : books.length === 0 ? (
         <p className="px-3 pb-3 text-sm opacity-60">No other book in the library</p>
       ) : (
@@ -103,10 +103,9 @@ export default function ParallelPane() {
           ? <span className="text-xs opacity-50">{Math.round(location.fraction * 100)}%</span> 
           : null
         }
-        <button
-          className="btn btn-ghost btn-xs btn-square"
+        <IconButton
+          size="xs"
           title="Bookmark this page of the book beside"
-          aria-label="Bookmark this page of the book beside"
           disabled={!location}
           onClick={() => toggleBookmark('side')}
         >
@@ -114,15 +113,14 @@ export default function ParallelPane() {
             ? <TbBookmarkFilled size={16} className="text-error" /> 
             : <TbBookmark size={16} />
           }
-        </button>
-        <button
-          className="btn btn-ghost btn-xs btn-square"
+        </IconButton>
+        <IconButton
+          size="xs"
           title="Close the book beside"
-          aria-label="Close the book beside"
           onClick={() => void useSideStore.getState().close()}
         >
           <TbX size={16} />
-        </button>
+        </IconButton>
       </div>
       <div className="relative flex-1 min-h-0 overflow-hidden">
         {status === 'ready' && book ? (
@@ -133,7 +131,7 @@ export default function ParallelPane() {
             <p className="text-sm opacity-60">{error}</p>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full"><Spinner className="w-8 h-8" /></div>
+          <div className="flex items-center justify-center h-full"><Spinner /></div>
         )}
       </div>
     </div>

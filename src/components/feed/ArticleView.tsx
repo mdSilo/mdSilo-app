@@ -4,7 +4,7 @@ import { useStore } from "lib/store";
 import { getFavicon, fmtDatetime } from "utils/helper";
 import { sanitizeHtml } from "utils/sanitize";
 import { ArticleType } from "types/model";
-import Tooltip from "components/misc/Tooltip";
+import { Tooltip } from "components/misc/ui";
 import { clipArticle } from "./clip";
 
 type ViewProps = {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { TbChevronLeft, TbChevronRight, TbCloud, TbCloudOff, TbInfoCircle } from 'react-icons/tb';
+import { IconButton } from 'components/misc/ui';
 import { formatDuration, totalSeconds } from '../../stats';
 import { formatSeries, isGroup, plainText, type ShelfBook, type ShelfGroup, type ShelfItem, type ViewMode } from '../../shelf';
 import BookCover from './BookCover';
@@ -117,9 +118,9 @@ function SyncButton({ books, onSync }: { books: ShelfBook[]; onSync: Props['onSy
       ? `All ${books.length} book files synced with the workspace (git): click to stop`
       : `${synced} of ${books.length} book files synced: click to sync them all`;
   return (
-    <IconButton title={title} onClick={() => onSync(books.map((b) => b.hash), state !== 'all')}>
+    <ShelfButton title={title} onClick={() => onSync(books.map((b) => b.hash), state !== 'all')}>
       {state === 'none' ? <TbCloudOff size={14} /> : <TbCloud size={14} className={state === 'some' ? 'opacity-50' : ''} />}
-    </IconButton>
+    </ShelfButton>
   );
 }
 
@@ -136,9 +137,9 @@ function BookItem({ book, mode, covers, onDetails, onSync }: Props & { book: She
       {mode === 'list' && book.status ? <span className="badge badge-ghost badge-xs">{book.status}</span> : null}
       {mode === 'list' ? <span className="badge badge-ghost badge-xs">{book.format}</span> : null}
       <SyncButton books={[book]} onSync={onSync} />
-      <IconButton title="Book details" onClick={() => onDetails(book)}>
+      <ShelfButton title="Book details" onClick={() => onDetails(book)}>
         <TbInfoCircle size={14} />
-      </IconButton>
+      </ShelfButton>
     </div>
   );
   const cover = (
@@ -262,13 +263,12 @@ function CoverRow({ group, covers }: { group: ShelfGroup; covers: Record<string,
   );
 }
 
-function IconButton({ title, onClick, children }: { title: string; onClick: () => void; children: ReactNode }) {
+/** Not a drag of the item, not a click on it. */
+function ShelfButton({ title, onClick, children }: { title: string; onClick: () => void; children: ReactNode }) {
   return (
-    <button
-      className="btn btn-ghost btn-xs btn-square"
+    <IconButton
+      size="xs"
       title={title}
-      aria-label={title}
-      // not a drag of the item, not a click on it
       onPointerDown={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
       onClick={(e) => {
@@ -277,6 +277,6 @@ function IconButton({ title, onClick, children }: { title: string; onClick: () =
       }}
     >
       {children}
-    </button>
+    </IconButton>
   );
 }
