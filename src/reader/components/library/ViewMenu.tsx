@@ -1,8 +1,10 @@
-import { Menu } from '@headlessui/react';
+import { MenuSeparator } from '@headlessui/react';
 import { TbCheck, TbLayoutGrid, TbList, TbSortAscending, TbSortDescending } from 'react-icons/tb';
 import Dropdown, { DropdownItem } from '@/ui/Dropdown';
 import { useStore } from '@/state/store';
-import { withLibraryDefaults, type GroupBy, type LibrarySettings, type SortBy, type ViewMode } from '../../shelf';
+import { 
+  withLibraryDefaults, type GroupBy, type LibrarySettings, type SortBy, type ViewMode 
+} from '../../shelf';
 
 const VIEWS: [ViewMode, string][] = [['grid', 'Grid'], ['list', 'List']];
 const GROUP_BYS: [GroupBy, string][] = [
@@ -41,8 +43,8 @@ export default function ViewMenu({ onGroupBy }: { onGroupBy: (groupBy: GroupBy) 
       buttonClassName="btn btn-sm btn-ghost"
       buttonChildren={
         <span className="flex items-center gap-1">
-          {settings.view === 'grid' ? <TbLayoutGrid size={16} /> : <TbList size={16} />}
-          {settings.ascending ? <TbSortAscending size={16} /> : <TbSortDescending size={16} />}
+          {settings.view === 'grid' ? <TbLayoutGrid size={18} /> : <TbList size={18} />}
+          {settings.ascending ? <TbSortAscending size={18} /> : <TbSortDescending size={18} />}
         </span>
       }
       tooltipContent="View, group by, sort by"
@@ -51,11 +53,11 @@ export default function ViewMenu({ onGroupBy }: { onGroupBy: (groupBy: GroupBy) 
     >
       <div aria-label="View menu">
         {section('View', VIEWS, settings.view, (view) => update({ view }))}
-        <Menu.Separator className="my-1 border-t border-base-300" />
+        <MenuSeparator className="my-1 border-t border-base-300" />
         {section('Group by', GROUP_BYS, settings.groupBy, onGroupBy)}
-        <Menu.Separator className="my-1 border-t border-base-300" />
+        <MenuSeparator className="my-1 border-t border-base-300" />
         {section('Sort by', SORT_BYS, settings.sortBy, (sortBy) => update({ sortBy }))}
-        <Menu.Separator className="my-1 border-t border-base-300" />
+        <MenuSeparator className="my-1 border-t border-base-300" />
         {section('Order', ORDERS, settings.ascending, (ascending) => update({ ascending }))}
       </div>
     </Dropdown>

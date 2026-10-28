@@ -279,7 +279,7 @@ export default function Library() {
         className={`relative flex flex-col w-full h-full overflow-y-auto bg-base-100 ${draggingFiles ? 'ring-4 ring-inset ring-primary/60' : ''}`}
         data-testid="library"
       >
-        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 px-6 pt-5 pb-3 bg-base-100">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 p-4 bg-base-100">
           <h1 className="text-xl font-semibold me-2">Library</h1>
           <label className="relative flex items-center flex-1 min-w-40 max-w-md">
             <TbSearch size={14} className="absolute z-10 left-3 pointer-events-none text-base-content/50" />
@@ -292,7 +292,11 @@ export default function Library() {
               onChange={(e) => setQuery(e.target.value)}
             />
             {query ? (
-              <button className="absolute right-2 text-base-content/50" aria-label="Clear the search" onClick={() => setQuery('')}>
+              <button 
+                className="absolute right-2 text-base-content/50" 
+                aria-label="Clear the search" 
+                onClick={() => setQuery('')}
+              >
                 <TbX size={14} />
               </button>
             ) : null}
@@ -303,10 +307,14 @@ export default function Library() {
             onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
             title="Select Books"
           >
-            <TbChecks size={16} />
+            <TbChecks size={18} />
           </button>
-          <button className="btn btn-sm btn-ghost" onClick={() => dispatch({ view: 'vocabulary' })} title="Vocabulary">
-            <TbVocabulary size={16} /> 
+          <button 
+            className="btn btn-sm btn-ghost" 
+            onClick={() => dispatch({ view: 'vocabulary' })} 
+            title="Vocabulary"
+          >
+            <TbVocabulary size={18} /> 
           </button>
           <button
             className="btn btn-sm btn-ghost"
@@ -314,13 +322,17 @@ export default function Library() {
             disabled={busy}
             title="Import the books of a folder and its sub folders"
           >
-            <TbFolderPlus size={16} /> 
+            <TbFolderPlus size={18} /> 
           </button>
           <button className="btn btn-sm btn-primary" onClick={onAdd} disabled={busy}>
-            <TbBookUpload size={16} /> Add books
+            <TbBookUpload size={18} /> Add books
           </button>
         </div>
-        <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={(e) => void onDragEnd(e)}>
+        <DndContext 
+          sensors={sensors} 
+          collisionDetection={pointerWithin} 
+          onDragEnd={(e) => void onDragEnd(e)}
+        >
           {opened ? (
             groupBy === 'group' ? (
               <nav className="flex flex-wrap items-center gap-1 px-6 pb-2" aria-label="Groups">
@@ -334,7 +346,7 @@ export default function Library() {
                   </Fragment>
                 ))}
                 <IconButton size="xs" title="Rename the group" onClick={() => setEditGroup(true)}>
-                  <TbPencil size={14} />
+                  <TbPencil size={16} />
                 </IconButton>
               </nav>
             ) : (
@@ -508,7 +520,9 @@ export default function Library() {
 }
 
 /** A group above, to open, and to drop a book in: `All` for no group. */
-function Crumb({ path, label, onOpen }: { path: string; label: string; onOpen: (path: string) => void }) {
+function Crumb(
+  { path, label, onOpen }: { path: string; label: string; onOpen: (path: string) => void }
+) {
   const { setNodeRef, isOver } = useDroppable({ id: `crumb:${path}` });
   return (
     <button

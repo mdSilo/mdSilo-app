@@ -44,7 +44,11 @@ export function eventText(e: EventItem) {
 
 function EventRow({ item }: { item: EventItem }) {
   const Icon = EVENT_ICONS[item.event] ?? IconOpened;
-  const color = item.event === 'closed' ? 'text-purple-600' : item.event === 'opened' || item.event === 'reopened' ? 'text-success' : 'text-base-content/60';
+  const color = item.event === 'closed' 
+    ? 'text-purple-600' 
+    : item.event === 'opened' || item.event === 'reopened' 
+      ? 'text-success' 
+      : 'text-base-content/60';
   return (
     <li className="flex items-center gap-2 py-2 pl-4 text-sm text-base-content/70" data-testid="timeline-event">
       <Icon size={16} className={color} />

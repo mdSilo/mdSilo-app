@@ -1,6 +1,6 @@
 import { memo, useEffect, useState, type ReactNode, type RefObject } from 'react';
 import {
-  TbCheck, TbCopy, TbHighlight, TbHighlightOff, TbLink, TbPencil, TbQuote,
+  TbCheck, TbCopy, TbHighlight, TbHighlightOff, TbLink, TbBallpen, TbQuote,
 } from 'react-icons/tb';
 import copy from 'copy-to-clipboard';
 import { useStore } from '@/state/store';
@@ -230,7 +230,7 @@ function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
     <div className="flex gap-2 p-2 text-sm border rounded-lg shadow-xl bg-base-100 border-base-300" data-testid="note-card">
       <p className="flex-1 overflow-y-auto whitespace-pre-wrap max-h-40">{note.note}</p>
       <IconButton size="xs" className="self-start" title="Edit the note" onClick={onEdit}>
-        <TbPencil />
+        <TbBallpen />
       </IconButton>
     </div>
   );
@@ -301,7 +301,7 @@ function BookPopups({ rootRef, tools }: {
       {
         id: 'note',
         title: 'Write a note',
-        icon: <TbPencil size={18} />,
+        icon: <TbBallpen size={18} />,
         onClick: () => {
           const created = annotateSelection(selection);
           usePopups.getState().setAnnotation({ id: created.id, box: selection.box, edit: highlighted ? 'existing' : 'new' });
@@ -370,7 +370,7 @@ function BookPopups({ rootRef, tools }: {
     { 
       id: 'note', 
       title: note.note ? 'Edit the note' : 'Write a note', 
-      icon: <TbPencil size={18} />, 
+      icon: <TbBallpen size={18} />, 
       onClick: () => setEditing(true) 
     },
     ...(asSelection ? tools?.(asSelection) ?? [] : []),
