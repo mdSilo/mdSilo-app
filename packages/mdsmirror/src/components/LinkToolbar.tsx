@@ -11,8 +11,8 @@ type Props = {
   dictionary: typeof baseDictionary;
   onCreateLink?: (title: string) => Promise<string>;
   onSearchLink?: (term: string) => Promise<SearchResult[]>;
-  isRemoteSearch?: boolean;
-  onSearchRemote?: (term: string) => Promise<SearchResult[]>;
+  isItemSearch?: boolean;
+  onSearchItem?: (term: string) => Promise<SearchResult[]>;
   isHashTagSearch?: boolean;
   onSearchHashTag?: (term: string) => Promise<SearchResult[]>;
   onOpenLink?: (href: string) => void;

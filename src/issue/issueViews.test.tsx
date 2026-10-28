@@ -6,6 +6,8 @@ import { store } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import MainView from '@/shell/MainView';
 import { makeNote, renderWithView, waitForView } from '@/testUtils';
+import { setLibraryBooks } from '@/reader/books';
+import type { BookEntry } from '@/reader/library';
 import * as ops from './issueOps';
 import { issueStore, resetIssueStore } from './issueStore';
 import { boardCollision, boardColumns, dragEndOp, dropTarget } from './project/ProjectBoard';
@@ -414,6 +416,21 @@ describe('Issue detail', () => {
     await go({ view: 'issue', number: 1 });
     act(() => issueStore.getState().apply((d) => ops.linkNote(d, 1, '/w/Spec.md')));
     expect(mentioned()).toEqual(['Nowherementioned']);
+  });
+
+  test('books linked in the text, and linking one', async () => {
+    seedDetail();
+    const book = (hash: string, title: string) =>
+      ({ hash, file: `reading/${title}.epub`, title, author: 'Someone', format: 'EPUB', addedAt: '' }) as BookEntry;
+    setLibraryBooks('/w', { ['a'.repeat(32)]: book('a'.repeat(32), 'Dune'), ['b'.repeat(32)]: book('b'.repeat(32), 'Emma') });
+    act(() => issueStore.getState().apply((d) => ops.addComment(d, 1, 'as in {{dune}}')));
+    await renderApp({ view: 'issue', number: 1 });
+    expect(screen.getByTestId('issue-books')).toHaveTextContent('Dune');
+    await userEvent.click(screen.getByRole('button', { name: 'Edit Books' }));
+    await userEvent.type(screen.getByPlaceholderText('Search books'), 'emm');
+    await userEvent.click(screen.getByRole('button', { name: /Emma/ }));
+    expect(data().issues[0].body).toBe(`see [[Spec]]\n\n[Emma](book:${'b'.repeat(32)})\n`);
+    expect(screen.getByTestId('issue-books')).toHaveTextContent('EmmaDune');
   });
 
   test('shows notes mentioning the issue and deletes it', async () => {

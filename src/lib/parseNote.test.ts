@@ -21,4 +21,12 @@ describe('parseNote', () => {
     expect(parseNote('- [ ] buy milk').has_tasks).toBe(true);
     expect(parseNote('call #TODO# now').has_tasks).toBe(true);
   });
+
+  test('books', () => {
+    const id = '0123456789ABCDEF0123456789abcdef';
+    const content = `[q](book:${id}#epubcfi(%2F6)) {{Dune}} [d](book:Dune%20Messiah) \\{{no}} \`{{code}}\` `
+      + `{{ Dune | alias }} [again](book:${id})`;
+    expect(parseNote(content).books).toEqual(['0123456789abcdef0123456789abcdef', 'Dune', 'Dune Messiah']);
+    expect(parseNote('[a](bookish) {x}').books).toEqual([]);
+  });
 });

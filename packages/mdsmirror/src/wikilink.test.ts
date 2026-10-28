@@ -74,3 +74,21 @@ describe("escapeHref", () => {
     }
   });
 });
+
+describe("item link", () => {
+  test("a book by its title, with an alias", () => {
+    expect(links("read {{Dune}} and {{ Dune Messiah | the 2nd }} ok")).toEqual([
+      ["book:Dune", "Dune"],
+      ["book:Dune%20Messiah", "the 2nd"],
+    ]);
+  });
+
+  test("escaped, in code or not closed is not a link", () => {
+    expect(links("\\{{x}} `{{y}}` {{z} {{}}")).toEqual([]);
+  });
+
+  test("a round trip keeps the link to the book", () => {
+    const md = serializer.serialize(parser.parse("see {{The _Book_}} ok"));
+    expect(links(md)).toEqual([["book:The%20_Book_", "The _Book_"]]);
+  });
+});

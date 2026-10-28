@@ -25,6 +25,7 @@ import { getView, usePane } from '../view';
 import FoliateViewer from './FoliateViewer';
 import TocView from './TocView';
 import NotesView from './NotesView';
+import LinksView from './LinksView';
 import BookPopups, { type Tool } from './BookPopups';
 import ReaderSettingsMenu from './ReaderSettingsMenu';
 import SearchView from './SearchView';
@@ -147,6 +148,11 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
           dispatch({ view: 'md', params: { noteId: mdPath } });
         } : undefined} />
       ),
+    },
+    {
+      id: 'links',
+      label: 'Links',
+      render: () => <LinksView flush={() => (activePane === 'side' ? useSideStore : useReaderStore).getState().flush()} />,
     },
     ...extraTabs,
   ];

@@ -88,7 +88,7 @@ import Hashtag from "./marks/Hashtag";
 // plugins
 import SlashMenuTrigger from "./components/SlashMenuTrigger";
 import SearchDocTrigger from "./components/SearchDocTrigger";
-import SearchRemoteTrigger from "./components/SearchRemoteTrigger";
+import SearchItemTrigger from "./components/SearchItemTrigger";
 import Folding from "./plugins/Folding";
 import History from "./plugins/History";
 import Keys from "./plugins/Keys";
@@ -209,10 +209,8 @@ export type Props = {
   // handle event form menu/toolbar...
   /** Calback on search to-be-linked notes per keyword(text) within editor, `[[]]` */
   onSearchLink?: (term: string) => Promise<SearchResult[]>;
-  /** Calback on search to-be-linked items per keyword(text) on serve, `{{}}` */
-  onSearchRemote?: (term: string) => Promise<SearchResult[]>;
-  /** for check remote search **/
-  remoteUrlBase?: string;
+  /** Calback on search to-be-linked items (e.g. books) per keyword(text), `{{}}` */
+  onSearchItem?: (term: string) => Promise<SearchResult[]>;
   /** Calback on search keyword(#hashtag#) within editor */
   onSearchHashTag?: (term: string) => Promise<SearchResult[]>;
   /** Calback on hover on any link */
@@ -244,7 +242,7 @@ type State = {
   slashMenuSearch: string;
   linkMenuOpen: boolean;
   searchTriggerOpen: boolean;
-  isRemoteSearch: boolean;
+  isItemSearch: boolean;
   isHashTagSearch: boolean;
 };
 
@@ -270,7 +268,7 @@ class MsEditor extends React.PureComponent<Props, State> {
     slashOrBlock: true, // true: slashmenu, false: side blockmenu
     linkMenuOpen: false,
     searchTriggerOpen: false,
-    isRemoteSearch: false,
+    isItemSearch: false,
     isHashTagSearch: false,
   };
 
@@ -445,7 +443,7 @@ class MsEditor extends React.PureComponent<Props, State> {
       new Attachment({
         onClickAttachment: this.props.onClickAttachment,
       }),
-      new Itemcard({ remoteUrlBase: this.props.remoteUrlBase }),
+      new Itemcard(),
       new Embed({ embeds: this.props.embeds }),
       new Image({
         dictionary,
@@ -507,10 +505,10 @@ class MsEditor extends React.PureComponent<Props, State> {
           this.setState({ searchTriggerOpen: true });
         },
       }),
-      new SearchRemoteTrigger({
+      new SearchItemTrigger({
         onOpen: () => {
           this.handleOpenLinkMenu();
-          this.setState({ searchTriggerOpen: true, isRemoteSearch: true });
+          this.setState({ searchTriggerOpen: true, isItemSearch: true });
         },
       }),
       new Placeholder({
@@ -928,9 +926,9 @@ class MsEditor extends React.PureComponent<Props, State> {
                   onClose={this.handleCloseLinkMenu}
                   onCreateLink={this.props.onCreateLink}
                   onSearchLink={this.props.onSearchLink}
-                  onSearchRemote={
-                    this.state.isRemoteSearch
-                      ? this.props.onSearchRemote
+                  onSearchItem={
+                    this.state.isItemSearch
+                      ? this.props.onSearchItem
                       : undefined
                   }
                   onSearchHashTag={
@@ -946,11 +944,11 @@ class MsEditor extends React.PureComponent<Props, State> {
                   resetSearchTrigger={() =>
                     this.setState({
                       searchTriggerOpen: false,
-                      isRemoteSearch: false,
+                      isItemSearch: false,
                       isHashTagSearch: false,
                     })
                   }
-                  isRemoteSearch={this.state.isRemoteSearch}
+                  isItemSearch={this.state.isItemSearch}
                   isHashTagSearch={this.state.isHashTagSearch}
                 />
                 <SlashMenu

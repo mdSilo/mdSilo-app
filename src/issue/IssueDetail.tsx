@@ -18,6 +18,7 @@ import LabelPicker from './pickers/LabelPicker';
 import MilestonePicker from './pickers/MilestonePicker';
 import ProjectPicker from './pickers/ProjectPicker';
 import NotePicker from './pickers/NotePicker';
+import BookPicker from './pickers/BookPicker';
 import Subtasks from './Subtasks';
 import type { Issue } from './types';
 
@@ -155,6 +156,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
             <DueDate issue={issue} />
             <ProjectPicker issue={issue} data={data} />
             <NotePicker issue={issue} />
+            <BookPicker issue={issue} />
             <NoteMentions num={num} />
             <button
               type="button"

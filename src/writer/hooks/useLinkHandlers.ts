@@ -6,10 +6,9 @@ import { issueHref, parseIssueHref } from '@/issue/refs';
 import { openFilePath, openUrl } from '@/workspace/open';
 import { isUrl } from '@/lib/helper';
 import { encodeHref, hrefToTitle, legacyLinkTitle } from '@/lib/mdlink';
-import { parseBookHref } from '@/reader/annotations';
 import useNoteSearch from '../../lib/hooks/useNoteSearch';
 
-export type LinkSearchResult = { title: string; url: string };
+export type LinkSearchResult = { title: string; subtitle?: string; url: string };
 
 type Options = {
   /** max number of note (and issue) results */
@@ -31,18 +30,33 @@ export function searchIssues(text: string, limit = 10): LinkSearchResult[] {
     .map((i) => ({ title: `#${i.number} ${i.title}`, url: issueHref(i.number) }));
 }
 
-/** The book file of an id in the open workspace, if it is on this device. */
-async function findBookPath(hash: string): Promise<string | undefined> {
+/**
+ * The book file of a `book:` link (by id or title) in the open workspace,
+ * and the place linked; no path if the book is not on this device.
+ */
+async function findLinkedBook(href: string): Promise<{ path?: string; cfi?: string } | undefined> {
+  const { parseBookLink, findBook, isBookId } = await import('@/reader/bookLinks');
+  const link = parseBookLink(href);
   const ws = store.getState().initDir;
-  if (!ws) return undefined;
+  if (!link || !ws) return link;
+  // by id: maybe not in the library yet, findBookPath looks in reading/
+  const { loadBooks } = await import('@/reader/books');
+  const hash = isBookId(link.ref) ? link.ref : findBook(await loadBooks(), link.ref)?.hash;
+  if (!hash) return { cfi: link.cfi };
   const library = await import('@/reader/library');
-  return library.findBookPath(ws, hash);
+  return { path: await library.findBookPath(ws, hash), cfi: link.cfi };
+}
+
+/** Books and their annotations, as editor link results: `{{` */
+async function searchItems(text: string): Promise<LinkSearchResult[]> {
+  const { searchBookItems } = await import('@/reader/bookLinks');
+  return searchBookItems(text);
 }
 
 /**
  * Link handlers shared by every MsEditor: the note editor and the issue
- * body/comment editors. Links can be URLs, note titles, `issue:N` or
- * `book:<id>#<cfi>`.
+ * body/comment editors. Links can be URLs, note titles, `issue:N`,
+ * `book:<id>#<cfi>` or `book:<title>`.
  */
 export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Options = {}) {
   const { dispatch } = useCurrentViewContext();
@@ -70,10 +84,9 @@ export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Op
         dispatch({ view: 'issue', number: issueNum });
         return;
       }
-      const bookLink = parseBookHref(href);
-      if (bookLink) {
-        const path = await findBookPath(bookLink.hash);
-        if (path) dispatch({ view: 'book', path, cfi: bookLink.cfi });
+      if (/^book:/i.test(href.trim())) {
+        const book = await findLinkedBook(href);
+        if (book?.path) dispatch({ view: 'book', path: book.path, cfi: book.cfi });
         return;
       }
       // find the note per title
@@ -96,5 +109,5 @@ export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Op
     [dispatch, onMissingNote]
   );
 
-  return { onSearchLink, onOpenLink };
+  return { onSearchLink, onSearchItem: searchItems, onOpenLink };
 }

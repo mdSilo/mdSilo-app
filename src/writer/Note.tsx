@@ -242,7 +242,7 @@ function Note(props: Props) {
     },
     [notePath]
   );
-  const { onSearchLink, onOpenLink } = useLinkHandlers({ onMissingNote });
+  const { onSearchLink, onSearchItem, onOpenLink } = useLinkHandlers({ onMissingNote });
 
   // attach file
   const onAttachFile = useCallback(
@@ -395,6 +395,7 @@ function Note(props: Props) {
                     theme={customTheme}
                     onChange={onContentChange}
                     onSearchLink={onSearchLink}
+                    onSearchItem={onSearchItem}
                     onCreateLink={onCreateNote}
                     onSearchSelectText={(txt: string) => onSearchText(txt)}
                     onClickHashtag={(txt: string) => onSearchText(txt, 'hashtag')}
