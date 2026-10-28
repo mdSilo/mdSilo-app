@@ -7,7 +7,7 @@ import { NoteMap } from '@/lib/noteMap';
 import { store } from '@/state/store';
 import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
 import { ProvideCurrentMd } from '@/writer/useCurrentMd';
-import { makeFileMeta, makeNote, mockInvoke, renderWithView } from '../../testUtils';
+import { makeFileMeta, makeNote, mockInvoke, renderWithView } from '@/testUtils';
 import NoteMetadata from './NoteMetadata';
 import Toc from './Toc';
 import Title from './Title';

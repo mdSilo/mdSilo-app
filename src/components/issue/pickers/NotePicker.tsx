@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { TbX as IconX } from 'react-icons/tb';
 import { useStore } from '@/state/store';
 import useNoteSearch from '@/lib/hooks/useNoteSearch';
-import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
+import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
 import { useIssueStore } from '../issueStore';
 import { linkNote, unlinkNote } from '../issueOps';
 import { inputClass } from '../common';

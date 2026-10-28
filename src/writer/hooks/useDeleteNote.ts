@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { store } from '@/state/store';
-import updateBacklinks from '@/components/note/backlinks/updateBacklinks';
+import updateBacklinks from '@/writer/backlinks/updateBacklinks';
 import { deleteFile } from '@/workspace/write';
 import { cancelSave } from '@/workspace/pendingSaves';
 

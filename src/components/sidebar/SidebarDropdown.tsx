@@ -6,8 +6,8 @@ import {
 import { usePopper } from 'react-popper';
 import { DropdownItem } from '@/ui/Dropdown';
 import Portal from '@/ui/Portal';
-import MoveToModal from '@/components/note/NoteMoveModal';
-import NoteMetadata from '@/components/note/NoteMetadata';
+import MoveToModal from '@/writer/NoteMoveModal';
+import NoteMetadata from '@/writer/NoteMetadata';
 import DirNewModal from '@/components/dir/DirNewModal';
 import DirRenameModal from '@/components/dir/DirRenameModal';
 import DirDelModal from '@/components/dir/DirDelModal';

@@ -12,7 +12,7 @@ import { writeFile, deleteFile } from '@/workspace/write';
 import { SAVE_DELAY_MS } from '@/workspace/pendingSaves';
 import * as issueOps from '@/components/issue/issueOps';
 import { issueStore, resetIssueStore } from '@/components/issue/issueStore';
-import { makeFileMeta, makeNote, mockInvoke } from '../../testUtils';
+import { makeFileMeta, makeNote, mockInvoke } from '@/testUtils';
 import Note from './Note';
 
 // The real editor is exercised elsewhere; here we capture the props Note wires into it.
@@ -28,7 +28,7 @@ vi.mock('mdsmirror', async (importOriginal) => {
   });
   return { ...actual, default: MockEditor };
 });
-vi.mock('@/components/mindmap/mindmap', () => ({
+vi.mock('@/writer/mindmap/mindmap', () => ({
   Mindmap: (props: { title: string }) => <div data-testid="mindmap">{props.title}</div>,
 }));
 vi.mock('@/workspace/write', () => ({

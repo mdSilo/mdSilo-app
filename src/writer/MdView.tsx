@@ -1,5 +1,5 @@
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import Note from '@/components/note/Note';
+import Note from '@/writer/Note';
 
 export default function NotePage() {
   const currentView = useCurrentViewContext();

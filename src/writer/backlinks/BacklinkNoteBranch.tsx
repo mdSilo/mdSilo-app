@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
+import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
 import { Backlink } from './useBacklinks';
 
 type BacklinkNoteBranchProps = {

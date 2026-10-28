@@ -8,11 +8,11 @@ import useTheme from '@/lib/hooks/useTheme';
 import { useStore, onStoreHydrated, SidebarTab } from '@/state/store';
 import { isWeb } from '@/workspace/util';
 import { openWebWorkspace } from '@/workspace/useOpen';
+import FindOrCreateModal from '@/writer/NoteNewModal';
 import SideMenu from './sidebar/SideMenu';
 import Sidebar from './sidebar/Sidebar';
 import StatusBar from './sidebar/StatusBar';
 import MainView from './view/MainView';
-import FindOrCreateModal from './note/NoteNewModal';
 import SettingsModal from './settings/SettingsModal';
 import AboutModal from './settings/AboutModal';
 

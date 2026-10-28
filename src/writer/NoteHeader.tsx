@@ -6,14 +6,14 @@ import {
 } from 'react-icons/tb';
 import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from '@/writer/useCurrentMd';
-import { ExportAs } from '@/editor/hooks/useExport';
+import { ExportAs } from '@/writer/hooks/useExport';
 import { useStore } from '@/state/store';
 import { openFilePath } from '@/workspace/open';
 import { Tooltip } from '@/ui/ui';
 import Portal from '@/ui/Portal';
 import { DropdownItem } from '@/ui/Dropdown';
-import NoteMetadata from '@/components/note/NoteMetadata';
-import NoteDelModal from '@/components/note/NoteDelModal';
+import NoteMetadata from '@/writer/NoteMetadata';
+import NoteDelModal from '@/writer/NoteDelModal';
 import EditorSettings from '@/components/settings/EditorSettings';
 
 export default function NoteHeader(

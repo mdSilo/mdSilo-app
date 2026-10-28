@@ -3,7 +3,7 @@ import { TbArrowLeft as IconBack, TbTrash as IconTrash } from 'react-icons/tb';
 import { useStore } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useDebounce from '@/lib/hooks/useDebounce';
-import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
+import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { useIssueData, useIssueStore } from './issueStore';
 import {

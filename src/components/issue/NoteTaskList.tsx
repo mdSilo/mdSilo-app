@@ -3,7 +3,7 @@ import { useStore } from '@/state/store';
 import useLoadNotes from '@/lib/hooks/useLoadNotes';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useDebounce from '@/lib/hooks/useDebounce';
-import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
+import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
 import { useIssueStore } from './issueStore';
 import { createIssueFromTask, issueOfTask, loadNoteTasks, NoteTask, TaskTag, TASK_TAGS } from './noteTasks';
 import { StateIcon, btnClass } from './common';

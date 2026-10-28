@@ -11,7 +11,7 @@ import {
 import { NoteTreeItem, store, useStore } from '@/state/store';
 import { isMobile } from '@/lib/helper';
 import { imageExtensions } from '@/lib/file-extensions';
-import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
+import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
 import { Tooltip } from '@/ui/ui';
 import { checkFileIsMd, getFileExt } from '@/workspace/process';
 import { listDir, openUrl } from '@/workspace/open';

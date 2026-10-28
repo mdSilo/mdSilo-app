@@ -7,7 +7,7 @@ import { Spinner } from '@/ui/ui';
 import useNoteTaskSync from '@/components/issue/useNoteTaskSync';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useStartupView from '@/state/useStartupView';
-import NotePage from './md';
+import NotePage from '@/writer/MdView';
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
 const Feed = lazy(() => import('./feed'));

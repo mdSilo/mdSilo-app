@@ -4,15 +4,15 @@ import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
 import MsEditor, { Attach, embeds } from "mdsmirror";
 import { EDITOR_THEME } from '@/lib/themes';
-import Title from '@/components/note/Title';
-import Toc, { Heading } from '@/components/note/Toc';
+import Title from '@/writer/Title';
+import Toc, { Heading } from '@/writer/Toc';
 import { Spinner } from '@/ui/ui';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { updateIssueNoteLinks } from '@/components/issue/issueStore';
 import { SidebarTab, store, useStore } from '@/state/store';
 import type { Note as NoteType } from '@/types/model';
 import { defaultNote } from '@/types/model';
-import useLinkHandlers from '@/editor/hooks/useLinkHandlers';
+import useLinkHandlers from '@/writer/hooks/useLinkHandlers';
 import { listDirPath } from '@/workspace/useOpen';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { ProvideCurrentMd } from '@/writer/useCurrentMd';
@@ -34,8 +34,8 @@ import IssueRefs from './IssueRefs';
 import updateBacklinks from './backlinks/updateBacklinks';
 
 // the raw markdown (CodeMirror) and mindmap (markmap) modes, loaded on use
-const RawMarkdown = lazy(() => import('@/components/md/Markdown'));
-const Mindmap = lazy(() => import('@/components/mindmap/mindmap').then((m) => ({ default: m.Mindmap })));
+const RawMarkdown = lazy(() => import('@/writer/md/Markdown'));
+const Mindmap = lazy(() => import('@/writer/mindmap/mindmap').then((m) => ({ default: m.Mindmap })));
 
 
 const CONTENT_SYNC_MS = 800;

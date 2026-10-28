@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import useHotkeys from '@/lib/hooks/useHotkeys';
-import useDeleteNote from '@/editor/hooks/useDeleteNote';
+import useDeleteNote from '@/writer/hooks/useDeleteNote';
 import { BaseModal } from '@/ui/BaseModal';
 
 type Props = {

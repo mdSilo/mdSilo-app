@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { NoteMap } from '@/lib/noteMap';
 import { store } from '@/state/store';
-import { makeNote } from '../../../testUtils';
+import { makeNote } from '@/testUtils';
 import useBacklinks, { computeBacklinks, computeLinkedBacklinks } from './useBacklinks';
 
 const target = makeNote({ id: '/n/target note.md', title: 'target note', content: 'I am the target' });

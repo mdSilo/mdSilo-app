@@ -6,7 +6,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { NoteMap } from '@/lib/noteMap';
 import { store } from '@/state/store';
 import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
-import { makeFileMeta, makeNote, mockInvoke } from '../../../testUtils';
+import { makeFileMeta, makeNote, mockInvoke } from '@/testUtils';
 import Backlinks, { getNumOfMatches } from './Backlinks';
 import BacklinkBranch from './BacklinkBranch';
 
