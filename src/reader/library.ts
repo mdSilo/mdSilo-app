@@ -6,6 +6,7 @@ import {
   BOOK_EXTS, bookFormatOf, CONVERTIBLE_EXTS, convertibleFormatOf, formatContributors, formatLanguageMap, isBookFile, type BookDoc, type BookFormat, type Contributor,
 } from './document';
 import { convertToBook } from './convert';
+import { setLibraryBooks } from './books';
 
 /**
  * The books of a workspace, by their id: the partial MD5 of the file, so a
@@ -162,6 +163,7 @@ export async function readLibrary(ws: string): Promise<Library> {
   for (const [hash, entry] of Object.entries(lib?.books ?? {})) {
     if (entry?.file) books[hash] = { ...entry, hash };
   }
+  setLibraryBooks(ws, books);
   return { version: LIBRARY_VERSION, books };
 }
 
@@ -169,6 +171,7 @@ export async function writeLibrary(ws: string, lib: Library) {
   // sorted by id: the file changes only with the books
   const books = Object.fromEntries(Object.entries(lib.books).sort(([a], [b]) => (a < b ? -1 : 1)));
   await writeJson(libraryPath(ws), { version: LIBRARY_VERSION, books });
+  setLibraryBooks(ws, { ...lib.books });
 }
 
 export async function readBookState(ws: string, hash: string): Promise<BookState | undefined> {

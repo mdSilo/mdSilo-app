@@ -5,7 +5,6 @@ import styled from "styled-components";
 import toggleWrap from "../../core/commands/toggleWrap";
 import { MarkdownSerializerState } from "../../core/mdSerializer";
 import itemcardRule from "../../core/rules/itemcard";
-import itemLinkRule from "../../core/rules/itemlink";
 import { ComponentProps } from "../types";
 import Node from "../../nodes/Node";
 
@@ -15,7 +14,7 @@ export default class Itemcard extends Node {
   }
 
   get rulePlugins() {
-    return [itemcardRule, itemLinkRule];
+    return [itemcardRule];
   }
 
   get schema(): NodeSpec {

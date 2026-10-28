@@ -31,7 +31,7 @@ export default function IssueEditor(props: Props) {
   const darkMode = useStore((state) => state.darkMode);
   // `./` paths are relative to where the notes are
   const notesRoot = useWritingRoot();
-  const { onSearchLink, onOpenLink } = useLinkHandlers();
+  const { onSearchLink, onSearchItem, onOpenLink } = useLinkHandlers();
   const ref = useRef<HTMLDivElement>(null);
   const wasFocused = useRef(false);
 
@@ -68,6 +68,7 @@ export default function IssueEditor(props: Props) {
         autoFocus={autoFocus}
         onChange={(text: string) => onChange?.(text)}
         onSearchLink={onSearchLink}
+        onSearchItem={onSearchItem}
         onOpenLink={onOpenLink}
         embeds={embeds}
         disables={['sub']}

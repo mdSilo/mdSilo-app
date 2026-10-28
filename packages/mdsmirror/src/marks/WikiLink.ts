@@ -1,5 +1,6 @@
 import { InputRule } from "prosemirror-inputrules";
 import { MarkSpec, MarkType } from "prosemirror-model";
+import itemLinkRule from "../core/rules/itemlink";
 import wikiLinkRule from "../core/rules/wikilink";
 import Mark from "./Mark";
 
@@ -43,7 +44,8 @@ export default class WikiLink extends Mark {
   // wikilink is the special type of link that the href is not url but plain_text_title
 
   get rulePlugins() {
-    return [wikiLinkRule];
+    // `{{book title}}` too: a link by title, to a book
+    return [wikiLinkRule, itemLinkRule];
   }
 
   inputRules({ type }: { type: MarkType }) {

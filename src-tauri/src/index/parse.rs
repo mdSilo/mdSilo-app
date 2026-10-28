@@ -31,6 +31,12 @@ static INLINE_CODE: LazyLock<FancyRegex> =
 static HASHTAG: LazyLock<FancyRegex> = LazyLock::new(|| FancyRegex::new(r"\s#([^#\n]+)#(?=\s)").unwrap());
 /// [#12](issue:12)
 static ISSUE_LINK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\(issue:(\d+)\)").unwrap());
+/// [x](book:<id>#<cfi>), [x](book:<title>)
+static BOOK_LINK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)\]\(\s*<?book:([^\s#)>]+)").unwrap());
+/// {{title}} or {{title|alias}}
+static ITEM_LINK: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"\{\{([^{|}\n]+)(?:\|[^{|}\n]+)?\}\}").unwrap());
+static BOOK_ID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[0-9a-fA-F]{32}$").unwrap());
 /// #todo# #doing# #done# tags or checkboxes: maybe tasks
 static MAYBE_TASKS: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"(?i)#(todo|doing|done)#|\[[ xX_-]\]").unwrap());
@@ -43,6 +49,9 @@ pub struct Parsed {
   pub tags: Vec<String>,
   /// the issues linked, [#12](issue:12)
   pub issues: Vec<u32>,
+  /// the books linked, by id or by title, in order, once each
+  #[serde(default)]
+  pub books: Vec<String>,
   /// it may have tasks: to look for them in the note
   pub has_tasks: bool,
 }
@@ -170,11 +179,49 @@ pub fn issue_links(content: &str) -> Vec<u32> {
   nums
 }
 
+/// The id of a book (lowercase), or its title: what a `book:` link points to.
+fn book_ref(target: &str) -> String {
+  let unescaped = ESCAPED_CHAR.replace_all(target, "$1");
+  let r = safe_decode(unescaped.trim()).trim().to_string();
+  if BOOK_ID.is_match(&r) { r.to_ascii_lowercase() } else { r }
+}
+
+/// The books linked, by id or by title (`{{title}}`, `[x](book:title)`), in
+/// order, once each; not in code.
+pub fn book_links(content: &str) -> Vec<String> {
+  if !content.contains("book:") && !content.contains("{{") {
+    return vec![];
+  }
+  let masked = mask_code(content);
+  let bytes = masked.as_bytes();
+  let mut found: Vec<(usize, String)> = Vec::new();
+  for caps in BOOK_LINK.captures_iter(&masked) {
+    found.push((caps.get(0).unwrap().start(), caps[1].to_string()));
+  }
+  for caps in ITEM_LINK.captures_iter(&masked) {
+    let index = caps.get(0).unwrap().start();
+    if index > 0 && bytes[index - 1] == b'\\' {
+      continue;
+    }
+    found.push((index, caps[1].to_string()));
+  }
+  found.sort_by_key(|(index, _)| *index);
+  let mut refs: Vec<String> = Vec::new();
+  for (_, target) in found {
+    let r = book_ref(&target);
+    if !r.is_empty() && !refs.contains(&r) {
+      refs.push(r);
+    }
+  }
+  refs
+}
+
 pub fn parse(content: &str) -> Parsed {
   Parsed {
     links: note_links(content),
     tags: tags(content),
     issues: issue_links(content),
+    books: book_links(content),
     has_tasks: MAYBE_TASKS.is_match(content),
   }
 }
@@ -219,5 +266,16 @@ mod tests {
     assert!(!parsed.has_tasks);
     assert!(parse("- [ ] buy milk").has_tasks);
     assert!(parse("call #TODO# now").has_tasks);
+  }
+
+  #[test]
+  fn books() {
+    let id = "0123456789ABCDEF0123456789abcdef";
+    let content = format!(
+      "[q](book:{id}#epubcfi(%2F6)) {{{{Dune}}}} [d](book:Dune%20Messiah) \\{{{{no}}}} `{{{{code}}}}` \
+       {{{{ Dune | alias }}}} [again](book:{id})"
+    );
+    assert_eq!(book_links(&content), ["0123456789abcdef0123456789abcdef", "Dune", "Dune Messiah"]);
+    assert!(book_links("[a](bookish) {x}").is_empty());
   }
 }

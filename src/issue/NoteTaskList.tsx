@@ -8,6 +8,7 @@ import { useIssueStore } from './issueStore';
 import { createIssueFromTask, issueOfTask, loadNoteTasks, NoteTask, TaskTag, TASK_TAGS } from './noteTasks';
 import { StateIcon, btnClass } from './common';
 import type { IssueData } from './types';
+import { issueLabel } from './refs';
 
 const TAG_CLASS: Record<TaskTag, string> = {
   todo: 'bg-info/15 text-info',
@@ -103,7 +104,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
                     className="flex items-center gap-1 text-sm hover:text-primary/75"
                     onClick={() => dispatch({ view: 'issue', number: issue.number })}
                   >
-                    <StateIcon state={issue.state} size={16} />#{issue.number}
+                    <StateIcon state={issue.state} size={16} />{issueLabel(issue.number)}
                   </button>
                 ) : (
                   <button type="button" className={btnClass} onClick={() => apply((d) => createIssueFromTask(d, task))}>

@@ -1,6 +1,9 @@
 import copy from 'copy-to-clipboard';
 import * as CFI from 'foliate-js/epubcfi.js';
 import { store } from '@/state/store';
+import { issueStore } from '@/issue/issueStore';
+import { issueHref, issueLabel } from '@/issue/refs';
+import { oneLine } from '@/issue/issueOfText';
 import {
   bookHref, newNoteId, type BookNote, type HighlightColor, type HighlightStyle,
 } from './annotations';
@@ -103,8 +106,8 @@ export function bookmarkAt(notes: BookNote[], cfi: string) {
 }
 
 /** The markdown to put the text in a note: a quote with a link back to it. */
-export function quoteMarkdown(text: string, cfi: string): string {
-  const { hash, entry } = activeStore().getState();
+export function quoteMarkdown(text: string, cfi: string, reader = activeStore()): string {
+  const { hash, entry } = reader.getState();
   const quote = text.split(/\r?\n/).filter((l) => l.trim()).map((l) => `> ${l.trim()}`).join('\n');
   if (!hash) return quote;
   const title = (entry?.title ?? 'book').replace(/[[\]]/g, '');
@@ -121,4 +124,28 @@ export function copyLink(cfi: string, pane?: Pane) {
   const { hash } = (pane ? storeOf(pane) : activeStore()).getState();
   if (hash) copy(bookHref(hash, cfi), { format: 'text/plain' });
   usePopups.getState().clear();
+}
+
+/**
+ * Make an issue of an annotation or a bookmark: the quote with a link back
+ * to its place, and the note; the annotation links to the issue then.
+ * @returns the number of the issue
+ */
+export async function issueOfNote(note: BookNote, pane?: Pane): Promise<number | undefined> {
+  const ws = store.getState().initDir;
+  if (!ws) return undefined;
+  const reader = pane ? storeOf(pane) : activeStore();
+  const { hash, entry } = reader.getState();
+  const bookTitle = (entry?.title ?? 'book').replace(/[[\]]/g, '');
+  const body = note.note.trim();
+  const place = note.text
+    ? quoteMarkdown(note.text, note.cfi, reader)
+    : hash ? `[${[bookTitle, note.chapter].filter(Boolean).join(' · ')}](${bookHref(hash, note.cfi)})` : '';
+  await issueStore.getState().load(ws);
+  const num = issueStore.getState().createIssue({
+    title: oneLine(body.split('\n')[0] || note.text || `${bookTitle}${note.chapter ? ` · ${note.chapter}` : ''}`),
+    body: [place, body].filter(Boolean).join('\n\n'),
+  });
+  reader.getState().updateNote(note.id, { note: `${body}${body ? '\n\n' : ''}[${issueLabel(num)}](${issueHref(num)})` });
+  return num;
 }

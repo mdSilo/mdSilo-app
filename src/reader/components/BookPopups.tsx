@@ -1,20 +1,21 @@
 import { memo, useEffect, useState, type ReactNode, type RefObject } from 'react';
 import {
-  TbCheck, TbCopy, TbHighlight, TbHighlightOff, TbLink, TbBallpen, TbQuote,
+  TbCheck, TbCircleDot, TbCopy, TbHighlight, TbHighlightOff, TbLink, TbBallpen, TbQuote,
 } from 'react-icons/tb';
 import copy from 'copy-to-clipboard';
 import { useStore } from '@/state/store';
 import { IconButton } from '@/ui/ui';
 import {
-  HIGHLIGHT_COLORS, sectionOf, type BookNote, type HighlightStyle,
+  HIGHLIGHT_COLORS, noteText, sectionOf, type BookNote, type HighlightStyle,
 } from '../annotations';
 import { HIGHLIGHT_CSS } from '../styles';
 import { withDefaults } from '../settings';
 import { activeStore, useActiveStore } from '../readerStore';
 import { usePopups, type Box, type TextSelection } from '../popups';
 import {
-  annotateSelection, copyLink, copyQuote, rememberHighlight,
+  annotateSelection, copyLink, copyQuote, issueOfNote, rememberHighlight,
 } from '../actions';
+import NoteIssues from './NoteIssues';
 
 /** Where to show a popup for a box: under it, or above if no room. */
 export function placeOf(box: Box, root: DOMRect, height: number, width: number) {
@@ -145,7 +146,12 @@ function StyleSample({ style, color }: { style: HighlightStyle; color: string })
 }
 
 /** The style and color of a highlight: the toolbar uses them from then on. */
-export function HighlightOptions({ note, onDone }: { note: BookNote; onDone: () => void }) {
+export function HighlightOptions({ note, onDone, children }: {
+  note: BookNote;
+  onDone: () => void;
+  /** more on the line, between the styles and the colors */
+  children?: ReactNode;
+}) {
   const updateNote = useActiveStore((state) => state.updateNote);
   const colors = withDefaults(useStore((state) => state.readerSettings)).highlightColors;
   const style = note.style ?? 'highlight';
@@ -170,6 +176,7 @@ export function HighlightOptions({ note, onDone }: { note: BookNote; onDone: () 
           </button>
         ))}
       </div>
+      {children}
       <div className="flex items-center gap-2 px-2 rounded-full shadow h-7 bg-base-300">
         {HIGHLIGHT_COLORS.map((c) => (
           <button
@@ -228,7 +235,7 @@ function NoteEditor({ value, onSave, onCancel }: {
 function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
   return (
     <div className="flex gap-2 p-2 text-sm border rounded-lg shadow-xl bg-base-100 border-base-300" data-testid="note-card">
-      <p className="flex-1 overflow-y-auto whitespace-pre-wrap max-h-40">{note.note}</p>
+      <p className="flex-1 overflow-y-auto whitespace-pre-wrap max-h-40">{noteText(note.note)}</p>
       <IconButton size="xs" className="self-start" title="Edit the note" onClick={onEdit}>
         <TbBallpen />
       </IconButton>
@@ -314,6 +321,17 @@ function BookPopups({ rootRef, tools }: {
         icon: <TbQuote size={18} />, 
         onClick: () => copyQuote(text, cfi) 
       },
+      {
+        id: 'issue',
+        title: 'New issue of it',
+        icon: <TbCircleDot size={18} />,
+        // highlighted, the issue made of it: shown on the highlight, to open it
+        onClick: async () => {
+          const created = annotateSelection(selection);
+          usePopups.getState().setAnnotation({ id: created.id, box: selection.box });
+          await issueOfNote(created);
+        },
+      },
       { 
         id: 'link', 
         title: 'Copy a link to here', 
@@ -381,6 +399,12 @@ function BookPopups({ rootRef, tools }: {
       hidden: !note.text, 
       onClick: () => copyQuote(note.text ?? '', note.cfi) 
     },
+    {
+      id: 'issue',
+      title: 'New issue of it',
+      icon: <TbCircleDot size={18} />,
+      onClick: () => void issueOfNote(note),
+    },
     { 
       id: 'link', 
       title: 'Copy a link to here', 
@@ -391,8 +415,10 @@ function BookPopups({ rootRef, tools }: {
   return (
     <AnchoredBox anchor={anchor} width={width} testId="annotation-popup">
       <Toolbar tools={list} />
-      <HighlightOptions note={note} onDone={clear} />
-      {note.note ? <NoteCard note={note} onEdit={() => setEditing(true)} /> : null}
+      <HighlightOptions note={note} onDone={clear}>
+        <NoteIssues note={note} className="justify-center flex-1 min-w-0 mx-1" />
+      </HighlightOptions>
+      {noteText(note.note) ? <NoteCard note={note} onEdit={() => setEditing(true)} /> : null}
     </AnchoredBox>
   );
 }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, act } from "@testing-library/react";
+import { render, act, fireEvent } from "@testing-library/react";
 import { TextSelection } from "prosemirror-state";
 import MsEditor from "./index";
 
@@ -83,5 +83,63 @@ describe.each([false, true])("create link (StrictMode: %s)", (strict) => {
     expect(state.doc.rangeHasMark(16, 21, state.schema.marks.strong)).toBe(
       true
     );
+  });
+});
+
+describe("item link", () => {
+  test("{{ searches the items, Enter links the first found", async () => {
+    const ref = React.createRef<MsEditor>();
+    const onSearchItem = vi.fn(async () => [
+      { title: "Dune", url: "book:0123456789abcdef0123456789abcdef" },
+    ]);
+    render(
+      <MsEditor
+        ref={ref}
+        value="a"
+        onSearchLink={async () => []}
+        onSearchItem={onSearchItem}
+        onCreateLink={async (title) => title}
+      />
+    );
+    const view = (ref.current as MsEditor).view;
+    await act(async () => {
+      view.focus();
+      view.dispatch(
+        view.state.tr.setSelection(TextSelection.create(view.state.doc, 2))
+      );
+    });
+    await act(async () => {
+      for (const ch of " {{") {
+        const { from, to } = view.state.selection;
+        const insert = () => view.state.tr.insertText(ch, from, to);
+        if (
+          !view.someProp("handleTextInput", (f) =>
+            f(view, from, to, ch, insert)
+          )
+        ) {
+          view.dispatch(insert());
+        }
+      }
+    });
+    const input = document.querySelector("input") as HTMLInputElement;
+    expect(input.placeholder).toMatch(/books/i);
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "dune" } });
+    });
+    expect(onSearchItem).toHaveBeenCalledWith("dune");
+    await act(async () => {
+      fireEvent.keyDown(input, { key: "Enter" });
+    });
+    const { state } = view;
+    expect(state.doc.textContent).toBe("a Dune");
+    expect(
+      state.doc.rangeHasMark(
+        3,
+        7,
+        state.schema.marks.link.create({
+          href: "book:0123456789abcdef0123456789abcdef",
+        })
+      )
+    ).toBe(true);
   });
 });

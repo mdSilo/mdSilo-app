@@ -1,4 +1,4 @@
-import { TbLink, TbTrash, TbPlus, TbNotes } from "react-icons/tb";
+import { TbBook, TbLink, TbTrash, TbPlus, TbNotes } from "react-icons/tb";
 import { Mark } from "prosemirror-model";
 import { setTextSelection } from "prosemirror-utils";
 import { EditorView } from "prosemirror-view";
@@ -26,8 +26,8 @@ type Props = {
   onRemoveLink?: () => void;
   onCreateLink?: (title: string) => Promise<void>;
   onSearchLink?: (term: string) => Promise<SearchResult[]>;
-  isRemoteSearch?: boolean;
-  onSearchRemote?: (term: string) => Promise<SearchResult[]>;
+  isItemSearch?: boolean;
+  onSearchItem?: (term: string) => Promise<SearchResult[]>;
   isHashTagSearch?: boolean;
   onSearchHashTag?: (term: string) => Promise<SearchResult[]>;
   onSelectLink: (options: {
@@ -119,9 +119,6 @@ class LinkEditor extends React.Component<Props, State> {
   };
 
   handleKeyDown = (event: React.KeyboardEvent): void => {
-    if (this.props.isRemoteSearch || this.props.onSearchRemote) {
-      return;
-    }
     switch (event.key) {
       case "Enter": {
         event.preventDefault();
@@ -129,11 +126,18 @@ class LinkEditor extends React.Component<Props, State> {
         const results = this.state.results[value] || [];
         const { onCreateLink } = this.props;
 
-        if (selectedIndex >= 0) {
-          const result = results[selectedIndex];
+        // an item is picked, not typed: the first one found if none chosen
+        const index =
+          selectedIndex < 0 && this.props.isItemSearch ? 0 : selectedIndex;
+        if (index >= 0) {
+          const result = results[index];
           if (result) {
             this.save(result.url, result.title);
-          } else if (onCreateLink && selectedIndex === results.length) {
+          } else if (
+            onCreateLink &&
+            !this.props.isItemSearch &&
+            index === results.length
+          ) {
             this.handleCreateLink(this.suggestedLinkTitle);
           }
         } else {
@@ -213,8 +217,8 @@ class LinkEditor extends React.Component<Props, State> {
     if (trimmedValue && this.props.onSearchLink) {
       try {
         const results =
-          this.props.isRemoteSearch && this.props.onSearchRemote
-            ? await this.props.onSearchRemote(trimmedValue)
+          this.props.isItemSearch && this.props.onSearchItem
+            ? await this.props.onSearchItem(trimmedValue)
             : this.props.isHashTagSearch && this.props.onSearchHashTag
               ? await this.props.onSearchHashTag(trimmedValue)
               : await this.props.onSearchLink(trimmedValue);
@@ -310,7 +314,7 @@ class LinkEditor extends React.Component<Props, State> {
       !(suggestedLinkTitle === this.initialValue) &&
       suggestedLinkTitle.length > 0 &&
       !looksLikeUrl &&
-      !this.props.isRemoteSearch;
+      !this.props.isItemSearch;
 
     const showResults =
       !!suggestedLinkTitle && (showCreateLink || results.length > 0);
@@ -324,9 +328,11 @@ class LinkEditor extends React.Component<Props, State> {
         <Input
           value={value}
           placeholder={
-            showCreateLink
-              ? dictionary.findOrCreateDoc
-              : dictionary.searchOrPasteLink
+            this.props.isItemSearch
+              ? dictionary.searchItems
+              : showCreateLink
+                ? dictionary.findOrCreateDoc
+                : dictionary.searchOrPasteLink
           }
           onKeyDown={this.handleKeyDown}
           // onPaste={this.handlePaste}
@@ -355,7 +361,13 @@ class LinkEditor extends React.Component<Props, State> {
                 key={result.url}
                 title={result.title}
                 subtitle={result.subtitle}
-                icon={<TbNotes color="currentColor" />}
+                icon={
+                  result.url.startsWith("book:") ? (
+                    <TbBook color="currentColor" />
+                  ) : (
+                    <TbNotes color="currentColor" />
+                  )
+                }
                 onPointerMove={() => this.handleFocusLink(index)}
                 onClick={this.handleSelectLink(result.url, result.title)}
                 selected={index === selectedIndex}

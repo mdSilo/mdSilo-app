@@ -9,7 +9,7 @@ use diesel::sqlite::SqliteConnection;
 use std::path::Path;
 
 /// Bump to rebuild the indexes of older versions.
-pub const SCHEMA_VERSION: i32 = 1;
+pub const SCHEMA_VERSION: i32 = 2;
 
 /// A file indexed, its path relative to the workspace (`/` separated).
 #[derive(Debug, Clone, PartialEq, Eq, QueryableByName)]
@@ -186,7 +186,7 @@ mod tests {
     let _ = std::fs::remove_dir_all(&dir);
     let path = dir.join("index.db");
     let mut db = IndexDb::open(&path).unwrap();
-    let parsed = Parsed { links: vec!["b".into()], tags: vec!["t".into()], issues: vec![1], has_tasks: true };
+    let parsed = Parsed { links: vec!["b".into()], tags: vec!["t".into()], issues: vec![1], books: vec!["Dune".into()], has_tasks: true };
     db.put(&[row("a.md", &parsed), row("sub/b.md", &Parsed::default()), row("sub", &Parsed::default())]).unwrap();
     assert_eq!(db.all().into_iter().find(|r| r.path == "a.md").unwrap().parsed(), parsed);
     assert_eq!(db.all().len(), 3);

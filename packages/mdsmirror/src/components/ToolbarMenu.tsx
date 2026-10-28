@@ -11,11 +11,12 @@ type Props = {
   commands: Record<string, CommandFactory>;
   view: EditorView;
   items: MenuItem[];
-  onSearch: () => void;
+  /** the items done by the toolbar, not commands: e.g. search, copy */
+  actions?: Record<string, () => void>;
 };
 
 function ToolbarMenu(props: Props) {
-  const { view, items, onSearch } = props;
+  const { view, items, actions = {} } = props;
   const { state } = view;
 
   return (
@@ -35,8 +36,8 @@ function ToolbarMenu(props: Props) {
             <ToolbarButton
               onClick={() => {
                 const name = item.name;
-                if (name === "search") {
-                  onSearch();
+                if (name && actions[name]) {
+                  actions[name]();
                 } else {
                   name && props.commands[name](item.attrs);
                 }

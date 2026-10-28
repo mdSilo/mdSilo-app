@@ -1,7 +1,7 @@
 import { parser } from 'mdsmirror';
 import { findNoteLinks, hrefToTitle, isNoteHref } from '@/lib/mdlink';
 import type { NoteMap } from './noteMap';
-import { issueLinks, noteTags, type Parsed } from './parseNote';
+import { bookLinks, issueLinks, noteTags, type Parsed } from './parseNote';
 
 export type TextRun = {
   text: string;
@@ -65,6 +65,7 @@ type Entry = {
   rawLinks?: string[]; // titles linked, from the raw text (graph)
   tags?: string[];
   issues?: Set<number>;
+  books?: string[];
 };
 
 const addTo = (map: Map<string, Set<string>>, key: string, id: string) => {
@@ -197,11 +198,19 @@ export class LinkIndex {
     return (entry.tags ??= noteTags(entry.content ?? ''));
   }
 
-  /** The issues a note links to, [#12](issue:12). */
+  /** The issues a note links to, [@12](issue:12). */
   issues(id: string): Set<number> {
     const entry = this.entries.get(id);
     if (!entry) return new Set();
     return (entry.issues ??= new Set(entry.parsed ? entry.parsed.issues : issueLinks(entry.content ?? '')));
+  }
+
+  /** The books a note links to, by id or by title, see bookLinks. */
+  books(id: string): string[] {
+    const entry = this.entries.get(id);
+    if (!entry) return [];
+    if (entry.parsed) return entry.parsed.books ?? [];
+    return (entry.books ??= bookLinks(entry.content ?? ''));
   }
 
   private linkTitles(id: string, entry: Entry): Set<string> {

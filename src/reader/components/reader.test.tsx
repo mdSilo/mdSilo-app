@@ -10,6 +10,7 @@ import type { ViewAction } from '@/state/viewReducer';
 import MainView from '@/shell/MainView';
 import useLinkHandlers from '@/writer/hooks/useLinkHandlers';
 import { writeFile } from '@/host/web/fs';
+import { issueStore, resetIssueStore } from '@/issue/issueStore';
 import { useWebFs, waitForView } from '../../testUtils';
 import { makeEpub } from '../testBook';
 import { bookHref } from '../annotations';
@@ -185,6 +186,65 @@ describe('reader', () => {
     expect(screen.getByTestId('reader-ribbon')).toBeInTheDocument();
     fireEvent.click(screen.getByTitle('Bookmark this page'));
     expect(useReaderStore.getState().notes.map((n) => n.type)).toEqual(['annotation']);
+  });
+
+  test('an annotation makes an issue, linked both ways', async () => {
+    resetIssueStore();
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    const now = new Date().toISOString();
+    const cfi = 'epubcfi(/6/4!/4/4,/1:0,/1:2)';
+    act(() => {
+      useReaderStore.getState().addNote({
+        id: 'x', type: 'annotation', cfi, text: 'It was', note: 'Check this\nlater',
+        color: 'yellow', style: 'highlight', createdAt: now, updatedAt: now,
+      });
+    });
+    fireEvent.click(screen.getByRole('tab', { name: /Notes/ }));
+    await act(async () => { fireEvent.click(screen.getByTitle('New issue of it')); });
+    await waitFor(() => expect(issueStore.getState().data.issues).toHaveLength(1));
+    const { hash, entry } = useReaderStore.getState();
+    const issue = issueStore.getState().data.issues[0];
+    expect(issue.title).toBe('Check this');
+    expect(issue.body).toBe(`> It was\n>\n> — [${entry!.title}](${bookHref(hash!, cfi)})\n\nCheck this\nlater`);
+    // the annotation links to the issue, which opens from it
+    expect(useReaderStore.getState().notes[0].note).toBe('Check this\nlater\n\n[@1](issue:1)');
+    expect(screen.getByTestId('note-issues')).toHaveTextContent('@1');
+
+    // the issue links the book: in its links
+    fireEvent.click(screen.getByRole('tab', { name: 'Links' }));
+    const links = await screen.findByTestId('reader-links');
+    await waitFor(() => expect(links).toHaveTextContent('@1 Check this'));
+    await act(async () => { fireEvent.click(within(links).getByText('@1 Check this')); });
+    await waitFor(() => expect(viewState()).toEqual({ view: 'issue', issueNumber: 1 }));
+    resetIssueStore();
+  });
+
+  test('an issue of the text selected, from its popup', async () => {
+    resetIssueStore();
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    const cfi = 'epubcfi(/6/4!/4/4,/1:9,/1:26)';
+    act(() => {
+      usePopups.getState().setSelection({
+        text: 'a bright cold day', cfi, index: 1, box: { left: 10, top: 10, right: 50, bottom: 20 },
+      });
+    });
+    await act(async () => { fireEvent.click(await screen.findByLabelText('New issue of it')); });
+    await waitFor(() => expect(issueStore.getState().data.issues).toHaveLength(1));
+    // highlighted, linked to the issue
+    const issue = issueStore.getState().data.issues[0];
+    expect(issue.title).toBe('a bright cold day');
+    expect(issue.body).toContain(`(${bookHref(useReaderStore.getState().hash!, cfi)})`);
+    expect(useReaderStore.getState().notes[0]).toMatchObject({ type: 'annotation', text: 'a bright cold day', note: '[@1](issue:1)' });
+    // the highlight shows the issue, not its link as a note
+    const popup = screen.getByTestId('annotation-popup');
+    expect(within(popup).queryByTestId('note-card')).not.toBeInTheDocument();
+    await act(async () => { fireEvent.click(within(popup).getByTitle('Open the issue')); });
+    await waitFor(() => expect(viewState()).toEqual({ view: 'issue', issueNumber: 1 }));
+    resetIssueStore();
   });
 
   test('edits an annotation clicked', async () => {
@@ -703,6 +763,20 @@ describe('links to books', () => {
     await waitFor(() => expect(viewState()).toMatchObject({
       view: 'book', bookPath: BOOK, bookCfi: 'epubcfi(/6/4!/4/2)',
     }));
+  });
+
+  test('open the book by its title, as {{title}} links', async () => {
+    const lib = await refreshLibrary(WS);
+    const { title } = Object.values(lib.books).find((b) => b.file === 'reading/Tiny Book.epub')!;
+    render(
+      <ProvideCurrentView>
+        <Controls><LinkOpener href={`book:${encodeURI(title.toUpperCase())}`} /></Controls>
+      </ProvideCurrentView>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByText('open link'));
+    });
+    await waitFor(() => expect(viewState()).toMatchObject({ view: 'book', bookPath: BOOK }));
   });
 
   test('a book not on this device', async () => {

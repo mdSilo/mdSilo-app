@@ -1,6 +1,8 @@
 import {
   TbBold,
+  TbCircleDot,
   TbCode,
+  TbCopy,
   TbItalic,
   TbLink,
   TbPaint,
@@ -17,7 +19,8 @@ import { baseDictionary } from "../../dictionary";
 export default function formattingMenuItems(
   state: EditorState,
   isTemplate: boolean,
-  dictionary: typeof baseDictionary
+  dictionary: typeof baseDictionary,
+  canCreateIssue = false
 ): MenuItem[] {
   const { schema } = state;
 
@@ -83,9 +86,20 @@ export default function formattingMenuItems(
       name: "separator",
     },
     {
+      name: "copy",
+      tooltip: dictionary.copy,
+      icon: TbCopy,
+    },
+    {
       name: "search",
       tooltip: dictionary.searchText,
       icon: TbSearch,
+    },
+    {
+      name: "issue",
+      tooltip: dictionary.createIssue,
+      icon: TbCircleDot,
+      visible: canCreateIssue,
     },
   ];
 }

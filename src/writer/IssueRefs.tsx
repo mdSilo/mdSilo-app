@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useIssueData } from '@/issue/issueStore';
-import { computeIssueRefs } from '@/issue/refs';
+import { computeIssueRefs, issueLabel } from '@/issue/refs';
 import { StateIcon } from '@/issue/common';
 
 type Props = {
@@ -30,7 +30,7 @@ export default function IssueRefs({ noteId, title, className = '' }: Props) {
               className="text-left ms-link"
               onClick={() => dispatch({ view: 'issue', number: issue.number })}
             >
-              #{issue.number} {issue.title}
+              {issueLabel(issue.number)} {issue.title}
             </button>
             {explicit ? null : <span className="text-xs text-base-content/60">mentioned</span>}
           </li>

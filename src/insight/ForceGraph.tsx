@@ -25,7 +25,15 @@ import { D3DragEvent, drag } from 'd3-drag';
 import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { useStore } from '@/state/store';
+import { store, useStore, type NoteMap } from '@/state/store';
+import { fromWorkspacePath } from '@/workspace/util';
+import { annotationsPathOf } from '@/reader/annotations';
+import { findBook, linkedBookIds } from '@/reader/bookLinks';
+import { useLibraryBooks } from '@/reader/books';
+import { useIssueData } from '@/issue/issueStore';
+import { issueLabel, issueTexts, linkedNoteTitles } from '@/issue/refs';
+import type { Issue } from '@/issue/types';
+import { findBookPath, type BookEntry } from '@/reader/library';
 import { noteTitleMap } from '@/lib/mdlink';
 import { indexOf } from '@/lib/linkIndex';
 import { openFilePath } from '@/workspace/open';
@@ -37,16 +45,24 @@ type GraphColors = {
   hovered: string;
   tag: string;
   hoveredTag: string;
+  book: string;
+  bookLink: string; // a note linking a book
+  spine: string;
   link: string;
+  issue: string; // an open issue
+  closedIssue: string;
+  issueLink: string;
+  background: string;
   text: string;
 };
 
 // fallbacks: no theme colors, e.g. in tests (Tailwind CSS v3 palette)
 const LIGHT_COLORS: GraphColors = {
   note: '#86efac', neighbor: '#60a5fa', hovered: '#2563eb', tag: '#facc15',
-  hoveredTag: '#ca8a04', link: '#e5e5e5', text: '#525252',
+  hoveredTag: '#ca8a04', book: '#38bdf8', bookLink: 'rgb(56 189 248 / 0.45)', spine: 'rgb(0 0 0 / 0.25)', link: '#e5e5e5', text: '#525252',
+  issue: '#22c55e', closedIssue: 'rgb(115 115 115 / 0.5)', issueLink: 'rgb(34 197 94 / 0.45)', background: '#ffffff',
 };
-const DARK_COLORS: GraphColors = { ...LIGHT_COLORS, link: '#404040', text: '#f5f5f5' };
+const DARK_COLORS: GraphColors = { ...LIGHT_COLORS, link: '#404040', text: '#f5f5f5', background: '#171717' };
 
 /** Colors of the daisyUI theme applied on <html>, see useTheme */
 function themeColors(): GraphColors {
@@ -67,7 +83,14 @@ function themeColors(): GraphColors {
     hovered: color('--color-secondary') || fallback.hovered,
     tag: color('--color-accent') || fallback.tag,
     hoveredTag: color('--color-warning') || fallback.hoveredTag,
+    book: color('--color-info') || fallback.book,
+    bookLink: color('--color-info', 0.45) || fallback.bookLink,
+    spine: color('--color-info-content', 0.5) || fallback.spine,
     link: color('--color-base-content', 0.15) || fallback.link,
+    issue: color('--color-success') || fallback.issue,
+    closedIssue: color('--color-base-content', 0.4) || fallback.closedIssue,
+    issueLink: color('--color-success', 0.45) || fallback.issueLink,
+    background: color('--color-base-100') || fallback.background,
     text: color('--color-base-content', 0.8) || fallback.text,
   };
 }
@@ -89,10 +112,20 @@ export type NodeDatum = {
   id: string;
   name: string;
   radius: number;
-  ty: 'tag' | 'link';
+  ty: 'tag' | 'link' | 'book' | 'issue';
+  /** a closed issue */
+  closed?: boolean;
 } & SimulationNodeDatum;
 
-export type LinkDatum = SimulationLinkDatum<NodeDatum> & { ty: 'tag' | 'link' };
+/** book: a note linking a book; annotation: a book and its annotations note */
+export type LinkDatum = SimulationLinkDatum<NodeDatum> & {
+  ty: 'tag' | 'link' | 'book' | 'annotation' | 'issue';
+};
+
+const BOOK_NODE_PREFIX = 'book:';
+const bookNodeId = (hash: string) => `${BOOK_NODE_PREFIX}${hash}`;
+const ISSUE_NODE_PREFIX = 'issue:';
+const issueNodeId = (num: number) => `${ISSUE_NODE_PREFIX}${num}`;
 
 export type GraphData = { nodes: NodeDatum[]; links: LinkDatum[] };
 
@@ -109,6 +142,8 @@ export default function ForceGraph(props: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const transform = useRef(zoomIdentity);
   const hoveredNode = useRef<NodeDatum | null>(null);
+  /** the id of the tag clicked, its notes highlighted */
+  const selectedTag = useRef<string | null>(null);
 
   const colors = useThemeColors();
   const storeNotes = useStore((state) => state.notes);
@@ -116,83 +151,13 @@ export default function ForceGraph(props: Props) {
   const dispatch = currentView.dispatch;
   const notes = useStore((state) => state.notes);
 
-  // Compute graph data
-  const data: GraphData = useMemo(() => {
-    const data: GraphData = { nodes: [], links: [] };
-    // filter out the dir and non-md file
-    const notesArr = notes.values().filter(n => !n.is_dir && checkFileIsMd(n.id));
-
-    // Initialize linksByNoteId: {id: Set[ids]}
-    const linksByNoteId: Record<string, Set<string>> = {};
-    for (const note of notesArr) {
-      linksByNoteId[note.id] = new Set();
-    }
-
-    // initiate tag set
-    const tagNames: Set<string> = new Set();
-
-    // title to note id, the first one if more than one note with same title
-    const idByTitle = new Map<string, string>();
-    for (const note of notesArr) {
-      if (!idByTitle.has(note.title)) idByTitle.set(note.title, note.id);
-    }
-    // link title (including legacy `a_b` for `a b`) to note title
-    const titleOf = noteTitleMap(idByTitle.keys());
-
-    // links and tags of each note, from the index: parsed once per content
-    const index = indexOf(notes);
-    for (const note of notesArr) {
-      // CASE []() and [[]]
-      for (const link of index.rawLinks(note.id)) {
-        const linkedTitle = titleOf.get(link);
-        const linkedId = linkedTitle !== undefined ? idByTitle.get(linkedTitle) : undefined;
-        if (linkedId && linkedId !== note.id) {
-          linksByNoteId[note.id].add(linkedId);
-          linksByNoteId[linkedId].add(note.id);
-        }
-      }
-      // HashTag
-      for (const tag of index.tags(note.id)) {
-        tagNames.add(tag);
-        // Add the tag to each note set
-        linksByNoteId[note.id].add(tag);
-      }
-    }
-
-    // Create graph data
-    for (const note of notesArr) {
-      // Populate links
-      const linkedIds = linksByNoteId[note.id].values(); // including notes and tags
-      const numOfLinks = linksByNoteId[note.id].size;
-      for (const linkedId of linkedIds) {
-        data.links.push({ 
-          source: note.id, 
-          target: linkedId, 
-          ty: tagNames.has(linkedId) ? 'tag' : 'link', 
-        });
-      }
-      // Populate nodes
-      data.nodes.push({
-        id: note.id,
-        name: note.title,
-        radius: getRadius(numOfLinks),
-        ty: 'link',
-      });
-    }
-
-    // update tag nodes to data.nodes
-    for (const tag of tagNames) {
-      // Populate nodes
-      data.nodes.push({
-        id: tag,
-        name: `#${tag}`,
-        radius: 4,
-        ty: 'tag',
-      });
-    }
-
-    return data;
-  }, [notes]);
+  const books = useLibraryBooks();
+  const ws = useStore((state) => state.initDir);
+  const { data: issueData } = useIssueData();
+  const data: GraphData = useMemo(
+    () => buildGraphData(notes, books, ws, issueData.issues),
+    [notes, books, ws, issueData.issues]
+  );
 
   const neighbors = useMemo(() => {
     const neighbors: Record<string, boolean> = {};
@@ -238,16 +203,33 @@ export default function ForceGraph(props: Props) {
       const isLinkHighlighted = isSourceHovered || isTargetHovered;
       const isTag = link.ty === 'tag';
 
+      // from edge to edge: not through the nodes, filled see-through
+      const from = edgePoint(source, target.x, target.y);
+      const to = edgePoint(target, source.x, source.y);
+      const dx = target.x - source.x;
+      const dy = target.y - source.y;
+      // overlapping nodes: nothing between them to draw
+      if ((to.x - from.x) * dx + (to.y - from.y) * dy <= 0) {
+        return;
+      }
+
       context.save();
 
       context.beginPath();
-      context.moveTo(source.x, source.y);
-      context.lineWidth = 0.5;
-      context.lineTo(target.x, target.y);
+      context.moveTo(from.x, from.y);
+      context.lineWidth = link.ty === 'annotation' ? 0.6 : 0.3;
+      context.lineCap = 'round';
+      context.lineTo(to.x, to.y);
       if (isTag) {
         context.strokeStyle = 'transparent';
       } else if (isLinkHighlighted) {
         context.strokeStyle = colors.neighbor;
+      } else if (link.ty === 'annotation') {
+        context.strokeStyle = colors.book;
+      } else if (link.ty === 'book') {
+        context.strokeStyle = colors.bookLink;
+      } else if (link.ty === 'issue') {
+        context.strokeStyle = colors.issueLink;
       } else {
         context.strokeStyle = colors.link;
       }
@@ -265,17 +247,38 @@ export default function ForceGraph(props: Props) {
       }
       const isHovered = node.id === hoveredNode.current?.id;
       const isTag = node.ty === 'tag';
+      const isBook = node.ty === 'book';
+      const isIssue = node.ty === 'issue';
+      const issueColor = node.closed ? colors.closedIssue : colors.issue;
+      // the notes of the tag clicked: in its color
+      const tag = selectedTag.current;
+      const isTagged = node.ty === 'link' && !!tag && areNeighbors(tag, node.id);
 
       context.save();
 
-      // Draw node
+      if (isTag) {
+        drawHash(context, node, isHovered || node.id === tag ? colors.hoveredTag : colors.tag);
+        drawLabel(context, node, scale, colors.text);
+        context.restore();
+        return;
+      }
+
+      // Draw node: a note a circle, a book a square, an issue a ring with a dot
       context.beginPath();
-      context.moveTo(node.x + node.radius, node.y);
-      context.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+      if (isBook) {
+        bookPath(context, node.x, node.y, node.radius);
+      } else {
+        context.moveTo(node.x + node.radius, node.y);
+        context.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+      }
 
       // Fill node color
-      if (isTag) {
+      if (isTagged) {
         context.fillStyle = colors.tag;
+      } else if (isBook) {
+        context.fillStyle = colors.book;
+      } else if (isIssue) {
+        context.fillStyle = issueColor;
       } else if (areNeighbors(hoveredNode.current?.id, node.id)) {
         context.fillStyle = colors.neighbor;
       } else {
@@ -285,29 +288,37 @@ export default function ForceGraph(props: Props) {
       if (isHovered) {
         context.strokeStyle = colors.hovered;
         context.stroke();
-        context.fillStyle = isTag ? colors.hoveredTag : colors.neighbor;
+        context.fillStyle = isTagged
+          ? colors.tag
+          : isBook ? colors.book : isIssue ? issueColor : colors.neighbor;
       }
 
       context.fill();
 
-      // Add node text
-      if (scale > 3) {
-        context.globalAlpha = 1;
-      } else if (scale > 2) {
-        context.globalAlpha = 0.8;
-      } else {
-        context.globalAlpha = 0;
+      if (isIssue) {
+        // a ring with a dot, as the icon of an issue
+        context.beginPath();
+        context.arc(node.x, node.y, node.radius * 0.6, 0, 2 * Math.PI);
+        context.fillStyle = colors.background;
+        context.fill();
+        context.beginPath();
+        context.arc(node.x, node.y, node.radius * 0.25, 0, 2 * Math.PI);
+        context.fillStyle = issueColor;
+        context.fill();
       }
-      context.fillStyle = colors.text;
-      context.font = `4px font-sans`;
 
-      const lines = getLines(context, node.name, 50);
-      let yPos = node.y + node.radius + 5;
-      for (const line of lines) {
-        const textWidth = context.measureText(line).width;
-        context.fillText(line, node.x - textWidth / 2, yPos);
-        yPos += 5;
+      if (isBook) {
+        // the spine
+        const { w, h } = bookSize(node.radius);
+        context.beginPath();
+        context.moveTo(node.x - w / 2 + w * 0.2, node.y - h / 2);
+        context.lineTo(node.x - w / 2 + w * 0.2, node.y + h / 2);
+        context.lineWidth = 0.6;
+        context.strokeStyle = colors.spine;
+        context.stroke();
       }
+
+      drawLabel(context, node, scale, colors.text);
 
       context.restore();
     },
@@ -416,12 +427,26 @@ export default function ForceGraph(props: Props) {
       .on('click', async (event) => {
         const { x, y } = getMousePos(context.canvas, event);
         const clickedNode = getNode(simulation, context.canvas, x, y);
+        // a tag: its notes shown in its color, until clicked again or out
+        if (clickedNode?.ty === 'tag' || !clickedNode) {
+          const id = clickedNode?.id ?? null;
+          selectedTag.current = selectedTag.current === id ? null : id;
+          renderCanvas();
+          return;
+        }
         // Redirect to note when a node is clicked
-        if (clickedNode && clickedNode.ty === 'link') {
+        if (clickedNode.ty === 'link') {
           const note = storeNotes.get(clickedNode.id);
           if (!note) return;
           await openFilePath(note.id, true);
           dispatch({view: 'md', params: { noteId: note.id }});
+        } else if (clickedNode.ty === 'book') {
+          const ws = store.getState().initDir;
+          const hash = clickedNode.id.slice(BOOK_NODE_PREFIX.length);
+          const path = ws ? await findBookPath(ws, hash) : undefined;
+          if (path) dispatch({ view: 'book', path });
+        } else if (clickedNode.ty === 'issue') {
+          dispatch({ view: 'issue', number: Number(clickedNode.id.slice(ISSUE_NODE_PREFIX.length)) });
         }
       });
   }, [data, dispatch, renderCanvas, storeNotes]);
@@ -492,6 +517,219 @@ export default function ForceGraph(props: Props) {
       />
     </div>
   );
+}
+
+/**
+ * The nodes and links of the graph: the notes linking each other, their
+ * tags, and the books they link to, each book linked to its annotations.
+ */
+export function buildGraphData(
+  notes: NoteMap, books: Record<string, BookEntry> = {}, ws?: string, issues: Issue[] = []
+): GraphData {
+  const data: GraphData = { nodes: [], links: [] };
+  // filter out the dir and non-md file
+  const notesArr = notes.values().filter(n => !n.is_dir && checkFileIsMd(n.id));
+
+  // Initialize linksByNoteId: {id: Set[ids]}
+  const linksByNoteId: Record<string, Set<string>> = {};
+  for (const note of notesArr) {
+    linksByNoteId[note.id] = new Set();
+  }
+
+  // initiate tag set
+  const tagNames: Set<string> = new Set();
+  // the books linked: node id -> the notes linking it
+  const bookLinks = new Map<string, Set<string>>();
+  const linkBook = (noteId: string, hash: string) => {
+    const nodeId = bookNodeId(hash);
+    linksByNoteId[noteId].add(nodeId);
+    let ids = bookLinks.get(nodeId);
+    if (!ids) bookLinks.set(nodeId, (ids = new Set()));
+    ids.add(noteId);
+  };
+  // the issues linked: node id -> the nodes linked to it, notes and books
+  const issueByNum = new Map(issues.map((i) => [i.number, i]));
+  const issueLinks = new Map<string, Set<string>>();
+  const linkIssue = (num: number, nodeId: string) => {
+    if (!issueByNum.has(num)) return;
+    const issueId = issueNodeId(num);
+    let ids = issueLinks.get(issueId);
+    if (!ids) issueLinks.set(issueId, (ids = new Set()));
+    ids.add(nodeId);
+  };
+  // the annotations note of a book -> the book
+  const bookOfAnnotations = new Map(
+    ws ? Object.values(books).map((b) => [annotationsPathOf(fromWorkspacePath(ws, b.file)), b.hash]) : []
+  );
+
+  // title to note id, the first one if more than one note with same title
+  const idByTitle = new Map<string, string>();
+  for (const note of notesArr) {
+    if (!idByTitle.has(note.title)) idByTitle.set(note.title, note.id);
+  }
+  // link title (including legacy `a_b` for `a b`) to note title
+  const titleOf = noteTitleMap(idByTitle.keys());
+
+  // links and tags of each note, from the index: parsed once per content
+  const index = indexOf(notes);
+  for (const note of notesArr) {
+    // CASE []() and [[]]
+    for (const link of index.rawLinks(note.id)) {
+      const linkedTitle = titleOf.get(link);
+      const linkedId = linkedTitle !== undefined ? idByTitle.get(linkedTitle) : undefined;
+      if (linkedId && linkedId !== note.id) {
+        linksByNoteId[note.id].add(linkedId);
+        linksByNoteId[linkedId].add(note.id);
+      }
+    }
+    // HashTag
+    for (const tag of index.tags(note.id)) {
+      tagNames.add(tag);
+      // Add the tag to each note set
+      linksByNoteId[note.id].add(tag);
+    }
+    // Books: linked, `book:` and `{{}}`, or annotated
+    for (const ref of index.books(note.id)) {
+      const book = findBook(books, ref);
+      if (book) linkBook(note.id, book.hash);
+    }
+    const annotated = bookOfAnnotations.get(note.id);
+    if (annotated) linkBook(note.id, annotated);
+    // Issues: [@12](issue:12)
+    for (const num of index.issues(note.id)) linkIssue(num, note.id);
+  }
+
+  // what the issues link: notes, explicitly or by title, and books
+  for (const issue of issues) {
+    for (const path of issue.notes) {
+      if (linksByNoteId[path]) linkIssue(issue.number, path);
+    }
+    for (const text of issueTexts(issue)) {
+      for (const title of linkedNoteTitles(text)) {
+        const linkedTitle = titleOf.get(title);
+        const noteId = linkedTitle !== undefined ? idByTitle.get(linkedTitle) : undefined;
+        if (noteId) linkIssue(issue.number, noteId);
+      }
+      for (const hash of linkedBookIds(books, text)) {
+        const nodeId = bookNodeId(hash);
+        linkIssue(issue.number, nodeId);
+        // a node of the book, even if no note links it
+        if (!bookLinks.has(nodeId)) bookLinks.set(nodeId, new Set());
+      }
+    }
+  }
+
+  // links of the issues; the more linked, the bigger, the books too
+  const issueLinksTo = new Map<string, number>();
+  for (const [issueId, nodeIds] of issueLinks) {
+    for (const nodeId of nodeIds) {
+      data.links.push({ source: issueId, target: nodeId, ty: 'issue' });
+      issueLinksTo.set(nodeId, (issueLinksTo.get(nodeId) ?? 0) + 1);
+    }
+    const issue = issueByNum.get(Number(issueId.slice(ISSUE_NODE_PREFIX.length)));
+    data.nodes.push({
+      id: issueId,
+      name: `${issue ? issueLabel(issue.number) : ''} ${issue?.title ?? ''}`.trim(),
+      radius: getRadius(nodeIds.size),
+      ty: 'issue',
+      ...(issue?.state === 'closed' ? { closed: true } : {}),
+    });
+  }
+
+  // Create graph data
+  for (const note of notesArr) {
+    // Populate links
+    const linkedIds = linksByNoteId[note.id].values(); // including notes and tags
+    // the book of the annotations note, if it is one
+    const annotatedHash = bookOfAnnotations.get(note.id);
+    const annotated = annotatedHash ? bookNodeId(annotatedHash) : undefined;
+    const numOfLinks = linksByNoteId[note.id].size;
+    for (const linkedId of linkedIds) {
+      data.links.push({ 
+        source: note.id, 
+        target: linkedId, 
+        ty: tagNames.has(linkedId)
+          ? 'tag'
+          : bookLinks.has(linkedId)
+            ? (annotated === linkedId ? 'annotation' : 'book')
+            : 'link',
+      });
+    }
+    // Populate nodes
+    data.nodes.push({
+      id: note.id,
+      name: note.title,
+      radius: getRadius(numOfLinks + (issueLinksTo.get(note.id) ?? 0)),
+      ty: 'link',
+    });
+  }
+
+  for (const [nodeId, noteIds] of bookLinks) {
+    const book = books[nodeId.slice(BOOK_NODE_PREFIX.length)];
+    data.nodes.push({
+      id: nodeId,
+      name: book?.title || 'Untitled book',
+      radius: getRadius(noteIds.size + (issueLinksTo.get(nodeId) ?? 0)),
+      ty: 'book',
+    });
+  }
+
+  // update tag nodes to data.nodes
+  for (const tag of tagNames) {
+    // Populate nodes
+    data.nodes.push({
+      id: tag,
+      name: `#${tag}`,
+      radius: 4,
+      ty: 'tag',
+    });
+  }
+
+  return data;
+}
+
+/** The size of a book node: a square, about as big as a note. */
+const bookSize = (radius: number) => ({ w: radius * 1.8, h: radius * 1.8 });
+
+/** The path of a book node: a cover, its corners rounded a little. */
+function bookPath(context: CanvasRenderingContext2D, x: number, y: number, radius: number) {
+  const { w, h } = bookSize(radius);
+  const r = Math.min(w, h) * 0.12;
+  const left = x - w / 2;
+  const top = y - h / 2;
+  context.moveTo(left + r, top);
+  context.lineTo(left + w - r, top);
+  context.quadraticCurveTo(left + w, top, left + w, top + r);
+  context.lineTo(left + w, top + h - r);
+  context.quadraticCurveTo(left + w, top + h, left + w - r, top + h);
+  context.lineTo(left + r, top + h);
+  context.quadraticCurveTo(left, top + h, left, top + h - r);
+  context.lineTo(left, top + r);
+  context.quadraticCurveTo(left, top, left + r, top);
+  context.closePath();
+}
+
+/**
+ * Where the line from the node toward (x, y) leaves it: on its circle, or on
+ * the cover of a book.
+ */
+export function edgePoint(node: NodeDatum, x: number, y: number) {
+  const cx = node.x ?? 0;
+  const cy = node.y ?? 0;
+  const dx = x - cx;
+  const dy = y - cy;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return { x: cx, y: cy };
+  let distance = node.radius;
+  if (node.ty === 'book') {
+    // the side of the cover the line crosses first
+    const { w, h } = bookSize(node.radius);
+    distance = Math.min(
+      dx ? (w / 2) * (length / Math.abs(dx)) : Infinity,
+      dy ? (h / 2) * (length / Math.abs(dy)) : Infinity,
+    );
+  }
+  return { x: cx + (dx / length) * distance, y: cy + (dy / length) * distance };
 }
 
 const getRadius = (numOfLinks: number) => {
@@ -584,25 +822,43 @@ const getDrag = (
     .on('end', dragended);
 };
 
-const getLines = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number
-) => {
-  const words = text.split(' ');
-  const lines = [];
-  let currentLine = words[0];
+/** The text cut to the width, `…` at the end if cut. */
+export function truncateText(context: CanvasRenderingContext2D, text: string, maxWidth: number) {
+  if (context.measureText(text).width <= maxWidth) return text;
+  let end = text.length;
+  while (end > 1 && context.measureText(`${text.slice(0, end)}…`).width > maxWidth) end -= 1;
+  return `${text.slice(0, end).trimEnd()}…`;
+}
 
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i];
-    const width = context.measureText(currentLine + ' ' + word).width;
-    if (width < maxWidth) {
-      currentLine += ' ' + word;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-    }
-  }
-  lines.push(currentLine);
-  return lines;
-};
+/** The name of a node, in one line under it; shown when zoomed in. */
+function drawLabel(context: CanvasRenderingContext2D, node: NodeDatum, scale: number, color: string) {
+  if (!node.x || !node.y) return;
+  context.globalAlpha = scale > 3 ? 1 : scale > 2 ? 0.8 : 0;
+  context.fillStyle = color;
+  context.font = `4px font-sans`;
+  const line = truncateText(context, node.name, 50);
+  const textWidth = context.measureText(line).width;
+  context.fillText(line, node.x - textWidth / 2, node.y + node.radius + 5);
+  context.globalAlpha = 1;
+}
+
+/** A tag: a `#`, as big as the node. */
+function drawHash(context: CanvasRenderingContext2D, node: NodeDatum, color: string) {
+  if (!node.x || !node.y) return;
+  const r = node.radius;
+  const { x, y } = node;
+  context.beginPath();
+  // two strokes leaning, two across
+  context.moveTo(x - r * 0.25, y - r);
+  context.lineTo(x - r * 0.55, y + r);
+  context.moveTo(x + r * 0.55, y - r);
+  context.lineTo(x + r * 0.25, y + r);
+  context.moveTo(x - r * 0.9, y - r * 0.35);
+  context.lineTo(x + r, y - r * 0.35);
+  context.moveTo(x - r, y + r * 0.35);
+  context.lineTo(x + r * 0.9, y + r * 0.35);
+  context.lineWidth = r * 0.28;
+  context.lineCap = 'round';
+  context.strokeStyle = color;
+  context.stroke();
+}

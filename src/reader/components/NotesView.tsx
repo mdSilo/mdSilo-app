@@ -1,10 +1,11 @@
 import { memo, useState } from 'react';
-import { TbBookmark, TbCopy, TbEdit, TbTrash } from 'react-icons/tb';
-import type { BookNote } from '../annotations';
+import { TbBookmark, TbCircleDot, TbCopy, TbEdit, TbTrash } from 'react-icons/tb';
+import { noteText, type BookNote } from '../annotations';
 import { HIGHLIGHT_CSS } from '../styles';
 import { useActiveStore } from '../readerStore';
-import { copyQuote } from '../actions';
+import { copyQuote, issueOfNote } from '../actions';
 import { getView } from '../view';
+import NoteIssues from './NoteIssues';
 
 /** The annotations and bookmarks of the book, in the order of the book. */
 function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
@@ -88,9 +89,10 @@ function NoteItem({ note }: { note: BookNote }) {
             }
           }}
         />
-      ) : note.note ? (
-        <p className="mt-1 text-sm whitespace-pre-wrap">{note.note}</p>
+      ) : noteText(note.note) ? (
+        <p className="mt-1 text-sm whitespace-pre-wrap">{noteText(note.note)}</p>
       ) : null}
+      {!editing ? <NoteIssues note={note} className="mt-1" /> : null}
       <div className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
         <button className="btn btn-ghost btn-xs" title="Edit the note" onClick={() => { setDraft(note.note); setEditing(true); }}>
           <TbEdit />
@@ -100,6 +102,9 @@ function NoteItem({ note }: { note: BookNote }) {
             <TbCopy />
           </button>
         ) : null}
+        <button className="btn btn-ghost btn-xs" title="New issue of it" onClick={() => void issueOfNote(note)}>
+          <TbCircleDot />
+        </button>
         <button className="btn btn-ghost btn-xs" title="Delete" onClick={() => removeNote(note.id)}>
           <TbTrash />
         </button>

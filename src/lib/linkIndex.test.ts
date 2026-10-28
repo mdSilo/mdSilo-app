@@ -56,10 +56,11 @@ describe('LinkIndex', () => {
 
   test('tags, raw links and issue links per note', () => {
     const index = new LinkIndex();
-    index.sync(notesOf({ id: '/a.md', content: 'x #one# #two words# [[n]] [i](issue:12) [j](issue:3)' }));
+    index.sync(notesOf({ id: '/a.md', content: 'x #one# #two words# [[n]] [i](issue:12) [j](issue:3) {{Dune}}' }));
     expect(index.tags('/a.md')).toEqual(['one', 'two words']);
     // as found in the raw text, not the links of the app (issue:, book:)
     expect(index.rawLinks('/a.md')).toEqual(['n']);
     expect([...index.issues('/a.md')].sort((x, y) => x - y)).toEqual([3, 12]);
+    expect(index.books('/a.md')).toEqual(['Dune']);
   });
 });

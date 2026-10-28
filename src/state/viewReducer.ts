@@ -1,5 +1,6 @@
 import { store } from '@/state/store';
 import { setWindowTitle } from '@/workspace/util';
+import { issueLabel } from '@/lib/parseNote';
 
 export const initialState = {view: 'default'};
 
@@ -54,7 +55,7 @@ export function viewEffects(action: ViewAction) {
     return;
   }
   store.getState().setCurrentNoteId('');
-  if (view === 'issue') setWindowTitle(`#${action.number} - mdSilo`);
+  if (view === 'issue') setWindowTitle(`${issueLabel(action.number)} - mdSilo`);
   else if (view === 'book') setWindowTitle(`${action.path.split('/').pop()} - mdSilo`);
   else setWindowTitle(`${view} - mdSilo`);
   // the books take the room of the note tree

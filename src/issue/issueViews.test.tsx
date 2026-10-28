@@ -6,6 +6,8 @@ import { store } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import MainView from '@/shell/MainView';
 import { makeNote, renderWithView, waitForView } from '@/testUtils';
+import { setLibraryBooks } from '@/reader/books';
+import type { BookEntry } from '@/reader/library';
 import * as ops from './issueOps';
 import { issueStore, resetIssueStore } from './issueStore';
 import { boardCollision, boardColumns, dragEndOp, dropTarget } from './project/ProjectBoard';
@@ -124,7 +126,7 @@ describe('Issues view', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Submit new issue' }));
     expect(viewState()).toEqual({ view: 'issue', issueNumber: 1 });
     expect(data().issues[0]).toMatchObject({ title: 'First bug', body: 'body [[Note]]' });
-    expect(await screen.findByTestId('issue-detail')).toHaveTextContent('First bug #1');
+    expect(await screen.findByTestId('issue-detail')).toHaveTextContent('First bug @1');
     await waitFor(() => expect(files.written.at(-1)?.path).toBe('/w/issues.json'));
   });
 
@@ -295,7 +297,7 @@ describe('Issue detail', () => {
   test('shows a missing issue', async () => {
     seed();
     await renderApp({ view: 'issue', number: 9 });
-    expect(screen.getByText('Issue #9 does not exist.')).toBeInTheDocument();
+    expect(screen.getByText('Issue @9 does not exist.')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Back to issues' }));
     expect(viewState().view).toBe('issues');
   });
@@ -304,7 +306,7 @@ describe('Issue detail', () => {
     seedDetail();
     await renderApp({ view: 'issue', number: 1 });
     const detail = screen.getByTestId('issue-detail');
-    expect(detail).toHaveTextContent('Crash #1');
+    expect(detail).toHaveTextContent('Crash @1');
     expect(detail).toHaveTextContent('Open');
     // title
     await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
@@ -416,6 +418,21 @@ describe('Issue detail', () => {
     expect(mentioned()).toEqual(['Nowherementioned']);
   });
 
+  test('books linked in the text, and linking one', async () => {
+    seedDetail();
+    const book = (hash: string, title: string) =>
+      ({ hash, file: `reading/${title}.epub`, title, author: 'Someone', format: 'EPUB', addedAt: '' }) as BookEntry;
+    setLibraryBooks('/w', { ['a'.repeat(32)]: book('a'.repeat(32), 'Dune'), ['b'.repeat(32)]: book('b'.repeat(32), 'Emma') });
+    act(() => issueStore.getState().apply((d) => ops.addComment(d, 1, 'as in {{dune}}')));
+    await renderApp({ view: 'issue', number: 1 });
+    expect(screen.getByTestId('issue-books')).toHaveTextContent('Dune');
+    await userEvent.click(screen.getByRole('button', { name: 'Edit Books' }));
+    await userEvent.type(screen.getByPlaceholderText('Search books'), 'emm');
+    await userEvent.click(screen.getByRole('button', { name: /Emma/ }));
+    expect(data().issues[0].body).toBe(`see [[Spec]]\n\n[Emma](book:${'b'.repeat(32)})\n`);
+    expect(screen.getByTestId('issue-books')).toHaveTextContent('EmmaDune');
+  });
+
   test('shows notes mentioning the issue and deletes it', async () => {
     seedDetail();
     await renderApp({ view: 'issue', number: 1 });
@@ -433,7 +450,7 @@ describe('Issue detail', () => {
     const body = editors.props['Describe the issue… [[Note]] links a note'];
     let results: unknown;
     await act(async () => { results = await body.onSearchLink('Sec' as never); });
-    expect(results).toEqual([{ title: '#2 Second thing', url: 'issue:2' }]);
+    expect(results).toEqual([{ title: '@2 Second thing', url: 'issue:2' }]);
     await act(async () => { results = await body.onSearchLink('Spec' as never); });
     expect(results).toEqual([{ title: 'Spec', url: 'Spec' }]);
     await act(async () => { await body.onOpenLink('issue:2' as never); });
@@ -467,7 +484,7 @@ describe('Tasks tab', () => {
     // one issue
     await userEvent.click(within(screen.getAllByTestId('note-task')[0]).getByRole('button', { name: 'Create issue' }));
     expect(data().issues[0]).toMatchObject({ number: 1, title: 'Write spec', notes: ['/w/Plan.md'] });
-    expect(rows()[0]).toBe('#todoWrite specPlan#1');
+    expect(rows()[0]).toBe('#todoWrite specPlan@1');
     // the rest
     await userEvent.click(screen.getByRole('button', { name: 'Create issues for 2 tasks' }));
     expect(data().issues.map((i) => [i.title, i.state])).toEqual([
@@ -478,7 +495,7 @@ describe('Tasks tab', () => {
     expect(screen.getByText('No tasks in notes.')).toBeInTheDocument();
     await userEvent.click(screen.getByLabelText('Without issue only'));
     // open the issue and the note
-    await userEvent.click(screen.getByRole('button', { name: /#3/ }));
+    await userEvent.click(screen.getByRole('button', { name: /@3/ }));
     expect(viewState()).toEqual({ view: 'issue', issueNumber: 3 });
     await go({ view: 'issues', tab: 'tasks' });
     await userEvent.click(screen.getAllByRole('button', { name: 'Old' })[0]);
@@ -548,7 +565,7 @@ describe('Project view', () => {
     expect(within(columns()[0]).getByText('Brand new')).toBeInTheDocument();
     // add an existing issue by number, into the closing column
     await userEvent.click(within(columns()[2]).getByRole('button', { name: /Add item/ }));
-    await userEvent.type(screen.getByLabelText('Add item to Done'), '#3{Enter}');
+    await userEvent.type(screen.getByLabelText('Add item to Done'), '@3{Enter}');
     expect(within(columns()[2]).getByText('Loose issue')).toBeInTheDocument();
     expect(ops.getIssue(data(), 3)!.state).toBe('closed');
     // escape cancels
@@ -603,7 +620,7 @@ describe('Project view', () => {
     await renderApp({ view: 'project' });
     await userEvent.click(screen.getByText('Todo item'));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByTestId('issue-detail')).toHaveTextContent('Todo item #1');
+    expect(within(dialog).getByTestId('issue-detail')).toHaveTextContent('Todo item @1');
     expect(within(dialog).queryByRole('button', { name: 'Issues' })).not.toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete issue' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
@@ -622,16 +639,16 @@ describe('Project view', () => {
     expect(titles()).toEqual(['Doing item', 'Todo item']);
     await userEvent.click(screen.getByRole('button', { name: /Title/ }));
     expect(titles()).toEqual(['Todo item', 'Doing item']);
-    for (const name of ['#', 'Labels', 'Milestone', 'Updated']) {
+    for (const name of ['@', 'Labels', 'Milestone', 'Updated']) {
       await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }));
     }
     fireEvent.change(screen.getByLabelText('Filter items'), { target: { value: 'label:bug' } });
     expect(titles()).toEqual(['Doing item']);
     fireEvent.change(screen.getByLabelText('Filter items'), { target: { value: '' } });
     const done = data().projects[0].statuses[2];
-    fireEvent.change(screen.getByLabelText('Status of #1'), { target: { value: done.id } });
+    fireEvent.change(screen.getByLabelText('Status of @1'), { target: { value: done.id } });
     expect(ops.getIssue(data(), 1)!.state).toBe('closed');
-    await userEvent.click(screen.getByRole('button', { name: 'Remove #2 from project' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Remove @2 from project' }));
     expect(titles()).toEqual(['Todo item']);
     fireEvent.change(screen.getByLabelText('Filter items'), { target: { value: 'zzz' } });
     expect(screen.getByText('No items.')).toBeInTheDocument();

@@ -4,9 +4,9 @@ import Extension from "../core/Extension";
 
 const OPEN_REGEX = /^(.*)?\{\{$/;
 
-export default class SearchRemoteTrigger extends Extension {
+export default class SearchItemTrigger extends Extension {
   get name() {
-    return "search_remote";
+    return "search_item";
   }
 
   get plugins() {

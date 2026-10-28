@@ -11,11 +11,13 @@ import { getStrDate } from '@/lib/helper';
 import { MD_LINK_REGEX, WIKI_LINK_REGEX } from '@/lib/mdlink';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '@/testUtils';
 import MainView from '@/shell/MainView';
+import type { BookEntry } from '@/reader/library';
+import type { Issue } from '@/issue/types';
 import HeatMap from './HeatMap';
 import Chronicle from './Chronicle';
 import Journals from './Journals';
 import Graph from './Graph';
-import { HASHTAG_REGEX } from './ForceGraph';
+import { buildGraphData, edgePoint, HASHTAG_REGEX, truncateText } from './ForceGraph';
 
 const Controls = ({ children }: { children: ReactNode }) => {
   const { state, dispatch } = useCurrentViewContext();
@@ -110,7 +112,7 @@ describe('HeatMap', () => {
     const now = new Date().toISOString();
     const notes = Array.from({ length: 6 }, (_, i) => makeNote({ id: `/n/${i}.md`, created_at: now, updated_at: now }));
     const { container } = render(<HeatMap noteList={notes} onClickCell={vi.fn()} />);
-    expect(container.querySelectorAll('rect')).toHaveLength(53 * 7);
+    expect(container.querySelectorAll('g.cursor-pointer > rect')).toHaveLength(53 * 7);
     // 6 created + 6 updated today => 12 activities
     expect(container.querySelectorAll('rect.fill-primary')).toHaveLength(1);
     expect(screen.getByText(/Activity: 12/)).toBeInTheDocument();
@@ -121,9 +123,29 @@ describe('HeatMap', () => {
     const { container } = render(
       <HeatMap noteList={[]} reading={{ [today()]: 46 * 60 }} onClickCell={vi.fn()} />
     );
-    // 4 units: the lightest color
-    expect(container.querySelectorAll('rect.fill-primary\\/30')).toHaveLength(1);
+    // 4 units, an hour: the color of reading
+    expect(container.querySelectorAll('rect.fill-secondary\\/60')).toHaveLength(1);
+    expect(container.querySelector('[data-testid="hm-split"]')).toBeNull();
     expect(screen.getByText(/Activity: 4\s+Created: 0\s+Updated: 0\s+Read: 46 min/)).toBeInTheDocument();
+  });
+
+  test('counts writing, reading or both', async () => {
+    const now = new Date().toISOString();
+    const notes = Array.from({ length: 6 }, (_, i) => makeNote({ id: `/n/${i}.md`, created_at: now, updated_at: now }));
+    render(<HeatMap noteList={notes} reading={{ [today()]: 46 * 60 }} onClickCell={vi.fn()} />);
+    expect(screen.getByText(/Activity: 16/)).toBeInTheDocument();
+    // both: split, written above the slash, read below
+    const split = () => document.querySelectorAll('[data-testid="hm-split"] polygon');
+    expect(split()).toHaveLength(1);
+    expect(split()[0]).toHaveClass('fill-secondary/60');
+    expect(document.querySelectorAll('rect.fill-primary')).toHaveLength(1);
+    await userEvent.click(screen.getByRole('tab', { name: 'Writing' }));
+    expect(screen.getByText(/Activity: 12/)).toBeInTheDocument();
+    expect(split()).toHaveLength(0);
+    expect(document.querySelectorAll('rect.fill-primary')).toHaveLength(1);
+    await userEvent.click(screen.getByRole('tab', { name: 'Reading' }));
+    expect(screen.getByText(/Activity: 4\s/)).toBeInTheDocument();
+    expect(document.querySelectorAll('rect.fill-secondary\\/60')).toHaveLength(1);
   });
 
   test('merges stored activities and reports clicked dates', async () => {
@@ -279,6 +301,62 @@ describe('Graph / ForceGraph', () => {
   };
 
   const drawnText = () => new Set((ctx.fillText?.mock.calls ?? []).map((c) => c[0]));
+
+  test('books: linked by id or title, and to their annotations', () => {
+    const id = '0123456789abcdef0123456789abcdef';
+    const book = { hash: id, file: 'reading/Dune.epub', title: 'Dune', author: 'Frank Herbert' } as BookEntry;
+    const a = makeNote({ id: '/ws/writing/a.md', title: 'A', content: `see [here](book:${id}#epubcfi(%2F6)) and {{Dune}}` });
+    const b = makeNote({ id: '/ws/writing/b.md', title: 'B', content: '{{Unknown}}' });
+    const notes = makeNote({ id: '/ws/reading/Dune.epub.md', title: 'Dune.epub', content: '# Dune' });
+    const data = buildGraphData(NoteMap.from({ [a.id]: a, [b.id]: b, [notes.id]: notes }), { [id]: book }, '/ws');
+    expect(data.nodes.filter((n) => n.ty === 'book').map((n) => n.name)).toEqual(['Dune']);
+    const toBook = (ty: string) => data.links.filter((l) => l.ty === ty).map((l) => l.source);
+    expect(toBook('book')).toEqual([a.id]);
+    expect(toBook('annotation')).toEqual([notes.id]);
+  });
+
+  test('issues: linked from notes, linking notes and books', () => {
+    const id = '0123456789abcdef0123456789abcdef';
+    const book = { hash: id, file: 'reading/Dune.epub', title: 'Dune', author: '' } as BookEntry;
+    const a = makeNote({ id: '/ws/a.md', title: 'A', content: 'fixes [#1](issue:1) and [#9](issue:9)' });
+    const b = makeNote({ id: '/ws/b.md', title: 'B', content: 'plain' });
+    const c = makeNote({ id: '/ws/c.md', title: 'C', content: 'plain' });
+    const issue = (number: number, body: string, extra: Partial<Issue> = {}) =>
+      ({ number, title: `T${number}`, body, state: 'open', notes: [], timeline: [], ...extra }) as unknown as Issue;
+    const issues = [
+      issue(1, 'see [[B]]', { notes: ['/ws/c.md'] }),
+      issue(2, '{{Dune}}', { state: 'closed' }),
+      issue(3, 'nothing linked'),
+    ];
+    const data = buildGraphData(NoteMap.from({ [a.id]: a, [b.id]: b, [c.id]: c }), { [id]: book }, '/ws', issues);
+    const issueNodes = data.nodes.filter((n) => n.ty === 'issue');
+    // #9 does not exist, #3 links nothing
+    expect(issueNodes.map((n) => [n.name, Boolean(n.closed)])).toEqual([['@1 T1', false], ['@2 T2', true]]);
+    const issueLinks = data.links.filter((l) => l.ty === 'issue').map((l) => `${l.source}>${l.target}`);
+    expect(issueLinks.sort()).toEqual([`issue:1>${a.id}`, `issue:1>${b.id}`, `issue:1>${c.id}`, `issue:2>book:${id}`]);
+    // the book linked by an issue only: a node too
+    expect(data.nodes.filter((n) => n.ty === 'book').map((n) => n.name)).toEqual(['Dune']);
+  });
+
+  test('labels in one line, cut', () => {
+    const context = { measureText: (t: string) => ({ width: t.length * 2 }) } as unknown as CanvasRenderingContext2D;
+    expect(truncateText(context, 'short', 50)).toBe('short');
+    const cut = truncateText(context, 'a title much too long to be shown whole', 50);
+    expect(cut.endsWith('…')).toBe(true);
+    expect(cut.length * 2).toBeLessThanOrEqual(50);
+  });
+
+  test('lines end on the edge of the nodes', () => {
+    const note = { id: 'n', name: 'n', ty: 'link' as const, radius: 4, x: 0, y: 0 };
+    expect(edgePoint(note, 10, 0)).toEqual({ x: 4, y: 0 });
+    // a book, a square 7.2 wide: its side, or its corner
+    const book = { id: 'b', name: 'b', ty: 'book' as const, radius: 4, x: 0, y: 0 };
+    expect(edgePoint(book, 10, 0).x).toBeCloseTo(3.6);
+    expect(edgePoint(book, 0, -10).y).toBeCloseTo(-3.6);
+    const corner = edgePoint(book, 10, 10);
+    expect(corner.x).toBeCloseTo(3.6);
+    expect(corner.y).toBeCloseTo(3.6);
+  });
 
   test('draws note and tag nodes with links', async () => {
     seed();

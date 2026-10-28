@@ -9,6 +9,7 @@ import Toc, { Heading } from '@/writer/Toc';
 import { Spinner } from '@/ui/ui';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { updateIssueNoteLinks } from '@/issue/issueStore';
+import { issueOfNoteText } from '@/issue/issueOfText';
 import { SidebarTab, store, useStore } from '@/state/store';
 import type { Note as NoteType } from '@/types/model';
 import { defaultNote } from '@/types/model';
@@ -242,7 +243,7 @@ function Note(props: Props) {
     },
     [notePath]
   );
-  const { onSearchLink, onOpenLink } = useLinkHandlers({ onMissingNote });
+  const { onSearchLink, onSearchItem, onOpenLink } = useLinkHandlers({ onMissingNote });
 
   // attach file
   const onAttachFile = useCallback(
@@ -395,8 +396,10 @@ function Note(props: Props) {
                     theme={customTheme}
                     onChange={onContentChange}
                     onSearchLink={onSearchLink}
+                    onSearchItem={onSearchItem}
                     onCreateLink={onCreateNote}
                     onSearchSelectText={(txt: string) => onSearchText(txt)}
+                    onCreateIssue={(txt: string) => issueOfNoteText(txt, noteId, title)}
                     onClickHashtag={(txt: string) => onSearchText(txt, 'hashtag')}
                     onOpenLink={onOpenLink}
                     attachFile={onAttachFile}
