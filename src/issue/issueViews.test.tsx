@@ -8,7 +8,7 @@ import MainView from '@/shell/MainView';
 import { makeNote, renderWithView, waitForView } from '@/testUtils';
 import * as ops from './issueOps';
 import { issueStore, resetIssueStore } from './issueStore';
-import { boardColumns, dragEndOp, dropTarget } from './project/ProjectBoard';
+import { boardCollision, boardColumns, dragEndOp, dropTarget } from './project/ProjectBoard';
 import { timeAgo } from './common';
 import { textColorFor } from './LabelChip';
 import type { IssueData } from './types';
@@ -83,7 +83,6 @@ function renderApp(view: object) {
 }
 
 beforeEach(() => {
-  vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 afterEach(() => {
   cleanup(); // unmount before resetting the store
@@ -206,6 +205,7 @@ describe('Issues view', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     // delete
     await userEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
     expect(data().labels.map((l) => l.name)).not.toContain('bug');
     expect(data().issues[0].labels).toEqual([]);
     // click a label to filter
@@ -251,6 +251,7 @@ describe('Issues view', () => {
     // delete
     await userEvent.click(screen.getByRole('button', { name: /Milestones/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
     expect(data().milestones).toEqual([]);
   });
 });
@@ -351,6 +352,7 @@ describe('Issue detail', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Edit comment' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await userEvent.click(screen.getByRole('button', { name: 'Delete comment' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
     expect(screen.queryAllByTestId('timeline-comment')).toHaveLength(0);
   });
 
@@ -419,6 +421,7 @@ describe('Issue detail', () => {
     await renderApp({ view: 'issue', number: 1 });
     await waitFor(() => expect(screen.getByText('Mentioned in notes').parentElement).toHaveTextContent('Spec'));
     await userEvent.click(screen.getByRole('button', { name: 'Delete issue' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
     expect(data().issues).toEqual([]);
     expect(viewState().view).toBe('issues');
   });
@@ -556,7 +559,6 @@ describe('Project view', () => {
 
   test('column rename, closes toggle, add and delete', async () => {
     seedProject();
-    vi.spyOn(window, 'prompt').mockReturnValue('Review');
     await renderApp({ view: 'project' });
     await userEvent.click(screen.getByRole('button', { name: 'Todo' }));
     const input = screen.getByLabelText('Column name');
@@ -566,8 +568,19 @@ describe('Project view', () => {
     await userEvent.click(screen.getAllByRole('button', { name: 'Moving here closes issues: off' })[0]);
     expect(data().projects[0].statuses[0].closes).toBe(true);
     await userEvent.click(screen.getByRole('button', { name: /Add column/ }));
+    const name = await screen.findByLabelText('New column name');
+    expect(name).toHaveValue('Column 4');
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Review{Enter}');
     expect(data().projects[0].statuses.map((s) => s.name)).toEqual(['Backlog', 'In Progress', 'Done', 'Review']);
+    await waitFor(() => expect(screen.queryByLabelText('New column name')).not.toBeInTheDocument());
     await userEvent.click(screen.getByRole('button', { name: 'Delete column In Progress' }));
+    // cancel keeps it
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument());
+    expect(data().projects[0].statuses).toHaveLength(4);
+    await userEvent.click(screen.getByRole('button', { name: 'Delete column In Progress' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
     expect(data().projects[0].statuses).toHaveLength(3);
     expect(within(columns()[0]).getByText('Doing item')).toBeInTheDocument();
   });
@@ -593,6 +606,7 @@ describe('Project view', () => {
     expect(within(dialog).getByTestId('issue-detail')).toHaveTextContent('Todo item #1');
     expect(within(dialog).queryByRole('button', { name: 'Issues' })).not.toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete issue' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(ops.getIssue(data(), 1)).toBeUndefined();
   });
@@ -627,7 +641,6 @@ describe('Project view', () => {
 
   test('create, switch, rename and delete projects', async () => {
     seedProject();
-    vi.spyOn(window, 'prompt').mockReturnValue('Main');
     await renderApp({ view: 'project' });
     await userEvent.type(screen.getByLabelText('New project'), 'Roadmap{Enter}');
     expect(data().projects.map((p) => p.title)).toEqual(['Default', 'Roadmap']);
@@ -636,10 +649,17 @@ describe('Project view', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Default' }));
     expect(screen.getByRole('heading')).toHaveTextContent('Default');
     await userEvent.click(screen.getByRole('button', { name: 'Rename' }));
+    const name = await screen.findByLabelText('Project name');
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Main{Enter}');
     expect(data().projects[0].title).toBe('Main');
+    await waitFor(() => expect(screen.queryByLabelText('Project name')).not.toBeInTheDocument());
     await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
     expect(data().projects.map((p) => p.title)).toEqual(['Roadmap']);
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Confirm delete' })).not.toBeInTheDocument());
     await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm delete' }));
     expect(screen.getByText('No projects yet. Create one above.')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Issues' }));
     expect(viewState().view).toBe('issues');
@@ -660,6 +680,38 @@ describe('Project view', () => {
     expect(dropTarget(p, 1, { type: 'Column', status: doing.id })).toEqual({ status: doing.id, order: 0 });
     expect(dropTarget(p, 1, { type: 'Card', issue: 99, status: todo.id })).toEqual({ status: todo.id, order: 3 });
     expect(dropTarget(p, 1, {})).toBeUndefined();
+  });
+
+  test('boardCollision drops a card into the column under the pointer', () => {
+    const rect = (left: number, top: number, width: number, height: number) =>
+      ({ left, top, width, height, right: left + width, bottom: top + height });
+    const container = (id: string, data: object, r: ReturnType<typeof rect>) =>
+      ({ id, data: { current: data }, rect: { current: r }, key: id, disabled: false, node: { current: null } });
+    const containers = [
+      container('status-a', { type: 'Column', status: 'a' }, rect(0, 0, 300, 800)),
+      container('status-b', { type: 'Column', status: 'b' }, rect(310, 0, 300, 800)),
+      container('issue-1', { type: 'Card', issue: 1, status: 'a' }, rect(10, 40, 280, 60)),
+      container('issue-2', { type: 'Card', issue: 2, status: 'a' }, rect(10, 110, 280, 60)),
+      container('issue-3', { type: 'Card', issue: 3, status: 'b' }, rect(320, 40, 280, 60)),
+    ];
+    const droppableRects = new Map(containers.map((c) => [c.id, c.rect.current]));
+    const hit = (type: string, x: number, y: number) => boardCollision({
+      active: { id: 'x', data: { current: { type, issue: 1, status: 'a' } }, rect: { current: { initial: null, translated: null } } },
+      collisionRect: rect(x - 140, y - 30, 280, 60),
+      droppableRects,
+      droppableContainers: containers,
+      pointerCoordinates: { x, y },
+    } as never).map((c) => c.id);
+    // empty space of another column, below its cards: its end
+    expect(hit('Card', 400, 600)).toEqual(['status-b']);
+    // over a card of another column
+    expect(hit('Card', 400, 70)[0]).toBe('issue-3');
+    // within its own column
+    expect(hit('Card', 100, 140)[0]).toBe('issue-2');
+    // outside every column
+    expect(hit('Card', 2000, 2000)).toEqual([]);
+    // columns still sort by corners
+    expect(hit('Column', 400, 400).length).toBeGreaterThan(0);
   });
 
   test('dragEndOp moves cards and columns', () => {

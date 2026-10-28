@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import {
-  DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, PointerSensor, TouchSensor,
-  closestCorners, useSensor, useSensors,
+  CollisionDetection, DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, MouseSensor,
+  PointerSensor, TouchSensor, closestCenter, closestCorners, pointerWithin, rectIntersection, useSensor, useSensors,
 } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
 import { TbPlus as IconPlus } from 'react-icons/tb';
+import { PromptModal } from '@/ui/Dialogs';
 import { useIssueStore } from '../issueStore';
 import {
   addStatus, deleteStatus, getIssue, moveProjectItem, moveStatus, updateStatus,
@@ -52,6 +53,29 @@ export function dropTarget(
 
 type DragData = { type?: string; issue?: number; status?: string } | undefined;
 
+/**
+ * Columns are found by corners; a card lands in the column under the pointer
+ * (else the one it overlaps), at the closest card there or below the last. Plain corners
+ * would favor the cards of the source column over a tall or empty column.
+ */
+export const boardCollision: CollisionDetection = (args) => {
+  if ((args.active.data.current as DragData)?.type !== 'Card') return closestCorners(args);
+  const isColumn = (id: string | number) =>
+    (args.droppableContainers.find((c) => c.id === id)?.data.current as DragData)?.type === 'Column';
+  const within = pointerWithin(args).filter((c) => isColumn(c.id));
+  const [hit] = within.length ? within : rectIntersection(args).filter((c) => isColumn(c.id));
+  if (!hit) return [];
+  const status = (args.droppableContainers.find((c) => c.id === hit.id)?.data.current as DragData)?.status;
+  const cards = args.droppableContainers.filter((c) => {
+    const d = c.data.current as DragData;
+    return d?.type === 'Card' && d.status === status;
+  });
+  // below the last card: the column's end
+  const bottom = Math.max(...cards.map((c) => args.droppableRects.get(c.id)?.bottom ?? -Infinity));
+  if (!cards.length || (args.pointerCoordinates && args.pointerCoordinates.y > bottom)) return [hit];
+  return closestCenter({ ...args, droppableContainers: cards });
+};
+
 /** The op a drop results in: reorder columns, or move a card. */
 export function dragEndOp(project: Project, a: DragData, o: DragData) {
   if (!a || !o) return undefined;
@@ -75,6 +99,8 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
   const apply = useIssueStore((s) => s.apply);
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [activeColumn, setActiveColumn] = useState<string | null>(null);
+  const [overColumn, setOverColumn] = useState<string | null>(null);
+  const [addingColumn, setAddingColumn] = useState(false);
   const columns = useMemo(() => boardColumns(project, data), [project, data]);
   const columnIds = useMemo(() => project.statuses.map((s) => columnDndId(s.id)), [project.statuses]);
   const candidates = useMemo(
@@ -94,9 +120,15 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
     if (d?.type === 'Column') setActiveColumn(d.status);
   };
 
+  const onDragOver = (e: DragOverEvent) => {
+    const d = e.active.data.current as DragData;
+    setOverColumn(d?.type === 'Card' ? (e.over?.data.current as DragData)?.status ?? null : null);
+  };
+
   const onDragEnd = (e: DragEndEvent) => {
     setActiveCard(null);
     setActiveColumn(null);
+    setOverColumn(null);
     const op = dragEndOp(project, e.active.data.current, e.over?.data.current);
     if (op) apply(op);
   };
@@ -106,7 +138,14 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
 
   return (
     <div className="flex h-full gap-3 p-4 overflow-x-auto" data-testid="project-board">
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={boardCollision}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => { setActiveCard(null); setActiveColumn(null); setOverColumn(null); }}
+      >
         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
           {columns.map(({ status, issues }) => (
             <ProjectColumn
@@ -120,6 +159,7 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
               onToggleCloses={() => apply((d) => updateStatus(d, project.id, status.id, { closes: !status.closes }))}
               onDelete={() => apply((d) => deleteStatus(d, project.id, status.id))}
               onAddItem={(text) => onAddItem(status.id, text)}
+              dropping={overColumn === status.id}
             />
           ))}
         </SortableContext>
@@ -127,14 +167,20 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
           <button
             type="button"
             className="flex items-center gap-1 px-3 py-2 text-sm text-base-content/60 bg-base-200 rounded-sm hover:bg-base-content/10"
-            onClick={() => {
-              const name = window.prompt('Column name', `Column ${project.statuses.length + 1}`);
-              if (name) apply((d) => addStatus(d, project.id, name));
-            }}
+            onClick={() => setAddingColumn(true)}
           >
             <IconPlus size={14} /> Add column
           </button>
         </div>
+        <PromptModal
+          title="Add column"
+          label="New column name"
+          initial={`Column ${project.statuses.length + 1}`}
+          submitLabel="Add column"
+          isOpen={addingColumn}
+          onSubmit={(name) => apply((d) => addStatus(d, project.id, name))}
+          handleClose={() => setAddingColumn(false)}
+        />
         {createPortal(
           <DragOverlay>
             {overlayIssue ? <ProjectCard issue={overlayIssue} data={data} status="" overlay /> : null}

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TbPlus as IconPlus, TbTrash as IconTrash, TbCircleCheck as IconCloses } from 'react-icons/tb';
+import { ConfirmModal } from '@/ui/Dialogs';
 import { inputClass } from '../common';
 import type { Issue, IssueData, ProjectStatus } from '../types';
 import ProjectCard, { cardDndId } from './ProjectCard';
@@ -18,20 +19,23 @@ type Props = {
   onDelete: () => void;
   /** title creates a new issue; '#n' adds issue n */
   onAddItem: (text: string) => void;
+  /** a dragged card would land in this column */
+  dropping?: boolean;
   overlay?: boolean;
 };
 
 export const columnDndId = (id: string) => `status-${id}`;
 
 export default function ProjectColumn(props: Props) {
-  const { status, issues, data, candidates, onOpen, onRename, onToggleCloses, onDelete, onAddItem, overlay = false } = props;
+  const { status, issues, data, candidates, onOpen, onRename, onToggleCloses, onDelete, onAddItem, dropping = false, overlay = false } = props;
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(status.name);
   const [adding, setAdding] = useState(false);
   const [text, setText] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const ids = useMemo(() => issues.map((i) => cardDndId(i.number)), [issues]);
 
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging, isOver } = useSortable({
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: columnDndId(status.id),
     data: { type: 'Column', status: status.id },
     disabled: editing || overlay,
@@ -54,7 +58,7 @@ export default function ProjectColumn(props: Props) {
       ref={setNodeRef}
       style={style}
       data-testid="project-column"
-      className={`flex flex-col shrink-0 w-72 max-h-full bg-base-200 rounded-sm ${isDragging ? 'opacity-40' : ''} ${isOver ? 'ring-2 ring-primary' : ''}`}
+      className={`flex flex-col shrink-0 w-72 max-h-full bg-base-200 rounded-sm ${isDragging ? 'opacity-40' : ''} ${dropping ? 'ring-2 ring-primary' : ''}`}
     >
       <div
         {...attributes}
@@ -83,8 +87,14 @@ export default function ProjectColumn(props: Props) {
           type="button"
           aria-label={`Moving here closes issues: ${status.closes ? 'on' : 'off'}`}
           aria-pressed={!!status.closes}
-          title={status.closes ? 'Moving an item here closes it' : 'Click: moving an item here closes it'}
-          className={status.closes ? 'text-purple-600' : 'text-base-content/50 opacity-0 group-hover:opacity-100'}
+          title={
+            status.closes
+              ? 'Done column: items moved here are closed, and closed issues move here. Click to turn off.'
+              : 'Make this a Done column: items moved here are closed, and closed issues move here'
+          }
+          className={`flex items-center gap-1 text-xs ${
+            status.closes ? 'text-purple-600' : 'text-base-content/50 opacity-0 group-hover:opacity-100'
+          }`}
           onClick={onToggleCloses}
         >
           <IconCloses size={16} />
@@ -93,13 +103,20 @@ export default function ProjectColumn(props: Props) {
           type="button"
           aria-label={`Delete column ${status.name}`}
           className="text-base-content/50 opacity-0 group-hover:opacity-100 hover:text-error/80"
-          onClick={() => {
-            if (window.confirm(`Delete column "${status.name}"? Its items move to the first column.`)) onDelete();
-          }}
+          onClick={() => setConfirmDelete(true)}
         >
           <IconTrash size={16} />
         </button>
       </div>
+      <ConfirmModal
+        title={`Delete column "${status.name}"?`}
+        message="Its items move to the first column."
+        confirmLabel="Confirm delete"
+        danger
+        isOpen={confirmDelete}
+        onConfirm={onDelete}
+        handleClose={() => setConfirmDelete(false)}
+      />
       <div className="flex flex-col flex-1 gap-2 px-2 pb-2 overflow-y-auto min-h-12">
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {issues.map((issue) => (

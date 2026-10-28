@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ConfirmModal } from '@/ui/Dialogs';
 import { useIssueStore } from './issueStore';
 import { createLabel, deleteLabel, updateLabel } from './issueOps';
 import LabelChip, { ColorPicker, LABEL_COLORS } from './LabelChip';
@@ -46,6 +47,9 @@ export default function LabelManager({ data, onFilter }: { data: IssueData; onFi
   // color for the next new label, picked when opening the form
   const [creating, setCreating] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  // kept while the modal closes
+  const [deleting, setDeleting] = useState<Label | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const counts = (id: string) => data.issues.filter((i) => i.state === 'open' && i.labels.includes(id)).length;
 
   return (
@@ -81,11 +85,7 @@ export default function LabelManager({ data, onFilter }: { data: IssueData; onFi
                 <button
                   type="button"
                   className="text-sm text-error hover:underline"
-                  onClick={() => {
-                    if (window.confirm(`Delete label "${label.name}"? It will be removed from all issues.`)) {
-                      apply((x) => deleteLabel(x, label.id));
-                    }
-                  }}
+                  onClick={() => { setConfirmOpen(true); setDeleting(label); }}
                 >
                   Delete
                 </button>
@@ -94,6 +94,15 @@ export default function LabelManager({ data, onFilter }: { data: IssueData; onFi
           </li>
         ))}
       </ul>
+      <ConfirmModal
+        title={`Delete label "${deleting?.name ?? ''}"?`}
+        message="It will be removed from all issues."
+        confirmLabel="Confirm delete"
+        danger
+        isOpen={confirmOpen}
+        onConfirm={() => { if (deleting) apply((x) => deleteLabel(x, deleting.id)); }}
+        handleClose={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

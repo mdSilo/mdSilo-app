@@ -5,6 +5,7 @@ import { useCurrentViewContext } from '@/state/useCurrentView';
 import useDebounce from '@/lib/hooks/useDebounce';
 import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
 import ErrorBoundary from '@/ui/ErrorBoundary';
+import { ConfirmModal } from '@/ui/Dialogs';
 import { useIssueData, useIssueStore } from './issueStore';
 import {
   addComment, commentCount, deleteIssue, getIssue, isOverdue, setDueOn, setState, updateIssue,
@@ -57,6 +58,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
   const [titleDraft, setTitleDraft] = useState(issue.title);
   const [comment, setComment] = useState('');
   const [commentKey, setCommentKey] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const num = issue.number;
 
   const submitComment = (close?: boolean) => {
@@ -157,14 +159,22 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
             <button
               type="button"
               className="flex items-center gap-1 mt-4 text-sm text-error hover:underline"
-              onClick={() => {
-                if (!window.confirm(`Delete issue #${num}? This cannot be undone.`)) return;
-                apply((d) => deleteIssue(d, num));
-                if (onClose) onClose(); else dispatch({ view: 'issues' });
-              }}
+              onClick={() => setConfirmDelete(true)}
             >
               <IconTrash size={14} /> Delete issue
             </button>
+            <ConfirmModal
+              title={`Delete issue #${num}?`}
+              message="This cannot be undone."
+              confirmLabel="Confirm delete"
+              danger
+              isOpen={confirmDelete}
+              onConfirm={() => {
+                apply((d) => deleteIssue(d, num));
+                if (onClose) onClose(); else dispatch({ view: 'issues' });
+              }}
+              handleClose={() => setConfirmDelete(false)}
+            />
           </aside>
         </div>
       </div>

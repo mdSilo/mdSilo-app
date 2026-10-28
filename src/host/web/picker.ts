@@ -38,7 +38,7 @@ async function initialDir(defaultPath?: string): Promise<[string, string]> {
   return [(await fs.isDir(fs.DEFAULT_DIR)) ? fs.DEFAULT_DIR : ROOT, defaultPath ? basename(defaultPath) : ''];
 }
 
-function el<K extends keyof HTMLElementTagNameMap>(
+export function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   style: Partial<CSSStyleDeclaration> = {},
   text?: string,
@@ -49,9 +49,8 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-export function pick(options: PickOptions): Promise<string[] | null> {
-  const { mode, multiple = false } = options;
-  const exts = (options.extensions ?? []).map((e) => e.toLowerCase()).filter((e) => e && e !== '*');
+/** colors and button style of the plain DOM dialogs, by the app theme */
+export function dialogStyle() {
   const dark = Boolean(document.querySelector('.dark'));
   const color = {
     bg: dark ? '#1f2937' : '#ffffff',
@@ -71,6 +70,13 @@ export function pick(options: PickOptions): Promise<string[] | null> {
     cursor: 'pointer',
     fontSize: '13px',
   };
+  return { color, btnStyle };
+}
+
+export function pick(options: PickOptions): Promise<string[] | null> {
+  const { mode, multiple = false } = options;
+  const exts = (options.extensions ?? []).map((e) => e.toLowerCase()).filter((e) => e && e !== '*');
+  const { color, btnStyle } = dialogStyle();
 
   return new Promise((resolve) => {
     let cwd = ROOT;
@@ -100,6 +106,16 @@ export function pick(options: PickOptions): Promise<string[] | null> {
     const pathLabel = el('div', { flex: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: color.muted });
     const newDirBtn = el('button', btnStyle, '+ New Folder');
     toolbar.append(upBtn, pathLabel, newDirBtn);
+
+    const newDirRow = el('div', { display: 'none', alignItems: 'center', gap: '8px', padding: '0 16px 8px' });
+    const newDirInput = el('input', {
+      flex: '1', padding: '4px 8px', border: `1px solid ${color.border}`, borderRadius: '4px',
+      background: 'transparent', color: color.fg,
+    });
+    newDirInput.placeholder = 'New folder name';
+    newDirInput.setAttribute('aria-label', 'New folder name');
+    const createDirBtn = el('button', btnStyle, 'Create');
+    newDirRow.append(newDirInput, createDirBtn);
 
     const list = el('div', {
       flex: '1', minHeight: '200px', overflowY: 'auto', margin: '0 16px',
@@ -135,7 +151,7 @@ export function pick(options: PickOptions): Promise<string[] | null> {
       mode === 'dir' ? 'Select Folder' : mode === 'save' ? 'Save' : 'Open');
     footer.append(uploadBtn, uploadInput, status, cancelBtn, okBtn);
 
-    box.append(header, hint, toolbar, list, nameRow, footer);
+    box.append(header, hint, toolbar, newDirRow, list, nameRow, footer);
 
     const close = (result: string[] | null) => {
       document.removeEventListener('keydown', onKey, true);
@@ -154,8 +170,32 @@ export function pick(options: PickOptions): Promise<string[] | null> {
       }
     };
 
+    const showNewDir = (show: boolean) => {
+      newDirRow.style.display = show ? 'flex' : 'none';
+      newDirInput.value = '';
+      if (show) newDirInput.focus();
+    };
+
+    const createDir = async () => {
+      const name = newDirInput.value.trim();
+      if (!name) return;
+      const dir = join(cwd, name);
+      if (await fs.mkdirp(dir)) {
+        cwd = dir;
+        selected = [];
+      }
+      showNewDir(false);
+      void render();
+    };
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.target === newDirInput && (e.key === 'Escape' || e.key === 'Enter')) {
+        // the new folder row takes its own keys
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.key === 'Enter') void createDir();
+        else showNewDir(false);
+      } else if (e.key === 'Escape') {
         e.stopPropagation();
         close(null);
       } else if (e.key === 'Enter' && (mode !== 'file' || selected.length)) {
@@ -221,16 +261,8 @@ export function pick(options: PickOptions): Promise<string[] | null> {
       selected = [];
       void render();
     };
-    newDirBtn.onclick = async () => {
-      const name = window.prompt('New folder name')?.trim();
-      if (!name) return;
-      const dir = join(cwd, name);
-      if (await fs.mkdirp(dir)) {
-        cwd = dir;
-        selected = [];
-      }
-      void render();
-    };
+    newDirBtn.onclick = () => showNewDir(newDirRow.style.display === 'none');
+    createDirBtn.onclick = () => void createDir();
     uploadBtn.onclick = () => uploadInput.click();
     uploadInput.onchange = async () => {
       const files = Array.from(uploadInput.files ?? []);

@@ -4,6 +4,7 @@ import {
   TbFlag as IconFlag, TbPencil as IconPencil, TbLayoutBoardSplit as IconStatus, TbTrash as IconTrash, TbCheckbox as IconTask,
   TbCalendar as IconCalendar,
 } from 'react-icons/tb';
+import { ConfirmModal } from '@/ui/Dialogs';
 import { useIssueStore } from './issueStore';
 import { deleteComment, editComment } from './issueOps';
 import { TimeAgo, btnClass, primaryBtnClass } from './common';
@@ -63,6 +64,7 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.body);
   const [version, setVersion] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <li className="my-3 border border-base-300 rounded-sm" data-testid="timeline-comment">
@@ -80,10 +82,18 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
               type="button"
               aria-label="Delete comment"
               className="hover:text-error/80"
-              onClick={() => { if (window.confirm('Delete this comment?')) apply((d) => deleteComment(d, issue.number, item.id)); }}
+              onClick={() => setConfirmDelete(true)}
             >
               <IconTrash size={14} />
             </button>
+            <ConfirmModal
+              title="Delete this comment?"
+              confirmLabel="Confirm delete"
+              danger
+              isOpen={confirmDelete}
+              onConfirm={() => apply((d) => deleteComment(d, issue.number, item.id))}
+              handleClose={() => setConfirmDelete(false)}
+            />
           </span>
         )}
       </div>

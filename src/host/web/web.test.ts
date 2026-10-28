@@ -2,13 +2,14 @@ import 'fake-indexeddb/auto';
 import { vi } from 'vitest';
 import { IDBFactory } from 'fake-indexeddb';
 import { closeDB } from './idb';
-import { resetFsInit } from './fs';
+import { isDir, resetFsInit } from './fs';
 import { invoke, convertFileSrc } from './core';
 import { getCurrentWindow } from './window';
 import { normalize, join, parent, basename, isWithin } from './path';
 import { parseFeed, proxiedUrl, getCorsProxy, resetBuiltinProxy, PUBLIC_CORS_PROXY } from './feed';
 import { buildBackup, backupFileName } from './backup';
 import { crc32 } from './zip';
+import { ask, message, open } from './dialog';
 
 beforeEach(async () => {
   await closeDB();
@@ -346,3 +347,51 @@ describe('backup', () => {
   });
 });
 
+
+describe('web dialogs', () => {
+  const key = (k: string) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k }));
+  const button = (text: string) =>
+    Array.from(document.querySelectorAll('button')).find((b) => b.textContent === text) as HTMLButtonElement;
+
+  it('asks and shows messages in the page', async () => {
+    const yes = ask('Sure?', 'Title');
+    expect(document.querySelector('[role=alertdialog]')?.textContent).toContain('TitleSure?');
+    button('OK').click();
+    expect(await yes).toBe(true);
+    const no = ask('Sure?');
+    button('Cancel').click();
+    expect(await no).toBe(false);
+    const esc = ask('Sure?', { title: 'T' });
+    key('Escape');
+    expect(await esc).toBe(false);
+    const enter = ask('Sure?');
+    key('Enter');
+    expect(await enter).toBe(true);
+    const msg = message('Done');
+    expect(button('Cancel')).toBeUndefined();
+    key('Escape');
+    await msg;
+    expect(document.querySelector('[data-testid=web-message-box]')).toBeNull();
+  });
+
+  it('creates a folder in the picker without a native prompt', async () => {
+    const picked = open({ directory: true });
+    await flush();
+    await flush();
+    const input = document.querySelector('[aria-label="New folder name"]') as HTMLInputElement;
+    expect(input.parentElement!.style.display).toBe('none');
+    button('+ New Folder').click();
+    expect(input.parentElement!.style.display).toBe('flex');
+    input.value = 'x';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); // closes the row only
+    expect(input.parentElement!.style.display).toBe('none');
+    expect(document.querySelector('[data-testid=web-file-picker]')).not.toBeNull();
+    button('+ New Folder').click();
+    input.value = 'Fresh';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await flush();
+    expect(await isDir('/mdSilo/Fresh')).toBe(true);
+    button('Select Folder').click();
+    expect(await picked).toBe('/mdSilo/Fresh');
+  });
+});

@@ -3,6 +3,7 @@ import { TbLayoutBoardSplit as IconBoard, TbTable as IconTable, TbPlus as IconPl
 import { useStore } from '@/state/store';
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { BaseModal } from '@/ui/BaseModal';
+import { ConfirmModal, PromptModal } from '@/ui/Dialogs';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useIssueData, useIssueStore } from '@/issue/issueStore';
 import { createProject, deleteProject, getIssue, moveProjectItem, updateProject } from '@/issue/issueOps';
@@ -18,6 +19,7 @@ export default function ProjectView() {
   const { state, dispatch } = useCurrentViewContext();
   const [openIssue, setOpenIssue] = useState<number | null>(null);
   const [newProject, setNewProject] = useState('');
+  const [dialog, setDialog] = useState<'rename' | 'delete' | null>(null);
 
   if (!initDir) {
     return <p className="p-8 text-base-content/60">Open a folder to use projects.</p>;
@@ -88,22 +90,14 @@ export default function ProjectView() {
               <button
                 type="button"
                 className="text-sm ms-link"
-                onClick={() => {
-                  const title = window.prompt('Project name', project.title);
-                  if (title) apply((d) => updateProject(d, project.id, { title }));
-                }}
+                onClick={() => setDialog('rename')}
               >
                 Rename
               </button>
               <button
                 type="button"
                 className="text-sm text-error hover:underline"
-                onClick={() => {
-                  if (window.confirm(`Delete project "${project.title}"? Issues are kept.`)) {
-                    apply((d) => deleteProject(d, project.id));
-                    dispatch({ view: 'project' });
-                  }
-                }}
+                onClick={() => setDialog('delete')}
               >
                 Delete
               </button>
@@ -130,6 +124,27 @@ export default function ProjectView() {
                 <ProjectBoard project={project} data={data} onOpen={setOpenIssue} onAddItem={addItem} />
               )}
             </div>
+            <PromptModal
+              title="Rename project"
+              label="Project name"
+              initial={project.title}
+              submitLabel="Rename"
+              isOpen={dialog === 'rename'}
+              onSubmit={(title) => apply((d) => updateProject(d, project.id, { title }))}
+              handleClose={() => setDialog(null)}
+            />
+            <ConfirmModal
+              title={`Delete project "${project.title}"?`}
+              message="Its issues are kept."
+              confirmLabel="Confirm delete"
+              danger
+              isOpen={dialog === 'delete'}
+              onConfirm={() => {
+                apply((d) => deleteProject(d, project.id));
+                dispatch({ view: 'project' });
+              }}
+              handleClose={() => setDialog(null)}
+            />
           </>
         ) : (
           <p className="p-8 text-base-content/60">No projects yet. Create one above.</p>

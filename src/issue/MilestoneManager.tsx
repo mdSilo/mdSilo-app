@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ConfirmModal } from '@/ui/Dialogs';
 import { useIssueStore } from './issueStore';
 import { createMilestone, deleteMilestone, milestoneProgress, updateMilestone } from './issueOps';
 import { btnClass, inputClass, primaryBtnClass } from './common';
@@ -53,6 +54,9 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [tab, setTab] = useState<IssueState>('open');
+  // kept while the modal closes
+  const [deleting, setDeleting] = useState<Milestone | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const shown = data.milestones.filter((m) => m.state === tab);
   const count = (s: IssueState) => data.milestones.filter((m) => m.state === s).length;
 
@@ -130,9 +134,7 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
                       <button
                         type="button"
                         className="text-error hover:underline"
-                        onClick={() => {
-                          if (window.confirm(`Delete milestone "${m.title}"?`)) apply((x) => deleteMilestone(x, m.id));
-                        }}
+                        onClick={() => { setConfirmOpen(true); setDeleting(m); }}
                       >
                         Delete
                       </button>
@@ -144,6 +146,15 @@ export default function MilestoneManager({ data, onFilter }: { data: IssueData; 
           );
         })}
       </ul>
+      <ConfirmModal
+        title={`Delete milestone "${deleting?.title ?? ''}"?`}
+        message="Its issues are kept."
+        confirmLabel="Confirm delete"
+        danger
+        isOpen={confirmOpen}
+        onConfirm={() => { if (deleting) apply((x) => deleteMilestone(x, deleting.id)); }}
+        handleClose={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
