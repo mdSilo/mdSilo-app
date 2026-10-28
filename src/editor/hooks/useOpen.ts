@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, store } from 'lib/store';
+import { NoteMap, store, type Store } from 'lib/store';
 import { 
   openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir, openJSONFilePath 
 } from 'file/open';
@@ -7,6 +7,8 @@ import { normalizeSlash, getDirPath, getBaseName, joinPaths } from 'file/util';
 import DirectoryAPI from 'file/directory';
 import { writeAllFile, writeFile } from 'file/write';
 import { rmFileNameExt } from 'file/process';
+import { READING_DIR, WRITING_DIR, resolveLayout } from 'workspace/layout';
+import { syncFeeds } from 'components/feed/feedSync';
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);
@@ -31,13 +33,33 @@ export const onOpenDir = async () => {
   if (dirPath && typeof dirPath === 'string') {
     cleanStore();
     const normalizedDir = await getDirPath(dirPath);
-    store.getState().setInitDir(normalizedDir);
+    await setWorkspace(normalizedDir);
     store.getState().setCurrentDir(normalizedDir);
     store.getState().upsertRecentDir(normalizedDir);
     // console.log("rencent dir path", store.getState().recentDir);
     await openDir(normalizedDir);
+    await expandLayoutRoots(normalizedDir);
   }
 };
+
+/** Set the folder as the workspace, with its layout (see workspace/layout). */
+async function setWorkspace(dir: string) {
+  const layout = await resolveLayout(dir);
+  store.getState().setLayout(layout);
+  store.getState().setInitDir(dir);
+  // the feeds of the workspace, e.g. subscribed on another device
+  if (layout === 'workspace') void syncFeeds();
+}
+
+/** In the workspace layout, the sidebar shows reading/ and writing/ expanded. */
+async function expandLayoutRoots(dir: string) {
+  if (store.getState().layout !== 'workspace') return;
+  for (const name of [READING_DIR, WRITING_DIR]) {
+    const root = await joinPaths(dir, [name]);
+    await listDir(root, false);
+    store.getState().toggleExpandedDir(normalizeSlash(root), true);
+  }
+}
 
 // used for list init dir: 
 // SidebarNotes init Open Folder,
@@ -57,31 +79,48 @@ export const onListDir = async () => {
 // onListDir 
 // SidebarHistory, to recent dir 
 export const listInitDir = async (dirPath: string) => {
-  store.getState().setInitDir(dirPath);
+  await setWorkspace(dirPath);
   store.getState().setCurrentDir(dirPath);
   store.getState().upsertRecentDir(dirPath);
   // listen on init dir only
   await listDir(dirPath);
+  await expandLayoutRoots(dirPath);
   // all notes with content, e.g. for backlinks and search
   void loadDir(dirPath);
+};
+
+/** Open the workspace again from scratch, e.g. once its layout changed. */
+export const reopenWorkspace = async (dirPath: string) => {
+  cleanStore();
+  await listInitDir(dirPath);
+};
+
+/** The folder to open on startup as the setting says, '' for none. */
+export const startupDir = (
+  state: Pick<Store, 'openOnStartup' | 'recentDir' | 'pinnedDir'>
+): string => {
+  if (state.openOnStartup === 'previous') {
+    const recent = state.recentDir ?? [];
+    return recent[recent.length - 1] ?? '';
+  }
+  return state.openOnStartup === 'pinned' ? state.pinnedDir : '';
 };
 
 let isWebWorkspaceOpening = false;
 
 /**
  * Web: notes live in IndexedDB, there is always a folder to work in. Open the
- * previous folder (if enabled), the pinned folder, or the default workspace
- * `/mdSilo`, so the views depending on a folder (issues, chronicle, graph...)
- * are available on startup.
+ * folder of the setting (previous or pinned), the pinned folder, or the
+ * default workspace `/mdSilo`, so the views depending on a folder (issues,
+ * chronicle, graph...) are available on startup.
  */
 export const openWebWorkspace = async (): Promise<string | undefined> => {
   const state = store.getState();
   if (state.initDir || isWebWorkspaceOpening) return;
   isWebWorkspaceOpening = true;
   try {
-    const recent = state.recentDir ?? [];
     const candidates = [
-      state.isOpenPreOn ? recent[recent.length - 1] : '',
+      startupDir(state),
       state.pinnedDir,
     ].filter((d): d is string => Boolean(d));
     for (const dir of candidates) {
@@ -165,6 +204,7 @@ function cleanStore() {
   store.getState().setNotes(NoteMap.EMPTY);
   store.getState().setCurrentDir(undefined);
   store.getState().setCurrentNoteId('');
+  store.getState().setLayout(undefined);
   store.getState().setIsLoaded(false);
   store.getState().setIsLoading(false);
 }

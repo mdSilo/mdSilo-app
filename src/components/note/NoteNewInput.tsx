@@ -10,6 +10,7 @@ import { openFilePath } from 'file/open';
 import { writeFile } from 'file/write';
 import { Notes, store, useStore } from 'lib/store';
 import { defaultNote } from 'types/model';
+import { newNoteDir } from 'workspace/layout';
 
 enum OptionType {
   NOTE,
@@ -74,8 +75,10 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       onOptionClickCallback?.();
 
       if (option.type === OptionType.NEW_NOTE) {
-        if (!currentDir) return;
-        const notePath = await joinPaths(currentDir, [`${inputTxt}.md`]);
+        // at the root of a workspace: in writing/
+        const noteDir = newNoteDir(currentDir);
+        if (!noteDir) return;
+        const notePath = await joinPaths(noteDir, [`${inputTxt}.md`]);
         const note = { 
           ...defaultNote, 
           id: notePath, 
@@ -85,7 +88,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         };
         await writeFile(notePath, ' ');
         store.getState().upsertNote(note);
-        store.getState().upsertTree(currentDir, [note]);
+        store.getState().upsertTree(noteDir, [note]);
         // navigate to md view
         const cNote: Notes = {};
         cNote[note.id] = note;

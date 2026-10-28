@@ -266,6 +266,31 @@ describe('Issue detail', () => {
     store.getState().setNotes(NoteMap.from({ [note.id]: note }));
   }
 
+  test('sub-tasks and the due date', async () => {
+    seedDetail();
+    await renderApp({ view: 'issue', number: 1 });
+    const add = screen.getByLabelText('Add a sub-task');
+    await userEvent.type(add, 'write tests{Enter}');
+    await userEvent.type(add, 'fix it{Enter}');
+    expect(ops.getIssue(data(), 1)!.subtasks!.map((t) => t.text)).toEqual(['write tests', 'fix it']);
+    await userEvent.click(screen.getByLabelText('Done: write tests'));
+    expect(within(screen.getByTestId('subtasks')).getByText('1/2')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('fix it'));
+    const edit = screen.getByLabelText('Sub-task');
+    await userEvent.clear(edit);
+    await userEvent.type(edit, 'fix the crash{Enter}');
+    expect(ops.getIssue(data(), 1)!.subtasks![1].text).toBe('fix the crash');
+    await userEvent.click(screen.getByLabelText('Delete the sub-task write tests'));
+    expect(ops.getIssue(data(), 1)!.subtasks).toHaveLength(1);
+
+    fireEvent.change(screen.getByLabelText('Due date'), { target: { value: '2000-01-01' } });
+    expect(ops.getIssue(data(), 1)!.dueOn).toBe('2000-01-01');
+    expect(screen.getByLabelText('Due date')).toHaveClass('text-error');
+    expect(screen.getByText('set the due date to 2000-01-01')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(ops.getIssue(data(), 1)!.dueOn).toBeUndefined();
+  });
+
   test('shows a missing issue', async () => {
     seed();
     await renderApp({ view: 'issue', number: 9 });
@@ -545,6 +570,19 @@ describe('Project view', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Delete column In Progress' }));
     expect(data().projects[0].statuses).toHaveLength(3);
     expect(within(columns()[0]).getByText('Doing item')).toBeInTheDocument();
+  });
+
+  test('cards show the due date and the sub-tasks done', async () => {
+    seed((d) => {
+      d = ops.createIssue(d, { title: 'Late', project: { id: d.projects[0].id } });
+      d = ops.setDueOn(d, 1, '2000-01-01');
+      d = ops.addSubtask(ops.addSubtask(d, 1, 'a'), 1, 'b');
+      return ops.updateSubtask(d, 1, d.issues[0].subtasks![0].id, { done: true });
+    });
+    await renderApp({ view: 'project' });
+    expect(screen.getByTestId('card-due')).toHaveTextContent('2000-01-01');
+    expect(screen.getByTestId('card-due')).toHaveClass('text-error');
+    expect(screen.getByTestId('card-subtasks')).toHaveTextContent('1/2');
   });
 
   test('card opens the issue in a modal', async () => {

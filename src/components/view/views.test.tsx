@@ -117,6 +117,15 @@ describe('HeatMap', () => {
     expect(store.getState().activities[today()]).toEqual({ activityNum: 12, createNum: 6, updateNum: 6 });
   });
 
+  test('counts the time read: a quarter of an hour, one activity', () => {
+    const { container } = render(
+      <HeatMap noteList={[]} reading={{ [today()]: 46 * 60 }} onClickCell={vi.fn()} />
+    );
+    // 4 units: the lightest color
+    expect(container.querySelectorAll('rect.fill-primary\\/30')).toHaveLength(1);
+    expect(screen.getByText(/Activity: 4\s+Created: 0\s+Updated: 0\s+Read: 46 min/)).toBeInTheDocument();
+  });
+
   test('merges stored activities and reports clicked dates', async () => {
     store.getState().setActivities({ [today()]: { activityNum: 7, createNum: 3, updateNum: 4 } });
     const onClickCell = vi.fn();
@@ -210,7 +219,7 @@ describe('Chronicle', () => {
     await act(async () => {
       renderView(<Chronicle />);
     });
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/root' });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/root' });
   });
 });
 
@@ -307,6 +316,6 @@ describe('Graph / ForceGraph', () => {
     await act(async () => {
       renderView(<Graph />);
     });
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/root' });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/root' });
   });
 });

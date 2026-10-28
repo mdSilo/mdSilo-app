@@ -3,9 +3,10 @@ import MsEditor from "mdsmirror";
 import { useStore } from 'lib/store';
 import { EDITOR_THEME } from 'lib/themes';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import Spinner from 'components/misc/Spinner';
+import { Spinner } from 'components/misc/ui';
 import useNoteTaskSync from 'components/issue/useNoteTaskSync';
 import { useCurrentViewContext } from 'context/useCurrentView';
+import useStartupView from 'context/useStartupView';
 import NotePage from './md';
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
@@ -17,6 +18,9 @@ const ProjectView = lazy(() => import('./project'));
 const Graph = lazy(() => import('./graph'));
 const Journals = lazy(() => import('./journals'));
 const HashTags = lazy(() => import('./hashtags'));
+const Library = lazy(() => import('reader/components/Library'));
+const Reader = lazy(() => import('reader/components/ReaderView'));
+const Vocabulary = lazy(() => import('reader/components/Vocabulary'));
 
 /** the view of each view type; any other type is a note */
 const VIEWS: Record<string, ComponentType> = {
@@ -29,11 +33,15 @@ const VIEWS: Record<string, ComponentType> = {
   graph: Graph,
   journal: Journals,
   tag: HashTags,
+  library: Library,
+  book: Reader,
+  vocabulary: Vocabulary,
 };
 
 export default function MainView() {
   // issues created from note tasks follow their tasks, whatever the view
   useNoteTaskSync();
+  useStartupView();
   const viewTy = useCurrentViewContext().state.view;
   const View = VIEWS[viewTy] ?? NotePage;
   return (
@@ -46,7 +54,7 @@ export default function MainView() {
 function ViewLoading() {
   return (
     <div className="flex items-center justify-center w-full h-full" data-testid="view-loading">
-      <Spinner className="w-8 h-8" />
+      <Spinner />
     </div>
   );
 }

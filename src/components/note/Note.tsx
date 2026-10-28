@@ -6,7 +6,7 @@ import MsEditor, { Attach, embeds } from "mdsmirror";
 import { EDITOR_THEME } from 'lib/themes';
 import Title from 'components/note/Title';
 import Toc, { Heading } from 'components/note/Toc';
-import Spinner from 'components/misc/Spinner';
+import { Spinner } from 'components/misc/ui';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
 import { updateIssueNoteLinks } from 'components/issue/issueStore';
 import { SidebarTab, store, useStore } from 'lib/store';
@@ -22,11 +22,12 @@ import { encodeHref } from 'utils/mdlink';
 import FileAPI from 'file/files';
 import { writeFile, deleteFile } from 'file/write';
 import { scheduleSave, flushSave } from 'file/pendingSaves';
-import { openFileDilog, openFilePath, openUrl, saveDilog } from 'file/open';
+import { openFileDilog, openFilePath, openFilePaths, openUrl, saveDilog } from 'file/open';
 import {
   joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
 } from 'file/util';
 import { getFileExt } from 'file/process';
+import { useWritingRoot } from 'workspace/useWorkspace';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import IssueRefs from './IssueRefs';
@@ -71,14 +72,16 @@ function Note(props: Props) {
   const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
   const useAsset = useStore((state) => state.useAsset);
+  const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
 
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
+  // `./` paths (assets) are relative to it: writing/ in the workspace layout
+  const notesRoot = useWritingRoot();
 
   // need to update timely if possible
   const protocol = getAssetProtocol();
 
-  // console.log("initDir", initDir, protocol, navigator.platform);
   const storeNotes = useStore((state) => state.notes);
   // get note and properties: title,  content value....
   const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
@@ -250,14 +253,16 @@ function Note(props: Props) {
         let fullPath = filePath;
         let fileUrl: string;
         // console.log("use asset", useAsset)
-        if (initDir && useAsset) {
+        if (notesRoot && useAsset) {
           const assetPath = await invoke<string[]>(
-            'copy_file_to_assets', { srcPath: filePath, workDir: initDir }
+            'copy_file_to_assets', { srcPath: filePath, workDir: notesRoot }
           );
-          // console.log("asset path", assetPath)
           fullPath = assetPath[0] || filePath;
           // now it is relative path
           fileUrl = encodeURI(assetPath[1] || filePath);
+          // in the tree now, not once the watcher tells (if ever: a copy
+          // in place, the web version)
+          if (assetPath[0]) void openFilePaths([assetPath[0]]);
         } else {
           // the local path, resolved to url by `resolveSrc` on display
           fileUrl = encodeURI(filePath);
@@ -279,27 +284,26 @@ function Note(props: Props) {
       }
       return [];
     },
-    [initDir, useAsset]
+    [notesRoot, useAsset]
   );
 
    // open Attachment file using defult application
   const onClickAttachment = useCallback(async (href: string) => {
-    const realHref = href.startsWith('./') && initDir
-      ? href.replace('.', initDir)
+    const realHref = href.startsWith('./') && notesRoot
+      ? href.replace('.', notesRoot)
       : href;
-    // console.log("file href", href, decodeURI(realHref), initDir);
     await openUrl(decodeURI(realHref));
-  }, [initDir]);
+  }, [notesRoot]);
 
   const onSaveDiagram = useCallback(async (svg: string, ty: string) => {
-    if (!initDir) return;
+    if (!notesRoot) return;
     const rawSVG = decodeHTMLEntity(svg);
     const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-${ty}.svg`
     const dir = await saveDilog(fname);
-    const defaultDir = `${initDir}/mindmap/${fname}`;
+    const defaultDir = `${notesRoot}/mindmap/${fname}`;
     const saveDir = normalizeSlash(dir || defaultDir);
     await writeFile(saveDir, rawSVG);
-  }, [initDir, title]);
+  }, [notesRoot, title]);
 
   // copy heading hash or hashtag hash
   const onCopyHash = useCallback(
@@ -361,8 +365,8 @@ function Note(props: Props) {
                 ? (<Toc headings={headings} />)
                 : null
               }
-              <div className="flex-1 px-2 pt-2 pb-8" id="note-content">
-                <Suspense fallback={<Spinner className="w-8 h-8 mx-auto" />}>
+              <div className="flex-1 px-2 pt-2 pb-8" id="note-content" spellCheck={isCheckSpellOn}>
+                <Suspense fallback={<Spinner className="mx-auto" />}>
                 {rawMode === 'raw' ? (
                   <RawMarkdown
                     key={`raw-${noteId}`}
@@ -377,7 +381,7 @@ function Note(props: Props) {
                     key={`mp-${noteId}`}
                     title={title}
                     mdValue={mdContent}
-                    initDir={initDir}
+                    initDir={notesRoot}
                   />
                 ) : (
                   <MsEditor
@@ -401,7 +405,7 @@ function Note(props: Props) {
                     onCopyHash={onCopyHash}
                     embeds={embeds}
                     disables={['sub']}
-                    rootPath={initDir}
+                    rootPath={notesRoot}
                     docPath={noteDir}
                     protocol={protocol}
                     resolveSrc={convertFileSrc}

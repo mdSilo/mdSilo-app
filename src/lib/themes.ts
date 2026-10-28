@@ -2,8 +2,8 @@
 export type ThemeInfo = { name: string; label: string; dark: boolean };
 
 export const THEMES: readonly ThemeInfo[] = [
-  { name: 'mdsilo-light', label: 'mdSilo Light', dark: false },
-  { name: 'mdsilo-dark', label: 'mdSilo Dark', dark: true },
+  { name: 'mdsilo-light', label: 'Light', dark: false },
+  { name: 'mdsilo-dark', label: 'Dark', dark: true },
   { name: 'cupcake', label: 'Cupcake', dark: false },
   { name: 'nord', label: 'Nord', dark: false },
   { name: 'retro', label: 'Retro', dark: false },

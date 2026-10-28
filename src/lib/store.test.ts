@@ -159,7 +159,7 @@ describe('persistence', () => {
     expect(saved.state.theme).toBe('nord');
     expect(saved.state).not.toHaveProperty('currentNoteId');
     expect(saved.state).not.toHaveProperty('notes');
-    expect(saved.version).toBe(2);
+    expect(saved.version).toBe(4);
   });
 
   test('writes storage only when persisted settings change', async () => {
@@ -195,6 +195,25 @@ describe('persistence', () => {
     localStorage.setItem('mdsilo-storage', JSON.stringify('not json'));
     await persist.rehydrate();
     expect(store.getState().fontSize).toBe(1.3);
+  });
+
+  test('keeps the switch of v2 to open the previous folder', async () => {
+    const persist = (store as unknown as { persist: { rehydrate: () => Promise<void> } }).persist;
+    localStorage.setItem('mdsilo-storage', JSON.stringify(JSON.stringify({ state: { isOpenPreOn: false }, version: 2 })));
+    await persist.rehydrate();
+    expect(store.getState().openOnStartup).toBe('none');
+    expect(store.getState()).not.toHaveProperty('isOpenPreOn');
+    localStorage.setItem('mdsilo-storage', JSON.stringify(JSON.stringify({ state: { isOpenPreOn: true }, version: 2 })));
+    await persist.rehydrate();
+    expect(store.getState().openOnStartup).toBe('previous');
+  });
+
+  test('shows the contents of the reader, hidden by default in v3', async () => {
+    const persist = (store as unknown as { persist: { rehydrate: () => Promise<void> } }).persist;
+    const readerSettings = { showSidebar: false, fontSize: 20 };
+    localStorage.setItem('mdsilo-storage', JSON.stringify(JSON.stringify({ state: { readerSettings }, version: 3 })));
+    await persist.rehydrate();
+    expect(store.getState().readerSettings).toEqual({ fontSize: 20 });
   });
 
   test('finishes hydrating on first launch w/o saved settings', async () => {

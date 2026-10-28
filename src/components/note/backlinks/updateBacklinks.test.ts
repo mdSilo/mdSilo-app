@@ -35,13 +35,22 @@ describe('updateBacklinks', () => {
     );
   });
 
-  test('triggers a full load when needed and waits for it', async () => {
+  test('triggers a full load when needed, the notes linking read', async () => {
     store.getState().setInitDir('/n');
-    const linker = makeNote({ id: '/n/linker.md', title: 'linker', content: 'see [[x]]' });
-    mockInvoke(invoke, { load_notes: { [linker.id]: linker } });
+    const indexed = (id: string, links: string[]) => ({
+      id, title: id.slice(3, -3), file_path: id, created_at: 'c', updated_at: 'u', is_dir: false,
+      links, tags: [], issues: [], has_tasks: false,
+    });
+    const files: Record<string, string> = { '/n/linker.md': 'see [[x]]', '/n/other.md': 'see [[z]]' };
+    mockInvoke(invoke, {
+      index_open: [indexed('/n/linker.md', ['x']), indexed('/n/other.md', ['z'])],
+      read_file: ({ filePath }: Record<string, unknown>) => files[filePath as string],
+    });
     await updateBacklinks('x', 'y');
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/n' });
-    expect(store.getState().notes.get(linker.id)?.content).toBe('see [[y]]');
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/n' });
+    expect(store.getState().notes.get('/n/linker.md')?.content).toBe('see [[y]]');
+    // the other one not even read
+    expect(invoke).not.toHaveBeenCalledWith('read_file', { filePath: '/n/other.md' });
   });
 
   test('goes on with the notes in store if the load never ends', async () => {

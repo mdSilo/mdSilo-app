@@ -1,7 +1,7 @@
-import { commentCount } from './issueOps';
+import { commentCount, isOverdue } from './issueOps';
 import type { Issue, IssueData, IssueState } from './types';
 
-export type SortKey = 'created' | 'updated' | 'comments' | 'number' | 'title';
+export type SortKey = 'created' | 'updated' | 'comments' | 'number' | 'title' | 'due';
 export type SortDir = 'asc' | 'desc';
 
 export type IssueQuery = {
@@ -11,12 +11,14 @@ export type IssueQuery = {
   milestone?: string; // milestone title
   noLabel: boolean;
   noMilestone: boolean;
+  /** is:overdue: open and due before today */
+  overdue?: boolean;
   sort: { key: SortKey; dir: SortDir };
   text: string; // free text, matched against title and body
 };
 
 export const DEFAULT_SORT = { key: 'created', dir: 'desc' } as const;
-export const SORT_KEYS: SortKey[] = ['created', 'updated', 'comments', 'number', 'title'];
+export const SORT_KEYS: SortKey[] = ['created', 'updated', 'comments', 'number', 'title', 'due'];
 
 /** Split on whitespace, keeping "quoted values" (also in key:"quoted value") together. */
 export function tokenize(query: string): string[] {
@@ -55,6 +57,7 @@ export function parseQuery(query: string): IssueQuery {
     const val = unquote(rawVal);
     if (key === 'is' || key === 'state') {
       if (val === 'open' || val === 'closed') q.state = val;
+      if (val === 'overdue') q.overdue = true;
       // is:issue and others are accepted and ignored
     } else if (key === 'label') {
       (neg ? q.excludeLabels : q.labels).push(val);
@@ -81,6 +84,7 @@ export function stringifyQuery(q: IssueQuery): string {
   const quote = (s: string) => (/\s/.test(s) ? `"${s}"` : s);
   const parts: string[] = [];
   if (q.state) parts.push(`is:${q.state}`);
+  if (q.overdue) parts.push('is:overdue');
   q.labels.forEach((l) => parts.push(`label:${quote(l)}`));
   q.excludeLabels.forEach((l) => parts.push(`-label:${quote(l)}`));
   if (q.milestone) parts.push(`milestone:${quote(q.milestone)}`);
@@ -103,6 +107,8 @@ export function sortIssues(issues: Issue[], sort: IssueQuery['sort']) {
       case 'comments': return commentCount(i);
       case 'number': return i.number;
       case 'title': return i.title.toLowerCase();
+      // no date: the farthest
+      case 'due': return i.dueOn ?? '9999-99-99';
       default: return i.createdAt;
     }
   };
@@ -132,6 +138,7 @@ export function filterIssues(
     if (q.noLabel && names.length > 0) return false;
     if (q.noMilestone && issue.milestone) return false;
     if (q.milestone && (!milestone || issue.milestone !== milestone.id)) return false;
+    if (q.overdue && !isOverdue(issue)) return false;
     if (words.length > 0) {
       const hay = ci(`#${issue.number} ${issue.title} ${issue.body}`);
       if (!words.every((w) => hay.includes(w))) return false;

@@ -10,7 +10,7 @@ import { ciStringCompare, dateCompare } from 'utils/helper';
 import { PodType as PodTreeItem } from 'types/model';
 import * as dataAgent from 'components/feed/dataAgent';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
-import Tooltip from 'components/misc/Tooltip';
+import { Tooltip } from 'components/misc/ui';
 import SidebarItem from './SidebarItem';
 
 type SidebarPlaylistProps = {

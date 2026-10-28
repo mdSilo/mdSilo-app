@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
-import { store } from 'lib/store';
+import { NoteMap, store } from 'lib/store';
 import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '../testUtils';
 import * as open from './open';
 
@@ -9,6 +9,12 @@ const parentOf = (p: string) => p.substring(0, p.lastIndexOf('/')) || '/';
 const baseOf = (p: string) => p.substring(p.lastIndexOf('/') + 1);
 const joinPaths = ({ root, parts }: Record<string, unknown>) =>
   [root, ...(parts as string[])].join('/').replace(/\/+/g, '/');
+
+const indexed = (id: string, links: string[] = []) => ({
+  id, title: id.split('/').pop()!.replace(/\.md$/, ''), file_path: id,
+  created_at: '2022-01-01T00:00:00.000Z', updated_at: '2022-01-01T00:00:00.000Z', is_dir: false,
+  links, tags: [], issues: [], has_tasks: false,
+});
 
 describe('open (web)', () => {
   test('getRecentDirPath returns the latest recent dir', () => {
@@ -72,21 +78,25 @@ describe('open (web)', () => {
   });
 
   test('loadDir loads the notes into the store, once while loading', async () => {
-    const note = makeNote({ id: '/notes/a.md' });
-    mockInvoke(invoke as Mock, { load_notes: { [note.id]: note } });
+    const note = indexed('/notes/a.md', ['b']);
+    mockInvoke(invoke as Mock, { index_open: [note] });
     const first = open.loadDir('/notes');
     const second = open.loadDir('/notes');
     expect(store.getState().isLoading).toBe(true);
     await Promise.all([first, second]);
     expect(invoke).toHaveBeenCalledTimes(1);
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/notes' });
-    expect(store.getState().notes.toRecord()).toEqual({ [note.id]: note });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/notes' });
+    // without content: what it links to as the index tells
+    expect(store.getState().notes.toRecord()).toEqual({ [note.id]: open.noteOfIndexed(note) });
+    expect(store.getState().notes.get(note.id)).toMatchObject({
+      title: 'a', content: '', parsed: { links: ['b'], tags: [], issues: [], has_tasks: false },
+    });
     expect(store.getState().isLoaded).toBe(true);
     expect(store.getState().isLoading).toBe(false);
   });
 
   test('loadDir drops the notes of a folder no longer open', async () => {
-    mockInvoke(invoke as Mock, { load_notes: { '/notes/a.md': makeNote({ id: '/notes/a.md' }) } });
+    mockInvoke(invoke as Mock, { index_open: [indexed('/notes/a.md')] });
     store.getState().setInitDir('/other');
     await open.loadDir('/notes');
     expect(store.getState().notes.toRecord()).toEqual({});
@@ -98,16 +108,25 @@ describe('open (web)', () => {
     let resolveFirst: (v: unknown) => void = () => {};
     (invoke as Mock)
       .mockImplementationOnce(() => new Promise((r) => { resolveFirst = r; }))
-      .mockResolvedValueOnce({ '/b/x.md': makeNote({ id: '/b/x.md' }) });
+      .mockResolvedValueOnce([indexed('/b/x.md')]);
     store.getState().setInitDir('/b');
     const first = open.loadDir('/a');
     await open.loadDir('/b');
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/b' });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/b' });
     expect(store.getState().notes.get('/b/x.md')).toBeDefined();
     // the late result of /a is dropped
-    resolveFirst({ '/a/y.md': makeNote({ id: '/a/y.md' }) });
+    resolveFirst([indexed('/a/y.md')]);
     await first;
     expect(store.getState().notes.get('/a/y.md')).toBeUndefined();
+  });
+
+  test('loadDir keeps the content of the notes loaded already', async () => {
+    const open_ = makeNote({ id: '/notes/open.md', title: 'open', content: 'being edited' });
+    store.getState().setNotes(NoteMap.from([open_]));
+    mockInvoke(invoke as Mock, { index_open: [indexed('/notes/open.md'), indexed('/notes/other.md')] });
+    await open.loadDir('/notes');
+    expect(store.getState().notes.get(open_.id)).toEqual(open_);
+    expect(store.getState().notes.get('/notes/other.md')?.parsed).toBeDefined();
   });
 
   test('loadDir failing leaves the notes unloaded', async () => {

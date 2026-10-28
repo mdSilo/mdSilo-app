@@ -104,14 +104,16 @@ function usePosition({
     selection instanceof NodeSelection && selection.node?.type.name === "image";
 
   // Images need their own positioning to get the toolbar in the center
-  if (isImageSelection) {
-    const element = view.nodeDOM(selection.from);
+  const element = isImageSelection ? view.nodeDOM(selection.from) : null;
+  // Images are wrapped which impacts positioning - need to traverse through
+  // p > span > div.image. The img may not be rendered yet, e.g. while a local
+  // image is being inserted, so fall back to the selection bounds then.
+  const imageElement =
+    element instanceof HTMLElement
+      ? element.getElementsByTagName("img")[0]
+      : undefined;
 
-    // Images are wrapped which impacts positioning - need to traverse through
-    // p > span > div.image
-    const imageElement = (element as HTMLElement).getElementsByTagName(
-      "img"
-    )[0];
+  if (imageElement) {
     const { left, top, width } = imageElement.getBoundingClientRect();
 
     return {

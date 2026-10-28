@@ -68,3 +68,16 @@ describe('filterIssues', () => {
     expect(nums(filterIssues(d, 'sort:updated-desc'))).toHaveLength(3);
   });
 });
+
+describe('due dates', () => {
+  test('is:overdue and sort:due', () => {
+    const issue = (number: number, dueOn?: string, state: 'open' | 'closed' = 'open') => ({
+      number, title: `t${number}`, body: '', state, labels: [], notes: [], timeline: [],
+      createdAt: '', updatedAt: '', ...(dueOn ? { dueOn } : {}),
+    });
+    const data = { issues: [issue(1, '2000-01-01'), issue(2), issue(3, '2999-01-01'), issue(4, '2000-01-02', 'closed')], labels: [], milestones: [] };
+    expect(filterIssues(data, 'is:overdue').map((i) => i.number)).toEqual([1]);
+    expect(filterIssues(data, 'sort:due-asc').map((i) => i.number)).toEqual([1, 4, 3, 2]);
+    expect(stringifyQuery(parseQuery('is:overdue x'))).toBe('is:overdue x');
+  });
+});

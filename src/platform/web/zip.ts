@@ -1,6 +1,8 @@
 /**
  * Minimal zip writer (stored, no compression), no dependency.
  * Notes are small text and images are compressed already, so storing is fine.
+ * An entry deflated already (e.g. the text of a book, see deflateRaw) is
+ * written deflated.
  * NOTE: no zip64, up to 65535 entries and 4GB.
  */
 
@@ -8,7 +10,20 @@ export interface ZipEntry {
   /** relative path, '/' separated; ends with '/' for a directory */
   name: string;
   data?: Uint8Array;
+  /** `data` deflated (raw, no header), written instead of it */
+  deflated?: Uint8Array;
   modified?: number; // ms since epoch
+}
+
+/** Raw deflate, as in a zip file; undefined where the browser has no CompressionStream. */
+export async function deflateRaw(data: Uint8Array): Promise<Uint8Array | undefined> {
+  if (typeof CompressionStream === 'undefined') return undefined;
+  try {
+    const stream = new Response(data as BodyInit).body!.pipeThrough(new CompressionStream('deflate-raw'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  } catch {
+    return undefined;
+  }
 }
 
 let crcTable: Uint32Array | null = null;
@@ -45,6 +60,10 @@ export function createZip(entries: ZipEntry[]): Blob {
   for (const entry of entries) {
     const name = encoder.encode(entry.name);
     const data = entry.data ?? new Uint8Array(0);
+    // deflated if smaller
+    const deflated = entry.deflated && entry.deflated.length < data.length ? entry.deflated : undefined;
+    const stored = deflated ?? data;
+    const method = deflated ? 8 : 0;
     const isDir = entry.name.endsWith('/');
     const crc = crc32(data);
     const [time, date] = dosDateTime(entry.modified ?? Date.now());
@@ -53,33 +72,33 @@ export function createZip(entries: ZipEntry[]): Blob {
     local.setUint32(0, 0x04034b50, true);
     local.setUint16(4, 20, true); // version needed
     local.setUint16(6, 0x0800, true); // utf-8 names
-    local.setUint16(8, 0, true); // stored
+    local.setUint16(8, method, true); // stored or deflated
     local.setUint16(10, time, true);
     local.setUint16(12, date, true);
     local.setUint32(14, crc, true);
-    local.setUint32(18, data.length, true);
+    local.setUint32(18, stored.length, true);
     local.setUint32(22, data.length, true);
     local.setUint16(26, name.length, true);
     local.setUint16(28, 0, true);
-    parts.push(new Uint8Array(local.buffer), name, data);
+    parts.push(new Uint8Array(local.buffer), name, stored);
 
     const cd = new DataView(new ArrayBuffer(46));
     cd.setUint32(0, 0x02014b50, true);
     cd.setUint16(4, 20, true); // version made by
     cd.setUint16(6, 20, true); // version needed
     cd.setUint16(8, 0x0800, true);
-    cd.setUint16(10, 0, true);
+    cd.setUint16(10, method, true);
     cd.setUint16(12, time, true);
     cd.setUint16(14, date, true);
     cd.setUint32(16, crc, true);
-    cd.setUint32(20, data.length, true);
+    cd.setUint32(20, stored.length, true);
     cd.setUint32(24, data.length, true);
     cd.setUint16(28, name.length, true);
     cd.setUint32(38, isDir ? 0x10 : 0, true); // external attrs: directory
     cd.setUint32(42, offset, true);
     central.push(new Uint8Array(cd.buffer), name);
 
-    offset += 30 + name.length + data.length;
+    offset += 30 + name.length + stored.length;
   }
 
   const cdSize = central.reduce((n, p) => n + p.length, 0);

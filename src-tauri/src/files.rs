@@ -1,8 +1,7 @@
-use crate::atomic::{is_self_write, is_temp, write_atomic};
+use crate::atomic::{is_self_write, is_temp};
+use crate::wsfs::{LocalFs, WorkspaceFs};
 use crate::paths::{PathBufExt, PathExt};
 use crate::storage::log_error;
-use crate::tree::node::{from_node, Node};
-use crate::tree::Tree;
 use ignore::WalkBuilder;
 use notify::{
   event::{EventKind, ModifyKind, RenameMode},
@@ -345,11 +344,6 @@ pub async fn read_directory(dir: &str) -> Result<FolderData, String> {
   })
 }
 
-// Read files and its information of a directory resursively
-pub fn read_dir(dir: &str) -> Result<Tree, String> {
-  Tree::init(dir, None, true)
-}
-
 // Get array of files of a directory
 #[tauri::command]
 pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
@@ -357,9 +351,7 @@ pub async fn list_directory(dir: &str) -> Result<Vec<FileMetaData>, String> {
 }
 
 // List the direct children of a directory, w/o content.
-// Walk the single level sequentially: the parallel Tree traversal (threads,
-// channel, arena) costs more than it saves here, see list_directory bench.
-// Same filters as the Tree walker: hidden skipped, .gitignore not applied.
+// Walk the single level: hidden skipped, .gitignore not applied.
 pub fn list_dir_entries(dir: &str) -> Vec<FileMetaData> {
   let root = match fs::canonicalize(dir) {
     Ok(root) => root,
@@ -374,8 +366,28 @@ pub fn list_dir_entries(dir: &str) -> Vec<FileMetaData> {
     .build()
     .filter_map(|entry| entry.ok())
     .filter(|entry| entry.depth() == 1)
-    .filter_map(|entry| from_node(&Node::from((&entry, false))))
+    .filter_map(|entry| meta_of_entry(&entry))
     .collect()
+}
+
+/// The metadata of an entry walked, without content.
+fn meta_of_entry(entry: &ignore::DirEntry) -> Option<FileMetaData> {
+  let metadata = entry.metadata().ok()?;
+  let file_path = entry.path().normalize_slash()?;
+  let is_hidden = check_hidden_meta(&file_path, &metadata);
+  Some(FileMetaData {
+    file_name: file_name_of(&file_path),
+    file_text: String::new(),
+    created: metadata.created().unwrap_or_else(|_| SystemTime::now()),
+    last_modified: metadata.modified().unwrap_or_else(|_| SystemTime::now()),
+    last_accessed: metadata.accessed().unwrap_or_else(|_| SystemTime::now()),
+    size: metadata.len(),
+    readonly: metadata.permissions().readonly(),
+    is_dir: metadata.is_dir(),
+    is_file: metadata.is_file(),
+    is_hidden,
+    file_path,
+  })
 }
 
 // Check if path given exists
@@ -415,7 +427,7 @@ pub async fn create_file(file_path: String) -> bool {
 // read file to string
 #[tauri::command]
 pub async fn read_file(file_path: String) -> String {
-  fs::read_to_string(&file_path)
+  LocalFs.read_to_string(Path::new(&file_path))
     .map_err(|e| {
       log_error(format!(
           "Error on [read_file: read_to_string, {}]: {:?}",
@@ -428,18 +440,18 @@ pub async fn read_file(file_path: String) -> String {
 // write to a file
 #[tauri::command]
 pub async fn write_file(file_path: String, text: String) -> bool {
-  write_atomic(Path::new(&file_path), text.as_bytes()).is_ok()
+  LocalFs.write_atomic(Path::new(&file_path), text.as_bytes()).is_ok()
 }
 
 #[tauri::command]
 pub async fn download_file(file_path: String, blob: Vec<u8>) -> bool {
-  write_atomic(Path::new(&file_path), &blob).is_ok()
+  LocalFs.write_atomic(Path::new(&file_path), &blob).is_ok()
 }
 
 // rename the file
 #[tauri::command]
 pub async fn rename_file(from_path: String, to_path: String) -> bool {
-  fs::rename(from_path, to_path).is_ok()
+  LocalFs.rename(Path::new(&from_path), Path::new(&to_path)).is_ok()
 }
 
 // copy the file
@@ -577,6 +589,7 @@ pub async fn listen_dir(
     .flatten()
     .filter(|real| real.as_path() != Path::new(&dir));
   let dir_path = Path::new(&dir).to_path_buf();
+  let watched = dir_path.clone();
   let to_dir_path = move |path: &Path| -> String {
     let path = match &real_dir {
       Some(real) => match path.strip_prefix(real) {
@@ -611,13 +624,23 @@ pub async fn listen_dir(
       kind,   // EventKind: Access,Create,Modify,Remove
       ..      // attrs,  // EventAttributes: tracker, flag...
     }) => {
-      // not the temp files of atomic writes, nor the files as the app wrote
-      // them: the app has their content already
+      // not the temp files of atomic writes, nor the hidden files and dirs:
+      // .git/, .mdsilo/... are never listed
       let paths: Vec<String> = paths
         .iter()
         .map(|path| to_dir_path(path))
-        .filter(|path| !is_temp(Path::new(path)) && !is_self_write(Path::new(path)))
+        .filter(|path| !is_hidden_in(&watched, Path::new(path)) && !is_temp(Path::new(path)))
         .collect();
+      // the index follows all the changes, the app's too (see index/)
+      if matches!(kind, EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)) {
+        let changed: Vec<std::path::PathBuf> = paths.iter().map(std::path::PathBuf::from).collect();
+        crate::index::on_changes(&changed);
+      }
+      // nor the files as the app wrote them: the app has their content already
+      let paths: Vec<String> = paths.into_iter().filter(|path| !is_self_write(Path::new(path))).collect();
+      if paths.is_empty() {
+        return;
+      }
       match kind {
         // EventKind::Access(_) => "access",
         EventKind::Create(_) => emit("create", paths),
@@ -664,6 +687,16 @@ pub async fn listen_dir(
       Err(format!("lock watcher on listen err: {}", e))
     }
   }
+}
+
+/// A path in the dir with a hidden file or dir on the way: `.git/HEAD`;
+/// the dir itself may be in a hidden one
+fn is_hidden_in(dir: &Path, path: &Path) -> bool {
+  path.strip_prefix(dir).is_ok_and(|rel| {
+    rel
+      .components()
+      .any(|c| c.as_os_str().to_str().is_some_and(|name| name.starts_with('.')))
+  })
 }
 
 // Stop watching the directory, if any
@@ -815,6 +848,15 @@ mod tests {
       [("a.md", "A"), ("b.txt", "B"), ("sub", "")].map(|(n, t)| (n.to_string(), t.to_string()))
     );
     fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[test]
+  fn hidden_paths_in_the_dir() {
+    let dir = Path::new("/home/me/.notes/ws");
+    assert!(is_hidden_in(dir, Path::new("/home/me/.notes/ws/.git/HEAD")));
+    assert!(is_hidden_in(dir, Path::new("/home/me/.notes/ws/reading/.gitignore")));
+    assert!(!is_hidden_in(dir, Path::new("/home/me/.notes/ws/writing/a.md")));
+    assert!(!is_hidden_in(dir, Path::new("/elsewhere/.x")));
   }
 
   #[test]

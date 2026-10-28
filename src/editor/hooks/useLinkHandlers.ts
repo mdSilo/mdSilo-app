@@ -6,6 +6,7 @@ import { issueHref, parseIssueHref } from 'components/issue/refs';
 import { openFilePath, openUrl } from 'file/open';
 import { isUrl } from 'utils/helper';
 import { encodeHref, hrefToTitle, legacyLinkTitle } from 'utils/mdlink';
+import { parseBookHref } from 'reader/annotations';
 import useNoteSearch from './useNoteSearch';
 
 export type LinkSearchResult = { title: string; url: string };
@@ -30,9 +31,18 @@ export function searchIssues(text: string, limit = 10): LinkSearchResult[] {
     .map((i) => ({ title: `#${i.number} ${i.title}`, url: issueHref(i.number) }));
 }
 
+/** The book file of an id in the open workspace, if it is on this device. */
+async function findBookPath(hash: string): Promise<string | undefined> {
+  const ws = store.getState().initDir;
+  if (!ws) return undefined;
+  const library = await import('reader/library');
+  return library.findBookPath(ws, hash);
+}
+
 /**
  * Link handlers shared by every MsEditor: the note editor and the issue
- * body/comment editors. Links can be URLs, note titles or `issue:N`.
+ * body/comment editors. Links can be URLs, note titles, `issue:N` or
+ * `book:<id>#<cfi>`.
  */
 export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Options = {}) {
   const { dispatch } = useCurrentViewContext();
@@ -58,6 +68,12 @@ export default function useLinkHandlers({ numOfResults = 10, onMissingNote }: Op
       const issueNum = parseIssueHref(href);
       if (issueNum !== undefined) {
         dispatch({ view: 'issue', number: issueNum });
+        return;
+      }
+      const bookLink = parseBookHref(href);
+      if (bookLink) {
+        const path = await findBookPath(bookLink.hash);
+        if (path) dispatch({ view: 'book', path, cfi: bookLink.cfi });
         return;
       }
       // find the note per title

@@ -1,5 +1,6 @@
 // import { invoke } from '@tauri-apps/api';
 import type { NoteMap } from 'lib/store';
+import { withContents } from 'lib/contentCache';
 import { buildNotesJson, joinPaths } from './util';
 import FileAPI from './files';
 
@@ -39,8 +40,8 @@ export async function deleteFile(filePath: string) {
  * @param dirPath string
  */
 export async function writeAllFile(dirPath: string, notes: NoteMap) {
-  // save mds
-  const myNotes = notes.values();
+  // save mds, the ones not loaded read (see Note.parsed)
+  const myNotes = await withContents(notes.values().filter((n) => !n.is_dir));
   for (const note of myNotes) {
     const fileName = `${note.title}.md`;
     const notePath = await joinPaths(dirPath, [fileName]);

@@ -8,6 +8,7 @@ import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree, { NoteTreeRow } from './SidebarNotesTree';
 import SidebarHistory from './SidebarHistory';
+import WorkspaceUpgrade from './WorkspaceUpgrade';
 
 type SidebarNotesProps = {
   className?: string;
@@ -45,6 +46,7 @@ function SidebarNotes(props: SidebarNotesProps) {
             numOfNotes={numOfNotes}
           />
         ) : null }
+        {currentDir ? <WorkspaceUpgrade /> : null}
         {sortedNoteTree && sortedNoteTree.length > 0 ? (
           <SidebarNotesTree
             data={sortedNoteTree}

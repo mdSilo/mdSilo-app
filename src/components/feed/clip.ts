@@ -7,9 +7,9 @@ import { joinPaths } from 'file/util';
 import { writeFile } from 'file/write';
 import { openFilePaths } from 'file/open';
 import FileAPI from 'file/files';
+import { CLIPS_DIR, readingRoot } from 'workspace/layout';
 
-/** folder of the clipped articles, in the workspace */
-export const CLIPS_DIR = 'clips';
+export { CLIPS_DIR };
 
 /** Markdown of HTML from outside: sanitized, then as the editor writes it. */
 export function htmlToMarkdown(html: string): string {
@@ -46,14 +46,15 @@ export function quote(markdown: string): string {
 }
 
 /**
- * Save an article as a note in clips/: the whole article, once (an existing
- * clip is kept as is), or a selection of it added to the clip as a quote.
+ * Save an article as a note in clips/ (reading/clips/ in the workspace
+ * layout): the whole article, once (an existing clip is kept as is), or a
+ * selection of it added to the clip as a quote.
  * @returns the note path, undefined without a workspace
  */
 export async function clipArticle(article: ArticleType, selectionHtml?: string) {
   const initDir = store.getState().initDir;
   if (!initDir) return;
-  const clipsDir = await joinPaths(initDir, [CLIPS_DIR]);
+  const clipsDir = await joinPaths(readingRoot() ?? initDir, [CLIPS_DIR]);
   const notePath = await joinPaths(clipsDir, [`${clipFileName(article.title)}.md`]);
   const file = new FileAPI(notePath);
   const existing = (await file.exists()) ? await file.readFile() : '';

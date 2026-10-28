@@ -38,7 +38,7 @@ describe('useOpen (tauri)', () => {
       list_directory: files,
       read_directory: { files, number_of_files: files.length },
       join_paths: joinPaths,
-      load_notes: {},
+      index_open: [],
     });
     useOpen = await import('./useOpen');
     store = (await import('lib/store')).store;
@@ -95,7 +95,7 @@ describe('useOpen (tauri)', () => {
     expect(s.initDir).toBe('/picked');
     expect(s.noteTree['/picked']).toHaveLength(2);
     expect(invoke).toHaveBeenCalledWith('list_directory', { dir: '/picked' });
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/picked' });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/picked' });
     // in the background: the notes with content come after the listing
     await vi.waitFor(() => expect(store.getState().isLoaded).toBe(true));
     expect(store.getState().isLoading).toBe(false);
@@ -183,10 +183,18 @@ describe('useOpen (tauri)', () => {
       expect(await useOpen.openWebWorkspace()).toBe('/pinned');
 
       store.getState().setInitDir(undefined);
-      store.getState().setIsOpenPreOn(false);
+      store.getState().setOpenOnStartup('none');
       store.getState().setRecentDir(['/work']);
       store.getState().setPinnedDir('');
       expect(await useOpen.openWebWorkspace()).toBe('/mdSilo');
+    });
+
+    test('opens the pinned folder if set so', async () => {
+      withDirs(['/mdSilo', '/work', '/pinned']);
+      store.getState().setRecentDir(['/work']);
+      store.getState().setPinnedDir('/pinned');
+      store.getState().setOpenOnStartup('pinned');
+      expect(await useOpen.openWebWorkspace()).toBe('/pinned');
     });
 
     test('does nothing if a folder is open', async () => {

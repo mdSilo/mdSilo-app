@@ -66,7 +66,11 @@ export function encodeHref(title: string) {
   return encodeURI(title.trim()).replace(/[()]/g, (c) => (c === '(' ? '%28' : '%29'));
 }
 
-const isNoteHref = (href: string) => !!href && !isUrl(href);
+/** Links of the app, not to notes: `issue:12`, `book:<id>#<cfi>` */
+const APP_LINK_REGEX = /^(issue|book):/i;
+
+/** A link to a note: not an URL, nor a link of the app. */
+export const isNoteHref = (href: string) => !!href && !isUrl(href) && !APP_LINK_REGEX.test(href);
 
 /**
  * Before v0.5.7, the spaces in title were written as `_` in the link href,

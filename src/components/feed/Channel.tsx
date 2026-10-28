@@ -1,9 +1,9 @@
 import React, { memo, useEffect, useState } from "react";
-import { TbCircle as IconCircle, TbCircleCheck as IconCircleCheck, TbRefresh as IconRefresh } from "react-icons/tb";
-import Tooltip from "components/misc/Tooltip";
-import Spinner from "components/misc/Spinner";
+import { TbBook2 as IconBook, TbCircle as IconCircle, TbCircleCheck as IconCircleCheck, TbRefresh as IconRefresh } from "react-icons/tb";
+import { Spinner, Tooltip } from "components/misc/ui";
 import { fmtDatetime, dateCompare } from 'utils/helper';
 import { ArticleType, ChannelType } from "types/model";
+import { MakeBook } from "./MakeBook";
 
 
 type Props = {
@@ -15,16 +15,19 @@ type Props = {
   onClickArticle: (article: ArticleType) => Promise<void>;
   loading: boolean;
   syncing: boolean;
+  /** open a book, e.g. made of the articles */
+  onOpenBook?: (path: string) => void;
 };
 
 export function Channel(props: Props) {
   const { 
-    channel, starChannel, articles, handleRefresh, updateAllReadStatus, onClickArticle, loading, syncing 
+    channel, starChannel, articles, handleRefresh, updateAllReadStatus, onClickArticle, loading, syncing, onOpenBook 
   } = props;
+  const [makingBook, setMakingBook] = useState(false);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center"><Spinner className="w-8 h-8" /></div>
+      <div className="flex items-center justify-center"><Spinner /></div>
     );
   } else if (!articles) {
     return (<></>);
@@ -34,8 +37,15 @@ export function Channel(props: Props) {
     <div className="flex flex-col items-between justify-center">
       <div className="flex flex-row items-center justify-between p-2 bg-base-300 rounded-sm">
         <div className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</div>
-        {(channel) && (
-          <div className="flex flex-row items-center justify-end">
+        <div className="flex flex-row items-center justify-end">
+          {articles.length > 0 && (
+            <Tooltip content="Make a book of the articles, or add the new ones to it" placement="bottom">
+              <button className="" aria-label="Make a book" onClick={() => setMakingBook((v) => !v)}>
+                <IconBook size={18} className="m-1" />
+              </button>
+            </Tooltip>
+          )}
+          {(channel) && (<>
             <Tooltip content="Mark All Read" placement="bottom">
               <button className="" onClick={async () => await updateAllReadStatus(channel.link, 1)}>
                 <IconCircleCheck size={18} className="m-1" />
@@ -46,10 +56,19 @@ export function Channel(props: Props) {
                 <IconRefresh size={18} className="m-1" />
               </button>
             </Tooltip>
-          </div>
-        )}
+          </>)}
+        </div>
       </div>
-      {syncing && <div className="flex items-center justify-center"><Spinner className="w-4 h-4" /></div>}
+      {makingBook && (
+        <MakeBook
+          defaultName={channel?.title || 'Starred'}
+          source={channel?.title}
+          articles={articles}
+          onOpenBook={onOpenBook}
+          onClose={() => setMakingBook(false)}
+        />
+      )}
+      {syncing && <div className="flex items-center justify-center"><Spinner size="xs" /></div>}
       <ArticleList
         articles={articles}
         onClickArticle={onClickArticle}

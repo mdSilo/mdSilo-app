@@ -1,6 +1,8 @@
 import { produce } from 'immer';
 import { getJSONContent, parser } from 'mdsmirror';
-import type { NoteMap } from 'lib/store';
+import { NoteMap } from 'lib/noteMap';
+import { withContents } from 'lib/contentCache';
+import { MAYBE_TASKS } from 'lib/parseNote';
 import { checkFileIsMd } from 'file/process';
 import { addEvent, createIssue, moveProjectItem, setState } from './issueOps';
 import type { Issue, IssueData, NoteTaskRef, ProjectStatus, TaskKind, TaskTag } from './types';
@@ -44,8 +46,6 @@ const tagOf = (node: JsonNode): TaskTag | undefined => {
 const inlineText = (nodes: JsonNode[]) =>
   nodes.filter((n) => !tagOf(n)).map((n) => n.text ?? '').join('').replace(/\s+/g, ' ').trim();
 
-const MAYBE_TASKS = /#(todo|doing|done)#|\[[ xX_-]\]/i;
-
 /** Tasks of one markdown text, in document order. */
 export function extractTasks(content: string): { kind: TaskKind; tag: TaskTag; text: string }[] {
   if (!content || !MAYBE_TASKS.test(content)) return [];
@@ -72,7 +72,18 @@ export function extractTasks(content: string): { kind: TaskKind; tag: TaskTag; t
   return out;
 }
 
-/** All tasks in the notes, newest notes first. */
+/**
+ * All tasks in the notes, the ones not loaded (Note.parsed) read if they may
+ * have tasks, as the index tells.
+ */
+export async function loadNoteTasks(notes: NoteMap): Promise<NoteTask[]> {
+  const candidates = notes.values().filter((n) =>
+    !n.is_dir && checkFileIsMd(n.id) && (n.parsed ? n.parsed.has_tasks : MAYBE_TASKS.test(n.content))
+  );
+  return computeNoteTasks(NoteMap.from(await withContents(candidates)));
+}
+
+/** All tasks in the notes (with content), newest notes first. */
 export function computeNoteTasks(notes: NoteMap): NoteTask[] {
   return notes.values()
     .filter((n) => !n.is_dir && checkFileIsMd(n.id))

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useStore } from 'lib/store';
 import useDebounce from 'editor/hooks/useDebounce';
 import { useIssueData, useIssueStore } from './issueStore';
-import { computeNoteTasks, syncNoteTasks } from './noteTasks';
+import { loadNoteTasks, syncNoteTasks } from './noteTasks';
 
 const SYNC_DEBOUNCE_MS = 1000;
 
@@ -20,7 +20,12 @@ export default function useNoteTaskSync() {
   useEffect(() => {
     // a partial note list would look like removed tasks, so wait for all notes
     if (!issuesLoaded || !notesLoaded || !hasTaskIssues) return;
-    const tasks = computeNoteTasks(notes);
-    apply((d) => syncNoteTasks(d, tasks, notes));
+    let cancelled = false;
+    loadNoteTasks(notes)
+      .then((tasks) => {
+        if (!cancelled) apply((d) => syncNoteTasks(d, tasks, notes));
+      })
+      .catch((e) => console.error('Failed to read the tasks of the notes', e));
+    return () => { cancelled = true; };
   }, [issuesLoaded, notesLoaded, hasTaskIssues, notes, apply]);
 }

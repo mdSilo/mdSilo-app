@@ -258,3 +258,52 @@ describe('labels, milestones, projects', () => {
     expect(ops.moveProjectItem(d, p.id, 99, doing.id, 0)).toBe(d);
   });
 });
+
+describe('due dates and sub-tasks', () => {
+  const base = () => ops.createIssue(ops.defaultIssueData(), { title: 'x' });
+
+  test('the due date, set and removed, in the timeline', () => {
+    let d = ops.setDueOn(base(), 1, '2026-11-02');
+    expect(d.issues[0].dueOn).toBe('2026-11-02');
+    expect(d.issues[0].timeline.at(-1)).toMatchObject({ event: 'due', detail: '2026-11-02' });
+    expect(ops.setDueOn(d, 1, '2026-11-02')).toBe(d);
+    expect(ops.setDueOn(d, 1, 'not a day').issues[0].dueOn).toBeUndefined();
+    d = ops.setDueOn(d, 1, undefined);
+    expect(d.issues[0]).not.toHaveProperty('dueOn');
+    expect(d.issues[0].timeline.at(-1)).toMatchObject({ event: 'due', detail: '' });
+  });
+
+  test('overdue: open, before today', () => {
+    const today = new Date(2026, 10, 2);
+    const issue = { ...base().issues[0], dueOn: '2026-11-01' };
+    expect(ops.isOverdue(issue, today)).toBe(true);
+    expect(ops.isOverdue({ ...issue, dueOn: '2026-11-02' }, today)).toBe(false);
+    expect(ops.isOverdue({ ...issue, state: 'closed' }, today)).toBe(false);
+  });
+
+  test('sub-tasks: added, done, edited, removed', () => {
+    let d = ops.addSubtask(base(), 1, '  one ');
+    d = ops.addSubtask(d, 1, 'two');
+    expect(ops.addSubtask(d, 1, '  ')).toBe(d);
+    const [one, two] = d.issues[0].subtasks!;
+    expect(one).toMatchObject({ text: 'one', done: false });
+    d = ops.updateSubtask(d, 1, one.id, { done: true });
+    d = ops.updateSubtask(d, 1, two.id, { text: 'second' });
+    expect(ops.subtaskProgress(d.issues[0])).toEqual({ done: 1, total: 2 });
+    expect(d.issues[0].subtasks![1].text).toBe('second');
+    d = ops.removeSubtask(d, 1, one.id);
+    d = ops.removeSubtask(d, 1, two.id);
+    expect(d.issues[0]).not.toHaveProperty('subtasks');
+    expect(ops.subtaskProgress(d.issues[0])).toBeUndefined();
+  });
+
+  test('kept as read, the broken ones dropped', () => {
+    const data = ops.normalizeIssueData({
+      issues: [{ number: 1, title: 'x', dueOn: '2026-11-02', subtasks: [{ id: 'a', text: 't', done: 1 }, { nope: true }] },
+        { number: 2, title: 'y', dueOn: 'tomorrow' }],
+    });
+    expect(data.issues[0].dueOn).toBe('2026-11-02');
+    expect(data.issues[0].subtasks).toEqual([{ id: 'a', text: 't', done: true }]);
+    expect(data.issues[1].dueOn).toBeUndefined();
+  });
+});

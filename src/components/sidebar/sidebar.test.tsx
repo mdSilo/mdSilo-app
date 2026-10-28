@@ -89,7 +89,7 @@ describe('SidebarContent', () => {
 
 describe('SidebarNotes', () => {
   test('shows open buttons and history without a dir', async () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     renderWithView(<SidebarNotes />);
     expect(screen.getByText('Open Folder')).toBeInTheDocument();
     expect(screen.getByText('Open File')).toBeInTheDocument();
@@ -207,7 +207,7 @@ describe('SidebarNotesSortDropdown', () => {
 
 describe('SidebarHistory', () => {
   test('lists recent dirs newest first and manages them', async () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     store.getState().setRecentDir(['/home/me/old', '/home/me/a/very/long/folder-name-here']);
     render(<SidebarHistory />);
     expect(screen.getByText('No Pinned Folder')).toBeInTheDocument();
@@ -224,7 +224,7 @@ describe('SidebarHistory', () => {
   });
 
   test('opens a recent dir on click', async () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     store.getState().setRecentDir(['/home/me/notes']);
     store.getState().setPinnedDir('/home/me/pinned');
     render(<SidebarHistory />);
@@ -245,7 +245,7 @@ describe('SidebarHistory', () => {
       render(<SidebarHistory />);
     });
     expect(store.getState().initDir).toBe('/home/me/last');
-    expect(vi.mocked(invoke).mock.calls.filter((c) => c[0] === 'load_notes')).toHaveLength(1);
+    expect(vi.mocked(invoke).mock.calls.filter((c) => c[0] === 'index_open')).toHaveLength(1);
   });
 
   test('reopens the previous folder on startup', async () => {
@@ -256,7 +256,22 @@ describe('SidebarHistory', () => {
       renderWithView(<SidebarNotes />);
     });
     expect(store.getState().initDir).toBe('/home/me/last');
-    expect(invoke).toHaveBeenCalledWith('load_notes', { dir: '/home/me/last' });
+    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/home/me/last' });
+  });
+
+  test('opens the pinned folder, or nothing, on startup as set', async () => {
+    mockInvoke(invoke, { file_exist: false });
+    store.getState().setRecentDir(['/home/me/last']);
+    store.getState().setPinnedDir('/home/me/pinned');
+    store.getState().setOpenOnStartup('pinned');
+    const view = await act(async () => render(<SidebarHistory />));
+    expect(store.getState().initDir).toBe('/home/me/pinned');
+
+    view.unmount();
+    store.getState().setInitDir(undefined);
+    store.getState().setOpenOnStartup('none');
+    await act(async () => { render(<SidebarHistory />); });
+    expect(store.getState().initDir).toBeUndefined();
   });
 });
 
@@ -379,14 +394,36 @@ describe('SidebarSearch', () => {
   test('shows no results', async () => {
     seed();
     renderWithView(<SearchTree keyword="zzz" ty="content" />);
-    expect(screen.getByText('No results found.')).toBeInTheDocument();
+    expect(await screen.findByText('No results found.')).toBeInTheDocument();
   });
 
-  test('searches hashtags', () => {
+  test('searches hashtags', async () => {
     seed();
     renderWithView(<SearchTree keyword="fruit" ty="hashtag" />);
-    expect(screen.getByText('apple')).toBeInTheDocument();
+    expect(await screen.findByText('apple')).toBeInTheDocument();
     expect(screen.queryByText('banana')).not.toBeInTheDocument();
+  });
+
+  test('searches the notes found by the index, reading them, and the books', async () => {
+    // the notes as indexed: not loaded
+    const indexed = (id: string, title: string) => ({
+      id, title, content: '', file_path: id, cover: '', created_at: 'c', updated_at: 'u', is_daily: false,
+      parsed: { links: [], tags: [], issues: [], has_tasks: false },
+    });
+    store.getState().setNotes(NoteMap.from([indexed('/n/a.md', 'apple'), indexed('/n/b.md', 'banana')]));
+    store.getState().setIsLoaded(true);
+    mockInvoke(invoke, {
+      index_search: [
+        { id: 'writing/a.md', path: '/n/a.md', kind: 'note', title: 'apple', label: '', snippet: '' },
+        { id: `book:${'a'.repeat(32)}#epubcfi(/6/4)`, path: '', kind: 'book', title: 'A Book', label: 'Two', snippet: 'a <b>fruit</b> tree' },
+      ],
+      read_file: ({ filePath }: Record<string, unknown>) => (filePath === '/n/a.md' ? 'red fruit' : 'yellow'),
+    });
+    renderWithView(<SearchTree keyword="fruit" ty="content" />);
+    expect(await screen.findByText('apple')).toBeInTheDocument();
+    expect(screen.queryByText('banana')).not.toBeInTheDocument();
+    expect(invoke).not.toHaveBeenCalledWith('read_file', { filePath: '/n/b.md' });
+    expect(screen.getByText('📖 A Book')).toBeInTheDocument();
   });
 
   test('matchSort orders by refIndex with undefined first', () => {
@@ -439,14 +476,14 @@ describe('SidebarPlaylist', () => {
 describe('Sidebar', () => {
   test('renders content when open', async () => {
     vi.mocked(invoke).mockResolvedValue([]);
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     renderWithView(<Sidebar />);
     expect(screen.getByText('Open Folder')).toBeInTheDocument();
   });
 
   test('renders a closable backdrop on mobile', async () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 500 });
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     const { container } = renderWithView(<Sidebar />);
     fireEvent.click(container.querySelector('.fixed.inset-0') as Element);
     expect(store.getState().isSidebarOpen).toBe(false);
@@ -476,7 +513,7 @@ describe('Sidebar resize', () => {
   const panelWidth = () => (handle().parentElement as HTMLElement).style.width;
 
   test('drags to resize and saves the width on release', () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     renderWithView(<Sidebar />);
     expect(panelWidth()).toBe('256px');
     fireEvent.pointerDown(handle(), { button: 0, clientX: 300, pointerId: 1 });
@@ -491,7 +528,7 @@ describe('Sidebar resize', () => {
   });
 
   test('clamps the width', () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     renderWithView(<Sidebar />);
     fireEvent.pointerDown(handle(), { button: 0, clientX: 300, pointerId: 1 });
     fireEvent.pointerMove(handle(), { clientX: 5000, pointerId: 1 });
@@ -504,7 +541,7 @@ describe('Sidebar resize', () => {
   });
 
   test('ignores moves without a drag and non-primary buttons', () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     renderWithView(<Sidebar />);
     fireEvent.pointerMove(handle(), { clientX: 400, pointerId: 1 });
     fireEvent.pointerDown(handle(), { button: 2, clientX: 300, pointerId: 1 });
@@ -515,7 +552,7 @@ describe('Sidebar resize', () => {
   });
 
   test('resizes by keyboard and resets on double click', () => {
-    store.getState().setIsOpenPreOn(false);
+    store.getState().setOpenOnStartup('none');
     store.getState().setSidebarWidth(400);
     renderWithView(<Sidebar />);
     expect(panelWidth()).toBe('400px');
@@ -623,7 +660,7 @@ describe('SideMenu', () => {
     const btns = Array.from(document.querySelectorAll('#side-menu-btns button')) as HTMLElement[];
     // logo, toggle, feed, new, issues, projects, chronicle, graph, file
     expect(btns).toHaveLength(9);
-    await userEvent.click(screen.getByRole('button', { name: 'Toggle Sidebar' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle Explorer' }));
     expect(store.getState().isSidebarOpen).toBe(false);
     await userEvent.click(btns[2]);
     expect(viewState().view).toBe('feed');

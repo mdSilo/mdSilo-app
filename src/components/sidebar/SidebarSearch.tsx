@@ -1,10 +1,12 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import Highlighter from 'react-highlight-words';
 import { type FuseResultMatch } from 'fuse.js';
 import { useCurrentViewContext } from 'context/useCurrentView';
-import useNoteSearch, { NoteBlock } from 'editor/hooks/useNoteSearch';
+import { searchContent, type ContentSearch, NoteBlock } from 'editor/hooks/useNoteSearch';
 import useDebounce from 'editor/hooks/useDebounce';
-import { useStore } from 'lib/store';
+import useLoadNotes from 'editor/hooks/useLoadNotes';
+import { store, useStore } from 'lib/store';
+import { sanitizeHtml } from 'utils/sanitize';
 import { isMobile } from 'utils/helper';
 import { openFilePath } from 'file/open';
 import ErrorBoundary from '../misc/ErrorBoundary';
@@ -55,15 +57,31 @@ type SearchTreeProps = {
   ty: string;
 };
 
+const NOTHING: ContentSearch = { notes: [], books: [] };
+
 export function SearchTree(props: SearchTreeProps) {
-  const { keyword, ty } = props; 
-  const search = useNoteSearch(
-    { searchContent: ty === 'content', searchHashTag: ty === 'hashtag', extendedSearch: true }
-  );
+  const { keyword, ty } = props;
+  useLoadNotes();
+  const notes = useStore((state) => state.notes);
+  // the notes found by the index, read for their blocks
+  const [found, setFound] = useState<ContentSearch>(NOTHING);
+  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    if (!keyword) {
+      setFound(NOTHING);
+      return;
+    }
+    setSearching(true);
+    searchContent(notes, keyword, ty === 'hashtag' ? 'hashtag' : 'content')
+      .then((result) => { if (!cancelled) setFound(result); })
+      .catch((e) => console.error('Failed to search', e))
+      .finally(() => { if (!cancelled) setSearching(false); });
+    return () => { cancelled = true; };
+  }, [notes, keyword, ty]);
 
   const searchResultsData = useMemo(() => {
-    const searchResults = search(keyword);
-    return searchResults.map((result) => ({
+    const noteData = found.notes.map((result) => ({
       id: result.item.id,
       labelNode: <SidebarSearchBranch text={result.item.title} />,
       children: result.matches
@@ -85,11 +103,27 @@ export function SearchTree(props: SearchTreeProps) {
           }))
         : undefined,
     }));
-  }, [search, keyword]);
+    // the sections of books with the words, by book
+    const byBook = new Map<string, ContentSearch['books']>();
+    for (const hit of found.books) {
+      const hash = hit.id.slice('book:'.length).split('#')[0];
+      byBook.set(hash, [...(byBook.get(hash) ?? []), hit]);
+    }
+    const bookData = [...byBook].map(([hash, hits]) => ({
+      id: `book:${hash}`,
+      labelNode: <SidebarSearchBranch text={`📖 ${hits[0].title}`} />,
+      children: hits.map((hit) => ({
+        id: hit.id,
+        labelNode: <BookLeaf id={hit.id} label={hit.label} snippet={hit.snippet} />,
+        showArrow: false,
+      })),
+    }));
+    return [...noteData, ...bookData];
+  }, [found, keyword]);
 
   return (
     <>
-      {!keyword || searchResultsData.length > 0 ? (
+      {!keyword || searching || searchResultsData.length > 0 ? (
         <VirtualTree
           className="flex-1 px-1 overflow-y-auto"
           data={searchResultsData}
@@ -153,6 +187,33 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
         searchWords={searchQuery.split(' ')}
         autoEscape={true}
         textToHighlight={text}
+      />
+    </button>
+  );
+});
+
+/** A section of a book found: its chapter and the text, opened at it. */
+const BookLeaf = memo(function BookLeaf({ id, label, snippet }: { id: string; label: string; snippet: string }) {
+  const { dispatch } = useCurrentViewContext();
+  return (
+    <button
+      className="w-full px-1 py-2 text-left rounded-sm hover:bg-base-content/10"
+      onClick={async () => {
+        const ws = store.getState().initDir;
+        const rest = id.slice('book:'.length);
+        const at = rest.indexOf('#');
+        const [hash, cfi] = at < 0 ? [rest, undefined] : [rest.slice(0, at), rest.slice(at + 1)];
+        if (!ws) return;
+        const { findBookPath } = await import('reader/library');
+        const path = await findBookPath(ws, hash);
+        if (path) dispatch({ view: 'book', path, cfi });
+      }}
+    >
+      {label ? <span className="block text-xs text-base-content/60">{label}</span> : null}
+      {/* the snippet of the search: escaped, the words in <b> */}
+      <span
+        className="block text-sm text-base-content/70 [&_b]:bg-warning/40"
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(snippet) }}
       />
     </button>
   );

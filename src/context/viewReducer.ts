@@ -15,6 +15,10 @@ export interface ViewState {
   issueNumber?: number;
   issuesTab?: IssuesTab;
   projectId?: string;
+  /** the book file read, see reader */
+  bookPath?: string;
+  /** the place to open the book at, a CFI */
+  bookCfi?: string;
 }
 
 export type ViewAction = 
@@ -26,6 +30,9 @@ export type ViewAction =
   | { view: 'issues'; tab?: IssuesTab }
   | { view: 'issue'; number: number }
   | { view: 'project'; projectId?: string }
+  | { view: 'library' }
+  | { view: 'vocabulary' }
+  | { view: 'book'; path: string; cfi?: string }
   | {
       view: 'md';
       params: ViewParams;
@@ -35,15 +42,27 @@ export type ViewAction =
     tag: string;
   };
 
+/**
+ * What goes with a view, outside of its state: the current note, the window
+ * title, the explorer hidden. Run on dispatch, not in the reducer: a reducer
+ * runs while React renders, where other components must not be updated.
+ */
+export function viewEffects(action: ViewAction) {
+  const { view } = action;
+  if (view === 'md') {
+    store.getState().setCurrentNoteId(action.params.noteId);
+    return;
+  }
+  store.getState().setCurrentNoteId('');
+  if (view === 'issue') setWindowTitle(`#${action.number} - mdSilo`);
+  else if (view === 'book') setWindowTitle(`${action.path.split('/').pop()} - mdSilo`);
+  else setWindowTitle(`${view} - mdSilo`);
+  // the books take the room of the note tree
+  if (view === 'library' || view === 'book' || view === 'vocabulary') store.getState().setIsSidebarOpen(false);
+}
+
 export function viewReducer(state: ViewState, action: ViewAction): ViewState {
   const actionView = action.view;
-  if (actionView === 'md') {
-    store.getState().setCurrentNoteId(action.params.noteId);
-  } else {
-    store.getState().setCurrentNoteId('');
-    setWindowTitle(`: ${actionView} - mdSilo`);
-  }
-
   switch (actionView) {
     case 'default':
       return {...state, view: 'default'};
@@ -58,10 +77,15 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
     case 'issues':
       return {view: 'issues', ...(action.tab ? {issuesTab: action.tab} : {})};
     case 'issue':
-      setWindowTitle(`: #${action.number} - mdSilo`);
       return {view: 'issue', issueNumber: action.number};
     case 'project':
       return {view: 'project', projectId: action.projectId};
+    case 'library':
+      return {view: 'library'};
+    case 'vocabulary':
+      return {view: 'vocabulary'};
+    case 'book':
+      return {view: 'book', bookPath: action.path, bookCfi: action.cfi};
     case 'md':
       return {view: 'md', params: action.params};
     case 'tag':

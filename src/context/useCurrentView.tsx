@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { useContext, createContext, useReducer, Dispatch } from 'react';
-import { viewReducer, initialState, ViewAction, ViewState } from './viewReducer';
+import { useCallback, useContext, createContext, useReducer, Dispatch } from 'react';
+import { viewEffects, viewReducer, initialState, ViewAction, ViewState } from './viewReducer';
 
 export type DispatchType = Dispatch<ViewAction>;
 
@@ -12,7 +12,11 @@ type CurrentView = {
 const CurrentViewContext = createContext<CurrentView | undefined>(undefined);
 
 export function ProvideCurrentView({ children }: {children: ReactNode;}) {
-  const [state, dispatch] = useReducer(viewReducer, initialState);
+  const [state, reduce] = useReducer(viewReducer, initialState);
+  const dispatch = useCallback((action: ViewAction) => {
+    viewEffects(action);
+    reduce(action);
+  }, []);
   return (
     <CurrentViewContext.Provider value={{ state, dispatch }}>
       {children}

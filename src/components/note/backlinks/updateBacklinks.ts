@@ -2,12 +2,14 @@ import { store } from 'lib/store';
 import { linkTitlesOf, rewriteNoteLinks } from 'utils/mdlink';
 import { writeFile } from 'file/write';
 import { loadDir } from 'file/open';
+import { noteContent } from 'lib/contentCache';
 
 const LOAD_TIMEOUT_MS = 5000;
 
 /**
- * Make sure the notes are loaded with content, otherwise the links in
- * the notes not opened yet would be missed.
+ * Make sure all the notes are loaded (with content, or what they link to
+ * from the index), otherwise the links in the notes not opened yet would be
+ * missed.
  * Wait for the load at most `timeout` ms then go on with what we have.
  */
 export const ensureNotesLoaded = async (timeout = LOAD_TIMEOUT_MS) => {
@@ -52,9 +54,13 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
   );
   const updateNote = store.getState().updateNote;
   for (const note of notes.values()) {
-    if (note.is_dir || !note.content) continue;
-    const content = rewriteNoteLinks(note.content, noteTitle, toTitle, oldTitles);
-    if (content === note.content) continue;
+    if (note.is_dir) continue;
+    // not loaded: read if it links to the note, as the index tells
+    if (note.parsed && !note.parsed.links.some((t) => oldTitles.includes(t))) continue;
+    const old = note.parsed ? await noteContent(note.id) : note.content;
+    if (!old) continue;
+    const content = rewriteNoteLinks(old, noteTitle, toTitle, oldTitles);
+    if (content === old) continue;
     // update content and write file
     updateNote({ id: note.id, content });
     await writeFile(note.file_path, content);

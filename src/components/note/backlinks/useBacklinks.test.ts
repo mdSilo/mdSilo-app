@@ -49,10 +49,10 @@ describe('useBacklinks', () => {
     vi.useRealTimers();
   });
 
-  test('returns linked and unlinked backlinks after debounce', () => {
+  test('returns linked and unlinked backlinks after debounce', async () => {
     store.getState().setNotes(NoteMap.from(notes));
     const { result } = renderHook(() => useBacklinks(target.id));
-    act(() => vi.advanceTimersByTime(1000));
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
 
     expect(result.current.linkedBacklinks.map((b) => b.id).sort()).toEqual(['/n/md.md', '/n/table.md', '/n/wiki.md']);
     // unlinked = text matches of the title, not in links

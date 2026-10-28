@@ -2,6 +2,8 @@ import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { NoteMap, Notes, store } from 'lib/store';
 import { defaultNote, Note } from 'types/model';
+import type { Parsed } from 'lib/parseNote';
+import { regDateStr } from 'utils/helper';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processFiles, processDirs } from './process';
@@ -154,6 +156,9 @@ export const openFileDilog = async (ty: string[], multi = true) => {
   return filePaths;
 };
 
+/** A note read: what the index parsed of it is no longer needed. */
+const withContent = (note: Note): Note => ({ ...note, parsed: undefined });
+
 /**
  * Open and process files or dirs, upsert note and tree to store
  * @param filePaths 
@@ -179,9 +184,9 @@ export async function openFilePaths(filePaths: string[]) {
   const upsertTree = store.getState().upsertTree;
   // The filePaths maybe not in same dir(even though it is same in most cases), 
   // so need to upsertTree in the for-loop
-  // process md files
+  // process md files, read: their content is known
   const processeds = processFiles(files);
-  const processedNotes = processeds[0];
+  const processedNotes = processeds[0].map(withContent);
   for (const md of processedNotes) {
     upsertNote(md);
     const parentDir = await getParentDir(md.file_path);
@@ -240,8 +245,8 @@ export async function openFilePath(filePath: string, setCurrent: boolean) {
     return;
   }
   
-  // process files
-  const processedNotes = processFiles(files)[0];
+  // process files, read: their content is known
+  const processedNotes = processFiles(files)[0].map(withContent);
   // process dirs
   const processedDirs = processDirs(dirs);
   const note = [...processedDirs, ...processedNotes][0];
@@ -335,12 +340,42 @@ export function loadDir(dir: string): Promise<void> {
   return promise;
 }
 
+/** A note of the index of the workspace (src-tauri/src/index), no content. */
+export type IndexedNote = Pick<Note, 'id' | 'title' | 'file_path' | 'created_at' | 'updated_at'> & Parsed & {
+  is_dir: boolean;
+  size?: number;
+};
+
+/** The note of the store of an indexed one: its content loaded on use. */
+export const noteOfIndexed = (n: IndexedNote): Note => ({
+  id: n.id,
+  title: n.title,
+  content: '',
+  file_path: n.file_path,
+  cover: '',
+  created_at: n.created_at,
+  updated_at: n.updated_at,
+  is_daily: !n.is_dir && regDateStr.test(n.title),
+  is_dir: n.is_dir,
+  ...(n.is_dir ? {} : {
+    parsed: { links: n.links ?? [], tags: n.tags ?? [], issues: n.issues ?? [], has_tasks: Boolean(n.has_tasks) },
+  }),
+});
+
 async function loadNotes(dir: string) {
   try {
-    const notes = await invoke<Notes | undefined>('load_notes', { dir });
-    if (!notes) return;
+    // the notes as indexed: what they link to, not their content (see
+    // lib/contentCache), the index kept up to date with the files
+    const indexed = await invoke<IndexedNote[] | undefined>('index_open', { dir });
+    if (!indexed) return;
     const initDir = store.getState().initDir;
     if (initDir && initDir !== dir) return;
+    // the notes read already (e.g. the one open) keep their content
+    const current = store.getState().notes;
+    const notes = indexed.map((n) => {
+      const known = current.get(n.id);
+      return known && !known.parsed && known.content ? known : noteOfIndexed(n);
+    });
     store.getState().setNotes(NoteMap.from(notes));
     store.getState().setIsLoaded(true);
   } catch (e) {

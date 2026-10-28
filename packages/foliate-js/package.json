@@ -1,0 +1,38 @@
+{
+  "name": "foliate-js",
+  "version": "0.0.0",
+  "description": "Render e-books in the browser; the fork of readup (https://github.com/johnfactotum/foliate-js upstream)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnfactotum/foliate-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/johnfactotum/foliate-js/issues"
+  },
+  "homepage": "https://github.com/johnfactotum/foliate-js#readme",
+  "author": "John Factotum",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    "./*.js": "./*.js"
+  },
+  "scripts": {},
+  "keywords": [
+    "ebook",
+    "reader",
+    "epub",
+    "cfi",
+    "mobi",
+    "azw",
+    "azw3",
+    "fb2",
+    "cbz",
+    "dictd",
+    "stardict",
+    "opds"
+  ],
+  "dependencies": {
+    "construct-style-sheets-polyfill": "^3.1.0",
+    "pdfjs-dist": "5.7.284"
+  }
+}

@@ -1,9 +1,18 @@
 // Lints the app (src). packages/mdsmirror has its own eslint.config.mjs.
 import js from '@eslint/js';
+import { SourceCode } from 'eslint';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import importPlugin from 'eslint-plugin-import';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+
+// eslint-plugin-import 2.32 calls SourceCode methods ESLint 10 removed when it
+// reports import/order: without them the whole lint run crashes
+for (const [name, method] of [['getTokenOrCommentBefore', 'getTokenBefore'], ['getTokenOrCommentAfter', 'getTokenAfter']]) {
+  SourceCode.prototype[name] ??= function (node, skip) {
+    return this[method](node, { includeComments: true, skip });
+  };
+}
 
 export default [
   { ignores: ['packages/', 'dist/', 'dist-web/', 'build/', 'src-tauri/', 'web/'] },

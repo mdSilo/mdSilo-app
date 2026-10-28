@@ -1,8 +1,8 @@
 import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { TbPin as IconPin, TbTrash as IconTrash } from 'react-icons/tb';
 import { useStore } from 'lib/store';
-import Tooltip from 'components/misc/Tooltip';
-import { listInitDir } from 'editor/hooks/useOpen';
+import { Tooltip } from 'components/misc/ui';
+import { listInitDir, startupDir } from 'editor/hooks/useOpen';
 import { isWeb } from 'file/util';
 
 type Props = {
@@ -25,20 +25,20 @@ function SidebarHistory(props: Props) {
     }, []
   );
 
-  const isOpenPreOn = useStore((state) => state.isOpenPreOn);
+  const openOnStartup = useStore((state) => state.openOnStartup);
   const showHistory = useStore((state) => state.showHistory);
-  // reopen the previous folder once: listInitDir updates recentDir, which
+  // open the startup folder once: listInitDir updates recentDir, which
   // would otherwise re-run this effect forever while the history is mounted
   const isOpened = useRef(false);
   useEffect(() => { 
     // web: the workspace is opened on startup, see openWebWorkspace
-    if (isWeb || !isOpenPreOn || showHistory || isOpened.current) return;
-    const recentDirPath = history.length > 0 ? history[history.length - 1] : '';
-    if (!recentDirPath) return;
+    if (isWeb || showHistory || isOpened.current) return;
+    const dir = startupDir({ openOnStartup, recentDir: history, pinnedDir });
+    if (!dir) return;
     isOpened.current = true;
-    listInitDir(recentDirPath);
+    listInitDir(dir);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history]);
+  }, [history, pinnedDir]);
 
   return (
     <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>

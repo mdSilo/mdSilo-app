@@ -1,19 +1,20 @@
 import { useMemo, useState } from 'react';
 import { TbArrowsSort as IconSort } from 'react-icons/tb';
 import { useIssueStore } from '../issueStore';
-import { moveProjectItem, removeProjectItem } from '../issueOps';
+import { isOverdue, moveProjectItem, removeProjectItem, subtaskProgress } from '../issueOps';
 import { filterIssues } from '../filter';
 import { StateIcon, TimeAgo, inputClass } from '../common';
 import LabelChip from '../LabelChip';
 import type { Issue, IssueData, Project } from '../types';
 
-type Col = 'number' | 'title' | 'status' | 'labels' | 'milestone' | 'updated';
+type Col = 'number' | 'title' | 'status' | 'labels' | 'milestone' | 'due' | 'updated';
 const COLS: { key: Col; name: string }[] = [
   { key: 'number', name: '#' },
   { key: 'title', name: 'Title' },
   { key: 'status', name: 'Status' },
   { key: 'labels', name: 'Labels' },
   { key: 'milestone', name: 'Milestone' },
+  { key: 'due', name: 'Due' },
   { key: 'updated', name: 'Updated' },
 ];
 
@@ -49,6 +50,8 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
         case 'status': return r.statusIdx * 1e9 + (inProject.get(r.issue.number)?.order ?? 0);
         case 'labels': return labelNames(r.issue);
         case 'milestone': return r.milestone.toLowerCase();
+        // no date last
+        case 'due': return r.issue.dueOn ?? '9999-99-99';
         default: return r.issue.updatedAt;
       }
     };
@@ -89,7 +92,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <tr><td colSpan={7} className="p-4 text-center text-base-content/60">No items.</td></tr>
+              <tr><td colSpan={8} className="p-4 text-center text-base-content/60">No items.</td></tr>
             ) : rows.map(({ issue, status, milestone }) => (
               <tr key={issue.number} className="border-t border-base-300" data-testid="project-row">
                 <td className="px-2 py-1 text-base-content/60 whitespace-nowrap">
@@ -99,6 +102,11 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                   <button type="button" className="text-left hover:text-primary/75" onClick={() => onOpen(issue.number)}>
                     {issue.title}
                   </button>
+                  {subtaskProgress(issue) ? (
+                    <span className="ml-2 text-xs text-base-content/60" title="Sub-tasks done">
+                      {subtaskProgress(issue)!.done}/{subtaskProgress(issue)!.total}
+                    </span>
+                  ) : null}
                 </td>
                 <td className="px-2 py-1">
                   <select
@@ -120,6 +128,9 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                   </div>
                 </td>
                 <td className="px-2 py-1 text-base-content/60">{milestone}</td>
+                <td className={`px-2 py-1 whitespace-nowrap ${isOverdue(issue) ? 'text-error' : 'text-base-content/60'}`}>
+                  {issue.dueOn ?? ''}
+                </td>
                 <td className="px-2 py-1 text-base-content/60 whitespace-nowrap"><TimeAgo iso={issue.updatedAt} /></td>
                 <td className="px-2 py-1">
                   <button

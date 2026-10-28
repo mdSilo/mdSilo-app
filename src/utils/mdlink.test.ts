@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   encodeHref,
   findNoteLinks,
+  isNoteHref,
   legacyLinkTitle,
   linkTitlesOf,
   maskCode,
@@ -73,5 +74,15 @@ describe('legacy links: spaces written as `_` before v0.5.7', () => {
     expect(rewriteNoteLinks('[x](a_b) [[a_b]] [[a b]]', 'a b', 'c d', ['a b', 'a_b'])).toBe(
       '[x](c%20d) [[c d]] [[c d]]'
     );
+  });
+});
+
+describe('links of the app', () => {
+  test('are not links to notes', () => {
+    const content = '[#12](issue:12) [quote](book:0123456789abcdef0123456789abcdef#epubcfi(%2F6)) [[Note]] [x](y)';
+    expect(findNoteLinks(content).map((l) => l.title)).toEqual(['Note', 'y']);
+    expect(isNoteHref('book:abc')).toBe(false);
+    expect(isNoteHref('Issue:1')).toBe(false);
+    expect(isNoteHref('bookish')).toBe(true);
   });
 });

@@ -1,10 +1,7 @@
 import { parser } from 'mdsmirror';
-import { isUrl } from 'utils/helper';
-import { findNoteLinks, HASHTAG_REGEX, hrefToTitle } from 'utils/mdlink';
+import { findNoteLinks, hrefToTitle, isNoteHref } from 'utils/mdlink';
 import type { NoteMap } from './noteMap';
-
-// [#12](issue:12)
-const ISSUE_LINK_REGEX = /\(issue:(\d+)\)/g;
+import { issueLinks, noteTags, type Parsed } from './parseNote';
 
 export type TextRun = {
   text: string;
@@ -34,7 +31,7 @@ export const getMarkdownTextBlocks = (content: string): TextBlock[] => {
       if (child.type === 'link_open') {
         const href = child.attrGet('href') || '';
         // '' for the links not to note, e.g. url
-        link = href && !isUrl(href) ? hrefToTitle(href) : '';
+        link = isNoteHref(href) ? hrefToTitle(href) : '';
       } else if (child.type === 'link_close') {
         link = undefined;
       } else if (child.type === 'text' || child.type === 'code_inline') {
@@ -54,9 +51,13 @@ export const getMarkdownTextBlocks = (content: string): TextBlock[] => {
   return blocks;
 };
 
-/** What a note links to and contains, computed on use, kept until it changes. */
+/**
+ * What a note links to and contains, computed on use, kept until it changes:
+ * of its content if loaded, else as the index of the workspace parsed it.
+ */
 type Entry = {
-  content: string;
+  content?: string;
+  parsed?: Parsed;
   blocks?: TextBlock[]; // parsed by markdown-it, the costly part
   linkTitles?: Set<string>; // titles of the notes linked
   plain?: string; // the block texts, to find mentions
@@ -103,12 +104,13 @@ export class LinkIndex {
     for (const note of notes.values()) {
       if (note.is_dir) continue;
       this.titles.set(note.title, (this.titles.get(note.title) ?? 0) + 1);
-      if (!note.content) continue;
+      const parsed = !note.content ? note.parsed : undefined;
+      if (!note.content && !parsed) continue;
       seen.add(note.id);
       const old = this.entries.get(note.id);
-      if (old?.content === note.content) continue;
+      if (parsed ? old?.parsed === parsed : old?.content === note.content) continue;
       if (old) this.unindex(note.id, old);
-      const entry: Entry = { content: note.content };
+      const entry: Entry = parsed ? { parsed } : { content: note.content };
       this.entries.set(note.id, entry);
       if (this.byTitle) this.index(note.id, entry);
     }
@@ -124,10 +126,20 @@ export class LinkIndex {
     return (this.titles.get(title) ?? 0) > 0;
   }
 
-  /** The text blocks of a note, parsed once per content. */
+  /** The content of the note is here: not only what the index tells. */
+  isLoaded(id: string): boolean {
+    return this.entries.get(id)?.content !== undefined;
+  }
+
+  /** The notes known by the index only: their content not loaded. */
+  notLoaded(): string[] {
+    return [...this.entries].filter(([, e]) => e.content === undefined).map(([id]) => id);
+  }
+
+  /** The text blocks of a note, parsed once per content; none if not loaded. */
   blocks(id: string): TextBlock[] {
     const entry = this.entries.get(id);
-    if (!entry) return [];
+    if (entry?.content === undefined) return [];
     if (!entry.blocks) {
       entry.blocks = getMarkdownTextBlocks(entry.content);
       this.parsed += 1;
@@ -148,13 +160,17 @@ export class LinkIndex {
     return ids;
   }
 
-  /** The notes with the title in their text (maybe in a link). */
+  /**
+   * The notes loaded with the title in their text (maybe in a link); for the
+   * others, the search of the index tells.
+   */
   mentioning(title: string): Set<string> {
     const ids = new Set<string>();
     for (const [id, entry] of this.entries) {
       // the content first: most notes do not have it, no need to parse them
       // (a mention may be escaped or an entity in the markdown though)
       const raw = entry.content;
+      if (raw === undefined) continue;
       if (!raw.includes(title) && !raw.includes('\\') && !raw.includes('&')) continue;
       if (entry.mention?.title !== title) {
         entry.plain ??= this.blocks(id).map((b) => b.text).join('\n');
@@ -169,34 +185,36 @@ export class LinkIndex {
   rawLinks(id: string): string[] {
     const entry = this.entries.get(id);
     if (!entry) return [];
-    return (entry.rawLinks ??= findNoteLinks(entry.content).map((link) => link.title));
+    if (entry.parsed) return entry.parsed.links;
+    return (entry.rawLinks ??= findNoteLinks(entry.content ?? '').map((link) => link.title));
   }
 
   /** The #tags# of a note. */
   tags(id: string): string[] {
     const entry = this.entries.get(id);
     if (!entry) return [];
-    return (entry.tags ??= [...entry.content.matchAll(HASHTAG_REGEX)]
-      .map((m) => m[1]?.trim())
-      .filter((tag): tag is string => !!tag && !tag.includes('#')));
+    if (entry.parsed) return entry.parsed.tags;
+    return (entry.tags ??= noteTags(entry.content ?? ''));
   }
 
   /** The issues a note links to, [#12](issue:12). */
   issues(id: string): Set<number> {
     const entry = this.entries.get(id);
     if (!entry) return new Set();
-    return (entry.issues ??= new Set(
-      [...entry.content.matchAll(ISSUE_LINK_REGEX)].map((m) => Number(m[1]))
-    ));
+    return (entry.issues ??= new Set(entry.parsed ? entry.parsed.issues : issueLinks(entry.content ?? '')));
   }
 
   private linkTitles(id: string, entry: Entry): Set<string> {
     if (!entry.linkTitles) {
-      const titles = new Set<string>();
-      for (const block of this.blocks(id)) {
-        for (const run of block.runs) if (run.link) titles.add(run.link);
+      if (entry.parsed) {
+        entry.linkTitles = new Set(entry.parsed.links);
+      } else {
+        const titles = new Set<string>();
+        for (const block of this.blocks(id)) {
+          for (const run of block.runs) if (run.link) titles.add(run.link);
+        }
+        entry.linkTitles = titles;
       }
-      entry.linkTitles = titles;
     }
     return entry.linkTitles;
   }

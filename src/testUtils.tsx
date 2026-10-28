@@ -112,3 +112,23 @@ export async function waitForView() {
     if (screen.queryByTestId('view-loading')) throw new Error('view loading');
   });
 }
+
+/**
+ * Back the mocked Tauri `invoke` with the file system of the web version,
+ * in a fresh (fake) IndexedDB: the commands work on files as in the app.
+ * Call in beforeEach; `/mdSilo` is a workspace already.
+ */
+export async function useWebFs() {
+  const { IDBFactory, IDBKeyRange } = await import('fake-indexeddb');
+  const { closeDB } = await import('./platform/web/idb');
+  const { resetFsInit } = await import('./platform/web/fs');
+  const web = await import('./platform/web/core');
+  const { invoke } = await import('@tauri-apps/api/core');
+  await closeDB();
+  resetFsInit();
+  Object.assign(globalThis, { indexedDB: new IDBFactory(), IDBKeyRange });
+  (invoke as Mock).mockImplementation((cmd: string, args?: Record<string, unknown>) =>
+    web.invoke(cmd, args)
+  );
+  return web.invoke;
+}

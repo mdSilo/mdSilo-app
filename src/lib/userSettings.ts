@@ -1,4 +1,6 @@
 import { Draft } from 'immer';
+import { DEFAULT_READER_SETTINGS, type ReaderSettings } from 'reader/settings';
+import { DEFAULT_LIBRARY_SETTINGS, type LibrarySettings } from 'reader/shelf';
 import { setter, Setter, Store } from './store';
 import { isSystemDark, SYSTEM_THEME } from './themes';
 
@@ -12,6 +14,24 @@ export enum Sort {
 }
 
 export type SideMenuOrientation = 'auto' | 'vertical' | 'horizontal';
+
+/** the folder opened on startup */
+export type OpenOnStartup = 'previous' | 'pinned' | 'none';
+
+/** the view shown on startup; explorer: the explorer in the sidebar */
+export type StartupView =
+  | 'notes' | 'library' | 'feed' | 'issues' | 'project' | 'chronicle' | 'graph' | 'journal';
+
+export const STARTUP_VIEWS: [StartupView, string][] = [
+  ['notes', 'Explorer'],
+  ['library', 'Library'],
+  ['feed', 'Feed Reader'],
+  ['issues', 'Issues'],
+  ['project', 'Projects'],
+  ['chronicle', 'Chronicle'],
+  ['graph', 'Graph'],
+  ['journal', 'Journals'],
+];
 
 export const ReadableNameBySort = {
   [Sort.TitleAscending]: 'Title (A-Z)',
@@ -51,8 +71,10 @@ export type UserSettings = {
   setNoteSort: Setter<Sort>;
   isCheckSpellOn: boolean;
   setIsCheckSpellOn: Setter<boolean>;
-  isOpenPreOn: boolean;
-  setIsOpenPreOn: Setter<boolean>;
+  openOnStartup: OpenOnStartup;
+  setOpenOnStartup: Setter<OpenOnStartup>;
+  startupView: StartupView;
+  setStartupView: Setter<StartupView>;
   showHistory: boolean,
   setShowHistory: Setter<boolean>;
   readMode: boolean;
@@ -75,12 +97,19 @@ export type UserSettings = {
   setFeedChannelWidth: Setter<number>;
   feedArticleWidth: number;
   setFeedArticleWidth: Setter<number>;
+  readerSidebarWidth: number;
+  setReaderSidebarWidth: Setter<number>;
+  readerSettings: ReaderSettings; // how books show, see reader/settings
+  setReaderSettings: Setter<ReaderSettings>;
+  librarySettings: LibrarySettings; // how the library shows, see reader/shelf
+  setLibrarySettings: Setter<LibrarySettings>;
 };
 
 // resizable panel widths in px
 export const SIDEBAR_WIDTH = { min: 160, max: 640, default: 256 } as const;
 export const FEED_CHANNEL_WIDTH = { min: 120, max: 480, default: 192 } as const;
 export const FEED_ARTICLE_WIDTH = { min: 200, max: 720, default: 288 } as const;
+export const READER_SIDEBAR_WIDTH = { min: 180, max: 560, default: 288 } as const;
 
 const userSettingsSlice = (
   set: (fn: (draft: Draft<Store>) => void) => void
@@ -114,8 +143,10 @@ const userSettingsSlice = (
   setNoteSort: setter(set, 'noteSort'),
   isCheckSpellOn: true,
   setIsCheckSpellOn: setter(set, 'isCheckSpellOn'),
-  isOpenPreOn: true,
-  setIsOpenPreOn: setter(set, 'isOpenPreOn'),
+  openOnStartup: 'previous' as OpenOnStartup,
+  setOpenOnStartup: setter(set, 'openOnStartup'),
+  startupView: 'notes' as StartupView,
+  setStartupView: setter(set, 'startupView'),
   showHistory: false,
   setShowHistory:setter(set, 'showHistory'),
   readMode: false,
@@ -157,6 +188,12 @@ const userSettingsSlice = (
   setFeedChannelWidth: setter(set, 'feedChannelWidth'),
   feedArticleWidth: FEED_ARTICLE_WIDTH.default as number,
   setFeedArticleWidth: setter(set, 'feedArticleWidth'),
+  readerSidebarWidth: READER_SIDEBAR_WIDTH.default as number,
+  setReaderSidebarWidth: setter(set, 'readerSidebarWidth'),
+  readerSettings: DEFAULT_READER_SETTINGS,
+  setReaderSettings: setter(set, 'readerSettings'),
+  librarySettings: DEFAULT_LIBRARY_SETTINGS,
+  setLibrarySettings: setter(set, 'librarySettings'),
 });
 
 export default userSettingsSlice;

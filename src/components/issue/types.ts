@@ -40,6 +40,7 @@ export type IssueEventKind =
   | 'demilestoned'
   | 'renamed'
   | 'status'
+  | 'due' // the due date set, changed or removed
   | 'task'; // synced from the source task in a note
 
 export type CommentItem = {
@@ -60,6 +61,9 @@ export type EventItem = {
 
 export type TimelineItem = CommentItem | EventItem;
 
+/** A step of an issue, checked when done. */
+export type Subtask = { id: string; text: string; done: boolean };
+
 export type Issue = {
   number: number; // human id, #12 (monotonic, never reused)
   title: string;
@@ -71,6 +75,8 @@ export type Issue = {
   notes: string[]; // explicitly linked note paths (note.id === file_path)
   /** set when created from a #todo#/#doing#/#done# task in a note */
   noteTask?: NoteTaskRef;
+  dueOn?: string; // yyyy-mm-dd
+  subtasks?: Subtask[];
   timeline: TimelineItem[];
   createdAt: string;
   updatedAt: string;

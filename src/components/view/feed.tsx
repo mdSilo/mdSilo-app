@@ -14,6 +14,7 @@ import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from 'lib/userSettings';
 export default function Feed() {
   const dispatch = useCurrentViewContext().dispatch;
   const openNote = useCallback((noteId: string) => dispatch({ view: 'md', params: { noteId } }), [dispatch]);
+  const openBook = useCallback((path: string) => dispatch({ view: 'book', path }), [dispatch]);
   // channel list
   const [channelList, setChannelList] = useState<ChannelType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<ChannelType | null>(null);
@@ -208,6 +209,7 @@ export default function Feed() {
                   onClickArticle={onClickArticle}
                   loading={loading}
                   syncing={syncing}
+                  onOpenBook={openBook}
                 />
               </div>
               <ResizeHandle

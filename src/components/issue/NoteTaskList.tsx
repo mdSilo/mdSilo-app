@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from 'lib/store';
 import useLoadNotes from 'editor/hooks/useLoadNotes';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import useDebounce from 'editor/hooks/useDebounce';
 import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
 import { useIssueStore } from './issueStore';
-import { computeNoteTasks, createIssueFromTask, issueOfTask, NoteTask, TaskTag, TASK_TAGS } from './noteTasks';
+import { createIssueFromTask, issueOfTask, loadNoteTasks, NoteTask, TaskTag, TASK_TAGS } from './noteTasks';
 import { StateIcon, btnClass } from './common';
 import type { IssueData } from './types';
 
@@ -25,7 +25,14 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
   useLoadNotes();
 
   const [notes] = useDebounce(useStore((state) => state.notes), 300);
-  const tasks = useMemo(() => computeNoteTasks(notes), [notes]);
+  const [tasks, setTasks] = useState<NoteTask[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    loadNoteTasks(notes)
+      .then((found) => { if (!cancelled) setTasks(found); })
+      .catch((e) => console.error('Failed to read the tasks of the notes', e));
+    return () => { cancelled = true; };
+  }, [notes]);
   const apply = useIssueStore((s) => s.apply);
   const { dispatch } = useCurrentViewContext();
   const { onClick: openNote } = useOnNoteLinkClick();

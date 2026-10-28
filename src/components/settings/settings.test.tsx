@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from 'lib/store';
 import { BaseModal } from './BaseModal';
-import { SettingsToggle } from './SettingsToggle';
 import SettingsModal from './SettingsModal';
+import EditorSettings from './EditorSettings';
 import AboutModal from './AboutModal';
 
 describe('BaseModal', () => {
@@ -13,6 +13,17 @@ describe('BaseModal', () => {
     render(<BaseModal title="Hello" isOpen handleClose={vi.fn()}><p>body</p></BaseModal>);
     expect(await screen.findByText('Hello')).toBeInTheDocument();
     expect(screen.getByText('body')).toBeInTheDocument();
+  });
+
+  test('closes on a click outside the panel', async () => {
+    const handleClose = vi.fn();
+    render(<BaseModal title="Hello" isOpen handleClose={handleClose}><p>body</p></BaseModal>);
+    await screen.findByText('Hello');
+    fireEvent.click(document.querySelector('.bg-gray-500\\/75') as HTMLElement);
+    expect(handleClose).toHaveBeenCalled();
+    handleClose.mockClear();
+    fireEvent.click(screen.getByText('body'));
+    expect(handleClose).not.toHaveBeenCalled();
   });
 
   test('renders nothing when closed', () => {
@@ -30,23 +41,8 @@ describe('BaseModal', () => {
   });
 });
 
-describe('SettingsToggle', () => {
-  test('renders labels and toggles', async () => {
-    const handleCheck = vi.fn();
-    render(<SettingsToggle name="Dark Theme" descript="desc" check={false} handleCheck={handleCheck} />);
-    expect(screen.getByText('Dark Theme')).toBeInTheDocument();
-    expect(screen.getByText('desc')).toBeInTheDocument();
-    expect(screen.getByText('Off')).toBeInTheDocument();
-    expect(screen.getByText('On')).toBeInTheDocument();
-    const checkbox = screen.getByRole('checkbox');
-    expect(checkbox).toHaveAttribute('id', 'Dark-Theme');
-    await userEvent.click(checkbox);
-    expect(handleCheck).toHaveBeenCalledWith(true);
-  });
-});
-
 describe('SettingsModal', () => {
-  test('updates store settings', async () => {
+  test('updates the global settings', async () => {
     render(<SettingsModal isOpen handleClose={vi.fn()} />);
     await screen.findByText('Settings');
 
@@ -55,31 +51,55 @@ describe('SettingsModal', () => {
     fireEvent.change(themeSelect, { target: { value: 'dracula' } });
     expect(store.getState().theme).toBe('dracula');
 
-    await userEvent.click(screen.getByLabelText('', { selector: '#Text-Direction' }));
-    expect(store.getState().isRTL).toBe(true);
-
     fireEvent.change(screen.getByLabelText('Side Menu Orientation'), { target: { value: 'horizontal' } });
     expect(store.getState().sideMenuOrientation).toBe('horizontal');
+
+    const openOn = screen.getByLabelText('Open on Startup');
+    expect(openOn).toHaveValue('previous');
+    fireEvent.change(openOn, { target: { value: 'pinned' } });
+    expect(store.getState().openOnStartup).toBe('pinned');
+
+    const startupView = screen.getByLabelText('View on Startup');
+    expect(startupView).toHaveValue('notes');
+    fireEvent.change(startupView, { target: { value: 'library' } });
+    expect(store.getState().startupView).toBe('library');
+  });
+
+  test('has no editor settings', async () => {
+    render(<SettingsModal isOpen handleClose={vi.fn()} />);
+    await screen.findByText('Settings');
+    expect(screen.queryByLabelText('Editor Font Family')).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('spinbutton')).toHaveLength(0);
+  });
+});
+
+describe('EditorSettings', () => {
+  test('updates the editor settings', async () => {
+    render(<EditorSettings />);
 
     fireEvent.change(screen.getByLabelText('Editor Font Family'), { target: { value: 'Sniglet' } });
     expect(store.getState().font).toBe('Sniglet');
 
-    const [size, height, weight] = screen.getAllByRole('spinbutton');
-    fireEvent.change(size, { target: { value: '1.5' } });
-    fireEvent.change(height, { target: { value: '2' } });
-    fireEvent.change(weight, { target: { value: '700' } });
+    fireEvent.change(screen.getByLabelText('Font Size'), { target: { value: '1.5' } });
+    fireEvent.change(screen.getByLabelText('Line Height'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Font Weight'), { target: { value: '700' } });
     expect(store.getState().fontSize).toBe(1.5);
     expect(store.getState().lineHeight).toBe(2);
     expect(store.getState().fontWt).toBe(700);
+
+    await userEvent.click(screen.getByLabelText('Right to Left'));
+    expect(store.getState().isRTL).toBe(true);
+    await userEvent.click(screen.getByLabelText('Spell Check'));
+    expect(store.getState().isCheckSpellOn).toBe(false);
+    await userEvent.click(screen.getByLabelText('Use Assets Folder'));
+    expect(store.getState().useAsset).toBe(false);
   });
 
-  test('falls back to defaults for invalid numbers', async () => {
-    render(<SettingsModal isOpen handleClose={vi.fn()} />);
-    await screen.findByText('Settings');
-    const [size, height, weight] = screen.getAllByRole('spinbutton');
-    fireEvent.change(size, { target: { value: '' } });
-    fireEvent.change(height, { target: { value: '' } });
-    fireEvent.change(weight, { target: { value: '' } });
+  test('falls back to defaults for invalid numbers', () => {
+    render(<EditorSettings />);
+    fireEvent.change(screen.getByLabelText('Font Size'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Line Height'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Font Weight'), { target: { value: '' } });
     expect(store.getState().fontSize).toBe(1.1);
     expect(store.getState().lineHeight).toBe(1.6);
     expect(store.getState().fontWt).toBe(400);

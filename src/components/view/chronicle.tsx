@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCurrentViewContext } from 'context/useCurrentView';
 import { useStore, store, Notes } from 'lib/store';
 import ErrorBoundary from 'components/misc/ErrorBoundary';
@@ -11,17 +11,21 @@ import { defaultNote, Note } from 'types/model';
 import { openFilePath } from 'file/open';
 import useLoadNotes from 'editor/hooks/useLoadNotes';
 import { checkFileIsMd } from 'file/process';
+import { useWritingRoot } from 'workspace/useWorkspace';
+import { readingTimeByDay } from 'reader/stats';
 
 export default function Chronicle() {
   useLoadNotes();
   const initDir = useStore((state) => state.initDir);
+  // daily notes are in writing/daily in the workspace layout
+  const notesRoot = useWritingRoot();
 
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
   const onNewDailyNote = useCallback(async (date: string) => {
-    if (!initDir || !regDateStr.test(date)) return;
-    const noteId = await joinPaths(initDir, ['daily', `${date}.md`]);
+    if (!notesRoot || !regDateStr.test(date)) return;
+    const noteId = await joinPaths(notesRoot, ['daily', `${date}.md`]);
     const note = await openFilePath(noteId, true);
     if (!note) {
       const newNote: Note = {
@@ -32,7 +36,7 @@ export default function Chronicle() {
         is_daily: true,
       };
       store.getState().upsertNote(newNote);
-      const dailyDir = await joinPaths(initDir, ['daily']);
+      const dailyDir = await joinPaths(notesRoot, ['daily']);
       const newDailyDir: Note = {
         ...defaultNote,
         id: dailyDir,
@@ -40,14 +44,14 @@ export default function Chronicle() {
         file_path: dailyDir,
         is_dir: true,
       };
-      store.getState().upsertTree(initDir, [newDailyDir]);
+      store.getState().upsertTree(notesRoot, [newDailyDir]);
       store.getState().upsertTree(dailyDir, [newNote]);
       const cNote: Notes = {};
       cNote[noteId] = newNote;
       store.getState().setCurrentNote(cNote);
     }
     dispatch({view: 'md', params: { noteId }});
-  }, [dispatch, initDir]);
+  }, [dispatch, notesRoot]);
 
   const today = getStrDate((new Date()).toString());
 
@@ -85,8 +89,22 @@ function HeatMapAndList(props: Props) {
   // console.log("heat loaded?");
 
   const notes = useStore((state) => state.notes);
+  const initDir = useStore((state) => state.initDir);
+  const layout = useStore((state) => state.layout);
 
   const noteList: readonly Note[] = notes.values();
+
+  // the time read per day: the input side of the activities
+  const [reading, setReading] = useState<Record<string, number>>({});
+  useEffect(() => {
+    let cancelled = false;
+    if (initDir && layout === 'workspace') {
+      void readingTimeByDay(initDir).then((time) => { if (!cancelled) setReading(time); });
+    } else {
+      setReading({});
+    }
+    return () => { cancelled = true; };
+  }, [initDir, layout]);
 
   const sortedNotes = useMemo(() => {
     const myNotes = noteList.filter(n => !n.is_daily && !n.is_dir && checkFileIsMd(n.id));
@@ -117,7 +135,7 @@ function HeatMapAndList(props: Props) {
   return (
     <>
       <div className="flex items-center justify-center overlfow-auto">
-        <HeatMap noteList={noteList} onClickCell={showDailyNote} />
+        <HeatMap noteList={noteList} reading={reading} onClickCell={showDailyNote} />
       </div>
       <div className="overlfow-auto">
         {dateArr.slice(0,42).map((d, idx) => (

@@ -4,21 +4,22 @@
 )]
 
 mod atomic;
+mod books;
 mod db;
 mod feed;
 mod files;
+mod index;
 #[cfg(target_os = "linux")]
 mod input_method;
-mod json;
 mod models;
 mod paths;
 mod schema;
 mod storage;
 mod tests;
-mod tree;
 mod window;
 mod plugins;
 mod tray;
+mod wsfs;
 
 extern crate diesel;
 extern crate diesel_migrations;
@@ -69,6 +70,8 @@ pub fn run() {
       feed::update_article_star_status,
       feed::get_unread_num,
       feed::update_all_read_status,
+      feed::add_starred_articles,
+      feed::fetch_url,
       files::read_directory,
       files::is_dir,
       files::is_file,
@@ -100,7 +103,15 @@ pub fn run() {
       storage::set_log,
       storage::get_log,
       storage::del_log,
-      json::load_notes,
+      books::book_hash,
+      books::read_file_bytes,
+      books::write_file_bytes,
+      books::write_file_raw,
+      index::index_open,
+      index::index_update,
+      index::index_search,
+      index::index_book,
+      index::index_book_indexed,
     ])
     .setup(|app| {
       tray::setup(app)?;
