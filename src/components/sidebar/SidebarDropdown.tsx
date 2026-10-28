@@ -11,7 +11,7 @@ import NoteMetadata from '@/components/note/NoteMetadata';
 import DirNewModal from '@/components/dir/DirNewModal';
 import DirRenameModal from '@/components/dir/DirRenameModal';
 import DirDelModal from '@/components/dir/DirDelModal';
-import { listDirPath } from '@/editor/hooks/useOpen';
+import { listDirPath } from '@/workspace/useOpen';
 
 type NoteProps = {
   noteId: string;

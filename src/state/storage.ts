@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoke } from '@tauri-apps/api/core'
-import { hasFs } from '@/file/util';
+import { hasFs } from '@/workspace/util';
 
 interface StorageData {
   status: boolean;

@@ -13,20 +13,20 @@ import { SidebarTab, store, useStore } from '@/state/store';
 import type { Note as NoteType } from '@/types/model';
 import { defaultNote } from '@/types/model';
 import useLinkHandlers from '@/editor/hooks/useLinkHandlers';
-import { listDirPath } from '@/editor/hooks/useOpen';
+import { listDirPath } from '@/workspace/useOpen';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { ProvideCurrentMd } from '@/writer/useCurrentMd';
 import { ciStringEqual, regDateStr, decodeHTMLEntity, emitCustomEvent } from '@/lib/helper';
 import { imageExtensions, docExtensions } from '@/lib/file-extensions';
 import { encodeHref } from '@/lib/mdlink';
-import FileAPI from '@/file/files';
-import { writeFile, deleteFile } from '@/file/write';
-import { scheduleSave, flushSave } from '@/file/pendingSaves';
-import { openFileDilog, openFilePath, openFilePaths, openUrl, saveDilog } from '@/file/open';
+import FileAPI from '@/workspace/files';
+import { writeFile, deleteFile } from '@/workspace/write';
+import { scheduleSave, flushSave } from '@/workspace/pendingSaves';
+import { openFileDilog, openFilePath, openFilePaths, openUrl, saveDilog } from '@/workspace/open';
 import {
   joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
-} from '@/file/util';
-import { getFileExt } from '@/file/process';
+} from '@/workspace/util';
+import { getFileExt } from '@/workspace/process';
 import { useWritingRoot } from '@/workspace/useWorkspace';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';

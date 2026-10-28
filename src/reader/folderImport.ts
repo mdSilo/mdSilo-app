@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { fromWorkspacePath } from '@/file/util';
+import { fromWorkspacePath } from '@/workspace/util';
 import {
   bookHashOf, bookIdOf, importBookFile, normalizeGroup, readLibrary, refreshLibrary, setBooksGroup,
 } from './library';

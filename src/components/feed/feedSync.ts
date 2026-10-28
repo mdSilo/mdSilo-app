@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { joinPath } from '@/file/util';
+import { joinPath } from '@/workspace/util';
 import { dataRoot, localRoot } from '@/workspace/layout';
 import type { ArticleType, ChannelType } from '@/types/model';
 

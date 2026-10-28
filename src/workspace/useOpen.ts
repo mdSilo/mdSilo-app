@@ -2,11 +2,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { NoteMap, store, type Store } from '@/state/store';
 import { 
   openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir, openJSONFilePath 
-} from '@/file/open';
-import { normalizeSlash, getDirPath, getBaseName, joinPaths } from '@/file/util';
-import DirectoryAPI from '@/file/directory';
-import { writeAllFile, writeFile } from '@/file/write';
-import { rmFileNameExt } from '@/file/process';
+} from '@/workspace/open';
+import { normalizeSlash, getDirPath, getBaseName, joinPaths } from '@/workspace/util';
+import DirectoryAPI from '@/workspace/directory';
+import { writeAllFile, writeFile } from '@/workspace/write';
+import { rmFileNameExt } from '@/workspace/process';
 import { READING_DIR, WRITING_DIR, resolveLayout } from '@/workspace/layout';
 import { syncFeeds } from '@/components/feed/feedSync';
 

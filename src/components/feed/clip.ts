@@ -3,10 +3,10 @@ import { store } from '@/state/store';
 import type { ArticleType } from '@/types/model';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { fmtDatetime } from '@/lib/helper';
-import { joinPaths } from '@/file/util';
-import { writeFile } from '@/file/write';
-import { openFilePaths } from '@/file/open';
-import FileAPI from '@/file/files';
+import { joinPaths } from '@/workspace/util';
+import { writeFile } from '@/workspace/write';
+import { openFilePaths } from '@/workspace/open';
+import FileAPI from '@/workspace/files';
 import { CLIPS_DIR, readingRoot } from '@/workspace/layout';
 
 export { CLIPS_DIR };

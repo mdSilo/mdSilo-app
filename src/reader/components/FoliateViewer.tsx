@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { openUrl } from '@/file/open';
+import { openUrl } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
 import { withDefaults } from '../settings';
 import { applyLayout, bookStyles, HIGHLIGHT_CSS, themeColors } from '../styles';

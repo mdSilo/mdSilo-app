@@ -2,16 +2,16 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
 import type { ArticleType } from '@/types/model';
-import { writeFile } from '@/file/write';
-import { openFilePaths } from '@/file/open';
+import { writeFile } from '@/workspace/write';
+import { openFilePaths } from '@/workspace/open';
 import { mockInvoke } from '../../testUtils';
 import { clipArticle, clipFileName, clipHeader, htmlToMarkdown, quote } from './clip';
 
-vi.mock('@/file/write', () => ({ writeFile: vi.fn(async () => undefined) }));
-vi.mock('@/file/open', () => ({ openFilePaths: vi.fn(async () => undefined) }));
+vi.mock('@/workspace/write', () => ({ writeFile: vi.fn(async () => undefined) }));
+vi.mock('@/workspace/open', () => ({ openFilePaths: vi.fn(async () => undefined) }));
 // files on "disk"
 const files: Record<string, string> = {};
-vi.mock('@/file/files', () => ({
+vi.mock('@/workspace/files', () => ({
   default: class {
     constructor(private path: string) {}
     async exists() { return this.path in files; }

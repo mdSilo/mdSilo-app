@@ -11,7 +11,7 @@ const files = vi.hoisted(() => ({
   deleteFails: false,
 }));
 
-vi.mock('@/file/files', () => ({
+vi.mock('@/workspace/files', () => ({
   default: class {
     fileName: string;
     constructor(name: string, parent?: string) {

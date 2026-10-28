@@ -3,7 +3,7 @@ import { store } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { issueStore } from '@/components/issue/issueStore';
 import { issueHref, parseIssueHref } from '@/components/issue/refs';
-import { openFilePath, openUrl } from '@/file/open';
+import { openFilePath, openUrl } from '@/workspace/open';
 import { isUrl } from '@/lib/helper';
 import { encodeHref, hrefToTitle, legacyLinkTitle } from '@/lib/mdlink';
 import { parseBookHref } from '@/reader/annotations';

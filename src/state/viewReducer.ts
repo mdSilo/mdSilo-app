@@ -1,5 +1,5 @@
 import { store } from '@/state/store';
-import { setWindowTitle } from '@/file/util';
+import { setWindowTitle } from '@/workspace/util';
 
 export const initialState = {view: 'default'};
 

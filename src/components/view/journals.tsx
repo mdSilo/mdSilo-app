@@ -6,7 +6,7 @@ import { Note } from '@/types/model';
 import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import FindOrCreateInput from '@/components/note/NoteNewInput';
 import { dateCompare, regDateStr, strToDate } from '@/lib/helper';
-import { openFilePath } from "@/file/open";
+import { openFilePath } from "@/workspace/open";
 import { useNoteContent } from '@/lib/contentCache';
 
 export default function Journals() {

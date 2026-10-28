@@ -3,7 +3,7 @@ import { getJSONContent, parser } from 'mdsmirror';
 import { NoteMap } from '@/lib/noteMap';
 import { withContents } from '@/lib/contentCache';
 import { MAYBE_TASKS } from '@/lib/parseNote';
-import { checkFileIsMd } from '@/file/process';
+import { checkFileIsMd } from '@/workspace/process';
 import { addEvent, createIssue, moveProjectItem, setState } from './issueOps';
 import type { Issue, IssueData, NoteTaskRef, ProjectStatus, TaskKind, TaskTag } from './types';
 

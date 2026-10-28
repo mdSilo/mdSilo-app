@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BaseModal } from '@/components/settings/BaseModal';
-import { createDirRecursive, joinPaths } from '@/file/util';
+import { createDirRecursive, joinPaths } from '@/workspace/util';
 
 type Props = {
   dirPath: string;

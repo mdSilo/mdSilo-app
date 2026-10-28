@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { get, set } from '@/state/storage';
 
-/** storage key, read by the web feed fetcher: src/platform/web/feed.ts */
+/** storage key, read by the web feed fetcher: src/host/web/feed.ts */
 export const CORS_PROXY_KEY = 'cors_proxy';
 
 /**

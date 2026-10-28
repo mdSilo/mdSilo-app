@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { useStore } from '@/state/store';
-import { reopenWorkspace } from '@/editor/hooks/useOpen';
+import { reopenWorkspace } from '@/workspace/useOpen';
 
 /**
  * On a legacy workspace: offer to move it into the workspace layout

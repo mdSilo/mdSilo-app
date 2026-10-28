@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react';
-import { openUrl } from '@/file/open';
+import { openUrl } from '@/workspace/open';
 import { sanitizeHtml } from '@/lib/sanitize';
 
 /**

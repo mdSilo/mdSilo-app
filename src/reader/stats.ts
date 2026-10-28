@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { joinPath } from '@/file/util';
+import { joinPath } from '@/workspace/util';
 import { DATA_DIR } from '@/workspace/layout';
 import { BOOK_STATE_DIR, type BookState } from './library';
 

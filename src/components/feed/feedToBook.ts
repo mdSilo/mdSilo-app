@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
 import { withContents } from '@/lib/contentCache';
-import { fromWorkspacePath, toWorkspacePath } from '@/file/util';
+import { fromWorkspacePath, toWorkspacePath } from '@/workspace/util';
 import { annotationsPathOf, parseAnnotations, parseBookHref } from '@/reader/annotations';
 import { indexBookText } from '@/reader/bookIndex';
 import { openBook } from '@/reader/document';

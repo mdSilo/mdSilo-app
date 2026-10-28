@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { flushSave } from '@/file/pendingSaves';
-import { joinPath, toWorkspacePath } from '@/file/util';
+import { flushSave } from '@/workspace/pendingSaves';
+import { joinPath, toWorkspacePath } from '@/workspace/util';
 import { ISSUE_FILE, issueDirOf, issueStore } from '@/components/issue/issueStore';
 import { LEGACY_KANBAN_FILE } from '@/components/issue/migrateKanban';
 import { writeIssueDir } from '@/components/issue/issueFiles';

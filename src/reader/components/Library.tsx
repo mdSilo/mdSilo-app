@@ -11,8 +11,8 @@ import {
 import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import { IconButton, Spinner } from '@/components/misc/ui';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { listDir, openFileDilog } from '@/file/open';
-import { fromWorkspacePath, joinPath } from '@/file/util';
+import { listDir, openFileDilog } from '@/workspace/open';
+import { fromWorkspacePath, joinPath } from '@/workspace/util';
 import { useStore } from '@/state/store';
 import { READING_DIR } from '@/workspace/layout';
 import { BOOK_EXTS, CONVERTIBLE_EXTS } from '../document';

@@ -5,9 +5,9 @@ import { TbFilePlus as IconFilePlus, TbSearch as IconSearch } from 'react-icons/
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useNoteSearch from '@/lib/hooks/useNoteSearch';
 import { ciStringEqual, regDateStr } from '@/lib/helper';
-import { joinPaths } from '@/file/util';
-import { openFilePath } from '@/file/open';
-import { writeFile } from '@/file/write';
+import { joinPaths } from '@/workspace/util';
+import { openFilePath } from '@/workspace/open';
+import { writeFile } from '@/workspace/write';
 import { Notes, store, useStore } from '@/state/store';
 import { defaultNote } from '@/types/model';
 import { newNoteDir } from '@/workspace/layout';

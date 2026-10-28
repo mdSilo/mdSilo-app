@@ -8,8 +8,8 @@ import copy from 'copy-to-clipboard';
 import { NoteMap } from '@/lib/noteMap';
 import { store, SidebarTab } from '@/state/store';
 import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
-import { writeFile, deleteFile } from '@/file/write';
-import { SAVE_DELAY_MS } from '@/file/pendingSaves';
+import { writeFile, deleteFile } from '@/workspace/write';
+import { SAVE_DELAY_MS } from '@/workspace/pendingSaves';
 import * as issueOps from '@/components/issue/issueOps';
 import { issueStore, resetIssueStore } from '@/components/issue/issueStore';
 import { makeFileMeta, makeNote, mockInvoke } from '../../testUtils';
@@ -31,7 +31,7 @@ vi.mock('mdsmirror', async (importOriginal) => {
 vi.mock('@/components/mindmap/mindmap', () => ({
   Mindmap: (props: { title: string }) => <div data-testid="mindmap">{props.title}</div>,
 }));
-vi.mock('@/file/write', () => ({
+vi.mock('@/workspace/write', () => ({
   writeFile: vi.fn(async () => undefined),
   deleteFile: vi.fn(async () => undefined),
   writeJsonFile: vi.fn(async () => undefined),

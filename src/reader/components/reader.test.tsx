@@ -9,8 +9,8 @@ import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentVie
 import type { ViewAction } from '@/state/viewReducer';
 import MainView from '@/components/view/MainView';
 import useLinkHandlers from '@/editor/hooks/useLinkHandlers';
+import { writeFile } from '@/host/web/fs';
 import { useWebFs, waitForView } from '../../testUtils';
-import { writeFile } from '../../platform/web/fs';
 import { makeEpub } from '../testBook';
 import { bookHref } from '../annotations';
 import { resetReaderStore, useReaderStore, useSideStore } from '../readerStore';

@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Transformer } from 'markmap-lib';
 import { Markmap } from 'markmap-view';
-import { writeFile } from '@/file/write';
-import { normalizeSlash } from '@/file/util';
-import { saveDilog } from '@/file/open';
+import { writeFile } from '@/workspace/write';
+import { normalizeSlash } from '@/workspace/util';
+import { saveDilog } from '@/workspace/open';
 import './mindmap.css';
 
 type Props = {

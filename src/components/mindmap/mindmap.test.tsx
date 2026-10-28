@@ -5,7 +5,7 @@ import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { Markmap } from 'markmap-view';
 import { store } from '@/state/store';
-import { writeFile } from '@/file/write';
+import { writeFile } from '@/workspace/write';
 import { mockInvoke } from '../../testUtils';
 import { Mindmap } from './mindmap';
 
@@ -15,7 +15,7 @@ const destroy = vi.hoisted(() => vi.fn());
 vi.mock('markmap-view', () => ({
   Markmap: { create: vi.fn(() => ({ destroy })) },
 }));
-vi.mock('@/file/write', () => ({ writeFile: vi.fn(async () => undefined) }));
+vi.mock('@/workspace/write', () => ({ writeFile: vi.fn(async () => undefined) }));
 
 describe('Mindmap', () => {
   test('renders a markmap from markdown', () => {

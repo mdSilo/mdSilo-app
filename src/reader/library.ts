@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { fromWorkspacePath, isTauri, joinPath, toWorkspacePath } from '@/file/util';
+import { fromWorkspacePath, isTauri, joinPath, toWorkspacePath } from '@/workspace/util';
 import { DATA_DIR, READING_DIR, WRITING_DIR } from '@/workspace/layout';
 import { updateGitignore } from '@/workspace/gitignore';
 import {

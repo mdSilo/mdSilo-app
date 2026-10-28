@@ -8,7 +8,7 @@ import {
 import { migratedPath, migratedRelPath, migrateToWorkspace } from './migrate';
 
 // FileAPI needs Tauri or the web build: on the web file system here too
-vi.mock('@/file/files', async () => {
+vi.mock('@/workspace/files', async () => {
   const { invoke } = await import('@tauri-apps/api/core');
   return {
     default: class {

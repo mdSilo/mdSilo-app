@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import { NoteMap } from '@/lib/noteMap';
-import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '../../testUtils';
+import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '@/testUtils';
 
 const joinPaths = ({ root, parts }: Record<string, unknown>) =>
   [root, ...(parts as string[])].join('/').replace(/\/+/g, '/');

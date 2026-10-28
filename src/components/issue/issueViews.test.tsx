@@ -16,7 +16,7 @@ import type { IssueData } from './types';
 const files = vi.hoisted(() => ({ written: [] as { path: string; text: string }[] }));
 const editors = vi.hoisted(() => ({ props: {} as Record<string, Record<string, (...a: never[]) => unknown>> }));
 
-vi.mock('@/file/files', () => ({
+vi.mock('@/workspace/files', () => ({
   default: class {
     fileName: string;
     constructor(name: string, parent?: string) {
@@ -45,8 +45,8 @@ vi.mock('mdsmirror', async (importOriginal) => {
   return { ...actual, default: MockEditor };
 });
 
-vi.mock('@/file/open', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/file/open')>()),
+vi.mock('@/workspace/open', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/workspace/open')>()),
   openFilePath: vi.fn(async (id: string) => store.getState().notes.get(id)),
   openUrl: vi.fn(async () => undefined),
 }));

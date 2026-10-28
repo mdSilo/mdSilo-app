@@ -5,7 +5,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { store } from '@/state/store';
 import { ProvideCurrentView } from '@/state/useCurrentView';
 import type { Note } from '@/types/model';
-import type { FileMetaData } from '@/file/directory';
+import type { FileMetaData } from '@/workspace/directory';
 
 const initialState = store.getState();
 
@@ -120,9 +120,9 @@ export async function waitForView() {
  */
 export async function useWebFs() {
   const { IDBFactory, IDBKeyRange } = await import('fake-indexeddb');
-  const { closeDB } = await import('./platform/web/idb');
-  const { resetFsInit } = await import('./platform/web/fs');
-  const web = await import('./platform/web/core');
+  const { closeDB } = await import('@/host/web/idb');
+  const { resetFsInit } = await import('@/host/web/fs');
+  const web = await import('@/host/web/core');
   const { invoke } = await import('@tauri-apps/api/core');
   await closeDB();
   resetFsInit();

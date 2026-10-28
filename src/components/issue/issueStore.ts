@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
-import FileAPI from '@/file/files';
-import { fromWorkspacePath, toWorkspacePath } from '@/file/util';
+import FileAPI from '@/workspace/files';
+import { fromWorkspacePath, toWorkspacePath } from '@/workspace/util';
 import { store, useStore } from '@/state/store';
 import { dataDirOf, type Layout } from '@/workspace/layout';
 import {

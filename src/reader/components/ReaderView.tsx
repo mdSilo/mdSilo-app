@@ -8,7 +8,7 @@ import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import ResizeHandle, { useResizableWidth } from '@/components/misc/ResizeHandle';
 import { IconButton, Spinner } from '@/components/misc/ui';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { openFilePath } from '@/file/open';
+import { openFilePath } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
 import { READER_SIDEBAR_WIDTH } from '@/state/userSettings';
 import { isMobile } from '@/lib/helper';

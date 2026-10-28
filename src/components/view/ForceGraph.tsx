@@ -28,8 +28,8 @@ import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useStore } from '@/state/store';
 import { noteTitleMap } from '@/lib/mdlink';
 import { indexOf } from '@/lib/linkIndex';
-import { openFilePath } from '@/file/open';
-import { checkFileIsMd } from '@/file/process';
+import { openFilePath } from '@/workspace/open';
+import { checkFileIsMd } from '@/workspace/process';
 
 type GraphColors = {
   note: string;

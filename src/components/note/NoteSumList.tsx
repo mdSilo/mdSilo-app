@@ -4,7 +4,7 @@ import { useCurrentViewContext, DispatchType } from '@/state/useCurrentView';
 import { Note } from '@/types/model';
 import Tree from '@/components/misc/Tree';
 import { Tooltip } from '@/components/misc/ui';
-import { openFilePath } from '@/file/open';
+import { openFilePath } from '@/workspace/open';
 import { useNoteContent } from '@/lib/contentCache';
 
 type Props = {

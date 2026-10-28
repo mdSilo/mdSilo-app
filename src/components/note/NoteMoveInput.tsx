@@ -6,10 +6,10 @@ import useNoteSearch from '@/lib/hooks/useNoteSearch';
 import { store, useStore } from '@/state/store';
 import type { Note } from '@/types/model';
 import { ciStringCompare } from '@/lib/helper';
-import FileAPI from '@/file/files';
-import { flushSave } from '@/file/pendingSaves';
+import FileAPI from '@/workspace/files';
+import { flushSave } from '@/workspace/pendingSaves';
 import useLoadNotes from '@/lib/hooks/useLoadNotes';
-import { createDirRecursive, joinPaths } from '@/file/util';
+import { createDirRecursive, joinPaths } from '@/workspace/util';
 
 enum OptionType {
   DIR,

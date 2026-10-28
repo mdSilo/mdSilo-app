@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
-import { joinPath } from '@/file/util';
+import { joinPath } from '@/workspace/util';
 import { DATA_DIR } from '@/workspace/layout';
 import { newNoteId } from './annotations';
 import type { DictionaryResult } from './lookup';

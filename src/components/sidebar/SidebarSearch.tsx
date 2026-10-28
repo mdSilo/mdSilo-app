@@ -8,7 +8,7 @@ import useLoadNotes from '@/lib/hooks/useLoadNotes';
 import { store, useStore } from '@/state/store';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { isMobile } from '@/lib/helper';
-import { openFilePath } from '@/file/open';
+import { openFilePath } from '@/workspace/open';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import VirtualTree from '../misc/VirtualTree';
 

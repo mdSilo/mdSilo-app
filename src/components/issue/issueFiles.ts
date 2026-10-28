@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { joinPath } from '@/file/util';
+import { joinPath } from '@/workspace/util';
 import { normalizeIssueData } from './issueOps';
 import { ISSUE_DATA_VERSION, type Issue, type IssueData } from './types';
 

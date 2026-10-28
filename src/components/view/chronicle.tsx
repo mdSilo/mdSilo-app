@@ -6,11 +6,11 @@ import NoteSumList from '@/components/note/NoteSumList';
 import FindOrCreateInput from '@/components/note/NoteNewInput';
 import HeatMap from '@/components/view/HeatMap';
 import { dateCompare, getStrDate, regDateStr } from '@/lib/helper';
-import { joinPaths } from '@/file/util';
+import { joinPaths } from '@/workspace/util';
 import { defaultNote, Note } from '@/types/model';
-import { openFilePath } from '@/file/open';
+import { openFilePath } from '@/workspace/open';
 import useLoadNotes from '@/lib/hooks/useLoadNotes';
-import { checkFileIsMd } from '@/file/process';
+import { checkFileIsMd } from '@/workspace/process';
 import { useWritingRoot } from '@/workspace/useWorkspace';
 import { readingTimeByDay } from '@/reader/stats';
 

@@ -1,7 +1,7 @@
 import { store } from '@/state/store';
 import { linkTitlesOf, rewriteNoteLinks } from '@/lib/mdlink';
-import { writeFile } from '@/file/write';
-import { loadDir } from '@/file/open';
+import { writeFile } from '@/workspace/write';
+import { loadDir } from '@/workspace/open';
 import { noteContent } from '@/lib/contentCache';
 
 const LOAD_TIMEOUT_MS = 5000;

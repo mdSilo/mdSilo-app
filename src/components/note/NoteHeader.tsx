@@ -8,7 +8,7 @@ import { usePopper } from 'react-popper';
 import { useCurrentMdContext } from '@/writer/useCurrentMd';
 import { ExportAs } from '@/editor/hooks/useExport';
 import { useStore } from '@/state/store';
-import { openFilePath } from '@/file/open';
+import { openFilePath } from '@/workspace/open';
 import { Tooltip } from '@/components/misc/ui';
 import Portal from '@/components/misc/Portal';
 import { DropdownItem } from '@/components/misc/Dropdown';

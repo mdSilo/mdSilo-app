@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
+import { ARTICLES, CHANNELS, put } from '@/host/web/idb';
 import { useWebFs } from '../../testUtils';
-import { ARTICLES, CHANNELS, put } from '../../platform/web/idb';
 import { mergeByKey, parseFeedsFile, resetFeedSync, syncFeeds } from './feedSync';
 
 const key = (x: { k: string }) => x.k;

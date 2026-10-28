@@ -22,8 +22,8 @@ vi.mock('mdsmirror', async (importOriginal) => {
   );
   return { ...actual, default: MockEditor };
 });
-vi.mock('@/file/open', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/file/open')>()),
+vi.mock('@/workspace/open', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/workspace/open')>()),
   openFilePath: vi.fn(async (id: string) => store.getState().notes.get(id)),
 }));
 

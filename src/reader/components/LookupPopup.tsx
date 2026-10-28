@@ -1,6 +1,6 @@
 import { memo, useEffect, useState, type RefObject } from 'react';
 import { TbCheck, TbExternalLink, TbNote, TbVocabulary } from 'react-icons/tb';
-import { openUrl } from '@/file/open';
+import { openUrl } from '@/workspace/open';
 import { useStore } from '@/state/store';
 import { Spinner } from '@/components/misc/ui';
 import {

@@ -6,7 +6,7 @@ import {
 } from 'react-icons/tb';
 import { BaseModal } from '@/components/settings/BaseModal';
 import { IconButton } from '@/components/misc/ui';
-import { openFileDilog, openFilePath } from '@/file/open';
+import { openFileDilog, openFilePath } from '@/workspace/open';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { annotationsPathOf, bookHref } from '../../annotations';

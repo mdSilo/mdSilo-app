@@ -6,8 +6,8 @@ import { NoteMap, store, useStore } from '@/state/store';
 import { indexOf } from '@/lib/linkIndex';
 import { withContents } from '@/lib/contentCache';
 import { Note } from '@/types/model';
-import { loadDir } from '@/file/open';
-import { checkFileIsMd } from '@/file/process';
+import { loadDir } from '@/workspace/open';
+import { checkFileIsMd } from '@/workspace/process';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type NoteBlock = { text: string; path?: any };
