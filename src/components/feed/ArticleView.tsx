@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { TbChevronLeft as IconChevronLeft, TbHeadphones as IconHeadphones, TbLink as IconLink, TbStar as IconStar, TbClipboardText as IconClip } from "react-icons/tb";
 import { useStore } from "@/lib/store";
-import { getFavicon, fmtDatetime } from "@/utils/helper";
-import { sanitizeHtml } from "@/utils/sanitize";
+import { getFavicon, fmtDatetime } from "@/lib/helper";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { ArticleType } from "@/types/model";
 import { Tooltip } from "@/components/misc/ui";
 import { clipArticle } from "./clip";

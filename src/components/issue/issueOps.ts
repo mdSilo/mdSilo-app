@@ -1,5 +1,5 @@
 import { produce, Draft } from 'immer';
-import { genId } from '@/utils/helper';
+import { genId } from '@/lib/helper';
 import { renameTitleInText } from './refs';
 import {
   ISSUE_DATA_VERSION,

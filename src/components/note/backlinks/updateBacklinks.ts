@@ -1,5 +1,5 @@
 import { store } from '@/lib/store';
-import { linkTitlesOf, rewriteNoteLinks } from '@/utils/mdlink';
+import { linkTitlesOf, rewriteNoteLinks } from '@/lib/mdlink';
 import { writeFile } from '@/file/write';
 import { loadDir } from '@/file/open';
 import { noteContent } from '@/lib/contentCache';

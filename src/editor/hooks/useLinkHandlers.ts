@@ -4,10 +4,10 @@ import { useCurrentViewContext } from '@/context/useCurrentView';
 import { issueStore } from '@/components/issue/issueStore';
 import { issueHref, parseIssueHref } from '@/components/issue/refs';
 import { openFilePath, openUrl } from '@/file/open';
-import { isUrl } from '@/utils/helper';
-import { encodeHref, hrefToTitle, legacyLinkTitle } from '@/utils/mdlink';
+import { isUrl } from '@/lib/helper';
+import { encodeHref, hrefToTitle, legacyLinkTitle } from '@/lib/mdlink';
 import { parseBookHref } from '@/reader/annotations';
-import useNoteSearch from './useNoteSearch';
+import useNoteSearch from '../../lib/hooks/useNoteSearch';
 
 export type LinkSearchResult = { title: string; url: string };
 

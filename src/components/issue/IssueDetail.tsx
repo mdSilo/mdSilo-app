@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { TbArrowLeft as IconBack, TbTrash as IconTrash } from 'react-icons/tb';
 import { useStore } from '@/lib/store';
 import { useCurrentViewContext } from '@/context/useCurrentView';
-import useDebounce from '@/editor/hooks/useDebounce';
+import useDebounce from '@/lib/hooks/useDebounce';
 import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
 import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import { useIssueData, useIssueStore } from './issueStore';

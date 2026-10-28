@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { NoteMap, Notes, store } from '@/lib/store';
 import { defaultNote, Note } from '@/types/model';
 import type { Parsed } from '@/lib/parseNote';
-import { regDateStr } from '@/utils/helper';
+import { regDateStr } from '@/lib/helper';
 import DirectoryAPI from './directory';
 import FileAPI from './files';
 import { processJson, processFiles, processDirs } from './process';

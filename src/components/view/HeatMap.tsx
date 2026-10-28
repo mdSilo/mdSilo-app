@@ -6,7 +6,7 @@ import {
   type ActivityData,
   type ActivityRecord,
 } from '@/lib/activity';
-import { getStrDate } from '@/utils/helper';
+import { getStrDate } from '@/lib/helper';
 import { Note } from '@/types/model';
 
 type HeatMapProps = {

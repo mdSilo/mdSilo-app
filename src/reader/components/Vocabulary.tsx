@@ -6,7 +6,7 @@ import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import { Spinner } from '@/components/misc/ui';
 import { useCurrentViewContext } from '@/context/useCurrentView';
 import { useStore } from '@/lib/store';
-import { sanitizeHtml } from '@/utils/sanitize';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { findBookPath } from '../library';
 import { openLinkOutside } from '../lookup';
 import { useVocabulary, type VocabularyEntry } from '../vocabulary';

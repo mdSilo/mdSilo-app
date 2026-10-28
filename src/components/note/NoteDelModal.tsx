@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import useHotkeys from '@/editor/hooks/useHotkeys';
+import useHotkeys from '@/lib/hooks/useHotkeys';
 import useDeleteNote from '@/editor/hooks/useDeleteNote';
 import { BaseModal } from '@/components/settings/BaseModal';
 

@@ -5,7 +5,7 @@ import { useStore } from '@/lib/store';
 import { Note } from '@/types/model';
 import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import FindOrCreateInput from '@/components/note/NoteNewInput';
-import { dateCompare, regDateStr, strToDate } from '@/utils/helper';
+import { dateCompare, regDateStr, strToDate } from '@/lib/helper';
 import { openFilePath } from "@/file/open";
 import { useNoteContent } from '@/lib/contentCache';
 

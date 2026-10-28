@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
-import useDebounce from '@/editor/hooks/useDebounce';
+import useDebounce from '@/lib/hooks/useDebounce';
 import { useIssueData, useIssueStore } from './issueStore';
 import { loadNoteTasks, syncNoteTasks } from './noteTasks';
 

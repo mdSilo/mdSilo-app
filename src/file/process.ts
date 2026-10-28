@@ -1,5 +1,5 @@
 import { NotesData } from '@/lib/store';
-import { regDateStr } from '@/utils/helper';
+import { regDateStr } from '@/lib/helper';
 import { Note, defaultNote } from '@/types/model';
 import { FileMetaData } from '@/file/directory';
 

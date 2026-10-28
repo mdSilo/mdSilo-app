@@ -1,4 +1,4 @@
-import { getStrDate } from '@/utils/helper';
+import { getStrDate } from '@/lib/helper';
 import type { Note } from '@/types/model';
 
 export type ActivityData = {

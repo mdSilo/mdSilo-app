@@ -9,8 +9,8 @@ import {
   TbCaretRight as IconCaretRight, TbMarkdown as IconMarkdown, TbNote as IconNote, TbPhoto as IconPhoto,
 } from 'react-icons/tb';
 import { NoteTreeItem, store, useStore } from '@/lib/store';
-import { isMobile } from '@/utils/helper';
-import { imageExtensions } from '@/utils/file-extensions';
+import { isMobile } from '@/lib/helper';
+import { imageExtensions } from '@/lib/file-extensions';
 import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
 import { Tooltip } from '@/components/misc/ui';
 import { checkFileIsMd, getFileExt } from '@/file/process';

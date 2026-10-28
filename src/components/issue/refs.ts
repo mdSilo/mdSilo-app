@@ -1,4 +1,4 @@
-import { isUrl } from '@/utils/helper';
+import { isUrl } from '@/lib/helper';
 import type { NoteMap } from '@/lib/store';
 import { indexOf } from '@/lib/linkIndex';
 import type { Issue } from './types';

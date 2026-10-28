@@ -3,7 +3,7 @@
  * Web implementations of the Rust commands in src-tauri/src/lib.rs,
  * files are stored in IndexedDB instead of the disk.
  */
-import { partialMd5 } from '../../utils/partialMd5';
+import { partialMd5 } from '../../lib/partialMd5';
 import * as fs from './fs';
 import * as feed from './feed';
 import { KV, del, get, put } from './idb';
