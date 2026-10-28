@@ -12,6 +12,7 @@ import { MD_LINK_REGEX, WIKI_LINK_REGEX } from '@/lib/mdlink';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '@/testUtils';
 import MainView from '@/shell/MainView';
 import type { BookEntry } from '@/reader/library';
+import type { Issue } from '@/issue/types';
 import HeatMap from './HeatMap';
 import Chronicle from './Chronicle';
 import Journals from './Journals';
@@ -312,6 +313,29 @@ describe('Graph / ForceGraph', () => {
     const toBook = (ty: string) => data.links.filter((l) => l.ty === ty).map((l) => l.source);
     expect(toBook('book')).toEqual([a.id]);
     expect(toBook('annotation')).toEqual([notes.id]);
+  });
+
+  test('issues: linked from notes, linking notes and books', () => {
+    const id = '0123456789abcdef0123456789abcdef';
+    const book = { hash: id, file: 'reading/Dune.epub', title: 'Dune', author: '' } as BookEntry;
+    const a = makeNote({ id: '/ws/a.md', title: 'A', content: 'fixes [#1](issue:1) and [#9](issue:9)' });
+    const b = makeNote({ id: '/ws/b.md', title: 'B', content: 'plain' });
+    const c = makeNote({ id: '/ws/c.md', title: 'C', content: 'plain' });
+    const issue = (number: number, body: string, extra: Partial<Issue> = {}) =>
+      ({ number, title: `T${number}`, body, state: 'open', notes: [], timeline: [], ...extra }) as unknown as Issue;
+    const issues = [
+      issue(1, 'see [[B]]', { notes: ['/ws/c.md'] }),
+      issue(2, '{{Dune}}', { state: 'closed' }),
+      issue(3, 'nothing linked'),
+    ];
+    const data = buildGraphData(NoteMap.from({ [a.id]: a, [b.id]: b, [c.id]: c }), { [id]: book }, '/ws', issues);
+    const issueNodes = data.nodes.filter((n) => n.ty === 'issue');
+    // #9 does not exist, #3 links nothing
+    expect(issueNodes.map((n) => [n.name, Boolean(n.closed)])).toEqual([['#1 T1', false], ['#2 T2', true]]);
+    const issueLinks = data.links.filter((l) => l.ty === 'issue').map((l) => `${l.source}>${l.target}`);
+    expect(issueLinks.sort()).toEqual([`issue:1>${a.id}`, `issue:1>${b.id}`, `issue:1>${c.id}`, `issue:2>book:${id}`]);
+    // the book linked by an issue only: a node too
+    expect(data.nodes.filter((n) => n.ty === 'book').map((n) => n.name)).toEqual(['Dune']);
   });
 
   test('lines end on the edge of the nodes', () => {

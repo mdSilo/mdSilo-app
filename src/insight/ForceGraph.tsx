@@ -28,8 +28,11 @@ import { useCurrentViewContext } from '@/state/useCurrentView';
 import { store, useStore, type NoteMap } from '@/state/store';
 import { fromWorkspacePath } from '@/workspace/util';
 import { annotationsPathOf } from '@/reader/annotations';
-import { findBook } from '@/reader/bookLinks';
+import { findBook, linkedBookIds } from '@/reader/bookLinks';
 import { useLibraryBooks } from '@/reader/books';
+import { useIssueData } from '@/issue/issueStore';
+import { issueTexts, linkedNoteTitles } from '@/issue/refs';
+import type { Issue } from '@/issue/types';
 import { findBookPath, type BookEntry } from '@/reader/library';
 import { noteTitleMap } from '@/lib/mdlink';
 import { indexOf } from '@/lib/linkIndex';
@@ -46,6 +49,10 @@ type GraphColors = {
   bookLink: string; // a note linking a book
   spine: string;
   link: string;
+  issue: string; // an open issue
+  closedIssue: string;
+  issueLink: string;
+  background: string;
   text: string;
 };
 
@@ -53,8 +60,9 @@ type GraphColors = {
 const LIGHT_COLORS: GraphColors = {
   note: '#86efac', neighbor: '#60a5fa', hovered: '#2563eb', tag: '#facc15',
   hoveredTag: '#ca8a04', book: '#38bdf8', bookLink: 'rgb(56 189 248 / 0.45)', spine: 'rgb(0 0 0 / 0.25)', link: '#e5e5e5', text: '#525252',
+  issue: '#22c55e', closedIssue: 'rgb(115 115 115 / 0.5)', issueLink: 'rgb(34 197 94 / 0.45)', background: '#ffffff',
 };
-const DARK_COLORS: GraphColors = { ...LIGHT_COLORS, link: '#404040', text: '#f5f5f5' };
+const DARK_COLORS: GraphColors = { ...LIGHT_COLORS, link: '#404040', text: '#f5f5f5', background: '#171717' };
 
 /** Colors of the daisyUI theme applied on <html>, see useTheme */
 function themeColors(): GraphColors {
@@ -79,6 +87,10 @@ function themeColors(): GraphColors {
     bookLink: color('--color-info', 0.45) || fallback.bookLink,
     spine: color('--color-info-content', 0.5) || fallback.spine,
     link: color('--color-base-content', 0.15) || fallback.link,
+    issue: color('--color-success') || fallback.issue,
+    closedIssue: color('--color-base-content', 0.4) || fallback.closedIssue,
+    issueLink: color('--color-success', 0.45) || fallback.issueLink,
+    background: color('--color-base-100') || fallback.background,
     text: color('--color-base-content', 0.8) || fallback.text,
   };
 }
@@ -100,14 +112,20 @@ export type NodeDatum = {
   id: string;
   name: string;
   radius: number;
-  ty: 'tag' | 'link' | 'book';
+  ty: 'tag' | 'link' | 'book' | 'issue';
+  /** a closed issue */
+  closed?: boolean;
 } & SimulationNodeDatum;
 
 /** book: a note linking a book; annotation: a book and its annotations note */
-export type LinkDatum = SimulationLinkDatum<NodeDatum> & { ty: 'tag' | 'link' | 'book' | 'annotation' };
+export type LinkDatum = SimulationLinkDatum<NodeDatum> & {
+  ty: 'tag' | 'link' | 'book' | 'annotation' | 'issue';
+};
 
 const BOOK_NODE_PREFIX = 'book:';
 const bookNodeId = (hash: string) => `${BOOK_NODE_PREFIX}${hash}`;
+const ISSUE_NODE_PREFIX = 'issue:';
+const issueNodeId = (num: number) => `${ISSUE_NODE_PREFIX}${num}`;
 
 export type GraphData = { nodes: NodeDatum[]; links: LinkDatum[] };
 
@@ -133,7 +151,11 @@ export default function ForceGraph(props: Props) {
 
   const books = useLibraryBooks();
   const ws = useStore((state) => state.initDir);
-  const data: GraphData = useMemo(() => buildGraphData(notes, books, ws), [notes, books, ws]);
+  const { data: issueData } = useIssueData();
+  const data: GraphData = useMemo(
+    () => buildGraphData(notes, books, ws, issueData.issues),
+    [notes, books, ws, issueData.issues]
+  );
 
   const neighbors = useMemo(() => {
     const neighbors: Record<string, boolean> = {};
@@ -204,6 +226,8 @@ export default function ForceGraph(props: Props) {
         context.strokeStyle = colors.book;
       } else if (link.ty === 'book') {
         context.strokeStyle = colors.bookLink;
+      } else if (link.ty === 'issue') {
+        context.strokeStyle = colors.issueLink;
       } else {
         context.strokeStyle = colors.link;
       }
@@ -222,6 +246,8 @@ export default function ForceGraph(props: Props) {
       const isHovered = node.id === hoveredNode.current?.id;
       const isTag = node.ty === 'tag';
       const isBook = node.ty === 'book';
+      const isIssue = node.ty === 'issue';
+      const issueColor = node.closed ? colors.closedIssue : colors.issue;
 
       context.save();
 
@@ -239,6 +265,8 @@ export default function ForceGraph(props: Props) {
         context.fillStyle = colors.tag;
       } else if (isBook) {
         context.fillStyle = colors.book;
+      } else if (isIssue) {
+        context.fillStyle = issueColor;
       } else if (areNeighbors(hoveredNode.current?.id, node.id)) {
         context.fillStyle = colors.neighbor;
       } else {
@@ -248,10 +276,24 @@ export default function ForceGraph(props: Props) {
       if (isHovered) {
         context.strokeStyle = colors.hovered;
         context.stroke();
-        context.fillStyle = isTag ? colors.hoveredTag : isBook ? colors.book : colors.neighbor;
+        context.fillStyle = isTag
+          ? colors.hoveredTag
+          : isBook ? colors.book : isIssue ? issueColor : colors.neighbor;
       }
 
       context.fill();
+
+      if (isIssue) {
+        // a ring with a dot, as the icon of an issue
+        context.beginPath();
+        context.arc(node.x, node.y, node.radius * 0.6, 0, 2 * Math.PI);
+        context.fillStyle = colors.background;
+        context.fill();
+        context.beginPath();
+        context.arc(node.x, node.y, node.radius * 0.25, 0, 2 * Math.PI);
+        context.fillStyle = issueColor;
+        context.fill();
+      }
 
       if (isBook) {
         // the spine
@@ -401,6 +443,8 @@ export default function ForceGraph(props: Props) {
           const hash = clickedNode.id.slice(BOOK_NODE_PREFIX.length);
           const path = ws ? await findBookPath(ws, hash) : undefined;
           if (path) dispatch({ view: 'book', path });
+        } else if (clickedNode?.ty === 'issue') {
+          dispatch({ view: 'issue', number: Number(clickedNode.id.slice(ISSUE_NODE_PREFIX.length)) });
         }
       });
   }, [data, dispatch, renderCanvas, storeNotes]);
@@ -478,7 +522,7 @@ export default function ForceGraph(props: Props) {
  * tags, and the books they link to, each book linked to its annotations.
  */
 export function buildGraphData(
-  notes: NoteMap, books: Record<string, BookEntry> = {}, ws?: string
+  notes: NoteMap, books: Record<string, BookEntry> = {}, ws?: string, issues: Issue[] = []
 ): GraphData {
   const data: GraphData = { nodes: [], links: [] };
   // filter out the dir and non-md file
@@ -500,6 +544,16 @@ export function buildGraphData(
     let ids = bookLinks.get(nodeId);
     if (!ids) bookLinks.set(nodeId, (ids = new Set()));
     ids.add(noteId);
+  };
+  // the issues linked: node id -> the nodes linked to it, notes and books
+  const issueByNum = new Map(issues.map((i) => [i.number, i]));
+  const issueLinks = new Map<string, Set<string>>();
+  const linkIssue = (num: number, nodeId: string) => {
+    if (!issueByNum.has(num)) return;
+    const issueId = issueNodeId(num);
+    let ids = issueLinks.get(issueId);
+    if (!ids) issueLinks.set(issueId, (ids = new Set()));
+    ids.add(nodeId);
   };
   // the annotations note of a book -> the book
   const bookOfAnnotations = new Map(
@@ -539,6 +593,45 @@ export function buildGraphData(
     }
     const annotated = bookOfAnnotations.get(note.id);
     if (annotated) linkBook(note.id, annotated);
+    // Issues: [#12](issue:12)
+    for (const num of index.issues(note.id)) linkIssue(num, note.id);
+  }
+
+  // what the issues link: notes, explicitly or by title, and books
+  for (const issue of issues) {
+    for (const path of issue.notes) {
+      if (linksByNoteId[path]) linkIssue(issue.number, path);
+    }
+    for (const text of issueTexts(issue)) {
+      for (const title of linkedNoteTitles(text)) {
+        const linkedTitle = titleOf.get(title);
+        const noteId = linkedTitle !== undefined ? idByTitle.get(linkedTitle) : undefined;
+        if (noteId) linkIssue(issue.number, noteId);
+      }
+      for (const hash of linkedBookIds(books, text)) {
+        const nodeId = bookNodeId(hash);
+        linkIssue(issue.number, nodeId);
+        // a node of the book, even if no note links it
+        if (!bookLinks.has(nodeId)) bookLinks.set(nodeId, new Set());
+      }
+    }
+  }
+
+  // links of the issues; the more linked, the bigger, the books too
+  const issueLinksTo = new Map<string, number>();
+  for (const [issueId, nodeIds] of issueLinks) {
+    for (const nodeId of nodeIds) {
+      data.links.push({ source: issueId, target: nodeId, ty: 'issue' });
+      issueLinksTo.set(nodeId, (issueLinksTo.get(nodeId) ?? 0) + 1);
+    }
+    const issue = issueByNum.get(Number(issueId.slice(ISSUE_NODE_PREFIX.length)));
+    data.nodes.push({
+      id: issueId,
+      name: `#${issue?.number} ${issue?.title ?? ''}`.trim(),
+      radius: getRadius(nodeIds.size),
+      ty: 'issue',
+      ...(issue?.state === 'closed' ? { closed: true } : {}),
+    });
   }
 
   // Create graph data
@@ -564,7 +657,7 @@ export function buildGraphData(
     data.nodes.push({
       id: note.id,
       name: note.title,
-      radius: getRadius(numOfLinks),
+      radius: getRadius(numOfLinks + (issueLinksTo.get(note.id) ?? 0)),
       ty: 'link',
     });
   }
@@ -574,7 +667,7 @@ export function buildGraphData(
     data.nodes.push({
       id: nodeId,
       name: book?.title ?? nodeId,
-      radius: getRadius(noteIds.size),
+      radius: getRadius(noteIds.size + (issueLinksTo.get(nodeId) ?? 0)),
       ty: 'book',
     });
   }
