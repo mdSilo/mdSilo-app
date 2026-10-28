@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Service worker of mdSilo web version:
-// serve files stored in IndexedDB (src/platform/web/fs.ts) under `__mdsilo_fs__/<path>`,
+// serve files stored in IndexedDB (src/host/web/fs.ts) under `__mdsilo_fs__/<path>`,
 // so that images and attachments can be loaded by URL, e.g. <img src>.
 const PREFIX = '/__mdsilo_fs__';
 const DB_NAME = 'mdsilo';

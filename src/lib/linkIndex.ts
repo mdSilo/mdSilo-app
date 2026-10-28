@@ -1,5 +1,5 @@
 import { parser } from 'mdsmirror';
-import { findNoteLinks, hrefToTitle, isNoteHref } from 'utils/mdlink';
+import { findNoteLinks, hrefToTitle, isNoteHref } from '@/lib/mdlink';
 import type { NoteMap } from './noteMap';
 import { issueLinks, noteTags, type Parsed } from './parseNote';
 

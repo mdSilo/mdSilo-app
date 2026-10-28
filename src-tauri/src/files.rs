@@ -603,7 +603,7 @@ pub async fn listen_dir(
 
   let emit = move |event: &str, paths: Vec<String>| {
     // emit event here, then Frontend will listen the event.
-    // frontend: src/file/directory.ts/DirectoryAPI/listen
+    // frontend: src/workspace/directory.ts/DirectoryAPI/listen
     if paths.is_empty() {
       return;
     }
@@ -721,7 +721,7 @@ pub fn open_link(_app: AppHandle, url: String) {
 // workflow: 
 // - can invoke() in inject scripts 
 // - listen emited event and handle on frontend: 
-//   src/file/directory.ts/DirectoryAPI/listen
+//   src/workspace/directory.ts/DirectoryAPI/listen
 #[tauri::command]
 pub async fn watch_event(
   id: String, 

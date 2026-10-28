@@ -1,10 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
-import { flushSave } from 'file/pendingSaves';
-import { joinPath, toWorkspacePath } from 'file/util';
-import { ISSUE_FILE, issueDirOf, issueStore } from 'components/issue/issueStore';
-import { LEGACY_KANBAN_FILE } from 'components/issue/migrateKanban';
-import { writeIssueDir } from 'components/issue/issueFiles';
-import type { Issue, IssueData } from 'components/issue/types';
+import { flushSave } from '@/workspace/pendingSaves';
+import { joinPath, toWorkspacePath } from '@/workspace/util';
+import { ISSUE_FILE, issueDirOf, issueStore } from '@/issue/issueStore';
+import { LEGACY_KANBAN_FILE } from '@/issue/migrateKanban';
+import { writeIssueDir } from '@/issue/issueFiles';
+import type { Issue, IssueData } from '@/issue/types';
 import {
   CLIPS_DIR, DATA_DIR, LAYOUT_ENTRIES, READING_DIR, WRITING_DIR, initLayout,
 } from './layout';

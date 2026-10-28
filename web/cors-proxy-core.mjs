@@ -10,7 +10,7 @@
 export const MAX_BYTES = 10 * 1024 * 1024;
 export const MAX_REDIRECTS = 5;
 export const TIMEOUT_MS = 15000;
-/** response header to tell the proxy from a static file server, see src/platform/web/feed.ts */
+/** response header to tell the proxy from a static file server, see src/host/web/feed.ts */
 export const PROXY_HEADER = 'X-Mdsilo-Cors-Proxy';
 
 export class ProxyError extends Error {

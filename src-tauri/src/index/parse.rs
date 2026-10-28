@@ -1,5 +1,5 @@
 //! What a note links to and contains, from its markdown: the same as the
-//! frontend finds (src/utils/mdlink.ts, src/lib/linkIndex.ts), so either can
+//! frontend finds (src/lib/mdlink.ts, src/lib/linkIndex.ts), so either can
 //! tell, e.g. the index for the notes not loaded.
 
 use fancy_regex::Regex as FancyRegex;

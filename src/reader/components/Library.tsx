@@ -8,13 +8,13 @@ import {
   TbSearch, TbTrash,
   TbVocabulary, TbX,
 } from 'react-icons/tb';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { IconButton, Spinner } from 'components/misc/ui';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { listDir, openFileDilog } from 'file/open';
-import { fromWorkspacePath, joinPath } from 'file/util';
-import { useStore } from 'lib/store';
-import { READING_DIR } from 'workspace/layout';
+import ErrorBoundary from '@/ui/ErrorBoundary';
+import { IconButton, Spinner } from '@/ui/ui';
+import { useCurrentViewContext } from '@/state/useCurrentView';
+import { listDir, openFileDilog } from '@/workspace/open';
+import { fromWorkspacePath, joinPath } from '@/workspace/util';
+import { useStore } from '@/state/store';
+import { READING_DIR } from '@/workspace/layout';
 import { BOOK_EXTS, CONVERTIBLE_EXTS } from '../document';
 import {
   bookHashOf, bookIdOf, IMPORT_EXTS, importBookData, importBookFile, readBookState, readLibrary, refreshLibrary, setBooksGroup, setBooksSynced,

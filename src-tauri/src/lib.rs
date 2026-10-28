@@ -115,7 +115,7 @@ pub fn run() {
     ])
     .setup(|app| {
       tray::setup(app)?;
-      // frontend: src/file/directory.ts/DirectoryAPI/unlisten
+      // frontend: src/workspace/directory.ts/DirectoryAPI/unlisten
       app.listen_any("unlisten_dir", |_| files::unlisten_dir());
       Ok(())
     })

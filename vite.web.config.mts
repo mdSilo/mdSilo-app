@@ -1,6 +1,6 @@
 /**
  * Build the web version of mdSilo, sharing the frontend code in `/src` with the
- * Tauri app. Tauri APIs are replaced with the stand-ins in `src/platform/web`,
+ * Tauri app. Tauri APIs are replaced with the stand-ins in `src/host/web`,
  * which keep files in IndexedDB instead of the disk.
  *
  *   pnpm start:web   # dev server
@@ -30,7 +30,7 @@ const corsProxy = (): Plugin => {
   };
 };
 
-const web = (name: string) => path.resolve(import.meta.dirname, './src/platform/web', name);
+const web = (name: string) => path.resolve(import.meta.dirname, './src/host/web', name);
 
 export default mergeConfig(
   baseConfig,

@@ -1,4 +1,4 @@
-import { createZip, crc32, deflateRaw } from '../../platform/web/zip';
+import { createZip, crc32, deflateRaw } from '@/host/web/zip';
 
 /**
  * A minimal EPUB 3 written from chapters of XHTML, for the text files

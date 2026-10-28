@@ -1,4 +1,4 @@
-import { BOOK_EXTS } from 'reader/document';
+import { BOOK_EXTS } from '@/reader/document';
 
 // reading/.gitignore: the book files are synced (git) only if chosen in the
 // library, see reader/library. The rest of the file is the user's.

@@ -1,9 +1,9 @@
 import { Blob as NodeBlob } from 'node:buffer';
 import { invoke } from '@tauri-apps/api/core';
-import { store } from 'lib/store';
-import { getStrDate } from 'utils/helper';
+import { store } from '@/state/store';
+import { getStrDate } from '@/lib/helper';
+import { writeFile } from '@/host/web/fs';
 import { useWebFs } from '../testUtils';
-import { writeFile } from '../platform/web/fs';
 import { serializeAnnotations, type BookNote } from './annotations';
 import { readBookState, readLibrary } from './library';
 import { IDLE_MS, readBookFile, resetReaderStore, TICK_MS, useReaderStore, useSideStore } from './readerStore';

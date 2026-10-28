@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { isTauri } from 'file/util';
+import { isTauri } from '@/workspace/util';
 import { cacheCover, coverUrl } from '../../covers';
 import { openBook } from '../../document';
 import { bookMetaOf, isImportable, META_FIELDS, saveBookEntry, withBookMeta, type BookEntry } from '../../library';

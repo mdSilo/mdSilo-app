@@ -1,5 +1,5 @@
 /* Books for unit tests. Not imported by app code. */
-import { createZip } from '../platform/web/zip';
+import { createZip } from '@/host/web/zip';
 
 const text = (s: string) => new TextEncoder().encode(s);
 

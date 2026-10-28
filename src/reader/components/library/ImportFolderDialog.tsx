@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { TbFolderOpen } from 'react-icons/tb';
-import { BaseModal } from 'components/settings/BaseModal';
-import { openDirDilog } from 'file/open';
+import { BaseModal } from '@/ui/BaseModal';
+import { openDirDilog } from '@/workspace/open';
 import { FORMAT_GROUPS, withImportDefaults, type FolderImportOptions } from '../../folderImport';
 
 type Props = {

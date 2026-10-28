@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { TbChevronLeft, TbChevronRight, TbCloud, TbCloudOff, TbInfoCircle } from 'react-icons/tb';
-import { IconButton } from 'components/misc/ui';
+import { IconButton } from '@/ui/ui';
 import { formatDuration, totalSeconds } from '../../stats';
 import { formatSeries, isGroup, plainText, type ShelfBook, type ShelfGroup, type ShelfItem, type ViewMode } from '../../shelf';
 import BookCover from './BookCover';

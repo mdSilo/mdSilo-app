@@ -1,4 +1,4 @@
-import { createZip } from '../../platform/web/zip';
+import { createZip } from '@/host/web/zip';
 import { makeEpub } from '../testBook';
 import { formatContributors, formatLanguageMap, openBook, type TOCItem } from '../document';
 import { chaptersOf, decodeText, guessLanguage, headingOf, paragraphsOf, titleOfTextFile } from './text';

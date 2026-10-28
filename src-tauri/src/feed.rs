@@ -235,7 +235,7 @@ const PAGE_USER_AGENT: &str =
 
 /// The bytes of a web page or an image (http, https), sent as binary: the
 /// full text of an article and its images, for a book of a feed, see
-/// src/components/feed/fullText.ts.
+/// src/feed/fullText.ts.
 #[command]
 pub async fn fetch_url(url: String) -> Result<tauri::ipc::Response, String> {
   let parsed = reqwest::Url::parse(&url).map_err(|e| e.to_string())?;
@@ -261,7 +261,7 @@ pub async fn fetch_url(url: String) -> Result<tauri::ipc::Response, String> {
   Ok(tauri::ipc::Response::new(bytes.to_vec()))
 }
 
-/// Starred articles synced from another device, see src/components/feed/feedSync.ts
+/// Starred articles synced from another device, see src/feed/feedSync.ts
 #[command]
 pub fn add_starred_articles(articles: Vec<NewArticle>) -> usize {
   db::add_starred_articles(articles)

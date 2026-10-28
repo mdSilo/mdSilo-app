@@ -1,0 +1,479 @@
+import React, { lazy, memo, Suspense, useCallback, useMemo, useEffect, useRef, useState } from 'react';
+import { invoke , convertFileSrc } from '@tauri-apps/api/core';
+import copy from "copy-to-clipboard";
+import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
+import MsEditor, { Attach, embeds } from "mdsmirror";
+import { EDITOR_THEME } from '@/lib/themes';
+import Title from '@/writer/Title';
+import Toc, { Heading } from '@/writer/Toc';
+import { Spinner } from '@/ui/ui';
+import ErrorBoundary from '@/ui/ErrorBoundary';
+import { updateIssueNoteLinks } from '@/issue/issueStore';
+import { SidebarTab, store, useStore } from '@/state/store';
+import type { Note as NoteType } from '@/types/model';
+import { defaultNote } from '@/types/model';
+import useLinkHandlers from '@/writer/hooks/useLinkHandlers';
+import { listDirPath } from '@/workspace/useOpen';
+import { useCurrentViewContext } from '@/state/useCurrentView';
+import { ProvideCurrentMd } from '@/writer/useCurrentMd';
+import { ciStringEqual, regDateStr, decodeHTMLEntity, emitCustomEvent } from '@/lib/helper';
+import { imageExtensions, docExtensions } from '@/lib/file-extensions';
+import { encodeHref } from '@/lib/mdlink';
+import FileAPI from '@/workspace/files';
+import { writeFile, deleteFile } from '@/workspace/write';
+import { scheduleSave, flushSave } from '@/workspace/pendingSaves';
+import { openFileDilog, openFilePath, openFilePaths, openUrl, saveDilog } from '@/workspace/open';
+import {
+  joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
+} from '@/workspace/util';
+import { getFileExt } from '@/workspace/process';
+import { useWritingRoot } from '@/workspace/useWorkspace';
+import NoteHeader from './NoteHeader';
+import Backlinks from './backlinks/Backlinks';
+import IssueRefs from './IssueRefs';
+import updateBacklinks from './backlinks/updateBacklinks';
+
+// the raw markdown (CodeMirror) and mindmap (markmap) modes, loaded on use
+const RawMarkdown = lazy(() => import('@/writer/md/Markdown'));
+const Mindmap = lazy(() => import('@/writer/mindmap/mindmap').then((m) => ({ default: m.Mindmap })));
+
+
+const CONTENT_SYNC_MS = 800;
+
+type Props = {
+  noteId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  highlightedPath?: any; // TODO
+  className?: string;
+};
+
+function Note(props: Props) {
+  const { noteId, className } = props;
+  // console.log("loading",noteId)
+  const [showBacklink, setShowBacklink] = useState(false);
+  const [headings, setHeadings] = useState<Heading[]>([]);
+  const editorInstance = useRef<MsEditor>(null);
+  const getHeading = useCallback(() => {
+    setHeadings(editorInstance.current?.getHeadings() ?? []);
+  }, []);
+
+  useEffect(() => { getHeading(); }, [noteId, getHeading]); // to trigger change on dep change
+
+  useEffect(() => {
+    emitCustomEvent("PageLoaded", noteId);
+  }, [noteId]);
+
+  const darkMode = useStore((state) => state.darkMode);
+  const font = useStore((state) => state.font);
+  const fontSize = useStore((state) => state.fontSize);
+  const fontWt = useStore((state) => state.fontWt);
+  const lineHt = useStore((state) => state.lineHeight);
+  const rawMode = useStore((state) => state.rawMode);
+  const readMode = useStore((state) => state.readMode);
+  const isRTL = useStore((state) => state.isRTL);
+  const useAsset = useStore((state) => state.useAsset);
+  const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
+
+  const initDir = useStore((state) => state.initDir);
+  const currentDir = useStore((state) => state.currentDir);
+  // `./` paths (assets) are relative to it: writing/ in the workspace layout
+  const notesRoot = useWritingRoot();
+
+  // need to update timely if possible
+  const protocol = getAssetProtocol();
+
+  const storeNotes = useStore((state) => state.notes);
+  // get note and properties: title,  content value....
+  const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
+  const isDaily = thisNote?.is_daily ?? false;
+  const title = thisNote?.title || '';
+  const mdContent = thisNote?.content || ' '; // show ' ' if null
+
+  // const doc = parser.parse(mdContent);
+  // console.log(">> doc: ", doc);
+  // const json = getJSONContent(doc);
+  // console.log(">>json: ", json);
+
+  const notePath = thisNote?.file_path;
+  const shortNotePath = initDir && notePath
+    ? notePath.replace(initDir, normalizeSlash(initDir).split('/').pop() || '.')
+    : notePath;
+  // dir of this note, relative image paths like `img/a.png` are relative to it
+  const noteDir = notePath
+    ? normalizeSlash(notePath).replace(/\/[^/]*$/, '') || '/'
+    : undefined;
+
+  // for context
+  const currentView = useCurrentViewContext();
+  const state = currentView.state;
+  const dispatch = currentView.dispatch;
+  const currentNoteValue = useMemo(() => (
+    { ty: 'note', id: noteId, state, dispatch }
+  ), [dispatch, noteId, state]);
+
+  // note action
+  const deleteNote = useStore((state) => state.deleteNote);
+  const upsertNote = useStore((state) => state.upsertNote);
+  const upsertTree = useStore((state) => state.upsertTree);
+
+  // Keep the note content in the store fresh too (tasks, issue sync,
+  // backlinks and search read it), debounced to not re-render on each key.
+  const contentTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pendingContent = useRef<string | null>(null);
+  const flushContent = useCallback(() => {
+    if (contentTimer.current) clearTimeout(contentTimer.current);
+    contentTimer.current = undefined;
+    if (pendingContent.current !== null) {
+      store.getState().updateNote({ id: noteId, content: pendingContent.current });
+      pendingContent.current = null;
+      // update TOC if any
+      getHeading();
+    }
+  }, [noteId, getHeading]);
+  const syncContent = useCallback((text: string) => {
+    pendingContent.current = text;
+    if (contentTimer.current) clearTimeout(contentTimer.current);
+    contentTimer.current = setTimeout(flushContent, CONTENT_SYNC_MS);
+  }, [flushContent]);
+  useEffect(() => flushContent, [flushContent]);
+
+  // write to local file, once the typing pauses
+  const onContentChange = useCallback(
+    (text: string) => {
+      if (!notePath) return;
+      // end the file with a newline, as a text file should
+      scheduleSave(notePath, text && !text.endsWith('\n') ? `${text}\n` : text);
+      syncContent(text);
+    },
+    [notePath, syncContent]
+  );
+
+  const onMarkdownChange = useCallback(
+    (text: string) => {
+      if (!notePath) return;
+      scheduleSave(notePath, text);
+      syncContent(text);
+    },
+    [notePath, syncContent]
+  );
+  // the note is closed or another one is opened: save it now
+  useEffect(() => () => {
+    if (notePath) void flushSave(notePath);
+  }, [notePath]);
+
+  setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
+  // update locally
+  const onTitleChange = useCallback(
+    async (newtitle: string) => {
+      // update note title in storage as unique title
+      const newTitle = newtitle.trim() || getUntitledTitle(noteId);
+      const isTitleUnique = () => {
+        const notesArr = storeNotes.values();
+        return notesArr.findIndex((n) => (n.title === newTitle)) === -1;
+      };
+      if (isTitleUnique()) {
+        // the file is read again, then moved: with all the changes
+        await flushSave(noteId);
+        await updateBacklinks(title, newTitle);
+        // on rename file:
+        // 0- reload the old note to store.
+        await openFilePath(noteId, false);
+        const oldPath = noteId;
+        // 1- new FilePath
+        const dirPath = await getDirPath(oldPath);
+        const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
+        // 2- swap value on disk: delete then write
+        const swapContent = store.getState().notes.get(noteId)?.content || mdContent;
+        await deleteFile(oldPath);
+        await writeFile(newPath, swapContent);
+        // 3- delete the old redundant in store before upsert note
+        deleteNote(oldPath);
+        // 4- update note in store
+        const oldNote = storeNotes.get(noteId);
+        const newNote = {
+          ...(oldNote ?? defaultNote),
+          id: newPath,
+          title: newTitle,
+          file_path: newPath,
+        };
+        upsertNote(newNote);
+        upsertTree(dirPath, [newNote]);
+        await updateIssueNoteLinks(oldPath, newPath, title, newTitle);
+        // 5- nav to renamed note
+        await openFilePath(newPath, true);
+        dispatch({view: 'md', params: {noteId: newPath}});
+      }
+    },
+    [noteId, storeNotes, title, mdContent, deleteNote, upsertNote, upsertTree, dispatch]
+  );
+
+  // Search
+  const onSearchText = useCallback(
+    async (text: string, ty?: string) => {
+      store.getState().setSidebarTab(SidebarTab.Search);
+      store.getState().setSidebarSearchQuery(text);
+      store.getState().setSidebarSearchType(ty || 'content');
+      store.getState().setIsSidebarOpen(true);
+    },
+    []
+  );
+
+  // Create new note, return encoded title as url: [title](encoded title as url)
+  const onCreateNote = useCallback(
+    async (title: string) => {
+      title = title.trim();
+      const existingNote = storeNotes.values().find((n) => (n.title === title));
+      if (existingNote) {
+        return encodeHref(existingNote.title);
+      }
+      const parentDir = await getDirPath(notePath);
+      await createNewNote(parentDir, title);
+
+      return encodeHref(title);
+    },
+    [notePath, storeNotes]
+  );
+
+  // open link: url, note title or issue:N; missing notes are created
+  const onMissingNote = useCallback(
+    async (title: string) => {
+      const parentDir = await getDirPath(notePath);
+      return await createNewNote(parentDir, title);
+    },
+    [notePath]
+  );
+  const { onSearchLink, onOpenLink } = useLinkHandlers({ onMissingNote });
+
+  // attach file
+  const onAttachFile = useCallback(
+    async (accept: string) => {
+      const ext = accept === 'image/*' ? imageExtensions : docExtensions;
+      const filePath = await openFileDilog(ext, false);
+      if (filePath && typeof filePath === 'string') {
+        let fullPath = filePath;
+        let fileUrl: string;
+        // console.log("use asset", useAsset)
+        if (notesRoot && useAsset) {
+          const assetPath = await invoke<string[]>(
+            'copy_file_to_assets', { srcPath: filePath, workDir: notesRoot }
+          );
+          fullPath = assetPath[0] || filePath;
+          // now it is relative path
+          fileUrl = encodeURI(assetPath[1] || filePath);
+          // in the tree now, not once the watcher tells (if ever: a copy
+          // in place, the web version)
+          if (assetPath[0]) void openFilePaths([assetPath[0]]);
+        } else {
+          // the local path, resolved to url by `resolveSrc` on display
+          fileUrl = encodeURI(filePath);
+        }
+        // console.log("file url", fileUrl)
+        const fileInfo = new FileAPI(fullPath);
+        if (await fileInfo.exists()) {
+          const fileMeta = await fileInfo.getMetadata();
+          const fname = fileMeta.file_name;
+          const fileExt = getFileExt(fname);
+          const attach: Attach = {
+            type: accept === 'image/*' ? `image/${fileExt}` : fileExt,
+            name: fname,
+            size: fileMeta.size,
+            src:  fileUrl,
+          };
+          return [attach];
+        }
+      }
+      return [];
+    },
+    [notesRoot, useAsset]
+  );
+
+   // open Attachment file using defult application
+  const onClickAttachment = useCallback(async (href: string) => {
+    const realHref = href.startsWith('./') && notesRoot
+      ? href.replace('.', notesRoot)
+      : href;
+    await openUrl(decodeURI(realHref));
+  }, [notesRoot]);
+
+  const onSaveDiagram = useCallback(async (svg: string, ty: string) => {
+    if (!notesRoot) return;
+    const rawSVG = decodeHTMLEntity(svg);
+    const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-${ty}.svg`
+    const dir = await saveDilog(fname);
+    const defaultDir = `${notesRoot}/mindmap/${fname}`;
+    const saveDir = normalizeSlash(dir || defaultDir);
+    await writeFile(saveDir, rawSVG);
+  }, [notesRoot, title]);
+
+  // copy heading hash or hashtag hash
+  const onCopyHash = useCallback(
+    (hash: string) => { copy(`${title}${hash}`); }, [title]
+  );
+
+  const customTheme = {
+    ...EDITOR_THEME,
+    fontFamily: `${font}`,
+    fontScale: [fontSize / 1.1, lineHt / 1.6, fontWt / 400],
+  };
+
+  const noteContainerClassName =
+    'flex flex-col w-full bg-base-100';
+  const errorContainerClassName =
+    `${noteContainerClassName} items-center justify-center h-full p-4`;
+
+  const isNoteExists = useMemo(() => storeNotes.has(noteId), [noteId, storeNotes]);
+
+  if (!isNoteExists) {
+    return (
+      <div className={errorContainerClassName}>
+        <p>The note does not exist: {noteId}</p>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className={errorContainerClassName}>
+          <p>An unexpected error occurred when rendering this note.</p>
+        </div>
+      }
+    >
+      <ProvideCurrentMd value={currentNoteValue}>
+        <div id={noteId} className={`${noteContainerClassName} ${className}`}>
+          <NoteHeader setShowBacklink={setShowBacklink} />
+          <div className="flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+            <div className="flex flex-col flex-1 w-full mx-auto px-8 md:px-12">
+              <div
+                className="px-2 pb-1 text-base-content/60 text-sm cursor-pointer"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  const parentDir: string = await getParentDir(notePath);
+                  if (parentDir === currentDir) return;
+                  await listDirPath(parentDir, false);
+                }}
+              >
+                {shortNotePath}
+              </div>
+              <Title
+                className="px-2 pb-1"
+                initialTitle={title}
+                onChange={onTitleChange}
+                isDaily={isDaily}
+              />
+              {(rawMode === 'wysiwyg') && headings.length > 0
+                ? (<Toc headings={headings} />)
+                : null
+              }
+              <div className="flex-1 px-2 pt-2 pb-8" id="note-content" spellCheck={isCheckSpellOn}>
+                <Suspense fallback={<Spinner className="mx-auto" />}>
+                {rawMode === 'raw' ? (
+                  <RawMarkdown
+                    key={`raw-${noteId}`}
+                    initialContent={mdContent}
+                    onChange={onMarkdownChange}
+                    dark={darkMode}
+                    readMode={readMode}
+                    className={"text-xl"}
+                  />
+                ) : rawMode === 'mindmap' ? (
+                  <Mindmap
+                    key={`mp-${noteId}`}
+                    title={title}
+                    mdValue={mdContent}
+                    initDir={notesRoot}
+                  />
+                ) : (
+                  <MsEditor
+                    key={`wys-${noteId}`}
+                    ref={editorInstance}
+                    value={mdContent}
+                    dark={darkMode}
+                    readOnly={readMode}
+                    readOnlyWriteCheckboxes={readMode}
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                    theme={customTheme}
+                    onChange={onContentChange}
+                    onSearchLink={onSearchLink}
+                    onCreateLink={onCreateNote}
+                    onSearchSelectText={(txt: string) => onSearchText(txt)}
+                    onClickHashtag={(txt: string) => onSearchText(txt, 'hashtag')}
+                    onOpenLink={onOpenLink}
+                    attachFile={onAttachFile}
+                    onClickAttachment={onClickAttachment}
+                    onSaveDiagram={onSaveDiagram}
+                    onCopyHash={onCopyHash}
+                    embeds={embeds}
+                    disables={['sub']}
+                    rootPath={notesRoot}
+                    docPath={noteDir}
+                    protocol={protocol}
+                    resolveSrc={convertFileSrc}
+                  />
+                )}
+                </Suspense>
+              </div>
+              <button
+                className="inline-flex items-center p-1 mt-2 group"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowBacklink(!showBacklink);
+                }}
+              >
+                <IconCaretRight
+                  className={`mr-1 text-base-content/60 ${showBacklink ? 'rotate-90' : ''}`}
+                  size={16}
+                  fill="currentColor"
+                />
+                  BackLinks
+              </button>
+              <div className="pt-2 border-t-2 border-base-300">
+                {showBacklink ? (<Backlinks className="mx-4 mb-8" isCollapse={false} />) : null}
+              </div>
+              <IssueRefs noteId={noteId} title={title} className="mb-8" />
+            </div>
+          </div>
+        </div>
+      </ProvideCurrentMd>
+    </ErrorBoundary>
+  );
+}
+
+export default memo(Note);
+
+// Get a unique "Untitled" title, ignoring the specified noteId.
+const getUntitledTitle = (noteId: string) => {
+  const title = 'Untitled';
+
+  const getResult = () => (suffix > 0 ? `${title} ${suffix}` : title);
+
+  let suffix = 0;
+  const notesArr: readonly NoteType[] = store.getState().notes.values();
+  while (
+    notesArr.findIndex(
+      (note) =>
+        note?.id !== noteId &&
+        ciStringEqual(note?.title, getResult())
+    ) > -1
+  ) {
+    suffix += 1;
+  }
+
+  return getResult();
+};
+
+const createNewNote = async (parentDir: string, title: string) => {
+  const notePath = await joinPaths(parentDir, [`${title}.md`]);
+  const newNote = {
+    ...defaultNote,
+    id: notePath,
+    title,
+    file_path: notePath,
+    is_daily: regDateStr.test(title),
+  };
+  store.getState().upsertNote(newNote);
+  store.getState().upsertTree(parentDir, [newNote]);
+  await writeFile(notePath, ' ');
+
+  return notePath;
+};

@@ -1,0 +1,410 @@
+import * as dialog from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
+import { NoteMap, Notes, store } from '@/state/store';
+import { defaultNote, Note } from '@/types/model';
+import type { Parsed } from '@/lib/parseNote';
+import { regDateStr } from '@/lib/helper';
+import DirectoryAPI from './directory';
+import FileAPI from './files';
+import { processJson, processFiles, processDirs } from './process';
+import { getParentDir, getBaseName, joinPaths } from './util';
+
+/* 
+Open files: 
+  process and import to store, a json storing all data will be created and saved
+Open json: 
+  import to store, when edit any file, a .md will be created and saved 
+*/
+
+export function getRecentDirPath() {
+  const recentDir = store.getState().recentDir;
+  if (recentDir && Array.isArray(recentDir) && recentDir.length > 0) {
+    return recentDir[recentDir.length - 1] || '';
+  } else {
+    return '';
+  }
+}
+
+/**
+ * Dialog to get dir path to open
+ * @returns 
+ */
+export const openDirDilog = async () => {
+  // no filters on a folder dialog, and no empty default path:
+  // either makes the dialog crash the app on macOS
+  const dirPath  = await dialog.open({
+    title: `Open Folder`,
+    directory: true,
+    multiple: false,
+    defaultPath: getRecentDirPath() || undefined,
+  });
+  return dirPath;
+};
+
+/**
+ * Open dir and process files w/o content, upsert note and tree to store
+ * @param dir 
+ * @returns 
+ */
+export const listDir = async (dir: string, toListen=true): Promise<void> => {
+  const dirInfo = new DirectoryAPI(dir);
+  // console.log("dir api", dirInfo)
+  if (!(await dirInfo.exists())) return;
+
+  // attach listener to monitor changes in dir 
+  if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
+
+  // 1- get files and dirs
+  const dirData = await dirInfo.listDirectory();
+  // console.log("dir data 0", dirData);
+  const files = dirData.filter(f => !f.is_hidden);
+
+  const dirs = files.filter(f => f.is_dir).map(d => ({...d, file_text: ''}));
+  const processedDirs = dirs.length ? processDirs(dirs) : [];
+  const mds = files.filter(f => f.is_file).map(d => ({...d, file_text: ''}));
+  const processeds =  mds.length ? processFiles(mds) : [[], []];
+  const processedMds = processeds[0];
+
+  const upsertNotes = store.getState().upsertNotes;
+  const upsertTree = store.getState().upsertTree;
+  const dirPath = dirInfo.dirPath;
+  // console.log("dir path 0", dirPath, dir);
+  // 2- dirs and md files: just listed, no need to check existence again; 
+  // 3- upsert them in one store update 
+  const treeItemList: Note[] = [...processedDirs, ...processedMds];
+  upsertNotes(treeItemList);
+
+  // 4- push non-md to tree
+  const processedNons = processeds[1];
+  // console.log("non", processedNons)
+  for (const non of processedNons) {
+    if (non.id.toLowerCase().endsWith('.json')) {
+      continue;
+    }
+    treeItemList.push(non);
+  }
+ 
+  // 5- upsertTree
+  upsertTree(dirPath, treeItemList);
+
+  // console.log("dir path", dirPath, dir, store.getState().noteTree);
+}
+
+/**
+ * Open dir and process files, upsert note and tree to store
+ * @param dir 
+ * @returns 
+ */
+export const openDir = async (dir: string, toListen=true): Promise<void> => {
+  const dirInfo = new DirectoryAPI(dir);
+  // console.log("dir api", dirInfo)
+  if (!(await dirInfo.exists())) return;
+
+  // attach listener to monitor changes in dir // TODO
+  if (toListen) { dirInfo.listen(() => {/*TODO*/}); }
+
+  // 1- get files and dirs
+  const dirData = await dirInfo.getFiles();
+  const files = dirData.files.filter(f => !f.is_hidden);
+
+  const dirs = files.filter(f => f.is_dir);
+  const processedDirs = dirs.length ? processDirs(dirs) : [];
+  const mds = files.filter(f => f.is_file);
+  const processeds =  mds.length ? processFiles(mds) : [[], []];
+  const processedMds = processeds[0];
+
+  const upsertNotes = store.getState().upsertNotes;
+  const upsertTree = store.getState().upsertTree;
+  const dirPath = dirInfo.dirPath;
+  // 2- dirs and md files: just listed, no need to check existence again; 
+  // 3- upsert them in one store update 
+  const treeItemList: Note[] = [...processedDirs, ...processedMds];
+  upsertNotes(treeItemList);
+  // 4- push non-md to tree
+  const processedNons = processeds[1];
+  // console.log("non", processedNons)
+  for (const non of processedNons) {
+    if (non.id.toLowerCase().endsWith('.json')) {
+      continue;
+    }
+    treeItemList.push(non);
+  }
+  // 5- upsertTree
+  upsertTree(dirPath, treeItemList);
+}
+
+/**
+ * dialog to get file paths to open
+ * @param ty file type: md or json
+ * @param multi multi-select or not
+ * @returns 
+ */
+export const openFileDilog = async (ty: string[], multi = true) => {
+  const filePaths = await dialog.open({
+    title: `Open ${ty} File`,
+    directory: false,
+    multiple: multi,
+    // an empty default path makes the dialog crash the app on macOS
+    defaultPath: getRecentDirPath() || undefined,
+    filters: [
+      {
+        name: 'file', 
+        extensions: ty,
+      }
+    ],
+  });
+  return filePaths;
+};
+
+/** A note read: what the index parsed of it is no longer needed. */
+const withContent = (note: Note): Note => ({ ...note, parsed: undefined });
+
+/**
+ * Open and process files or dirs, upsert note and tree to store
+ * @param filePaths 
+ * @returns Promise<boolean>
+ */
+export async function openFilePaths(filePaths: string[]) {
+  const files = [];
+  const dirs = [];
+
+  for (const filePath of filePaths) {
+    const fileInfo = new FileAPI(filePath);
+    if (await fileInfo.exists()) {
+      const fileMeta = await fileInfo.getMetadata();
+      if (fileMeta.is_file) {
+        files.push(fileMeta);
+      } else {
+        dirs.push(fileMeta);
+      }
+    }
+  }
+
+  const upsertNote = store.getState().upsertNote;
+  const upsertTree = store.getState().upsertTree;
+  // The filePaths maybe not in same dir(even though it is same in most cases), 
+  // so need to upsertTree in the for-loop
+  // process md files, read: their content is known
+  const processeds = processFiles(files);
+  const processedNotes = processeds[0].map(withContent);
+  for (const md of processedNotes) {
+    upsertNote(md);
+    const parentDir = await getParentDir(md.file_path);
+    upsertTree(parentDir, [md]);
+    upsertTreeRecursively(parentDir);
+  }
+  // process non-md files
+  const processedNons = processeds[1];
+  for (const non of processedNons) {
+    if (non.id.toLowerCase().endsWith('.json')) {
+      continue;
+    }
+    const parentDir = await getParentDir(non.id);
+    upsertTree(parentDir, [non]);
+    upsertTreeRecursively(parentDir);
+  }
+  // process dirs
+  const processedDirs = processDirs(dirs);
+  for (const dir of processedDirs) {
+    upsertNote(dir);
+    const parentDir = await getParentDir(dir.file_path);
+    upsertTree(parentDir, [dir]);
+    upsertTreeRecursively(parentDir);
+  }
+  
+  return processedNotes.length > 0 || processedDirs.length > 0;
+}
+
+// openFile, use case:
+// always reload file. there are 7 to open note: 
+//    inline note link,
+//    onNoteLinkClick(side note list, backlink)
+//    graph view, 
+//    when switch mode, 
+//    sum list(chronicle)
+//    journal
+
+/**
+ * Open and process md file or dir
+ * @param filePath
+ * @returns Promise<Note | undefined>
+ */
+export async function openFilePath(filePath: string, setCurrent: boolean) {
+  const files = [];
+  const dirs = [];
+
+  const fileInfo = new FileAPI(filePath);
+  if (await fileInfo.exists()) {
+    const fileMeta = await fileInfo.getMetadata();
+    if (fileMeta.is_file) {
+      files.push(fileMeta);
+    } else {
+      dirs.push(fileMeta);
+    }
+  } else {
+    return;
+  }
+  
+  // process files, read: their content is known
+  const processedNotes = processFiles(files)[0].map(withContent);
+  // process dirs
+  const processedDirs = processDirs(dirs);
+  const note = [...processedDirs, ...processedNotes][0];
+  if (note) {
+    store.getState().upsertNote(note);
+    const parentDir = await getParentDir(note.file_path);
+    store.getState().upsertTree(parentDir, [note]);
+    upsertTreeRecursively(parentDir);
+    if (setCurrent) {
+      const cNote: Notes = {};
+      cNote[note.id] = note;
+      store.getState().setCurrentNote(cNote);
+    }
+  }
+
+  return note;
+}
+
+/**
+ * upsert dir to Tree Recursively till initDir
+ * @param dirPath 
+ * @returns 
+ */
+async function upsertTreeRecursively(dirPath: string) {
+  const initDir = store.getState().initDir;
+  if (!initDir || !dirPath.startsWith(initDir) || dirPath === initDir) return;
+
+  // const noteTree = store.getState().noteTree;
+  // if (noteTree[dirPath]) return;
+
+  const dirName = (await getBaseName(dirPath))[0]; 
+  if (!dirName.trim()) return;
+
+  const newDir: Note = { 
+    ...defaultNote, 
+    id: dirPath, 
+    title: dirName,
+    file_path: dirPath,
+    is_dir: true,
+  };
+  
+  const upsertTree = store.getState().upsertTree; 
+  const parentDir = await getParentDir(dirPath);
+  upsertTree(parentDir, [newDir]);
+  // then recursively
+  upsertTreeRecursively(parentDir);
+  
+  return true;
+}
+
+/**
+ * Open and process JSON
+ * @param filePath
+ * @returns Promise<boolean>
+ */
+export async function openJSONFilePath(filePath: string) {
+  if (filePath) {
+    const jsonInfo = new FileAPI(filePath);
+    if (await jsonInfo.exists()) {
+      const fileContent = await jsonInfo.readFile();
+      const notesData = processJson(fileContent);
+      return notesData;
+    }
+  }
+}
+
+
+// to load all with content, use case: 
+// view(chronicle, graph); 
+// search text: useNoteSearch  
+// NoteMoveToInput: search dir to move to, so need to upsert dir to notes 
+// backlinks(useBacklinks, updateBacklinks)
+
+// the load in progress: loading the same dir again waits for it
+let loading: { dir: string; promise: Promise<void> } | undefined;
+
+/**
+ * Load all the notes with content in dir / sub-dirs into the store, then
+ * `isLoaded` is set. Dropped if another folder is opened meanwhile.
+ */
+export function loadDir(dir: string): Promise<void> {
+  // a reset (e.g. another folder opened) forgets the load
+  if (loading?.dir === dir && store.getState().isLoading) return loading.promise;
+  store.getState().setIsLoading(true);
+  const promise = loadNotes(dir).finally(() => {
+    if (loading?.promise !== promise) return; // a newer load
+    loading = undefined;
+    store.getState().setIsLoading(false);
+  });
+  loading = { dir, promise };
+  return promise;
+}
+
+/** A note of the index of the workspace (src-tauri/src/index), no content. */
+export type IndexedNote = Pick<Note, 'id' | 'title' | 'file_path' | 'created_at' | 'updated_at'> & Parsed & {
+  is_dir: boolean;
+  size?: number;
+};
+
+/** The note of the store of an indexed one: its content loaded on use. */
+export const noteOfIndexed = (n: IndexedNote): Note => ({
+  id: n.id,
+  title: n.title,
+  content: '',
+  file_path: n.file_path,
+  cover: '',
+  created_at: n.created_at,
+  updated_at: n.updated_at,
+  is_daily: !n.is_dir && regDateStr.test(n.title),
+  is_dir: n.is_dir,
+  ...(n.is_dir ? {} : {
+    parsed: { links: n.links ?? [], tags: n.tags ?? [], issues: n.issues ?? [], has_tasks: Boolean(n.has_tasks) },
+  }),
+});
+
+async function loadNotes(dir: string) {
+  try {
+    // the notes as indexed: what they link to, not their content (see
+    // lib/contentCache), the index kept up to date with the files
+    const indexed = await invoke<IndexedNote[] | undefined>('index_open', { dir });
+    if (!indexed) return;
+    const initDir = store.getState().initDir;
+    if (initDir && initDir !== dir) return;
+    // the notes read already (e.g. the one open) keep their content
+    const current = store.getState().notes;
+    const notes = indexed.map((n) => {
+      const known = current.get(n.id);
+      return known && !known.parsed && known.content ? known : noteOfIndexed(n);
+    });
+    store.getState().setNotes(NoteMap.from(notes));
+    store.getState().setIsLoaded(true);
+  } catch (e) {
+    console.error('Failed to load notes:', e);
+  }
+}
+
+/**
+ * open an url
+ * @returns boolean, if opened
+ */
+export async function openUrl(url: string): Promise<boolean> {
+  return await invoke<boolean>('open_url', { url });
+}
+
+/**
+ * dialog to get dir path to save data
+ *  @param fname string, optional 
+ * @returns 
+ */
+export const saveDilog = async (fname?: string) => {
+  const recentDirPath = getRecentDirPath();
+  const saveToPath = recentDirPath && fname
+    ? await joinPaths(recentDirPath, [fname])
+    : recentDirPath || fname;
+  const dirPath = await dialog.save({
+    title: 'Select Folder to Save Data',
+    // an empty default path makes the dialog crash the app on macOS
+    defaultPath: saveToPath || undefined,
+  });
+  return dirPath;
+};
