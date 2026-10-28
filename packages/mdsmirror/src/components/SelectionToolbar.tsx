@@ -1,3 +1,4 @@
+import copy from "copy-to-clipboard";
 import { some } from "lodash";
 import { NodeSelection, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
@@ -11,6 +12,7 @@ import { isMarkActive } from "../core/queries/isMarkActive";
 import isNodeActive from "../core/queries/isNodeActive";
 import { MenuItem } from "./types";
 import { baseDictionary } from "../dictionary";
+import { ToastType } from "../types";
 import filterExcessSeparators from "./filterExcessSeparators";
 import getDividerMenuItems from "./menus/divider";
 import getFormattingMenuItems from "./menus/formatting";
@@ -23,6 +25,9 @@ import FloatingToolbar from "./FloatingToolbar";
 import LinkEditor, { SearchResult } from "./LinkEditor";
 import ToolbarMenu from "./ToolbarMenu";
 
+// the items the toolbar does itself, not commands of the editor
+const TOOLBAR_ACTIONS = ["search", "copy", "issue"];
+
 type Props = {
   dictionary: typeof baseDictionary;
   rtl: boolean;
@@ -33,6 +38,10 @@ type Props = {
   onSearchLink?: (term: string) => Promise<SearchResult[]>;
   onCreateLink?: (title: string) => Promise<string>;
   onSearchSelectText?: (txt: string) => void;
+  /** make an issue of the text selected; the link to it goes after the text */
+  onCreateIssue?: (
+    text: string
+  ) => Promise<{ title: string; href: string } | undefined>;
   onOpenLink?: (href: string) => void;
   onShowToast?: (msg: string, code: string) => void;
   view: EditorView;
@@ -176,11 +185,31 @@ export default class SelectionToolbar extends React.Component<Props> {
     );
   };
 
+  handleCreateIssue = async (text: string) => {
+    const { view, onCreateIssue } = this.props;
+    const issue = await onCreateIssue?.(text);
+    if (!issue) return;
+    // the link right after the text, where it is now
+    const { state, dispatch } = view;
+    const at = Math.min(state.selection.to, state.doc.content.size);
+    const label = ` ${issue.title}`;
+    dispatch(
+      state.tr
+        .insertText(label, at)
+        .addMark(
+          at + 1,
+          at + label.length,
+          state.schema.marks.link.create({ href: issue.href })
+        )
+    );
+  };
+
   render() {
     const {
       dictionary,
       onCreateLink,
       onSearchSelectText,
+      onCreateIssue,
       isTemplate,
       rtl,
       ...rest
@@ -225,7 +254,12 @@ export default class SelectionToolbar extends React.Component<Props> {
     } else if (isDividerSelection) {
       items = getDividerMenuItems(state, dictionary);
     } else {
-      items = getFormattingMenuItems(state, isTemplate, dictionary);
+      items = getFormattingMenuItems(
+        state,
+        isTemplate,
+        dictionary,
+        !!onCreateIssue
+      );
       isTextSelection = true;
     }
 
@@ -234,7 +268,7 @@ export default class SelectionToolbar extends React.Component<Props> {
       if (item.name === "separator") {
         return true;
       }
-      if (item.name === "search") {
+      if (item.name && TOOLBAR_ACTIONS.includes(item.name)) {
         return true;
       }
       if (item.name && !this.props.commands[item.name]) {
@@ -257,7 +291,17 @@ export default class SelectionToolbar extends React.Component<Props> {
       return null;
     }
 
-    const onSearchText = () => onSearchSelectText?.(selectionText);
+    const actions = {
+      search: () => onSearchSelectText?.(selectionText),
+      copy: () => {
+        // the blocks apart, as copied from the page
+        copy(state.doc.textBetween(selection.from, selection.to, "\n\n"), {
+          format: "text/plain",
+        });
+        rest.onShowToast?.(dictionary.copied, ToastType.Info);
+      },
+      issue: () => void this.handleCreateIssue(selectionText),
+    };
 
     return (
       <FloatingToolbar
@@ -276,7 +320,7 @@ export default class SelectionToolbar extends React.Component<Props> {
             {...rest}
           />
         ) : (
-          <ToolbarMenu items={items} onSearch={onSearchText} {...rest} />
+          <ToolbarMenu items={items} actions={actions} {...rest} />
         )}
       </FloatingToolbar>
     );

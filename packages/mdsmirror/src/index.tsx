@@ -219,6 +219,10 @@ export type Props = {
   onClickHashtag?: (tag: string, event: MouseEvent) => void;
   /** Calback on search keyword(text) within editor */
   onSearchSelectText?: (txt: string) => void;
+  /** Callback to make an issue of the text selected, return its link */
+  onCreateIssue?: (
+    text: string
+  ) => Promise<{ title: string; href: string } | undefined>;
   /** Calback on open link */
   onOpenLink?: (href: string) => void;
   /** Callback on click attachment */
@@ -916,6 +920,7 @@ class MsEditor extends React.PureComponent<Props, State> {
                   onSearchLink={this.props.onSearchLink}
                   onCreateLink={this.props.onCreateLink}
                   onSearchSelectText={this.props.onSearchSelectText}
+                  onCreateIssue={this.props.onCreateIssue}
                   onOpenLink={this.props.onOpenLink}
                   onShowToast={this.props.onShowToast}
                 />
