@@ -279,36 +279,41 @@ export const ImageViewer = memo(function ImageViewer(
               <TbChevronRight size={26} />
             </button>
           ) : null}
-          {image.alt ? (
-            <div
-              dir="auto"
-              className="absolute bottom-4 left-1/2 z-10 max-h-[30%] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 overflow-y-auto rounded-lg bg-black/50 px-4 py-2 text-center text-sm text-white"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {image.alt}
-            </div>
-          ) : null}
         </>
       }
     >
-      <img
-        src={image.src}
-        alt={image.alt || 'Zoomed'}
-        draggable={false}
-        className="object-contain max-w-full max-h-full"
-        style={zoom.style}
-        onPointerDown={zoom.onPointerDown}
-        onClick={(e) => {
-          e.stopPropagation();
-          zoom.dragged.current = false;
-        }}
-        // double click: in to twice the size about the pointer, or back
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          if (zoom.scale === 1) zoom.zoomTo(2, zoom.anchorOf(e.clientX, e.clientY));
-          else zoom.reset();
-        }}
-      />
+      {/* the image, and its description below it */}
+      <div className="flex flex-col items-center justify-center w-full h-full gap-3 px-16 py-14 pointer-events-none">
+        <img
+          src={image.src}
+          alt={image.alt || 'Zoomed'}
+          title={image.alt || undefined}
+          draggable={false}
+          className="object-contain max-w-full min-h-0 max-h-full pointer-events-auto"
+          style={zoom.style}
+          onPointerDown={zoom.onPointerDown}
+          onClick={(e) => {
+            e.stopPropagation();
+            zoom.dragged.current = false;
+          }}
+          // double click: in to twice the size about the pointer, or back
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            if (zoom.scale === 1) zoom.zoomTo(2, zoom.anchorOf(e.clientX, e.clientY));
+            else zoom.reset();
+          }}
+        />
+        {image.alt ? (
+          <p
+            dir="auto"
+            className="relative z-10 max-w-2xl px-4 py-2 overflow-y-auto text-sm text-center text-white rounded-lg pointer-events-auto shrink-0 max-h-32 bg-black/50 select-text"
+            data-testid="image-caption"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {image.alt}
+          </p>
+        ) : null}
+      </div>
     </Overlay>
   );
 });

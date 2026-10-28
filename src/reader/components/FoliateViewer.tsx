@@ -12,7 +12,7 @@ import {
 } from '../pagination';
 import { sectionOf, type BookNote } from '../annotations';
 import type { BookDoc } from '../document';
-import { fillsPage, imagesOf, mediaAt, type Media } from '../media';
+import { fillsPage, imagesOf, markCaptions, mediaAt, type Media } from '../media';
 import { highlightCode } from '../highlight';
 import { placeOf } from './BookPopups';
 import { ImageViewer, TableViewer } from './MediaViewer';
@@ -187,12 +187,18 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       const point = { x: e.clientX + (frame?.left ?? 0), y: e.clientY + (frame?.top ?? 0) };
       turner.note(cornerAt(point, area, view.book?.dir === 'rtl'));
     };
-    const singleClick = (x: number, doc?: Document, media?: Media | null) => {
+    const singleClick = (x: number, doc?: Document, media?: Media | null, filling = false) => {
       // a selection made, an annotation shown, a popup closed: not a page turn
       const sel = doc?.getSelection();
       if (sel && !sel.isCollapsed) return;
       if (Date.now() - annotationAt < DOUBLE_CLICK_MS * 2 || popupAtDown) return;
-      // an image or a table: zoomed, alone over the pages
+      const chrome = useReaderChrome.getState();
+      const settings = withDefaults(store.getState().readerSettings);
+      const box = container.getBoundingClientRect();
+      const action = clickAction(x, box, { clickToTurn: settings.clickToTurn, swap: settings.swapClickArea });
+      // an image or a table: zoomed, alone over the pages; one filling the
+      // page turns it on the sides, as the text, and zooms in the middle
+      if (filling && action !== 'bars') media = null;
       if (media?.type === 'table') {
         setZoomed({ type: 'table', html: media.html });
         return;
@@ -203,10 +209,6 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         setZoomed(start < 0 ? { type: 'image', images: [media], start: 0 } : { type: 'image', images, start });
         return;
       }
-      const chrome = useReaderChrome.getState();
-      const settings = withDefaults(store.getState().readerSettings);
-      const box = container.getBoundingClientRect();
-      const action = clickAction(x, box, { clickToTurn: settings.clickToTurn, swap: settings.swapClickArea });
       if (action === 'bars') {
         chrome.setBarsVisible(!chrome.barsVisible);
         return;
@@ -226,13 +228,14 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         return;
       }
       lastClickAt = now;
-      if (e.button !== 0 || isActive(e.target) || pressed || now - downAt > LONG_PRESS_MS) return;
+      // in a reflowable book
+      const media = doc && !viewRef.current?.isFixedLayout ? mediaAt(e.target) : null;
+      if (e.button !== 0 || (!media && isActive(e.target)) || pressed || now - downAt > LONG_PRESS_MS) return;
       // in the window, not in the frame of the section
       const frame = doc?.defaultView?.frameElement?.getBoundingClientRect();
       const x = e.clientX + (frame?.left ?? 0);
-      // in a reflowable book; a cover, a page of illustration turns as the text
-      const media = doc && !viewRef.current?.isFixedLayout && !fillsPage(e.target) ? mediaAt(e.target) : null;
-      clickTimer = setTimeout(() => singleClick(x, doc, media), DOUBLE_CLICK_MS);
+      const filling = Boolean(media) && fillsPage(e.target);
+      clickTimer = setTimeout(() => singleClick(x, doc, media, filling), DOUBLE_CLICK_MS);
     };
 
     // a gesture of the wheel turns a page, but in scrolled flow
@@ -315,6 +318,13 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       doc.addEventListener('pointerup', onPointerUp);
       doc.addEventListener('pointermove', (ev) => onSelectDrag(ev, doc));
       doc.addEventListener('click', (ev) => onClick(ev, doc));
+      // an image in a link zooms: the link not followed by foliate-js, whose listener comes first
+      doc.addEventListener('click', (ev) => {
+        if (viewRef.current?.isFixedLayout || !(ev.target as Element | null)?.closest?.('a[href]') || !mediaAt(ev.target)) return;
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        onClick(ev, doc);
+      }, true);
       doc.addEventListener('mouseup', onMouseUp);
       doc.addEventListener('wheel', onWheel, { passive: true });
       doc.addEventListener('keyup', (ev) => {
@@ -326,6 +336,8 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         }
       });
       doc.addEventListener('keydown', onKeydown);
+      // the captions, shown or not by the styles: a setting changed needs no pass here
+      if (!viewRef.current?.isFixedLayout) markCaptions(doc);
       const { codeHighlight, codeLanguage } = withDefaults(store.getState().readerSettings);
       if (codeHighlight) highlightCode(doc, true, codeLanguage);
     };

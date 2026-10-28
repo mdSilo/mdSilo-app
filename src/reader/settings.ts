@@ -26,6 +26,8 @@ export type ReaderSettings = {
   pageTheme: PageTheme;
   /** the images in negative, e.g. black diagrams on a dark page */
   invertImages: boolean;
+  /** the description of an image below it, on the page */
+  imageCaptions: boolean;
   /** the code blocks colored, in a language or guessed */
   codeHighlight: boolean;
   codeLanguage: CodeLanguage;
@@ -63,6 +65,7 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   margin: 44,
   pageTheme: 'auto',
   invertImages: false,
+  imageCaptions: true,
   codeHighlight: false,
   codeLanguage: 'auto',
   animated: true,

@@ -12,11 +12,14 @@ describe('image viewer', () => {
     render(<ImageViewer images={images} start={0} onClose={onClose} />);
     const viewer = screen.getByTestId('media-viewer');
     expect(screen.getByRole('img')).toHaveAttribute('src', 'https://x/1.png');
-    expect(screen.getByText('One')).toBeInTheDocument();
+    // the description below the image, and on hover
+    expect(screen.getByTestId('image-caption')).toHaveTextContent('One');
+    expect(screen.getByRole('img')).toHaveAttribute('title', 'One');
     expect(screen.queryByLabelText('Previous image')).toBeNull();
     fireEvent.keyDown(viewer, { key: 'ArrowRight' });
     expect(screen.getByRole('img')).toHaveAttribute('src', 'https://x/2.png');
     expect(screen.queryByLabelText('Next image')).toBeNull();
+    expect(screen.queryByTestId('image-caption')).toBeNull();
     fireEvent.click(screen.getByLabelText('Zoom in'));
     expect(screen.getByLabelText('Zoom level')).toHaveTextContent('120%');
     fireEvent.keyDown(viewer, { key: '0', ctrlKey: true });

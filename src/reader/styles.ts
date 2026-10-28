@@ -1,6 +1,7 @@
 import type { PageTheme, ReaderSettings } from './settings';
 import { ttsStyles } from './tts';
 import { codeStyles } from './highlight';
+import { captionStyles } from './media';
 import type { FoliateView } from './view';
 
 /**
@@ -36,7 +37,7 @@ const SERIF = `'Literata', 'Georgia', 'Noto Serif', 'Songti SC', 'Noto Serif CJK
 const SANS = `'Inter', 'Helvetica Neue', 'Noto Sans', 'PingFang SC', 'Noto Sans CJK SC', sans-serif`;
 
 export function bookStyles(settings: ReaderSettings, colors: ThemeColors): string {
-  const { fontSize, lineHeight, font, justify, hyphenate, invertImages, codeHighlight } = settings;
+  const { fontSize, lineHeight, font, justify, hyphenate, invertImages, imageCaptions, codeHighlight } = settings;
   const family = font === 'serif' ? SERIF : font === 'sans-serif' ? SANS : '';
   const { bg, fg, primary, dark } = colors;
   return `
@@ -96,6 +97,7 @@ export function bookStyles(settings: ReaderSettings, colors: ThemeColors): strin
     }
     ::selection { background: color-mix(in srgb, ${primary} 35%, transparent); }
     ${codeHighlight ? codeStyles(dark) : ''}
+    ${imageCaptions ? captionStyles() : ''}
     ${ttsStyles(primary)}
   `;
 }

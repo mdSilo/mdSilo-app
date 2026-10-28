@@ -75,6 +75,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           <Toggle label="Hyphenate" checked={settings.hyphenate} onChange={(hyphenate) => update({ hyphenate })} />
           <Toggle label="Chapter above" checked={settings.showHeader} onChange={(showHeader) => update({ showHeader })} />
           <Toggle label="Progress below" checked={settings.showFooter} onChange={(showFooter) => update({ showFooter })} />
+          <Toggle label="Image descriptions below images" checked={settings.imageCaptions} onChange={(imageCaptions) => update({ imageCaptions })} />
           <Toggle label="Highlight code" checked={settings.codeHighlight} onChange={(codeHighlight) => update({ codeHighlight })} />
           {settings.codeHighlight ? (
             <Select label="Code language" value={settings.codeLanguage}
