@@ -1,14 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, store, type Store } from 'lib/store';
+import { NoteMap, store, type Store } from '@/lib/store';
 import { 
   openDirDilog, openDir, listDir, openFilePaths, openFileDilog, saveDilog, loadDir, openJSONFilePath 
-} from 'file/open';
-import { normalizeSlash, getDirPath, getBaseName, joinPaths } from 'file/util';
-import DirectoryAPI from 'file/directory';
-import { writeAllFile, writeFile } from 'file/write';
-import { rmFileNameExt } from 'file/process';
-import { READING_DIR, WRITING_DIR, resolveLayout } from 'workspace/layout';
-import { syncFeeds } from 'components/feed/feedSync';
+} from '@/file/open';
+import { normalizeSlash, getDirPath, getBaseName, joinPaths } from '@/file/util';
+import DirectoryAPI from '@/file/directory';
+import { writeAllFile, writeFile } from '@/file/write';
+import { rmFileNameExt } from '@/file/process';
+import { READING_DIR, WRITING_DIR, resolveLayout } from '@/workspace/layout';
+import { syncFeeds } from '@/components/feed/feedSync';
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(['md'], multi);

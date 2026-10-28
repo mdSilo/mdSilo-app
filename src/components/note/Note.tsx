@@ -3,39 +3,39 @@ import { invoke , convertFileSrc } from '@tauri-apps/api/core';
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
 import MsEditor, { Attach, embeds } from "mdsmirror";
-import { EDITOR_THEME } from 'lib/themes';
-import Title from 'components/note/Title';
-import Toc, { Heading } from 'components/note/Toc';
-import { Spinner } from 'components/misc/ui';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { updateIssueNoteLinks } from 'components/issue/issueStore';
-import { SidebarTab, store, useStore } from 'lib/store';
-import type { Note as NoteType } from 'types/model';
-import { defaultNote } from 'types/model';
-import useLinkHandlers from 'editor/hooks/useLinkHandlers';
-import { listDirPath } from 'editor/hooks/useOpen';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { ProvideCurrentMd } from 'context/useCurrentMd';
-import { ciStringEqual, regDateStr, decodeHTMLEntity, emitCustomEvent } from 'utils/helper';
-import { imageExtensions, docExtensions } from 'utils/file-extensions';
-import { encodeHref } from 'utils/mdlink';
-import FileAPI from 'file/files';
-import { writeFile, deleteFile } from 'file/write';
-import { scheduleSave, flushSave } from 'file/pendingSaves';
-import { openFileDilog, openFilePath, openFilePaths, openUrl, saveDilog } from 'file/open';
+import { EDITOR_THEME } from '@/lib/themes';
+import Title from '@/components/note/Title';
+import Toc, { Heading } from '@/components/note/Toc';
+import { Spinner } from '@/components/misc/ui';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import { updateIssueNoteLinks } from '@/components/issue/issueStore';
+import { SidebarTab, store, useStore } from '@/lib/store';
+import type { Note as NoteType } from '@/types/model';
+import { defaultNote } from '@/types/model';
+import useLinkHandlers from '@/editor/hooks/useLinkHandlers';
+import { listDirPath } from '@/editor/hooks/useOpen';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { ProvideCurrentMd } from '@/context/useCurrentMd';
+import { ciStringEqual, regDateStr, decodeHTMLEntity, emitCustomEvent } from '@/utils/helper';
+import { imageExtensions, docExtensions } from '@/utils/file-extensions';
+import { encodeHref } from '@/utils/mdlink';
+import FileAPI from '@/file/files';
+import { writeFile, deleteFile } from '@/file/write';
+import { scheduleSave, flushSave } from '@/file/pendingSaves';
+import { openFileDilog, openFilePath, openFilePaths, openUrl, saveDilog } from '@/file/open';
 import {
   joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
-} from 'file/util';
-import { getFileExt } from 'file/process';
-import { useWritingRoot } from 'workspace/useWorkspace';
+} from '@/file/util';
+import { getFileExt } from '@/file/process';
+import { useWritingRoot } from '@/workspace/useWorkspace';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import IssueRefs from './IssueRefs';
 import updateBacklinks from './backlinks/updateBacklinks';
 
 // the raw markdown (CodeMirror) and mindmap (markmap) modes, loaded on use
-const RawMarkdown = lazy(() => import('components/md/Markdown'));
-const Mindmap = lazy(() => import('components/mindmap/mindmap').then((m) => ({ default: m.Mindmap })));
+const RawMarkdown = lazy(() => import('@/components/md/Markdown'));
+const Mindmap = lazy(() => import('@/components/mindmap/mindmap').then((m) => ({ default: m.Mindmap })));
 
 
 const CONTENT_SYNC_MS = 800;

@@ -1,9 +1,9 @@
 import { memo, useMemo } from 'react';
-import { NoteTree, NoteTreeItem, useStore } from 'lib/store';
-import { Sort } from 'lib/userSettings';
-import { ciStringCompare } from 'utils/helper';
-import { onOpenFile, onListDir } from 'editor/hooks/useOpen';
-import { normalizeSlash } from 'file/util';
+import { NoteTree, NoteTreeItem, useStore } from '@/lib/store';
+import { Sort } from '@/lib/userSettings';
+import { ciStringCompare } from '@/utils/helper';
+import { onOpenFile, onListDir } from '@/editor/hooks/useOpen';
+import { normalizeSlash } from '@/file/util';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import SidebarNotesBar from './SidebarNotesBar';
 import SidebarNotesTree, { NoteTreeRow } from './SidebarNotesTree';

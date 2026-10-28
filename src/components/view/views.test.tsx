@@ -3,12 +3,12 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap } from 'lib/noteMap';
-import { store } from 'lib/store';
-import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
-import type { ViewAction } from 'context/viewReducer';
-import { getStrDate } from 'utils/helper';
-import { MD_LINK_REGEX, WIKI_LINK_REGEX } from 'utils/mdlink';
+import { NoteMap } from '@/lib/noteMap';
+import { store } from '@/lib/store';
+import { ProvideCurrentView, useCurrentViewContext } from '@/context/useCurrentView';
+import type { ViewAction } from '@/context/viewReducer';
+import { getStrDate } from '@/utils/helper';
+import { MD_LINK_REGEX, WIKI_LINK_REGEX } from '@/utils/mdlink';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '../../testUtils';
 import MainView from './MainView';
 import HeatMap from './HeatMap';

@@ -1,19 +1,19 @@
 import { useMemo, useState } from 'react';
 import { TbTag as IconTag, TbFlag as IconFlag, TbCircleDot as IconIssue, TbCheckbox as IconTasks } from 'react-icons/tb';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { useIssueData, useIssueStore } from 'components/issue/issueStore';
-import { filterIssues, parseQuery, stringifyQuery, SORT_KEYS, IssueQuery } from 'components/issue/filter';
-import IssueList from 'components/issue/IssueList';
-import IssueEditor from 'components/issue/IssueEditor';
-import IssueDetail from 'components/issue/IssueDetail';
-import LabelManager from 'components/issue/LabelManager';
-import MilestoneManager from 'components/issue/MilestoneManager';
-import NoteTaskList from 'components/issue/NoteTaskList';
-import { StateIcon, btnClass, inputClass, primaryBtnClass } from 'components/issue/common';
-import type { IssueState } from 'components/issue/types';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useIssueData, useIssueStore } from '@/components/issue/issueStore';
+import { filterIssues, parseQuery, stringifyQuery, SORT_KEYS, IssueQuery } from '@/components/issue/filter';
+import IssueList from '@/components/issue/IssueList';
+import IssueEditor from '@/components/issue/IssueEditor';
+import IssueDetail from '@/components/issue/IssueDetail';
+import LabelManager from '@/components/issue/LabelManager';
+import MilestoneManager from '@/components/issue/MilestoneManager';
+import NoteTaskList from '@/components/issue/NoteTaskList';
+import { StateIcon, btnClass, inputClass, primaryBtnClass } from '@/components/issue/common';
+import type { IssueState } from '@/components/issue/types';
 
-import type { IssuesTab as Tab } from 'context/viewReducer';
+import type { IssuesTab as Tab } from '@/context/viewReducer';
 
 const selectClass =
   'py-1 pl-2 pr-8 text-sm bg-transparent border-base-300 rounded-sm';

@@ -2,14 +2,14 @@ import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { TbChevronsUp as IconChevronsUp, TbFolderPlus as IconFolderPlus, TbSearch as IconSearch } from 'react-icons/tb';
 import type { IconType as Icon } from 'react-icons';
-import useNoteSearch from 'editor/hooks/useNoteSearch';
-import { store, useStore } from 'lib/store';
-import type { Note } from 'types/model';
-import { ciStringCompare } from 'utils/helper';
-import FileAPI from 'file/files';
-import { flushSave } from 'file/pendingSaves';
-import useLoadNotes from 'editor/hooks/useLoadNotes';
-import { createDirRecursive, joinPaths } from 'file/util';
+import useNoteSearch from '@/editor/hooks/useNoteSearch';
+import { store, useStore } from '@/lib/store';
+import type { Note } from '@/types/model';
+import { ciStringCompare } from '@/utils/helper';
+import FileAPI from '@/file/files';
+import { flushSave } from '@/file/pendingSaves';
+import useLoadNotes from '@/editor/hooks/useLoadNotes';
+import { createDirRecursive, joinPaths } from '@/file/util';
 
 enum OptionType {
   DIR,

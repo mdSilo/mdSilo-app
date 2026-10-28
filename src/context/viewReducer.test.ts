@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { store } from 'lib/store';
+import { store } from '@/lib/store';
 import { viewEffects, viewReducer, initialState, type ViewAction } from './viewReducer';
 
 describe('viewReducer', () => {

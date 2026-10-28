@@ -1,9 +1,9 @@
-import { useStore } from 'lib/store';
+import { useStore } from '@/lib/store';
 import {
   STARTUP_VIEWS, type OpenOnStartup, type SideMenuOrientation, type StartupView,
-} from 'lib/userSettings';
-import { SYSTEM_THEME, THEMES } from 'lib/themes';
-import { Select } from 'components/misc/ui';
+} from '@/lib/userSettings';
+import { SYSTEM_THEME, THEMES } from '@/lib/themes';
+import { Select } from '@/components/misc/ui';
 import { BaseModal } from './BaseModal';
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>

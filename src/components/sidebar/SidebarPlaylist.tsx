@@ -4,13 +4,13 @@ import React, {
 import { List } from 'react-virtualized';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { TbHeadphones as IconHeadphones } from 'react-icons/tb';
-import { useStore } from 'lib/store';
-import { Sort } from 'lib/userSettings';
-import { ciStringCompare, dateCompare } from 'utils/helper';
-import { PodType as PodTreeItem } from 'types/model';
-import * as dataAgent from 'components/feed/dataAgent';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { Tooltip } from 'components/misc/ui';
+import { useStore } from '@/lib/store';
+import { Sort } from '@/lib/userSettings';
+import { ciStringCompare, dateCompare } from '@/utils/helper';
+import { PodType as PodTreeItem } from '@/types/model';
+import * as dataAgent from '@/components/feed/dataAgent';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import { Tooltip } from '@/components/misc/ui';
 import SidebarItem from './SidebarItem';
 
 type SidebarPlaylistProps = {

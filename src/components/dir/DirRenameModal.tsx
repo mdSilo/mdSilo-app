@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { BaseModal } from 'components/settings/BaseModal';
-import { renameFile, joinPaths, getParentDir } from 'file/util';
-import { flushSave } from 'file/pendingSaves';
+import { BaseModal } from '@/components/settings/BaseModal';
+import { renameFile, joinPaths, getParentDir } from '@/file/util';
+import { flushSave } from '@/file/pendingSaves';
 
 type Props = {
   dirPath: string;

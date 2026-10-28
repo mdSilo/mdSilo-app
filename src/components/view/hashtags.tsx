@@ -1,6 +1,6 @@
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { SearchTree } from 'components/sidebar/SidebarSearch';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { SearchTree } from '@/components/sidebar/SidebarSearch';
 
 export default function HashTags() {
   const className = '';

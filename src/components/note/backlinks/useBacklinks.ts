@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, useStore } from 'lib/store';
-import useDebounce from 'editor/hooks/useDebounce';
-import { linkTitlesOf } from 'utils/mdlink';
-import { getMarkdownTextBlocks, indexOf, LinkIndex, type TextBlock } from 'lib/linkIndex';
-import { withContents } from 'lib/contentCache';
-import useLoadNotes from 'editor/hooks/useLoadNotes';
-import type { Note } from 'types/model';
+import { NoteMap, useStore } from '@/lib/store';
+import useDebounce from '@/editor/hooks/useDebounce';
+import { linkTitlesOf } from '@/utils/mdlink';
+import { getMarkdownTextBlocks, indexOf, LinkIndex, type TextBlock } from '@/lib/linkIndex';
+import { withContents } from '@/lib/contentCache';
+import useLoadNotes from '@/editor/hooks/useLoadNotes';
+import type { Note } from '@/types/model';
 
 const DEBOUNCE_MS = 1000;
 

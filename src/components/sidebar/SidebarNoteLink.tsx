@@ -8,19 +8,19 @@ import {
 import {
   TbCaretRight as IconCaretRight, TbMarkdown as IconMarkdown, TbNote as IconNote, TbPhoto as IconPhoto,
 } from 'react-icons/tb';
-import { NoteTreeItem, store, useStore } from 'lib/store';
-import { isMobile } from 'utils/helper';
-import { imageExtensions } from 'utils/file-extensions';
-import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
-import { Tooltip } from 'components/misc/ui';
-import { checkFileIsMd, getFileExt } from 'file/process';
-import { listDir, openUrl } from 'file/open';
-import { joinPath, normalizeSlash } from 'file/util';
-import { READING_DIR, WRITING_DIR } from 'workspace/layout';
-import { isBookFile } from 'reader/document';
-import BookIcon, { bookIconOf } from 'reader/components/BookIcon';
-import { bookPathOfAnnotations } from 'reader/annotations';
-import { useCurrentViewContext } from 'context/useCurrentView';
+import { NoteTreeItem, store, useStore } from '@/lib/store';
+import { isMobile } from '@/utils/helper';
+import { imageExtensions } from '@/utils/file-extensions';
+import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
+import { Tooltip } from '@/components/misc/ui';
+import { checkFileIsMd, getFileExt } from '@/file/process';
+import { listDir, openUrl } from '@/file/open';
+import { joinPath, normalizeSlash } from '@/file/util';
+import { READING_DIR, WRITING_DIR } from '@/workspace/layout';
+import { isBookFile } from '@/reader/document';
+import BookIcon, { bookIconOf } from '@/reader/components/BookIcon';
+import { bookPathOfAnnotations } from '@/reader/annotations';
+import { useCurrentViewContext } from '@/context/useCurrentView';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
 

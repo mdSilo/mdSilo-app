@@ -5,13 +5,13 @@ import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import copy from 'copy-to-clipboard';
-import { NoteMap } from 'lib/noteMap';
-import { store, SidebarTab } from 'lib/store';
-import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
-import { writeFile, deleteFile } from 'file/write';
-import { SAVE_DELAY_MS } from 'file/pendingSaves';
-import * as issueOps from 'components/issue/issueOps';
-import { issueStore, resetIssueStore } from 'components/issue/issueStore';
+import { NoteMap } from '@/lib/noteMap';
+import { store, SidebarTab } from '@/lib/store';
+import { ProvideCurrentView, useCurrentViewContext } from '@/context/useCurrentView';
+import { writeFile, deleteFile } from '@/file/write';
+import { SAVE_DELAY_MS } from '@/file/pendingSaves';
+import * as issueOps from '@/components/issue/issueOps';
+import { issueStore, resetIssueStore } from '@/components/issue/issueStore';
 import { makeFileMeta, makeNote, mockInvoke } from '../../testUtils';
 import Note from './Note';
 
@@ -28,10 +28,10 @@ vi.mock('mdsmirror', async (importOriginal) => {
   });
   return { ...actual, default: MockEditor };
 });
-vi.mock('components/mindmap/mindmap', () => ({
+vi.mock('@/components/mindmap/mindmap', () => ({
   Mindmap: (props: { title: string }) => <div data-testid="mindmap">{props.title}</div>,
 }));
-vi.mock('file/write', () => ({
+vi.mock('@/file/write', () => ({
   writeFile: vi.fn(async () => undefined),
   deleteFile: vi.fn(async () => undefined),
   writeJsonFile: vi.fn(async () => undefined),

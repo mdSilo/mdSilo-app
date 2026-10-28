@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core'
-import { store, NotesData } from 'lib/store';
+import { store, NotesData } from '@/lib/store';
 
 
 export const isTauri = Boolean(

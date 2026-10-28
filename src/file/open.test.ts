@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, store } from 'lib/store';
+import { NoteMap, store } from '@/lib/store';
 import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '../testUtils';
 import * as open from './open';
 
@@ -193,7 +193,7 @@ describe('open (tauri)', () => {
       join_paths: joinPaths,
     });
     tOpen = await import('./open');
-    tStore = (await import('lib/store')).store;
+    tStore = (await import('@/lib/store')).store;
   });
 
   afterEach(() => {

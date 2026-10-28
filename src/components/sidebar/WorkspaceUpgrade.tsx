@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
-import { useStore } from 'lib/store';
-import { reopenWorkspace } from 'editor/hooks/useOpen';
+import { useStore } from '@/lib/store';
+import { reopenWorkspace } from '@/editor/hooks/useOpen';
 
 /**
  * On a legacy workspace: offer to move it into the workspace layout
@@ -19,7 +19,7 @@ function WorkspaceUpgrade() {
     setBusy(true);
     setError('');
     try {
-      const { migrateToWorkspace } = await import('workspace/migrate');
+      const { migrateToWorkspace } = await import('@/workspace/migrate');
       const result = await migrateToWorkspace(initDir);
       await reopenWorkspace(initDir);
       if (result.skipped.length > 0) {

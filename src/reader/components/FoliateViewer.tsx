@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { openUrl } from 'file/open';
-import { store, useStore } from 'lib/store';
+import { openUrl } from '@/file/open';
+import { store, useStore } from '@/lib/store';
 import { withDefaults } from '../settings';
 import { applyLayout, bookStyles, HIGHLIGHT_CSS, themeColors } from '../styles';
 import { storeOf } from '../readerStore';

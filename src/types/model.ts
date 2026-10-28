@@ -1,4 +1,4 @@
-import type { Parsed } from 'lib/parseNote';
+import type { Parsed } from '@/lib/parseNote';
 
 // READING
 //

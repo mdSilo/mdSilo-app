@@ -1,9 +1,9 @@
 import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { TbPin as IconPin, TbTrash as IconTrash } from 'react-icons/tb';
-import { useStore } from 'lib/store';
-import { Tooltip } from 'components/misc/ui';
-import { listInitDir, startupDir } from 'editor/hooks/useOpen';
-import { isWeb } from 'file/util';
+import { useStore } from '@/lib/store';
+import { Tooltip } from '@/components/misc/ui';
+import { listInitDir, startupDir } from '@/editor/hooks/useOpen';
+import { isWeb } from '@/file/util';
 
 type Props = {
   className?: string;

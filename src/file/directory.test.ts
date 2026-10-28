@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap } from 'lib/noteMap';
+import { NoteMap } from '@/lib/noteMap';
 import { enterTauri, leaveTauri, makeFileMeta, makeNote, mockInvoke } from '../testUtils';
 import DirectoryAPI from './directory';
 
@@ -27,7 +27,7 @@ describe('DirectoryAPI (web)', () => {
 describe('DirectoryAPI (tauri)', () => {
   let Dir: typeof DirectoryAPI;
   let tauriInvoke: Mock;
-  let store: typeof import('lib/store').store;
+  let store: typeof import('@/lib/store').store;
   let win: { listen: Mock; emit: Mock };
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('DirectoryAPI (tauri)', () => {
     tauriInvoke = (await import('@tauri-apps/api/core')).invoke as Mock;
     mockInvoke(tauriInvoke, { get_data: { status: false } });
     Dir = (await import('./directory')).default;
-    store = (await import('lib/store')).store;
+    store = (await import('@/lib/store')).store;
     win = (await import('@tauri-apps/api/window')).getCurrentWindow() as never;
   });
 

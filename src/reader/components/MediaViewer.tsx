@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { TbChevronLeft, TbChevronRight, TbMaximize, TbMinus, TbPlus, TbX } from 'react-icons/tb';
-import { sanitizeHtml } from 'utils/sanitize';
+import { sanitizeHtml } from '@/utils/sanitize';
 import type { Media } from '../media';
 
 /**

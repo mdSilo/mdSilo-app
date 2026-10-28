@@ -1,9 +1,9 @@
 import { produce } from 'immer';
 import { getJSONContent, parser } from 'mdsmirror';
-import { NoteMap } from 'lib/noteMap';
-import { withContents } from 'lib/contentCache';
-import { MAYBE_TASKS } from 'lib/parseNote';
-import { checkFileIsMd } from 'file/process';
+import { NoteMap } from '@/lib/noteMap';
+import { withContents } from '@/lib/contentCache';
+import { MAYBE_TASKS } from '@/lib/parseNote';
+import { checkFileIsMd } from '@/file/process';
 import { addEvent, createIssue, moveProjectItem, setState } from './issueOps';
 import type { Issue, IssueData, NoteTaskRef, ProjectStatus, TaskKind, TaskTag } from './types';
 

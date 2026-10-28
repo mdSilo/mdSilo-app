@@ -1,7 +1,7 @@
 import { Menu } from '@headlessui/react';
 import { TbCheck, TbLayoutGrid, TbList, TbSortAscending, TbSortDescending } from 'react-icons/tb';
-import Dropdown, { DropdownItem } from 'components/misc/Dropdown';
-import { useStore } from 'lib/store';
+import Dropdown, { DropdownItem } from '@/components/misc/Dropdown';
+import { useStore } from '@/lib/store';
 import { withLibraryDefaults, type GroupBy, type LibrarySettings, type SortBy, type ViewMode } from '../../shelf';
 
 const VIEWS: [ViewMode, string][] = [['grid', 'Grid'], ['list', 'List']];

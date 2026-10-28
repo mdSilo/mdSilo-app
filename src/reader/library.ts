@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
-import { fromWorkspacePath, isTauri, joinPath, toWorkspacePath } from 'file/util';
-import { DATA_DIR, READING_DIR, WRITING_DIR } from 'workspace/layout';
-import { updateGitignore } from 'workspace/gitignore';
+import { fromWorkspacePath, isTauri, joinPath, toWorkspacePath } from '@/file/util';
+import { DATA_DIR, READING_DIR, WRITING_DIR } from '@/workspace/layout';
+import { updateGitignore } from '@/workspace/gitignore';
 import {
   BOOK_EXTS, bookFormatOf, CONVERTIBLE_EXTS, convertibleFormatOf, formatContributors, formatLanguageMap, isBookFile, type BookDoc, type BookFormat, type Contributor,
 } from './document';

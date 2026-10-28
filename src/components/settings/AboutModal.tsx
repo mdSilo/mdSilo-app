@@ -1,8 +1,8 @@
 import { getVersion, getTauriVersion } from '@tauri-apps/api/app';
 import { useState, useEffect } from 'react';
-import { openUrl } from 'file/open';
-import { getLog, clearLog } from 'file/storage';
-import { isWeb } from 'file/util';
+import { openUrl } from '@/file/open';
+import { getLog, clearLog } from '@/file/storage';
+import { isWeb } from '@/file/util';
 import { BaseModal } from './BaseModal';
 
 

@@ -24,12 +24,12 @@ import {
 import { D3DragEvent, drag } from 'd3-drag';
 import { zoom, zoomIdentity, zoomTransform, ZoomTransform } from 'd3-zoom';
 import { select } from 'd3-selection';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { useStore } from 'lib/store';
-import { noteTitleMap } from 'utils/mdlink';
-import { indexOf } from 'lib/linkIndex';
-import { openFilePath } from 'file/open';
-import { checkFileIsMd } from 'file/process';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useStore } from '@/lib/store';
+import { noteTitleMap } from '@/utils/mdlink';
+import { indexOf } from '@/lib/linkIndex';
+import { openFilePath } from '@/file/open';
+import { checkFileIsMd } from '@/file/process';
 
 type GraphColors = {
   note: string;
@@ -83,7 +83,7 @@ function useThemeColors(): GraphColors {
   return colors;
 }
 
-export { HASHTAG_REGEX } from 'utils/mdlink';
+export { HASHTAG_REGEX } from '@/utils/mdlink';
 
 export type NodeDatum = {
   id: string;

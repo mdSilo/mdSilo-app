@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useStore } from 'lib/store';
-import { loadDir } from 'file/open';
+import { useStore } from '@/lib/store';
+import { loadDir } from '@/file/open';
 
 /**
  * Load all the notes of the workspace with content, for views needing them

@@ -1,6 +1,6 @@
-import { isUrl } from 'utils/helper';
-import type { NoteMap } from 'lib/store';
-import { indexOf } from 'lib/linkIndex';
+import { isUrl } from '@/utils/helper';
+import type { NoteMap } from '@/lib/store';
+import { indexOf } from '@/lib/linkIndex';
 import type { Issue } from './types';
 
 // [[title]] or [[title|alias]]

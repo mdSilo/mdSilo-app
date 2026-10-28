@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { useStore, store, Notes } from 'lib/store';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import NoteSumList from 'components/note/NoteSumList';
-import FindOrCreateInput from 'components/note/NoteNewInput';
-import HeatMap from 'components/view/HeatMap';
-import { dateCompare, getStrDate, regDateStr } from 'utils/helper';
-import { joinPaths } from 'file/util';
-import { defaultNote, Note } from 'types/model';
-import { openFilePath } from 'file/open';
-import useLoadNotes from 'editor/hooks/useLoadNotes';
-import { checkFileIsMd } from 'file/process';
-import { useWritingRoot } from 'workspace/useWorkspace';
-import { readingTimeByDay } from 'reader/stats';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useStore, store, Notes } from '@/lib/store';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import NoteSumList from '@/components/note/NoteSumList';
+import FindOrCreateInput from '@/components/note/NoteNewInput';
+import HeatMap from '@/components/view/HeatMap';
+import { dateCompare, getStrDate, regDateStr } from '@/utils/helper';
+import { joinPaths } from '@/file/util';
+import { defaultNote, Note } from '@/types/model';
+import { openFilePath } from '@/file/open';
+import useLoadNotes from '@/editor/hooks/useLoadNotes';
+import { checkFileIsMd } from '@/file/process';
+import { useWritingRoot } from '@/workspace/useWorkspace';
+import { readingTimeByDay } from '@/reader/stats';
 
 export default function Chronicle() {
   useLoadNotes();

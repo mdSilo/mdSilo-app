@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
-import { joinPath } from 'file/util';
-import { dataRoot, localRoot } from 'workspace/layout';
-import type { ArticleType, ChannelType } from 'types/model';
+import { joinPath } from '@/file/util';
+import { dataRoot, localRoot } from '@/workspace/layout';
+import type { ArticleType, ChannelType } from '@/types/model';
 
 /**
  * The feed subscriptions and the starred articles are kept in the app's

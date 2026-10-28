@@ -1,13 +1,13 @@
 import MsEditor from "mdsmirror";
-import { EDITOR_THEME } from 'lib/themes';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { useStore } from 'lib/store';
-import { Note } from 'types/model';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import FindOrCreateInput from 'components/note/NoteNewInput';
-import { dateCompare, regDateStr, strToDate } from 'utils/helper';
-import { openFilePath } from "file/open";
-import { useNoteContent } from 'lib/contentCache';
+import { EDITOR_THEME } from '@/lib/themes';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useStore } from '@/lib/store';
+import { Note } from '@/types/model';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import FindOrCreateInput from '@/components/note/NoteNewInput';
+import { dateCompare, regDateStr, strToDate } from '@/utils/helper';
+import { openFilePath } from "@/file/open";
+import { useNoteContent } from '@/lib/contentCache';
 
 export default function Journals() {
   const initDir = useStore((state) => state.initDir);

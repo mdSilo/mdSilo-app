@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { NoteMap } from 'lib/noteMap';
-import { store } from 'lib/store';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import MainView from 'components/view/MainView';
+import { NoteMap } from '@/lib/noteMap';
+import { store } from '@/lib/store';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import MainView from '@/components/view/MainView';
 import { makeNote, renderWithView, waitForView } from '../../testUtils';
 import * as ops from './issueOps';
 import { issueStore, resetIssueStore } from './issueStore';
@@ -16,7 +16,7 @@ import type { IssueData } from './types';
 const files = vi.hoisted(() => ({ written: [] as { path: string; text: string }[] }));
 const editors = vi.hoisted(() => ({ props: {} as Record<string, Record<string, (...a: never[]) => unknown>> }));
 
-vi.mock('file/files', () => ({
+vi.mock('@/file/files', () => ({
   default: class {
     fileName: string;
     constructor(name: string, parent?: string) {
@@ -45,8 +45,8 @@ vi.mock('mdsmirror', async (importOriginal) => {
   return { ...actual, default: MockEditor };
 });
 
-vi.mock('file/open', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('file/open')>()),
+vi.mock('@/file/open', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/file/open')>()),
   openFilePath: vi.fn(async (id: string) => store.getState().notes.get(id)),
   openUrl: vi.fn(async () => undefined),
 }));

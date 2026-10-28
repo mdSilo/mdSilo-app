@@ -1,5 +1,5 @@
 import { produce } from 'immer';
-import { genId } from 'utils/helper';
+import { genId } from '@/utils/helper';
 import { createIssue } from './issueOps';
 import type { IssueData, ProjectStatus } from './types';
 

@@ -2,7 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import {
   TbPlayerPause, TbPlayerPlay, TbPlayerSkipBack, TbPlayerSkipForward, TbPlayerStop,
 } from 'react-icons/tb';
-import { store, useStore } from 'lib/store';
+import { store, useStore } from '@/lib/store';
 import { withDefaults } from '../settings';
 import { ttsOf, ttsView, useTTS, webSpeech } from '../tts';
 import { getView, type Pane } from '../view';

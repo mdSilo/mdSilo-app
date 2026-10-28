@@ -1,14 +1,14 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import Highlighter from 'react-highlight-words';
 import { type FuseResultMatch } from 'fuse.js';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { searchContent, type ContentSearch, NoteBlock } from 'editor/hooks/useNoteSearch';
-import useDebounce from 'editor/hooks/useDebounce';
-import useLoadNotes from 'editor/hooks/useLoadNotes';
-import { store, useStore } from 'lib/store';
-import { sanitizeHtml } from 'utils/sanitize';
-import { isMobile } from 'utils/helper';
-import { openFilePath } from 'file/open';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { searchContent, type ContentSearch, NoteBlock } from '@/editor/hooks/useNoteSearch';
+import useDebounce from '@/editor/hooks/useDebounce';
+import useLoadNotes from '@/editor/hooks/useLoadNotes';
+import { store, useStore } from '@/lib/store';
+import { sanitizeHtml } from '@/utils/sanitize';
+import { isMobile } from '@/utils/helper';
+import { openFilePath } from '@/file/open';
 import ErrorBoundary from '../misc/ErrorBoundary';
 import VirtualTree from '../misc/VirtualTree';
 
@@ -204,7 +204,7 @@ const BookLeaf = memo(function BookLeaf({ id, label, snippet }: { id: string; la
         const at = rest.indexOf('#');
         const [hash, cfi] = at < 0 ? [rest, undefined] : [rest.slice(0, at), rest.slice(at + 1)];
         if (!ws) return;
-        const { findBookPath } = await import('reader/library');
+        const { findBookPath } = await import('@/reader/library');
         const path = await findBookPath(ws, hash);
         if (path) dispatch({ view: 'book', path, cfi });
       }}

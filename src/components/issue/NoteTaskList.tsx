@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useStore } from 'lib/store';
-import useLoadNotes from 'editor/hooks/useLoadNotes';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import useDebounce from 'editor/hooks/useDebounce';
-import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
+import { useStore } from '@/lib/store';
+import useLoadNotes from '@/editor/hooks/useLoadNotes';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import useDebounce from '@/editor/hooks/useDebounce';
+import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
 import { useIssueStore } from './issueStore';
 import { createIssueFromTask, issueOfTask, loadNoteTasks, NoteTask, TaskTag, TASK_TAGS } from './noteTasks';
 import { StateIcon, btnClass } from './common';

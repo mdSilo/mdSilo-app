@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, type Mock } from 'vitest';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { NoteMap } from 'lib/noteMap';
-import { store } from 'lib/store';
+import { NoteMap } from '@/lib/noteMap';
+import { store } from '@/lib/store';
 import { enterTauri, leaveTauri, makeNote, mockInvoke } from '../testUtils';
 import * as util from './util';
 
@@ -84,7 +84,7 @@ describe('tauri mode', () => {
     enterTauri();
     mockInvoke((await import('@tauri-apps/api/core')).invoke, { get_data: { status: false } });
     tauriUtil = await import('./util');
-    tauriStore = (await import('lib/store')).store;
+    tauriStore = (await import('@/lib/store')).store;
   });
 
   afterEach(() => {

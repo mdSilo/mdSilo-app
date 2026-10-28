@@ -1,4 +1,4 @@
-import { findNoteLinks, HASHTAG_REGEX } from 'utils/mdlink';
+import { findNoteLinks, HASHTAG_REGEX } from '@/utils/mdlink';
 
 /**
  * What a note links to and contains, found in its raw markdown. The same as

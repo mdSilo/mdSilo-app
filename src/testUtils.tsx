@@ -2,10 +2,10 @@
 import { vi, type Mock } from 'vitest';
 import type { ReactElement, ReactNode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { store } from 'lib/store';
-import { ProvideCurrentView } from 'context/useCurrentView';
-import type { Note } from 'types/model';
-import type { FileMetaData } from 'file/directory';
+import { store } from '@/lib/store';
+import { ProvideCurrentView } from '@/context/useCurrentView';
+import type { Note } from '@/types/model';
+import type { FileMetaData } from '@/file/directory';
 
 const initialState = store.getState();
 

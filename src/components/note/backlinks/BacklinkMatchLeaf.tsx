@@ -1,5 +1,5 @@
 import { memo, ReactNode } from 'react';
-import useOnNoteLinkClick from 'editor/hooks/useOnNoteLinkClick';
+import useOnNoteLinkClick from '@/editor/hooks/useOnNoteLinkClick';
 import { BacklinkMatch } from './useBacklinks';
 
 const MAX_CONTEXT_LEN = 128;

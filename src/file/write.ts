@@ -1,6 +1,6 @@
 // import { invoke } from '@tauri-apps/api';
-import type { NoteMap } from 'lib/store';
-import { withContents } from 'lib/contentCache';
+import type { NoteMap } from '@/lib/store';
+import { withContents } from '@/lib/contentCache';
 import { buildNotesJson, joinPaths } from './util';
 import FileAPI from './files';
 

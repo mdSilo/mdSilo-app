@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { store } from 'lib/store';
-import { joinPath } from 'file/util';
+import { store } from '@/lib/store';
+import { joinPath } from '@/file/util';
 import { updateGitignore } from './gitignore';
 
 /**

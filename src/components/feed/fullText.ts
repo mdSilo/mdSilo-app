@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { decodeText } from 'reader/convert/text';
-import type { ArticleType } from 'types/model';
+import { decodeText } from '@/reader/convert/text';
+import type { ArticleType } from '@/types/model';
 
 /**
  * The full text of a feed article. Many feeds give a summary only, or the

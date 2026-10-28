@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { gitignoreBlock, updateGitignore } from 'workspace/gitignore';
+import { gitignoreBlock, updateGitignore } from '@/workspace/gitignore';
 import { useWebFs } from '../testUtils';
 import type { BookDoc } from './document';
 import {

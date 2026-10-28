@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { store } from 'lib/store';
+import { store } from '@/lib/store';
 import { useWebFs } from '../../testUtils';
 import { ARTICLES, CHANNELS, put } from '../../platform/web/idb';
 import { mergeByKey, parseFeedsFile, resetFeedSync, syncFeeds } from './feedSync';

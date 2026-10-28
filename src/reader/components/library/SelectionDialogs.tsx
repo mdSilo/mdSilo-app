@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BaseModal } from 'components/settings/BaseModal';
+import { BaseModal } from '@/components/settings/BaseModal';
 import { deleteCovers } from '../../covers';
 import { deleteBooks, normalizeGroup, setBooksGroup } from '../../library';
 import { allGroups, type ShelfBook } from '../../shelf';

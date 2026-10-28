@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import useHotkeys from 'editor/hooks/useHotkeys';
+import useHotkeys from '@/editor/hooks/useHotkeys';
 import MoveToInput from './NoteMoveInput';
 
 type Props = {

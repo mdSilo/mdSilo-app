@@ -161,17 +161,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
-      components: path.resolve(import.meta.dirname, './src/components'),
-      context: path.resolve(import.meta.dirname, './src/context'),
-      editor: path.resolve(import.meta.dirname, './src/editor'),
-      file: path.resolve(import.meta.dirname, './src/file'),
-      lib: path.resolve(import.meta.dirname, './src/lib'),
-      utils: path.resolve(import.meta.dirname, './src/utils'),
-      types: path.resolve(import.meta.dirname, './src/types'),
-      asset: path.resolve(import.meta.dirname, './src/asset'),
-      styles: path.resolve(import.meta.dirname, './src/styles'),
-      workspace: path.resolve(import.meta.dirname, './src/workspace'),
-      reader: path.resolve(import.meta.dirname, './src/reader'),
       // imported by packages/foliate-js/pdf.js, loaded on first use
       '@pdfjs/pdf.min.mjs': path.join(pdfjsDir, 'legacy/build/pdf.min.mjs'),
       // prosemirror-history's CommonJS build does `require('rope-sequence')`,

@@ -1,8 +1,8 @@
 import { describe, expect, test, vi } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
-import { NoteMap } from 'lib/noteMap';
-import { store } from 'lib/store';
-import { useCurrentViewContext } from 'context/useCurrentView';
+import { NoteMap } from '@/lib/noteMap';
+import { store } from '@/lib/store';
+import { useCurrentViewContext } from '@/context/useCurrentView';
 import { makeNote, renderWithView } from '../../testUtils';
 import IssueEditor from './IssueEditor';
 
@@ -22,8 +22,8 @@ vi.mock('mdsmirror', async (importOriginal) => {
   );
   return { ...actual, default: MockEditor };
 });
-vi.mock('file/open', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('file/open')>()),
+vi.mock('@/file/open', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/file/open')>()),
   openFilePath: vi.fn(async (id: string) => store.getState().notes.get(id)),
 }));
 

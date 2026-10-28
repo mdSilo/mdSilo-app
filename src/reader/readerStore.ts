@@ -1,10 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
-import { store } from 'lib/store';
-import { getStrDate } from 'utils/helper';
-import { flushSave } from 'file/pendingSaves';
-import { openFilePaths } from 'file/open';
-import { toWorkspacePath } from 'file/util';
+import { store } from '@/lib/store';
+import { getStrDate } from '@/utils/helper';
+import { flushSave } from '@/file/pendingSaves';
+import { openFilePaths } from '@/file/open';
+import { toWorkspacePath } from '@/file/util';
 import {
   annotationsPathOf, parseAnnotations, serializeAnnotations, sortNotes,
   type BookHeader, type BookNote,

@@ -1,9 +1,9 @@
 import { memo } from 'react';
 import { useTransition, animated, SpringConfig } from '@react-spring/web';
-import { isMobile } from 'utils/helper';
-import { useStore } from 'lib/store';
-import { SIDEBAR_WIDTH } from 'lib/userSettings';
-import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
+import { isMobile } from '@/utils/helper';
+import { useStore } from '@/lib/store';
+import { SIDEBAR_WIDTH } from '@/lib/userSettings';
+import ResizeHandle, { useResizableWidth } from '@/components/misc/ResizeHandle';
 import SidebarContent from './SidebarContent';
 
 const SPRING_CONFIG: SpringConfig = {

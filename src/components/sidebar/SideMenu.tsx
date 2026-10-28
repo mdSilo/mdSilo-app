@@ -8,17 +8,17 @@ import {
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
 import { usePopper } from 'react-popper';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import useHotkeys from 'editor/hooks/useHotkeys';
-import { onOpenFile, onListDir, onSave, openJsonFile } from 'editor/hooks/useOpen';
-import { isWeb } from 'file/util';
-import { store, useStore } from 'lib/store';
-import type { SideMenuOrientation } from 'lib/userSettings';
-import { isMobile } from 'utils/helper';
-import { ViewAction } from 'context/viewReducer';
-import Dropdown, { DropdownItem } from 'components/misc/Dropdown';
-import { Tooltip } from 'components/misc/ui';
-import Portal from 'components/misc/Portal';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import useHotkeys from '@/editor/hooks/useHotkeys';
+import { onOpenFile, onListDir, onSave, openJsonFile } from '@/editor/hooks/useOpen';
+import { isWeb } from '@/file/util';
+import { store, useStore } from '@/lib/store';
+import type { SideMenuOrientation } from '@/lib/userSettings';
+import { isMobile } from '@/utils/helper';
+import { ViewAction } from '@/context/viewReducer';
+import Dropdown, { DropdownItem } from '@/components/misc/Dropdown';
+import { Tooltip } from '@/components/misc/ui';
+import Portal from '@/components/misc/Portal';
 import Logo from '../Logo';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');

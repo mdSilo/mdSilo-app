@@ -1,4 +1,4 @@
-import { useStore } from 'lib/store';
+import { useStore } from '@/lib/store';
 import { readingRoot, writingRoot } from './layout';
 
 /** Where the notes are in the open workspace, see writingRoot. */

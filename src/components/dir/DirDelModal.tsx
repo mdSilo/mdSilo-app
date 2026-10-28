@@ -1,5 +1,5 @@
-import { BaseModal } from 'components/settings/BaseModal';
-import { deleteFiles } from 'file/util';
+import { BaseModal } from '@/components/settings/BaseModal';
+import { deleteFiles } from '@/file/util';
 
 type Props = {
   dirPath: string;

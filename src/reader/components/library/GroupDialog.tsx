@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BaseModal } from 'components/settings/BaseModal';
+import { BaseModal } from '@/components/settings/BaseModal';
 import { normalizeGroup, renameGroup } from '../../library';
 
 type Props = {

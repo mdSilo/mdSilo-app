@@ -1,5 +1,5 @@
 import { Component, ReactNode } from 'react';
-import { setLog } from 'file/storage';
+import { setLog } from '@/file/storage';
 
 type Props = {
   children: ReactNode;

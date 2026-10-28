@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { store } from 'lib/store';
+import { store } from '@/lib/store';
 import * as ops from './issueOps';
 import { issueStore, resetIssueStore, SAVE_DEBOUNCE_MS, useIssueData } from './issueStore';
 
@@ -11,7 +11,7 @@ const files = vi.hoisted(() => ({
   deleteFails: false,
 }));
 
-vi.mock('file/files', () => ({
+vi.mock('@/file/files', () => ({
   default: class {
     fileName: string;
     constructor(name: string, parent?: string) {

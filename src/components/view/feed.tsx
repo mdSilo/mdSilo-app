@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { store, useStore } from 'lib/store';
-import { ArticleType, ChannelType } from 'types/model';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { ChannelList } from 'components/feed/ChannelList';
-import { Channel } from 'components/feed/Channel';
-import { ArticleView } from 'components/feed/ArticleView';
-import { FeedManager } from 'components/feed/FeedManager';
-import * as dataAgent from 'components/feed/dataAgent';
-import ResizeHandle, { useResizableWidth } from 'components/misc/ResizeHandle';
-import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from 'lib/userSettings';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { store, useStore } from '@/lib/store';
+import { ArticleType, ChannelType } from '@/types/model';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import { ChannelList } from '@/components/feed/ChannelList';
+import { Channel } from '@/components/feed/Channel';
+import { ArticleView } from '@/components/feed/ArticleView';
+import { FeedManager } from '@/components/feed/FeedManager';
+import * as dataAgent from '@/components/feed/dataAgent';
+import ResizeHandle, { useResizableWidth } from '@/components/misc/ResizeHandle';
+import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from '@/lib/userSettings';
 
 export default function Feed() {
   const dispatch = useCurrentViewContext().dispatch;

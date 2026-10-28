@@ -2,10 +2,10 @@ import React, { useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes } fr
 import { List } from 'react-virtualized';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { TbHash as IconHash } from 'react-icons/tb';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { NoteMap, useStore } from 'lib/store';
-import { indexOf } from 'lib/linkIndex';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { NoteMap, useStore } from '@/lib/store';
+import { indexOf } from '@/lib/linkIndex';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
 import SidebarItem from './SidebarItem';
 
 export type TagTreeItem = {

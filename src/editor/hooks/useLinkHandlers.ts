@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
-import { store } from 'lib/store';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { issueStore } from 'components/issue/issueStore';
-import { issueHref, parseIssueHref } from 'components/issue/refs';
-import { openFilePath, openUrl } from 'file/open';
-import { isUrl } from 'utils/helper';
-import { encodeHref, hrefToTitle, legacyLinkTitle } from 'utils/mdlink';
-import { parseBookHref } from 'reader/annotations';
+import { store } from '@/lib/store';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { issueStore } from '@/components/issue/issueStore';
+import { issueHref, parseIssueHref } from '@/components/issue/refs';
+import { openFilePath, openUrl } from '@/file/open';
+import { isUrl } from '@/utils/helper';
+import { encodeHref, hrefToTitle, legacyLinkTitle } from '@/utils/mdlink';
+import { parseBookHref } from '@/reader/annotations';
 import useNoteSearch from './useNoteSearch';
 
 export type LinkSearchResult = { title: string; url: string };
@@ -35,7 +35,7 @@ export function searchIssues(text: string, limit = 10): LinkSearchResult[] {
 async function findBookPath(hash: string): Promise<string | undefined> {
   const ws = store.getState().initDir;
   if (!ws) return undefined;
-  const library = await import('reader/library');
+  const library = await import('@/reader/library');
   return library.findBookPath(ws, hash);
 }
 

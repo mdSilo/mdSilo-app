@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { joinPath } from 'file/util';
-import { DATA_DIR, localDirOf } from 'workspace/layout';
+import { joinPath } from '@/file/util';
+import { DATA_DIR, localDirOf } from '@/workspace/layout';
 import type { BookDoc } from './document';
 import type { BookEntry } from './library';
 

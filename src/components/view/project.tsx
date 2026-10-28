@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { TbLayoutBoardSplit as IconBoard, TbTable as IconTable, TbPlus as IconPlus } from 'react-icons/tb';
-import { useStore } from 'lib/store';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { BaseModal } from 'components/settings/BaseModal';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { useIssueData, useIssueStore } from 'components/issue/issueStore';
-import { createProject, deleteProject, getIssue, moveProjectItem, updateProject } from 'components/issue/issueOps';
-import { btnClass, inputClass } from 'components/issue/common';
-import IssueDetail from 'components/issue/IssueDetail';
-import ProjectBoard from 'components/issue/project/ProjectBoard';
-import ProjectTable from 'components/issue/project/ProjectTable';
+import { useStore } from '@/lib/store';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import { BaseModal } from '@/components/settings/BaseModal';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useIssueData, useIssueStore } from '@/components/issue/issueStore';
+import { createProject, deleteProject, getIssue, moveProjectItem, updateProject } from '@/components/issue/issueOps';
+import { btnClass, inputClass } from '@/components/issue/common';
+import IssueDetail from '@/components/issue/IssueDetail';
+import ProjectBoard from '@/components/issue/project/ProjectBoard';
+import ProjectTable from '@/components/issue/project/ProjectTable';
 
 export default function ProjectView() {
   const { data, isLoaded, initDir } = useIssueData();

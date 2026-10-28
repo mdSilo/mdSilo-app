@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { store, useStore } from 'lib/store';
-import { DARK_QUERY, isSystemDark, resolveTheme } from 'lib/themes';
+import { store, useStore } from '@/lib/store';
+import { DARK_QUERY, isSystemDark, resolveTheme } from '@/lib/themes';
 
 /**
  * Apply the theme setting on <html>: daisyUI `data-theme` and the `dark`

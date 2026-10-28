@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { useStore } from 'lib/store';
-import { Range, Segmented, Select, Toggle } from 'components/misc/ui';
+import { useStore } from '@/lib/store';
+import { Range, Segmented, Select, Toggle } from '@/components/misc/ui';
 import {
   DEFAULT_READER_SETTINGS, KEPT_ON_RESET, withDefaults, type PageTheme, type ReaderSettings,
 } from '../settings';

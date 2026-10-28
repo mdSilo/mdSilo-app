@@ -1,8 +1,8 @@
-import { store } from 'lib/store';
-import { linkTitlesOf, rewriteNoteLinks } from 'utils/mdlink';
-import { writeFile } from 'file/write';
-import { loadDir } from 'file/open';
-import { noteContent } from 'lib/contentCache';
+import { store } from '@/lib/store';
+import { linkTitlesOf, rewriteNoteLinks } from '@/utils/mdlink';
+import { writeFile } from '@/file/write';
+import { loadDir } from '@/file/open';
+import { noteContent } from '@/lib/contentCache';
 
 const LOAD_TIMEOUT_MS = 5000;
 

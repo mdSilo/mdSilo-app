@@ -1,5 +1,5 @@
 import { TbCircleDot as IconOpen, TbCircleCheck as IconClosed } from 'react-icons/tb';
-import { fmtDatetime } from 'utils/helper';
+import { fmtDatetime } from '@/utils/helper';
 import type { IssueState } from './types';
 
 type IconProps = { state: IssueState; size?: number; className?: string };

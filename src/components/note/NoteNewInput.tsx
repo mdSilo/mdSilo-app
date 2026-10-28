@@ -2,15 +2,15 @@ import type { ForwardedRef } from 'react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import type { IconType as Icon } from 'react-icons';
 import { TbFilePlus as IconFilePlus, TbSearch as IconSearch } from 'react-icons/tb';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import useNoteSearch from 'editor/hooks/useNoteSearch';
-import { ciStringEqual, regDateStr } from 'utils/helper';
-import { joinPaths } from 'file/util';
-import { openFilePath } from 'file/open';
-import { writeFile } from 'file/write';
-import { Notes, store, useStore } from 'lib/store';
-import { defaultNote } from 'types/model';
-import { newNoteDir } from 'workspace/layout';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import useNoteSearch from '@/editor/hooks/useNoteSearch';
+import { ciStringEqual, regDateStr } from '@/utils/helper';
+import { joinPaths } from '@/file/util';
+import { openFilePath } from '@/file/open';
+import { writeFile } from '@/file/write';
+import { Notes, store, useStore } from '@/lib/store';
+import { defaultNote } from '@/types/model';
+import { newNoteDir } from '@/workspace/layout';
 
 enum OptionType {
   NOTE,

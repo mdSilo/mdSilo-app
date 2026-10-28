@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { SidebarTab, store } from 'lib/store';
+import { SidebarTab, store } from '@/lib/store';
 import { ProvideCurrentView, useCurrentViewContext } from './useCurrentView';
 import useStartupView from './useStartupView';
 

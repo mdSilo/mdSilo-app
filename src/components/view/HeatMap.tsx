@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { store, useStore } from 'lib/store';
+import { store, useStore } from '@/lib/store';
 import {
   countNoteActivities,
   mergeActivities,
   type ActivityData,
   type ActivityRecord,
-} from 'lib/activity';
-import { getStrDate } from 'utils/helper';
-import { Note } from 'types/model';
+} from '@/lib/activity';
+import { getStrDate } from '@/utils/helper';
+import { Note } from '@/types/model';
 
 type HeatMapProps = {
   noteList: readonly Note[];

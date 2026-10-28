@@ -1,8 +1,8 @@
 import { memo, useEffect, useState, type RefObject } from 'react';
 import { TbCheck, TbExternalLink, TbNote, TbVocabulary } from 'react-icons/tb';
-import { openUrl } from 'file/open';
-import { useStore } from 'lib/store';
-import { Spinner } from 'components/misc/ui';
+import { openUrl } from '@/file/open';
+import { useStore } from '@/lib/store';
+import { Spinner } from '@/components/misc/ui';
 import {
   lookupWikipedia, lookupWiktionary, openLinkOutside, targetLanguage, translate, translateUrl, wikipediaSearchUrl,
   type DictionaryResult, type TranslationResult, type WikipediaResult,

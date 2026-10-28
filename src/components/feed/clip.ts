@@ -1,13 +1,13 @@
 import { domToMarkdown } from 'mdsmirror';
-import { store } from 'lib/store';
-import type { ArticleType } from 'types/model';
-import { sanitizeHtml } from 'utils/sanitize';
-import { fmtDatetime } from 'utils/helper';
-import { joinPaths } from 'file/util';
-import { writeFile } from 'file/write';
-import { openFilePaths } from 'file/open';
-import FileAPI from 'file/files';
-import { CLIPS_DIR, readingRoot } from 'workspace/layout';
+import { store } from '@/lib/store';
+import type { ArticleType } from '@/types/model';
+import { sanitizeHtml } from '@/utils/sanitize';
+import { fmtDatetime } from '@/utils/helper';
+import { joinPaths } from '@/file/util';
+import { writeFile } from '@/file/write';
+import { openFilePaths } from '@/file/open';
+import FileAPI from '@/file/files';
+import { CLIPS_DIR, readingRoot } from '@/workspace/layout';
 
 export { CLIPS_DIR };
 

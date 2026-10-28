@@ -1,5 +1,5 @@
-import { useStore } from 'lib/store';
-import { fmtDatetime, countWords } from 'utils/helper';
+import { useStore } from '@/lib/store';
+import { fmtDatetime, countWords } from '@/utils/helper';
 
 type Props = {
   noteId: string;

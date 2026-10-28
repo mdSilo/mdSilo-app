@@ -5,16 +5,16 @@ import {
   TbPhoto as IconPhoto, TbSettings as IconSettings, TbTournament as IconTournament, TbTrash as IconTrash
 } from 'react-icons/tb';
 import { usePopper } from 'react-popper';
-import { useCurrentMdContext } from 'context/useCurrentMd';
-import { ExportAs } from 'editor/hooks/useExport';
-import { useStore } from 'lib/store';
-import { openFilePath } from 'file/open';
-import { Tooltip } from 'components/misc/ui';
-import Portal from 'components/misc/Portal';
-import { DropdownItem } from 'components/misc/Dropdown';
-import NoteMetadata from 'components/note/NoteMetadata';
-import NoteDelModal from 'components/note/NoteDelModal';
-import EditorSettings from 'components/settings/EditorSettings';
+import { useCurrentMdContext } from '@/context/useCurrentMd';
+import { ExportAs } from '@/editor/hooks/useExport';
+import { useStore } from '@/lib/store';
+import { openFilePath } from '@/file/open';
+import { Tooltip } from '@/components/misc/ui';
+import Portal from '@/components/misc/Portal';
+import { DropdownItem } from '@/components/misc/Dropdown';
+import NoteMetadata from '@/components/note/NoteMetadata';
+import NoteDelModal from '@/components/note/NoteDelModal';
+import EditorSettings from '@/components/settings/EditorSettings';
 
 export default function NoteHeader(
   {setShowBacklink} : {setShowBacklink : (show: boolean) => void}

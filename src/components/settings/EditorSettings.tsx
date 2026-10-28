@@ -1,5 +1,5 @@
-import { useStore } from 'lib/store';
-import { NumberInput, Select, Toggle } from 'components/misc/ui';
+import { useStore } from '@/lib/store';
+import { NumberInput, Select, Toggle } from '@/components/misc/ui';
 
 const FONTS = [
   { name: 'Default', font: '' },

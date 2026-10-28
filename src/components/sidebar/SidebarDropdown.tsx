@@ -4,14 +4,14 @@ import {
   TbCornerDownRight as IconCornerDownRight, TbDots as IconDots, TbDotsDiagonal as IconDotsDiagonal, TbFolder as IconFolder, TbId as IconId, TbPlus as IconPlus, TbTrash as IconTrash
 } from 'react-icons/tb';
 import { usePopper } from 'react-popper';
-import { DropdownItem } from 'components/misc/Dropdown';
-import Portal from 'components/misc/Portal';
-import MoveToModal from 'components/note/NoteMoveModal';
-import NoteMetadata from 'components/note/NoteMetadata';
-import DirNewModal from 'components/dir/DirNewModal';
-import DirRenameModal from 'components/dir/DirRenameModal';
-import DirDelModal from 'components/dir/DirDelModal';
-import { listDirPath } from 'editor/hooks/useOpen';
+import { DropdownItem } from '@/components/misc/Dropdown';
+import Portal from '@/components/misc/Portal';
+import MoveToModal from '@/components/note/NoteMoveModal';
+import NoteMetadata from '@/components/note/NoteMetadata';
+import DirNewModal from '@/components/dir/DirNewModal';
+import DirRenameModal from '@/components/dir/DirRenameModal';
+import DirDelModal from '@/components/dir/DirDelModal';
+import { listDirPath } from '@/editor/hooks/useOpen';
 
 type NoteProps = {
   noteId: string;

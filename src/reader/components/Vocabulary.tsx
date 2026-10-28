@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   TbArrowLeft, TbBook, TbCards, TbLayoutGrid, TbListCheck, TbTrash,
 } from 'react-icons/tb';
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import { Spinner } from 'components/misc/ui';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { useStore } from 'lib/store';
-import { sanitizeHtml } from 'utils/sanitize';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import { Spinner } from '@/components/misc/ui';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { useStore } from '@/lib/store';
+import { sanitizeHtml } from '@/utils/sanitize';
 import { findBookPath } from '../library';
 import { openLinkOutside } from '../lookup';
 import { useVocabulary, type VocabularyEntry } from '../vocabulary';

@@ -1,17 +1,17 @@
 import { invoke } from '@tauri-apps/api/core';
-import { store } from 'lib/store';
-import { withContents } from 'lib/contentCache';
-import { fromWorkspacePath, toWorkspacePath } from 'file/util';
-import { annotationsPathOf, parseAnnotations, parseBookHref } from 'reader/annotations';
-import { indexBookText } from 'reader/bookIndex';
-import { openBook } from 'reader/document';
+import { store } from '@/lib/store';
+import { withContents } from '@/lib/contentCache';
+import { fromWorkspacePath, toWorkspacePath } from '@/file/util';
+import { annotationsPathOf, parseAnnotations, parseBookHref } from '@/reader/annotations';
+import { indexBookText } from '@/reader/bookIndex';
+import { openBook } from '@/reader/document';
 import {
   articleOfCfi, makeFeedBook, readFeedBook, type FeedArticleInput, type FeedBookData, type FeedBookFiles,
-} from 'reader/feedBook';
-import { bookHashOf, importBookData, readLibrary, saveBookEntry, writeBytes } from 'reader/library';
-import { useReaderStore, useSideStore } from 'reader/readerStore';
-import { readVocabulary } from 'reader/vocabulary';
-import type { ArticleType } from 'types/model';
+} from '@/reader/feedBook';
+import { bookHashOf, importBookData, readLibrary, saveBookEntry, writeBytes } from '@/reader/library';
+import { useReaderStore, useSideStore } from '@/reader/readerStore';
+import { readVocabulary } from '@/reader/vocabulary';
+import type { ArticleType } from '@/types/model';
 import { fetchImage, fullTextOf } from './fullText';
 
 /**

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { openFilePath } from 'file/open';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { openFilePath } from '@/file/open';
 
 export default function useOnNoteLinkClick() {
   const currentView = useCurrentViewContext();

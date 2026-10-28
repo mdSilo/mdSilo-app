@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { NoteMap } from 'lib/noteMap';
-import { store } from 'lib/store';
+import { NoteMap } from '@/lib/noteMap';
+import { store } from '@/lib/store';
 import { makeNote } from '../../../testUtils';
 import useBacklinks, { computeBacklinks, computeLinkedBacklinks } from './useBacklinks';
 

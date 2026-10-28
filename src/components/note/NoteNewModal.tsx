@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import useHotkeys from 'editor/hooks/useHotkeys';
+import useHotkeys from '@/editor/hooks/useHotkeys';
 import FindOrCreateInput from './NoteNewInput';
 
 type Props = {

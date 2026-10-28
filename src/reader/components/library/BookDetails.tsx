@@ -4,11 +4,11 @@ import copy from 'copy-to-clipboard';
 import {
   TbBook, TbBookmarks, TbCloud, TbCloudOff, TbLink, TbNotes, TbPencil, TbPhoto, TbPhotoOff, TbRestore, TbTrash,
 } from 'react-icons/tb';
-import { BaseModal } from 'components/settings/BaseModal';
-import { IconButton } from 'components/misc/ui';
-import { openFileDilog, openFilePath } from 'file/open';
-import { useCurrentViewContext } from 'context/useCurrentView';
-import { sanitizeHtml } from 'utils/sanitize';
+import { BaseModal } from '@/components/settings/BaseModal';
+import { IconButton } from '@/components/misc/ui';
+import { openFileDilog, openFilePath } from '@/file/open';
+import { useCurrentViewContext } from '@/context/useCurrentView';
+import { sanitizeHtml } from '@/utils/sanitize';
 import { annotationsPathOf, bookHref } from '../../annotations';
 import { COVER_EXTS, coverUrl, deleteCovers, setCustomCover } from '../../covers';
 import { deleteBook, normalizeGroup, saveBookEntry, setBookSynced, type BookEntry } from '../../library';

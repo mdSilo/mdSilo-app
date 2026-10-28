@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import type { Note } from 'types/model';
+import type { Note } from '@/types/model';
 import { store } from './store';
 
 /**

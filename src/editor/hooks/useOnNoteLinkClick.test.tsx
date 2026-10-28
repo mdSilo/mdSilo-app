@@ -2,8 +2,8 @@ import { describe, expect, test } from 'vitest';
 import type { ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { invoke } from '@tauri-apps/api/core';
-import { store } from 'lib/store';
-import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
+import { store } from '@/lib/store';
+import { ProvideCurrentView, useCurrentViewContext } from '@/context/useCurrentView';
 import { makeFileMeta, mockInvoke } from '../../testUtils';
 import useOnNoteLinkClick from './useOnNoteLinkClick';
 

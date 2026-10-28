@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
-import FileAPI from 'file/files';
-import { fromWorkspacePath, toWorkspacePath } from 'file/util';
-import { store, useStore } from 'lib/store';
-import { dataDirOf, type Layout } from 'workspace/layout';
+import FileAPI from '@/file/files';
+import { fromWorkspacePath, toWorkspacePath } from '@/file/util';
+import { store, useStore } from '@/lib/store';
+import { dataDirOf, type Layout } from '@/workspace/layout';
 import {
   createIssue as createIssueOp, defaultIssueData, NewIssue, normalizeIssueData, renameNoteRefs,
 } from './issueOps';

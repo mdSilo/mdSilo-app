@@ -1,4 +1,4 @@
-import type { Note } from 'types/model';
+import type { Note } from '@/types/model';
 
 // Number of buckets: an update copies one bucket (~size/BUCKETS notes)
 // plus the bucket array, rather than every note.

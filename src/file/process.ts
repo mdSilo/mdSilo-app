@@ -1,7 +1,7 @@
-import { NotesData } from 'lib/store';
-import { regDateStr } from 'utils/helper';
-import { Note, defaultNote } from 'types/model';
-import { FileMetaData } from 'file/directory';
+import { NotesData } from '@/lib/store';
+import { regDateStr } from '@/utils/helper';
+import { Note, defaultNote } from '@/types/model';
+import { FileMetaData } from '@/file/directory';
 
 export function processJson(content: string): NotesData {
   try {

@@ -1,6 +1,6 @@
-import ErrorBoundary from 'components/misc/ErrorBoundary';
-import ForceGraph from 'components/view/ForceGraph';
-import useLoadNotes from 'editor/hooks/useLoadNotes';
+import ErrorBoundary from '@/components/misc/ErrorBoundary';
+import ForceGraph from '@/components/view/ForceGraph';
+import useLoadNotes from '@/editor/hooks/useLoadNotes';
 
 export default function Graph() {
   useLoadNotes();

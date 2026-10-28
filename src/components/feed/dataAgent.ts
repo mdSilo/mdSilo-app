@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { ChannelType, ArticleType } from "types/model";
+import { ChannelType, ArticleType } from "@/types/model";
 import { scheduleFeedSync } from "./feedSync";
 
 type FeedResult = {

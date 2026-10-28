@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react';
-import { openUrl } from 'file/open';
-import { sanitizeHtml } from 'utils/sanitize';
+import { openUrl } from '@/file/open';
+import { sanitizeHtml } from '@/utils/sanitize';
 
 /**
  * Look up the text selected in a book: in Wiktionary, in Wikipedia, or

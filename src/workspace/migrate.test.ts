@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { store } from 'lib/store';
-import { resetIssueStore, issueStore } from 'components/issue/issueStore';
+import { store } from '@/lib/store';
+import { resetIssueStore, issueStore } from '@/components/issue/issueStore';
 import { useWebFs } from '../testUtils';
 import {
   dataRoot, detectLayout, newNoteDir, readingRoot, resolveLayout, writingRoot,
@@ -8,7 +8,7 @@ import {
 import { migratedPath, migratedRelPath, migrateToWorkspace } from './migrate';
 
 // FileAPI needs Tauri or the web build: on the web file system here too
-vi.mock('file/files', async () => {
+vi.mock('@/file/files', async () => {
   const { invoke } = await import('@tauri-apps/api/core');
   return {
     default: class {

@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { joinPath } from 'file/util';
-import { DATA_DIR } from 'workspace/layout';
+import { joinPath } from '@/file/util';
+import { DATA_DIR } from '@/workspace/layout';
 import { BOOK_STATE_DIR, type BookState } from './library';
 
 /** Seconds read per day (`yyyy-m-d`), of all the books of the workspace. */

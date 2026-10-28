@@ -1,11 +1,11 @@
 import { TbPencil as IconPencil } from 'react-icons/tb';
 import { parser, serializer } from "mdsmirror";
-import { useCurrentViewContext, DispatchType } from 'context/useCurrentView';
-import { Note } from 'types/model';
-import Tree from 'components/misc/Tree';
-import { Tooltip } from 'components/misc/ui';
-import { openFilePath } from 'file/open';
-import { useNoteContent } from 'lib/contentCache';
+import { useCurrentViewContext, DispatchType } from '@/context/useCurrentView';
+import { Note } from '@/types/model';
+import Tree from '@/components/misc/Tree';
+import { Tooltip } from '@/components/misc/ui';
+import { openFilePath } from '@/file/open';
+import { useNoteContent } from '@/lib/contentCache';
 
 type Props = {
   anchor: string;

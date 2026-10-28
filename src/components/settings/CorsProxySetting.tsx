@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { get, set } from 'file/storage';
+import { get, set } from '@/file/storage';
 
 /** storage key, read by the web feed fetcher: src/platform/web/feed.ts */
 export const CORS_PROXY_KEY = 'cors_proxy';

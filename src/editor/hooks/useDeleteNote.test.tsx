@@ -2,16 +2,16 @@ import { describe, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { invoke } from '@tauri-apps/api/core';
-import { NoteMap } from 'lib/noteMap';
-import { store } from 'lib/store';
-import { ProvideCurrentView, useCurrentViewContext } from 'context/useCurrentView';
-import { writeFile } from 'file/write';
-import { scheduleSave, hasPendingSave, MAX_WAIT_MS } from 'file/pendingSaves';
+import { NoteMap } from '@/lib/noteMap';
+import { store } from '@/lib/store';
+import { ProvideCurrentView, useCurrentViewContext } from '@/context/useCurrentView';
+import { writeFile } from '@/file/write';
+import { scheduleSave, hasPendingSave, MAX_WAIT_MS } from '@/file/pendingSaves';
 import { makeNote } from '../../testUtils';
 import useDeleteNote, { doDeleteNote } from './useDeleteNote';
 
-vi.mock('file/write', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('file/write')>()),
+vi.mock('@/file/write', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/file/write')>()),
   writeFile: vi.fn(async () => undefined),
 }));
 
