@@ -62,6 +62,7 @@ Please follow these guidelines when contributing code to mdSilo:
 | `src/reader` | ebook reader |
 | `src/issue` | issues, milestones, projects |
 | `src/feed` | feeds and podcasts |
+| `src/sync` | git sync of the workspace (the git side is `src-tauri/src/sync`) |
 | `src/insight` | views across features: graph, chronicle, heatmap, tags, journals |
 
 Shared folders (`ui`, `state`, `workspace`, `host`, `lib`) should not import from the feature folders or `shell`. Known exceptions to clean up: the settings and store in `state/` (reader settings, activity), workspace migration (issue files) and `workspace/useOpen` (feed sync).

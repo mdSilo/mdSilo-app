@@ -21,6 +21,7 @@ import Dropdown, { DropdownItem } from '@/ui/Dropdown';
 import { Tooltip } from '@/ui/ui';
 import Portal from '@/ui/Portal';
 import Logo from '@/ui/Logo';
+import SyncButton from '@/sync/SyncButton';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
 
@@ -504,8 +505,11 @@ const FileButton = () => {
 
 
 const BottomSection = () => {
+  const tooltipPlacement = useTooltipPlacement();
+  const isHorizontal = useIsHorizontalMenu();
   return (
-    <div>
+    <div className={isHorizontal ? 'flex' : 'flex flex-col'}>
+      <SyncButton className={btnClass} iconClassName={btnIconClass} tooltipPlacement={tooltipPlacement} />
       <SettingsButton />
     </div>
   )

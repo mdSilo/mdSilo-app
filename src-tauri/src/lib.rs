@@ -15,6 +15,7 @@ mod models;
 mod paths;
 mod schema;
 mod storage;
+mod sync;
 mod tests;
 mod window;
 mod plugins;
@@ -112,7 +113,16 @@ pub fn run() {
       index::index_search,
       index::index_book,
       index::index_book_indexed,
+      sync::sync_info,
+      sync::sync_setup,
+      sync::sync_run,
     ])
+    // the main window gone, the app quits, other windows (web_window) too
+    .on_window_event(|window, event| {
+      if window.label() == tray::MAIN_WIN && matches!(event, tauri::WindowEvent::Destroyed) {
+        window.app_handle().exit(0);
+      }
+    })
     .setup(|app| {
       tray::setup(app)?;
       // frontend: src/workspace/directory.ts/DirectoryAPI/unlisten

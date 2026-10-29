@@ -17,7 +17,7 @@ pub struct StorageData {
 // Linux: $HOME/.local/share/mdsilo
 // macOS: $HOME/Library/Application Support/mdsilo
 // Windows: $HOME/AppData/Local/mdsilo
-fn data_dir() -> Option<PathBuf> {
+pub(crate) fn data_dir() -> Option<PathBuf> {
   data_local_dir().map(|dir| dir.join("mdsilo"))
 }
 
