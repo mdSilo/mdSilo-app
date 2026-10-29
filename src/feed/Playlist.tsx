@@ -2,7 +2,7 @@ import React, {
   useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes, useState, useEffect, useMemo 
 } from 'react';
 import { List } from 'react-virtualized';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { TbHeadphones as IconHeadphones } from 'react-icons/tb';
 import { useStore } from '@/state/store';
 import { Sort } from '@/state/userSettings';
@@ -99,7 +99,9 @@ function Playlist(props: TreeProps) {
               className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.TitleAscending)}
             >
-              <span className={podSort === Sort.TitleAscending ? 'text-primary' : ''}>A-Z</span>
+              <span className={`text-xs ${podSort === Sort.TitleAscending ? 'text-primary' : ''}`}>
+                A-Z
+              </span>
             </button>
           </Tooltip>
           <Tooltip content="Title: Z-A">
@@ -107,7 +109,9 @@ function Playlist(props: TreeProps) {
               className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.TitleDescending)}
             >
-              <span className={podSort === Sort.TitleDescending ? 'text-primary' : ''}>Z-A</span>
+              <span className={`text-xs ${podSort === Sort.TitleDescending ? 'text-primary' : ''}`}>
+                Z-A
+              </span>
             </button>
           </Tooltip>
           <Tooltip content="Publish: Old-New">
@@ -115,7 +119,11 @@ function Playlist(props: TreeProps) {
               className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.DateCreatedAscending)}
             >
-              <span className={podSort === Sort.DateCreatedAscending ? 'text-primary' : ''}>Old</span>
+              <span 
+                className={`text-xs ${podSort === Sort.DateCreatedAscending ? 'text-primary' : ''}`}
+              >
+                Old
+              </span>
             </button>
           </Tooltip>
           <Tooltip content="Publish: New-Old">
@@ -123,22 +131,30 @@ function Playlist(props: TreeProps) {
               className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.DateCreatedDescending)}
             >
-              <span className={podSort === Sort.DateCreatedDescending ? 'text-primary' : ''}>New</span>
+              <span 
+                className={`text-xs ${podSort === Sort.DateCreatedDescending ? 'text-primary' : ''}`}
+              >
+                New
+              </span>
             </button>
           </Tooltip>
         </div>
         <div className={className}>
-          <AutoSizer>
-            {({ width, height }) => (
-              <List
-                width={width}
-                height={height}
-                rowCount={data.length}
-                rowHeight={32}
-                rowRenderer={Row}
-              />
-            )}
-          </AutoSizer>
+          <AutoSizer
+            box="border-box"
+            renderProp={({ width, height }) => {
+              if (width === undefined || height === undefined) return null;
+              return (
+                <List
+                  width={width}
+                  height={height}
+                  rowCount={data.length}
+                  rowHeight={32}
+                  rowRenderer={Row}
+                />
+              );
+            }}
+          />
         </div>
       </div>
   </ErrorBoundary>

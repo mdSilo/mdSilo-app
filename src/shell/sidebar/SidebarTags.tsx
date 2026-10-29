@@ -1,6 +1,6 @@
 import React, { useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes } from 'react';
 import { List } from 'react-virtualized';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { TbHash as IconHash } from 'react-icons/tb';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { NoteMap, useStore } from '@/state/store';
@@ -64,17 +64,21 @@ function SidebarTagTree(props: TreeProps) {
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
         <div className={className}>
-          <AutoSizer>
-            {({ width, height }) => (
-              <List
-                width={width}
-                height={height}
-                rowCount={data.length}
-                rowHeight={32}
-                rowRenderer={Row}
-              />
-            )}
-          </AutoSizer>
+          <AutoSizer
+            box="border-box"
+            renderProp={({ width, height }) => {
+              if (width === undefined || height === undefined) return null;
+              return (
+                <List
+                  width={width}
+                  height={height}
+                  rowCount={data.length}
+                  rowHeight={32}
+                  rowRenderer={Row}
+                />
+              );
+            }}
+          />
         </div>
       </div>
   </ErrorBoundary>

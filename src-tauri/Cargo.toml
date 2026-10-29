@@ -1,7 +1,7 @@
 [package]
 name = "mdsilo"
 version = "0.7.0"
-description = "mdSilo Desktop"
+description = "mdSilo"
 authors = ["dloh"]
 license = "AGPL-3.0-or-later"
 repository = ""
@@ -22,7 +22,7 @@ tauri-build = { version = "2.7.4", features = [] }
 serde_json = "1.0.154"
 serde = { version = "1.0.229", features = ["derive"] }
 tauri = { version = "2.12.5", features = ["tray-icon", "protocol-asset"] }
-tauri-plugin-dialog = "2.8.3"
+tauri-plugin-dialog = "2.8.4"
 tauri-plugin-updater = "2.13.1"
 dirs = "7.0.0"
 trash = "5.2.2"
@@ -40,7 +40,7 @@ percent-encoding = "2.3.2"
 tantivy = "0.27.0"
 tantivy-jieba = "0.21.0"
 # walk dir
-ignore = "0.4.33"
+ignore = "0.4.34"
 ## rss reader
 reqwest = { version = "0.13.5", features = ["json", "socks", "blocking"] }
 rss = { version = "2.0.12", features = ["serde"] }
@@ -51,7 +51,7 @@ diesel_migrations = { version = "2.3.2", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.38.2", features = ["bundled"] }
 # git sync, see sync/: libgit2 built in, no OpenSSL or SSH; HTTPS goes through
 # reqwest (sync/http.rs), which builds for mobile as it is
-git2 = { version = "0.20.4", default-features = false, features = ["vendored-libgit2"] }
+git2 = { version = "0.21.0", default-features = false, features = ["vendored-libgit2"] }
 
 [dev-dependencies]
 tokio = { version = "1.54.1", features = ["full"] }

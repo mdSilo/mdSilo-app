@@ -1,8 +1,17 @@
 # Changelog 
 
-## app-v0.7.0 
+## app-v0.7.1 
 
 2026-XX-XX
+
+## app-v0.7.0 
+
+2026-10-30
+
+- Feat: ebook reader
+- Feat: Git sync
+- Feat: Publish as a static site
+- Improve Linking and Graph
 
 ## app-v0.6.2 
 

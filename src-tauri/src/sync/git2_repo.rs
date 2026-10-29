@@ -245,7 +245,7 @@ fn file_entry(path: &str, mode: u32, id: Oid, size: usize) -> IndexEntry {
 impl Repo for Git2Repo {
   fn remote_url(&self) -> Result<Option<String>> {
     match self.repo.find_remote(REMOTE) {
-      Ok(remote) => Ok(remote.url().map(str::to_string)),
+      Ok(remote) => Ok(remote.url().ok().map(str::to_string)),
       Err(_) => Ok(None),
     }
   }
@@ -275,6 +275,8 @@ impl Repo for Git2Repo {
     let head = self.repo.find_reference("HEAD").map_err(err)?;
     head
       .symbolic_target()
+      .ok()
+      .flatten()
       .and_then(|target| target.strip_prefix("refs/heads/"))
       .map(str::to_string)
       .ok_or_else(|| "HEAD is not on a branch".to_string())
@@ -300,12 +302,10 @@ impl Repo for Git2Repo {
       let connection = git_remote.connect_auth(Direction::Fetch, None, None)?;
       connection
         .default_branch()
-        .map(|name| name.as_str().map(str::to_string))
+        .and_then(|name| name.as_str().map(str::to_string))
     });
     match head {
-      Ok(name) => {
-        Ok(name.and_then(|n| n.strip_prefix("refs/heads/").map(str::to_string)))
-      }
+      Ok(name) => Ok(name.strip_prefix("refs/heads/").map(str::to_string)),
       // an empty remote
       Err(e) if e.code() == ErrorCode::NotFound => Ok(None),
       Err(e) => Err(err(e)),
@@ -322,7 +322,7 @@ impl Repo for Git2Repo {
     Ok(
       statuses
         .iter()
-        .filter_map(|s| s.path().map(str::to_string))
+        .filter_map(|s| s.path().ok().map(str::to_string))
         .collect(),
     )
   }

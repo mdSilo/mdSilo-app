@@ -121,15 +121,15 @@ describe('SidebarNotes', () => {
     [Sort.DateCreatedDescending, ['sub', 'b', 'c', 'A']],
     [Sort.DateModifiedAscending, ['sub', 'b', 'c', 'A']],
     [Sort.DateModifiedDescending, ['sub', 'A', 'c', 'b']],
-  ])('sorts the tree by %s with dirs first', (sort, expected) => {
+  ])('sorts the tree by %s with dirs first', async (sort, expected) => {
     seedTree();
     store.getState().setNoteSort(sort);
     renderWithView(withContainer(<SidebarNotes />));
-    expect(rowTitles()).toEqual(expected);
+    await waitFor(() => expect(rowTitles()).toEqual(expected));
     expect(screen.getByText('n: 4')).toBeInTheDocument();
   });
 
-  test('shows expanded sub dirs as a nested tree', () => {
+  test('shows expanded sub dirs as a nested tree', async () => {
     seedTree();
     store.getState().setNoteSort(Sort.TitleAscending);
     store.getState().setNoteTree({
@@ -142,7 +142,7 @@ describe('SidebarNotes', () => {
     });
     store.getState().setExpandedDirs({ '/n/sub': true });
     renderWithView(withContainer(<SidebarNotes />));
-    expect(rowTitles()).toEqual(['sub', 'deep', 'z', 'A', 'b', 'c']);
+    await waitFor(() => expect(rowTitles()).toEqual(['sub', 'deep', 'z', 'A', 'b', 'c']));
     expect(screen.getByText('n: 4')).toBeInTheDocument();
   });
 
@@ -352,7 +352,7 @@ describe('SidebarTags', () => {
     const dir = makeNote({ id: '/d', content: ' #hidden# ', is_dir: true });
     store.getState().setNotes(NoteMap.from({ [a.id]: a, [b.id]: b, [dir.id]: dir }));
     renderWithView(<><SidebarTags /><ViewProbe /></>);
-    const todo = screen.getByText('todo');
+    const todo = await screen.findByText('todo');
     expect(todo.parentElement?.nextSibling).toHaveTextContent('3');
     expect(screen.getByText('idea')).toBeInTheDocument();
     expect(screen.queryByText('hidden')).not.toBeInTheDocument();
@@ -571,15 +571,16 @@ describe('SidebarNotesTree horizontal scroll', () => {
   const grid = () => document.querySelector('.ReactVirtualized__Grid') as HTMLElement;
   const inner = () => document.querySelector('.ReactVirtualized__Grid__innerScrollContainer') as HTMLElement;
 
-  test('fits short rows without horizontal scroll', () => {
+  test('fits short rows without horizontal scroll', async () => {
     renderWithView(withContainer(
       <SidebarNotesTree data={[{ node: treeItem('/n/a.md', 'a'), depth: 0, isExpanded: false }]} className="h-full" />
     ));
+    await waitFor(() => expect(grid()).toBeInTheDocument());
     expect(grid().style.overflowX).toBe('hidden');
     expect(inner().style.width).toBe('300px');
   });
 
-  test('scrolls horizontally when deep rows overflow', () => {
+  test('scrolls horizontally when deep rows overflow', async () => {
     const title = 'a-quite-long-note-title-at-depth-ten';
     renderWithView(withContainer(
       <SidebarNotesTree
@@ -590,6 +591,7 @@ describe('SidebarNotesTree horizontal scroll', () => {
         className="h-full"
       />
     ));
+    await waitFor(() => expect(grid()).toBeInTheDocument());
     expect(grid().style.overflowX).toBe('auto');
     // jsdom has no canvas: titles are estimated at 8px per char
     const expected = treeContentWidth(

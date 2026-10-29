@@ -359,8 +359,8 @@ fn an_author_without_email_commits() {
     .unwrap()
     .peel_to_commit()
     .unwrap();
-  assert_eq!(commit.author().name(), Some("Me"));
-  assert_eq!(commit.author().email(), Some(DEFAULT_EMAIL));
+  assert_eq!(commit.author().name().ok(), Some("Me"));
+  assert_eq!(commit.author().email().ok(), Some(DEFAULT_EMAIL));
 }
 
 #[test]

@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useLayoutEffect, useRef, useState, memo } from 'react';
 import { List } from 'react-virtualized';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { NoteTreeItem } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import SidebarNoteLink, { INDENT_PER_LEVEL } from './SidebarNoteLink';
@@ -103,8 +103,10 @@ function SidebarNotesTree(props: Props) {
 
   return (
     <div ref={containerRef} className={className}>
-      <AutoSizer>
-        {({ width, height }) => {
+      <AutoSizer
+        box="border-box"
+        renderProp={({ width, height }) => {
+          if (width === undefined || height === undefined) return null;
           const innerWidth = Math.max(width, contentWidth);
           return (
             <List
@@ -119,7 +121,7 @@ function SidebarNotesTree(props: Props) {
             />
           );
         }}
-      </AutoSizer>
+      />
     </div>
   );
 }
