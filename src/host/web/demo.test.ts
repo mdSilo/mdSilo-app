@@ -24,7 +24,7 @@ describe.each<[DemoLang, string]>([['en', 'Manual'], ['zh', '手册']])('demo wo
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
     const files = await loadDemo(lang);
     const notes = files.filter((f) => f.path.startsWith(`writing/${dir}/`));
-    expect(notes).toHaveLength(10);
+    expect(notes).toHaveLength(11);
     // no book without the file
     expect(files.some((f) => f.path.startsWith('reading/'))).toBe(false);
   });

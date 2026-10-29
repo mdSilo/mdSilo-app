@@ -21,7 +21,7 @@ Open it with the books icon in the side menu (`Ctrl/Cmd + Shift + L`). It lists 
 Books are recognised by their content (a partial MD5 hash), so a renamed or moved book is still the same book, on every device.
 
 :::info
-**Sync, book by book.** Books can be large, so they are *not* synced with git by default. Each book and each group has a sync switch; the annotations and the reading progress are always synced. See [[2 Workspace|Workspace]].
+**Sync, book by book.** Books can be large, so they are *not* synced with git by default. Each book and each group has a sync switch; the annotations and the reading progress are always synced. See [[9 Sync and Publish|Sync and Publish]].
 :::
 
 ## Reading

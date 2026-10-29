@@ -37,4 +37,4 @@ The **Hashtag** tab of the sidebar is a map of your vocabulary of topics. The mo
 
 At the foot of every note: the notes that link to it, and the notes that mention its title without a link. Good for finding the hidden structure of a subject. See [[4 Linking|Linking]].
 
-Next: [[9 Reference|Reference]].
+Next: [[9 Sync and Publish|Sync and Publish]].

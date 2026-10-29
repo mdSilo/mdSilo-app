@@ -84,6 +84,7 @@ mdSilo keeps what you read, what you think and what you write in one local works
   - ✍️ Writing: WYSIWYG Markdown, mind map, diagram, math; slash commands, hotkeys and hovering toolbar  
   - 🔗 Linking: \`[[notes]]\`, \`{{books}}\`, issues, hashtags and backlinks; Graph view; Chronicle and activity heat map  
   - 🔍 Full-text search over notes, annotations and books  
+  - 🔄 Sync with git (GitHub, Gitea...) and publish chosen notes as a website, in the desktop app  
   - ✨ Windows, macOS, Linux and Web; local plain files, no account  
 
 For a human brain, reading and writing are the I/O. mdSilo is here to boost it: tiny yet powerful, free for everyone.
