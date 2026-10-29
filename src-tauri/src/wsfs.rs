@@ -33,10 +33,16 @@ pub trait WorkspaceFs: Send + Sync {
   fn stat(&self, path: &Path) -> Option<FsEntry>;
   fn read(&self, path: &Path) -> std::io::Result<Vec<u8>>;
   fn read_to_string(&self, path: &Path) -> std::io::Result<String> {
-    String::from_utf8(self.read(path)?).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+    String::from_utf8(self.read(path)?)
+      .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
   }
   /// `len` bytes from `start`, fewer at the end of the file.
-  fn read_range(&self, path: &Path, start: u64, len: u64) -> std::io::Result<Vec<u8>>;
+  fn read_range(
+    &self,
+    path: &Path,
+    start: u64,
+    len: u64,
+  ) -> std::io::Result<Vec<u8>>;
   /// Written whole or not at all.
   fn write_atomic(&self, path: &Path, data: &[u8]) -> std::io::Result<()>;
   fn rename(&self, from: &Path, to: &Path) -> std::io::Result<()>;
@@ -44,7 +50,11 @@ pub trait WorkspaceFs: Send + Sync {
 }
 
 fn millis(time: std::io::Result<SystemTime>) -> Option<u64> {
-  time.ok()?.duration_since(UNIX_EPOCH).ok().map(|d| d.as_millis() as u64)
+  time
+    .ok()?
+    .duration_since(UNIX_EPOCH)
+    .ok()
+    .map(|d| d.as_millis() as u64)
 }
 
 fn entry_of(path: PathBuf, meta: &fs::Metadata) -> FsEntry {
@@ -105,7 +115,12 @@ impl WorkspaceFs for LocalFs {
     fs::read(path)
   }
 
-  fn read_range(&self, path: &Path, start: u64, len: u64) -> std::io::Result<Vec<u8>> {
+  fn read_range(
+    &self,
+    path: &Path,
+    start: u64,
+    len: u64,
+  ) -> std::io::Result<Vec<u8>> {
     let mut file = fs::File::open(path)?;
     file.seek(SeekFrom::Start(start))?;
     let mut buf = Vec::new();
@@ -139,29 +154,50 @@ mod tests {
 
   #[test]
   fn the_local_disk() {
-    let dir = std::env::temp_dir().join(format!("mdsilo-wsfs-{}", std::process::id()));
+    let dir =
+      std::env::temp_dir().join(format!("mdsilo-wsfs-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(dir.join("sub/.hidden")).unwrap();
     let fs_ = LocalFs;
     fs_.write_atomic(&dir.join("a.md"), b"hello world").unwrap();
     fs_.write_atomic(&dir.join("sub/b.md"), b"b").unwrap();
-    fs_.write_atomic(&dir.join("sub/.hidden/c.md"), b"c").unwrap();
+    fs_
+      .write_atomic(&dir.join("sub/.hidden/c.md"), b"c")
+      .unwrap();
     fs_.write_atomic(&dir.join(".git"), b"x").unwrap();
 
-    let mut listed: Vec<String> = fs_.list(&dir).unwrap().into_iter()
-      .map(|e| e.path.file_name().unwrap().to_string_lossy().to_string()).collect();
+    let mut listed: Vec<String> = fs_
+      .list(&dir)
+      .unwrap()
+      .into_iter()
+      .map(|e| e.path.file_name().unwrap().to_string_lossy().to_string())
+      .collect();
     listed.sort();
     assert_eq!(listed, ["a.md", "sub"]);
-    let mut walked: Vec<String> = fs_.walk(&dir).into_iter()
-      .map(|e| e.path.strip_prefix(&dir).unwrap().to_string_lossy().replace('\\', "/")).collect();
+    let mut walked: Vec<String> = fs_
+      .walk(&dir)
+      .into_iter()
+      .map(|e| {
+        e.path
+          .strip_prefix(&dir)
+          .unwrap()
+          .to_string_lossy()
+          .replace('\\', "/")
+      })
+      .collect();
     walked.sort();
     assert_eq!(walked, ["a.md", "sub", "sub/b.md"]);
 
     let a = fs_.stat(&dir.join("a.md")).unwrap();
     assert!(!a.is_dir && a.size == 11 && a.modified > 0);
     assert_eq!(fs_.read_range(&dir.join("a.md"), 6, 100).unwrap(), b"world");
-    assert_eq!(fs_.read_to_string(&dir.join("a.md")).unwrap(), "hello world");
-    fs_.rename(&dir.join("a.md"), &dir.join("moved/a.md")).unwrap();
+    assert_eq!(
+      fs_.read_to_string(&dir.join("a.md")).unwrap(),
+      "hello world"
+    );
+    fs_
+      .rename(&dir.join("a.md"), &dir.join("moved/a.md"))
+      .unwrap();
     assert!(fs_.stat(&dir.join("a.md")).is_none());
     fs_.remove(&dir.join("sub")).unwrap();
     assert!(fs_.stat(&dir.join("sub")).is_none());

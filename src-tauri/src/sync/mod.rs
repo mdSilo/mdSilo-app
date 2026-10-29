@@ -94,14 +94,15 @@ pub fn sync(
       }
       (Relation::Diverged, Some(theirs)) => {
         let mut resolver = |c: &resolve::Conflict| resolve(c, stamp, exists);
-        let merged = repo.merge(theirs, &mut resolver, &format!("Merge {stamp}"), author)?;
+        let merged =
+          repo.merge(theirs, &mut resolver, &format!("Merge {stamp}"), author)?;
         report.pulled.extend(merged.changed);
-        report.conflicts.extend(
-          merged
-            .conflicts
-            .into_iter()
-            .map(|(path, resolved)| ConflictReport { path, copy: resolved.copy }),
-        );
+        report.conflicts.extend(merged.conflicts.into_iter().map(
+          |(path, resolved)| ConflictReport {
+            path,
+            copy: resolved.copy,
+          },
+        ));
       }
       _ => {}
     }
@@ -140,19 +141,26 @@ fn read_store(file: &Path) -> CredentialStore {
 }
 
 pub(crate) fn load_credentials(file: &Path, url: &str) -> Option<Credentials> {
-  read_store(file)
-    .remotes
-    .get(url)
-    .map(|c| Credentials { username: c.username.clone(), token: c.token.clone() })
+  read_store(file).remotes.get(url).map(|c| Credentials {
+    username: c.username.clone(),
+    token: c.token.clone(),
+  })
 }
 
 /// Save or, without a token, forget the credentials of a remote.
-fn save_credentials(file: &Path, url: &str, credentials: Option<&Credentials>) -> Result<()> {
+fn save_credentials(
+  file: &Path,
+  url: &str,
+  credentials: Option<&Credentials>,
+) -> Result<()> {
   let mut store = read_store(file);
   match credentials {
     Some(c) => store.remotes.insert(
       url.to_string(),
-      StoredCredentials { username: c.username.clone(), token: c.token.clone() },
+      StoredCredentials {
+        username: c.username.clone(),
+        token: c.token.clone(),
+      },
     ),
     None => store.remotes.remove(url),
   };
@@ -170,11 +178,18 @@ fn save_credentials(file: &Path, url: &str, credentials: Option<&Credentials>) -
 pub(crate) fn normalize_url(url: &str) -> Result<String> {
   let url = url.trim().trim_end_matches('/');
   let lower = url.to_lowercase();
-  if lower.starts_with("https://") || lower.starts_with("http://") || lower.starts_with("file://") || Path::new(url).is_absolute() {
+  if lower.starts_with("https://")
+    || lower.starts_with("http://")
+    || lower.starts_with("file://")
+    || Path::new(url).is_absolute()
+  {
     return Ok(url.to_string());
   }
   if lower.starts_with("git@") || lower.starts_with("ssh://") {
-    return Err("SSH remotes are not supported yet: use the HTTPS URL of the repository".into());
+    return Err(
+      "SSH remotes are not supported yet: use the HTTPS URL of the repository"
+        .into(),
+    );
   }
   Err(format!("Not a remote URL: {url}"))
 }
@@ -205,7 +220,9 @@ fn info_of(root: &Path, file: &Path) -> Result<SyncInfo> {
     return Ok(SyncInfo::default());
   };
   let remote_url = repo.remote_url()?;
-  let credentials = remote_url.as_deref().and_then(|url| load_credentials(file, url));
+  let credentials = remote_url
+    .as_deref()
+    .and_then(|url| load_credentials(file, url));
   let author = repo.author()?;
   Ok(SyncInfo {
     is_repo: true,
@@ -230,14 +247,24 @@ pub struct SyncSetup {
   pub author_email: Option<String>,
 }
 
-pub(crate) fn setup_in(root: &Path, file: &Path, setup: SyncSetup) -> Result<SyncInfo> {
+pub(crate) fn setup_in(
+  root: &Path,
+  file: &Path,
+  setup: SyncSetup,
+) -> Result<SyncInfo> {
   let url = normalize_url(&setup.url)?;
   let mut repo = open_repo(root, true)?.ok_or("No repo")?;
   let old_url = repo.remote_url()?;
   repo.set_remote_url(&url)?;
-  let name = setup.author_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+  let name = setup
+    .author_name
+    .map(|s| s.trim().to_string())
+    .filter(|s| !s.is_empty());
   if let Some(name) = name {
-    let email = setup.author_email.map(|s| s.trim().to_string()).unwrap_or_default();
+    let email = setup
+      .author_email
+      .map(|s| s.trim().to_string())
+      .unwrap_or_default();
     repo.set_author(&Author { name, email })?;
   }
   let username = setup
@@ -260,29 +287,45 @@ pub(crate) fn setup_in(root: &Path, file: &Path, setup: SyncSetup) -> Result<Syn
 }
 
 fn sync_in(root: &Path, file: &Path) -> Result<SyncReport> {
-  let mut repo = open_repo(root, false)?.ok_or("Sync is not set up for this workspace")?;
+  let mut repo =
+    open_repo(root, false)?.ok_or("Sync is not set up for this workspace")?;
   let url = repo.remote_url()?.ok_or("No remote to sync with")?;
   let url = normalize_url(&url)?;
-  let remote = Remote { credentials: load_credentials(file, &url), url };
+  let remote = Remote {
+    credentials: load_credentials(file, &url),
+    url,
+  };
   let author = author_of(repo.as_ref())?;
-  sync(repo.as_mut(), &remote, &author, &stamp(), &|path| root.join(path).exists())
+  sync(repo.as_mut(), &remote, &author, &stamp(), &|path| {
+    root.join(path).exists()
+  })
 }
 
 /// The author of the commits: as configured, or mdSilo.
 pub(crate) fn author_of(repo: &dyn Repo) -> Result<Author> {
   // git takes no empty email: the name set, the email left out
   Ok(match repo.author()? {
-    Some(Author { name, email }) if email.trim().is_empty() => Author { name, email: DEFAULT_EMAIL.into() },
+    Some(Author { name, email }) if email.trim().is_empty() => Author {
+      name,
+      email: DEFAULT_EMAIL.into(),
+    },
     Some(author) => author,
-    None => Author { name: DEFAULT_AUTHOR.into(), email: DEFAULT_EMAIL.into() },
+    None => Author {
+      name: DEFAULT_AUTHOR.into(),
+      email: DEFAULT_EMAIL.into(),
+    },
   })
 }
 
 /// one sync at a time
 pub(crate) static SYNCING: Mutex<()> = Mutex::new(());
 
-pub(crate) async fn blocking<T: Send + 'static>(f: impl FnOnce() -> Result<T> + Send + 'static) -> Result<T> {
-  tauri::async_runtime::spawn_blocking(f).await.map_err(|e| e.to_string())?
+pub(crate) async fn blocking<T: Send + 'static>(
+  f: impl FnOnce() -> Result<T> + Send + 'static,
+) -> Result<T> {
+  tauri::async_runtime::spawn_blocking(f)
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]

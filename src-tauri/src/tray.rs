@@ -1,8 +1,8 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{
+  App, Manager, Runtime,
   menu::{Menu, MenuItem, PredefinedMenuItem},
   tray::{TrayIconBuilder, TrayIconEvent},
-  App, Manager, Runtime,
 };
 
 pub const MAIN_WIN: &str = "main";
@@ -40,7 +40,11 @@ pub fn setup<R: Runtime>(app: &mut App<R>) -> tauri::Result<()> {
         // the first quit closes the window (the guard does): the app quits
         // once it is gone, see lib.rs; the next quit, or no window to close,
         // quits at once
-        "quit" if QUITTING.swap(true, Ordering::SeqCst) || window.close().is_err() => app.exit(0),
+        "quit"
+          if QUITTING.swap(true, Ordering::SeqCst) || window.close().is_err() =>
+        {
+          app.exit(0)
+        }
         _ => {}
       }
     })

@@ -39,7 +39,10 @@ pub async fn get_feed_content(url: &str) -> Option<Bytes> {
         let content = match response.bytes().await {
           Ok(ctn) => ctn,
           Err(e) => {
-            log_error(format!("Err on [get_feed_content: process response bytes]: {:?}", e));
+            log_error(format!(
+              "Err on [get_feed_content: process response bytes]: {:?}",
+              e
+            ));
             return None;
           }
         };
@@ -47,7 +50,10 @@ pub async fn get_feed_content(url: &str) -> Option<Bytes> {
         Some(content)
       }
       _status => {
-        log_error(format!("Err on [get_feed_content], response status: {}", _status));
+        log_error(format!(
+          "Err on [get_feed_content], response status: {}",
+          _status
+        ));
 
         None
       }
@@ -230,8 +236,7 @@ pub async fn add_channel(url: String, ty: String, title: Option<String>) -> usiz
 const MAX_FETCH_BYTES: usize = 32 << 20;
 
 /// A browser's: some sites send the full page only to browsers.
-const PAGE_USER_AGENT: &str =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
+const PAGE_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
 
 /// The bytes of a web page or an image (http, https), sent as binary: the
 /// full text of an article and its images, for a book of a feed, see
@@ -251,7 +256,10 @@ pub async fn fetch_url(url: String) -> Result<tauri::ipc::Response, String> {
   if !response.status().is_success() {
     return Err(format!("{url}: {}", response.status()));
   }
-  if response.content_length().is_some_and(|n| n as usize > MAX_FETCH_BYTES) {
+  if response
+    .content_length()
+    .is_some_and(|n| n as usize > MAX_FETCH_BYTES)
+  {
     return Err(format!("{url}: too big"));
   }
   let bytes = response.bytes().await.map_err(|e| e.to_string())?;
@@ -280,8 +288,6 @@ pub async fn import_channels(url_list: Vec<String>) -> usize {
 
 #[command]
 pub async fn get_channels() -> Vec<Channel> {
-  
-
   db::get_channels()
 }
 
@@ -300,8 +306,6 @@ pub async fn add_articles_with_channel(link: String) -> usize {
         None => return 0,
       };
       let articles = res.1;
-
-      
 
       db::add_articles(String::from(&link), articles)
     }
@@ -325,7 +329,6 @@ pub fn get_articles(
 #[command]
 pub fn get_unread_num() -> HashMap<String, i32> {
   let record = db::get_unread_num();
-  
 
   record
     .into_iter()

@@ -13,20 +13,20 @@ mod index;
 mod input_method;
 mod models;
 mod paths;
+mod plugins;
+mod publish;
 mod schema;
 mod storage;
 mod sync;
 mod tests;
-mod window;
-mod plugins;
-mod publish;
 mod tray;
+mod window;
 mod wsfs;
 
 extern crate diesel;
 extern crate diesel_migrations;
 
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use tauri::{Listener, Manager};
 
 #[tauri::command]
@@ -122,7 +122,9 @@ pub fn run() {
     ])
     // the main window gone, the app quits, other windows (web_window) too
     .on_window_event(|window, event| {
-      if window.label() == tray::MAIN_WIN && matches!(event, tauri::WindowEvent::Destroyed) {
+      if window.label() == tray::MAIN_WIN
+        && matches!(event, tauri::WindowEvent::Destroyed)
+      {
         window.app_handle().exit(0);
       }
     })

@@ -5,11 +5,14 @@ use std::path::Path;
 use tantivy::collector::TopDocs;
 use tantivy::query::QueryParser;
 use tantivy::schema::{
-  Field, IndexRecordOption, Schema, TextFieldIndexing, TextOptions, Value, STORED, STRING,
+  Field, IndexRecordOption, STORED, STRING, Schema, TextFieldIndexing, TextOptions,
+  Value,
 };
 use tantivy::snippet::SnippetGenerator;
 use tantivy::tokenizer::{LowerCaser, RemoveLongFilter, TextAnalyzer};
-use tantivy::{doc, Index, IndexReader, IndexWriter, ReloadPolicy, TantivyDocument, Term};
+use tantivy::{
+  Index, IndexReader, IndexWriter, ReloadPolicy, TantivyDocument, Term, doc,
+};
 
 /// Bump on a change of the schema: the index is made anew.
 const SCHEMA_VERSION: &str = "1";
@@ -87,11 +90,15 @@ impl SearchIndex {
   /// Open the index in the dir, made anew if of another version or broken.
   pub fn open(dir: &Path) -> Result<Self, String> {
     let version_file = dir.join("VERSION");
-    let same = std::fs::read_to_string(&version_file).is_ok_and(|v| v.trim() == SCHEMA_VERSION);
+    let same = std::fs::read_to_string(&version_file)
+      .is_ok_and(|v| v.trim() == SCHEMA_VERSION);
     let (schema, fields) = schema();
     let open = || -> tantivy::Result<Index> {
       std::fs::create_dir_all(dir)?;
-      Index::open_or_create(tantivy::directory::MmapDirectory::open(dir)?, schema.clone())
+      Index::open_or_create(
+        tantivy::directory::MmapDirectory::open(dir)?,
+        schema.clone(),
+      )
     };
     let index = match (same, open()) {
       (true, Ok(index)) => index,
@@ -109,7 +116,13 @@ impl SearchIndex {
       .try_into()
       .map_err(|e: tantivy::TantivyError| e.to_string())?;
     let writer = index.writer(WRITER_HEAP).map_err(|e| e.to_string())?;
-    Ok(Self { index, reader, writer, fields, dirty: false })
+    Ok(Self {
+      index,
+      reader,
+      writer,
+      fields,
+      dirty: false,
+    })
   }
 
   /// Index the document, replacing the one of its id.
@@ -125,7 +138,9 @@ impl SearchIndex {
   }
 
   pub fn delete(&mut self, id: &str) {
-    self.writer.delete_term(Term::from_field_text(self.fields.id, id));
+    self
+      .writer
+      .delete_term(Term::from_field_text(self.fields.id, id));
     self.dirty = true;
   }
 
@@ -166,24 +181,39 @@ impl SearchIndex {
 
   /// The documents matching the query (all the words; `"..."` a phrase),
   /// of a kind or any, best first.
-  pub fn search(&self, query: &str, kind: Option<&str>, limit: usize) -> Result<Vec<Hit>, String> {
+  pub fn search(
+    &self,
+    query: &str,
+    kind: Option<&str>,
+    limit: usize,
+  ) -> Result<Vec<Hit>, String> {
     let f = self.fields;
     let mut parser = QueryParser::for_index(&self.index, vec![f.title, f.body]);
     parser.set_conjunction_by_default();
     parser.set_field_boost(f.title, 2.0);
     let (text_query, _errors) = parser.parse_query_lenient(query);
     let searcher = self.reader.searcher();
-    let mut snippets = SnippetGenerator::create(&searcher, &*text_query, f.body).map_err(|e| e.to_string())?;
+    let mut snippets = SnippetGenerator::create(&searcher, &*text_query, f.body)
+      .map_err(|e| e.to_string())?;
     snippets.set_max_num_chars(160);
     // more than the limit: the documents of another kind are skipped
     let wanted = if kind.is_some() { limit * 4 } else { limit };
     let top = searcher
-      .search(&*text_query, &TopDocs::with_limit(wanted.max(1)).order_by_score())
+      .search(
+        &*text_query,
+        &TopDocs::with_limit(wanted.max(1)).order_by_score(),
+      )
       .map_err(|e| e.to_string())?;
     let mut hits = Vec::new();
     for (score, address) in top {
       let doc: TantivyDocument = searcher.doc(address).map_err(|e| e.to_string())?;
-      let text = |field: Field| doc.get_first(field).and_then(|v| v.as_str()).unwrap_or_default().to_string();
+      let text = |field: Field| {
+        doc
+          .get_first(field)
+          .and_then(|v| v.as_str())
+          .unwrap_or_default()
+          .to_string()
+      };
       let doc_kind = text(f.kind);
       if kind.is_some_and(|k| k != doc_kind) {
         continue;
@@ -211,20 +241,53 @@ mod tests {
 
   #[test]
   fn searches_the_notes_and_books() {
-    let dir = std::env::temp_dir().join(format!("mdsilo-search-{}", std::process::id()));
+    let dir =
+      std::env::temp_dir().join(format!("mdsilo-search-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let mut index = SearchIndex::open(&dir).unwrap();
-    let note = |id, title, body| Doc { id, kind: "note", title, label: "", body };
-    index.put(note("a.md", "Rust notes", "Ownership and borrowing in Rust.")).unwrap();
-    index.put(note("b.md", "中文笔记", "我们今天学习全文搜索和分词。")).unwrap();
-    index.put(Doc { id: "book:x#/6/4", kind: "book", title: "A Book", label: "One", body: "Borrowing money from a friend." }).unwrap();
+    let note = |id, title, body| Doc {
+      id,
+      kind: "note",
+      title,
+      label: "",
+      body,
+    };
+    index
+      .put(note(
+        "a.md",
+        "Rust notes",
+        "Ownership and borrowing in Rust.",
+      ))
+      .unwrap();
+    index
+      .put(note("b.md", "中文笔记", "我们今天学习全文搜索和分词。"))
+      .unwrap();
+    index
+      .put(Doc {
+        id: "book:x#/6/4",
+        kind: "book",
+        title: "A Book",
+        label: "One",
+        body: "Borrowing money from a friend.",
+      })
+      .unwrap();
     index.commit().unwrap();
 
     let hits = index.search("borrowing", None, 10).unwrap();
     assert_eq!(hits.len(), 2);
-    assert!(hits.iter().any(|h| h.id == "a.md" && h.snippet.contains("<b>borrowing</b>")));
+    assert!(
+      hits
+        .iter()
+        .any(|h| h.id == "a.md" && h.snippet.contains("<b>borrowing</b>"))
+    );
     let books = index.search("borrowing", Some("book"), 10).unwrap();
-    assert_eq!(books.iter().map(|h| (h.id.as_str(), h.label.as_str())).collect::<Vec<_>>(), [("book:x#/6/4", "One")]);
+    assert_eq!(
+      books
+        .iter()
+        .map(|h| (h.id.as_str(), h.label.as_str()))
+        .collect::<Vec<_>>(),
+      [("book:x#/6/4", "One")]
+    );
     // by word, in Chinese
     assert_eq!(index.search("搜索", None, 10).unwrap()[0].id, "b.md");
     // the title counts
@@ -233,7 +296,9 @@ mod tests {
     assert!(index.search("rust money", None, 10).unwrap().is_empty());
 
     // replaced, deleted
-    index.put(note("a.md", "Rust notes", "Lifetimes only.")).unwrap();
+    index
+      .put(note("a.md", "Rust notes", "Lifetimes only."))
+      .unwrap();
     index.delete_prefix("book:x").unwrap();
     index.commit().unwrap();
     assert!(index.search("borrowing", None, 10).unwrap().is_empty());

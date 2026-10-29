@@ -16,7 +16,8 @@ struct TempDir(PathBuf);
 impl TempDir {
   fn new(name: &str) -> Self {
     let n = COUNTER.fetch_add(1, Ordering::SeqCst);
-    let dir = std::env::temp_dir().join(format!("mdsilo-sync-{name}-{}-{n}", std::process::id()));
+    let dir = std::env::temp_dir()
+      .join(format!("mdsilo-sync-{name}-{}-{n}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     Self(dir)
@@ -46,7 +47,13 @@ fn setup(name: &str) -> Setup {
   fs::create_dir_all(&a).unwrap();
   fs::create_dir_all(&b).unwrap();
   let creds = tmp.0.join("creds.json");
-  Setup { remote, creds, a, b, _tmp: tmp }
+  Setup {
+    remote,
+    creds,
+    a,
+    b,
+    _tmp: tmp,
+  }
 }
 
 fn write(root: &Path, path: &str, text: &str) {
@@ -104,7 +111,10 @@ fn the_first_device_pushes_the_second_takes_all() {
   assert!(!report.committed);
   assert!(report.pulled.contains(&"writing/Hello.md".to_string()));
   assert_eq!(read(&s.b, "writing/Hello.md"), "# Hello\n");
-  assert_eq!(read(&s.b, ".mdsilo/workspace.json"), read(&s.a, ".mdsilo/workspace.json"));
+  assert_eq!(
+    read(&s.b, ".mdsilo/workspace.json"),
+    read(&s.a, ".mdsilo/workspace.json")
+  );
   // ignored: the local data, the books not synced
   assert!(!s.b.join(".mdsilo/local/index.db").exists());
   assert!(!s.b.join("reading/Book.epub").exists());
@@ -132,12 +142,18 @@ fn changes_on_both_devices_merge() {
   let report = run(&s, &s.b);
   assert!(report.pushed);
   assert!(report.conflicts.is_empty());
-  assert_eq!(read(&s.b, "writing/Shared.md"), "ONE\ntwo\nthree\nfour\nFIVE\n");
+  assert_eq!(
+    read(&s.b, "writing/Shared.md"),
+    "ONE\ntwo\nthree\nfour\nFIVE\n"
+  );
   assert!(!s.b.join("writing/A.md").exists());
 
   run(&s, &s.a);
   assert_eq!(read(&s.a, "writing/B.md"), "b\n");
-  assert_eq!(read(&s.a, "writing/Shared.md"), "ONE\ntwo\nthree\nfour\nFIVE\n");
+  assert_eq!(
+    read(&s.a, "writing/Shared.md"),
+    "ONE\ntwo\nthree\nfour\nFIVE\n"
+  );
 }
 
 #[test]
@@ -170,7 +186,11 @@ fn a_note_changed_on_both_devices_keeps_both() {
 #[test]
 fn the_data_of_the_app_merges_as_json() {
   let s = setup("json");
-  let books = |a: &str, b: &str| format!("{{\n  \"version\": 1,\n  \"books\": {{\n    \"x\": {{\n      \"title\": \"{a}\",\n      \"group\": \"{b}\"\n    }}\n  }}\n}}\n");
+  let books = |a: &str, b: &str| {
+    format!(
+      "{{\n  \"version\": 1,\n  \"books\": {{\n    \"x\": {{\n      \"title\": \"{a}\",\n      \"group\": \"{b}\"\n    }}\n  }}\n}}\n"
+    )
+  };
   write(&s.a, ".mdsilo/books.json", &books("X", "g"));
   write(&s.a, "reading/.gitignore", "*.epub\n");
   connect(&s, &s.a);
@@ -185,12 +205,23 @@ fn the_data_of_the_app_merges_as_json() {
   write(&s.b, ".mdsilo/books.json", &books("X", "h"));
   write(&s.b, "reading/.gitignore", "*.epub\n!/b.epub\n");
   let report = run(&s, &s.b);
-  assert_eq!(report.conflicts.iter().map(|c| c.copy.clone()).collect::<Vec<_>>(), vec![None]);
-  let merged: serde_json::Value = serde_json::from_str(&read(&s.b, ".mdsilo/books.json")).unwrap();
+  assert_eq!(
+    report
+      .conflicts
+      .iter()
+      .map(|c| c.copy.clone())
+      .collect::<Vec<_>>(),
+    vec![None]
+  );
+  let merged: serde_json::Value =
+    serde_json::from_str(&read(&s.b, ".mdsilo/books.json")).unwrap();
   assert_eq!(merged["books"]["x"]["title"], "X!");
   assert_eq!(merged["books"]["x"]["group"], "h");
   let gitignore = read(&s.b, "reading/.gitignore");
-  assert!(gitignore.contains("!/a.epub") && gitignore.contains("!/b.epub"), "{gitignore}");
+  assert!(
+    gitignore.contains("!/a.epub") && gitignore.contains("!/b.epub"),
+    "{gitignore}"
+  );
 }
 
 #[test]
@@ -221,7 +252,11 @@ fn two_workspaces_started_apart_merge() {
   run(&s, &s.a);
   // a workspace made on the other device before connecting it
   layout(&s.b);
-  write(&s.b, ".mdsilo/workspace.json", "{\n  \"version\": 1,\n  \"createdAt\": \"b\"\n}\n");
+  write(
+    &s.b,
+    ".mdsilo/workspace.json",
+    "{\n  \"version\": 1,\n  \"createdAt\": \"b\"\n}\n",
+  );
   write(&s.b, "writing/B.md", "b\n");
   connect(&s, &s.b);
   let report = run(&s, &s.b);
@@ -235,40 +270,74 @@ fn two_workspaces_started_apart_merge() {
 fn a_new_repo_takes_the_branch_of_the_remote() {
   let s = setup("branch");
   // a repo on master, made by other tools
-  git2::Repository::init_opts(&s.a, git2::RepositoryInitOptions::new().initial_head("master")).unwrap();
+  git2::Repository::init_opts(
+    &s.a,
+    git2::RepositoryInitOptions::new().initial_head("master"),
+  )
+  .unwrap();
   write(&s.a, "writing/A.md", "a\n");
   connect(&s, &s.a);
   run(&s, &s.a);
-  git2::Repository::open(&s.remote).unwrap().set_head("refs/heads/master").unwrap();
+  git2::Repository::open(&s.remote)
+    .unwrap()
+    .set_head("refs/heads/master")
+    .unwrap();
 
   // a new workspace on the other device: not a second branch
   layout(&s.b);
   connect(&s, &s.b);
-  assert_eq!(info_of(&s.b, &s.creds).unwrap().branch.as_deref(), Some("main"));
+  assert_eq!(
+    info_of(&s.b, &s.creds).unwrap().branch.as_deref(),
+    Some("main")
+  );
   assert!(run(&s, &s.b).pushed);
-  assert_eq!(info_of(&s.b, &s.creds).unwrap().branch.as_deref(), Some("master"));
+  assert_eq!(
+    info_of(&s.b, &s.creds).unwrap().branch.as_deref(),
+    Some("master")
+  );
   assert_eq!(read(&s.b, "writing/A.md"), "a\n");
   let remote = git2::Repository::open(&s.remote).unwrap();
   assert!(remote.find_reference("refs/heads/main").is_err());
   run(&s, &s.a);
-  assert_eq!(read(&s.a, ".mdsilo/workspace.json"), read(&s.b, ".mdsilo/workspace.json"));
+  assert_eq!(
+    read(&s.a, ".mdsilo/workspace.json"),
+    read(&s.b, ".mdsilo/workspace.json")
+  );
 }
 
 #[test]
 fn a_branch_with_commits_stays() {
   let s = setup("stay");
-  git2::Repository::init_opts(&s.a, git2::RepositoryInitOptions::new().initial_head("master")).unwrap();
+  git2::Repository::init_opts(
+    &s.a,
+    git2::RepositoryInitOptions::new().initial_head("master"),
+  )
+  .unwrap();
   write(&s.a, "writing/A.md", "a\n");
   connect(&s, &s.a);
   run(&s, &s.a);
-  git2::Repository::open(&s.remote).unwrap().set_head("refs/heads/master").unwrap();
+  git2::Repository::open(&s.remote)
+    .unwrap()
+    .set_head("refs/heads/master")
+    .unwrap();
   write(&s.b, "writing/B.md", "b\n");
   connect(&s, &s.b);
   let mut repo = open_repo(&s.b, false).unwrap().unwrap();
-  repo.commit_all("mine", &Author { name: "b".into(), email: "b@example.com".into() }).unwrap();
+  repo
+    .commit_all(
+      "mine",
+      &Author {
+        name: "b".into(),
+        email: "b@example.com".into(),
+      },
+    )
+    .unwrap();
   assert!(repo.set_unborn_branch("master").is_err());
   run(&s, &s.b);
-  assert_eq!(info_of(&s.b, &s.creds).unwrap().branch.as_deref(), Some("main"));
+  assert_eq!(
+    info_of(&s.b, &s.creds).unwrap().branch.as_deref(),
+    Some("main")
+  );
 }
 
 #[test]
@@ -285,7 +354,11 @@ fn an_author_without_email_commits() {
   setup_in(&s.a, &s.creds, setup).unwrap();
   assert!(run(&s, &s.a).pushed);
   let remote = git2::Repository::open(&s.remote).unwrap();
-  let commit = remote.find_reference("refs/heads/main").unwrap().peel_to_commit().unwrap();
+  let commit = remote
+    .find_reference("refs/heads/main")
+    .unwrap()
+    .peel_to_commit()
+    .unwrap();
   assert_eq!(commit.author().name(), Some("Me"));
   assert_eq!(commit.author().email(), Some(DEFAULT_EMAIL));
 }
@@ -301,7 +374,10 @@ fn the_token_is_kept_out_of_the_workspace() {
     author_email: None,
   };
   let info = setup_in(&s.a, &s.creds, setup.clone()).unwrap();
-  assert_eq!(info.remote_url.as_deref(), Some("https://example.com/me/notes.git"));
+  assert_eq!(
+    info.remote_url.as_deref(),
+    Some("https://example.com/me/notes.git")
+  );
   assert_eq!(info.username.as_deref(), Some("me"));
   assert!(info.has_token);
   let config = read(&s.a, ".git/config");
@@ -323,7 +399,10 @@ fn the_token_is_kept_out_of_the_workspace() {
 // smart HTTP, served by `git upload-pack` and `git receive-pack`
 
 fn has_git() -> bool {
-  Command::new("git").arg("--version").output().is_ok_and(|o| o.status.success())
+  Command::new("git")
+    .arg("--version")
+    .output()
+    .is_ok_and(|o| o.status.success())
 }
 
 /// Serve the bare repo at `http://127.0.0.1:<port>/repo.git`, with basic
@@ -360,17 +439,23 @@ fn serve(repo: PathBuf, auth: &'static str) -> String {
         let _ = stream.write_all(b"HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
         continue;
       }
-      let (service, advertise) = if let Some(query) = target.split("?service=git-").nth(1) {
-        (query.to_string(), true)
-      } else {
-        (target.rsplit("/git-").next().unwrap().to_string(), false)
-      };
+      let (service, advertise) =
+        if let Some(query) = target.split("?service=git-").nth(1) {
+          (query.to_string(), true)
+        } else {
+          (target.rsplit("/git-").next().unwrap().to_string(), false)
+        };
       let mut cmd = Command::new("git");
       cmd.arg(&service).arg("--stateless-rpc");
       if advertise {
         cmd.arg("--advertise-refs");
       }
-      let mut child = cmd.arg(&repo).stdin(Stdio::piped()).stdout(Stdio::piped()).spawn().unwrap();
+      let mut child = cmd
+        .arg(&repo)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
       child.stdin.take().unwrap().write_all(&body).unwrap();
       let output = child.wait_with_output().unwrap().stdout;
       let mut payload = Vec::new();
@@ -394,11 +479,15 @@ fn serve(repo: PathBuf, auth: &'static str) -> String {
 }
 
 fn base64(text: &str) -> String {
-  const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const CHARS: &[u8] =
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   let bytes = text.as_bytes();
   let mut out = String::new();
   for chunk in bytes.chunks(3) {
-    let n = chunk.iter().enumerate().fold(0u32, |n, (i, b)| n | (*b as u32) << (16 - 8 * i));
+    let n = chunk
+      .iter()
+      .enumerate()
+      .fold(0u32, |n, (i, b)| n | (*b as u32) << (16 - 8 * i));
     for i in 0..4 {
       if i <= chunk.len() {
         out.push(CHARS[(n >> (18 - 6 * i) & 63) as usize] as char);
@@ -450,7 +539,10 @@ fn sync_over_http_with_a_token() {
 fn fetch_a_public_repo_over_https() {
   let s = setup("github");
   let mut repo = open_repo(&s.a, true).unwrap().unwrap();
-  let remote = Remote { url: "https://github.com/octocat/Hello-World.git".into(), credentials: None };
+  let remote = Remote {
+    url: "https://github.com/octocat/Hello-World.git".into(),
+    credentials: None,
+  };
   let theirs = repo.fetch(&remote, "master").unwrap().expect("the branch");
   assert_eq!(repo.relation(&theirs).unwrap(), Relation::Behind);
   repo.fast_forward(&theirs).unwrap();

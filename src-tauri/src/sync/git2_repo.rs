@@ -5,8 +5,9 @@ use super::repo::{Author, CommitId, Merged, Relation, Remote, Repo, Result};
 use super::resolve::{Conflict, Resolved};
 use git2::build::CheckoutBuilder;
 use git2::{
-  AutotagOption, ConfigLevel, Direction, ErrorCode, FetchOptions, IndexAddOption, IndexEntry, IndexTime, Oid, PushOptions,
-  RemoteCallbacks, Repository, Signature, StatusOptions, Tree,
+  AutotagOption, ConfigLevel, Direction, ErrorCode, FetchOptions, IndexAddOption,
+  IndexEntry, IndexTime, Oid, PushOptions, RemoteCallbacks, Repository, Signature,
+  StatusOptions, Tree,
 };
 use std::cell::RefCell;
 use std::fs;
@@ -19,7 +20,8 @@ const DEFAULT_BRANCH: &str = "main";
 const EXCLUDE: &[&str] = &["/.mdsilo/local/", "*.mdsilo-tmp"];
 /// `.git/info/attributes`: the data of the app is merged as JSON (see
 /// resolve.rs), not by lines; the .gitignore files keep the lines of both.
-const ATTRIBUTES: &[&str] = &["/.mdsilo/**/*.json merge=binary", ".gitignore merge=union"];
+const ATTRIBUTES: &[&str] =
+  &["/.mdsilo/**/*.json merge=binary", ".gitignore merge=union"];
 
 pub struct Git2Repo {
   repo: Repository,
@@ -33,7 +35,11 @@ fn err(e: git2::Error) -> String {
 /// Add the lines missing to a file of `.git/info/`.
 fn ensure_lines(path: &Path, lines: &[&str]) -> Result<()> {
   let text = fs::read_to_string(path).unwrap_or_default();
-  let missing: Vec<&str> = lines.iter().copied().filter(|l| !text.lines().any(|t| t == *l)).collect();
+  let missing: Vec<&str> = lines
+    .iter()
+    .copied()
+    .filter(|l| !text.lines().any(|t| t == *l))
+    .collect();
   if missing.is_empty() {
     return Ok(());
   }
@@ -59,7 +65,10 @@ impl Git2Repo {
       return Ok(None);
     }
     let repo = Repository::open(root).map_err(err)?;
-    let this = Self { repo, root: root.to_path_buf() };
+    let this = Self {
+      repo,
+      root: root.to_path_buf(),
+    };
     this.ensure_info()?;
     Ok(Some(this))
   }
@@ -71,7 +80,10 @@ impl Git2Repo {
     let mut opts = git2::RepositoryInitOptions::new();
     opts.initial_head(DEFAULT_BRANCH);
     let repo = Repository::init_opts(root, &opts).map_err(err)?;
-    let this = Self { repo, root: root.to_path_buf() };
+    let this = Self {
+      repo,
+      root: root.to_path_buf(),
+    };
     this.ensure_info()?;
     Ok(this)
   }
@@ -85,14 +97,24 @@ impl Git2Repo {
   fn head(&self) -> Result<Option<Oid>> {
     match self.repo.head() {
       Ok(head) => Ok(head.target()),
-      Err(e) if matches!(e.code(), ErrorCode::UnbornBranch | ErrorCode::NotFound) => Ok(None),
+      Err(e)
+        if matches!(e.code(), ErrorCode::UnbornBranch | ErrorCode::NotFound) =>
+      {
+        Ok(None)
+      }
       Err(e) => Err(err(e)),
     }
   }
 
   fn tree_of(&self, commit: Option<Oid>) -> Result<Option<Tree<'_>>> {
     commit
-      .map(|id| self.repo.find_commit(id).and_then(|c| c.tree()).map_err(err))
+      .map(|id| {
+        self
+          .repo
+          .find_commit(id)
+          .and_then(|c| c.tree())
+          .map_err(err)
+      })
       .transpose()
   }
 
@@ -121,7 +143,10 @@ impl Git2Repo {
     let to_tree = self.tree_of(Some(to))?.ok_or("no tree")?;
     let mut checkout = CheckoutBuilder::new();
     checkout.safe();
-    self.repo.checkout_tree(to_tree.as_object(), Some(&mut checkout)).map_err(err)?;
+    self
+      .repo
+      .checkout_tree(to_tree.as_object(), Some(&mut checkout))
+      .map_err(err)?;
     let branch = self.branch()?;
     self
       .repo
@@ -135,8 +160,11 @@ impl Git2Repo {
     let mut changed = Vec::new();
     for delta in diff.deltas() {
       let path = delta.new_file().path().or(delta.old_file().path());
-      let Some(path) = path.and_then(Path::to_str) else { continue };
-      let ignored = delta.status() == git2::Delta::Deleted && self.repo.is_path_ignored(path).unwrap_or(false);
+      let Some(path) = path.and_then(Path::to_str) else {
+        continue;
+      };
+      let ignored = delta.status() == git2::Delta::Deleted
+        && self.repo.is_path_ignored(path).unwrap_or(false);
       if let (true, Some(tree)) = (ignored, &from_tree) {
         self.restore(tree, path)?;
         continue;
@@ -159,7 +187,13 @@ impl Git2Repo {
   fn blob(&self, entry: &Option<IndexEntry>) -> Result<Option<Vec<u8>>> {
     entry
       .as_ref()
-      .map(|e| self.repo.find_blob(e.id).map(|b| b.content().to_vec()).map_err(err))
+      .map(|e| {
+        self
+          .repo
+          .find_blob(e.id)
+          .map(|b| b.content().to_vec())
+          .map_err(err)
+      })
       .transpose()
   }
 }
@@ -167,7 +201,10 @@ impl Git2Repo {
 /// The tree of the files of a dir, the hidden ones too; None if empty.
 fn tree_of_dir(repo: &Repository, dir: &Path) -> Result<Option<Oid>> {
   let mut builder = repo.treebuilder(None).map_err(err)?;
-  let mut entries: Vec<_> = fs::read_dir(dir).map_err(|e| e.to_string())?.flatten().collect();
+  let mut entries: Vec<_> = fs::read_dir(dir)
+    .map_err(|e| e.to_string())?
+    .flatten()
+    .collect();
   entries.sort_by_key(|e| e.file_name());
   for entry in entries {
     let name = entry.file_name();
@@ -221,7 +258,10 @@ impl Repo for Git2Repo {
     let config = self.repo.config().map_err(err)?;
     let name = config.get_string("user.name").ok();
     let email = config.get_string("user.email").ok();
-    Ok(name.map(|name| Author { name, email: email.unwrap_or_default() }))
+    Ok(name.map(|name| Author {
+      name,
+      email: email.unwrap_or_default(),
+    }))
   }
 
   fn set_author(&mut self, author: &Author) -> Result<()> {
@@ -248,17 +288,24 @@ impl Repo for Git2Repo {
     if self.head()?.is_some() {
       return Err("the branch has commits already".into());
     }
-    self.repo.set_head(&format!("refs/heads/{branch}")).map_err(err)
+    self
+      .repo
+      .set_head(&format!("refs/heads/{branch}"))
+      .map_err(err)
   }
 
   fn remote_default_branch(&mut self, remote: &Remote) -> Result<Option<String>> {
     let mut git_remote = self.remote(&remote.url)?;
     let head = with_credentials(&remote.url, remote.credentials.as_ref(), || {
       let connection = git_remote.connect_auth(Direction::Fetch, None, None)?;
-      connection.default_branch().map(|name| name.as_str().map(str::to_string))
+      connection
+        .default_branch()
+        .map(|name| name.as_str().map(str::to_string))
     });
     match head {
-      Ok(name) => Ok(name.and_then(|n| n.strip_prefix("refs/heads/").map(str::to_string))),
+      Ok(name) => {
+        Ok(name.and_then(|n| n.strip_prefix("refs/heads/").map(str::to_string)))
+      }
       // an empty remote
       Err(e) if e.code() == ErrorCode::NotFound => Ok(None),
       Err(e) => Err(err(e)),
@@ -267,14 +314,24 @@ impl Repo for Git2Repo {
 
   fn changes(&self) -> Result<Vec<String>> {
     let mut opts = StatusOptions::new();
-    opts.include_untracked(true).recurse_untracked_dirs(true).include_ignored(false);
+    opts
+      .include_untracked(true)
+      .recurse_untracked_dirs(true)
+      .include_ignored(false);
     let statuses = self.repo.statuses(Some(&mut opts)).map_err(err)?;
-    Ok(statuses.iter().filter_map(|s| s.path().map(str::to_string)).collect())
+    Ok(
+      statuses
+        .iter()
+        .filter_map(|s| s.path().map(str::to_string))
+        .collect(),
+    )
   }
 
   fn commit_all(&mut self, message: &str, author: &Author) -> Result<bool> {
     let mut index = self.repo.index().map_err(err)?;
-    index.add_all(["*"], IndexAddOption::DEFAULT, None).map_err(err)?;
+    index
+      .add_all(["*"], IndexAddOption::DEFAULT, None)
+      .map_err(err)?;
     index.update_all(["*"], None).map_err(err)?;
     // tracked, but ignored now (a book no longer synced): out of git, kept on disk
     let ignored: Vec<String> = index
@@ -287,7 +344,11 @@ impl Repo for Git2Repo {
     }
     index.write().map_err(err)?;
     let tree_id = index.write_tree().map_err(err)?;
-    let parent = self.head()?.map(|id| self.repo.find_commit(id)).transpose().map_err(err)?;
+    let parent = self
+      .head()?
+      .map(|id| self.repo.find_commit(id))
+      .transpose()
+      .map_err(err)?;
     let tree = self.repo.find_tree(tree_id).map_err(err)?;
     let unchanged = match &parent {
       Some(parent) => parent.tree_id() == tree_id,
@@ -356,12 +417,23 @@ impl Repo for Git2Repo {
   ) -> Result<Merged> {
     let ours_id = self.head()?.ok_or("nothing to merge into")?;
     let ours = self.repo.find_commit(ours_id).map_err(err)?;
-    let theirs = self.repo.find_commit(Oid::from_str(theirs).map_err(err)?).map_err(err)?;
+    let theirs = self
+      .repo
+      .find_commit(Oid::from_str(theirs).map_err(err)?)
+      .map_err(err)?;
     let base_tree = match self.repo.merge_base(ours.id(), theirs.id()) {
-      Ok(base) => self.repo.find_commit(base).and_then(|c| c.tree()).map_err(err)?,
+      Ok(base) => self
+        .repo
+        .find_commit(base)
+        .and_then(|c| c.tree())
+        .map_err(err)?,
       // unrelated histories, e.g. a workspace started on two devices
       Err(e) if e.code() == ErrorCode::NotFound => {
-        let empty = self.repo.treebuilder(None).and_then(|b| b.write()).map_err(err)?;
+        let empty = self
+          .repo
+          .treebuilder(None)
+          .and_then(|b| b.write())
+          .map_err(err)?;
         self.repo.find_tree(empty).map_err(err)?
       }
       Err(e) => return Err(err(e)),
@@ -381,7 +453,12 @@ impl Repo for Git2Repo {
         .collect::<std::result::Result<Vec<_>, _>>()
         .map_err(err)?;
       for found in found {
-        let Some(entry) = found.our.as_ref().or(found.their.as_ref()).or(found.ancestor.as_ref()) else {
+        let Some(entry) = found
+          .our
+          .as_ref()
+          .or(found.their.as_ref())
+          .or(found.ancestor.as_ref())
+        else {
           continue;
         };
         let path = String::from_utf8_lossy(&entry.path).into_owned();
@@ -399,7 +476,9 @@ impl Repo for Git2Repo {
             Some(data) => {
               // the merged index is in memory: the blob first, then its entry
               let id = self.repo.blob(data).map_err(err)?;
-              index.add(&file_entry(file, mode, id, data.len())).map_err(err)?;
+              index
+                .add(&file_entry(file, mode, id, data.len()))
+                .map_err(err)?;
             }
             None => {
               let _ = index.remove_path(Path::new(file));
@@ -421,14 +500,27 @@ impl Repo for Git2Repo {
     Ok(Merged { changed, conflicts })
   }
 
-  fn push_dir(&mut self, remote: &Remote, dir: &Path, branch: &str, message: &str, author: &Author) -> Result<()> {
+  fn push_dir(
+    &mut self,
+    remote: &Remote,
+    dir: &Path,
+    branch: &str,
+    message: &str,
+    author: &Author,
+  ) -> Result<()> {
     let tree = tree_of_dir(&self.repo, dir)?.ok_or("Nothing to publish")?;
     let tree = self.repo.find_tree(tree).map_err(err)?;
     let sig = self.signature(author)?;
-    let commit = self.repo.commit(None, &sig, &sig, message, &tree, &[]).map_err(err)?;
+    let commit = self
+      .repo
+      .commit(None, &sig, &sig, message, &tree, &[])
+      .map_err(err)?;
     // a ref of its own to push from, out of the branches
     let local = format!("refs/mdsilo/{branch}");
-    self.repo.reference(&local, commit, true, "mdsilo: publish").map_err(err)?;
+    self
+      .repo
+      .reference(&local, commit, true, "mdsilo: publish")
+      .map_err(err)?;
     let mut git_remote = self.remote(&remote.url)?;
     let refspec = format!("+{local}:refs/heads/{branch}");
     let rejected = RefCell::new(None::<String>);
@@ -476,7 +568,13 @@ impl Repo for Git2Repo {
       Ok(()) => match rejected.into_inner() {
         None => Ok(true),
         // the remote moved on since the fetch
-        Some(status) if ["fast-forward", "fetch first", "stale"].iter().any(|s| status.contains(s)) => Ok(false),
+        Some(status)
+          if ["fast-forward", "fetch first", "stale"]
+            .iter()
+            .any(|s| status.contains(s)) =>
+        {
+          Ok(false)
+        }
         Some(status) => Err(format!("the remote refused the push: {status}")),
       },
       Err(e) if e.code() == ErrorCode::NotFastForward => Ok(false),

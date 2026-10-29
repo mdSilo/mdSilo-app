@@ -16,33 +16,44 @@ static MD_LINK: LazyLock<Regex> = LazyLock::new(|| {
   .unwrap()
 });
 /// [[target]] or [[target|alias]]
-static WIKI_LINK: LazyLock<Regex> =
-  LazyLock::new(|| Regex::new(r"\[\[([^\[|\]\n]+)(?:\|([^\[|\]\n]+))?\]\]").unwrap());
+static WIKI_LINK: LazyLock<Regex> = LazyLock::new(|| {
+  Regex::new(r"\[\[([^\[|\]\n]+)(?:\|([^\[|\]\n]+))?\]\]").unwrap()
+});
 static ESCAPED_CHAR: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"\\([!-/:-@\[-`{-~])").unwrap());
 /// fenced code blocks: ``` or ~~~
 static FENCE: LazyLock<FancyRegex> = LazyLock::new(|| {
-  FancyRegex::new(r"(?m)^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^ {0,3}\1[`~]*[ \t]*$|\z)").unwrap()
+  FancyRegex::new(
+    r"(?m)^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^ {0,3}\1[`~]*[ \t]*$|\z)",
+  )
+  .unwrap()
 });
 /// inline code: a backtick run closed by a run of the same length
-static INLINE_CODE: LazyLock<FancyRegex> =
-  LazyLock::new(|| FancyRegex::new(r"(`+)(?!`)(?:[^\n]|\n(?![ \t]*\n))*?\1(?!`)").unwrap());
+static INLINE_CODE: LazyLock<FancyRegex> = LazyLock::new(|| {
+  FancyRegex::new(r"(`+)(?!`)(?:[^\n]|\n(?![ \t]*\n))*?\1(?!`)").unwrap()
+});
 /// #tag#, the trailing space a lookahead so adjacent tags share it
-static HASHTAG: LazyLock<FancyRegex> = LazyLock::new(|| FancyRegex::new(r"\s#([^#\n]+)#(?=\s)").unwrap());
+static HASHTAG: LazyLock<FancyRegex> =
+  LazyLock::new(|| FancyRegex::new(r"\s#([^#\n]+)#(?=\s)").unwrap());
 /// [#12](issue:12)
-static ISSUE_LINK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\(issue:(\d+)\)").unwrap());
+static ISSUE_LINK: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"\(issue:(\d+)\)").unwrap());
 /// [x](book:<id>#<cfi>), [x](book:<title>)
-static BOOK_LINK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)\]\(\s*<?book:([^\s#)>]+)").unwrap());
+static BOOK_LINK: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"(?i)\]\(\s*<?book:([^\s#)>]+)").unwrap());
 /// {{title}} or {{title|alias}}
 static ITEM_LINK: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"\{\{([^{|}\n]+)(?:\|[^{|}\n]+)?\}\}").unwrap());
-static BOOK_ID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[0-9a-fA-F]{32}$").unwrap());
+static BOOK_ID: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"^[0-9a-fA-F]{32}$").unwrap());
 /// #todo# #doing# #done# tags or checkboxes: maybe tasks
 static MAYBE_TASKS: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"(?i)#(todo|doing|done)#|\[[ xX_-]\]").unwrap());
 
 /// What a note links to and contains.
-#[derive(Debug, Default, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(
+  Debug, Default, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize,
+)]
 pub struct Parsed {
   /// the titles of the notes linked, in order, as many times as linked
   pub links: Vec<String>,
@@ -118,8 +129,10 @@ pub fn is_note_href(href: &str) -> bool {
     return false;
   }
   let lower = href.to_ascii_lowercase();
-  !(lower.starts_with("http:") || lower.starts_with("https:")
-    || lower.starts_with("issue:") || lower.starts_with("book:"))
+  !(lower.starts_with("http:")
+    || lower.starts_with("https:")
+    || lower.starts_with("issue:")
+    || lower.starts_with("book:"))
 }
 
 /// The titles of the notes the content links to, in order.
@@ -148,7 +161,8 @@ pub fn note_links(content: &str) -> Vec<String> {
       continue;
     }
     // `[x]` of `[[x]](y)`, a wiki link
-    if index > 0 && bytes[index - 1] == b'[' && masked[index - 1..].starts_with("[[") {
+    if index > 0 && bytes[index - 1] == b'[' && masked[index - 1..].starts_with("[[")
+    {
       continue;
     }
     let title = raw_href_to_title(&caps[3]);
@@ -183,7 +197,11 @@ pub fn issue_links(content: &str) -> Vec<u32> {
 fn book_ref(target: &str) -> String {
   let unescaped = ESCAPED_CHAR.replace_all(target, "$1");
   let r = safe_decode(unescaped.trim()).trim().to_string();
-  if BOOK_ID.is_match(&r) { r.to_ascii_lowercase() } else { r }
+  if BOOK_ID.is_match(&r) {
+    r.to_ascii_lowercase()
+  } else {
+    r
+  }
 }
 
 /// The books linked, by id or by title (`{{title}}`, `[x](book:title)`), in
@@ -259,7 +277,8 @@ mod tests {
 
   #[test]
   fn tags_issues_tasks() {
-    let content = "x #one# #two words# #a#b# end\n[i](issue:12) [j](issue:3) [k](issue:12)";
+    let content =
+      "x #one# #two words# #a#b# end\n[i](issue:12) [j](issue:3) [k](issue:12)";
     let parsed = parse(content);
     assert_eq!(parsed.tags, ["one", "two words"]);
     assert_eq!(parsed.issues, [3, 12]);
@@ -275,7 +294,10 @@ mod tests {
       "[q](book:{id}#epubcfi(%2F6)) {{{{Dune}}}} [d](book:Dune%20Messiah) \\{{{{no}}}} `{{{{code}}}}` \
        {{{{ Dune | alias }}}} [again](book:{id})"
     );
-    assert_eq!(book_links(&content), ["0123456789abcdef0123456789abcdef", "Dune", "Dune Messiah"]);
+    assert_eq!(
+      book_links(&content),
+      ["0123456789abcdef0123456789abcdef", "Dune", "Dune Messiah"]
+    );
     assert!(book_links("[a](bookish) {x}").is_empty());
   }
 }
