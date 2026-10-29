@@ -76,7 +76,7 @@ function DefaultView() {
 const defaultValue = `
 **A hub for your personal I/O: Reading (input) → Issue (process) → Writing (output).**
 
-mdSilo keeps what you read, what you think and what you write in one local workspace of plain Markdown files, tied together by links.
+mdSilo keeps what you read, what you think and what you write in one local workspace of plain Markdown files, tied together by links. Get the Desktop Application [here](https://github.com/mdSilo/mdSilo-app/releases).
 
 ## Features  
   - 📖 Reading: books (EPUB, PDF...), feeds and podcasts; highlights and notes saved as Markdown  
