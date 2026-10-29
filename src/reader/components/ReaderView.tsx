@@ -4,6 +4,9 @@ import {
   TbBrandWikipedia, TbChevronRight, TbChevronsLeft, TbChevronsRight, TbLanguage, TbLayoutSidebar, 
   TbLink, TbSearch, TbColumns2, TbTypography, TbVocabulary, TbVolume, 
 } from 'react-icons/tb';
+import { FaList, FaSearch } from "react-icons/fa";
+import { CgNotes } from "react-icons/cg";
+import { VscReferences } from "react-icons/vsc";
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import ResizeHandle, { useResizableWidth } from '@/ui/ResizeHandle';
 import { IconButton, Spinner } from '@/ui/ui';
@@ -33,7 +36,12 @@ import LookupPopup from './LookupPopup';
 import TTSBar, { canReadAloud, readAloud } from './TTSBar';
 import ParallelPane, { ParallelBooks } from './ParallelPane';
 
-export type SidebarTab = { id: string; label: string; render: () => ReactNode };
+export type SidebarTab = { 
+  id: string; 
+  label: string; 
+  icon: ReactNode;
+  render: () => ReactNode 
+};
 
 type Props = {
   /** more tabs in the sidebar, e.g. search */
@@ -134,12 +142,14 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   const tabs: SidebarTab[] = [
     { 
       id: 'toc', 
-      label: 'Contents', 
+      label: 'Table of Contents', 
+      icon: <FaList size={18} />,
       render: () => <TocView toc={panelBook?.toc ?? []} current={panelLocation?.tocHref} /> 
     },
     {
       id: 'notes',
       label: `Notes${panelNotes.length ? ` ${panelNotes.length}` : ''}`,
+      icon: <CgNotes size={18} />,
       render: () => (
         <NotesView onOpenFile={panelPath ? async () => {
           const mdPath = annotationsPathOf(panelPath);
@@ -152,7 +162,18 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
     {
       id: 'links',
       label: 'Links',
-      render: () => <LinksView flush={() => (activePane === 'side' ? useSideStore : useReaderStore).getState().flush()} />,
+      icon: <VscReferences size={18} />,
+      render: () => (
+        <LinksView 
+          flush={() => (activePane === 'side' ? useSideStore : useReaderStore).getState().flush()} 
+        />
+      ),
+    },
+    { 
+      id: 'search', 
+      label: 'Search', 
+      icon: <FaSearch size={18} />,
+      render: () => <SearchView /> 
     },
     ...extraTabs,
   ];
@@ -195,15 +216,16 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
               </div>
             ) : null}
             <div className="flex items-center gap-1 px-1 pt-1">
-              <div role="tablist" className="flex-1 tabs tabs-border tabs-sm">
+              <div role="tablist" className="flex-1 justify-between tabs tabs-border">
                 {tabs.map((t) => (
                   <button
                     key={t.id}
                     role="tab"
-                    className={`tab ${t.id === activeTab.id ? 'tab-active' : ''}`}
+                    title={t.label}
+                    className={`tab ${t.id === activeTab.id ? 'text-primary' : ''}`}
                     onClick={() => useReaderChrome.getState().setTab(t.id)}
                   >
-                    {t.label}
+                    {t.icon}
                   </button>
                 ))}
               </div>
@@ -487,7 +509,6 @@ function lookupTools(selection: TextSelection): Tool[] {
 export default function ReaderView() {
   return (
     <Reader
-      extraTabs={[{ id: 'search', label: 'Search', render: () => <SearchView /> }]}
       tools={lookupTools}
       headerButtons={canReadAloud() ? (
         <IconButton title="Read aloud" onClick={() => void readAloud(undefined, 'main')}>

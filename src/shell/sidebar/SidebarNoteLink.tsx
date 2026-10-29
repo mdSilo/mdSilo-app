@@ -5,9 +5,7 @@ import {
   memo,
   useCallback,
 } from 'react';
-import {
-  TbCaretRight as IconCaretRight, TbMarkdown as IconMarkdown, TbNote as IconNote, TbPhoto as IconPhoto,
-} from 'react-icons/tb';
+import { TbCaretRight, TbMarkdown, TbNote, TbPhoto } from 'react-icons/tb';
 import { NoteTreeItem, store, useStore } from '@/state/store';
 import { isMobile } from '@/lib/helper';
 import { imageExtensions } from '@/lib/file-extensions';
@@ -107,7 +105,7 @@ const SidebarNoteLink = (
       >
         <div className="p-1 mr-1 rounded-sm hover:bg-base-content/15">
           {isDir ? (
-            <IconCaretRight
+            <TbCaretRight
               className={`shrink-0 text-base-content/60 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
               size={16}
               fill="currentColor"
@@ -115,19 +113,19 @@ const SidebarNoteLink = (
           ) : bookIconOf(node.id) ? (
             <BookIcon path={node.id} />
           ) : isImage ? (
-            <IconPhoto 
+            <TbPhoto 
               className="shrink-0 text-base-content/60"
               size={16} 
               color="orange"
             />
           ) : !isNonMd ? (
-            <IconMarkdown 
+            <TbMarkdown 
               className="shrink-0 text-base-content/60"
               size={16}
-              color="green"
+              color="black"
             />
           ) : (
-            <IconNote 
+            <TbNote 
               className="shrink-0 text-base-content/60"
               size={16}
               color="purple"
@@ -141,11 +139,13 @@ const SidebarNoteLink = (
             </span>
           ) : (
             <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-              {node.title}
               {/* the annotations of a book, named after it */}
               {!isDir && bookPathOfAnnotations(node.id) ? (
-                <span className="ml-1 text-xs text-base-content/50">notes</span>
-              ) : null}
+                <>
+                  <span className="text-sm text-base-content/50">{node.title}</span>
+                  <span className="ml-1 text-xs text-base-content/50">notes</span>
+                </>
+              ) : (<>{node.title}</>)}
             </span>
           )}
         </Tooltip>

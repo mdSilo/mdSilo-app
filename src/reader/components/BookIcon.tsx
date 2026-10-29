@@ -6,7 +6,7 @@ import { bookFormatOf, convertibleFormatOf, type BookFormat, type TextFormat } f
 
 /** The icon of a book format, its color: to tell the books apart in the file tree. */
 const BOOK_ICONS: Record<BookFormat, { icon: IconType; color: string }> = {
-  EPUB: { icon: TbBook, color: '#2563eb' },
+  EPUB: { icon: TbBook, color: '#86b918' },
   PDF: { icon: TbFileTypePdf, color: '#dc2626' },
   MOBI: { icon: TbBook2, color: '#ea580c' },
   AZW: { icon: TbBook2, color: '#ea580c' },
