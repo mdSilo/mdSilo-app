@@ -108,6 +108,7 @@ export {
   serializer,
   renderToHtml,
   domToMarkdown,
+  mathRules,
 } from "./server";
 export { default as Extension } from "./core/Extension";
 export { embeds } from "./components/embeds/Embeds";

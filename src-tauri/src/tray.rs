@@ -1,10 +1,15 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{
+  App, Manager, Runtime,
   menu::{Menu, MenuItem, PredefinedMenuItem},
   tray::{TrayIconBuilder, TrayIconEvent},
-  App, Manager, Runtime,
 };
 
-const MAIN_WIN: &str = "main";
+pub const MAIN_WIN: &str = "main";
+
+/// Quit asked once: closing the main window, which may sync first (see
+/// src/sync/autoSync.ts); asked again, quit at once.
+static QUITTING: AtomicBool = AtomicBool::new(false);
 
 pub fn setup<R: Runtime>(app: &mut App<R>) -> tauri::Result<()> {
   let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
@@ -32,7 +37,14 @@ pub fn setup<R: Runtime>(app: &mut App<R>) -> tauri::Result<()> {
         "hide" => {
           let _ = window.hide();
         }
-        "quit" => app.exit(0),
+        // the first quit closes the window (the guard does): the app quits
+        // once it is gone, see lib.rs; the next quit, or no window to close,
+        // quits at once
+        "quit"
+          if QUITTING.swap(true, Ordering::SeqCst) || window.close().is_err() =>
+        {
+          app.exit(0)
+        }
         _ => {}
       }
     })

@@ -33,6 +33,16 @@ export const STARTUP_VIEWS: [StartupView, string][] = [
   ['journal', 'Journals'],
 ];
 
+/** automatic sync of the workspace (see sync/), where sync is set up */
+export type SyncSettings = {
+  /** minutes between syncs, 0 for none */
+  interval: number;
+  /** sync when the app closes */
+  onExit: boolean;
+};
+
+export const DEFAULT_SYNC_SETTINGS: SyncSettings = { interval: 0, onExit: false };
+
 export const ReadableNameBySort = {
   [Sort.TitleAscending]: 'Title (A-Z)',
   [Sort.TitleDescending]: 'Title (Z-A)',
@@ -103,6 +113,8 @@ export type UserSettings = {
   setReaderSettings: Setter<ReaderSettings>;
   librarySettings: LibrarySettings; // how the library shows, see reader/shelf
   setLibrarySettings: Setter<LibrarySettings>;
+  syncSettings: SyncSettings;
+  setSyncSettings: Setter<SyncSettings>;
 };
 
 // resizable panel widths in px
@@ -194,6 +206,8 @@ const userSettingsSlice = (
   setReaderSettings: setter(set, 'readerSettings'),
   librarySettings: DEFAULT_LIBRARY_SETTINGS,
   setLibrarySettings: setter(set, 'librarySettings'),
+  syncSettings: DEFAULT_SYNC_SETTINGS,
+  setSyncSettings: setter(set, 'syncSettings'),
 });
 
 export default userSettingsSlice;

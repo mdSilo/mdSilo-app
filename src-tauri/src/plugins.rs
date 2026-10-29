@@ -1,6 +1,6 @@
 use tauri::{
   Runtime, generate_handler,
-  plugin::{Builder, TauriPlugin}, 
+  plugin::{Builder, TauriPlugin},
 };
 
 use std::path::Path;
@@ -20,7 +20,10 @@ pub fn inject_script(script_path: Option<String>) -> String {
   // TODO: set the script dir or default dir is `local_data_dir/mdsilo/plugins`
   let script_path = script_path.unwrap_or_else(|| {
     if let Some(local_dir) = dirs::data_local_dir() {
-      Path::new(&local_dir).join("mdsilo/plugins").display().to_string()
+      Path::new(&local_dir)
+        .join("mdsilo/plugins")
+        .display()
+        .to_string()
     } else {
       String::new()
     }
@@ -33,14 +36,12 @@ pub fn inject_script(script_path: Option<String>) -> String {
       if let Ok(paths) = std::fs::read_dir(file_path) {
         for file_path_ in paths.flatten() {
           let file = file_path_.path().display().to_string();
-          let script_content =
-            std::fs::read_to_string(&file).unwrap_or_default();
+          let script_content = std::fs::read_to_string(&file).unwrap_or_default();
           script += &format!("{script_content}\n");
         }
       }
     } else if file_path.is_file() {
-      let script_content =
-        std::fs::read_to_string(&script_path).unwrap_or_default();
+      let script_content = std::fs::read_to_string(&script_path).unwrap_or_default();
       script += &format!("{script_content}\n");
     }
   }

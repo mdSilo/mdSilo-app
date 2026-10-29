@@ -17,7 +17,7 @@ pub struct StorageData {
 // Linux: $HOME/.local/share/mdsilo
 // macOS: $HOME/Library/Application Support/mdsilo
 // Windows: $HOME/AppData/Local/mdsilo
-fn data_dir() -> Option<PathBuf> {
+pub(crate) fn data_dir() -> Option<PathBuf> {
   data_local_dir().map(|dir| dir.join("mdsilo"))
 }
 
@@ -40,12 +40,14 @@ pub fn create_mdsilo_dir() -> Option<PathBuf> {
 /// Store the JSON value under `key` in `dir`: JSON in bincode, as ever.
 /// It does not log: the log is stored with it.
 fn set_data_in(dir: &Path, key: &str, value: &Value) -> Result<(), String> {
-  let vec_value =
-    serde_json::to_vec(value).map_err(|e| format!("Err on [set_data: serde_json::to_vec]: {e:?}"))?;
-  let bin_value = bincode::serde::encode_to_vec(&vec_value, bincode::config::legacy())
-    .map_err(|e| format!("Err on [set_data: bincode::serialize]: {e:?}"))?;
+  let vec_value = serde_json::to_vec(value)
+    .map_err(|e| format!("Err on [set_data: serde_json::to_vec]: {e:?}"))?;
+  let bin_value =
+    bincode::serde::encode_to_vec(&vec_value, bincode::config::legacy())
+      .map_err(|e| format!("Err on [set_data: bincode::serialize]: {e:?}"))?;
   // write_atomic creates the dir if needed
-  write_atomic(&dir.join(key), &bin_value).map_err(|e| format!("Err on [set_data: write {key}]: {e:?}"))
+  write_atomic(&dir.join(key), &bin_value)
+    .map_err(|e| format!("Err on [set_data: write {key}]: {e:?}"))
 }
 
 fn get_data_in(dir: &Path, key: &str) -> StorageData {
@@ -55,11 +57,12 @@ fn get_data_in(dir: &Path, key: &str) -> StorageData {
       data: Value::Null,
     };
   };
-  let data: String = match bincode::serde::decode_from_slice(&bytes, bincode::config::legacy()) {
-    Ok((data, _)) => data,
-    // stored as plain JSON
-    Err(_) => str::from_utf8(&bytes).unwrap_or("").to_string(),
-  };
+  let data: String =
+    match bincode::serde::decode_from_slice(&bytes, bincode::config::legacy()) {
+      Ok((data, _)) => data,
+      // stored as plain JSON
+      Err(_) => str::from_utf8(&bytes).unwrap_or("").to_string(),
+    };
   match serde_json::from_str(&data) {
     Ok(data) => StorageData { data, status: true },
     Err(_) => StorageData {
@@ -72,9 +75,7 @@ fn get_data_in(dir: &Path, key: &str) -> StorageData {
 #[tauri::command]
 pub fn set_data(key: String, value: Value) -> bool {
   match data_dir() {
-    Some(dir) => set_data_in(&dir, &key, &value)
-      .map_err(log_error)
-      .is_ok(),
+    Some(dir) => set_data_in(&dir, &key, &value).map_err(log_error).is_ok(),
     None => false,
   }
 }
@@ -116,7 +117,9 @@ static LOG_LOCK: Mutex<()> = Mutex::new(());
 
 fn get_log_in(dir: &Path) -> Vec<LogItem> {
   let data = get_data_in(dir, LOG_KEY).data;
-  serde_json::from_value::<LogItems>(data).unwrap_or_default().logs
+  serde_json::from_value::<LogItems>(data)
+    .unwrap_or_default()
+    .logs
 }
 
 /// Add the items before the ones logged already, newest first.
@@ -172,7 +175,11 @@ mod tests {
   use super::*;
 
   fn temp_dir(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("mdsilo-storage-{}-{}", name, std::process::id()));
+    let dir = std::env::temp_dir().join(format!(
+      "mdsilo-storage-{}-{}",
+      name,
+      std::process::id()
+    ));
     let _ = fs::remove_dir_all(&dir);
     dir
   }

@@ -4,7 +4,7 @@ import { ask } from '@tauri-apps/plugin-dialog';
 import { 
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
   TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
-  TbPizza, TbInfoCircle, TbCurrentLocation, TbDatabaseExport, TbBooks, TbEraser,
+  TbPizza, TbInfoCircle, TbCurrentLocation, TbDatabaseExport, TbBooks, TbEraser, TbWorldUpload,
 } from 'react-icons/tb';
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
@@ -21,6 +21,8 @@ import Dropdown, { DropdownItem } from '@/ui/Dropdown';
 import { Tooltip } from '@/ui/ui';
 import Portal from '@/ui/Portal';
 import Logo from '@/ui/Logo';
+import SyncButton from '@/sync/SyncButton';
+import { isPublishAvailable, usePublishUi } from '@/publish/publish';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
 
@@ -379,6 +381,7 @@ const ProjectButton = (props: ButtonProps) => {
 };
 
 export function FileDrop() {
+  const initDir = useStore((state) => state.initDir);
   // the web version starts with a demo: the manual, a book and some issues
   const [hasDemo, setHasDemo] = useState(false);
   useEffect(() => {
@@ -440,6 +443,12 @@ export function FileDrop() {
         <DropdownItem onClick={onRemoveDemo}>
           <TbEraser size={18} className="mr-1" />
           <Tooltip content="Remove the manual, sample book and sample issues"><span>Remove demo</span></Tooltip>
+        </DropdownItem>
+      )}
+      {isPublishAvailable && initDir && (
+        <DropdownItem className="border-t-2 border-base-300" onClick={() => usePublishUi.setState({ isOpen: true })}>
+          <TbWorldUpload size={18} className="mr-1" />
+          <Tooltip content="Publish the notes as a static site"><span>Publish</span></Tooltip>
         </DropdownItem>
       )}
       <DropdownItem 
@@ -504,8 +513,11 @@ const FileButton = () => {
 
 
 const BottomSection = () => {
+  const tooltipPlacement = useTooltipPlacement();
+  const isHorizontal = useIsHorizontalMenu();
   return (
-    <div>
+    <div className={isHorizontal ? 'flex' : 'flex flex-col'}>
+      <SyncButton className={btnClass} iconClassName={btnIconClass} tooltipPlacement={tooltipPlacement} />
       <SettingsButton />
     </div>
   )

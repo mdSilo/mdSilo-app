@@ -26,22 +26,17 @@ pub fn establish_connection() -> SqliteConnection {
     .expect("Error on converting db path to url");
 
   SqliteConnection::establish(database_url)
-    .map_err(|e| {
-      log_error(format!("Error on connecting to db: {:?}", e))
-    })
+    .map_err(|e| log_error(format!("Error on connecting to db: {:?}", e)))
     .expect("Error on connecting to database")
 }
 
 pub fn get_channels() -> Vec<Channel> {
   let mut guard = connection();
   let connection = &mut *guard;
-  
 
   schema::channels::dsl::channels
     .load::<Channel>(connection)
-    .map_err(|e| {
-      log_error(format!("db Error on [get_channels]: {:?}", e))
-    })
+    .map_err(|e| log_error(format!("db Error on [get_channels]: {:?}", e)))
     .unwrap_or_else(|_| vec![])
 }
 
@@ -53,7 +48,10 @@ pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
     .values(channel)
     .execute(connection)
     .map_err(|e| {
-      log_error(format!("db Error on [add_channels: insert channel]: {:?}", e))
+      log_error(format!(
+        "db Error on [add_channels: insert channel]: {:?}",
+        e
+      ))
     })
     .unwrap_or(0);
 
@@ -65,7 +63,10 @@ pub fn add_channel(channel: NewChannel, articles: Vec<NewArticle>) -> usize {
     .values(articles)
     .execute(connection)
     .map_err(|e| {
-      log_error(format!("db Error on [add_channels: insert articles]: {:?}", e))
+      log_error(format!(
+        "db Error on [add_channels: insert articles]: {:?}",
+        e
+      ))
     })
     .unwrap_or(0);
 
@@ -82,9 +83,9 @@ pub fn delete_channel(link: String) -> usize {
     .load::<Channel>(connection)
     .map_err(|e| {
       log_error(format!(
-          "db Error on [delete_channel: query channel, {}]: {:?}",
-          link, e
-        ))
+        "db Error on [delete_channel: query channel, {}]: {:?}",
+        link, e
+      ))
     })
     .unwrap_or_else(|_| vec![]);
 
@@ -95,7 +96,10 @@ pub fn delete_channel(link: String) -> usize {
     )
     .execute(connection)
     .map_err(|e| {
-      log_error(format!("db Error on [delete_channel: del channel]: {:?}", e))
+      log_error(format!(
+        "db Error on [delete_channel: del channel]: {:?}",
+        e
+      ))
     })
     .unwrap_or(0);
 
@@ -104,7 +108,10 @@ pub fn delete_channel(link: String) -> usize {
     )
     .execute(connection)
     .map_err(|e| {
-      log_error(format!("db Error on [delete_channel: del articles]: {:?}", e))
+      log_error(format!(
+        "db Error on [delete_channel: del articles]: {:?}",
+        e
+      ))
     })
     .unwrap_or(0);
 
@@ -121,7 +128,10 @@ pub fn get_channel_by_link(link: String) -> Option<Channel> {
     .filter(schema::channels::link.eq(&link))
     .load::<Channel>(connection)
     .map_err(|e| {
-      log_error(format!("db Error on [get_channel_by_link: {}]: {:?}", link, e))
+      log_error(format!(
+        "db Error on [get_channel_by_link: {}]: {:?}",
+        link, e
+      ))
     })
     .unwrap_or_else(|_| vec![]);
 
@@ -147,13 +157,10 @@ pub fn get_unread_num() -> Vec<UnreadNum> {
     ";
   let mut guard = connection();
   let connection = &mut *guard;
-  
 
   diesel::sql_query(SQL_QUERY_UNREAD_NUM)
     .load::<UnreadNum>(connection)
-    .map_err(|e| {
-      log_error(format!("db Error on [get_unread_num]: {:?}", e))
-    })
+    .map_err(|e| log_error(format!("db Error on [get_unread_num]: {:?}", e)))
     .unwrap_or_else(|_| vec![])
 }
 
@@ -165,23 +172,21 @@ pub fn add_articles(feed_link: String, articles: Vec<NewArticle>) -> usize {
     .load::<Channel>(connection)
     .map_err(|e| {
       log_error(format!(
-          "db Error on [add_articles: get channel, {}]: {:?}",
-          feed_link, e
-        ))
+        "db Error on [add_articles: get channel, {}]: {:?}",
+        feed_link, e
+      ))
     })
     .unwrap_or_else(|_| vec![]);
 
   if channel.len() == 1 {
-    
-
     diesel::insert_or_ignore_into(schema::articles::dsl::articles)
       .values(articles)
       .execute(connection)
       .map_err(|e| {
         log_error(format!(
-            "db Error on [add_articles: to channel, {}]: {:?}",
-            feed_link, e
-          ))
+          "db Error on [add_articles: to channel, {}]: {:?}",
+          feed_link, e
+        ))
       })
       .unwrap_or(0)
   } else {
@@ -196,7 +201,10 @@ pub fn get_article_by_url(url: String) -> Option<Article> {
     .filter(schema::articles::url.eq(&url))
     .load::<Article>(connection)
     .map_err(|e| {
-      log_error(format!("db Error on [get_article_by_url, {}]: {:?}", url, e))
+      log_error(format!(
+        "db Error on [get_article_by_url, {}]: {:?}",
+        url, e
+      ))
     })
     .unwrap_or_else(|_| vec![]);
 
@@ -211,26 +219,36 @@ pub fn update_article_read_status(url: String, status: i32) -> usize {
   // no article of the url: nothing updated, 0
   let mut guard = connection();
   let connection = &mut *guard;
-  diesel::update(schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)))
-    .set(schema::articles::read_status.eq(status))
-    .execute(connection)
-    .map_err(|e| {
-      log_error(format!("db Error on [update_article_read_status: {}]: {:?}", url, e))
-    })
-    .unwrap_or(0)
+  diesel::update(
+    schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)),
+  )
+  .set(schema::articles::read_status.eq(status))
+  .execute(connection)
+  .map_err(|e| {
+    log_error(format!(
+      "db Error on [update_article_read_status: {}]: {:?}",
+      url, e
+    ))
+  })
+  .unwrap_or(0)
 }
 
 pub fn update_article_star_status(url: String, status: i32) -> usize {
   // no article of the url: nothing updated, 0
   let mut guard = connection();
   let connection = &mut *guard;
-  diesel::update(schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)))
-    .set(schema::articles::star_status.eq(status))
-    .execute(connection)
-    .map_err(|e| {
-      log_error(format!("db Error on [update_article_star_status, {}]: {:?}", url, e))
-    })
-    .unwrap_or(0)
+  diesel::update(
+    schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)),
+  )
+  .set(schema::articles::star_status.eq(status))
+  .execute(connection)
+  .map_err(|e| {
+    log_error(format!(
+      "db Error on [update_article_star_status, {}]: {:?}",
+      url, e
+    ))
+  })
+  .unwrap_or(0)
 }
 
 /// Insert the articles (kept if there) and star them all, whatever channel:
@@ -242,13 +260,22 @@ pub fn add_starred_articles(articles: Vec<NewArticle>) -> usize {
   diesel::insert_or_ignore_into(schema::articles::dsl::articles)
     .values(articles)
     .execute(connection)
-    .map_err(|e| log_error(format!("db Error on [add_starred_articles: insert]: {:?}", e)))
+    .map_err(|e| {
+      log_error(format!(
+        "db Error on [add_starred_articles: insert]: {:?}",
+        e
+      ))
+    })
     .unwrap_or(0);
-  diesel::update(schema::articles::dsl::articles.filter(schema::articles::url.eq_any(&urls)))
-    .set(schema::articles::star_status.eq(1))
-    .execute(connection)
-    .map_err(|e| log_error(format!("db Error on [add_starred_articles: star]: {:?}", e)))
-    .unwrap_or(0)
+  diesel::update(
+    schema::articles::dsl::articles.filter(schema::articles::url.eq_any(&urls)),
+  )
+  .set(schema::articles::star_status.eq(1))
+  .execute(connection)
+  .map_err(|e| {
+    log_error(format!("db Error on [add_starred_articles: star]: {:?}", e))
+  })
+  .unwrap_or(0)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -283,9 +310,9 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
     .load::<Article>(connection)
     .map_err(|e| {
       log_error(format!(
-          "db Error on [get_articles, per fileter: {:?}]: {:?}",
-          filter, e
-        ))
+        "db Error on [get_articles, per fileter: {:?}]: {:?}",
+        filter, e
+      ))
     })
     .unwrap_or_else(|_| vec![]);
 
@@ -297,7 +324,6 @@ pub fn get_articles(filter: ArticleFilter) -> Vec<Article> {
 pub fn update_articles_read_status(feed_link: String, read_status: i32) -> usize {
   let mut guard = connection();
   let connection = &mut *guard;
-  
 
   diesel::update(
     schema::articles::dsl::articles
@@ -306,7 +332,10 @@ pub fn update_articles_read_status(feed_link: String, read_status: i32) -> usize
   .set(schema::articles::read_status.eq(read_status))
   .execute(connection)
   .map_err(|e| {
-    log_error(format!("db Error on [update_articles_read_status]: {:?}", e))
+    log_error(format!(
+      "db Error on [update_articles_read_status]: {:?}",
+      e
+    ))
   })
   .unwrap_or(0)
 }
@@ -369,9 +398,11 @@ mod tests {
     let saved = get_article_by_url(url.clone()).unwrap();
     assert_eq!((saved.star_status, saved.title.as_str()), (1, "t"));
     let mut guard = connection();
-    diesel::delete(schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)))
-      .execute(&mut *guard)
-      .unwrap();
+    diesel::delete(
+      schema::articles::dsl::articles.filter(schema::articles::url.eq(&url)),
+    )
+    .execute(&mut *guard)
+    .unwrap();
   }
 
   // the connection is not reentrant: updating must not lock it twice

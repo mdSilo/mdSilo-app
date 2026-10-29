@@ -20,7 +20,9 @@ fn chunk_offsets() -> impl Iterator<Item = u64> {
 pub fn partial_md5(fs: &dyn WorkspaceFs, path: &Path) -> std::io::Result<String> {
   let size = fs
     .stat(path)
-    .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "no such file"))?
+    .ok_or_else(|| {
+      std::io::Error::new(std::io::ErrorKind::NotFound, "no such file")
+    })?
     .size;
   let mut hasher = Md5::new();
   for offset in chunk_offsets() {
@@ -43,11 +45,15 @@ pub async fn book_hash(file_path: String) -> String {
 
 /// The bytes of a file, sent as binary, not as a JSON array of numbers.
 #[tauri::command]
-pub async fn read_file_bytes(file_path: String) -> Result<tauri::ipc::Response, String> {
-  let bytes = tauri::async_runtime::spawn_blocking(move || LocalFs.read(Path::new(&file_path)))
-    .await
-    .map_err(|e| e.to_string())?
-    .map_err(|e| e.to_string())?;
+pub async fn read_file_bytes(
+  file_path: String,
+) -> Result<tauri::ipc::Response, String> {
+  let bytes = tauri::async_runtime::spawn_blocking(move || {
+    LocalFs.read(Path::new(&file_path))
+  })
+  .await
+  .map_err(|e| e.to_string())?
+  .map_err(|e| e.to_string())?;
   Ok(tauri::ipc::Response::new(bytes))
 }
 
@@ -60,7 +66,9 @@ pub async fn write_file_bytes(file_path: String, data: Vec<u8>) -> bool {
 /// Write the bytes of the request, sent as binary (a big book), to the file
 /// of its `file-path` header, percent encoded: not as a JSON array of numbers.
 #[tauri::command]
-pub async fn write_file_raw(request: tauri::ipc::Request<'_>) -> Result<bool, String> {
+pub async fn write_file_raw(
+  request: tauri::ipc::Request<'_>,
+) -> Result<bool, String> {
   let tauri::ipc::InvokeBody::Raw(data) = request.body() else {
     return Err("expected the bytes of the file".into());
   };
@@ -82,12 +90,16 @@ mod tests {
 
   #[test]
   fn hashes_the_chunks_of_a_file() {
-    let dir = std::env::temp_dir().join(format!("mdsilo-books-{}", std::process::id()));
+    let dir =
+      std::env::temp_dir().join(format!("mdsilo-books-{}", std::process::id()));
     fs::create_dir_all(&dir).unwrap();
     let small = dir.join("small.epub");
     fs::write(&small, b"hello").unwrap();
     // the whole of a small file
-    assert_eq!(partial_md5(&LocalFs, &small).unwrap(), "5d41402abc4b2a76b9719d911017c592");
+    assert_eq!(
+      partial_md5(&LocalFs, &small).unwrap(),
+      "5d41402abc4b2a76b9719d911017c592"
+    );
 
     // chunks at 0, 1 KiB and 4 KiB of a 5000 bytes file
     let data: Vec<u8> = (0..5000u32).map(|i| (i % 251) as u8).collect();
@@ -97,7 +109,10 @@ mod tests {
     expected.update(&data[0..1024]);
     expected.update(&data[1024..2048]);
     expected.update(&data[4096..5000]);
-    assert_eq!(partial_md5(&LocalFs, &big).unwrap(), hex(&expected.finalize()));
+    assert_eq!(
+      partial_md5(&LocalFs, &big).unwrap(),
+      hex(&expected.finalize())
+    );
 
     assert!(partial_md5(&LocalFs, &dir.join("missing")).is_err());
     fs::remove_dir_all(&dir).unwrap();

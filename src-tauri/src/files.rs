@@ -1,11 +1,11 @@
 use crate::atomic::{is_self_write, is_temp};
-use crate::wsfs::{LocalFs, WorkspaceFs};
 use crate::paths::{PathBufExt, PathExt};
 use crate::storage::log_error;
+use crate::wsfs::{LocalFs, WorkspaceFs};
 use ignore::WalkBuilder;
 use notify::{
-  event::{EventKind, ModifyKind, RenameMode},
   Config, Event as RawEvent, RecommendedWatcher, RecursiveMode, Watcher,
+  event::{EventKind, ModifyKind, RenameMode},
 };
 use std::fs;
 use std::path::Path;
@@ -186,7 +186,9 @@ fn file_name_of(file_path: &str) -> String {
 /// A time of the metadata, now if the platform does not have it
 fn time_or_now(time: std::io::Result<SystemTime>, what: &str) -> SystemTime {
   time.unwrap_or_else(|e| {
-    log_error(format!("Error on [get_simple_meta: get file {what}]: {e:?}"));
+    log_error(format!(
+      "Error on [get_simple_meta: get file {what}]: {e:?}"
+    ));
     SystemTime::now()
   })
 }
@@ -204,7 +206,10 @@ pub fn get_simple_meta(file_path: &str) -> Result<SimpleFileMeta, String> {
   let normalized_path = match Path::new(file_path).normalize_slash() {
     Some(normalized) => normalized,
     None => {
-      log_error(format!("Err on [get_simple_meta: normalized_path]: {}", file_path));
+      log_error(format!(
+        "Err on [get_simple_meta: normalized_path]: {}",
+        file_path
+      ));
       return Err(format!("Err on normalize Path: {}", file_path));
     }
   };
@@ -242,9 +247,9 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
     Ok(data) => data,
     Err(e) => {
       log_error(format!(
-          "Error on [get_file_meta: get_simple_meta, {}]: {:?}",
-          file_path, e
-        ));
+        "Error on [get_file_meta: get_simple_meta, {}]: {:?}",
+        file_path, e
+      ));
       return Err(e);
     }
   };
@@ -255,9 +260,9 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
       Ok(text) => text,
       Err(e) => {
         log_error(format!(
-            "Error on [get_file_meta: read_to_string, {}]: {:?}",
-            file_path, e
-          ));
+          "Error on [get_file_meta: read_to_string, {}]: {:?}",
+          file_path, e
+        ));
         String::new()
       }
     }
@@ -427,12 +432,13 @@ pub async fn create_file(file_path: String) -> bool {
 // read file to string
 #[tauri::command]
 pub async fn read_file(file_path: String) -> String {
-  LocalFs.read_to_string(Path::new(&file_path))
+  LocalFs
+    .read_to_string(Path::new(&file_path))
     .map_err(|e| {
       log_error(format!(
-          "Error on [read_file: read_to_string, {}]: {:?}",
-          file_path, e
-        ))
+        "Error on [read_file: read_to_string, {}]: {:?}",
+        file_path, e
+      ))
     })
     .unwrap_or_else(|_| String::from("")) // nothing
 }
@@ -440,7 +446,9 @@ pub async fn read_file(file_path: String) -> String {
 // write to a file
 #[tauri::command]
 pub async fn write_file(file_path: String, text: String) -> bool {
-  LocalFs.write_atomic(Path::new(&file_path), text.as_bytes()).is_ok()
+  LocalFs
+    .write_atomic(Path::new(&file_path), text.as_bytes())
+    .is_ok()
 }
 
 #[tauri::command]
@@ -451,7 +459,9 @@ pub async fn download_file(file_path: String, blob: Vec<u8>) -> bool {
 // rename the file
 #[tauri::command]
 pub async fn rename_file(from_path: String, to_path: String) -> bool {
-  LocalFs.rename(Path::new(&from_path), Path::new(&to_path)).is_ok()
+  LocalFs
+    .rename(Path::new(&from_path), Path::new(&to_path))
+    .is_ok()
 }
 
 // copy the file
@@ -473,12 +483,15 @@ fn same_content(a: &Path, b: &Path) -> bool {
   if meta_a.len() != meta_b.len() {
     return false;
   }
-  let (Ok(mut file_a), Ok(mut file_b)) = (fs::File::open(a), fs::File::open(b)) else {
+  let (Ok(mut file_a), Ok(mut file_b)) = (fs::File::open(a), fs::File::open(b))
+  else {
     return false;
   };
   let (mut buf_a, mut buf_b) = ([0u8; 8192], [0u8; 8192]);
   loop {
-    let Ok(n) = file_a.read(&mut buf_a) else { return false };
+    let Ok(n) = file_a.read(&mut buf_a) else {
+      return false;
+    };
     if n == 0 {
       return true;
     }
@@ -490,9 +503,16 @@ fn same_content(a: &Path, b: &Path) -> bool {
 
 /// Where to put `src` in `dir`, by its name: (path, already there). Never
 /// replace another file: `name-1.ext`, `name-2.ext`... are tried.
-fn asset_target(src: &Path, dir: &Path, file_name: &str) -> (std::path::PathBuf, bool) {
+fn asset_target(
+  src: &Path,
+  dir: &Path,
+  file_name: &str,
+) -> (std::path::PathBuf, bool) {
   let name = Path::new(file_name);
-  let stem = name.file_stem().and_then(|s| s.to_str()).unwrap_or(file_name);
+  let stem = name
+    .file_stem()
+    .and_then(|s| s.to_str())
+    .unwrap_or(file_name);
   let ext = name.extension().and_then(|e| e.to_str());
   let src_real = fs::canonicalize(src).ok();
   let mut i = 0;
@@ -518,7 +538,10 @@ fn asset_target(src: &Path, dir: &Path, file_name: &str) -> (std::path::PathBuf,
 // copy the assets(image...) to the `assets` dir of the given work dir
 // return (absolute_path, relative_path_to_work_dir), empty on failure
 #[tauri::command]
-pub async fn copy_file_to_assets(src_path: String, work_dir: String) -> (String, String) {
+pub async fn copy_file_to_assets(
+  src_path: String,
+  work_dir: String,
+) -> (String, String) {
   let src = Path::new(&src_path);
   if !src.is_file() {
     return (String::new(), String::new());
@@ -666,10 +689,11 @@ pub async fn listen_dir(
     Err(e) => log_watch_err(format!("error on [listen_dir: receive event]: {}", e)),
   };
 
-  let mut watcher = RecommendedWatcher::new(handler, Config::default()).map_err(|e| {
-    log_watch_err(format!("Err on [listen_dir: new watcher] : {}", e));
-    format!("new watcher err: {}", e)
-  })?;
+  let mut watcher =
+    RecommendedWatcher::new(handler, Config::default()).map_err(|e| {
+      log_watch_err(format!("Err on [listen_dir: new watcher] : {}", e));
+      format!("new watcher err: {}", e)
+    })?;
   watcher
     .watch(dir.as_ref(), RecursiveMode::Recursive)
     .map_err(|e| {
@@ -693,9 +717,11 @@ pub async fn listen_dir(
 /// the dir itself may be in a hidden one
 fn is_hidden_in(dir: &Path, path: &Path) -> bool {
   path.strip_prefix(dir).is_ok_and(|rel| {
-    rel
-      .components()
-      .any(|c| c.as_os_str().to_str().is_some_and(|name| name.starts_with('.')))
+    rel.components().any(|c| {
+      c.as_os_str()
+        .to_str()
+        .is_some_and(|name| name.starts_with('.'))
+    })
   })
 }
 
@@ -718,25 +744,22 @@ pub fn open_link(_app: AppHandle, url: String) {
 }
 
 /// watch event as a bridge from injected script to frontend via invoke()
-// workflow: 
-// - can invoke() in inject scripts 
-// - listen emited event and handle on frontend: 
+// workflow:
+// - can invoke() in inject scripts
+// - listen emited event and handle on frontend:
 //   src/workspace/directory.ts/DirectoryAPI/listen
 #[tauri::command]
-pub async fn watch_event(
-  id: String, 
-  ev: String,
-  window: tauri::Window,
-) {
+pub async fn watch_event(id: String, ev: String, window: tauri::Window) {
   // println!("watch: {ev}, {id}");
-  window.emit(
-    "changes",
-    EventPayload {
-      paths: vec![id],
-      event: ev,
-    },
-  )
-  .unwrap_or(());
+  window
+    .emit(
+      "changes",
+      EventPayload {
+        paths: vec![id],
+        event: ev,
+      },
+    )
+    .unwrap_or(());
 }
 
 #[cfg(test)]
@@ -745,7 +768,11 @@ mod tests {
   use std::path::PathBuf;
 
   fn temp_dir(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("mdsilo-files-{}-{}", name, std::process::id()));
+    let dir = std::env::temp_dir().join(format!(
+      "mdsilo-files-{}-{}",
+      name,
+      std::process::id()
+    ));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir
@@ -761,18 +788,23 @@ mod tests {
     let work = dir.join("work");
     fs::write(dir.join("pic.png"), b"first").unwrap();
     let (abs, rel) = copy_file_to_assets(s(&dir.join("pic.png")), s(&work)).await;
-    assert_eq!((abs.as_str(), rel.as_str()), (s(&work.join("assets/pic.png")).as_str(), "./assets/pic.png"));
+    assert_eq!(
+      (abs.as_str(), rel.as_str()),
+      (s(&work.join("assets/pic.png")).as_str(), "./assets/pic.png")
+    );
 
     // another picture of the same name
     fs::create_dir_all(dir.join("other")).unwrap();
     fs::write(dir.join("other/pic.png"), b"second").unwrap();
-    let (abs, rel) = copy_file_to_assets(s(&dir.join("other/pic.png")), s(&work)).await;
+    let (abs, rel) =
+      copy_file_to_assets(s(&dir.join("other/pic.png")), s(&work)).await;
     assert_eq!(rel, "./assets/pic-1.png");
     assert_eq!(fs::read(&abs).unwrap(), b"second");
     assert_eq!(fs::read(work.join("assets/pic.png")).unwrap(), b"first");
 
     // the same picture again: no new copy
-    let (_, rel) = copy_file_to_assets(s(&dir.join("other/pic.png")), s(&work)).await;
+    let (_, rel) =
+      copy_file_to_assets(s(&dir.join("other/pic.png")), s(&work)).await;
     assert_eq!(rel, "./assets/pic-1.png");
     assert_eq!(fs::read_dir(work.join("assets")).unwrap().count(), 2);
     fs::remove_dir_all(&dir).unwrap();
@@ -840,12 +872,16 @@ mod tests {
     fs::create_dir_all(dir.join("sub")).unwrap();
     let data = read_directory(&s(&dir)).await.unwrap();
     assert_eq!(data.number_of_files, 3);
-    let mut texts: Vec<(String, String)> =
-      data.files.into_iter().map(|f| (f.file_name, f.file_text)).collect();
+    let mut texts: Vec<(String, String)> = data
+      .files
+      .into_iter()
+      .map(|f| (f.file_name, f.file_text))
+      .collect();
     texts.sort();
     assert_eq!(
       texts,
-      [("a.md", "A"), ("b.txt", "B"), ("sub", "")].map(|(n, t)| (n.to_string(), t.to_string()))
+      [("a.md", "A"), ("b.txt", "B"), ("sub", "")]
+        .map(|(n, t)| (n.to_string(), t.to_string()))
     );
     fs::remove_dir_all(&dir).unwrap();
   }
@@ -854,8 +890,14 @@ mod tests {
   fn hidden_paths_in_the_dir() {
     let dir = Path::new("/home/me/.notes/ws");
     assert!(is_hidden_in(dir, Path::new("/home/me/.notes/ws/.git/HEAD")));
-    assert!(is_hidden_in(dir, Path::new("/home/me/.notes/ws/reading/.gitignore")));
-    assert!(!is_hidden_in(dir, Path::new("/home/me/.notes/ws/writing/a.md")));
+    assert!(is_hidden_in(
+      dir,
+      Path::new("/home/me/.notes/ws/reading/.gitignore")
+    ));
+    assert!(!is_hidden_in(
+      dir,
+      Path::new("/home/me/.notes/ws/writing/a.md")
+    ));
     assert!(!is_hidden_in(dir, Path::new("/elsewhere/.x")));
   }
 

@@ -1,10 +1,13 @@
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import Note from '@/writer/Note';
+import { useNoteReloads } from '@/workspace/noteReloads';
 
 export default function NotePage() {
   const currentView = useCurrentViewContext();
   const params = currentView.state.params;
   const noteId = params?.noteId || '';
+  // mounted again when the note changed on disk, e.g. by a sync
+  const reloads = useNoteReloads((s) => s.seq);
   // const hlHash = params?.hash || '';
 
   if (!noteId || typeof noteId !== 'string') {
@@ -19,7 +22,7 @@ export default function NotePage() {
 
   return (
     <div className="flex flex-1 overflow-x-auto">
-      <Note key={noteId} noteId={noteId} />
+      <Note key={`${noteId}#${reloads}`} noteId={noteId} />
     </div>
   );
 }

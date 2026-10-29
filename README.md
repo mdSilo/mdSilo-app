@@ -22,7 +22,7 @@ So mdSilo is built around the whole loop, and gives each step its own tool:
 
 And **links** close the loop: a note links to a book (`{{Alice's Adventures in Wonderland}}`), to a sentence in it, to an issue (`[@3](issue:3)`) and to other notes (`[[Philosophy]]`). Every link is two-way, and the Graph draws the whole network.
 
-Everything is a plain file in a folder you choose: Markdown for notes and annotations, JSON for issues and the library. No account, no server, no lock-in; sync it with git or anything else(coming soon).
+Everything is a plain file in a folder you choose: Markdown for notes and annotations, JSON for issues and the library. No account, no server, no lock-in; sync it with git right from the app (or with anything else), and publish the notes you choose as a website.
 
 ## Features
 
@@ -65,6 +65,12 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 - **Full-text search** over notes, annotations and the text of your books, Chinese included
 - **Dark and light**, 10 themes; Windows, macOS, Linux and Web; free and open source
 
+### 🔄 Sync and publish
+
+- **Git sync** with GitHub, Gitea, GitLab or any git host over HTTPS with a token: commit, pull and push in one click, every few minutes or when the app closes. Books sync only if you choose; the token stays on the device
+- **No lost edits**: changes on two devices merge; when both changed the same lines, your version is kept beside the note as a conflict copy, and the app's data merges field by field
+- **Publish a static site** to GitHub Pages (or export it to a folder): the folders you tick, with backlinks, graph, search, tag pages, book annotations and issues with their milestones and boards. Math, mermaid and echarts are drawn as you publish; links to private notes become plain text
+
 ## Learn more
 
 The [user manual](docs/manual/0%20Start%20Here.md) covers every part in detail (also in Chinese: [中文手册](docs/manual-zh/0%20开始.md)). The web version opens with the manual already in your workspace (in Chinese for a Chinese browser), together with a public domain sample book ([Project Gutenberg](https://www.gutenberg.org/ebooks/11)) and a few issues to play with; click around and break things. When you are done, **File Menu > Remove demo** clears all of it in one click and keeps what you made.
@@ -77,7 +83,9 @@ The [user manual](docs/manual/0%20Start%20Here.md) covers every part in detail (
 6. [Feeds](docs/manual/6%20Feeds.md)
 7. [Issues](docs/manual/7%20Issues.md)
 8. [Insight](docs/manual/8%20Insight.md)
-9. [Reference](docs/manual/9%20Reference.md)
+9. [Sync and Publish](docs/manual/9%20Sync%20and%20Publish.md)
+
+Appendix: [Reference](docs/manual/Reference.md)
 
 ## Get the app
 
@@ -147,14 +155,14 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 - [X] Export as PDF and PNG
 - [ ] Drawing
 - [ ] Block reference
-- [ ] Publish a static site
+- [X] Publish a static site (GitHub Pages)
 
 ### Link and see
 
 - [X] Backlinks, unlinked mentions, links to books and issues
 - [X] Graph, Chronicle, activity heat map
 - [X] Full-text search
-- [ ] Version control: git sync
+- [X] Version control: git sync
 
 ### Extension
 

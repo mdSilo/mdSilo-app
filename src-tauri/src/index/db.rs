@@ -58,7 +58,9 @@ impl IndexDb {
       .unwrap_or(0);
     if version != SCHEMA_VERSION {
       for table in ["files", "books"] {
-        diesel::sql_query(format!("DROP TABLE IF EXISTS {table}")).execute(&mut conn).map_err(|e| e.to_string())?;
+        diesel::sql_query(format!("DROP TABLE IF EXISTS {table}"))
+          .execute(&mut conn)
+          .map_err(|e| e.to_string())?;
       }
     }
     for sql in [
@@ -75,7 +77,9 @@ impl IndexDb {
       // the books whose text is in the search index
       "CREATE TABLE IF NOT EXISTS books (hash TEXT PRIMARY KEY NOT NULL, indexed INTEGER NOT NULL)",
     ] {
-      diesel::sql_query(sql).execute(&mut conn).map_err(|e| e.to_string())?;
+      diesel::sql_query(sql)
+        .execute(&mut conn)
+        .map_err(|e| e.to_string())?;
     }
     diesel::sql_query(format!("PRAGMA user_version = {SCHEMA_VERSION}"))
       .execute(&mut conn)
@@ -84,9 +88,11 @@ impl IndexDb {
   }
 
   pub fn all(&mut self) -> Vec<Row> {
-    diesel::sql_query("SELECT path, is_dir, size, modified, created, parsed FROM files")
-      .load::<Row>(&mut self.conn)
-      .unwrap_or_default()
+    diesel::sql_query(
+      "SELECT path, is_dir, size, modified, created, parsed FROM files",
+    )
+    .load::<Row>(&mut self.conn)
+    .unwrap_or_default()
   }
 
   /// Insert or replace the rows, in one transaction.
@@ -123,11 +129,13 @@ impl IndexDb {
       .conn
       .transaction::<_, diesel::result::Error, _>(|conn| {
         for path in paths {
-          diesel::sql_query("DELETE FROM files WHERE path = ? OR substr(path, 1, ?) = ?")
-            .bind::<Text, _>(path)
-            .bind::<Integer, _>(path.len() as i32 + 1)
-            .bind::<Text, _>(format!("{path}/"))
-            .execute(conn)?;
+          diesel::sql_query(
+            "DELETE FROM files WHERE path = ? OR substr(path, 1, ?) = ?",
+          )
+          .bind::<Text, _>(path)
+          .bind::<Integer, _>(path.len() as i32 + 1)
+          .bind::<Text, _>(format!("{path}/"))
+          .execute(conn)?;
         }
         Ok(())
       })
@@ -150,18 +158,29 @@ impl IndexDb {
       .is_ok_and(|c| c.n > 0)
   }
 
-  pub fn set_book_indexed(&mut self, hash: &str, indexed: bool) -> Result<(), String> {
+  pub fn set_book_indexed(
+    &mut self,
+    hash: &str,
+    indexed: bool,
+  ) -> Result<(), String> {
     let sql = if indexed {
       "INSERT OR REPLACE INTO books (hash, indexed) VALUES (?, strftime('%s','now'))"
     } else {
       "DELETE FROM books WHERE hash = ?"
     };
-    diesel::sql_query(sql).bind::<Text, _>(hash).execute(&mut self.conn).map(|_| ()).map_err(|e| e.to_string())
+    diesel::sql_query(sql)
+      .bind::<Text, _>(hash)
+      .execute(&mut self.conn)
+      .map(|_| ())
+      .map_err(|e| e.to_string())
   }
 
   /// Forget the books indexed, e.g. the search index made anew.
   pub fn clear_books(&mut self) -> Result<(), String> {
-    diesel::sql_query("DELETE FROM books").execute(&mut self.conn).map(|_| ()).map_err(|e| e.to_string())
+    diesel::sql_query("DELETE FROM books")
+      .execute(&mut self.conn)
+      .map(|_| ())
+      .map_err(|e| e.to_string())
   }
 }
 
@@ -182,13 +201,32 @@ mod tests {
 
   #[test]
   fn stores_the_rows() {
-    let dir = std::env::temp_dir().join(format!("mdsilo-index-db-{}", std::process::id()));
+    let dir =
+      std::env::temp_dir().join(format!("mdsilo-index-db-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let path = dir.join("index.db");
     let mut db = IndexDb::open(&path).unwrap();
-    let parsed = Parsed { links: vec!["b".into()], tags: vec!["t".into()], issues: vec![1], books: vec!["Dune".into()], has_tasks: true };
-    db.put(&[row("a.md", &parsed), row("sub/b.md", &Parsed::default()), row("sub", &Parsed::default())]).unwrap();
-    assert_eq!(db.all().into_iter().find(|r| r.path == "a.md").unwrap().parsed(), parsed);
+    let parsed = Parsed {
+      links: vec!["b".into()],
+      tags: vec!["t".into()],
+      issues: vec![1],
+      books: vec!["Dune".into()],
+      has_tasks: true,
+    };
+    db.put(&[
+      row("a.md", &parsed),
+      row("sub/b.md", &Parsed::default()),
+      row("sub", &Parsed::default()),
+    ])
+    .unwrap();
+    assert_eq!(
+      db.all()
+        .into_iter()
+        .find(|r| r.path == "a.md")
+        .unwrap()
+        .parsed(),
+      parsed
+    );
     assert_eq!(db.all().len(), 3);
     // a dir: its files too, not the paths sharing its prefix
     db.put(&[row("subway.md", &Parsed::default())]).unwrap();

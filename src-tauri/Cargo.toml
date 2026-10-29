@@ -42,13 +42,16 @@ tantivy-jieba = "0.21.0"
 # walk dir
 ignore = "0.4.33"
 ## rss reader
-reqwest = { version = "0.13.5", features = ["json", "socks"] }
+reqwest = { version = "0.13.5", features = ["json", "socks", "blocking"] }
 rss = { version = "2.0.12", features = ["serde"] }
 atom_syndication = "0.12.7"
 bytes = "1.10.1"
 diesel = { version = "2.3.14", features = ["sqlite", "chrono"] }
 diesel_migrations = { version = "2.3.2", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.38.2", features = ["bundled"] }
+# git sync, see sync/: libgit2 built in, no OpenSSL or SSH; HTTPS goes through
+# reqwest (sync/http.rs), which builds for mobile as it is
+git2 = { version = "0.20.4", default-features = false, features = ["vendored-libgit2"] }
 
 [dev-dependencies]
 tokio = { version = "1.54.1", features = ["full"] }

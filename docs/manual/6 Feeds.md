@@ -9,7 +9,7 @@ Feeds are the other half of the input end: the news, blogs and podcasts you foll
 Open **Manage Channels and Settings** at the bottom of the channel list, choose *add*, and enter the URL of a feed (RSS and Atom both work). The feed is loaded so you can check its title before saving. Use **Refresh All** to fetch every channel, or *Refresh Channel* in a channel. The channels are listed at the left, with the number of unread articles; the articles of the chosen channel are at the right, with **Mark All Read**.
 
 :::info
-**Web version.** Browsers block most feeds with CORS, so the web version fetches a feed directly first, then through a CORS proxy. You can set your own proxy in the settings of *Manage Channels*. See [[9 Reference|Reference]].
+**Web version.** Browsers block most feeds with CORS, so the web version fetches a feed directly first, then through a CORS proxy. You can set your own proxy in the settings of *Manage Channels*. See [[Reference]].
 :::
 
 ## Reading

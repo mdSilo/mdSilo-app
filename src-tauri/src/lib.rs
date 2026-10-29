@@ -13,18 +13,20 @@ mod index;
 mod input_method;
 mod models;
 mod paths;
+mod plugins;
+mod publish;
 mod schema;
 mod storage;
+mod sync;
 mod tests;
-mod window;
-mod plugins;
 mod tray;
+mod window;
 mod wsfs;
 
 extern crate diesel;
 extern crate diesel_migrations;
 
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use tauri::{Listener, Manager};
 
 #[tauri::command]
@@ -112,7 +114,20 @@ pub fn run() {
       index::index_search,
       index::index_book,
       index::index_book_indexed,
+      sync::sync_info,
+      sync::sync_setup,
+      sync::sync_run,
+      publish::publish_write,
+      publish::publish_push,
     ])
+    // the main window gone, the app quits, other windows (web_window) too
+    .on_window_event(|window, event| {
+      if window.label() == tray::MAIN_WIN
+        && matches!(event, tauri::WindowEvent::Destroyed)
+      {
+        window.app_handle().exit(0);
+      }
+    })
     .setup(|app| {
       tray::setup(app)?;
       // frontend: src/workspace/directory.ts/DirectoryAPI/unlisten

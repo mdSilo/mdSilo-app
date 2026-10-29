@@ -16,7 +16,8 @@ mdSilo keeps everything you read, think and write in one local workspace of plai
 | 6 | [[6 Feeds\|Feeds]] | RSS, podcasts, clipping articles, turning feeds into books |
 | 7 | [[7 Issues\|Issues]] | Issues, labels, milestones, projects, tasks inside notes |
 | 8 | [[8 Insight\|Insight]] | Graph, Chronicle, activity heat map |
-| 9 | [[9 Reference\|Reference]] | Shortcuts, search, settings, the web version, backup |
+| 9 | [[9 Sync and Publish\|Sync and Publish]] | Sync the workspace with git, publish notes as a website |
+| | [[Reference]] | Shortcuts, search, settings, the web version, backup |
 
 ## A five minute tour
 

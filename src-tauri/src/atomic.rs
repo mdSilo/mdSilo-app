@@ -16,7 +16,8 @@ const SELF_WRITE_TTL: Duration = Duration::from_secs(60);
 /// the files written by the app: path -> (len, modified) as written, and when;
 /// modified is None while being written (the watcher may see it before)
 type SelfWrites = HashMap<PathBuf, (u64, Option<SystemTime>, Instant)>;
-static SELF_WRITES: LazyLock<Mutex<SelfWrites>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static SELF_WRITES: LazyLock<Mutex<SelfWrites>> =
+  LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// A temp file of `write_atomic`.
 pub fn is_temp(path: &Path) -> bool {
@@ -80,8 +81,12 @@ fn forget_write(path: &Path) {
 /// The file is as the app wrote it: a change event of it is the app's own.
 /// A change by another program afterwards differs in modified time or size.
 pub fn is_self_write(path: &Path) -> bool {
-  let Ok(writes) = SELF_WRITES.lock() else { return false };
-  let Some((len, modified, at)) = writes.get(path) else { return false };
+  let Ok(writes) = SELF_WRITES.lock() else {
+    return false;
+  };
+  let Some((len, modified, at)) = writes.get(path) else {
+    return false;
+  };
   if at.elapsed() >= SELF_WRITE_TTL {
     return false;
   }
@@ -99,7 +104,11 @@ mod tests {
   use super::*;
 
   fn temp_dir(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("mdsilo-atomic-{}-{}", name, std::process::id()));
+    let dir = std::env::temp_dir().join(format!(
+      "mdsilo-atomic-{}-{}",
+      name,
+      std::process::id()
+    ));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir
@@ -142,7 +151,7 @@ mod tests {
   #[cfg(unix)]
   #[test]
   fn keeps_symlinks_and_permissions() {
-    use std::os::unix::fs::{symlink, PermissionsExt};
+    use std::os::unix::fs::{PermissionsExt, symlink};
     let dir = temp_dir("link");
     let target = dir.join("real.md");
     fs::write(&target, b"old").unwrap();
@@ -150,10 +159,18 @@ mod tests {
     let link = dir.join("link.md");
     symlink(&target, &link).unwrap();
     write_atomic(&link, b"via link").unwrap();
-    assert!(fs::symlink_metadata(&link).unwrap().file_type().is_symlink());
+    assert!(
+      fs::symlink_metadata(&link)
+        .unwrap()
+        .file_type()
+        .is_symlink()
+    );
     assert_eq!(fs::read_to_string(&target).unwrap(), "via link");
     write_atomic(&target, b"direct").unwrap();
-    assert_eq!(fs::metadata(&target).unwrap().permissions().mode() & 0o777, 0o600);
+    assert_eq!(
+      fs::metadata(&target).unwrap().permissions().mode() & 0o777,
+      0o600
+    );
     fs::remove_dir_all(&dir).unwrap();
   }
 }

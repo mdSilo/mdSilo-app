@@ -18,7 +18,7 @@ my-workspace/
 - **reading/** holds the books you read and the Markdown file of annotations that sits next to each book (`Foo.epub` → `Foo.epub.md`). Clipped web articles go to `reading/clips/`.
 - **.mdsilo/** holds what is not meant to be read by hand: the library, reading progress, issues, feed subscriptions. All of it is plain JSON.
 
-Because everything is a file, you can sync the whole workspace with git, Dropbox or anything else. Books are not added to git unless you choose to, book by book (see [[5 Reader|Reader]]). The `local/` folder is excluded automatically.
+Because everything is a file, you can sync the whole workspace with git, Dropbox or anything else. The desktop app syncs it with a git repository by itself, and can publish chosen notes as a website: see [[9 Sync and Publish|Sync and Publish]]. Books are not added to git unless you choose to, book by book (see [[5 Reader|Reader]]). The `local/` folder is excluded automatically.
 
 :::tip
 An empty folder you open becomes a workspace by itself. A folder that already has Markdown files is opened as it is (a *legacy* workspace); the sidebar then offers **Upgrade** to move into this layout.
@@ -38,7 +38,8 @@ The narrow bar at the edge of the window switches between views.
 | Board | Projects | `Ctrl/Cmd + Shift + K` |
 | Calendar | Chronicle | `Ctrl/Cmd + Shift + C` |
 | Graph | Graph | `Ctrl/Cmd + Shift + G` |
-| Folder | Open folder / file | |
+| Folder | File menu: open a folder or file; **Publish** (desktop), **Backup** (web) | |
+| Circling arrows | Sync, see [[9 Sync and Publish\|Sync and Publish]] | |
 | Gear | Settings | |
 
 The tasks list is the **Tasks** tab of Issues (`Ctrl/Cmd + Shift + T`).
@@ -48,7 +49,7 @@ The tasks list is the **Tasks** tab of Issues (`Ctrl/Cmd + Shift + T`).
 The sidebar has four tabs:
 
 - **Silo** (`Ctrl/Cmd + Shift + D`): the file tree. Use the `…` menu of an item to create, rename, move and delete. Sort the tree with the sort button.
-- **Search** (`Ctrl/Cmd + Shift + F`): full-text search over notes, annotations and the text of your books. See [[9 Reference|Reference]].
+- **Search** (`Ctrl/Cmd + Shift + F`): full-text search over notes, annotations and the text of your books. See [[Reference]].
 - **Hashtag** (`Ctrl/Cmd + Shift + H`): every `#tag#` in the workspace, click one to list its notes. See [[4 Linking|Linking]].
 - **Playlist** (`Ctrl/Cmd + Shift + P`): the episodes of your podcast channels.
 

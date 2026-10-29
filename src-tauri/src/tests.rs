@@ -120,25 +120,21 @@ mod tests {
 
   #[test]
   fn test_file_exist() {
-    assert!(
-      file_exist(Path::new(env!("CARGO_MANIFEST_DIR")).to_str().unwrap())
-    );
-    assert!(
-      file_exist(
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-          .join("Cargo.toml")
-          .to_str()
-          .unwrap()
-      )
-    );
-    assert!(
-      !file_exist(
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-          .join("cargo.toml.bak")
-          .to_str()
-          .unwrap()
-      )
-    );
+    assert!(file_exist(
+      Path::new(env!("CARGO_MANIFEST_DIR")).to_str().unwrap()
+    ));
+    assert!(file_exist(
+      Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("Cargo.toml")
+        .to_str()
+        .unwrap()
+    ));
+    assert!(!file_exist(
+      Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("cargo.toml.bak")
+        .to_str()
+        .unwrap()
+    ));
   }
 
   #[test]
@@ -284,7 +280,7 @@ mod tests {
 
     #[cfg(not(target_os = "macos"))]
     assert!(file_exist(&abs_path_1)); // ci test failed on win, but OK on Win10
-                                               // on macOS:
+    // on macOS:
     #[cfg(target_os = "macos")]
     assert_eq!(file_exist(&abs_path_1), false);
 
@@ -335,11 +331,24 @@ mod tests {
       ]
     );
     let listed = list_directory(dir.to_str().unwrap()).await.unwrap();
-    assert!(listed.iter().all(|f| f.file_text.is_empty() && !f.is_hidden));
-    assert!(listed.iter().all(|f| f.file_path.ends_with(&format!("/{}", f.file_name))));
+    assert!(
+      listed
+        .iter()
+        .all(|f| f.file_text.is_empty() && !f.is_hidden)
+    );
+    assert!(
+      listed
+        .iter()
+        .all(|f| f.file_path.ends_with(&format!("/{}", f.file_name)))
+    );
 
     // missing dir lists nothing
-    assert!(list_directory(dir.join("nope").to_str().unwrap()).await.unwrap().is_empty());
+    assert!(
+      list_directory(dir.join("nope").to_str().unwrap())
+        .await
+        .unwrap()
+        .is_empty()
+    );
 
     std::fs::remove_dir_all(&dir).unwrap();
   }

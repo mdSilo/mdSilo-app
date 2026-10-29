@@ -1,9 +1,9 @@
 // code modified from  https://github.com/rhysd/path-slash
 // MIT License Copyright (c) 2018 rhysd
 
-use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 #[cfg(windows)]
 use std::path::{Component, Prefix};
+use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 
 pub trait PathExt {
   fn normalize_slash(&self) -> Option<String>;
@@ -73,7 +73,7 @@ fn is_safe_to_strip_prefix(path: &Path) -> bool {
   let mut components = path.components();
   match components.next() {
     Some(Component::Prefix(p)) => match p.kind() {
-      Prefix::VerbatimDisk(..) => {},
+      Prefix::VerbatimDisk(..) => {}
       _ => return false, // Other kinds of UNC paths
     },
     _ => return false, // relative or empty
@@ -81,7 +81,7 @@ fn is_safe_to_strip_prefix(path: &Path) -> bool {
 
   for component in components {
     match component {
-      Component::RootDir | Component::Normal(_) => {},
+      Component::RootDir | Component::Normal(_) => {}
       _ => return false, // UNC paths take things like ".." literally
     };
   }

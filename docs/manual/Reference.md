@@ -62,7 +62,7 @@ The web version at the same address as this manual is the same app. Differences:
 - Your workspace is **stored in your browser** (IndexedDB). Nothing is sent to any server.
 - Use **Open Folder** to import a folder from your device, and the options of a note to export it; files are downloaded by your browser.
 - Feeds go through a CORS proxy, see [[6 Feeds|Feeds]].
-- No native file watching or git; the desktop app is the choice for big libraries.
+- No native file watching, no git sync and no publishing; the desktop app is the choice for big libraries.
 
 :::warning
 **Back up.** Clearing the site data of your browser deletes your notes. Use the **File Menu** (the folder icon at the bottom of the side menu) > **Backup** to download everything as a zip. To restore, unzip it and import the folder with *Open Folder*.
@@ -74,7 +74,7 @@ The web version at the same address as this manual is the same app. Differences:
 
 ## The desktop app
 
-Available for Windows, macOS and Linux. Your workspace is a real folder: sync it with git, Dropbox, Syncthing, edit the files with another editor and the changes appear in mdSilo.
+Available for Windows, macOS and Linux. Your workspace is a real folder: sync it with the built-in git sync (see [[9 Sync and Publish|Sync and Publish]]), or with Dropbox, Syncthing; edit the files with another editor and the changes appear in mdSilo.
 
 ## Plain files, for good
 
@@ -87,6 +87,7 @@ Available for Windows, macOS and Linux. Your workspace is a real folder: sync it
 | Reading progress | `.mdsilo/books/<id>.json` | JSON |
 | Issues, labels, projects | `.mdsilo/` | JSON |
 | Feeds | `.mdsilo/feeds.json` | JSON |
+| What to publish | `.mdsilo/publish.json` | JSON |
 | Vocabulary | `.mdsilo/vocabulary.json` | JSON |
 
 ## Help

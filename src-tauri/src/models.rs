@@ -1,5 +1,5 @@
 use super::schema::{articles, channels};
-use diesel::{sql_types::*, Insertable, Queryable, QueryableByName};
+use diesel::{Insertable, Queryable, QueryableByName, sql_types::*};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Queryable, Serialize, QueryableByName)]
