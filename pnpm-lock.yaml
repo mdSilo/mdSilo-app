@@ -107,6 +107,9 @@ importers:
       dompurify:
         specifier: ^3.4.17
         version: 3.4.17
+      echarts:
+        specifier: 6.1.0
+        version: 6.1.0
       foliate-js:
         specifier: workspace:*
         version: link:packages/foliate-js
@@ -140,9 +143,15 @@ importers:
       markmap-view:
         specifier: 0.18.12
         version: 0.18.12(markmap-common@0.18.9)
+      mdsilo-publish:
+        specifier: workspace:*
+        version: link:packages/publish
       mdsmirror:
         specifier: workspace:*
         version: link:packages/mdsmirror
+      mermaid:
+        specifier: 12.2.0
+        version: 12.2.0
       minisearch:
         specifier: ^7.2.0
         version: 7.2.0
@@ -487,6 +496,15 @@ importers:
       vitest:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(jsdom@29.1.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
+
+  packages/publish:
+    dependencies:
+      katex:
+        specifier: ^0.19.1
+        version: 0.19.1
+      mdsmirror:
+        specifier: workspace:*
+        version: link:../mdsmirror
 
 packages:
 

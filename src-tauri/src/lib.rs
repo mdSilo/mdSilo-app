@@ -19,6 +19,7 @@ mod sync;
 mod tests;
 mod window;
 mod plugins;
+mod publish;
 mod tray;
 mod wsfs;
 
@@ -116,6 +117,8 @@ pub fn run() {
       sync::sync_info,
       sync::sync_setup,
       sync::sync_run,
+      publish::publish_write,
+      publish::publish_push,
     ])
     // the main window gone, the app quits, other windows (web_window) too
     .on_window_event(|window, event| {

@@ -28,11 +28,11 @@ use std::sync::Mutex;
 /// a push refused as the remote moved on: fetch, merge, push again
 const MAX_ROUNDS: usize = 3;
 
-const DEFAULT_AUTHOR: &str = "mdSilo";
-const DEFAULT_EMAIL: &str = "mdsilo@localhost";
+pub(crate) const DEFAULT_AUTHOR: &str = "mdSilo";
+pub(crate) const DEFAULT_EMAIL: &str = "mdsilo@localhost";
 const DEFAULT_USERNAME: &str = "mdsilo";
 
-fn open_repo(root: &Path, create: bool) -> Result<Option<Box<dyn Repo>>> {
+pub(crate) fn open_repo(root: &Path, create: bool) -> Result<Option<Box<dyn Repo>>> {
   http::register();
   if create {
     return Ok(Some(Box::new(git2_repo::Git2Repo::init(root)?)));
@@ -126,7 +126,7 @@ struct StoredCredentials {
   token: String,
 }
 
-fn credentials_file() -> Result<PathBuf> {
+pub(crate) fn credentials_file() -> Result<PathBuf> {
   crate::storage::data_dir()
     .map(|dir| dir.join("sync-credentials.json"))
     .ok_or_else(|| "No data dir for the credentials".into())
@@ -139,7 +139,7 @@ fn read_store(file: &Path) -> CredentialStore {
     .unwrap_or_default()
 }
 
-fn load_credentials(file: &Path, url: &str) -> Option<Credentials> {
+pub(crate) fn load_credentials(file: &Path, url: &str) -> Option<Credentials> {
   read_store(file)
     .remotes
     .get(url)
@@ -167,7 +167,7 @@ fn save_credentials(file: &Path, url: &str, credentials: Option<&Credentials>) -
 }
 
 /// The URL as kept: no `/` at the end; an SSH remote is not supported yet.
-fn normalize_url(url: &str) -> Result<String> {
+pub(crate) fn normalize_url(url: &str) -> Result<String> {
   let url = url.trim().trim_end_matches('/');
   let lower = url.to_lowercase();
   if lower.starts_with("https://") || lower.starts_with("http://") || lower.starts_with("file://") || Path::new(url).is_absolute() {
@@ -179,7 +179,7 @@ fn normalize_url(url: &str) -> Result<String> {
   Err(format!("Not a remote URL: {url}"))
 }
 
-fn stamp() -> String {
+pub(crate) fn stamp() -> String {
   chrono::Local::now().format("%Y-%m-%d %H%M").to_string()
 }
 
@@ -230,7 +230,7 @@ pub struct SyncSetup {
   pub author_email: Option<String>,
 }
 
-fn setup_in(root: &Path, file: &Path, setup: SyncSetup) -> Result<SyncInfo> {
+pub(crate) fn setup_in(root: &Path, file: &Path, setup: SyncSetup) -> Result<SyncInfo> {
   let url = normalize_url(&setup.url)?;
   let mut repo = open_repo(root, true)?.ok_or("No repo")?;
   let old_url = repo.remote_url()?;
@@ -264,19 +264,24 @@ fn sync_in(root: &Path, file: &Path) -> Result<SyncReport> {
   let url = repo.remote_url()?.ok_or("No remote to sync with")?;
   let url = normalize_url(&url)?;
   let remote = Remote { credentials: load_credentials(file, &url), url };
-  // git takes no empty email: the name set, the email left out
-  let author = match repo.author()? {
-    Some(Author { name, email }) if email.trim().is_empty() => Author { name, email: DEFAULT_EMAIL.into() },
-    Some(author) => author,
-    None => Author { name: DEFAULT_AUTHOR.into(), email: DEFAULT_EMAIL.into() },
-  };
+  let author = author_of(repo.as_ref())?;
   sync(repo.as_mut(), &remote, &author, &stamp(), &|path| root.join(path).exists())
 }
 
-/// one sync at a time
-static SYNCING: Mutex<()> = Mutex::new(());
+/// The author of the commits: as configured, or mdSilo.
+pub(crate) fn author_of(repo: &dyn Repo) -> Result<Author> {
+  // git takes no empty email: the name set, the email left out
+  Ok(match repo.author()? {
+    Some(Author { name, email }) if email.trim().is_empty() => Author { name, email: DEFAULT_EMAIL.into() },
+    Some(author) => author,
+    None => Author { name: DEFAULT_AUTHOR.into(), email: DEFAULT_EMAIL.into() },
+  })
+}
 
-async fn blocking<T: Send + 'static>(f: impl FnOnce() -> Result<T> + Send + 'static) -> Result<T> {
+/// one sync at a time
+pub(crate) static SYNCING: Mutex<()> = Mutex::new(());
+
+pub(crate) async fn blocking<T: Send + 'static>(f: impl FnOnce() -> Result<T> + Send + 'static) -> Result<T> {
   tauri::async_runtime::spawn_blocking(f).await.map_err(|e| e.to_string())?
 }
 

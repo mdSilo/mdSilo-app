@@ -1,7 +1,10 @@
 import { DOMParser, Schema } from "prosemirror-model";
 import type { MarkdownParser } from "prosemirror-markdown";
+import type { PluginSimple } from "./types";
 import ExtensionManager from "./core/ExtensionManager";
 import render from "./components/renderToHtml";
+import mathRule from "./core/rules/math";
+import mathTexRule from "./core/rules/math_katex";
 
 // nodes
 import Doc from "./nodes/Doc";
@@ -108,5 +111,15 @@ export function domToMarkdown(node: Node): string {
   return serializer.serialize(DOMParser.fromSchema(schema).parse(node));
 }
 
-export const renderToHtml = (markdown: string): string =>
-  render(markdown, extensions.rulePlugins);
+/** HTML of markdown, as the editor reads it; `plugins` run after its rules. */
+export const renderToHtml = (
+  markdown: string,
+  plugins: PluginSimple[] = []
+): string => render(markdown, [...extensions.rulePlugins, ...plugins]);
+
+/**
+ * The rules of math, for `renderToHtml`: `$...$`, `$$...$$`, `\(...\)`,
+ * `\begin{env}`; tokens `math_inline`, `math_display` and `math`, their
+ * renderers to set.
+ */
+export const mathRules: PluginSimple[] = [mathRule, mathTexRule(undefined)];

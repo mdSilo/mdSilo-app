@@ -75,6 +75,9 @@ pub trait Repo: Send {
     message: &str,
     author: &Author,
   ) -> Result<Merged>;
+  /// Commit the files of a dir alone, no history, and push them over a
+  /// branch of the remote, e.g. a static site to `gh-pages`.
+  fn push_dir(&mut self, remote: &Remote, dir: &std::path::Path, branch: &str, message: &str, author: &Author) -> Result<()>;
   /// Push the branch; false if the remote has moved on (fetch again).
   fn push(&mut self, remote: &Remote, branch: &str) -> Result<bool>;
 }

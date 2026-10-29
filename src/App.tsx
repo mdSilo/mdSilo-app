@@ -11,6 +11,7 @@ import { openWebWorkspace } from '@/workspace/useOpen';
 import FindOrCreateModal from '@/writer/NoteNewModal';
 import SideMenu from '@/shell/SideMenu';
 import { useAutoSync } from '@/sync/autoSync';
+import PublishModal from '@/publish/PublishModal';
 import Sidebar from '@/shell/sidebar/Sidebar';
 import StatusBar from '@/shell/StatusBar';
 import MainView from '@/shell/MainView';
@@ -110,6 +111,7 @@ const App = () => {
           {isFindOrCreateModalOpen ? (
             <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />
           ) : null}
+          <PublishModal />
           <SettingsModal 
             isOpen={isSettingsOpen}
             handleClose={() => setIsSettingsOpen(false)} 

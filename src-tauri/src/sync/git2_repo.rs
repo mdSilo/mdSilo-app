@@ -164,6 +164,30 @@ impl Git2Repo {
   }
 }
 
+/// The tree of the files of a dir, the hidden ones too; None if empty.
+fn tree_of_dir(repo: &Repository, dir: &Path) -> Result<Option<Oid>> {
+  let mut builder = repo.treebuilder(None).map_err(err)?;
+  let mut entries: Vec<_> = fs::read_dir(dir).map_err(|e| e.to_string())?.flatten().collect();
+  entries.sort_by_key(|e| e.file_name());
+  for entry in entries {
+    let name = entry.file_name();
+    let Some(name) = name.to_str() else { continue };
+    let kind = entry.file_type().map_err(|e| e.to_string())?;
+    if kind.is_dir() {
+      if let Some(tree) = tree_of_dir(repo, &entry.path())? {
+        builder.insert(name, tree, 0o040000).map_err(err)?;
+      }
+    } else if kind.is_file() {
+      let blob = repo.blob_path(&entry.path()).map_err(err)?;
+      builder.insert(name, blob, 0o100644).map_err(err)?;
+    }
+  }
+  if builder.is_empty() {
+    return Ok(None);
+  }
+  builder.write().map(Some).map_err(err)
+}
+
 fn file_entry(path: &str, mode: u32, id: Oid, size: usize) -> IndexEntry {
   IndexEntry {
     ctime: IndexTime::new(0, 0),
@@ -395,6 +419,37 @@ impl Repo for Git2Repo {
       .map_err(err)?;
     let changed = self.move_to(Some(ours_id), merged)?;
     Ok(Merged { changed, conflicts })
+  }
+
+  fn push_dir(&mut self, remote: &Remote, dir: &Path, branch: &str, message: &str, author: &Author) -> Result<()> {
+    let tree = tree_of_dir(&self.repo, dir)?.ok_or("Nothing to publish")?;
+    let tree = self.repo.find_tree(tree).map_err(err)?;
+    let sig = self.signature(author)?;
+    let commit = self.repo.commit(None, &sig, &sig, message, &tree, &[]).map_err(err)?;
+    // a ref of its own to push from, out of the branches
+    let local = format!("refs/mdsilo/{branch}");
+    self.repo.reference(&local, commit, true, "mdsilo: publish").map_err(err)?;
+    let mut git_remote = self.remote(&remote.url)?;
+    let refspec = format!("+{local}:refs/heads/{branch}");
+    let rejected = RefCell::new(None::<String>);
+    let mut callbacks = RemoteCallbacks::new();
+    callbacks.push_update_reference(|_, status| {
+      if let Some(status) = status {
+        *rejected.borrow_mut() = Some(status.to_string());
+      }
+      Ok(())
+    });
+    let mut opts = PushOptions::new();
+    opts.remote_callbacks(callbacks);
+    let result = with_credentials(&remote.url, remote.credentials.as_ref(), || {
+      git_remote.push(&[&refspec], Some(&mut opts))
+    });
+    drop(opts);
+    result.map_err(err)?;
+    match rejected.into_inner() {
+      Some(status) => Err(format!("the remote refused the push: {status}")),
+      None => Ok(()),
+    }
   }
 
   fn push(&mut self, remote: &Remote, branch: &str) -> Result<bool> {
