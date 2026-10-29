@@ -98,5 +98,3 @@ Please note that mdSilo follows the Contributor Covenant [Code of Conduct](CODE_
 Thank you for contributing to mdSilo. Your contributions help make this project better for everyone. We appreciate your time and effort in helping us achieve our goals.
 
 Happy coding!  
-
-Feel free to adjust this CONTRIBUTING.md to fit the specific guidelines and processes of your mdSilo project.

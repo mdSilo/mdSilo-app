@@ -4,7 +4,7 @@
 
 mdSilo is a local-first workspace where what you *read*, what you *think* and what you *write* live together, linked, searchable and yours. It is a Markdown notebook, a book reader, a feed reader and an issue tracker in one small app (React + [Tauri](https://github.com/tauri-apps)), on top of plain files.
 
-[Try it in your browser](https://mdsilo.com/app/) · [User manual](docs/manual/0%20Start%20Here.md) · [Discord](https://discord.gg/EXYSEHRTFt) · [Bluesky](https://bsky.app/profile/mdsilo.com)
+[Try it in your browser](https://mdsilo.github.io/mdSilo-app/) · [User manual](docs/manual/0%20Start%20Here.md) · [Discord](https://discord.gg/EXYSEHRTFt) · [Bluesky](https://bsky.app/profile/mdsilo.com)
 
 ![reader](docs/images/reader.png)
 
@@ -136,6 +136,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 - [X] Issues, labels, milestones, subtasks, due dates
 - [X] Projects: boards and tables
 - [X] Tasks in notes, issues from highlights and selections
+- [X] Vacubulary: record and revise the new things  
 - [ ] Flashcards
 
 ### Output
