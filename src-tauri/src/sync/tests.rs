@@ -232,6 +232,65 @@ fn two_workspaces_started_apart_merge() {
 }
 
 #[test]
+fn a_new_repo_takes_the_branch_of_the_remote() {
+  let s = setup("branch");
+  // a repo on master, made by other tools
+  git2::Repository::init_opts(&s.a, git2::RepositoryInitOptions::new().initial_head("master")).unwrap();
+  write(&s.a, "writing/A.md", "a\n");
+  connect(&s, &s.a);
+  run(&s, &s.a);
+  git2::Repository::open(&s.remote).unwrap().set_head("refs/heads/master").unwrap();
+
+  // a new workspace on the other device: not a second branch
+  layout(&s.b);
+  connect(&s, &s.b);
+  assert_eq!(info_of(&s.b, &s.creds).unwrap().branch.as_deref(), Some("main"));
+  assert!(run(&s, &s.b).pushed);
+  assert_eq!(info_of(&s.b, &s.creds).unwrap().branch.as_deref(), Some("master"));
+  assert_eq!(read(&s.b, "writing/A.md"), "a\n");
+  let remote = git2::Repository::open(&s.remote).unwrap();
+  assert!(remote.find_reference("refs/heads/main").is_err());
+  run(&s, &s.a);
+  assert_eq!(read(&s.a, ".mdsilo/workspace.json"), read(&s.b, ".mdsilo/workspace.json"));
+}
+
+#[test]
+fn a_branch_with_commits_stays() {
+  let s = setup("stay");
+  git2::Repository::init_opts(&s.a, git2::RepositoryInitOptions::new().initial_head("master")).unwrap();
+  write(&s.a, "writing/A.md", "a\n");
+  connect(&s, &s.a);
+  run(&s, &s.a);
+  git2::Repository::open(&s.remote).unwrap().set_head("refs/heads/master").unwrap();
+  write(&s.b, "writing/B.md", "b\n");
+  connect(&s, &s.b);
+  let mut repo = open_repo(&s.b, false).unwrap().unwrap();
+  repo.commit_all("mine", &Author { name: "b".into(), email: "b@example.com".into() }).unwrap();
+  assert!(repo.set_unborn_branch("master").is_err());
+  run(&s, &s.b);
+  assert_eq!(info_of(&s.b, &s.creds).unwrap().branch.as_deref(), Some("main"));
+}
+
+#[test]
+fn an_author_without_email_commits() {
+  let s = setup("email");
+  write(&s.a, "writing/A.md", "a\n");
+  let setup = SyncSetup {
+    url: s.remote.to_str().unwrap().to_string(),
+    username: None,
+    token: None,
+    author_name: Some("Me".into()),
+    author_email: None,
+  };
+  setup_in(&s.a, &s.creds, setup).unwrap();
+  assert!(run(&s, &s.a).pushed);
+  let remote = git2::Repository::open(&s.remote).unwrap();
+  let commit = remote.find_reference("refs/heads/main").unwrap().peel_to_commit().unwrap();
+  assert_eq!(commit.author().name(), Some("Me"));
+  assert_eq!(commit.author().email(), Some(DEFAULT_EMAIL));
+}
+
+#[test]
 fn the_token_is_kept_out_of_the_workspace() {
   let s = setup("token");
   let mut setup = SyncSetup {

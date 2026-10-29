@@ -159,27 +159,21 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
                 Forget the saved token
               </label>
             ) : null}
+            <p className="text-xs text-base-content/70">
+              The token is kept in the app data of this device, never in the workspace.
+            </p>
             <label className="flex flex-col gap-1">
               <span>User name <span className="text-base-content/70">(if the host needs it with the token)</span></span>
               <input className={inputClass} value={form.username} onChange={set('username')} />
             </label>
-            <div className="text-xs text-base-content/70">
-              Author of the commits <span className="badge badge-ghost badge-xs">optional</span>
-              {' '}Empty: the name and email of your git config, or mdSilo.
-            </div>
-            <div className="flex gap-2">
-              <label className="flex flex-col flex-1 gap-1">
-                <span>Name</span>
-                <input className={inputClass} placeholder="Name" value={form.authorName} onChange={set('authorName')} />
-              </label>
-              <label className="flex flex-col flex-1 gap-1">
-                <span>Email</span>
-                <input className={inputClass} placeholder="me@example.com" value={form.authorEmail} onChange={set('authorEmail')} />
-              </label>
-            </div>
-            <p className="text-xs text-base-content/70">
-              The token is kept in the app data of this device, never in the workspace.
-            </p>
+            <label className="flex flex-col flex-1 gap-1">
+              <span>Author(optional)</span>
+              <input className={inputClass} placeholder="Name" value={form.authorName} onChange={set('authorName')} />
+            </label>
+            <label className="flex flex-col flex-1 gap-1">
+              <span>Email(optional)</span>
+              <input className={inputClass} placeholder="me@example.com" value={form.authorEmail} onChange={set('authorEmail')} />
+            </label>
             {setupError ? <div role="alert" className="text-error">{setupError}</div> : null}
             <div className="flex justify-end gap-2">
               {ready ? (

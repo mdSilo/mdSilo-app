@@ -68,6 +68,13 @@ pub fn sync(
   stamp: &str,
   exists: &dyn Fn(&str) -> bool,
 ) -> Result<SyncReport> {
+  // a new repo takes the branch of the remote (e.g. `master`), not to push
+  // another one beside it; a branch with commits stays as it is
+  if !repo.has_commits()?
+    && let Some(theirs) = repo.remote_default_branch(remote)?
+  {
+    repo.set_unborn_branch(&theirs)?;
+  }
   let branch = repo.branch()?;
   let mut report = SyncReport {
     committed: repo.commit_all(&format!("Sync {stamp}"), author)?,
@@ -257,10 +264,12 @@ fn sync_in(root: &Path, file: &Path) -> Result<SyncReport> {
   let url = repo.remote_url()?.ok_or("No remote to sync with")?;
   let url = normalize_url(&url)?;
   let remote = Remote { credentials: load_credentials(file, &url), url };
-  let author = repo.author()?.unwrap_or_else(|| Author {
-    name: DEFAULT_AUTHOR.into(),
-    email: DEFAULT_EMAIL.into(),
-  });
+  // git takes no empty email: the name set, the email left out
+  let author = match repo.author()? {
+    Some(Author { name, email }) if email.trim().is_empty() => Author { name, email: DEFAULT_EMAIL.into() },
+    Some(author) => author,
+    None => Author { name: DEFAULT_AUTHOR.into(), email: DEFAULT_EMAIL.into() },
+  };
   sync(repo.as_mut(), &remote, &author, &stamp(), &|path| root.join(path).exists())
 }
 

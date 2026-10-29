@@ -51,6 +51,12 @@ pub trait Repo: Send {
   fn set_author(&mut self, author: &Author) -> Result<()>;
   /// The local branch, e.g. `main`, also before the first commit.
   fn branch(&self) -> Result<String>;
+  /// The branch has a commit yet.
+  fn has_commits(&self) -> Result<bool>;
+  /// Put the branch to come on another name, before the first commit.
+  fn set_unborn_branch(&mut self, branch: &str) -> Result<()>;
+  /// The branch the remote's HEAD names, e.g. `master`; None if empty.
+  fn remote_default_branch(&mut self, remote: &Remote) -> Result<Option<String>>;
   /// The files changed and not committed, relative, with `/`.
   fn changes(&self) -> Result<Vec<String>>;
   /// Commit every change but the ignored files; false if nothing changed.

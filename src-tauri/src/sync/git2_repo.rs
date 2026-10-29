@@ -5,7 +5,7 @@ use super::repo::{Author, CommitId, Merged, Relation, Remote, Repo, Result};
 use super::resolve::{Conflict, Resolved};
 use git2::build::CheckoutBuilder;
 use git2::{
-  AutotagOption, ConfigLevel, ErrorCode, FetchOptions, IndexAddOption, IndexEntry, IndexTime, Oid, PushOptions,
+  AutotagOption, ConfigLevel, Direction, ErrorCode, FetchOptions, IndexAddOption, IndexEntry, IndexTime, Oid, PushOptions,
   RemoteCallbacks, Repository, Signature, StatusOptions, Tree,
 };
 use std::cell::RefCell;
@@ -214,6 +214,31 @@ impl Repo for Git2Repo {
       .and_then(|target| target.strip_prefix("refs/heads/"))
       .map(str::to_string)
       .ok_or_else(|| "HEAD is not on a branch".to_string())
+  }
+
+  fn has_commits(&self) -> Result<bool> {
+    Ok(self.head()?.is_some())
+  }
+
+  fn set_unborn_branch(&mut self, branch: &str) -> Result<()> {
+    if self.head()?.is_some() {
+      return Err("the branch has commits already".into());
+    }
+    self.repo.set_head(&format!("refs/heads/{branch}")).map_err(err)
+  }
+
+  fn remote_default_branch(&mut self, remote: &Remote) -> Result<Option<String>> {
+    let mut git_remote = self.remote(&remote.url)?;
+    let head = with_credentials(&remote.url, remote.credentials.as_ref(), || {
+      let connection = git_remote.connect_auth(Direction::Fetch, None, None)?;
+      connection.default_branch().map(|name| name.as_str().map(str::to_string))
+    });
+    match head {
+      Ok(name) => Ok(name.and_then(|n| n.strip_prefix("refs/heads/").map(str::to_string))),
+      // an empty remote
+      Err(e) if e.code() == ErrorCode::NotFound => Ok(None),
+      Err(e) => Err(err(e)),
+    }
   }
 
   fn changes(&self) -> Result<Vec<String>> {

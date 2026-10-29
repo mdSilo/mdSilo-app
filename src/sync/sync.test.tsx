@@ -176,7 +176,8 @@ describe('SyncModal', () => {
       sync_setup: () => (info = { isRepo: true, remoteUrl: 'https://h.test/r.git', hasToken: false, changes: 0 }),
     });
     renderWithView(<SyncModal ws={WS} isOpen handleClose={() => undefined} />);
-    expect(await screen.findByText('optional')).toBeInTheDocument();
+    expect(await screen.findByText('Author(optional)')).toBeInTheDocument();
+    expect(screen.getByText('Email(optional)')).toBeInTheDocument();
     expect(screen.queryByText('Automatic sync')).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText('https://github.com/me/notes.git'), { target: { value: 'https://h.test/r.git' } });
