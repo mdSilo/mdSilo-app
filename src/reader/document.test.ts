@@ -35,12 +35,19 @@ describe('book files', () => {
     expect(convertibleFormatOf('/r/a.TXT')).toBe('TXT');
     expect(convertibleFormatOf('/r/a.markdown')).toBe('Markdown');
     expect(convertibleFormatOf('/r/a.epub')).toBeUndefined();
-    const icons = ['a.epub', 'a.pdf', 'a.azw3', 'a.fb2', 'a.cbz', 'a.txt', 'a.html', 'a.zip'].map((p) => bookIconOf(p));
-    expect(icons.map((i) => i?.label)).toEqual(['EPUB', 'PDF', 'AZW3', 'FB2', 'CBZ', 'TXT', 'HTML', 'ZIP']);
+    const icons = 
+      ['a.md', 'a.epub', 'a.pdf', 'a.azw3', 'a.fb2', 'a.cbz', 'a.txt', 'a.html', 'a.zip'].map(
+        (p) => bookIconOf(p)
+      );
+    expect(
+      icons.map(
+        (i) => i?.label)
+      )
+      .toEqual(['Markdown', 'EPUB', 'PDF', 'AZW3', 'FB2', 'CBZ', 'TXT', 'HTML', 'ZIP']
+    );
     // each its own
     expect(new Set(icons.map((i) => i?.icon)).size).toBe(icons.length);
-    // the notes and images as they are
-    expect(bookIconOf('a.md')).toBeUndefined();
+    // the images as they are
     expect(bookIconOf('a.png')).toBeUndefined();
   });
 

@@ -42,7 +42,8 @@ export const CONVERTIBLE_EXTS: Record<string, TextFormat> = {
 };
 
 /** A file converted to a book when imported, by its extension. */
-export const convertibleFormatOf = (path: string): TextFormat | undefined => CONVERTIBLE_EXTS[extOf(path)];
+export const convertibleFormatOf = 
+  (path: string): TextFormat | undefined => CONVERTIBLE_EXTS[extOf(path)];
 
 export type LanguageMap = Record<string, string>;
 export type Contributor = string | { name?: string | LanguageMap } | Contributor[];

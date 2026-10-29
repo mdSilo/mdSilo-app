@@ -118,12 +118,6 @@ const SidebarNoteLink = (
               size={16} 
               color="orange"
             />
-          ) : !isNonMd ? (
-            <TbMarkdown 
-              className="shrink-0 text-base-content/60"
-              size={16}
-              color="black"
-            />
           ) : (
             <TbNote 
               className="shrink-0 text-base-content/60"

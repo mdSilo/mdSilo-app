@@ -822,7 +822,7 @@ describe('reader, the second part', () => {
     fireEvent.click(screen.getByText('was a'));
     expect(view.goTo).toHaveBeenCalledWith('epubcfi(/6/4!/4/4,/1:2,/1:7)');
     // the highlights of the matches go with the tab
-    fireEvent.click(screen.getByRole('tab', { name: 'Contents' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Table of Contents' }));
     expect((view as unknown as { clearSearch: () => void }).clearSearch).toHaveBeenCalled();
   });
 
