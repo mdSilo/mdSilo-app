@@ -1,9 +1,10 @@
-import { createContext, type ReactNode, useMemo, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, type ReactNode, useEffect, useMemo, useCallback, useContext, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { ask } from '@tauri-apps/plugin-dialog';
 import { 
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
   TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
-  TbPizza, TbInfoCircle, TbCurrentLocation, TbDatabaseExport, TbBooks,
+  TbPizza, TbInfoCircle, TbCurrentLocation, TbDatabaseExport, TbBooks, TbEraser,
 } from 'react-icons/tb';
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
@@ -378,6 +379,27 @@ const ProjectButton = (props: ButtonProps) => {
 };
 
 export function FileDrop() {
+  // the web version starts with a demo: the manual, a book and some issues
+  const [hasDemo, setHasDemo] = useState(false);
+  useEffect(() => {
+    if (isWeb) void invoke<boolean>('has_demo').then(setHasDemo).catch(() => setHasDemo(false));
+  }, []);
+  const onRemoveDemo = useCallback(async () => {
+    const ok = await ask(
+      'Remove the demo: the manual, the sample book with its highlight, and the sample issues and project? ' +
+      'What you added is kept. This cannot be undone.',
+      { title: 'Remove demo' }
+    );
+    if (!ok) return;
+    try {
+      await invoke('remove_demo');
+      // the notes, issues and the library are loaded again
+      window.location.reload();
+    } catch (e) {
+      console.error('Failed to remove the demo:', e);
+    }
+  }, []);
+
   const onClear = useCallback(() => {
     // to see recent history
     store.getState().setShowHistory(true);
@@ -412,6 +434,12 @@ export function FileDrop() {
         >
           <TbDatabaseExport size={18} className="mr-1" />
           <Tooltip content="Export Backup"><span>Backup</span></Tooltip>
+        </DropdownItem>
+      )}
+      {isWeb && hasDemo && (
+        <DropdownItem onClick={onRemoveDemo}>
+          <TbEraser size={18} className="mr-1" />
+          <Tooltip content="Remove the manual, sample book and sample issues"><span>Remove demo</span></Tooltip>
         </DropdownItem>
       )}
       <DropdownItem 

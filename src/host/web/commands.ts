@@ -11,6 +11,7 @@ import { basename, fileStem, isTextNote, join, normalize, parent } from './path'
 import { emitChanges, watchDir } from './watch';
 import { downloadBlob, fileUrl, showMessage } from './browser';
 import { exportBackup } from './backup';
+import { hasDemo, removeDemo } from './demoClear';
 import * as indexer from './indexer';
 
 type Args = Record<string, any>;
@@ -191,4 +192,7 @@ export const commands: Record<string, Command> = {
   write_file_bytes: ({ filePath, data }) => fs.writeFile(filePath, new Blob([new Uint8Array(data ?? [])])),
   // web only: back up notes in IndexedDB to a zip file
   export_backup: ({ dir }) => exportBackup(dir ?? '/'),
+  // web only: the demo of the first run, see demo.ts
+  has_demo: () => hasDemo(),
+  remove_demo: () => removeDemo(),
 };

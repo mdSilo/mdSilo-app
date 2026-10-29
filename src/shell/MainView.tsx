@@ -74,21 +74,19 @@ function DefaultView() {
 }
 
 const defaultValue = `
-A lightweight, local-first personal Wiki and knowledge base for storing ideas, thought, knowledge with the powerful all-in-one reading/writing tool. Use it to organize writing, network thoughts and build a Second Brain on top of local plain text Markdown files.
+**A hub for your personal I/O: Reading (input) → Issue (process) → Writing (output).**
+
+mdSilo keeps what you read, what you think and what you write in one local workspace of plain Markdown files, tied together by links.
 
 ## Features  
-  - ➰ I/O: Feed & Podcast client(Input) and Personal Wiki(Output); 
-  - 🔀 All-In-One Editor: Markdown, WYSIWYG, Mind Map...  
-  - 📝 Markdown and extensions: Math/Chemical Equation, Diagram, Hashtag...   
-  - 🗄️ Build personal wiki with bidirectional wiki links  
-  - ⌨️ Slash commands, Hotkeys and Hovering toolbar...  
-  - 📋 Projects: Kanban boards and tables to manage the process of knowledge growing   
-  - 🎯 Built-in issue tracker: labels, milestones and comments, linked to notes; tasks in notes (#todo# #doing# #done#, checkboxes) become issues   
-  - 🕸️ Graph view to visualize the networked writing  
-  - 📅 Chronicle view and Daily activities graph  
-  - 🔍 Full-text search 
-  - ✨ Available for Windows, macOS, Linux and Web  
+  - 📖 Reading: books (EPUB, PDF...), feeds and podcasts; highlights and notes saved as Markdown  
+  - 🧩 Issue: issues, labels, milestones and project boards; made from a highlight, a selection or a task in a note (#todo# #doing# #done#, checkboxes)  
+  - ✍️ Writing: WYSIWYG Markdown, mind map, diagram, math; slash commands, hotkeys and hovering toolbar  
+  - 🔗 Linking: \`[[notes]]\`, \`{{books}}\`, issues, hashtags and backlinks; Graph view; Chronicle and activity heat map  
+  - 🔍 Full-text search over notes, annotations and books  
+  - ✨ Windows, macOS, Linux and Web; local plain files, no account  
 
-For human brain, Reading and Writing is the I/O: the communication between the information processing system and the outside world. mdSilo is here to boost your daily I/O, it is tiny yet powerful, free for everyone.
-\\
+For a human brain, reading and writing are the I/O. mdSilo is here to boost it: tiny yet powerful, free for everyone.
+
+New here? Read the Manual: it is in the sidebar of the web version, and in \`docs/manual\` of the repo.
 `;

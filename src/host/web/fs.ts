@@ -5,6 +5,7 @@
 import { FILES, getAll, get, reqToPromise, tx } from './idb';
 import { ROOT, basename, isHidden, isTextFile, isWithin, normalize, parent } from './path';
 import { emitFsChange } from './watch';
+import { loadDemo } from './demo';
 
 export type FileData = string | Blob;
 
@@ -67,6 +68,8 @@ export function initFs(): Promise<void> {
     initialized = (async () => {
       const root = await get<FsEntry>(FILES, ROOT);
       if (root) return;
+      // the demo of the first run: the manual, a book and some issues; not in tests
+      const demo = import.meta.env.MODE === 'test' ? [] : await loadDemo().catch(() => []);
       await tx(FILES, 'readwrite', (t) => {
         const s = t.objectStore(FILES);
         s.put(newEntry(ROOT, true));
@@ -78,7 +81,19 @@ export function initFs(): Promise<void> {
         s.put(newEntry(`${DEFAULT_DIR}/.mdsilo/.gitignore`, false, 'local/\n'));
         const meta = { version: 1, createdAt: new Date().toISOString() };
         s.put(newEntry(`${DEFAULT_DIR}/.mdsilo/workspace.json`, false, JSON.stringify(meta, null, 2)));
-        s.put(newEntry(`${DEFAULT_DIR}/writing/Welcome.md`, false, WELCOME));
+        if (demo.length === 0) {
+          s.put(newEntry(`${DEFAULT_DIR}/writing/Welcome.md`, false, WELCOME));
+        }
+        const dirs = new Set<string>();
+        for (const file of demo) {
+          const path = `${DEFAULT_DIR}/${file.path}`;
+          // the parent dirs, up to the workspace
+          for (let dir = parent(path); dir !== DEFAULT_DIR && !dirs.has(dir); dir = parent(dir)) {
+            dirs.add(dir);
+            s.put(newEntry(dir, true));
+          }
+          s.put(newEntry(path, false, file.data));
+        }
       });
     })().catch((e) => {
       initialized = null;
