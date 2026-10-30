@@ -2,7 +2,7 @@ import type { FoliateView } from './view';
 import type { Box } from './popups';
 
 /**
- * Turning the pages, as readup does: by a click on the sides of the page, the
+ * Turning the pages: by a click on the sides of the page, the
  * wheel, the keys, the buttons of the bars. In scrolled flow a page is the
  * height shown, ending between two lines.
  */
@@ -177,7 +177,7 @@ export type TurnHint = { corner: Corner; turned: boolean };
 
 /**
  * The corner of the text of the page (`area`, in the window) a point of a
- * selection dragged is at, as readup does: the bottom right ends the page
+ * selection dragged is at: the bottom right ends the page
  * (the bottom left, in a book written right to left), the top left starts it.
  * A point dragged out of the page, past an edge, is at that end of it.
  */

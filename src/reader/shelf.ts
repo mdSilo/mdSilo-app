@@ -207,7 +207,7 @@ export const breadcrumbs = (path: string) => {
   return parts.map((name, i) => ({ name, path: parts.slice(0, i + 1).join('/') }));
 };
 
-/** The name of a new group of two books dropped one on the other, as readup does. */
+/** The name of a new group of two books dropped one on the other. */
 export function newGroupName(a: Pick<BookEntry, 'title'>, b: Pick<BookEntry, 'title'>, parent = '') {
   const part = (title: string) => title.replace(/\//g, ' ').trim().slice(0, 5).trim() || 'Book';
   const name = `${part(a.title)}-${part(b.title)}`;

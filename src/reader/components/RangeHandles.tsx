@@ -71,7 +71,7 @@ const inside = (p: Point, area: Box) => p.x >= area.left - 2 && p.x <= area.righ
 
 /**
  * The handles at the ends of the text selected and of a highlight clicked,
- * to change their range by dragging one (as readup does): the other end
+ * to change their range by dragging one: the other end
  * stays, the end dragged snaps to words; dragged to a corner, the page
  * turns and the range goes on in the next one. A highlight changed is
  * drawn as it goes and saved once the handle is let go.

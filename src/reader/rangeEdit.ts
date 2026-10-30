@@ -1,6 +1,6 @@
 /**
  * The range of a highlight, or of the text selected, changed by dragging a
- * handle at one of its ends (as readup does): the other end stays where it
+ * handle at one of its ends: the other end stays where it
  * is, as a place in the text; the end dragged goes to the word under the
  * pointer.
  */
