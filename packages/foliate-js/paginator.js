@@ -3203,8 +3203,11 @@ export class Paginator extends HTMLElement {
     async #scrollToRect(rect, reason) {
         if (this.scrolled) {
             // rect is in iframe-local coordinates; add view offset
-            // to convert to container scroll coordinates
-            const localOffset = this.#getRectMapper()(rect).left - 3
+            // to convert to container scroll coordinates. Map it within the
+            // primary view: vertical writing mirrors the rect across the
+            // view's width, and the width of all the loaded views would put
+            // it as far ahead as the views preloaded after it.
+            const localOffset = this.#getRectMapper(this.#primaryView)(rect).left - 3
             const viewOffset = this.#getViewOffset(this.#primaryIndex)
             return this.#scrollTo(viewOffset + localOffset, reason)
         }

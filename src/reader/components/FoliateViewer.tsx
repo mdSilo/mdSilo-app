@@ -10,7 +10,7 @@ import { boxOfRange, usePopups, type Box } from '../popups';
 import { activePane, setActivePane, setView, type FoliateView, type Pane } from '../view';
 import { useReaderChrome } from '../chrome';
 import {
-  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, wheelGesture, wheelScrolls, zoomKey,
+  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, wheelGesture, wheelPixels, wheelScrolls, zoomKey,
   type TurnHint,
 } from '../pagination';
 import { sectionOf, type BookNote } from '../annotations';
@@ -291,7 +291,15 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     const onWheel = (e: WheelEvent) => {
       bookStore.getState().touch();
       const view = viewRef.current;
-      if (!view || view.renderer.scrolled) return;
+      if (!view) return;
+      if (view.renderer.scrolled) {
+        // written down the page it scrolls across, the wheel not: forward to the left
+        const container = view.renderer.shadowRoot?.querySelector('#container');
+        if (container?.classList.contains('vertical') && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          container.scrollLeft -= wheelPixels(e.deltaY, e.deltaMode, container.clientWidth);
+        }
+        return;
+      }
       if (e.ctrlKey) {
         // a fixed layout zooms, by the wheel or a pinch of a touchpad; not the window
         if (!view.isFixedLayout || !e.deltaY) return;

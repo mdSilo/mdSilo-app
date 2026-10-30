@@ -10,50 +10,76 @@ import type { Box } from './popups';
 export type Side = 'left' | 'right' | 'up' | 'down';
 export type TurnMode = 'page' | 'section';
 
-/** The lines of the text in view, to scroll by whole lines; or the distance asked. */
+type Line = { start: number; end: number };
+
+/**
+ * The lines of the sections around the view, from its start along the scroll:
+ * across the page from its top, down the page (columns) from its right.
+ */
+function linesAround(view: FoliateView, box: DOMRect, vertical: boolean): Line[] {
+  const size = vertical ? box.width : box.height;
+  const lines: Line[] = [];
+  for (const { doc } of view.renderer.getContents()) {
+    const frame = doc?.defaultView?.frameElement?.getBoundingClientRect();
+    if (!frame || !doc.body) continue;
+    // a section a view or more away: none of its lines to snap to
+    const near = vertical
+      ? frame.right > box.left - size && frame.left < box.right + size
+      : frame.bottom > box.top - size && frame.top < box.bottom + size;
+    if (!near) continue;
+    const range = doc.createRange();
+    range.selectNodeContents(doc.body);
+    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 2 && r.height > 2);
+    // the boxes of the blocks too: the lines are those no thicker than most
+    const thickness = (r: DOMRect) => (vertical ? r.width : r.height);
+    const sorted = rects.map(thickness).sort((a, b) => a - b);
+    const maxLine = (sorted[Math.floor(sorted.length / 2)] ?? 0) * 1.8;
+    for (const r of rects) {
+      if (thickness(r) > maxLine) continue;
+      lines.push(vertical
+        ? { start: box.right - (frame.left + r.right), end: box.right - (frame.left + r.left) }
+        : { start: frame.top + r.top - box.top, end: frame.top + r.bottom - box.top });
+    }
+  }
+  return lines;
+}
+
+/**
+ * The distance to scroll by whole lines: the line cut at the end of the view
+ * at the start of the next, or the line cut at its start at the end of the
+ * one before; else the distance asked.
+ */
 function snapToLines(view: FoliateView, distance: number, forward: boolean): number {
   try {
-    const visible = view.renderer.getContents().find(({ doc }) => {
-      const frame = doc?.defaultView?.frameElement?.getBoundingClientRect();
-      return Boolean(frame && frame.bottom > 1 && frame.top < window.innerHeight);
-    });
-    const frame = visible?.doc.defaultView?.frameElement as HTMLElement | undefined;
-    if (!visible || !frame) return distance;
-    let container: HTMLElement | null = frame;
-    while (container && container.id !== 'container') container = container.parentElement;
+    const container = view.renderer.shadowRoot?.querySelector('#container');
     if (!container) return distance;
+    // foliate marks the text written down the page, scrolled across
+    const vertical = container.classList.contains('vertical');
     const box = container.getBoundingClientRect();
-    const frameBox = frame.getBoundingClientRect();
-    const size = box.height;
-    const scrollTop = container.scrollTop;
-    const range = visible.doc.createRange();
-    range.selectNodeContents(visible.doc.body);
-    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 2 && r.height > 2);
-    if (rects.length < 2) return distance;
-    const heights = rects.map((r) => r.height).sort((a, b) => a - b);
-    const maxLine = (heights[Math.floor(heights.length / 2)] ?? 0) * 1.8;
-    const toContent = (y: number) => y + frameBox.top - box.top + scrollTop;
-    const lines = rects
-      .filter((r) => r.height <= maxLine)
-      .map((r) => ({ top: toContent(r.top), bottom: toContent(r.bottom) }))
-      .sort((a, b) => a.top - b.top);
+    const size = vertical ? box.width : box.height;
+    const lines = linesAround(view, box, vertical);
+    if (lines.length < 2) return distance;
     let snapped: number;
     if (forward) {
-      // the first line not all shown is the top of the next view
-      const next = lines.find((l) => l.bottom > scrollTop + size + 1);
-      if (!next) return distance;
-      snapped = next.top - scrollTop;
+      // the first line not all shown is the start of the next view
+      const cut = lines.filter((l) => l.end > size + 1);
+      if (!cut.length) return distance;
+      snapped = Math.min(...cut.map((l) => l.start));
     } else {
-      // the last line not all shown above is the bottom of the view before
-      const prev = [...lines].reverse().find((l) => l.top < scrollTop - 1);
-      if (!prev) return distance;
-      snapped = scrollTop + size - prev.bottom;
+      // the last line not all shown before is the end of the view before
+      const cut = lines.filter((l) => l.start < -1);
+      if (!cut.length) return distance;
+      snapped = size - Math.max(...cut.map((l) => l.end));
     }
     return snapped > size * 0.4 && snapped < size * 1.6 ? snapped : distance;
   } catch {
     return distance;
   }
 }
+
+/** px a wheel step scrolls, by its mode: pixels, lines, pages of `page` px */
+export const wheelPixels = (delta: number, mode: number, page: number) =>
+  mode === 1 ? delta * 16 : mode === 2 ? delta * page : delta;
 
 type Scroller = Pick<HTMLElement, 'scrollLeft' | 'scrollTop' | 'scrollWidth' | 'scrollHeight' | 'clientWidth' | 'clientHeight'>;
 
