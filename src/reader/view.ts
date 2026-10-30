@@ -2,9 +2,14 @@ import { create } from 'zustand';
 import type { BookDoc } from './document';
 
 /** The `foliate-view` element of foliate-js (packages/foliate-js/view.js). */
+/** The marks drawn over a section: the one at a point of it, with its box there. */
+export type Overlay = {
+  hitTest: (point: { x: number; y: number }) => [string?, Range?, { left: number; top: number; right: number; bottom: number }?];
+};
+
 export interface FoliateRenderer extends HTMLElement {
   setStyles?: (css: string) => void;
-  getContents: () => { doc: Document; index?: number }[];
+  getContents: () => { doc: Document; index?: number; overlayer?: Overlay }[];
   primaryIndex: number;
   next: (distance?: number) => Promise<void>;
   prev: (distance?: number) => Promise<void>;

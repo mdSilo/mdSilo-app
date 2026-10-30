@@ -24,6 +24,10 @@ export type AnnotationTarget = {
   edit?: 'new' | 'existing';
   /** its range, while the section is shown: to change it by its handles */
   range?: Range;
+  /** its note alone, from the bubble on it: not the toolbar */
+  bubble?: boolean;
+  /** shown while the pointer is on the bubble, or then on the note: gone once it leaves */
+  hover?: 'bubble' | 'note';
 };
 
 type Popups = {

@@ -270,10 +270,32 @@ describe('reader', () => {
     fireEvent.change(screen.getByPlaceholderText(/A note/), { target: { value: 'Orwell' } });
     fireEvent.click(screen.getByText('Save'));
     expect(useReaderStore.getState().notes[0].note).toBe('Orwell');
+    // the highlight clicked: the toolbar, not the note
     act(() => {
       usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 } });
     });
+    expect(screen.queryByTestId('note-card')).not.toBeInTheDocument();
+    // its bubble hovered: the note alone, gone once the pointer leaves it
+    act(() => {
+      usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 }, bubble: true, hover: 'bubble' });
+    });
     expect(screen.getByTestId('note-card')).toHaveTextContent('Orwell');
+    expect(screen.queryByTestId('annotation-toolbar')).not.toBeInTheDocument();
+    fireEvent.mouseEnter(screen.getByTestId('note-card'));
+    expect(usePopups.getState().annotation?.hover).toBe('note');
+    fireEvent.mouseLeave(screen.getByTestId('note-card'));
+    expect(screen.queryByTestId('note-popup')).not.toBeInTheDocument();
+    // clicked: it stays; its note edited from there
+    act(() => {
+      usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 }, bubble: true });
+    });
+    fireEvent.click(screen.getByTitle('Edit the note'));
+    fireEvent.change(screen.getByPlaceholderText(/A note/), { target: { value: 'Orwell, 1984' } });
+    fireEvent.click(screen.getByText('Save'));
+    expect(useReaderStore.getState().notes[0].note).toBe('Orwell, 1984');
+    act(() => {
+      usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 } });
+    });
 
     fireEvent.click(screen.getByLabelText('Delete the highlight'));
     expect(useReaderStore.getState().notes).toEqual([]);

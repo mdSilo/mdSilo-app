@@ -43,7 +43,7 @@ export type Anchor = {
 
 /**
  * Where a popup goes for a box of text, in the root: on the side with the
- * more room (as readup does), unless the popup fits under it; centered on
+ * more room, unless the popup fits under it; centered on
  * the text, kept in the root.
  */
 export function anchorOf(box: Box, root: DOMRect, width: number, height: number): Anchor {
@@ -246,6 +246,8 @@ function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
 const TOOLBAR_WIDTH = 380;
 // the toolbar and the highlight options, to choose the side
 const TOOLBAR_HEIGHT = 44 + 8 + 28;
+// the note of a bubble, about
+const NOTE_HEIGHT = 120;
 
 /**
  * The popups over the book, as in readup: the toolbar of the text selected
@@ -346,8 +348,9 @@ function BookPopups({ rootRef, tools }: {
   }
 
   if (!annotation || !note) return null;
-  const edit = () => usePopups.getState().setAnnotation({ ...annotation, edit: 'existing' });
-  const anchor = anchorOf(annotation.box, root, width, TOOLBAR_HEIGHT + (note.note ? 80 : 0));
+  // written, it stays: not gone with the pointer
+  const edit = () => usePopups.getState().setAnnotation({ ...annotation, edit: 'existing', hover: undefined });
+  const anchor = anchorOf(annotation.box, root, width, annotation.bubble ? NOTE_HEIGHT : TOOLBAR_HEIGHT);
   if (editing) {
     const cancel = () => {
       // a highlight made to write a note on: not wanted
@@ -364,6 +367,20 @@ function BookPopups({ rootRef, tools }: {
             clear();
           }}
         />
+      </AnchoredBox>
+    );
+  }
+  // from its bubble: the note alone; hovered, gone once the pointer leaves it
+  if (annotation.bubble) {
+    const { hover } = annotation;
+    return (
+      <AnchoredBox anchor={anchor} width={width} testId="note-popup">
+        <div
+          onMouseEnter={() => hover && usePopups.getState().setAnnotation({ ...annotation, hover: 'note' })}
+          onMouseLeave={() => hover && clear()}
+        >
+          <NoteCard note={note} onEdit={edit} />
+        </div>
       </AnchoredBox>
     );
   }
@@ -418,7 +435,6 @@ function BookPopups({ rootRef, tools }: {
       <HighlightOptions note={note} onDone={clear}>
         <NoteIssues note={note} className="justify-center flex-1 min-w-0 mx-1" />
       </HighlightOptions>
-      {noteText(note.note) ? <NoteCard note={note} onEdit={edit} /> : null}
     </AnchoredBox>
   );
 }
