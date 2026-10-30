@@ -3,15 +3,16 @@ import { openUrl } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
 import { DEFAULT_READER_SETTINGS, lookKey, withDefaults, zoomBy } from '../settings';
 import {
-  applyLayout, bookStyles, HIGHLIGHT_CSS, isVerticalMode, pageLayout, pagesDirection, setBookDir, setSpread, themeColors,
+  applyLayout, bookStyles, HIGHLIGHT_CSS, isVerticalMode, pageLayout, 
+  pagesDirection, setBookDir, setSpread, themeColors,
 } from '../styles';
 import { storeOf } from '../readerStore';
 import { boxOfRange, usePopups, type Box } from '../popups';
 import { activePane, setActivePane, setView, type FoliateView, type Pane } from '../view';
 import { useReaderChrome } from '../chrome';
 import {
-  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, wheelGesture, wheelPixels, wheelScrolls, zoomKey,
-  type TurnHint,
+  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, 
+  wheelGesture, wheelPixels, wheelScrolls, zoomKey, type TurnHint,
 } from '../pagination';
 import { noteText, sectionOf, type BookNote } from '../annotations';
 import { getDirection, type BookDoc } from '../document';
@@ -23,6 +24,7 @@ import { placeOf } from './BookPopups';
 import { ImageViewer, TableViewer } from './MediaViewer';
 import DoubleBorder from './DoubleBorder';
 import RangeHandles from './RangeHandles';
+import { useBookTranslation } from './useBookTranslation';
 
 type Props = {
   book: BookDoc;
@@ -190,8 +192,11 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const theme = useStore((state) => state.theme);
   const notes = bookStore((state) => state.notes);
   const fixed = book.rendition?.layout === 'pre-paginated';
-  // a fixed layout: its pages from right to left or from left to right, as chosen; no text to write otherwise
-  const writingMode = bookStore((state) => (fixed ? pagesDirection(state.writingMode) : state.writingMode));
+  // a fixed layout: its pages from right to left or from left to right, as chosen; 
+  // no text to write otherwise
+  const writingMode = bookStore((state) => (
+    fixed ? pagesDirection(state.writingMode) : state.writingMode
+  ));
   const textMode = fixed ? 'auto' : writingMode;
   const vertical = bookStore((state) => state.vertical);
   const drawnRef = useRef(new Map<string, BookNote>());
@@ -205,6 +210,9 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   };
   const [turnHint, setTurnHint] = useState<TurnHint>();
   const [zoomed, setZoomed] = useState<Zoomed>();
+  // the view opened, for what goes with it
+  const [opened, setOpened] = useState<FoliateView | null>(null);
+  useBookTranslation(opened, pane);
 
   // open the book, once per book; again in another writing
   useEffect(() => {
@@ -620,6 +628,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       applyLayout(view, current, state.vertical);
       view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme), textMode));
       setView(view, pane);
+      setOpened(view);
       // the notes to draw
       drawnRef.current = new Map(state.notes.filter((n) => n.text).map((n) => [n.cfi, n]));
       // opened again in another writing: where the reader is
@@ -660,6 +669,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       if (flashRef.current) clearTimeout(flashRef.current.timer);
       flashRef.current = undefined;
       setView(null, pane);
+      setOpened(null);
       usePopups.getState().clear();
       footnoteHost?.replaceChildren();
       if (view) {

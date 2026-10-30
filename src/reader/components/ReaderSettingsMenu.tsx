@@ -8,6 +8,7 @@ import {
 import { useReaderStore } from '../readerStore';
 import { bookDir, pagesDirection, rtlPagesMode, themeColors } from '../styles';
 import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
+import TranslationSwitches from './TranslationSwitches';
 
 const PAGE_THEMES: [PageTheme, string][] = [
   ['auto', 'As the app'], ['light', 'White'], ['sepia', 'Sepia'], ['gray', 'Gray'], ['dark', 'Dark'],
@@ -180,6 +181,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       {settings.clickToTurn ? (
         <Toggle label="Click left to go forward" checked={settings.swapClickArea} onChange={(swapClickArea) => update({ swapClickArea })} />
       ) : null}
+      <TranslationSwitches />
       <button
         className="self-end btn btn-ghost btn-xs"
         onClick={() => setReaderSettings({

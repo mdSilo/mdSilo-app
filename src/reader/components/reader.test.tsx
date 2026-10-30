@@ -912,6 +912,14 @@ describe('reader, the second part', () => {
     expect(store.getState().readerSettings).toMatchObject({ translator: 'google', translateTo: 'zh-CN' });
     // one service so far: no choice of it shown
     expect(screen.queryByLabelText('Translate by')).not.toBeInTheDocument();
+    // the book translated as it is read: switched on from here, kept with the book
+    expect(screen.queryByLabelText('Translation only')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Translate the book'));
+    expect(useReaderStore.getState().entry?.translate).toBe(true);
+    expect(screen.getByLabelText('Translation only')).toBeInTheDocument();
+    expect(screen.getByText('Make the translated book…')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Translate the book'));
+    expect(useReaderStore.getState().entry?.translate).toBeUndefined();
     fireEvent.click(screen.getByText('Keep as note'));
     expect(useReaderStore.getState().notes[0]).toMatchObject({ text: 'a bright cold day', note: '寒冷的一天' });
     expect(screen.queryByTestId('lookup-popup')).not.toBeInTheDocument();

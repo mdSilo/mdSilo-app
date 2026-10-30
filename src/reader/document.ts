@@ -63,6 +63,8 @@ export interface SectionItem {
   /** a fixed layout: the side of a spread the page is on; '' as the layout goes */
   pageSpread?: 'left' | 'right' | 'center' | '';
   createDocument: () => Promise<Document>;
+  /** the page as shown: a URL of it, its images and styles as blob: URLs */
+  load?: () => string | Promise<string>;
 }
 
 export interface BookMetadata {
@@ -82,6 +84,10 @@ export interface BookDoc {
   toc?: TOCItem[];
   sections: SectionItem[];
   splitTOCHref?(href: string): Array<string | number>;
+  /** a link in the book: its section, and the element it goes to there */
+  resolveHref?(href: string): { index: number; anchor?: (doc: Document) => Element | null } | undefined
+    | Promise<{ index: number; anchor?: (doc: Document) => Element | null } | undefined>;
+  isExternal?(href: string): boolean;
   getCover(): Promise<Blob | null>;
   destroy?(): void | Promise<void>;
 }

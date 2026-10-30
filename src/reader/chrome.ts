@@ -9,10 +9,13 @@ type ReaderChrome = {
   tab: string;
   /** a search asked from the text selected, run by the search tab */
   searchRequest?: { query: string; seq: number };
+  /** the dialog to make the translated book, open */
+  translatedBook: boolean;
   setBarsVisible: (visible: boolean) => void;
   setMenuOpen: (open: boolean) => void;
   setTab: (tab: string) => void;
   requestSearch: (query: string) => void;
+  setTranslatedBook: (open: boolean) => void;
 };
 
 let searchSeq = 0;
@@ -22,11 +25,13 @@ export const useReaderChrome = create<ReaderChrome>((set) => ({
   barsVisible: false,
   menuOpen: false,
   tab: 'toc',
+  translatedBook: false,
   setBarsVisible: (barsVisible) => set({ barsVisible }),
   setMenuOpen: (menuOpen) => set({ menuOpen }),
   setTab: (tab) => set({ tab }),
   requestSearch: (query) => set({ tab: 'search', searchRequest: { query, seq: ++searchSeq } }),
+  setTranslatedBook: (translatedBook) => set({ translatedBook }),
 }));
 
 export const resetReaderChrome = () =>
-  useReaderChrome.setState({ barsVisible: false, menuOpen: false, tab: 'toc', searchRequest: undefined });
+  useReaderChrome.setState({ barsVisible: false, menuOpen: false, tab: 'toc', searchRequest: undefined, translatedBook: false });

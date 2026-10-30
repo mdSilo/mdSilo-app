@@ -51,7 +51,7 @@ export interface FoliateView extends HTMLElement {
   renderer: FoliateRenderer;
   isFixedLayout: boolean;
   language?: { canonical?: string; isCJK?: boolean };
-  lastLocation?: { cfi?: string; fraction?: number };
+  lastLocation?: { cfi?: string; fraction?: number; range?: Range };
   tts?: TTSApi | null;
   open: (book: BookDoc) => Promise<void>;
   close: () => void;

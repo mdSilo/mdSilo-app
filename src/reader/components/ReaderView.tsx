@@ -31,6 +31,7 @@ import NotesView from './NotesView';
 import LinksView from './LinksView';
 import BookPopups, { type Tool } from './BookPopups';
 import ReaderSettingsMenu from './ReaderSettingsMenu';
+import TranslatedBookDialog from './TranslatedBookDialog';
 import SearchView from './SearchView';
 import LookupPopup from './LookupPopup';
 import TTSBar, { canReadAloud, readAloud } from './TTSBar';
@@ -77,6 +78,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   const barsVisible = useReaderChrome((s) => s.barsVisible);
   const menuOpen = useReaderChrome((s) => s.menuOpen);
   const tab = useReaderChrome((s) => s.tab);
+  const translatedBook = useReaderChrome((s) => s.translatedBook);
   const searchRequest = useReaderChrome((s) => s.searchRequest);
   const rootRef = useRef<HTMLDivElement>(null);
   // the book read and the book beside it: the popups over either
@@ -395,6 +397,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
           <ParallelPane />
           <BookPopups rootRef={booksRef} tools={tools} />
           {overlay?.(booksRef)}
+          {translatedBook ? <TranslatedBookDialog /> : null}
         </div>
       </div>
     </ErrorBoundary>

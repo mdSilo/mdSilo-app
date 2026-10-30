@@ -73,6 +73,8 @@ export type ReaderSettings = {
   /** translations: the service and the target language (e.g. en, zh-CN), as chosen last in the popup */
   translator: string;
   translateTo: string;
+  /** a book translated: the translation in place of the text, not under it */
+  translationOnly: boolean;
 };
 
 export const DEFAULT_READER_SETTINGS: ReaderSettings = {
@@ -111,6 +113,7 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   ttsRate: 1,
   translator: 'google',
   translateTo: '',
+  translationOnly: false,
 };
 
 /** %, the zoom of a fixed layout: the least, the most, a step */

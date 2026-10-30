@@ -14,6 +14,7 @@ import { activeStore, useActiveStore } from '../readerStore';
 import { getView } from '../view';
 import { definitionOf, sameWord, sentenceAround, useVocabulary } from '../vocabulary';
 import { Popup } from './BookPopups';
+import TranslationSwitches from './TranslationSwitches';
 
 type Result =
   | { kind: 'dictionary'; data: DictionaryResult }
@@ -120,6 +121,7 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
           <p className="whitespace-pre-wrap" lang={result.data.to}>{result.data.text}</p>
         )}
       </div>
+      {kind === 'translate' ? <TranslationSwitches className="pt-2 mt-2 border-t border-base-300" /> : null}
       {result && !error && (result.kind !== 'wikipedia' || result.data) ? (
         <div className="flex justify-end gap-1 mt-1">
           {result.kind === 'dictionary' && result.data.entries.length > 0 && ws ? (
