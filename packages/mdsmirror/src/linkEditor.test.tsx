@@ -143,3 +143,41 @@ describe("item link", () => {
     ).toBe(true);
   });
 });
+
+describe("a short link clicked", () => {
+  // the click of the link at a position, as the view handles it
+  const click = (view: MsEditor["view"], pos: number) => {
+    const a = view.dom.querySelector("a") as HTMLAnchorElement;
+    const event = new MouseEvent("click", { bubbles: true });
+    Object.defineProperty(event, "target", { value: a });
+    return view.someProp("handleClick", (f) => f(view, pos, event));
+  };
+
+  test.each([5, 6])(
+    "of one character, at its edge %i: selected, its toolbar shown",
+    async (pos) => {
+      const ref = React.createRef<MsEditor>();
+      render(<MsEditor ref={ref} value="see [x](https://a.b) here" />);
+      const { view } = ref.current as MsEditor;
+      await act(async () => {
+        view.focus();
+        expect(click(view, pos)).toBe(true);
+      });
+      expect(view.state.selection.from).toBe(5);
+      expect(view.state.selection.to).toBe(6);
+      expect((document.querySelector("input") as HTMLInputElement).value).toBe(
+        "https://a.b"
+      );
+    }
+  );
+
+  test("longer, clicked in it: as usual", async () => {
+    const ref = React.createRef<MsEditor>();
+    render(<MsEditor ref={ref} value="see [xyz](https://a.b) here" />);
+    const { view } = ref.current as MsEditor;
+    await act(async () => {
+      view.focus();
+      expect(click(view, 6)).toBeFalsy();
+    });
+  });
+});

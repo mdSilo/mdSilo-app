@@ -178,7 +178,9 @@ describe('reader', () => {
 
     await act(async () => { await useReaderStore.getState().flush(); });
     const md = await invoke<string>('read_file', { filePath: `${BOOK}.md` });
-    expect(md).toContain('> a bright cold day\n\nSee [[1984]]');
+    // the quote links back to its place
+    const hash = await invoke<string>('book_hash', { filePath: BOOK });
+    expect(md).toContain(`> a bright cold day [↗ in book](${bookHref(hash, 'epubcfi(/6/4!/4/4,/1:9,/1:26)')})\n\nSee [[1984]]`);
 
     // a bookmark
     fireEvent.click(screen.getByTitle('Bookmark this page'));

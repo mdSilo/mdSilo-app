@@ -3,7 +3,8 @@ import { toggleMark } from "prosemirror-commands";
 import { InputRule } from "prosemirror-inputrules";
 import { MarkdownSerializerState } from "prosemirror-markdown";
 import { MarkSpec, MarkType, Node, Mark as PmMark } from "prosemirror-model";
-import { EditorState, Plugin } from "prosemirror-state";
+import { EditorState, Plugin, TextSelection } from "prosemirror-state";
+import getMarkRange from "../core/queries/getMarkRange";
 import { Dispatch } from "../types";
 import Mark from "./Mark";
 
@@ -104,6 +105,40 @@ export default class Link extends Mark {
     const plugin: Plugin = new Plugin({
       props: {
         decorations: (state) => plugin.getState(state),
+        // a link of a character or so: the click puts the caret at an edge
+        // of it, out of the link (not inclusive), and the link toolbar does
+        // not show. The link selected instead, to show it
+        handleClick: (view, pos, event) => {
+          if (
+            !view.editable ||
+            !(event.target instanceof Element) ||
+            !event.target.closest("a")
+          ) {
+            return false;
+          }
+          const type = view.state.schema.marks.link;
+          const $pos = view.state.doc.resolve(pos);
+          if (type.isInSet($pos.marks())) {
+            return false;
+          }
+          const { nodeAfter, nodeBefore } = $pos;
+          const $start =
+            nodeAfter && type.isInSet(nodeAfter.marks)
+              ? $pos
+              : nodeBefore && type.isInSet(nodeBefore.marks)
+                ? view.state.doc.resolve(pos - nodeBefore.nodeSize)
+                : undefined;
+          const range = getMarkRange($start, type);
+          if (!range) {
+            return false;
+          }
+          view.dispatch(
+            view.state.tr.setSelection(
+              TextSelection.create(view.state.doc, range.from, range.to)
+            )
+          );
+          return true;
+        },
         handleDOMEvents: {
           mouseover: (view, event: MouseEvent) => {
             if (

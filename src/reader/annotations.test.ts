@@ -27,7 +27,10 @@ describe('annotations file', () => {
     const md = serializeAnnotations(doc);
     expect(md).toContain('# A Book\n\n*Someone*');
     expect(md).toContain('## One\n\n<!-- mdsilo:note');
-    expect(md).toContain('> First line\n> second line\n\nMy **note** with [[Other]]');
+    // the quote links back to its place in the book
+    const back = `[↗ in book](${bookHref('a'.repeat(32), 'epubcfi(/6/4!/4/2,/1:0,/1:5)')})`;
+    expect(md).toContain(`> First line\n> second line ${back}\n\nMy **note** with [[Other]]`);
+    expect(md).toContain(`> more ${back}`);
     expect(md.match(/## One/g)).toHaveLength(1);
     expect(md).toContain('## Two');
   });
@@ -36,6 +39,18 @@ describe('annotations file', () => {
     const parsed = parseAnnotations(serializeAnnotations(doc));
     expect(parsed.header).toEqual(doc.header);
     expect(parsed.notes).toEqual(doc.notes);
+  });
+
+  test('the quotes link back to their place, if the book is known; files without the links still read', () => {
+    const md = serializeAnnotations({ notes: [note({ text: 'Some text' })] });
+    expect(md).toContain('> Some text\n');
+    expect(md).not.toContain('book:');
+    const old = serializeAnnotations(doc).replace(/ \[↗ in book\]\(book:\S*\)/g, '');
+    expect(old).not.toContain('↗');
+    expect(parseAnnotations(old).notes).toEqual(doc.notes);
+    // a bare ↗, as first written
+    const bare = serializeAnnotations(doc).replace(/\[↗ in book\]/g, '[↗]');
+    expect(parseAnnotations(bare).notes).toEqual(doc.notes);
   });
 
   test('keeps the notes as edited in the file', () => {
