@@ -55,18 +55,55 @@ function snapToLines(view: FoliateView, distance: number, forward: boolean): num
   }
 }
 
+type Scroller = Pick<HTMLElement, 'scrollLeft' | 'scrollTop' | 'scrollWidth' | 'scrollHeight' | 'clientWidth' | 'clientHeight'>;
+
+/** the part of the view a pan moves by: some of it still in view after */
+const PAN = 0.85;
+
+/**
+ * A page larger than the view (fit to the width, zoomed in), turned to a
+ * side: first panned there, across by the left and right if it is wider,
+ * else down or up; at its edge, `axis` with no step, turned.
+ */
+export function panStep(el: Scroller, side: Side, back: boolean): { axis: 'x' | 'y'; left: number; top: number } {
+  const across = side === 'left' || side === 'right';
+  if (across && el.scrollWidth - el.clientWidth > 1) {
+    const right = side === 'right';
+    const room = right ? el.scrollWidth - el.clientWidth - el.scrollLeft : el.scrollLeft;
+    const left = room > 1 ? (right ? 1 : -1) * Math.min(room, el.clientWidth * PAN) : 0;
+    return { axis: 'x', left, top: 0 };
+  }
+  const room = back ? el.scrollTop : el.scrollHeight - el.clientHeight - el.scrollTop;
+  const top = room > 1 ? (back ? -1 : 1) * Math.min(room, el.clientHeight * PAN) : 0;
+  return { axis: 'y', left: 0, top };
+}
+
 /** Turn a page, or go to a section, to a side of the screen. */
 export function turn(view: FoliateView | null, side: Side, mode: TurnMode = 'page') {
   if (!view?.renderer) return;
+  const { renderer } = view;
   const rtl = view.book?.dir === 'rtl';
   // to the left is back, but in a book written right to left
   const back = side === 'up' || (side === 'left' ? !rtl : false) || (side === 'right' && rtl);
   if (mode === 'section') {
-    return back ? view.renderer.prevSection?.() : view.renderer.nextSection?.();
+    return back ? renderer.prevSection?.() : renderer.nextSection?.();
   }
-  if (view.renderer.scrolled && view.renderer.size) {
-    const distance = snapToLines(view, view.renderer.size, !back);
+  if (renderer.scrolled && renderer.size) {
+    const distance = snapToLines(view, renderer.size, !back);
     return back ? view.prev(distance) : view.next(distance);
+  }
+  if (view.isFixedLayout) {
+    const step = panStep(renderer, side, back);
+    if (step.left || step.top) {
+      renderer.scrollBy({ left: step.left, top: step.top, behavior: 'smooth' });
+      return Promise.resolve();
+    }
+    if (step.axis === 'y' && renderer.scrollHeight - renderer.clientHeight > 1) {
+      // the page before from its bottom, to read on up; the next from its top
+      return (back ? view.prev() : view.next()).then(() => {
+        renderer.scrollTop = back ? renderer.scrollHeight : 0;
+      });
+    }
   }
   return back ? view.prev() : view.next();
 }
@@ -175,7 +212,8 @@ export type WheelSample = { deltaX: number; deltaY: number; deltaMode: number; t
 /**
  * One page turned by a gesture of the wheel: the travel adds up to a
  * threshold, then the rest of the gesture (the momentum of a touchpad) is
- * ignored until the wheel stops.
+ * ignored until the wheel stops. A gesture that `scrolls` a page larger than
+ * the view turns none, even once at its edge.
  */
 export function wheelGesture({ threshold = 30, idleMs = 200 } = {}) {
   let x = 0;
@@ -183,12 +221,13 @@ export function wheelGesture({ threshold = 30, idleMs = 200 } = {}) {
   let last = -Infinity;
   let turned = false;
   const px = (delta: number, mode: number) => (mode === 1 ? delta * 40 : mode === 2 ? delta * 800 : delta);
-  return (e: WheelSample): Side | undefined => {
+  return (e: WheelSample, scrolls = false): Side | undefined => {
     if (e.timeStamp - last > idleMs) {
       x = y = 0;
       turned = false;
     }
     last = e.timeStamp;
+    if (scrolls) turned = true;
     if (turned) return undefined;
     x += px(e.deltaX, e.deltaMode);
     y += px(e.deltaY, e.deltaMode);
@@ -198,6 +237,25 @@ export function wheelGesture({ threshold = 30, idleMs = 200 } = {}) {
     x = y = 0;
     return side;
   };
+}
+
+/** The wheel scrolls the page there, larger than the view: not at its edge on the way of the wheel. */
+export function wheelScrolls(el: Scroller, deltaX: number, deltaY: number): boolean {
+  if (Math.abs(deltaY) >= Math.abs(deltaX)) {
+    if (deltaY > 0) return el.scrollHeight - el.clientHeight - el.scrollTop > 1;
+    return deltaY < 0 && el.scrollTop > 1;
+  }
+  if (deltaX > 0) return el.scrollWidth - el.clientWidth - el.scrollLeft > 1;
+  return el.scrollLeft > 1;
+}
+
+/** The zoom of a fixed layout by Ctrl (⌘) with +, - and 0: steps in or out, or back to the fit. */
+export function zoomKey({ key, ctrlKey, metaKey, altKey }: Keys): number | 'reset' | undefined {
+  if (!(ctrlKey || metaKey) || altKey) return undefined;
+  if (key === '=' || key === '+') return 1;
+  if (key === '-' || key === '_') return -1;
+  if (key === '0') return 'reset';
+  return undefined;
 }
 
 export type KeyAction =

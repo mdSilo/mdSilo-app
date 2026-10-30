@@ -3,6 +3,7 @@ import { ttsStyles } from './tts';
 import { codeStyles } from './highlight';
 import { captionStyles } from './media';
 import type { FoliateView } from './view';
+import type { BookDoc, SectionItem } from './document';
 
 /**
  * The CSS set in the pages of a book (foliate-js renderer `setStyles`),
@@ -111,12 +112,41 @@ export const HIGHLIGHT_CSS: Record<string, string> = {
   violet: '#a78bfa',
 };
 
-/** The layout of the pages, as set: the flow, the columns, the margins. */
+/** The side of the first spread the cover is on: alone (as the layout goes), or the page before the second. */
+const coverSpread = (separate: boolean, rtl: boolean): NonNullable<SectionItem['pageSpread']> =>
+  separate ? '' : rtl ? 'right' : 'left';
+
+/** Before a fixed layout opens: its pages in spreads or one by one, the cover alone or not, as set. */
+export function setSpread(book: BookDoc, settings: ReaderSettings) {
+  if (book.rendition?.layout !== 'pre-paginated' || !book.sections.length) return;
+  book.rendition.spread = settings.spreadMode;
+  book.sections[0].pageSpread = coverSpread(settings.separateCover, book.dir === 'rtl');
+}
+
+/** A fixed layout: the zoom and the spreads, as set; each change renders the pages again, so only a change. */
+function applyFixedLayout(view: FoliateView, settings: ReaderSettings) {
+  const { renderer, book } = view;
+  const set = (name: string, value: string) => {
+    if (renderer.getAttribute(name) !== value) renderer.setAttribute(name, value);
+  };
+  set('zoom', settings.zoomMode);
+  set('scale-factor', String(settings.zoomLevel));
+  const cover = book.sections[0];
+  const side = coverSpread(settings.separateCover, book.dir === 'rtl');
+  if (cover && (cover.pageSpread ?? '') !== side) {
+    cover.pageSpread = side;
+    // the spreads made again
+    renderer.setAttribute('spread', settings.spreadMode);
+  } else set('spread', settings.spreadMode);
+}
+
+/** The layout of the pages, as set: the flow, the columns, the margins; the zoom and spreads of a fixed layout. */
 export function applyLayout(view: FoliateView, settings: ReaderSettings) {
   const { renderer } = view;
   renderer.toggleAttribute('animated', settings.animated);
   if (view.isFixedLayout) {
     renderer.setAttribute('flow', settings.flow === 'scrolled' ? 'scrolled' : 'paginated');
+    applyFixedLayout(view, settings);
     return;
   }
   renderer.setAttribute('flow', settings.flow);

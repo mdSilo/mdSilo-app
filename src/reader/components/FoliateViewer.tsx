@@ -1,14 +1,15 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { openUrl } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
-import { withDefaults } from '../settings';
-import { applyLayout, bookStyles, HIGHLIGHT_CSS, themeColors } from '../styles';
+import { DEFAULT_READER_SETTINGS, withDefaults, zoomBy } from '../settings';
+import { applyLayout, bookStyles, HIGHLIGHT_CSS, setSpread, themeColors } from '../styles';
 import { storeOf } from '../readerStore';
 import { boxOfRange, usePopups, type Box } from '../popups';
 import { activePane, setActivePane, setView, type FoliateView, type Pane } from '../view';
 import { useReaderChrome } from '../chrome';
 import {
-  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, wheelGesture, type TurnHint,
+  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, wheelGesture, wheelScrolls, zoomKey,
+  type TurnHint,
 } from '../pagination';
 import { sectionOf, type BookNote } from '../annotations';
 import type { BookDoc } from '../document';
@@ -130,6 +131,13 @@ const isEditable = (target: EventTarget | null) => {
 /** Not a click on the page: on a link, a note mark, a control. */
 const isActive = (target: EventTarget | null) =>
   Boolean((target as Element | null)?.closest?.('a[href], sup, audio, video, button, input, select, textarea, label'));
+
+/** The zoom of a fixed layout, set: of all such books, as the other settings. */
+function setZoom(level: (now: number) => number) {
+  const settings = withDefaults(store.getState().readerSettings);
+  const zoomLevel = level(settings.zoomLevel);
+  if (zoomLevel !== settings.zoomLevel) store.getState().setReaderSettings({ ...settings, zoomLevel });
+}
 
 /**
  * The pages of a book, rendered by foliate-js. Reports where the reader is,
@@ -274,10 +282,21 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     const onWheel = (e: WheelEvent) => {
       bookStore.getState().touch();
       const view = viewRef.current;
-      if (!view || view.renderer.scrolled || e.ctrlKey) return;
-      const side = onWheelGesture({ deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, timeStamp: e.timeStamp });
+      if (!view || view.renderer.scrolled) return;
+      if (e.ctrlKey) {
+        // a fixed layout zooms, by the wheel or a pinch of a touchpad; not the window
+        if (!view.isFixedLayout || !e.deltaY) return;
+        e.preventDefault();
+        setZoom((now) => zoomBy(now, -e.deltaY / 100));
+        return;
+      }
+      // a page larger than the view scrolls, as the wheel does it; turned at its edge
+      const scrolls = view.isFixedLayout && wheelScrolls(view.renderer, e.deltaX, e.deltaY);
+      const side = onWheelGesture({ deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, timeStamp: e.timeStamp }, scrolls);
       if (side) void turn(view, side);
     };
+    // not passive in a fixed layout, to zoom it alone by Ctrl and the wheel
+    const wheelOptions = { passive: book.rendition?.layout !== 'pre-paginated' };
 
     // the back and forward buttons of a mouse
     const onMouseUp = (e: MouseEvent) => {
@@ -361,7 +380,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         onClick(ev, doc);
       }, true);
       doc.addEventListener('mouseup', onMouseUp);
-      doc.addEventListener('wheel', onWheel, { passive: true });
+      doc.addEventListener('wheel', onWheel, wheelOptions);
       doc.addEventListener('keyup', (ev) => {
         if (ev.shiftKey) reportSelection();
       });
@@ -391,6 +410,12 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       if ((e.key === ' ' || e.key === 'Enter') && (e.target as Element | null)?.closest?.('button, a[href]')) return;
       // the slider of the progress moves by the arrows
       if ((e.target as Element | null)?.closest?.('[role="slider"], input[type="range"]')) return;
+      const zoom = view.isFixedLayout ? zoomKey(e) : undefined;
+      if (zoom !== undefined) {
+        e.preventDefault();
+        setZoom((now) => (zoom === 'reset' ? DEFAULT_READER_SETTINGS.zoomLevel : zoomBy(now, zoom)));
+        return;
+      }
       const action = keyAction(e);
       if (!action) return;
       e.preventDefault();
@@ -456,6 +481,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       view.addEventListener('link', onLink);
       container.append(view);
       viewRef.current = view;
+      setSpread(book, withDefaults(store.getState().readerSettings));
       await view.open(book);
       if (cancelled) return;
       const state = bookStore.getState();
@@ -485,7 +511,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     container.addEventListener('pointerup', onPointerUp);
     container.addEventListener('click', onContainerClick);
     container.addEventListener('mouseup', onMouseUp);
-    container.addEventListener('wheel', onWheel, { passive: true });
+    container.addEventListener('wheel', onWheel, wheelOptions);
     return () => {
       cancelled = true;
       if (clickTimer) clearTimeout(clickTimer);

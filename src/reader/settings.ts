@@ -31,6 +31,14 @@ export type ReaderSettings = {
   /** the code blocks colored, in a language or guessed */
   codeHighlight: boolean;
   codeLanguage: CodeLanguage;
+  /** a fixed layout (PDF, comics): the page fit to the view, or to its width */
+  zoomMode: 'fit-page' | 'fit-width';
+  /** %, of the fit; a fixed layout */
+  zoomLevel: number;
+  /** a fixed layout: two pages side by side if wide enough, or one */
+  spreadMode: 'auto' | 'none';
+  /** a fixed layout in spreads: the cover alone, the pages after it in pairs */
+  separateCover: boolean;
   /** the pages slide as they turn */
   animated: boolean;
   /** a click on the left or right of the page turns it */
@@ -68,6 +76,10 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   imageCaptions: true,
   codeHighlight: false,
   codeLanguage: 'auto',
+  zoomMode: 'fit-page',
+  zoomLevel: 100,
+  spreadMode: 'auto',
+  separateCover: true,
   animated: true,
   clickToTurn: true,
   swapClickArea: false,
@@ -80,6 +92,15 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   ttsRate: 1,
   translateTo: '',
 };
+
+/** %, the zoom of a fixed layout: the least, the most, a step */
+export const MIN_ZOOM = 50;
+export const MAX_ZOOM = 500;
+export const ZOOM_STEP = 10;
+
+/** The zoom of a fixed layout, steps (or a part of one, by the wheel) in or out, within the bounds. */
+export const zoomBy = (level: number, steps: number) =>
+  Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(level + steps * ZOOM_STEP)));
 
 /** The settings not about the look of the pages, kept on a reset. */
 export const KEPT_ON_RESET = [

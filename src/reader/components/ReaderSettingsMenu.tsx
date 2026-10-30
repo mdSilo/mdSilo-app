@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { useStore } from '@/state/store';
 import { Range, Segmented, Select, Toggle } from '@/ui/ui';
 import {
-  DEFAULT_READER_SETTINGS, KEPT_ON_RESET, withDefaults, type PageTheme, type ReaderSettings,
+  DEFAULT_READER_SETTINGS, KEPT_ON_RESET, MAX_ZOOM, MIN_ZOOM, withDefaults, zoomBy, type PageTheme, type ReaderSettings,
 } from '../settings';
 import { themeColors } from '../styles';
 import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
@@ -53,7 +53,47 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
         options={[['paginated', 'Pages'], ['scrolled', 'Scroll']] as const}
         onChange={(flow) => update({ flow })}
       />
-      {fixedLayout ? null : (
+      {fixedLayout ? (
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <span>Zoom</span>
+            <div className="join" role="group" aria-label="Zoom">
+              <button className="join-item btn btn-xs" aria-label="Zoom out" title="Zoom out (Ctrl -)"
+                disabled={settings.zoomLevel <= MIN_ZOOM} onClick={() => update({ zoomLevel: zoomBy(settings.zoomLevel, -1) })}>
+                −
+              </button>
+              <button className="join-item btn btn-xs w-14" aria-label="Reset zoom" title="Reset zoom (Ctrl 0)"
+                onClick={() => update({ zoomLevel: DEFAULT_READER_SETTINGS.zoomLevel })}>
+                {settings.zoomLevel}%
+              </button>
+              <button className="join-item btn btn-xs" aria-label="Zoom in" title="Zoom in (Ctrl +)"
+                disabled={settings.zoomLevel >= MAX_ZOOM} onClick={() => update({ zoomLevel: zoomBy(settings.zoomLevel, 1) })}>
+                +
+              </button>
+            </div>
+          </div>
+          <Segmented
+            label="Fit"
+            value={settings.zoomMode}
+            options={[['fit-page', 'Page'], ['fit-width', 'Width']] as const}
+            onChange={(zoomMode) => update({ zoomMode })}
+          />
+          {settings.flow === 'paginated' ? (
+            <>
+              <Segmented
+                label="Spread"
+                value={settings.spreadMode}
+                options={[['none', 'One page'], ['auto', 'Two pages']] as const}
+                onChange={(spreadMode) => update({ spreadMode })}
+              />
+              {settings.spreadMode === 'auto' ? (
+                <Toggle label="Cover page alone" checked={settings.separateCover}
+                  onChange={(separateCover) => update({ separateCover })} />
+              ) : null}
+            </>
+          ) : null}
+        </>
+      ) : (
         <>
           <Range label="Font size" min={12} max={32} value={settings.fontSize} format={String}
             onChange={(fontSize) => update({ fontSize })} />

@@ -1,6 +1,6 @@
 import {
-  clickAction, cornerAt, cornerTurner, DWELL_MS, formatMinutes, formatProgress, keyAction, runKeyAction, turn,
-  wheelGesture,
+  clickAction, cornerAt, cornerTurner, DWELL_MS, formatMinutes, formatProgress, keyAction, panStep, runKeyAction, turn,
+  wheelGesture, wheelScrolls, zoomKey,
 } from './pagination';
 import { bookmarkAt } from './actions';
 import { withDefaults } from './settings';
@@ -72,6 +72,69 @@ describe('turning pages', () => {
     const view = viewOf();
     runKeyAction(view, { go: 'end' });
     expect(view.goToFraction).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('a fixed layout larger than the view', () => {
+  /** a page 1000 high in a view 400 high, scrolled to `top`; as wide as the view, or twice */
+  const page = (top: number, left = 0, wide = false) =>
+    ({ scrollTop: top, scrollLeft: left, scrollHeight: 1000, clientHeight: 400, scrollWidth: wide ? 1200 : 600, clientWidth: 600 });
+
+  test('panned to a side before it turns', () => {
+    // fit to the width: down and up, across too
+    expect(panStep(page(0), 'down', false)).toEqual({ axis: 'y', left: 0, top: 340 });
+    expect(panStep(page(0), 'right', false)).toEqual({ axis: 'y', left: 0, top: 340 });
+    // the rest of it, then at the edge
+    expect(panStep(page(500), 'down', false).top).toBe(100);
+    expect(panStep(page(600), 'down', false).top).toBe(0);
+    expect(panStep(page(0), 'up', true).top).toBe(0);
+    expect(panStep(page(300), 'left', true).top).toBe(-300);
+    // zoomed in, wider: across by the left and right
+    expect(panStep(page(0, 0, true), 'right', false)).toEqual({ axis: 'x', left: 510, top: 0 });
+    expect(panStep(page(0, 600, true), 'right', false)).toEqual({ axis: 'x', left: 0, top: 0 });
+    expect(panStep(page(0, 600, true), 'left', true).left).toBe(-510);
+  });
+
+  test('turned at the edge: the page before shown from its bottom', async () => {
+    const renderer = { ...page(0), scrolled: false, scrollBy: vi.fn() };
+    const view = { ...viewOf(), isFixedLayout: true, renderer } as unknown as ReturnType<typeof viewOf>;
+    view.prev.mockResolvedValue(undefined);
+    view.next.mockResolvedValue(undefined);
+    await turn(view, 'down');
+    expect(renderer.scrollBy).toHaveBeenCalledWith({ left: 0, top: 340, behavior: 'smooth' });
+    expect(view.next).not.toHaveBeenCalled();
+    await turn(view, 'up');
+    expect(view.prev).toHaveBeenCalled();
+    expect(renderer.scrollTop).toBe(1000);
+    renderer.scrollTop = 600;
+    await turn(view, 'down');
+    expect(view.next).toHaveBeenCalled();
+    expect(renderer.scrollTop).toBe(0);
+  });
+
+  test('the wheel scrolls it, and turns no page in that gesture', () => {
+    expect(wheelScrolls(page(0), 0, 40)).toBe(true);
+    expect(wheelScrolls(page(0), 0, -40)).toBe(false);
+    expect(wheelScrolls(page(600), 0, 40)).toBe(false);
+    expect(wheelScrolls(page(0), 40, 0)).toBe(false);
+    expect(wheelScrolls(page(0, 0, true), 40, 0)).toBe(true);
+    const feed = wheelGesture();
+    const at = (timeStamp: number, scrolls: boolean) => feed({ deltaX: 0, deltaY: 50, deltaMode: 0, timeStamp }, scrolls);
+    expect(at(0, true)).toBeUndefined();
+    // at the edge, the momentum of the gesture
+    expect(at(16, false)).toBeUndefined();
+    // a new one
+    expect(at(400, false)).toBe('down');
+  });
+
+  test('zoomed by Ctrl with +, - and 0', () => {
+    const k = (key: string, ctrlKey = true) => zoomKey({ key, ctrlKey, metaKey: false, altKey: false, shiftKey: false });
+    expect(k('=')).toBe(1);
+    expect(k('+')).toBe(1);
+    expect(k('-')).toBe(-1);
+    expect(k('0')).toBe('reset');
+    expect(k('=', false)).toBeUndefined();
+    expect(k('f')).toBeUndefined();
   });
 });
 

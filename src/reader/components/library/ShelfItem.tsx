@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { 
+  useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode 
+} from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { TbChevronLeft, TbChevronRight, TbCloud, TbCloudOff, TbInfoCircle } from 'react-icons/tb';
+import { TbChevronLeft, TbChevronRight, TbCloud, TbCloudOff } from 'react-icons/tb';
 import { IconButton } from '@/ui/ui';
 import { formatDuration, totalSeconds } from '../../stats';
-import { formatSeries, isGroup, plainText, type ShelfBook, type ShelfGroup, type ShelfItem, type ViewMode } from '../../shelf';
+import { 
+  formatSeries, isGroup, plainText, type ShelfBook, type ShelfGroup, type ShelfItem, type ViewMode 
+} from '../../shelf';
+import BookIcon from '../BookIcon';
 import BookCover from './BookCover';
 
 /** The ids of the items to drag and drop: `book:<hash>`, `group:<key>`. */
@@ -119,7 +124,10 @@ function SyncButton({ books, onSync }: { books: ShelfBook[]; onSync: Props['onSy
       : `${synced} of ${books.length} book files synced: click to sync them all`;
   return (
     <ShelfButton title={title} onClick={() => onSync(books.map((b) => b.hash), state !== 'all')}>
-      {state === 'none' ? <TbCloudOff size={14} /> : <TbCloud size={14} className={state === 'some' ? 'opacity-50' : ''} />}
+      {state === 'none' 
+        ? <TbCloudOff size={14} /> 
+        : <TbCloud size={14} className={state === 'some' ? 'opacity-50' : ''} />
+      }
     </ShelfButton>
   );
 }
@@ -138,7 +146,7 @@ function BookItem({ book, mode, covers, onDetails, onSync }: Props & { book: She
       {mode === 'list' ? <span className="badge badge-ghost badge-xs">{book.format}</span> : null}
       <SyncButton books={[book]} onSync={onSync} />
       <ShelfButton title="Book details" onClick={() => onDetails(book)}>
-        <TbInfoCircle size={14} />
+        <BookIcon path={book.path} size={14} />
       </ShelfButton>
     </div>
   );

@@ -60,6 +60,8 @@ export interface SectionItem {
   cfi?: string;
   size: number;
   linear?: string;
+  /** a fixed layout: the side of a spread the page is on; '' as the layout goes */
+  pageSpread?: 'left' | 'right' | 'center' | '';
   createDocument: () => Promise<Document>;
 }
 
