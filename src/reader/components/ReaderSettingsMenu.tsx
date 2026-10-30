@@ -61,12 +61,24 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           })}
         </div>
       </div>
-      <Segmented
-        label="Layout"
-        value={settings.flow}
-        options={[['paginated', 'Pages'], ['scrolled', 'Scroll']] as const}
-        onChange={(flow) => update({ flow })}
-      />
+      {fixedLayout ? (
+        <Segmented
+          label="Layout"
+          value={settings.flow === 'paginated' ? 'paginated' : settings.scrollDirection}
+          options={[['paginated', 'Pages'], ['vertical', 'Vertical'], ['horizontal', 'Horizontal']] as const}
+          onChange={(layout) => update(layout === 'paginated'
+            ? { flow: 'paginated' }
+            // a webtoon is scrolled down
+            : { flow: 'scrolled', scrollDirection: layout, ...(layout === 'horizontal' ? { webtoon: false } : {}) })}
+        />
+      ) : (
+        <Segmented
+          label="Layout"
+          value={settings.flow}
+          options={[['paginated', 'Pages'], ['scrolled', 'Scroll']] as const}
+          onChange={(flow) => update({ flow })}
+        />
+      )}
       {fixedLayout ? (
         <>
           <div className="flex items-center justify-between gap-2">
@@ -86,14 +98,15 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
               </button>
             </div>
           </div>
-          <Segmented
-            label="Fit"
-            value={settings.zoomMode}
-            options={[['fit-page', 'Page'], ['fit-width', 'Width']] as const}
-            onChange={(zoomMode) => update({ zoomMode })}
-          />
           {settings.flow === 'paginated' ? (
             <>
+              {/* scrolled, the pages fit the width of the strip down, the height of the strip across */}
+              <Segmented
+                label="Fit"
+                value={settings.zoomMode}
+                options={[['fit-page', 'Page'], ['fit-width', 'Width']] as const}
+                onChange={(zoomMode) => update({ zoomMode })}
+              />
               <Segmented
                 label="Spread"
                 value={settings.spreadMode}
@@ -105,7 +118,16 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
                   onChange={(separateCover) => update({ separateCover })} />
               ) : null}
             </>
+          ) : settings.scrollDirection === 'vertical' ? (
+            // a webtoon fills the width: not zoomed, no page cut off
+            <Toggle label="Webtoon (no gaps)" checked={settings.webtoon}
+              onChange={(webtoon) => update(webtoon ? { webtoon, zoomLevel: DEFAULT_READER_SETTINGS.zoomLevel } : { webtoon })} />
           ) : null}
+          {/* scrolled across, the reading moves sideways: not locked */}
+          {settings.flow === 'scrolled' && settings.scrollDirection === 'horizontal' ? null : (
+            <Toggle label="Lock horizontal panning" checked={settings.lockPanX}
+              onChange={(lockPanX) => update({ lockPanX })} />
+          )}
         </>
       ) : (
         <>
@@ -120,7 +142,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             <option value="sans-serif">Sans serif</option>
           </Select>
           {hasBook ? (
-            <Select label="Writing" value={writingMode}
+            <Select label="Writing Mode" value={writingMode}
               onChange={(mode) => useReaderStore.getState().setWritingMode(mode as WritingMode)}>
               {WRITING_MODES.map(([mode, name]) => <option key={mode} value={mode}>{name}</option>)}
             </Select>

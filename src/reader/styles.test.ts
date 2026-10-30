@@ -62,6 +62,28 @@ describe('a fixed layout', () => {
     expect(set).toHaveBeenCalledWith('spread', 'auto');
   });
 
+  test('scrolled across, a webtoon, the panning locked: the direction set before the flow', () => {
+    const book = bookOf();
+    const { view, renderer, set } = fixedView(book);
+    applyLayout(view, DEFAULT_READER_SETTINGS);
+    expect(renderer.getAttribute('scroll-direction')).toBe('vertical');
+    expect(renderer.getAttribute('scroll-gap')).toBe('4');
+    expect(renderer.hasAttribute('lock-pan-x')).toBe(false);
+
+    set.mockClear();
+    applyLayout(view, { ...DEFAULT_READER_SETTINGS, flow: 'scrolled', scrollDirection: 'horizontal' });
+    // the strip built once, on its axis
+    expect(set.mock.calls.map(([name]) => name)).toEqual(['scroll-direction', 'flow']);
+    expect(renderer.getAttribute('flow')).toBe('scrolled');
+
+    applyLayout(view, { ...DEFAULT_READER_SETTINGS, flow: 'scrolled', webtoon: true, lockPanX: true });
+    expect(renderer.getAttribute('scroll-direction')).toBe('vertical');
+    expect(renderer.getAttribute('scroll-gap')).toBe('0');
+    expect(renderer.hasAttribute('lock-pan-x')).toBe(true);
+    applyLayout(view, DEFAULT_READER_SETTINGS);
+    expect(renderer.hasAttribute('lock-pan-x')).toBe(false);
+  });
+
   test('zoomed by steps, within the bounds', () => {
     expect(zoomBy(100, 1)).toBe(110);
     expect(zoomBy(100, -0.25)).toBe(98);

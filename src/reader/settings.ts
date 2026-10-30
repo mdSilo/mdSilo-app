@@ -45,6 +45,12 @@ export type ReaderSettings = {
   spreadMode: 'auto' | 'none';
   /** a fixed layout in spreads: the cover alone, the pages after it in pairs */
   separateCover: boolean;
+  /** a fixed layout scrolled: the pages one below the other, or side by side */
+  scrollDirection: 'vertical' | 'horizontal';
+  /** a fixed layout scrolled down: no gaps between the pages, a strip of a webtoon */
+  webtoon: boolean;
+  /** a fixed layout: a touch moves the page up and down only, its sides cut off by the zoom stay so */
+  lockPanX: boolean;
   /** the pages slide as they turn */
   animated: boolean;
   /** a click on the left or right of the page turns it */
@@ -88,6 +94,9 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   zoomLevel: 100,
   spreadMode: 'auto',
   separateCover: true,
+  scrollDirection: 'vertical',
+  webtoon: false,
+  lockPanX: false,
   animated: true,
   clickToTurn: true,
   swapClickArea: false,

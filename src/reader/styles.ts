@@ -188,12 +188,23 @@ export function setSpread(book: BookDoc, settings: ReaderSettings) {
   book.sections[0].pageSpread = coverSpread(settings.separateCover, book.dir === 'rtl');
 }
 
-/** A fixed layout: the zoom and the spreads, as set; each change renders the pages again, so only a change. */
+/** The px between the pages of a fixed layout scrolled: none in a webtoon, else the default of foliate-js. */
+const scrollGap = (settings: ReaderSettings) => (settings.webtoon ? '0' : '4');
+
+/**
+ * A fixed layout: the flow and its direction, the zoom, the spreads, as set;
+ * each change renders the pages again, so only a change. The direction comes
+ * before the flow: the strip of pages built once, on its axis.
+ */
 function applyFixedLayout(view: FoliateView, settings: ReaderSettings) {
   const { renderer, book } = view;
   const set = (name: string, value: string) => {
     if (renderer.getAttribute(name) !== value) renderer.setAttribute(name, value);
   };
+  set('scroll-direction', settings.scrollDirection);
+  set('scroll-gap', scrollGap(settings));
+  if (renderer.hasAttribute('lock-pan-x') !== settings.lockPanX) renderer.toggleAttribute('lock-pan-x', settings.lockPanX);
+  renderer.setAttribute('flow', settings.flow === 'scrolled' ? 'scrolled' : 'paginated');
   set('zoom', settings.zoomMode);
   set('scale-factor', String(settings.zoomLevel));
   const cover = book.sections[0];
@@ -213,7 +224,6 @@ export function applyLayout(view: FoliateView, settings: ReaderSettings, vertica
   const { renderer } = view;
   renderer.toggleAttribute('animated', settings.animated);
   if (view.isFixedLayout) {
-    renderer.setAttribute('flow', settings.flow === 'scrolled' ? 'scrolled' : 'paginated');
     applyFixedLayout(view, settings);
     return;
   }

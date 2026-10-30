@@ -361,7 +361,7 @@ describe('reader settings menu', () => {
 
     openMenu();
     expect(screen.queryByText('Double border')).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Writing'), { target: { value: 'vertical-rl' } });
+    fireEvent.change(screen.getByLabelText('Writing Mode'), { target: { value: 'vertical-rl' } });
     expect(useReaderStore.getState().writingMode).toBe('vertical-rl');
     await waitFor(async () => {
       const lib = await readLibrary(WS);

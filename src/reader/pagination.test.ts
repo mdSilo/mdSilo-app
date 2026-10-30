@@ -112,6 +112,51 @@ describe('a fixed layout larger than the view', () => {
     expect(renderer.scrollTop).toBe(0);
   });
 
+  test('scrolled, panned across by the other keys, else along the strip', async () => {
+    /** a strip scrolled down, `wide` zoomed wider than the view; or across, taller */
+    const stripOf = (direction: 'vertical' | 'horizontal', zoomed: boolean, locked = false) => {
+      const renderer = document.createElement('div');
+      renderer.setAttribute('scroll-direction', direction);
+      renderer.toggleAttribute('lock-pan-x', locked);
+      const size = direction === 'vertical'
+        ? { scrollWidth: zoomed ? 1200 : 600, scrollHeight: 9000 }
+        : { scrollWidth: 9000, scrollHeight: zoomed ? 1000 : 400 };
+      Object.defineProperties(renderer, {
+        scrollTop: { value: 0, writable: true }, scrollLeft: { value: 0, writable: true },
+        clientWidth: { value: 600 }, clientHeight: { value: 400 },
+        scrollWidth: { value: size.scrollWidth }, scrollHeight: { value: size.scrollHeight },
+        scrolled: { value: true },
+      });
+      const scrollBy = vi.fn();
+      renderer.scrollBy = scrollBy as unknown as typeof renderer.scrollBy;
+      const view = { ...viewOf(), isFixedLayout: true, renderer } as unknown as ReturnType<typeof viewOf>;
+      return { view, scrollBy };
+    };
+
+    // down the strip, zoomed: the right pans across, the down goes along
+    let { view, scrollBy } = stripOf('vertical', true);
+    await turn(view, 'right');
+    expect(scrollBy).toHaveBeenCalledWith({ left: 510, top: 0, behavior: 'smooth' });
+    expect(view.next).not.toHaveBeenCalled();
+    await turn(view, 'down');
+    expect(view.next).toHaveBeenCalledTimes(1);
+    // not zoomed, or locked: the right goes along
+    for (const strip of [stripOf('vertical', false), stripOf('vertical', true, true)]) {
+      await turn(strip.view, 'right');
+      expect(strip.scrollBy).not.toHaveBeenCalled();
+      expect(strip.view.next).toHaveBeenCalled();
+    }
+
+    // across the strip, zoomed: the down pans down, the right goes along
+    ({ view, scrollBy } = stripOf('horizontal', true));
+    await turn(view, 'down');
+    expect(scrollBy).toHaveBeenCalledWith({ left: 0, top: 340, behavior: 'smooth' });
+    await turn(view, 'right');
+    expect(view.next).toHaveBeenCalledTimes(1);
+    await turn(view, 'up');
+    expect(view.prev).toHaveBeenCalledTimes(1);
+  });
+
   test('the wheel scrolls it, and turns no page in that gesture', () => {
     expect(wheelScrolls(page(0), 0, 40)).toBe(true);
     expect(wheelScrolls(page(0), 0, -40)).toBe(false);

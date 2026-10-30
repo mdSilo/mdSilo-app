@@ -114,6 +114,21 @@ export function turn(view: FoliateView | null, side: Side, mode: TurnMode = 'pag
   if (mode === 'section') {
     return back ? renderer.prevSection?.() : renderer.nextSection?.();
   }
+  if (view.isFixedLayout && renderer.scrolled) {
+    // a page zoomed larger than the strip: panned across it first, by the other keys
+    const horizontal = renderer.getAttribute('scroll-direction') === 'horizontal';
+    const across = side === 'left' || side === 'right';
+    // locked, the strip scrolled down is not panned across
+    if (across !== horizontal && !(across && renderer.hasAttribute('lock-pan-x'))) {
+      const step = panStep(renderer, side, back);
+      if (step.axis === (across ? 'x' : 'y') && (step.left || step.top)) {
+        renderer.scrollBy({ left: step.left, top: step.top, behavior: 'smooth' });
+        return Promise.resolve();
+      }
+    }
+    // along the strip, a view at a time
+    return back ? view.prev() : view.next();
+  }
   if (renderer.scrolled && renderer.size) {
     const distance = snapToLines(view, renderer.size, !back);
     return back ? view.prev(distance) : view.next(distance);
