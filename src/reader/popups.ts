@@ -22,6 +22,8 @@ export type AnnotationTarget = {
   box: Box;
   /** its note edited: of a highlight made for it (gone if cancelled), or there before */
   edit?: 'new' | 'existing';
+  /** its range, while the section is shown: to change it by its handles */
+  range?: Range;
 };
 
 type Popups = {
@@ -33,14 +35,17 @@ type Popups = {
   lookup?: { kind: LookupKind; selection: TextSelection };
   /** a footnote shown, at its link, of the size of the note (rendered by FoliateViewer) */
   footnote?: Footnote;
+  /** the range of the selection or the annotation changed by a handle: no popup meanwhile */
+  adjusting?: boolean;
   setSelection: (selection?: TextSelection) => void;
   setAnnotation: (annotation?: AnnotationTarget) => void;
   setLookup: (lookup?: { kind: LookupKind; selection: TextSelection }) => void;
   setFootnote: (footnote?: Footnote) => void;
+  setAdjusting: (adjusting: boolean) => void;
   clear: () => void;
 };
 
-const NONE = { selection: undefined, annotation: undefined, lookup: undefined, footnote: undefined };
+const NONE = { selection: undefined, annotation: undefined, lookup: undefined, footnote: undefined, adjusting: false };
 
 /** The popups over the book: one at a time. */
 export const usePopups = create<Popups>((set) => ({
@@ -48,6 +53,7 @@ export const usePopups = create<Popups>((set) => ({
   setAnnotation: (annotation) => set({ ...NONE, annotation }),
   setLookup: (lookup) => set({ ...NONE, lookup }),
   setFootnote: (footnote) => set({ ...NONE, footnote }),
+  setAdjusting: (adjusting) => set({ adjusting }),
   clear: () => set(NONE),
 }));
 

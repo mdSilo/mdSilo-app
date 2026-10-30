@@ -21,6 +21,7 @@ import { sentenceRangeAround } from '../vocabulary';
 import { placeOf } from './BookPopups';
 import { ImageViewer, TableViewer } from './MediaViewer';
 import DoubleBorder from './DoubleBorder';
+import RangeHandles from './RangeHandles';
 
 type Props = {
   book: BookDoc;
@@ -46,6 +47,8 @@ const FLASH_MS = 2000;
 /** the prefix of the mark: drawn apart from the notes, which have their bare CFI */
 const FLASH_PREFIX = 'foliate-note:';
 const FLASH_COLOR = HIGHLIGHT_CSS.blue;
+/** the highlight whose range a handle changes: drawn over the range dragged, apart from the notes */
+type Preview = { value: string; note: BookNote };
 
 function clearFlash(view: FoliateView, flash: { current?: Flash }) {
   if (!flash.current) return;
@@ -165,6 +168,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const vertical = bookStore((state) => state.vertical);
   const drawnRef = useRef(new Map<string, BookNote>());
   const flashRef = useRef<Flash | undefined>(undefined);
+  const previewRef = useRef<Preview | undefined>(undefined);
   const [turnHint, setTurnHint] = useState<TurnHint>();
   const [zoomed, setZoomed] = useState<Zoomed>();
 
@@ -179,7 +183,8 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     const onRelocate = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail?.cfi) return;
-      if (detail.reason !== 'selection') usePopups.getState().clear();
+      // a page turned by a handle dragged to a corner: the range goes on
+      if (detail.reason !== 'selection' && !usePopups.getState().adjusting) usePopups.getState().clear();
       const renderer = viewRef.current?.renderer;
       const paged = renderer && !viewRef.current?.isFixedLayout && !renderer.scrolled;
       bookStore.getState().setLocation({
@@ -330,7 +335,8 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         draw(overlayer.highlight, { color: FLASH_COLOR });
         return;
       }
-      const note = drawnRef.current.get(annotation.value);
+      const preview = previewRef.current;
+      const note = preview && preview.value === annotation.value ? preview.note : drawnRef.current.get(annotation.value);
       if (!note || !overlayer) return;
       const color = HIGHLIGHT_CSS[note.color ?? 'yellow'] ?? HIGHLIGHT_CSS.yellow;
       const style = note.style ?? 'highlight';
@@ -342,7 +348,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       const note = drawnRef.current.get(value);
       if (!note || !range) return;
       annotationAt = Date.now();
-      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range, readingArea(viewRef.current, bookStore.getState().vertical)) });
+      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range, readingArea(viewRef.current, bookStore.getState().vertical)), range });
     };
 
     // the annotations of a section, once it shows
@@ -625,6 +631,23 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     host.replaceChildren();
   }, [footnote]);
 
+  // a highlight drawn over the range dragged, in place of it; or as saved, the drag over
+  const preview = (note: BookNote, range?: Range) => {
+    const view = viewRef.current;
+    if (!view) return;
+    if (previewRef.current) void view.deleteAnnotation({ value: previewRef.current.value }).catch(() => undefined);
+    previewRef.current = undefined;
+    if (!range) {
+      // still there, not changed
+      if (bookStore.getState().notes.some((n) => n.cfi === note.cfi)) void view.addAnnotation(toAnnotation(note)).catch(() => undefined);
+      return;
+    }
+    void view.deleteAnnotation({ value: note.cfi }).catch(() => undefined);
+    const index = sectionOf(note.cfi);
+    previewRef.current = { value: FLASH_PREFIX + view.getCFI(index, range), note };
+    void view.addAnnotation({ value: previewRef.current.value }).catch(() => undefined);
+  };
+
   // the keys back to the pages
   const closeZoomed = () => {
     setZoomed(undefined);
@@ -665,6 +688,14 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       {zoomed?.type === 'table' ? (
         <TableViewer html={zoomed.html} colors={themeColors(darkMode, settings.pageTheme)} onClose={closeZoomed} />
       ) : null}
+      <RangeHandles
+        pane={pane}
+        view={() => viewRef.current}
+        area={() => readingArea(viewRef.current, vertical)}
+        vertical={vertical}
+        onTurnHint={setTurnHint}
+        preview={preview}
+      />
       {turnHint ? <TurnMark key={turnHint.corner} hint={turnHint} area={readingArea(viewRef.current, vertical)} rtl={book.dir === 'rtl'} /> : null}
     </>
   );

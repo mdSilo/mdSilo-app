@@ -258,13 +258,11 @@ function BookPopups({ rootRef, tools }: {
 }) {
   const selection = usePopups((state) => state.selection);
   const annotation = usePopups((state) => state.annotation);
+  const adjusting = usePopups((state) => state.adjusting);
   const notes = useActiveStore((state) => state.notes);
   const note = annotation ? notes.find((n) => n.id === annotation.id) : undefined;
-  const [editing, setEditing] = useState(false);
-
-  useEffect(() => {
-    setEditing(Boolean(annotation?.edit));
-  }, [annotation]);
+  // its note written: in the store, the handles of its range not shown meanwhile
+  const editing = Boolean(annotation?.edit);
 
   // close on Escape
   useEffect(() => {
@@ -276,7 +274,8 @@ function BookPopups({ rootRef, tools }: {
   }, []);
 
   const root = rootRef.current?.getBoundingClientRect();
-  if (!root || (!selection && !(annotation && note))) return null;
+  // none while a handle changes the range
+  if (!root || adjusting || (!selection && !(annotation && note))) return null;
   const width = Math.min(TOOLBAR_WIDTH, root.width - 16);
   const clear = () => usePopups.getState().clear();
 
@@ -290,7 +289,7 @@ function BookPopups({ rootRef, tools }: {
         return;
       }
       const created = annotateSelection(selection);
-      usePopups.getState().setAnnotation({ id: created.id, box: selection.box });
+      usePopups.getState().setAnnotation({ id: created.id, box: selection.box, range: selection.range });
     };
     const list: Tool[] = [
       { 
@@ -328,7 +327,7 @@ function BookPopups({ rootRef, tools }: {
         // highlighted, the issue made of it: shown on the highlight, to open it
         onClick: async () => {
           const created = annotateSelection(selection);
-          usePopups.getState().setAnnotation({ id: created.id, box: selection.box });
+          usePopups.getState().setAnnotation({ id: created.id, box: selection.box, range: selection.range });
           await issueOfNote(created);
         },
       },
@@ -347,6 +346,7 @@ function BookPopups({ rootRef, tools }: {
   }
 
   if (!annotation || !note) return null;
+  const edit = () => usePopups.getState().setAnnotation({ ...annotation, edit: 'existing' });
   const anchor = anchorOf(annotation.box, root, width, TOOLBAR_HEIGHT + (note.note ? 80 : 0));
   if (editing) {
     const cancel = () => {
@@ -389,7 +389,7 @@ function BookPopups({ rootRef, tools }: {
       id: 'note', 
       title: note.note ? 'Edit the note' : 'Write a note', 
       icon: <TbBallpen size={18} />, 
-      onClick: () => setEditing(true) 
+      onClick: edit 
     },
     ...(asSelection ? tools?.(asSelection) ?? [] : []),
     { 
@@ -418,7 +418,7 @@ function BookPopups({ rootRef, tools }: {
       <HighlightOptions note={note} onDone={clear}>
         <NoteIssues note={note} className="justify-center flex-1 min-w-0 mx-1" />
       </HighlightOptions>
-      {noteText(note.note) ? <NoteCard note={note} onEdit={() => setEditing(true)} /> : null}
+      {noteText(note.note) ? <NoteCard note={note} onEdit={edit} /> : null}
     </AnchoredBox>
   );
 }
