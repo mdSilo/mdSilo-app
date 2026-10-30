@@ -2,7 +2,9 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { openUrl } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
 import { DEFAULT_READER_SETTINGS, withDefaults, zoomBy } from '../settings';
-import { applyLayout, bookStyles, HIGHLIGHT_CSS, setSpread, themeColors } from '../styles';
+import {
+  applyLayout, bookStyles, HIGHLIGHT_CSS, isVerticalMode, pageLayout, setBookDir, setSpread, themeColors,
+} from '../styles';
 import { storeOf } from '../readerStore';
 import { boxOfRange, usePopups, type Box } from '../popups';
 import { activePane, setActivePane, setView, type FoliateView, type Pane } from '../view';
@@ -12,12 +14,13 @@ import {
   type TurnHint,
 } from '../pagination';
 import { sectionOf, type BookNote } from '../annotations';
-import type { BookDoc } from '../document';
+import { getDirection, type BookDoc } from '../document';
 import { fillsPage, imagesOf, markCaptions, mediaAt, type Media } from '../media';
 import { highlightCode } from '../highlight';
 import { sentenceRangeAround } from '../vocabulary';
 import { placeOf } from './BookPopups';
 import { ImageViewer, TableViewer } from './MediaViewer';
+import DoubleBorder from './DoubleBorder';
 
 type Props = {
   book: BookDoc;
@@ -111,14 +114,16 @@ function noteSize(doc: Document, host: HTMLElement, note: HTMLElement) {
 
 /**
  * The text of the pages, in the window: the pages of the renderer, less the
- * margins above and below them, of the chapter and the progress.
+ * margins of the chapter and the progress, above and below them (or on the
+ * sides, written down the page).
  */
-function readingArea(view: FoliateView | null): Box | undefined {
+function readingArea(view: FoliateView | null, vertical = false): Box | undefined {
   if (!view) return undefined;
   const rect = (view.renderer.shadowRoot?.querySelector('#container') ?? view).getBoundingClientRect();
-  const { margin, flow } = withDefaults(store.getState().readerSettings);
-  const inset = flow === 'scrolled' ? 0 : margin;
-  return { left: rect.left, top: rect.top + inset, right: rect.right, bottom: rect.bottom - inset };
+  const { margins } = pageLayout(withDefaults(store.getState().readerSettings), vertical);
+  return vertical
+    ? { left: rect.left + margins.left, top: rect.top, right: rect.right - margins.right, bottom: rect.bottom }
+    : { left: rect.left, top: rect.top + margins.top, right: rect.right, bottom: rect.bottom - margins.bottom };
 }
 
 /** Typing there: the keys are not for turning pages. */
@@ -153,12 +158,16 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const darkMode = useStore((state) => state.darkMode);
   const theme = useStore((state) => state.theme);
   const notes = bookStore((state) => state.notes);
+  const fixed = book.rendition?.layout === 'pre-paginated';
+  // a fixed layout is as it is
+  const writingMode = bookStore((state) => (fixed ? 'auto' : state.writingMode));
+  const vertical = bookStore((state) => state.vertical);
   const drawnRef = useRef(new Map<string, BookNote>());
   const flashRef = useRef<Flash | undefined>(undefined);
   const [turnHint, setTurnHint] = useState<TurnHint>();
   const [zoomed, setZoomed] = useState<Zoomed>();
 
-  // open the book, once per book
+  // open the book, once per book; again in another writing
   useEffect(() => {
     let cancelled = false;
     let overlayer: Overlayer | undefined;
@@ -214,7 +223,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     );
     const onSelectDrag = (e: PointerEvent, doc: Document) => {
       const view = viewRef.current;
-      const area = readingArea(view);
+      const area = readingArea(view, bookStore.getState().vertical);
       // the pages of a chapter only: in scrolled flow the selection scrolls them
       const selecting = (e.buttons & 1) === 1 && doc.getSelection()?.isCollapsed === false;
       if (!view || !area || view.isFixedLayout || view.renderer.scrolled || !selecting) {
@@ -324,7 +333,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       const note = drawnRef.current.get(value);
       if (!note || !range) return;
       annotationAt = Date.now();
-      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range, readingArea(viewRef.current)) });
+      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range, readingArea(viewRef.current, bookStore.getState().vertical)) });
     };
 
     // the annotations of a section, once it shows
@@ -362,7 +371,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
           if (!text || !view) return;
           setActivePane(pane);
           usePopups.getState().setSelection({
-            text, index, cfi: view.getCFI(index, range), box: boxOfRange(range, readingArea(view)), range,
+            text, index, cfi: view.getCFI(index, range), box: boxOfRange(range, readingArea(view, bookStore.getState().vertical)), range,
           });
         }, 0);
       };
@@ -390,6 +399,12 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         }
       });
       doc.addEventListener('keydown', onKeydown);
+      // the text written down the page, as a section of the book says: the margins of it
+      const view = viewRef.current;
+      if (view && !fixed && !bookStore.getState().vertical && getDirection(doc).vertical) {
+        bookStore.getState().setVertical(true);
+        applyLayout(view, withDefaults(store.getState().readerSettings), true);
+      }
       // the captions, shown or not by the styles: a setting changed needs no pass here
       if (!viewRef.current?.isFixedLayout) markCaptions(doc);
       const { codeHighlight, codeLanguage } = withDefaults(store.getState().readerSettings);
@@ -482,20 +497,25 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       container.append(view);
       viewRef.current = view;
       setSpread(book, withDefaults(store.getState().readerSettings));
+      setBookDir(book, writingMode);
+      bookStore.getState().setVertical(isVerticalMode(writingMode));
       await view.open(book);
       if (cancelled) return;
       const state = bookStore.getState();
       // the settings now, not of the render that opened the book
       const current = withDefaults(store.getState().readerSettings);
-      applyLayout(view, current);
-      view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme)));
+      applyLayout(view, current, state.vertical);
+      view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme), writingMode));
       setView(view, pane);
       // the notes to draw
       drawnRef.current = new Map(state.notes.filter((n) => n.text).map((n) => [n.cfi, n]));
+      // opened again in another writing: where the reader is
+      const reopened = state.location?.cfi;
+      const start = reopened ?? initialCfi;
       try {
-        await view.init({ lastLocation: initialCfi, showTextStart: !initialCfi });
+        await view.init({ lastLocation: start, showTextStart: !start });
         // a place asked for, not the place read last
-        if (!cancelled && initialCfi && bookStore.getState().targetCfi === initialCfi) {
+        if (!cancelled && !reopened && initialCfi && bookStore.getState().targetCfi === initialCfi) {
           void flashPlace(view, initialCfi, flashRef).catch(() => undefined);
         }
       } catch (e) {
@@ -536,7 +556,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     };
     // initialCfi: a new place is handled below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [book]);
+  }, [book, writingMode]);
 
   // go to a place asked later, e.g. a link to the book open
   useEffect(() => {
@@ -553,10 +573,10 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   useEffect(() => {
     const view = viewRef.current;
     if (!view?.renderer) return;
-    applyLayout(view, settings);
-    view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme)));
+    applyLayout(view, settings, vertical);
+    view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme), writingMode));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(settings), darkMode, theme]);
+  }, [JSON.stringify(settings), darkMode, theme, vertical]);
 
   // the code blocks of the sections shown; the sections loaded later, on load
   useEffect(() => {
@@ -606,16 +626,16 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const paper = settings.pageTheme === 'auto' ? undefined : themeColors(darkMode, settings.pageTheme);
   const dark = paper ? paper.dark : darkMode;
   // the text would go under the chapter and the progress: the view is between them
-  const inset = settings.flow === 'scrolled' || book.rendition?.layout === 'pre-paginated' ? settings.margin : 0;
+  const { inset } = pageLayout(settings, vertical, fixed);
 
   return (
     <>
       <div
         ref={containerRef}
-        className="absolute inset-x-0 focus:outline-none"
+        className="absolute focus:outline-none"
         tabIndex={-1}
         data-testid="foliate-viewer"
-        style={{ top: inset, bottom: inset, ['--overlayer-highlight-opacity' as string]: dark ? '0.4' : '0.35' }}
+        style={{ ...inset, ['--overlayer-highlight-opacity' as string]: dark ? '0.4' : '0.35' }}
       />
       <div
         ref={footnoteRef}
@@ -628,11 +648,14 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         data-testid="footnote-popup"
         onPointerDown={(e) => e.stopPropagation()}
       />
+      {vertical && settings.doubleBorder && !fixed ? (
+        <DoubleBorder header={settings.showHeader} footer={settings.showFooter} />
+      ) : null}
       {zoomed?.type === 'image' ? <ImageViewer images={zoomed.images} start={zoomed.start} onClose={closeZoomed} /> : null}
       {zoomed?.type === 'table' ? (
         <TableViewer html={zoomed.html} colors={themeColors(darkMode, settings.pageTheme)} onClose={closeZoomed} />
       ) : null}
-      {turnHint ? <TurnMark key={turnHint.corner} hint={turnHint} area={readingArea(viewRef.current)} rtl={book.dir === 'rtl'} /> : null}
+      {turnHint ? <TurnMark key={turnHint.corner} hint={turnHint} area={readingArea(viewRef.current, vertical)} rtl={book.dir === 'rtl'} /> : null}
     </>
   );
 }

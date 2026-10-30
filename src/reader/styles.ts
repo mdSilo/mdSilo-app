@@ -1,4 +1,4 @@
-import type { PageTheme, ReaderSettings } from './settings';
+import type { PageTheme, ReaderSettings, WritingMode } from './settings';
 import { ttsStyles } from './tts';
 import { codeStyles } from './highlight';
 import { captionStyles } from './media';
@@ -37,7 +37,7 @@ export function themeColors(dark: boolean, pageTheme: PageTheme = 'auto'): Theme
 const SERIF = `'Literata', 'Georgia', 'Noto Serif', 'Songti SC', 'Noto Serif CJK SC', serif`;
 const SANS = `'Inter', 'Helvetica Neue', 'Noto Sans', 'PingFang SC', 'Noto Sans CJK SC', sans-serif`;
 
-export function bookStyles(settings: ReaderSettings, colors: ThemeColors): string {
+export function bookStyles(settings: ReaderSettings, colors: ThemeColors, writingMode: WritingMode = 'auto'): string {
   const { fontSize, lineHeight, font, justify, hyphenate, invertImages, imageCaptions, codeHighlight } = settings;
   const family = font === 'serif' ? SERIF : font === 'sans-serif' ? SANS : '';
   const { bg, fg, primary, dark } = colors;
@@ -100,7 +100,72 @@ export function bookStyles(settings: ReaderSettings, colors: ThemeColors): strin
     ${codeHighlight ? codeStyles(dark) : ''}
     ${imageCaptions ? captionStyles() : ''}
     ${ttsStyles(primary)}
+    ${writingModeStyles(writingMode)}
   `;
+}
+
+/** Written down the page, as chosen. */
+export const isVerticalMode = (mode: WritingMode) => mode === 'vertical-rl' || mode === 'vertical-lr';
+
+/** The CSS of the writing chosen for a book; none as the book says. */
+export function writingModeStyles(mode: WritingMode): string {
+  if (mode === 'auto') return '';
+  const direction = mode === 'horizontal-rtl' ? 'rtl' : mode === 'horizontal-tb' ? 'ltr' : '';
+  return `
+    html, body {
+      writing-mode: ${mode === 'horizontal-rtl' ? 'horizontal-tb' : mode} !important;
+      ${direction ? `direction: ${direction} !important;` : ''}
+    }
+  `;
+}
+
+// the direction of the books as they say it, before a writing chosen
+const bookDirs = new WeakMap<BookDoc, string | undefined>();
+
+/** Before a book opens: its pages turn as the writing chosen, or as the book says. */
+export function setBookDir(book: BookDoc, mode: WritingMode) {
+  if (!bookDirs.has(book)) bookDirs.set(book, book.dir);
+  book.dir = mode === 'auto' ? bookDirs.get(book)
+    : mode === 'vertical-rl' || mode === 'horizontal-rtl' ? 'rtl' : 'ltr';
+}
+
+export type Sides = { top: number; right: number; bottom: number; left: number };
+
+/** px, written down the page: the double border from the sides of the view, its outer line and its inner one */
+export const FRAME_OUTER = 12;
+export const FRAME_INNER = 17;
+/** px, the band of the chapter or of the progress, in the border */
+export const FRAME_BAND = 32;
+/** px, between the border and the text */
+const FRAME_PAD = 12;
+/** px, on the sides of the text, across the page */
+const SIDE = 48;
+
+const NONE: Sides = { top: 0, right: 0, bottom: 0, left: 0 };
+
+/**
+ * Where the text is in the view of a book: the view inset in it (scrolled,
+ * a fixed layout: between the chapter and the progress), and the margins of
+ * the renderer. Across the page the chapter is above, the progress below;
+ * down the page, the chapter on the right, the progress on the left.
+ */
+export function pageLayout(settings: ReaderSettings, vertical: boolean, fixed = false): { inset: Sides; margins: Sides } {
+  const { margin } = settings;
+  const scrolled = settings.flow === 'scrolled';
+  if (!vertical) {
+    return scrolled || fixed
+      ? { inset: { ...NONE, top: margin, bottom: margin }, margins: { ...NONE, left: SIDE, right: SIDE } }
+      : { inset: NONE, margins: { top: margin, right: SIDE, bottom: margin, left: SIDE } };
+  }
+  const border = settings.doubleBorder;
+  const band = (shown: boolean) => (border ? FRAME_INNER + (shown ? FRAME_BAND : 0) + FRAME_PAD : margin);
+  const left = band(settings.showFooter);
+  const right = band(settings.showHeader);
+  // down the page the renderer has 1.5 times the margins above and below
+  const end = Math.round((border ? FRAME_INNER + FRAME_PAD : 16) / 1.5);
+  return scrolled
+    ? { inset: { ...NONE, left, right }, margins: { ...NONE, top: end, bottom: end } }
+    : { inset: NONE, margins: { top: end, right, bottom: end, left } };
 }
 
 /** The highlight colors, as in the overlay of the book and in the app. */
@@ -140,8 +205,11 @@ function applyFixedLayout(view: FoliateView, settings: ReaderSettings) {
   } else set('spread', settings.spreadMode);
 }
 
-/** The layout of the pages, as set: the flow, the columns, the margins; the zoom and spreads of a fixed layout. */
-export function applyLayout(view: FoliateView, settings: ReaderSettings) {
+/**
+ * The layout of the pages, as set: the flow, the columns, the margins (of
+ * the text written across or down); the zoom and spreads of a fixed layout.
+ */
+export function applyLayout(view: FoliateView, settings: ReaderSettings, vertical = false) {
   const { renderer } = view;
   renderer.toggleAttribute('animated', settings.animated);
   if (view.isFixedLayout) {
@@ -154,6 +222,6 @@ export function applyLayout(view: FoliateView, settings: ReaderSettings) {
   renderer.setAttribute('max-inline-size', `${settings.maxInlineSize}px`);
   renderer.setAttribute('gap', `${settings.gap}%`);
   // room for the chapter and the progress, in the margins; scrolled, the view is between them
-  const margin = settings.flow === 'scrolled' ? 0 : settings.margin;
-  for (const side of ['top', 'bottom']) renderer.setAttribute(`margin-${side}`, `${margin}px`);
+  const { margins } = pageLayout(settings, vertical);
+  for (const side of ['top', 'right', 'bottom', 'left'] as const) renderer.setAttribute(`margin-${side}`, `${margins[side]}px`);
 }

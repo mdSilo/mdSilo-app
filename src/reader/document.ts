@@ -222,7 +222,14 @@ export function formatContributors(value: Contributor | undefined): string {
 export function getDirection(doc: Document) {
   const view = doc.defaultView;
   if (!view || !doc.body) return { vertical: false, rtl: false };
-  const { writingMode, direction } = view.getComputedStyle(doc.body);
+  const { direction } = view.getComputedStyle(doc.body);
+  let { writingMode } = view.getComputedStyle(doc.body);
+  // some books set it on the first child of the body
+  if (!writingMode || writingMode === 'horizontal-tb') {
+    const child = doc.body.firstElementChild;
+    const childMode = child ? view.getComputedStyle(child).writingMode : '';
+    if (childMode === 'vertical-rl' || childMode === 'vertical-lr') writingMode = childMode;
+  }
   const vertical = writingMode === 'vertical-rl' || writingMode === 'vertical-lr';
   const rtl = writingMode === 'vertical-rl' || direction === 'rtl' || doc.body.dir === 'rtl'
     || doc.documentElement.dir === 'rtl';

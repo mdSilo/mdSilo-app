@@ -16,6 +16,7 @@ import {
 import { cacheCover } from './covers';
 import { indexBookText } from './bookIndex';
 import type { Progress } from './pagination';
+import type { WritingMode } from './settings';
 import { activePane, usePane, type Pane } from './view';
 
 export type ReaderLocation = Progress & {
@@ -46,6 +47,10 @@ type ReaderStore = {
   notes: BookNote[];
   /** seconds read per day, see BookState */
   time: Record<string, number>;
+  /** the writing chosen for the book, kept with its entry */
+  writingMode: WritingMode;
+  /** the text written down the page: as chosen, or as a section of the book says */
+  vertical: boolean;
   open: (path: string, cfi?: string) => Promise<void>;
   close: () => Promise<void>;
   setLocation: (location: ReaderLocation) => void;
@@ -54,6 +59,8 @@ type ReaderStore = {
   addNote: (note: BookNote) => void;
   updateNote: (id: string, patch: Partial<BookNote>) => void;
   removeNote: (id: string) => void;
+  setWritingMode: (mode: WritingMode) => void;
+  setVertical: (vertical: boolean) => void;
   /** write the pending changes now */
   flush: () => Promise<void>;
 };
@@ -95,7 +102,7 @@ async function writeNotes(path: string, header: BookHeader, notes: BookNote[]) {
 const empty = (): Partial<ReaderStore> => ({
   path: undefined, ws: undefined, hash: undefined, entry: undefined, book: undefined,
   format: undefined, status: 'idle', error: undefined, initialCfi: undefined, targetCfi: undefined,
-  location: undefined, notes: [], time: {},
+  location: undefined, notes: [], time: {}, writingMode: 'auto', vertical: false,
 });
 
 /**
@@ -200,6 +207,8 @@ export function createReaderStore() {
     status: 'idle',
     notes: [],
     time: {},
+    writingMode: 'auto',
+    vertical: false,
 
     open: async (path, cfi) => {
       const current = get();
@@ -213,7 +222,10 @@ export function createReaderStore() {
       await release();
       if (seq !== openSeq) return;
       const ws = store.getState().initDir;
-      set({ path, ws, status: 'loading', error: undefined, initialCfi: cfi, targetCfi: cfi, notes: [], location: undefined, time: {} });
+      set({
+        path, ws, status: 'loading', error: undefined, initialCfi: cfi, targetCfi: cfi, notes: [], location: undefined,
+        time: {}, writingMode: 'auto', vertical: false,
+      });
       try {
         const [file, fileHash] = await Promise.all([
           readBookFile(path),
@@ -251,7 +263,7 @@ export function createReaderStore() {
           await book.destroy?.();
           return;
         }
-        set({ hash, entry, book, format, notes, initialCfi, time, status: 'ready' });
+        set({ hash, entry, book, format, notes, initialCfi, time, writingMode: entry?.writingMode ?? 'auto', status: 'ready' });
         startTicking();
         // for the library; for the search of the workspace
         if (ws && hash) {
@@ -295,6 +307,18 @@ export function createReaderStore() {
     removeNote: (id) => {
       set({ notes: get().notes.filter((n) => n.id !== id) });
       scheduleNotes();
+    },
+
+    setWritingMode: (mode) => {
+      const { ws, hash, entry } = get();
+      const writingMode = mode === 'auto' ? undefined : mode;
+      set({ writingMode: mode, ...(entry ? { entry: { ...entry, writingMode } } : {}) });
+      if (!ws || !hash || !entry) return;
+      saveBookEntry(ws, { hash, writingMode }).catch((e: unknown) => console.error('Failed to save the writing mode', e));
+    },
+
+    setVertical: (vertical) => {
+      if (get().vertical !== vertical) set({ vertical });
     },
 
     flush: async () => {

@@ -2,13 +2,23 @@ import { memo } from 'react';
 import { useStore } from '@/state/store';
 import { Range, Segmented, Select, Toggle } from '@/ui/ui';
 import {
-  DEFAULT_READER_SETTINGS, KEPT_ON_RESET, MAX_ZOOM, MIN_ZOOM, withDefaults, zoomBy, type PageTheme, type ReaderSettings,
+  DEFAULT_READER_SETTINGS, KEPT_ON_RESET, MAX_ZOOM, MIN_ZOOM, withDefaults, zoomBy,
+  type PageTheme, type ReaderSettings, type WritingMode,
 } from '../settings';
+import { useReaderStore } from '../readerStore';
 import { themeColors } from '../styles';
 import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
 
 const PAGE_THEMES: [PageTheme, string][] = [
   ['auto', 'As the app'], ['light', 'White'], ['sepia', 'Sepia'], ['gray', 'Gray'], ['dark', 'Dark'],
+];
+
+const WRITING_MODES: [WritingMode, string][] = [
+  ['auto', 'As the book'],
+  ['horizontal-tb', 'Horizontal'],
+  ['vertical-rl', 'Vertical, right to left'],
+  ['vertical-lr', 'Vertical, left to right'],
+  ['horizontal-rtl', 'Horizontal, right to left'],
 ];
 
 const LANGUAGES = [
@@ -23,6 +33,10 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
   const darkMode = useStore((state) => state.darkMode);
   const setReaderSettings = useStore((state) => state.setReaderSettings);
   const update = (patch: Partial<ReaderSettings>) => setReaderSettings({ ...settings, ...patch });
+  // of the book read, not of all books
+  const hasBook = useReaderStore((state) => Boolean(state.book));
+  const writingMode = useReaderStore((state) => state.writingMode);
+  const vertical = useReaderStore((state) => state.vertical);
 
   return (
     <div className="flex flex-col gap-3 p-3 text-sm w-72" data-testid="reader-settings">
@@ -105,6 +119,15 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             <option value="serif">Serif</option>
             <option value="sans-serif">Sans serif</option>
           </Select>
+          {hasBook ? (
+            <Select label="Writing" value={writingMode}
+              onChange={(mode) => useReaderStore.getState().setWritingMode(mode as WritingMode)}>
+              {WRITING_MODES.map(([mode, name]) => <option key={mode} value={mode}>{name}</option>)}
+            </Select>
+          ) : null}
+          {vertical ? (
+            <Toggle label="Double border" checked={settings.doubleBorder} onChange={(doubleBorder) => update({ doubleBorder })} />
+          ) : null}
           <Segmented label="Columns" value={settings.maxColumns} options={[[1, '1'], [2, '2']]}
             onChange={(maxColumns) => update({ maxColumns })} />
           <Range label="Width" ariaLabel="Column width" min={400} max={1200} step={20} value={settings.maxInlineSize}

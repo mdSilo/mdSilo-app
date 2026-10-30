@@ -22,7 +22,7 @@ import { usePopups, type TextSelection } from '../popups';
 import { resetReaderChrome, useReaderChrome } from '../chrome';
 import { formatMinutes, formatProgress, turn } from '../pagination';
 import { withDefaults } from '../settings';
-import { themeColors } from '../styles';
+import { FRAME_BAND, FRAME_INNER, themeColors } from '../styles';
 import { stopTTS } from '../tts';
 import { getView, usePane } from '../view';
 import FoliateViewer from './FoliateViewer';
@@ -71,6 +71,7 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   const initialCfi = useReaderStore((s) => s.initialCfi);
   const location = useReaderStore((s) => s.location);
   const notes = useReaderStore((s) => s.notes);
+  const vertical = useReaderStore((s) => s.vertical);
   const settings = withDefaults(useStore((s) => s.readerSettings));
   const darkMode = useStore((s) => s.darkMode);
   const barsVisible = useReaderChrome((s) => s.barsVisible);
@@ -185,6 +186,14 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
   const title = entry?.title ?? path?.split('/').pop();
   const sideTitle = parallelOpen ? panelTitle : title;
   const showBars = barsVisible || menuOpen;
+  // written down the page: the chapter on the right, the progress on the left, written down too
+  // (their px- padding is inline, so above and below)
+  const band = (side: 'left' | 'right') => ({
+    writingMode: 'vertical-rl' as const,
+    ...(settings.doubleBorder
+      ? { [side]: FRAME_INNER, top: FRAME_INNER, bottom: FRAME_INNER, width: FRAME_BAND }
+      : { [side]: 0, top: 0, bottom: 0, width: settings.margin }),
+  });
   const setBars = (visible: boolean) => useReaderChrome.getState().setBarsVisible(visible);
   // hidden on leaving, but not to a menu of it
   const leaveBars = () => {
@@ -265,8 +274,8 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
             {/* in the margins: the chapter above, the progress below */}
             {settings.showHeader && !showBars ? (
               <div
-                className="absolute inset-x-0 top-0 flex items-center justify-center px-16 text-xs pointer-events-none opacity-60"
-                style={{ height: settings.margin }}
+                className={`absolute flex items-center justify-center text-xs pointer-events-none opacity-60 ${vertical ? '' : 'inset-x-0 top-0'} px-16`}
+                style={vertical ? band('right') : { height: settings.margin }}
                 data-testid="reader-section"
               >
                 <span className="truncate">{location?.tocLabel?.trim() || title}</span>
@@ -274,8 +283,8 @@ export function Reader({ extraTabs = [], tools, headerButtons, overlay }: Props)
             ) : null}
             {settings.showFooter && location ? (
               <div
-                className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-4 px-8 text-xs pointer-events-none opacity-60"
-                style={{ height: settings.margin }}
+                className={`absolute flex items-center justify-between gap-4 text-xs pointer-events-none opacity-60 ${vertical ? '' : 'inset-x-0 bottom-0'} px-8`}
+                style={vertical ? band('left') : { height: settings.margin }}
                 data-testid="reader-progress-info"
               >
                 <span className="truncate">{progress.left}</span>

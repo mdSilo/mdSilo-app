@@ -352,6 +352,44 @@ describe('reader settings menu', () => {
     fireEvent.click(screen.getByText('Scroll'));
     expect(menu()).toBeInTheDocument();
   });
+
+  test('the writing of the book: kept for it; down the page, the chapter and the progress on the sides', async () => {
+    renderMain();
+    await go({ view: 'book', path: BOOK });
+    await waitFor(() => expect(screen.getByTestId('foliate-viewer')).toBeInTheDocument());
+    act(() => useReaderStore.getState().setLocation({ cfi: 'epubcfi(/6/2!/4/2)', fraction: 0.5, tocLabel: 'One' }));
+
+    openMenu();
+    expect(screen.queryByText('Double border')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Writing'), { target: { value: 'vertical-rl' } });
+    expect(useReaderStore.getState().writingMode).toBe('vertical-rl');
+    await waitFor(async () => {
+      const lib = await readLibrary(WS);
+      expect(Object.values(lib.books)[0].writingMode).toBe('vertical-rl');
+    });
+
+    // down the page, as FoliateViewer finds it
+    act(() => useReaderStore.getState().setVertical(true));
+    expect(screen.getByText('Double border')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Scroll'));
+    fireEvent.click(screen.getByTestId('reader-menu-backdrop'));
+    expect(screen.getByTestId('reader-section').style.writingMode).toBe('vertical-rl');
+    expect(screen.getByTestId('reader-section').style.right).toBe('17px');
+    expect(screen.getByTestId('reader-progress-info').style.left).toBe('17px');
+
+    // the book again: as chosen
+    await act(async () => { await useReaderStore.getState().close(); });
+    expect(useReaderStore.getState().writingMode).toBe('auto');
+    await act(async () => { await useReaderStore.getState().open(BOOK); });
+    expect(useReaderStore.getState().writingMode).toBe('vertical-rl');
+
+    // as the book says: not kept
+    act(() => useReaderStore.getState().setWritingMode('auto'));
+    await waitFor(async () => {
+      const lib = await readLibrary(WS);
+      expect(Object.values(lib.books)[0].writingMode).toBeUndefined();
+    });
+  });
 });
 
 describe('parallel reading', () => {

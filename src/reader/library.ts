@@ -7,6 +7,7 @@ import {
 } from './document';
 import { convertToBook } from './convert';
 import { setLibraryBooks } from './books';
+import type { WritingMode } from './settings';
 
 /**
  * The books of a workspace, by their id: the partial MD5 of the file, so a
@@ -61,6 +62,8 @@ export type BookEntry = {
   status?: string;
   /** the partial MD5 of the file now, if not the id: the book written again by the app */
   fileHash?: string;
+  /** the writing of the book, if not as it says */
+  writingMode?: WritingMode;
   /** a book made of feed articles: its name, to add the new articles to it (see feedBook.ts) */
   feed?: string;
 };
