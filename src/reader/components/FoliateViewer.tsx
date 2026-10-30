@@ -3,7 +3,7 @@ import { openUrl } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
 import { DEFAULT_READER_SETTINGS, withDefaults, zoomBy } from '../settings';
 import {
-  applyLayout, bookStyles, HIGHLIGHT_CSS, isVerticalMode, pageLayout, setBookDir, setSpread, themeColors,
+  applyLayout, bookStyles, HIGHLIGHT_CSS, isVerticalMode, pageLayout, pagesDirection, setBookDir, setSpread, themeColors,
 } from '../styles';
 import { storeOf } from '../readerStore';
 import { boxOfRange, usePopups, type Box } from '../popups';
@@ -159,8 +159,9 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const theme = useStore((state) => state.theme);
   const notes = bookStore((state) => state.notes);
   const fixed = book.rendition?.layout === 'pre-paginated';
-  // a fixed layout is as it is
-  const writingMode = bookStore((state) => (fixed ? 'auto' : state.writingMode));
+  // a fixed layout: its pages from right to left or from left to right, as chosen; no text to write otherwise
+  const writingMode = bookStore((state) => (fixed ? pagesDirection(state.writingMode) : state.writingMode));
+  const textMode = fixed ? 'auto' : writingMode;
   const vertical = bookStore((state) => state.vertical);
   const drawnRef = useRef(new Map<string, BookNote>());
   const flashRef = useRef<Flash | undefined>(undefined);
@@ -504,8 +505,9 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       view.addEventListener('link', onLink);
       container.append(view);
       viewRef.current = view;
-      setSpread(book, withDefaults(store.getState().readerSettings));
+      // the direction first: the side of the cover goes by it
       setBookDir(book, writingMode);
+      setSpread(book, withDefaults(store.getState().readerSettings));
       bookStore.getState().setVertical(isVerticalMode(writingMode));
       await view.open(book);
       if (cancelled) return;
@@ -513,7 +515,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       // the settings now, not of the render that opened the book
       const current = withDefaults(store.getState().readerSettings);
       applyLayout(view, current, state.vertical);
-      view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme), writingMode));
+      view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme), textMode));
       setView(view, pane);
       // the notes to draw
       drawnRef.current = new Map(state.notes.filter((n) => n.text).map((n) => [n.cfi, n]));
@@ -582,7 +584,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     const view = viewRef.current;
     if (!view?.renderer) return;
     applyLayout(view, settings, vertical);
-    view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme), writingMode));
+    view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme), textMode));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(settings), darkMode, theme, vertical]);
 

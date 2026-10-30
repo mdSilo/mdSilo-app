@@ -6,7 +6,7 @@ import {
   type PageTheme, type ReaderSettings, type WritingMode,
 } from '../settings';
 import { useReaderStore } from '../readerStore';
-import { themeColors } from '../styles';
+import { bookDir, pagesDirection, rtlPagesMode, themeColors } from '../styles';
 import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
 
 const PAGE_THEMES: [PageTheme, string][] = [
@@ -34,7 +34,8 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
   const setReaderSettings = useStore((state) => state.setReaderSettings);
   const update = (patch: Partial<ReaderSettings>) => setReaderSettings({ ...settings, ...patch });
   // of the book read, not of all books
-  const hasBook = useReaderStore((state) => Boolean(state.book));
+  const book = useReaderStore((state) => state.book);
+  const hasBook = Boolean(book);
   const writingMode = useReaderStore((state) => state.writingMode);
   const vertical = useReaderStore((state) => state.vertical);
 
@@ -128,6 +129,14 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             <Toggle label="Lock horizontal panning" checked={settings.lockPanX}
               onChange={(lockPanX) => update({ lockPanX })} />
           )}
+          {/* of the book read, e.g. a manga in a CBZ, which does not say so */}
+          {book ? (
+            <Toggle
+              label="Right-to-left pages"
+              checked={pagesDirection(writingMode) === 'auto' ? bookDir(book) === 'rtl' : writingMode === 'horizontal-rtl'}
+              onChange={(rtl) => useReaderStore.getState().setWritingMode(rtlPagesMode(book, rtl))}
+            />
+          ) : null}
         </>
       ) : (
         <>

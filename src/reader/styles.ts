@@ -122,6 +122,20 @@ export function writingModeStyles(mode: WritingMode): string {
 // the direction of the books as they say it, before a writing chosen
 const bookDirs = new WeakMap<BookDoc, string | undefined>();
 
+/** The direction of a book as it says it, before a writing chosen. */
+export const bookDir = (book: BookDoc) => (bookDirs.has(book) ? bookDirs.get(book) : book.dir);
+
+/** A fixed layout: of the writing chosen, only the direction its pages turn. */
+export const pagesDirection = (mode: WritingMode): WritingMode =>
+  mode === 'horizontal-rtl' || mode === 'horizontal-tb' ? mode : 'auto';
+
+/**
+ * The writing chosen for the pages of a fixed layout from right to left or
+ * not: none, as the book says it already.
+ */
+export const rtlPagesMode = (book: BookDoc, rtl: boolean): WritingMode =>
+  rtl === (bookDir(book) === 'rtl') ? 'auto' : rtl ? 'horizontal-rtl' : 'horizontal-tb';
+
 /** Before a book opens: its pages turn as the writing chosen, or as the book says. */
 export function setBookDir(book: BookDoc, mode: WritingMode) {
   if (!bookDirs.has(book)) bookDirs.set(book, book.dir);

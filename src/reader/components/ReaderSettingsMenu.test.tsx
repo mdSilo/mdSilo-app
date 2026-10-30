@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { store } from '@/state/store';
 import { DEFAULT_READER_SETTINGS, withDefaults } from '../settings';
+import { useReaderStore } from '../readerStore';
+import type { BookDoc } from '../document';
 import ReaderSettingsMenu from './ReaderSettingsMenu';
 
 const settings = () => withDefaults(store.getState().readerSettings);
@@ -61,6 +63,26 @@ describe('the settings of a fixed layout', () => {
     fireEvent.click(screen.getByText('Pages'));
     expect(settings().flow).toBe('paginated');
     expect(screen.getByText('Lock horizontal panning')).toBeInTheDocument();
+  });
+
+  test('the pages from right to left, of the book read', () => {
+    render(<ReaderSettingsMenu fixedLayout />);
+    // no book read: no toggle
+    expect(screen.queryByText('Right-to-left pages')).not.toBeInTheDocument();
+  });
+
+  test('the pages from right to left: chosen, and back as the book says', () => {
+    const book = { dir: 'ltr', rendition: { layout: 'pre-paginated' }, sections: [] } as unknown as BookDoc;
+    useReaderStore.setState({ book, writingMode: 'auto' });
+    render(<ReaderSettingsMenu fixedLayout />);
+    const toggle = () => screen.getByRole('checkbox', { name: 'Right-to-left pages' });
+    expect(toggle()).not.toBeChecked();
+    fireEvent.click(toggle());
+    expect(useReaderStore.getState().writingMode).toBe('horizontal-rtl');
+    expect(toggle()).toBeChecked();
+    fireEvent.click(toggle());
+    expect(useReaderStore.getState().writingMode).toBe('auto');
+    useReaderStore.setState({ book: undefined });
   });
 
   test('not shown for a book reflowed', () => {

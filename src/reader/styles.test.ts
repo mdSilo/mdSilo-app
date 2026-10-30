@@ -1,4 +1,6 @@
-import { applyLayout, pageLayout, setBookDir, setSpread, writingModeStyles } from './styles';
+import {
+  applyLayout, bookDir, pageLayout, pagesDirection, rtlPagesMode, setBookDir, setSpread, writingModeStyles,
+} from './styles';
 import { DEFAULT_READER_SETTINGS, MAX_ZOOM, MIN_ZOOM, zoomBy } from './settings';
 import type { BookDoc } from './document';
 import type { FoliateView } from './view';
@@ -89,6 +91,36 @@ describe('a fixed layout', () => {
     expect(zoomBy(100, -0.25)).toBe(98);
     expect(zoomBy(MAX_ZOOM, 1)).toBe(MAX_ZOOM);
     expect(zoomBy(MIN_ZOOM + 5, -1)).toBe(MIN_ZOOM);
+  });
+});
+
+describe('a fixed layout from right to left', () => {
+  test('of the writing chosen, the direction only', () => {
+    expect(pagesDirection('horizontal-rtl')).toBe('horizontal-rtl');
+    expect(pagesDirection('horizontal-tb')).toBe('horizontal-tb');
+    expect(pagesDirection('vertical-rl')).toBe('auto');
+    expect(pagesDirection('auto')).toBe('auto');
+  });
+
+  test('chosen against the book only: as it says, none', () => {
+    // a CBZ says nothing: left to right
+    const cbz = bookOf();
+    expect(rtlPagesMode(cbz, true)).toBe('horizontal-rtl');
+    expect(rtlPagesMode(cbz, false)).toBe('auto');
+    // a manga that says it, its direction kept after a writing chosen
+    const manga = bookOf('rtl');
+    setBookDir(manga, 'horizontal-tb');
+    expect(manga.dir).toBe('ltr');
+    expect(bookDir(manga)).toBe('rtl');
+    expect(rtlPagesMode(manga, true)).toBe('auto');
+    expect(rtlPagesMode(manga, false)).toBe('horizontal-tb');
+  });
+
+  test('the cover on the right of the first spread, the direction set first', () => {
+    const book = bookOf();
+    setBookDir(book, 'horizontal-rtl');
+    setSpread(book, { ...DEFAULT_READER_SETTINGS, separateCover: false });
+    expect(book.sections[0].pageSpread).toBe('right');
   });
 });
 
