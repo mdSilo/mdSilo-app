@@ -356,9 +356,16 @@ export class FixedLayout extends HTMLElement {
         else this.scrollLeft = clamp(this.scrollLeft + (rect.left - anchor.left), 0, maxLeft)
     }
     #getScrollModePageMetrics() {
+        // From the start of the strip, as #scrollContentPos measures. The
+        // offsets are from the offsetParent, outside the shadow root; a strip
+        // laid right to left overflows to the left of it, so its pages' offsets
+        // run negative and no page held the scroll position: the anchor fell
+        // back and restored to 0, the end of the book.
+        const origin = this.#scrollHorizontal
+            ? this.#scrollContainer.offsetLeft : this.#scrollContainer.offsetTop
         return this.#scrollPages.map(page => ({
             index: page.index,
-            start: this.#scrollHorizontal ? page.el.offsetLeft : page.el.offsetTop,
+            start: (this.#scrollHorizontal ? page.el.offsetLeft : page.el.offsetTop) - origin,
             size: this.#scrollHorizontal ? page.el.offsetWidth : page.el.offsetHeight,
         }))
     }
