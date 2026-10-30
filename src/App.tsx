@@ -13,7 +13,7 @@ import SideMenu from '@/shell/SideMenu';
 import { useAutoSync } from '@/sync/autoSync';
 import PublishModal from '@/publish/PublishModal';
 import Sidebar from '@/shell/sidebar/Sidebar';
-import StatusBar from '@/shell/StatusBar';
+import Player from '@/player/Player';
 import MainView from '@/shell/MainView';
 import SettingsModal from '@/shell/settings/SettingsModal';
 import AboutModal from '@/shell/settings/AboutModal';
@@ -104,9 +104,9 @@ const App = () => {
           <div className="relative flex flex-1 min-h-0 min-w-0">
             <Sidebar />
             <div className="relative flex flex-1 flex-col min-w-0 overflow-y-auto">
-              <div className="flex items-center justify-center"><StatusBar /></div>
               <MainView />
             </div>
+            <Player />
           </div>
           {isFindOrCreateModalOpen ? (
             <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />

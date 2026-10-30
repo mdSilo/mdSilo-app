@@ -67,8 +67,9 @@ export type ReaderSettings = {
   /** the highlight made by the toolbar, and the color of each style */
   highlightStyle: HighlightStyle;
   highlightColors: Record<HighlightStyle, HighlightColor>;
-  /** text-to-speech: voice name, rate */
-  ttsVoice: string;
+  /** read aloud: the engine ('' the system's, else the browser's), the voice chosen for each engine, the rate */
+  ttsEngine: string;
+  ttsVoices: Record<string, string>;
   ttsRate: number;
   /** translations: the service and the target language (e.g. en, zh-CN), as chosen last in the popup */
   translator: string;
@@ -109,7 +110,8 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   showSidebar: true,
   highlightStyle: 'highlight',
   highlightColors: { highlight: 'yellow', underline: 'green', squiggly: 'blue' },
-  ttsVoice: '',
+  ttsEngine: '',
+  ttsVoices: {},
   ttsRate: 1,
   translator: 'google',
   translateTo: '',
@@ -127,7 +129,7 @@ export const zoomBy = (level: number, steps: number) =>
 
 /** The settings not about the look of the pages, kept on a reset. */
 export const KEPT_ON_RESET = [
-  'showSidebar', 'highlightStyle', 'highlightColors', 'ttsVoice', 'ttsRate', 'translator', 'translateTo',
+  'showSidebar', 'highlightStyle', 'highlightColors', 'ttsEngine', 'ttsVoices', 'ttsRate', 'translator', 'translateTo',
 ] as const;
 
 /**
@@ -138,8 +140,13 @@ export const lookKey = (settings: ReaderSettings) =>
   JSON.stringify({ ...settings, ...Object.fromEntries(KEPT_ON_RESET.map((key) => [key, undefined])) });
 
 /** The settings stored, completed with the defaults (new settings, older versions). */
-export const withDefaults = (settings?: Partial<ReaderSettings>): ReaderSettings => ({
-  ...DEFAULT_READER_SETTINGS,
-  ...(settings ?? {}),
-  highlightColors: { ...DEFAULT_READER_SETTINGS.highlightColors, ...(settings?.highlightColors ?? {}) },
-});
+export const withDefaults = (settings?: Partial<ReaderSettings> & { ttsVoice?: string }): ReaderSettings => {
+  // the voice of the browser, before the engines
+  const { ttsVoice, ...rest } = settings ?? {};
+  return {
+    ...DEFAULT_READER_SETTINGS,
+    ...rest,
+    highlightColors: { ...DEFAULT_READER_SETTINGS.highlightColors, ...(settings?.highlightColors ?? {}) },
+    ttsVoices: rest.ttsVoices ?? (ttsVoice ? { web: ttsVoice } : {}),
+  };
+};

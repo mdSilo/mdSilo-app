@@ -1,4 +1,5 @@
-import { parseSSML, TTSController, type Speech } from './tts';
+import type { Speech } from '@/speech/speech';
+import { parseSSML, TTSController } from './tts';
 import type { FoliateView, TTSApi } from './view';
 
 const ssml = (body: string) =>
@@ -52,11 +53,21 @@ function setup(sections: string[][]) {
   const speech: Speech = {
     speak: vi.fn(async (text: string) => { spoken.push(text); return 'end' as const; }),
     cancel: vi.fn(),
-    voices: () => [],
+    voices: async () => [],
+    prepare: vi.fn(),
   };
   const statuses: string[] = [];
-  const tts = new TTSController(view as unknown as FoliateView, speech, () => ({ rate: 1.5 }), (s) => statuses.push(s));
-  return { tts, spoken, marks, statuses, speech, view };
+  const errors: string[] = [];
+  let current: Speech | undefined = speech;
+  const tts = new TTSController(
+    view as unknown as FoliateView,
+    () => current,
+    () => ({ rate: 1.5 }),
+    (s) => statuses.push(s),
+    (e) => errors.push(e),
+  );
+  const choose = (other?: Speech) => { current = other; };
+  return { tts, spoken, marks, statuses, errors, speech, view, choose };
 }
 
 const settle = () => new Promise((r) => setTimeout(r, 0));
@@ -79,7 +90,7 @@ describe('TTSController', () => {
     const { tts, spoken, statuses, speech } = setup([[ssml('<mark name="0"/>One. <mark name="1"/>Two.')]]);
     // the speech ends only when canceled
     let cancel: (v: 'cancel') => void = () => undefined;
-    vi.mocked(speech.speak).mockImplementation((text) => {
+    vi.mocked(speech.speak).mockImplementation((text: string) => {
       spoken.push(text);
       return new Promise((resolve) => { cancel = resolve; });
     });
@@ -95,5 +106,54 @@ describe('TTSController', () => {
     expect(statuses.at(-1)).toBe('playing');
     tts.stop();
     expect(statuses.at(-1)).toBe('idle');
+  });
+
+  test('makes the next sentences ahead', async () => {
+    const { tts, speech } = setup([[ssml('<mark name="0"/>One. <mark name="1"/>Two. <mark name="2"/>Three. <mark name="3"/>Four.')]]);
+    await tts.start();
+    for (let i = 0; i < 10; i++) await settle();
+    const options = { lang: 'en', voice: undefined, rate: 1.5 };
+    expect(vi.mocked(speech.prepare!).mock.calls.slice(0, 2)).toEqual([['Two.', options], ['Three.', options]]);
+    expect(vi.mocked(speech.prepare!).mock.calls.map(([text]) => text)).toEqual(['Two.', 'Three.', 'Three.', 'Four.', 'Four.']);
+  });
+
+  test('stops with the error of the speech', async () => {
+    const { tts, spoken, statuses, errors, speech } = setup([[ssml('<mark name="0"/>One. <mark name="1"/>Two.')]]);
+    vi.mocked(speech.speak).mockRejectedValueOnce(new Error('No voice'));
+    await tts.start();
+    for (let i = 0; i < 10; i++) await settle();
+    expect(errors).toEqual(['No voice']);
+    expect(spoken).toEqual([]);
+    expect(statuses.at(-1)).toBe('idle');
+  });
+
+  test('no engine: stops, says so', async () => {
+    const { tts, errors, statuses, choose } = setup([[ssml('<mark name="0"/>One.')]]);
+    choose(undefined);
+    await tts.start();
+    for (let i = 0; i < 10; i++) await settle();
+    expect(errors).toEqual(['No speech engine to read aloud']);
+    expect(statuses.at(-1)).toBe('idle');
+  });
+
+  test('another engine chosen while reading: the one speaking is canceled', async () => {
+    const { tts, speech, choose, spoken } = setup([[ssml('<mark name="0"/>One. <mark name="1"/>Two.')]]);
+    let cancel: (v: 'cancel') => void = () => undefined;
+    vi.mocked(speech.speak).mockImplementation(() => new Promise((resolve) => { cancel = resolve; }));
+    vi.mocked(speech.cancel).mockImplementation(() => cancel('cancel'));
+    const other: Speech = {
+      speak: vi.fn(async (text: string) => { spoken.push(`other ${text}`); return 'end' as const; }),
+      cancel: vi.fn(),
+      voices: async () => [],
+    };
+    await tts.start();
+    await settle();
+    choose(other);
+    tts.pause();
+    expect(speech.cancel).toHaveBeenCalled();
+    expect(other.cancel).not.toHaveBeenCalled();
+    await tts.resume();
+    for (let i = 0; i < 10; i++) await settle();
+    expect(spoken).toEqual(['other One.', 'other Two.']);
   });
 });

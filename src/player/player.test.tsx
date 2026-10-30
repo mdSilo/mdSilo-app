@@ -1,0 +1,106 @@
+import { screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { invoke } from '@tauri-apps/api/core';
+import { store } from '@/state/store';
+import { useCurrentViewContext } from '@/state/useCurrentView';
+import { useTTS } from '@/reader/tts';
+import { useEngines } from '@/speech/speech';
+import SideMenu from '@/shell/SideMenu';
+import { mockInvoke, renderWithView } from '../testUtils';
+import { onPauseRequest, playing, usePlayer } from './player';
+import Player from './Player';
+
+const ViewProbe = () => {
+  const { state } = useCurrentViewContext();
+  return <p data-testid="view">{JSON.stringify(state)}</p>;
+};
+
+beforeEach(() => {
+  usePlayer.setState({ shown: false });
+  useTTS.setState({ status: 'idle', error: undefined });
+  useEngines.setState({ engines: [], loaded: true });
+});
+
+test('one at a time: a source playing pauses the others, shows the player', () => {
+  const pausePodcast = vi.fn();
+  const pauseTTS = vi.fn();
+  const offPodcast = onPauseRequest('podcast', pausePodcast);
+  const offTTS = onPauseRequest('tts', pauseTTS);
+  playing('tts');
+  expect(pausePodcast).toHaveBeenCalledTimes(1);
+  expect(pauseTTS).not.toHaveBeenCalled();
+  expect(usePlayer.getState().shown).toBe(true);
+  playing('podcast');
+  expect(pauseTTS).toHaveBeenCalledTimes(1);
+  offPodcast();
+  offTTS();
+});
+
+describe('Player', () => {
+  test('hidden, it keeps the podcast; shown, its title to the article', async () => {
+    const article = { id: 1, title: 'Ep 1', url: 'https://pod/1' };
+    mockInvoke(invoke, { get_article_by_url: article, get_articles: [] });
+    store.getState().setCurrentPod({ title: 'Ep 1', url: 'ep1.mp3', article_url: 'https://pod/1', feed_link: 'f' });
+    renderWithView(<><Player /><ViewProbe /></>);
+    expect(screen.getByTestId('player')).toHaveClass('hidden');
+    expect(document.querySelector('audio')).toHaveAttribute('src', 'ep1.mp3');
+    // played: shown
+    fireEvent.play(document.querySelector('audio')!);
+    expect(screen.getByTestId('player')).not.toHaveClass('hidden');
+    await userEvent.click(screen.getByText('Ep 1'));
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('view').textContent!).view).toBe('feed'));
+    expect(store.getState().currentArticle).toEqual(article);
+  });
+
+  test('another pod: the audio of it', () => {
+    mockInvoke(invoke, { get_articles: [] });
+    store.getState().setCurrentPod({ title: 'Ep 1', url: 'ep1.mp3', article_url: 'a', feed_link: 'f' });
+    renderWithView(<Player />);
+    store.getState().setCurrentPod({ title: 'Ep 2', url: 'ep2.mp3', article_url: 'b', feed_link: 'f' });
+    return waitFor(() => expect(document.querySelector('audio')).toHaveAttribute('src', 'ep2.mp3'));
+  });
+
+  test('a book read aloud: its controls; the error of the engine, dismissed', async () => {
+    useEngines.setState({
+      engines: [
+        { id: 'system', name: 'System', kind: 'live', online: false, fields: [], available: true, config: {} },
+        { id: 'web', name: 'Browser', kind: 'web', online: false, fields: [], available: true, config: {} },
+      ],
+    });
+    mockInvoke(invoke, { tts_voices: [] });
+    useTTS.setState({ status: 'paused' });
+    usePlayer.setState({ shown: true });
+    renderWithView(<Player />);
+    expect(screen.getByTitle('Resume')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Engine'), 'web');
+    expect(store.getState().readerSettings?.ttsEngine).toBe('web');
+    useTTS.setState({ status: 'idle', error: 'No voice' });
+    expect(await screen.findByRole('alert')).toHaveTextContent('No voice');
+    await userEvent.click(screen.getByTitle('Dismiss'));
+    expect(screen.queryByTestId('tts-bar')).not.toBeInTheDocument();
+    expect(screen.getByText(/Nothing playing/)).toBeInTheDocument();
+  });
+
+  test('the voices of the engine, of the language of the book', async () => {
+    useEngines.setState({
+      engines: [{ id: 'system', name: 'System', kind: 'live', online: false, fields: [], available: true, config: {} }],
+    });
+    mockInvoke(invoke, {
+      tts_voices: [{ id: 'a', name: 'Alice', lang: 'en-US' }, { id: 'b', name: 'Bob', lang: 'en-GB' }],
+    });
+    useTTS.setState({ status: 'playing' });
+    usePlayer.setState({ shown: true });
+    renderWithView(<Player />);
+    await userEvent.selectOptions(await screen.findByLabelText('Voice'), 'b');
+    expect(store.getState().readerSettings?.ttsVoices).toEqual({ system: 'b' });
+  });
+});
+
+test('SideMenu: the player shown and hidden', async () => {
+  renderWithView(<div id="app-container"><SideMenu /><Player /></div>);
+  expect(screen.getByTestId('player')).toHaveClass('hidden');
+  await userEvent.click(screen.getByRole('button', { name: 'Player' }));
+  expect(screen.getByTestId('player')).not.toHaveClass('hidden');
+  await userEvent.click(screen.getByRole('button', { name: 'Player' }));
+  expect(screen.getByTestId('player')).toHaveClass('hidden');
+});

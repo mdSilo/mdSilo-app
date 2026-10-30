@@ -1,10 +1,11 @@
 import { create } from 'zustand';
+import type { Speech } from '@/speech/speech';
 import type { FoliateView, TTSApi } from './view';
 
 /**
  * Read a book aloud: foliate-js splits the text into blocks, as SSML with a
- * mark before each sentence; the speech synthesis of the system (Web Speech
- * API) reads them one by one, the sentence read highlighted.
+ * mark before each sentence; a speech engine (src/speech) reads them one by
+ * one, the sentence read highlighted.
  */
 
 export type Segment = { mark?: string; text: string };
@@ -36,42 +37,20 @@ export function parseSSML(ssml: string): Segment[] {
   return segments;
 }
 
-/** What the speech synthesis of the system offers, see SpeechSynthesis. */
-export type Speech = {
-  speak: (text: string, options: { lang?: string; voice?: string; rate: number }) => Promise<'end' | 'cancel'>;
-  cancel: () => void;
-  voices: () => { name: string; lang: string }[];
-};
-
-/** The Web Speech API, if any. */
-export function webSpeech(): Speech | undefined {
-  const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined;
-  if (!synth || typeof SpeechSynthesisUtterance === 'undefined') return undefined;
-  return {
-    speak: (text, { lang, voice, rate }) => new Promise((resolve) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      if (lang) utterance.lang = lang;
-      const voices = synth.getVoices();
-      const chosen = voices.find((v) => v.name === voice)
-        ?? (lang ? voices.find((v) => v.lang.toLowerCase().startsWith(lang.split('-')[0].toLowerCase())) : undefined);
-      if (chosen) utterance.voice = chosen;
-      utterance.rate = rate;
-      utterance.onend = () => resolve('end');
-      utterance.onerror = (e) => resolve(e.error === 'interrupted' || e.error === 'canceled' ? 'cancel' : 'end');
-      synth.speak(utterance);
-    }),
-    cancel: () => synth.cancel(),
-    voices: () => synth.getVoices().map((v) => ({ name: v.name, lang: v.lang })),
-  };
-}
-
 export type TTSStatus = 'idle' | 'playing' | 'paused';
 
-type TTSStore = { status: TTSStatus; setStatus: (status: TTSStatus) => void };
+type TTSStore = {
+  status: TTSStatus;
+  /** why the reading stopped, if it failed */
+  error?: string;
+  setStatus: (status: TTSStatus) => void;
+  setError: (error?: string) => void;
+};
 
 export const useTTS = create<TTSStore>((set) => ({
   status: 'idle',
-  setStatus: (status) => set({ status }),
+  setStatus: (status) => set(status === 'playing' ? { status, error: undefined } : { status }),
+  setError: (error) => set({ error }),
 }));
 
 const HIGHLIGHT = 'mdsilo-tts';
@@ -97,6 +76,9 @@ export const ttsStyles = (color: string) =>
 
 export type TTSOptions = { voice?: string; rate: number };
 
+/** the sentences made ahead by an engine making audio */
+const AHEAD = 2;
+
 /**
  * Reads the book from a place, sentence by sentence, on to the next sections
  * until the end or stopped.
@@ -104,13 +86,22 @@ export type TTSOptions = { voice?: string; rate: number };
 export class TTSController {
   private segments: Segment[] = [];
   private run = 0;
+  /** the speech speaking, canceled even if another one is chosen meanwhile */
+  private speaking?: Speech;
 
+  /** `speech`: the engine to read the next sentence, the one chosen then */
   constructor(
     private view: FoliateView,
-    private speech: Speech,
+    private speech: () => Speech | undefined,
     private options: () => TTSOptions,
     private onStatus: (status: TTSStatus) => void = (s) => useTTS.getState().setStatus(s),
+    private onError: (error: string) => void = (e) => useTTS.getState().setError(e),
   ) {}
+
+  private cancel() {
+    this.speaking?.cancel();
+    this.speaking = undefined;
+  }
 
   private async tts(): Promise<TTSApi | undefined> {
     await this.view.initTTS('sentence', undefined, (range: Range) => {
@@ -133,7 +124,7 @@ export class TTSController {
 
   pause() {
     this.run += 1;
-    this.speech.cancel();
+    this.cancel();
     this.onStatus('paused');
   }
 
@@ -147,7 +138,7 @@ export class TTSController {
   stop() {
     this.run += 1;
     this.segments = [];
-    this.speech.cancel();
+    this.cancel();
     clearHighlight(this.view);
     this.onStatus('idle');
   }
@@ -155,7 +146,7 @@ export class TTSController {
   /** The next or previous block. */
   async skip(forward: boolean) {
     this.run += 1;
-    this.speech.cancel();
+    this.cancel();
     const tts = await this.tts();
     const ssml = forward ? tts?.next() : tts?.prev();
     this.segments = ssml ? parseSSML(ssml) : [];
@@ -185,8 +176,23 @@ export class TTSController {
       }
       const segment = this.segments.shift()!;
       if (segment.mark) this.view.tts?.setMark(segment.mark);
+      const speech = this.speech();
+      if (!speech) {
+        this.onError('No speech engine to read aloud');
+        break;
+      }
       const { voice, rate } = this.options();
-      const ended = await this.speech.speak(segment.text, { lang, voice, rate });
+      const options = { lang, voice, rate };
+      for (const next of this.segments.slice(0, AHEAD)) speech.prepare?.(next.text, options);
+      this.speaking = speech;
+      let ended: 'end' | 'cancel';
+      try {
+        ended = await speech.speak(segment.text, options);
+      } catch (e) {
+        if (run !== this.run) return;
+        this.onError(e instanceof Error ? e.message : String(e));
+        break;
+      }
       if (ended === 'cancel' || run !== this.run) return;
     }
     if (run === this.run) this.stop();
@@ -203,13 +209,15 @@ export class TTSController {
 
 let controller: { view: FoliateView; tts: TTSController } | undefined;
 
-/** The reader aloud of the book view, if speech synthesis is available. */
-export function ttsOf(view: FoliateView | null, options: () => TTSOptions): TTSController | undefined {
+/** The reader aloud of the book view, by the speech chosen for each sentence. */
+export function ttsOf(
+  view: FoliateView | null,
+  speech: () => Speech | undefined,
+  options: () => TTSOptions,
+): TTSController | undefined {
   if (!view) return undefined;
   if (controller?.view === view) return controller.tts;
   controller?.tts.stop();
-  const speech = webSpeech();
-  if (!speech) return undefined;
   controller = { view, tts: new TTSController(view, speech, options) };
   return controller.tts;
 }

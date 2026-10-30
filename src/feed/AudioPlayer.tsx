@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { TbPlaylist as IconPlaylist } from 'react-icons/tb';
 import { SidebarTab, store } from '@/state/store';
 import { PodType } from '@/types/model';
 import { computePlaylist } from '@/feed/Playlist';
+import { onPauseRequest, playing } from '@/player/player';
 
 type Props = {
   currentPod: PodType | null;
@@ -13,6 +14,10 @@ export default function AudioPlayer(props: Props) {
   const { currentPod, className = '' } = props;
   const [playlist, setPlaylist] = useState<PodType[]>([]);
   const [currentTrack, setCurrentTrack] = useState(currentPod);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // one at a time with a book read aloud
+  useEffect(() => onPauseRequest('podcast', () => audioRef.current?.pause()), []);
 
   useEffect(() => {
     const fetchPlaylist = async () => {
@@ -49,9 +54,11 @@ export default function AudioPlayer(props: Props) {
       <button className='mx-1' onClick={TriggerPlaylist}>
         <IconPlaylist size={24} className="" />
       </button>
-      <audio 
-        autoPlay 
-        controls 
+      <audio
+        ref={audioRef}
+        autoPlay
+        controls
+        onPlay={() => playing('podcast')}
         src={currentTrack.url} 
         onEnded={playNextTrack}
         onError={playNextTrack}

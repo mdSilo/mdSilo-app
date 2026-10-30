@@ -25,6 +25,7 @@ import { withDefaults } from '../settings';
 import { FRAME_BAND, FRAME_INNER, themeColors } from '../styles';
 import { stopTTS } from '../tts';
 import { getView, usePane } from '../view';
+import { canReadAloud, readAloud, useCanReadAloud } from '../readAloud';
 import FoliateViewer from './FoliateViewer';
 import TocView from './TocView';
 import NotesView from './NotesView';
@@ -34,7 +35,6 @@ import ReaderSettingsMenu from './ReaderSettingsMenu';
 import TranslatedBookDialog from './TranslatedBookDialog';
 import SearchView from './SearchView';
 import LookupPopup from './LookupPopup';
-import TTSBar, { canReadAloud, readAloud } from './TTSBar';
 import ParallelPane, { ParallelBooks } from './ParallelPane';
 
 export type SidebarTab = { 
@@ -519,20 +519,16 @@ function lookupTools(selection: TextSelection): Tool[] {
 }
 
 export default function ReaderView() {
+  const canRead = useCanReadAloud();
   return (
     <Reader
       tools={lookupTools}
-      headerButtons={canReadAloud() ? (
+      headerButtons={canRead ? (
         <IconButton title="Read aloud" onClick={() => void readAloud(undefined, 'main')}>
           <TbVolume size={18} />
         </IconButton>
       ) : null}
-      overlay={(rootRef) => (
-        <>
-          <LookupPopup rootRef={rootRef} />
-          <TTSBar />
-        </>
-      )}
+      overlay={(rootRef) => <LookupPopup rootRef={rootRef} />}
     />
   );
 }
