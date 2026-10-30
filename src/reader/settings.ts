@@ -70,7 +70,8 @@ export type ReaderSettings = {
   /** text-to-speech: voice name, rate */
   ttsVoice: string;
   ttsRate: number;
-  /** target language of translations, e.g. en, zh-CN */
+  /** translations: the service and the target language (e.g. en, zh-CN), as chosen last in the popup */
+  translator: string;
   translateTo: string;
 };
 
@@ -108,6 +109,7 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   highlightColors: { highlight: 'yellow', underline: 'green', squiggly: 'blue' },
   ttsVoice: '',
   ttsRate: 1,
+  translator: 'google',
   translateTo: '',
 };
 
@@ -122,8 +124,15 @@ export const zoomBy = (level: number, steps: number) =>
 
 /** The settings not about the look of the pages, kept on a reset. */
 export const KEPT_ON_RESET = [
-  'showSidebar', 'highlightStyle', 'highlightColors', 'ttsVoice', 'ttsRate', 'translateTo',
+  'showSidebar', 'highlightStyle', 'highlightColors', 'ttsVoice', 'ttsRate', 'translator', 'translateTo',
 ] as const;
+
+/**
+ * The settings about the look of the pages, as a key: a change of the others
+ * (a translation's language, the highlight remembered) lays nothing out again.
+ */
+export const lookKey = (settings: ReaderSettings) =>
+  JSON.stringify({ ...settings, ...Object.fromEntries(KEPT_ON_RESET.map((key) => [key, undefined])) });
 
 /** The settings stored, completed with the defaults (new settings, older versions). */
 export const withDefaults = (settings?: Partial<ReaderSettings>): ReaderSettings => ({

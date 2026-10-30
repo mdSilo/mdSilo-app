@@ -98,13 +98,28 @@ export async function lookupWikipedia(text: string, lang?: string): Promise<Wiki
 export const wikipediaSearchUrl = (text: string, lang?: string) =>
   `https://${baseLanguage(lang)}.wikipedia.org/w/index.php?search=${encodeURIComponent(text.trim())}`;
 
-/** The language to translate to: as set, else of the app. */
+/** The language to translate to: as chosen last, else of the app. */
 export const targetLanguage = (setting?: string) =>
   setting || (typeof navigator !== 'undefined' ? navigator.language : '') || 'en';
+
+/** The languages to translate to, offered: the code, the name in the language. */
+export const TRANSLATE_LANGUAGES: [string, string][] = [
+  ['en', 'English'], ['zh-CN', '简体中文'], ['zh-TW', '繁體中文'], ['ja', '日本語'], ['ko', '한국어'],
+  ['fr', 'Français'], ['de', 'Deutsch'], ['es', 'Español'], ['pt', 'Português'], ['it', 'Italiano'],
+  ['ru', 'Русский'], ['ar', 'العربية'],
+];
 
 /** The page of Google Translate for the text. */
 export const translateUrl = (text: string, to: string) =>
   `https://translate.google.com/?sl=auto&tl=${encodeURIComponent(to)}&text=${encodeURIComponent(text)}&op=translate`;
+
+/** A service to translate by; the page of it on the web, for the text. */
+export type Translator = {
+  name: string;
+  label: string;
+  translate: (text: string, to: string) => Promise<TranslationResult>;
+  url: (text: string, to: string) => string;
+};
 
 /** The text translated by Google Translate (the endpoint its web widgets use). */
 export async function translate(text: string, to: string): Promise<TranslationResult> {
@@ -116,3 +131,11 @@ export async function translate(text: string, to: string): Promise<TranslationRe
   if (!translated) throw new Error('No translation');
   return { text: translated, from: typeof data?.[2] === 'string' ? data[2] : undefined, to, url };
 }
+
+/** The services to translate by, chosen in the popup of a translation; the first by default. */
+export const TRANSLATORS: Translator[] = [
+  { name: 'google', label: 'Google', translate, url: translateUrl },
+];
+
+/** The service of a name, as chosen last; the first if none or no longer offered. */
+export const translatorOf = (name?: string) => TRANSLATORS.find((t) => t.name === name) ?? TRANSLATORS[0];

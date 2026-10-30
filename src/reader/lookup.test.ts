@@ -1,5 +1,5 @@
 import {
-  baseLanguage, lookupWikipedia, lookupWiktionary, targetLanguage, translate, translateUrl,
+  baseLanguage, lookupWikipedia, lookupWiktionary, targetLanguage, translate, translateUrl, translatorOf, TRANSLATORS,
 } from './lookup';
 
 const respond = (body: unknown, status = 200) =>
@@ -61,5 +61,12 @@ describe('lookup', () => {
     expect(res).toEqual({ text: 'Bonjour le monde', from: 'en', to: 'fr', url: translateUrl('Hello world', 'fr') });
     fetchMock.mockResolvedValueOnce(respond([[]]));
     await expect(translate('x', 'fr')).rejects.toThrow('No translation');
+  });
+
+  test('the service to translate by: as chosen, else the first', () => {
+    expect(translatorOf('google')).toBe(TRANSLATORS[0]);
+    expect(translatorOf(undefined).name).toBe('google');
+    expect(translatorOf('gone').name).toBe('google');
+    expect(translatorOf('google').url('Hi', 'fr')).toBe(translateUrl('Hi', 'fr'));
   });
 });

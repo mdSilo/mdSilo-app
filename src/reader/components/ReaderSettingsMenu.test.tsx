@@ -14,6 +14,8 @@ describe('the settings of a fixed layout', () => {
     render(<ReaderSettingsMenu fixedLayout />);
     // not of the text
     expect(screen.queryByText('Font size')).not.toBeInTheDocument();
+    // the language to translate to: chosen in the popup of a translation, not here
+    expect(screen.queryByText('Translate to')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Zoom in'));
     fireEvent.click(screen.getByLabelText('Zoom in'));

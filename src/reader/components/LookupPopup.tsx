@@ -1,12 +1,13 @@
 import { memo, useEffect, useState, type RefObject } from 'react';
 import { TbCheck, TbExternalLink, TbNote, TbVocabulary } from 'react-icons/tb';
 import { openUrl } from '@/workspace/open';
-import { useStore } from '@/state/store';
+import { store, useStore } from '@/state/store';
 import { Spinner } from '@/ui/ui';
 import {
-  lookupWikipedia, lookupWiktionary, openLinkOutside, targetLanguage, translate, translateUrl, wikipediaSearchUrl,
-  type DictionaryResult, type TranslationResult, type WikipediaResult,
+  lookupWikipedia, lookupWiktionary, openLinkOutside, targetLanguage, translatorOf, wikipediaSearchUrl,
+  TRANSLATE_LANGUAGES, TRANSLATORS, type DictionaryResult, type TranslationResult, type WikipediaResult,
 } from '../lookup';
+import { withDefaults, type ReaderSettings } from '../settings';
 import { usePopups } from '../popups';
 import { annotateSelection } from '../actions';
 import { activeStore, useActiveStore } from '../readerStore';
@@ -24,7 +25,8 @@ const TITLES = { dictionary: 'Dictionary', wikipedia: 'Wikipedia', translate: 'T
 /** The text selected, looked up in a dictionary, Wikipedia, or translated. */
 function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> }) {
   const lookup = usePopups((state) => state.lookup);
-  const translateTo = useStore((state) => state.readerSettings?.translateTo);
+  const translateTo = targetLanguage(useStore((state) => state.readerSettings?.translateTo));
+  const translator = translatorOf(useStore((state) => state.readerSettings?.translator));
   const [result, setResult] = useState<Result | undefined>();
   const [error, setError] = useState('');
   const ws = useActiveStore((state) => state.ws);
@@ -46,13 +48,13 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
     const run = async (): Promise<Result> => {
       if (kind === 'dictionary') return { kind, data: await lookupWiktionary(selection.text, lang) };
       if (kind === 'wikipedia') return { kind, data: await lookupWikipedia(selection.text, lang) };
-      return { kind, data: await translate(selection.text, targetLanguage(translateTo)) };
+      return { kind, data: await translator.translate(selection.text, translateTo) };
     };
     run()
       .then((res) => { if (!cancelled) setResult(res); })
       .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : String(e)); });
     return () => { cancelled = true; };
-  }, [lookup, translateTo]);
+  }, [lookup, translateTo, translator]);
 
   if (!lookup) return null;
   const { kind, selection } = lookup;
@@ -61,7 +63,7 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
     ? `https://en.wiktionary.org/wiki/${encodeURIComponent(selection.text.trim())}`
     : kind === 'wikipedia'
       ? (result?.kind === 'wikipedia' && result.data?.url) || wikipediaSearchUrl(selection.text, lang)
-      : translateUrl(selection.text, targetLanguage(translateTo));
+      : translator.url(selection.text, translateTo);
 
   /** Keep what was found as the note of a highlight of the text. */
   const keep = (note: string) => {
@@ -74,6 +76,7 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
     <Popup box={selection.box} rootRef={rootRef} testId="lookup-popup" height={260} width={360}>
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-semibold uppercase text-base-content/60">{TITLES[kind]}</span>
+        {kind === 'translate' ? <TranslateOptions translator={translator.name} to={translateTo} /> : null}
         <button className="btn btn-ghost btn-xs" title="Open on the web" onClick={() => void openUrl(webUrl)}>
           <TbExternalLink />
         </button>
@@ -134,6 +137,29 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
         </div>
       ) : null}
     </Popup>
+  );
+}
+
+/** The service and the language to translate to: chosen here, used from then on. */
+function TranslateOptions({ translator, to }: { translator: string; to: string }) {
+  const update = (patch: Partial<ReaderSettings>) => {
+    const { readerSettings, setReaderSettings } = store.getState();
+    setReaderSettings({ ...withDefaults(readerSettings), ...patch });
+  };
+  const select = 'select select-ghost select-xs min-h-0 h-6 font-normal';
+  return (
+    <div className="flex items-center gap-1 ml-auto">
+      {TRANSLATORS.length > 1 ? (
+        <select className={select} aria-label="Translate by" value={translator} onChange={(e) => update({ translator: e.target.value })}>
+          {TRANSLATORS.map((t) => <option key={t.name} value={t.name}>{t.label}</option>)}
+        </select>
+      ) : null}
+      <select className={select} aria-label="Translate to" value={to} onChange={(e) => update({ translateTo: e.target.value })}>
+        {/* the language of the app, if not one offered */}
+        {TRANSLATE_LANGUAGES.some(([code]) => code === to) ? null : <option value={to}>{to}</option>}
+        {TRANSLATE_LANGUAGES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+      </select>
+    </div>
   );
 }
 

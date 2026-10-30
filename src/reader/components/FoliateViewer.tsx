@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { openUrl } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
-import { DEFAULT_READER_SETTINGS, withDefaults, zoomBy } from '../settings';
+import { DEFAULT_READER_SETTINGS, lookKey, withDefaults, zoomBy } from '../settings';
 import {
   applyLayout, bookStyles, HIGHLIGHT_CSS, isVerticalMode, pageLayout, pagesDirection, setBookDir, setSpread, themeColors,
 } from '../styles';
@@ -689,7 +689,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     applyLayout(view, settings, vertical);
     view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme), textMode));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(settings), darkMode, theme, vertical]);
+  }, [lookKey(settings), darkMode, theme, vertical]);
 
   // the code blocks of the sections shown; the sections loaded later, on load
   useEffect(() => {

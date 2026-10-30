@@ -903,8 +903,17 @@ describe('reader, the second part', () => {
     expect(screen.queryByLabelText('Dictionary')).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Translate'));
     expect(await screen.findByText('un jour froid')).toBeInTheDocument();
+    // the language to translate to, chosen in the popup: translated again, and so from then on
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    fetchMock.mockImplementation(async () => ({ ok: true, status: 200, json: async () => [[['寒冷的一天', 'a cold day']], null, 'en'] }));
+    fireEvent.change(screen.getByLabelText('Translate to'), { target: { value: 'zh-CN' } });
+    expect(await screen.findByText('寒冷的一天')).toBeInTheDocument();
+    expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('tl=zh-CN');
+    expect(store.getState().readerSettings).toMatchObject({ translator: 'google', translateTo: 'zh-CN' });
+    // one service so far: no choice of it shown
+    expect(screen.queryByLabelText('Translate by')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Keep as note'));
-    expect(useReaderStore.getState().notes[0]).toMatchObject({ text: 'a bright cold day', note: 'un jour froid' });
+    expect(useReaderStore.getState().notes[0]).toMatchObject({ text: 'a bright cold day', note: '寒冷的一天' });
     expect(screen.queryByTestId('lookup-popup')).not.toBeInTheDocument();
   });
 
