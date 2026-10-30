@@ -1,6 +1,6 @@
 import {
   clickAction, cornerAt, cornerTurner, DWELL_MS, formatMinutes, formatProgress, keyAction, panStep, runKeyAction, turn,
-  wheelGesture, wheelScrolls, zoomKey,
+  wheelGesture, wheelPixels, wheelScrolls, zoomKey,
 } from './pagination';
 import { bookmarkAt } from './actions';
 import { withDefaults } from './settings';
@@ -259,5 +259,83 @@ describe('bookmarks and contents', () => {
   test('the colors of the highlights, completed', () => {
     const settings = withDefaults({ highlightColors: { underline: 'red' } as never });
     expect(settings.highlightColors).toEqual({ highlight: 'yellow', underline: 'red', squiggly: 'blue' });
+  });
+});
+
+describe('scrolled by whole lines', () => {
+  const rect = (left: number, top: number, width: number, height: number) =>
+    ({ left, top, width, height, right: left + width, bottom: top + height }) as DOMRect;
+
+  /**
+   * A scrolled view 600 px along the scroll, of sections at `frames` (in the
+   * window), each with its lines (in the frame): across, from the top; down
+   * the page, columns from the right.
+   */
+  function scrolledView(vertical: boolean, frames: { frame: DOMRect; lines: DOMRect[] }[]) {
+    const container = document.createElement('div');
+    if (vertical) container.classList.add('vertical');
+    container.getBoundingClientRect = () => (vertical ? rect(100, 0, 600, 800) : rect(0, 100, 800, 600));
+    const view = {
+      book: { dir: vertical ? 'rtl' : 'ltr' },
+      renderer: {
+        scrolled: true,
+        size: 600,
+        shadowRoot: { querySelector: () => container },
+        getContents: () => frames.map(({ frame, lines }) => ({
+          doc: {
+            body: {},
+            defaultView: { frameElement: { getBoundingClientRect: () => frame } },
+            // the box of the body, and its lines
+            createRange: () => ({ selectNodeContents: () => undefined, getClientRects: () => [frame, ...lines] }),
+          },
+        })),
+      },
+      next: vi.fn(async () => undefined),
+      prev: vi.fn(async () => undefined),
+    };
+    return view;
+  }
+
+  // lines of 28 px, 32 px apart: a view of 600 px cuts the 19th, at 576 to 604
+  const pitch = (n: number, at: (i: number) => DOMRect) => Array.from({ length: n }, (_, i) => at(i));
+
+  test('across: the line cut at the end at the start of the next view, also in the section after', async () => {
+    const view = scrolledView(false, [{ frame: rect(0, 100, 800, 800), lines: pitch(25, (i) => rect(0, 32 * i, 700, 28)) }]);
+    await turn(view as unknown as FoliateView, 'down');
+    expect(view.next).toHaveBeenCalledWith(576);
+
+    // the section in view ends above the end of the view: the lines of the next one
+    const two = scrolledView(false, [
+      { frame: rect(0, 500, 800, 160), lines: pitch(5, (i) => rect(0, 32 * i, 700, 28)) },
+      { frame: rect(0, 660, 800, 400), lines: pitch(10, (i) => rect(0, 32 * i, 700, 28)) },
+    ]);
+    await turn(two as unknown as FoliateView, 'down');
+    expect(two.next).toHaveBeenCalledWith(592);
+  });
+
+  test('across, back: the line cut at the start at the end of the view before', async () => {
+    // the frame 100 px above the view: its 4th line cut, -4 to 24
+    const view = scrolledView(false, [{ frame: rect(0, 0, 800, 1000), lines: pitch(30, (i) => rect(0, 32 * i, 700, 28)) }]);
+    await turn(view as unknown as FoliateView, 'up');
+    expect(view.prev).toHaveBeenCalledWith(600 - 24);
+  });
+
+  test('down the page: by whole columns, from the right', async () => {
+    const view = scrolledView(true, [{ frame: rect(100, 0, 600, 800), lines: pitch(25, (i) => rect(600 - 32 * i - 28, 0, 28, 700)) }]);
+    // forward is to the left, in a book written right to left
+    await turn(view as unknown as FoliateView, 'left');
+    expect(view.next).toHaveBeenCalledWith(576);
+  });
+
+  test('no lines to snap to: by the view', async () => {
+    const view = scrolledView(false, []);
+    await turn(view as unknown as FoliateView, 'down');
+    expect(view.next).toHaveBeenCalledWith(600);
+  });
+
+  test('the pixels of a wheel step: of lines, of pages', () => {
+    expect(wheelPixels(100, 0, 600)).toBe(100);
+    expect(wheelPixels(3, 1, 600)).toBe(48);
+    expect(wheelPixels(1, 2, 600)).toBe(600);
   });
 });

@@ -1,4 +1,4 @@
-import { applyLayout, setSpread } from './styles';
+import { applyLayout, pageLayout, setBookDir, setSpread, writingModeStyles } from './styles';
 import { DEFAULT_READER_SETTINGS, MAX_ZOOM, MIN_ZOOM, zoomBy } from './settings';
 import type { BookDoc } from './document';
 import type { FoliateView } from './view';
@@ -67,5 +67,69 @@ describe('a fixed layout', () => {
     expect(zoomBy(100, -0.25)).toBe(98);
     expect(zoomBy(MAX_ZOOM, 1)).toBe(MAX_ZOOM);
     expect(zoomBy(MIN_ZOOM + 5, -1)).toBe(MIN_ZOOM);
+  });
+});
+
+describe('the writing of a book', () => {
+  test('the CSS of the writing chosen: none as the book says', () => {
+    expect(writingModeStyles('auto')).toBe('');
+    expect(writingModeStyles('vertical-rl')).toContain('writing-mode: vertical-rl !important');
+    expect(writingModeStyles('vertical-lr')).toContain('writing-mode: vertical-lr !important');
+    expect(writingModeStyles('vertical-lr')).not.toContain('direction');
+    expect(writingModeStyles('horizontal-tb')).toContain('direction: ltr !important');
+    const rtl = writingModeStyles('horizontal-rtl');
+    expect(rtl).toContain('writing-mode: horizontal-tb !important');
+    expect(rtl).toContain('direction: rtl !important');
+  });
+
+  test('the pages turn as the writing chosen, and as the book says again', () => {
+    const book = { dir: 'ltr', sections: [] } as unknown as BookDoc;
+    setBookDir(book, 'vertical-rl');
+    expect(book.dir).toBe('rtl');
+    setBookDir(book, 'vertical-lr');
+    expect(book.dir).toBe('ltr');
+    setBookDir(book, 'horizontal-rtl');
+    expect(book.dir).toBe('rtl');
+    setBookDir(book, 'auto');
+    expect(book.dir).toBe('ltr');
+    const rtl = { dir: 'rtl', sections: [] } as unknown as BookDoc;
+    setBookDir(rtl, 'horizontal-tb');
+    expect(rtl.dir).toBe('ltr');
+    setBookDir(rtl, 'auto');
+    expect(rtl.dir).toBe('rtl');
+  });
+
+  test('across the page: the margins above and below; scrolled, the view between them', () => {
+    const settings = { ...DEFAULT_READER_SETTINGS, margin: 40 };
+    expect(pageLayout(settings, false)).toEqual({
+      inset: { top: 0, right: 0, bottom: 0, left: 0 },
+      margins: { top: 40, right: 48, bottom: 40, left: 48 },
+    });
+    expect(pageLayout({ ...settings, flow: 'scrolled' }, false).inset).toEqual({ top: 40, right: 0, bottom: 40, left: 0 });
+    expect(pageLayout(settings, false, true).inset).toEqual({ top: 40, right: 0, bottom: 40, left: 0 });
+  });
+
+  test('down the page: the margins on the sides, room for the bands in the double border', () => {
+    const settings = { ...DEFAULT_READER_SETTINGS, margin: 40, doubleBorder: false };
+    expect(pageLayout(settings, true).margins).toMatchObject({ right: 40, left: 40 });
+    const framed = pageLayout({ ...settings, doubleBorder: true }, true).margins;
+    expect(framed.right).toBeGreaterThan(17 + 32);
+    expect(framed.left).toBe(framed.right);
+    // no chapter: no band for it
+    expect(pageLayout({ ...settings, doubleBorder: true, showHeader: false }, true).margins.right).toBeLessThan(framed.right - 31);
+    // scrolled: the view between the bands
+    const scrolled = pageLayout({ ...settings, doubleBorder: true, flow: 'scrolled' }, true);
+    expect(scrolled.inset).toMatchObject({ top: 0, bottom: 0, left: framed.left, right: framed.right });
+    expect(scrolled.margins).toMatchObject({ left: 0, right: 0 });
+  });
+
+  test('the margins set on the renderer, of the text across or down', () => {
+    const renderer = document.createElement('div');
+    const view = { renderer, isFixedLayout: false } as unknown as FoliateView;
+    applyLayout(view, { ...DEFAULT_READER_SETTINGS, doubleBorder: false }, true);
+    expect(renderer.getAttribute('margin-left')).toBe(`${DEFAULT_READER_SETTINGS.margin}px`);
+    applyLayout(view, DEFAULT_READER_SETTINGS);
+    expect(renderer.getAttribute('margin-top')).toBe(`${DEFAULT_READER_SETTINGS.margin}px`);
+    expect(renderer.getAttribute('margin-left')).toBe('48px');
   });
 });

@@ -4,6 +4,12 @@ import type { CodeLanguage } from './highlight';
 /** The colors of the pages: of the app theme, or of paper. */
 export type PageTheme = 'auto' | 'light' | 'sepia' | 'gray' | 'dark';
 
+/**
+ * The writing of a book, chosen for it: as the book says; across, left to
+ * right; down, the lines right to left or left to right; across, right to left.
+ */
+export type WritingMode = 'auto' | 'horizontal-tb' | 'vertical-rl' | 'vertical-lr' | 'horizontal-rtl';
+
 /** How books are shown, for all books; kept with the user settings. */
 export type ReaderSettings = {
   /** px */
@@ -48,6 +54,8 @@ export type ReaderSettings = {
   /** the chapter above the text, the progress below it */
   showHeader: boolean;
   showFooter: boolean;
+  /** written down the page: a double border around the text, as books printed so */
+  doubleBorder: boolean;
   /** the panel of contents and notes; on mobile it starts hidden */
   showSidebar: boolean;
   /** the highlight made by the toolbar, and the color of each style */
@@ -85,6 +93,7 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   swapClickArea: false,
   showHeader: true,
   showFooter: true,
+  doubleBorder: true,
   showSidebar: true,
   highlightStyle: 'highlight',
   highlightColors: { highlight: 'yellow', underline: 'green', squiggly: 'blue' },
