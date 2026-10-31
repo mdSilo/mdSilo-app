@@ -81,7 +81,9 @@ export function webSpeech(): Speech | undefined {
       utterance.onend = () => { clearTimeout(timer); resolve('end'); };
       utterance.onerror = (e) => {
         clearTimeout(timer);
-        resolve(e.error === 'interrupted' || e.error === 'canceled' ? 'cancel' : 'end');
+        if (e.error === 'interrupted' || e.error === 'canceled') resolve('cancel');
+        // e.g. 'synthesis-failed': Chromium on Linux without speech-dispatcher
+        else reject(new Error(`The speech of the browser failed: ${e.error}`));
       };
       synth.speak(utterance);
     }),

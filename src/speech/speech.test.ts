@@ -119,6 +119,14 @@ describe('webSpeech', () => {
     synth.speak.mockImplementation((u: { onstart: () => void; onend: () => void }) => { u.onstart(); u.onend(); });
     await expect(webSpeech()!.speak('Hi.', { rate: 1 })).resolves.toBe('end');
   });
+
+  test('a failed speech is an error; a canceled one is not', async () => {
+    type Utterance = { onerror: (e: { error: string }) => void };
+    synth.speak.mockImplementation((u: Utterance) => u.onerror({ error: 'synthesis-failed' }));
+    await expect(webSpeech()!.speak('Hi.', { rate: 1 })).rejects.toThrow('synthesis-failed');
+    synth.speak.mockImplementation((u: Utterance) => u.onerror({ error: 'interrupted' }));
+    await expect(webSpeech()!.speak('Hi.', { rate: 1 })).resolves.toBe('cancel');
+  });
 });
 
 describe('useEngines', () => {
