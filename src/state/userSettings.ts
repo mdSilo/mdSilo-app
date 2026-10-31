@@ -2,6 +2,7 @@ import { Draft } from 'immer';
 import { DEFAULT_READER_SETTINGS, type ReaderSettings } from '@/reader/settings';
 import { DEFAULT_LIBRARY_SETTINGS, type LibrarySettings } from '@/reader/library/shelf';
 import { isSystemDark, SYSTEM_THEME } from '@/lib/themes';
+import type { CustomFont } from '@/custom/fonts';
 import { setter, Setter, Store } from './store';
 
 export enum Sort {
@@ -60,8 +61,10 @@ export type UserSettings = {
   setTheme: Setter<string>;
   darkMode: boolean; // the applied theme is dark, follows `theme`
   setDarkMode: Setter<boolean>;
-  font: string;
+  font: string; // a font id, see custom/fonts
   setFont: Setter<string>;
+  customFonts: CustomFont[]; // the fonts added by the user, see custom/fonts
+  setCustomFonts: Setter<CustomFont[]>;
   fontSize: number;
   setFontSize: Setter<number>;
   fontWt: number;
@@ -139,6 +142,8 @@ const userSettingsSlice = (
   setDarkMode: setter(set, 'darkMode'),
   font: '',
   setFont: setter(set, 'font'),
+  customFonts: [],
+  setCustomFonts: setter(set, 'customFonts'),
   fontSize: 1.1,
   setFontSize: setter(set, 'fontSize'),
   fontWt: 400,

@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { openUrl } from '@/workspace/open';
+import { useFontsVersion } from '@/custom/fonts';
 import { store, useStore } from '@/state/store';
 import { DEFAULT_READER_SETTINGS, lookKey, withDefaults, zoomBy } from '../settings';
 import {
@@ -192,6 +193,8 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const darkMode = useStore((state) => state.darkMode);
   const theme = useStore((state) => state.theme);
+  const customFonts = useStore((state) => state.customFonts);
+  const fontsVersion = useFontsVersion();
   const notes = bookStore((state) => state.notes);
   const fixed = book.rendition?.layout === 'pre-paginated';
   // a fixed layout: its pages from right to left or from left to right, as chosen; 
@@ -597,7 +600,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         const settings = withDefaults(store.getState().readerSettings);
         // smaller, as notes are
         const noteSettings = { ...settings, fontSize: Math.round(settings.fontSize * 0.8), justify: false };
-        note.renderer.setStyles?.(bookStyles(noteSettings, themeColors(store.getState().darkMode, settings.pageTheme)));
+        note.renderer.setStyles?.(bookStyles(noteSettings, themeColors(store.getState().darkMode, settings.pageTheme), 'auto', store.getState().customFonts));
       });
       // the note cut out of its section: the popup of its size, shown
       handler.addEventListener('render', (e: Event) => {
@@ -632,7 +635,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       // the settings now, not of the render that opened the book
       const current = withDefaults(store.getState().readerSettings);
       applyLayout(view, current, state.vertical);
-      view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme), textMode));
+      view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme), textMode, store.getState().customFonts));
       setView(view, pane);
       setOpened(view);
       // the notes to draw
@@ -703,9 +706,9 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     const view = viewRef.current;
     if (!view?.renderer) return;
     applyLayout(view, settings, vertical);
-    view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme), textMode));
+    view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme), textMode, customFonts));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lookKey(settings), darkMode, theme, vertical]);
+  }, [lookKey(settings), darkMode, theme, vertical, customFonts, fontsVersion]);
 
   // the code blocks of the sections shown; the sections loaded later, on load
   useEffect(() => {
