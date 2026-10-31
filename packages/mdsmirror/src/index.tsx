@@ -118,6 +118,7 @@ export { JSONContent, getJSONContent } from "./core/queries/getJSONContent";
 export { Heading, getHeadings } from "./core/queries/getHeadings";
 export { HashTag, getHashtags } from "./core/queries/getHashtags";
 export { Task, getTasks } from "./core/queries/getTasks";
+export { renderSmiles } from "./lib/smiles";
 
 export const theme = lightTheme;
 

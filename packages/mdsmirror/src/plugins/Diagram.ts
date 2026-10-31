@@ -2,6 +2,7 @@ import { Node } from "prosemirror-model";
 import { Plugin, PluginKey, Transaction } from "prosemirror-state";
 import { findBlockNodes } from "prosemirror-utils";
 import { Decoration, DecorationSet } from "prosemirror-view";
+import { renderSmiles } from "../lib/smiles";
 
 type PluginState = {
   decorationSet: DecorationSet;
@@ -23,7 +24,7 @@ type StateProps = {
   name: string;
   dark: boolean;
   pluginState: PluginState;
-  pluginKey: string; // 'mermaid' | 'echats' | 'abcjs';
+  pluginKey: string; // 'mermaid' | 'echats' | 'abcjs' | 'smiles';
   onSave?: SaveDiagram;
 };
 
@@ -69,7 +70,9 @@ function getNewState({
         ? mermaidWidget(pluginState, diagramId, block, dark, onSave)
         : pluginKey === "echarts"
           ? echartsWidget(pluginState, diagramId, block, dark, onSave)
-          : abcWidget(pluginState, diagramId, block, dark, onSave),
+          : pluginKey === "smiles"
+            ? smilesWidget(pluginState, diagramId, block, dark, onSave)
+            : abcWidget(pluginState, diagramId, block, dark, onSave),
       {
         diagramId,
         // what the widget is drawn from: keep the drawn diagram while it is
@@ -161,6 +164,70 @@ const mermaidWidget =
 
     return mainWrapper;
   };
+
+const smilesWidget =
+  (
+    pluginState: PluginState,
+    diagramId: string,
+    block: any,
+    dark: boolean,
+    onSave?: SaveDiagram
+  ) =>
+  () => {
+    const mainWrapper = document.createElement("div");
+    const diagramWrapper = document.createElement("div");
+    diagramWrapper.classList.add("smiles-diagram-wrapper");
+    mainWrapper.append(diagramWrapper);
+
+    if (pluginState.diagramVisibility[diagramId] === false) {
+      mainWrapper.classList.add("diagram-hidden");
+      return mainWrapper;
+    }
+
+    renderSmiles(block.node.textContent, dark)
+      .then((svg) => {
+        diagramWrapper.innerHTML = svg;
+
+        if (onSave) {
+          const saveDiagramButton = document.createElement("button");
+          saveDiagramButton.innerText = "Save Structure SVG";
+          saveDiagramButton.type = "button";
+          saveDiagramButton.classList.add("save-diagram-button");
+          // one file: the drawings of all the lines, side by side
+          const svgs = [...diagramWrapper.querySelectorAll(":scope > svg")];
+          saveDiagramButton.addEventListener("click", () =>
+            onSave(svgs.length === 1 ? svg : combineSvgs(svgs), "smiles")
+          );
+          mainWrapper.append(saveDiagramButton);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        diagramWrapper.textContent = `SMILES: ${error?.message ?? error}`;
+      });
+
+    return mainWrapper;
+  };
+
+/** Drawings, side by side in one SVG, at the size they are drawn. */
+function combineSvgs(svgs: Element[]): string {
+  let x = 0;
+  let height = 0;
+  const parts = svgs.map((svg) => {
+    const { style } = svg as SVGSVGElement;
+    const w = parseFloat(style.width) || 0;
+    const h = parseFloat(style.height) || 0;
+    const part = svg.cloneNode(true) as Element;
+    part.removeAttribute("style");
+    part.setAttribute("x", `${x}`);
+    part.setAttribute("width", `${w}`);
+    part.setAttribute("height", `${h}`);
+    x += w;
+    height = Math.max(height, h);
+    return part.outerHTML;
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${x}" height="${height}" viewBox="0 0 ${x} ${height}">${parts.join("")}</svg>`;
+}
 
 const echartsWidget =
   (

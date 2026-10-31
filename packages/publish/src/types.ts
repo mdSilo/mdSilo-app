@@ -82,9 +82,11 @@ export type PublishOptions = {
   journals: boolean;
   /** math as MathML: `$...$`, `$$...$$`, `\(...\)` */
   math: boolean;
-  /** mermaid and echarts code blocks as pictures (SVG) */
+  /** mermaid, echarts and smiles code blocks as pictures (SVG) */
   mermaid: boolean;
   echarts: boolean;
+  /** chemical structures: molecules and reactions */
+  smiles: boolean;
 };
 
 export const DEFAULT_OPTIONS: PublishOptions = {
@@ -100,6 +102,7 @@ export const DEFAULT_OPTIONS: PublishOptions = {
   math: true,
   mermaid: true,
   echarts: true,
+  smiles: true,
 };
 
 export type SiteInput = {
@@ -118,6 +121,7 @@ export type SiteInput = {
 export type Renderers = {
   mermaid?: (code: string) => Promise<string>;
   echarts?: (code: string) => Promise<string>;
+  smiles?: (code: string) => Promise<string>;
 };
 
 /** A file of the site: its text, or a file of the workspace to copy. */

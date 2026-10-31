@@ -65,7 +65,7 @@ publish: false
 ```
 
 - **With**: switch on what else the site shows: **Backlinks**, **Graph**, **Tag pages**, **Journals** (the daily notes, on the home page), **Book annotations** (the highlights and notes of your books, never the books) and **Issues** (with their timeline, milestones and project boards). For issues you can tick labels, e.g. `public`, to publish only the issues that carry one of them.
-- **Draw**: **Math**, **Mermaid** and **ECharts** are drawn as you publish, so readers see formulas and diagrams without the site loading any library. Off, they show as their source.
+- **Draw**: **Math**, **Mermaid**, **ECharts** and **SMILES** are drawn as you publish, so readers see formulas, diagrams and chemical structures without the site loading any library. Off, they show as their source.
 
 :::warning
 **A link to a note that is not published shows as plain text**: the reader sees its title, never its content. Comments (`<!-- -->`) and front matter are left out of every page. Still, read what you tick before publishing: a published site is public.

@@ -94,6 +94,15 @@ sequenceDiagram
 }
 ```
 
+### Chemical structures
+
+A code block with the language `smiles` draws a molecule for each line of [SMILES](https://en.wikipedia.org/wiki/Simplified_Molecular_Input_Line_Entry_System), or a reaction (`reactants>agents>products`). A wrong line shows its error instead.
+
+```smiles
+CC(=O)Oc1ccccc1C(=O)O
+CN1C=NC2=C1C(=O)N(C(=O)N2C)C
+```
+
 ### Code
 
 ```ts

@@ -740,7 +740,8 @@ export const StyledEditor = styled("div")<{
 
   .abcjs-diagram-wrapper,
   .mermaid-diagram-wrapper,
-  .echarts-diagram-wrapper {
+  .echarts-diagram-wrapper,
+  .smiles-diagram-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -757,6 +758,16 @@ export const StyledEditor = styled("div")<{
   
     &.diagram-hidden {
       display: none;
+    }
+  }
+
+  .smiles-diagram-wrapper {
+    flex-wrap: wrap;
+    gap: 8px;
+
+    svg {
+      max-width: 100%;
+      height: auto !important;
     }
   }
 

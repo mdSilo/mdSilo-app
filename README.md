@@ -51,7 +51,7 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 ![editor](docs/images/editor.png)
 
 - **All-in-one editor**: WYSIWYG, raw Markdown and Mind Map views of the same file
-- **Markdown and more**: tables, task lists, `==highlight==`, math and chemistry (KaTeX), notices, mermaid / echarts / abc music, code highlighting, embeds, attachments
+- **Markdown and more**: tables, task lists, `==highlight==`, math and chemistry (KaTeX), notices, mermaid / echarts / abc music, chemical structures (SMILES), code highlighting, embeds, attachments
 - **Slash commands**, a hovering toolbar and hotkeys: never leave the keyboard
 - **Export** to PDF and PNG
 
@@ -69,7 +69,7 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 
 - **Git sync** with GitHub, Gitea, GitLab or any git host over HTTPS with a token: commit, pull and push in one click, every few minutes or when the app closes. Books sync only if you choose; the token stays on the device
 - **No lost edits**: changes on two devices merge; when both changed the same lines, your version is kept beside the note as a conflict copy, and the app's data merges field by field
-- **Publish a static site** to GitHub Pages (or export it to a folder): the folders you tick, with backlinks, graph, search, tag pages, book annotations and issues with their milestones and boards. Math, mermaid and echarts are drawn as you publish; links to private notes become plain text
+- **Publish a static site** to GitHub Pages (or export it to a folder): the folders you tick, with backlinks, graph, search, tag pages, book annotations and issues with their milestones and boards. Math, mermaid, echarts and SMILES are drawn as you publish; links to private notes become plain text
 
 ## Learn more
 
@@ -150,7 +150,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 ### Output
 
 - [X] Markdown: style, link, image, headings and TOC, lists, tables, quotes
-- [X] Extensions: mark, underline, sup, highlighted code, math and chemistry, notices, wikilink `[[]]`, hashtag `#tag#`, diagrams (mermaid, echarts, abc), embeds, attached PDF
+- [X] Extensions: mark, underline, sup, highlighted code, math and chemistry, notices, wikilink `[[]]`, hashtag `#tag#`, diagrams (mermaid, echarts, abc), chemical structures (SMILES), embeds, attached PDF
 - [X] WYSIWYG, Markdown and Mind Map; slash commands, hovering toolbar, hotkeys
 - [X] Export as PDF and PNG
 - [ ] Drawing

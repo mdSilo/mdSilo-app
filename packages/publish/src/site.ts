@@ -80,7 +80,7 @@ async function drawDiagrams(rendered: Rendered[], renderers: Renderers) {
 }
 
 /**
- * The files of the static site of a workspace; the mermaid and echarts code
+ * The files of the static site of a workspace; the mermaid, echarts and smiles code
  * blocks drawn by `renderers`, where a browser is.
  */
 export async function buildSite(input: SiteInput, renderers: Renderers = {}): Promise<SiteFile[]> {
@@ -171,7 +171,7 @@ export async function buildSite(input: SiteInput, renderers: Renderers = {}): Pr
   let diagramId = 0;
   const features: Features = {
     math: options.math,
-    diagrams: new Set((['mermaid', 'echarts'] as const).filter((lang) => options[lang] && renderers[lang])),
+    diagrams: new Set((['mermaid', 'echarts', 'smiles'] as const).filter((lang) => options[lang] && renderers[lang])),
     nextId: () => (diagramId += 1),
   };
   const rendered: Rendered[] = [];
