@@ -21,6 +21,13 @@ type DataPayload = { from: string; kind: DataKind; dir: string };
 
 const label = () => getCurrentWindow().label;
 
+/** `listen`, a failure logged, not left unhandled: then nothing to stop */
+const listenTo = <T>(event: string, handler: Parameters<typeof listen<T>>[1], what: string) =>
+  listen<T>(event, handler).catch((e) => {
+    console.error(`Failed to listen to ${what}:`, e);
+    return () => undefined;
+  });
+
 // the settings of another window being set: not to give them back
 let applying = false;
 
@@ -41,7 +48,7 @@ export function shareSettings(): () => void {
     void emit<SettingsPayload>(SETTINGS_EVENT, { from, values })
       .catch((e) => console.error('Failed to share the settings:', e));
   });
-  const unlisten = listen<SettingsPayload>(SETTINGS_EVENT, ({ payload }) => {
+  const unlisten = listenTo<SettingsPayload>(SETTINGS_EVENT, ({ payload }) => {
     if (payload.from === from) return;
     applying = true;
     try {
@@ -49,7 +56,7 @@ export function shareSettings(): () => void {
     } finally {
       applying = false;
     }
-  });
+  }, 'the settings');
   return () => {
     unsubscribe();
     void unlisten.then((off) => off());
@@ -70,8 +77,8 @@ export function announce(kind: DataKind, dir: string) {
 export function onAnnounce(kind: DataKind, fn: (dir: string) => void): () => void {
   if (!hasWindows) return () => undefined;
   const from = label();
-  const unlisten = listen<DataPayload>(DATA_EVENT, ({ payload }) => {
+  const unlisten = listenTo<DataPayload>(DATA_EVENT, ({ payload }) => {
     if (payload.from !== from && payload.kind === kind) fn(payload.dir);
-  });
+  }, 'the changes of other windows');
   return () => void unlisten.then((off) => off());
 }
