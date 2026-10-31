@@ -1,6 +1,9 @@
-//! The speech of the system: speech-dispatcher on Linux (see speechd.rs),
-//! `say` on macOS, System.Speech on Windows (by PowerShell). The programs are
-//! run, nothing linked, so the app starts without them.
+//! The speech of the system, in the app: speech-dispatcher on Linux (see
+//! speechd.rs), AVSpeechSynthesizer on macOS (avspeech.rs), WinRT's speech on
+//! Windows (winrt.rs).
+//!
+//! And by a program, the other choice on macOS and Windows: `say`, and
+//! System.Speech by PowerShell (its older SAPI voices).
 
 use std::io::Write;
 use std::process::{Command, Stdio};
@@ -14,8 +17,24 @@ pub fn engine() -> Box<dyn Engine> {
   Box::new(super::speechd::Speechd::default())
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(target_os = "macos")]
 pub fn engine() -> Box<dyn Engine> {
+  Box::new(super::avspeech::AvSpeech)
+}
+
+#[cfg(target_os = "windows")]
+pub fn engine() -> Box<dyn Engine> {
+  Box::new(super::winrt::WinRt)
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+pub fn engine() -> Box<dyn Engine> {
+  Box::new(System)
+}
+
+/// The speech of the system by a program: `say`, PowerShell.
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+pub fn by_program() -> Box<dyn Engine> {
   Box::new(System)
 }
 
@@ -84,8 +103,8 @@ fn parse_say_voices(list: &str) -> Vec<Voice> {
 impl Engine for System {
   fn info(&self) -> EngineInfo {
     EngineInfo {
-      id: "system",
-      name: "System (macOS)",
+      id: "system-program",
+      name: "System, by say",
       kind: Kind::Audio,
       online: false,
       fields: vec![],
@@ -222,8 +241,8 @@ fn base64(bytes: &[u8]) -> String {
 impl Engine for System {
   fn info(&self) -> EngineInfo {
     EngineInfo {
-      id: "system",
-      name: "System (Windows)",
+      id: "system-program",
+      name: "System, by PowerShell (SAPI)",
       kind: Kind::Audio,
       online: false,
       fields: vec![],

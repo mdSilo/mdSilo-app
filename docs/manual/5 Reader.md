@@ -92,7 +92,8 @@ The engines:
 
 | Engine | |
 |---|---|
-| System | The speech of your computer: speech-dispatcher on Linux (`spd-say`), the voices of macOS, System.Speech on Windows. Used unless you choose another. |
+| System | The speech of your computer: speech-dispatcher on Linux, the voices of macOS (AVSpeechSynthesizer, with the Enhanced and Premium voices you download in System Settings → Accessibility → Spoken Content), the voices of Windows (WinRT). Used unless you choose another. |
+| System, by a program | macOS and Windows: the same by `say`, or by PowerShell with the older SAPI voices of Windows. |
 | Piper | Natural voices, offline. Install [Piper](https://github.com/OHF-Voice/piper1-gpl), download voices (an `.onnx` file and its `.onnx.json` each) into a folder, and give the folder in the settings. |
 | Azure Speech | Online, with your own key and region of an Azure Speech resource. |
 | OpenAI or alike | Online, with your own key; the API URL, the model and the voices can be changed for a service or a server of your own with the same API (e.g. Kokoro). |
