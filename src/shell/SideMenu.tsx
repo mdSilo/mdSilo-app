@@ -23,7 +23,7 @@ import Portal from '@/ui/Portal';
 import Logo from '@/ui/Logo';
 import SyncButton from '@/sync/SyncButton';
 import { isPublishAvailable, usePublishUi } from '@/publish/publish';
-import { usePlayer } from '@/player/player';
+import { usePlayer } from '@/player/playerStore';
 import { useTTS } from '@/reader/tts';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');

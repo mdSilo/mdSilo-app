@@ -3,7 +3,7 @@ import { TbPlaylist as IconPlaylist } from 'react-icons/tb';
 import { SidebarTab, store } from '@/state/store';
 import { PodType } from '@/types/model';
 import { computePlaylist } from '@/feed/Playlist';
-import { onPauseRequest, playing } from '@/player/player';
+import { onPauseRequest, playing } from '@/player/playerStore';
 import MediaControls, { formatTime } from '@/player/MediaControls';
 
 type Props = {

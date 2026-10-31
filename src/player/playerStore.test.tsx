@@ -7,7 +7,7 @@ import { useTTS } from '@/reader/tts';
 import { useEngines } from '@/speech/speech';
 import SideMenu from '@/shell/SideMenu';
 import { mockInvoke, renderWithView } from '../testUtils';
-import { onPauseRequest, playing, usePlayer } from './player';
+import { onPauseRequest, playing, usePlayer } from './playerStore';
 import Player from './Player';
 
 const ViewProbe = () => {

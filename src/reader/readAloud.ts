@@ -1,6 +1,6 @@
 import { store } from '@/state/store';
 import { engineOf, speechOf, useEngines } from '@/speech/speech';
-import { onPauseRequest, playing } from '@/player/player';
+import { onPauseRequest, playing } from '@/player/playerStore';
 import { withDefaults } from './settings';
 import { ttsOf, ttsView, useTTS } from './tts';
 import { getView, type FoliateView, type Pane } from './view';

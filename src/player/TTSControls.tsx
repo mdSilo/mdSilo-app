@@ -8,7 +8,7 @@ import { stopTTS, ttsView, useTTS } from '@/reader/tts';
 import { readerAloud, ttsEngine } from '@/reader/readAloud';
 import { getView } from '@/reader/view';
 import MediaControls from './MediaControls';
-import { usePlayer } from './player';
+import { usePlayer } from './playerStore';
 
 /** The fraction of the book shown, as it turns. */
 function useFraction(view: ReturnType<typeof getView>) {
