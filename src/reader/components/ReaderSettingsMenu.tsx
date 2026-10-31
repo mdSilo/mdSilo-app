@@ -8,7 +8,7 @@ import {
 import { useReaderStore } from '../readerStore';
 import { bookDir, pagesDirection, rtlPagesMode, themeColors } from '../styles';
 import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
-import TranslationSwitches from './TranslationSwitches';
+import TranslationSwitches from '../translation/TranslationSwitches';
 
 const PAGE_THEMES: [PageTheme, string][] = [
   ['auto', 'As the app'], ['light', 'White'], ['sepia', 'Sepia'], ['gray', 'Gray'], ['dark', 'Dark'],

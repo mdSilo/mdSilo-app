@@ -13,14 +13,14 @@ import { writeFile } from '@/host/web/fs';
 import { issueStore, resetIssueStore } from '@/issue/issueStore';
 import { useWebFs, waitForView } from '../../testUtils';
 import { makeEpub } from '../testBook';
-import { bookHref } from '../annotations';
+import { bookHref } from '../annotations/annotations';
 import { resetReaderStore, useReaderStore, useSideStore } from '../readerStore';
 import { usePopups } from '../popups';
 import { resetReaderChrome, useReaderChrome } from '../chrome';
 import { DEFAULT_READER_SETTINGS } from '../settings';
-import { DEFAULT_LIBRARY_SETTINGS } from '../shelf';
-import { readLibrary, refreshLibrary, setBooksGroup } from '../library';
-import { resetVocabulary, useVocabulary } from '../vocabulary';
+import { DEFAULT_LIBRARY_SETTINGS } from '../library/shelf';
+import { readLibrary, refreshLibrary, setBooksGroup } from '../library/library';
+import { resetVocabulary, useVocabulary } from '../vocabulary/vocabulary';
 import { setActivePane, setView, type FoliateView } from '../view';
 
 // no rendering of the pages in jsdom: a view the panels can drive

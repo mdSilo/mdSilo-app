@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import { joinIssueData } from '@/issue/issueFiles';
-import { parseAnnotations } from '@/reader/annotations';
+import { parseAnnotations } from '@/reader/annotations/annotations';
 import { demoLangOf, loadDemo, type DemoFile, type DemoLang } from './demo';
 
 const text = (files: DemoFile[], path: string) => {

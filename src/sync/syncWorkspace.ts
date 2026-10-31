@@ -62,7 +62,7 @@ export async function applyPulled(ws: string, pulled: string[]) {
     await useIssueStore.getState().load(ws, true);
   }
   if (pulled.includes(`${data}books.json`)) {
-    const { readLibrary } = await import('@/reader/library');
+    const { readLibrary } = await import('@/reader/library/library');
     await readLibrary(ws);
   }
   if (pulled.includes(`${data}feeds.json`)) {

@@ -7,7 +7,7 @@ import { useStore } from '@/state/store';
 import { IconButton } from '@/ui/ui';
 import {
   HIGHLIGHT_COLORS, noteText, sectionOf, type BookNote, type HighlightStyle,
-} from '../annotations';
+} from '../annotations/annotations';
 import { HIGHLIGHT_CSS } from '../styles';
 import { withDefaults } from '../settings';
 import { activeStore, useActiveStore } from '../readerStore';
@@ -15,7 +15,7 @@ import { usePopups, type Box, type TextSelection } from '../popups';
 import {
   annotateSelection, copyLink, copyQuote, issueOfNote, rememberHighlight,
 } from '../actions';
-import NoteIssues from './NoteIssues';
+import NoteIssues from '../annotations/NoteIssues';
 
 /** Where to show a popup for a box: under it, or above if no room. */
 export function placeOf(box: Box, root: DOMRect, height: number, width: number) {

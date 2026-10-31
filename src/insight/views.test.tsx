@@ -11,7 +11,7 @@ import { getStrDate } from '@/lib/helper';
 import { MD_LINK_REGEX, WIKI_LINK_REGEX } from '@/lib/mdlink';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '@/testUtils';
 import MainView from '@/shell/MainView';
-import type { BookEntry } from '@/reader/library';
+import type { BookEntry } from '@/reader/library/library';
 import type { Issue } from '@/issue/types';
 import HeatMap from './HeatMap';
 import Chronicle from './Chronicle';

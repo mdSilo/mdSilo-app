@@ -5,7 +5,7 @@ import AudioPlayer from '@/feed/AudioPlayer';
 import * as dataAgent from '@/feed/dataAgent';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import { useEngines } from '@/speech/speech';
-import { useTTS } from '@/reader/tts';
+import { useTTS } from '@/reader/tts/tts';
 import { usePlayer } from './playerStore';
 import TTSControls from './TTSControls';
 import SpeechSettings from './SpeechSettings';

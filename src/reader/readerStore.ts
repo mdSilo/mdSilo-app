@@ -8,12 +8,12 @@ import { toWorkspacePath } from '@/workspace/util';
 import {
   annotationsPathOf, parseAnnotations, serializeAnnotations, sortNotes,
   type BookHeader, type BookNote,
-} from './annotations';
+} from './annotations/annotations';
 import { openBook, type BookDoc, type BookFormat } from './document';
 import {
   bookIdOf, bookMetaOf, readBookState, readLibrary, saveBookEntry, titleOfFile, withBookMeta, writeBookState, type BookEntry,
-} from './library';
-import { cacheCover } from './covers';
+} from './library/library';
+import { cacheCover } from './library/covers';
 import { indexBookText } from './bookIndex';
 import type { Progress } from './pagination';
 import type { WritingMode } from './settings';

@@ -18,9 +18,9 @@ const ProjectView = lazy(() => import('@/issue/ProjectView'));
 const Graph = lazy(() => import('@/insight/Graph'));
 const Journals = lazy(() => import('@/insight/Journals'));
 const HashTags = lazy(() => import('@/insight/Hashtags'));
-const Library = lazy(() => import('@/reader/components/Library'));
+const Library = lazy(() => import('@/reader/library/LibraryView'));
 const Reader = lazy(() => import('@/reader/components/ReaderView'));
-const Vocabulary = lazy(() => import('@/reader/components/Vocabulary'));
+const Vocabulary = lazy(() => import('@/reader/vocabulary/VocabularyView'));
 
 /** the view of each view type; any other type is a note */
 const VIEWS: Record<string, ComponentType> = {

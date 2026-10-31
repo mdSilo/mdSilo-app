@@ -204,7 +204,7 @@ const BookLeaf = memo(function BookLeaf({ id, label, snippet }: { id: string; la
         const at = rest.indexOf('#');
         const [hash, cfi] = at < 0 ? [rest, undefined] : [rest.slice(0, at), rest.slice(at + 1)];
         if (!ws) return;
-        const { findBookPath } = await import('@/reader/library');
+        const { findBookPath } = await import('@/reader/library/library');
         const path = await findBookPath(ws, hash);
         if (path) dispatch({ view: 'book', path, cfi });
       }}

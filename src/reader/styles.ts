@@ -1,7 +1,7 @@
 import type { PageTheme, ReaderSettings, WritingMode } from './settings';
-import { ttsStyles } from './tts';
+import { ttsStyles } from './tts/tts';
 import { codeStyles } from './highlight';
-import { captionStyles } from './media';
+import { captionStyles } from './media/media';
 import type { FoliateView } from './view';
 import type { BookDoc, SectionItem } from './document';
 

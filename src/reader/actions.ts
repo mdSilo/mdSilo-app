@@ -6,7 +6,7 @@ import { issueHref, issueLabel } from '@/issue/refs';
 import { oneLine } from '@/issue/issueOfText';
 import {
   bookHref, newNoteId, type BookNote, type HighlightColor, type HighlightStyle,
-} from './annotations';
+} from './annotations/annotations';
 import { activeStore, storeOf } from './readerStore';
 import { usePopups, type TextSelection } from './popups';
 import { getView, type Pane } from './view';

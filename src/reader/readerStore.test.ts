@@ -4,11 +4,11 @@ import { store } from '@/state/store';
 import { getStrDate } from '@/lib/helper';
 import { writeFile } from '@/host/web/fs';
 import { useWebFs } from '../testUtils';
-import { serializeAnnotations, type BookNote } from './annotations';
-import { readBookState, readLibrary } from './library';
+import { serializeAnnotations, type BookNote } from './annotations/annotations';
+import { readBookState, readLibrary } from './library/library';
 import { IDLE_MS, readBookFile, resetReaderStore, TICK_MS, useReaderStore, useSideStore } from './readerStore';
-import { formatDuration, readingTimeByDay, totalSeconds } from './stats';
-import { cacheCover, coverPathOf, coverUrl } from './covers';
+import { formatDuration, readingTimeByDay, totalSeconds } from './library/stats';
+import { cacheCover, coverPathOf, coverUrl } from './library/covers';
 import type { BookDoc } from './document';
 
 const book = vi.hoisted(() => ({

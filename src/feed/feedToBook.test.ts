@@ -1,9 +1,9 @@
 import { Blob as NodeBlob } from 'node:buffer';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
-import { serializeAnnotations, type BookNote } from '@/reader/annotations';
-import { readFeedBook } from '@/reader/feedBook';
-import { bookIdOf, readLibrary, refreshLibrary } from '@/reader/library';
+import { serializeAnnotations, type BookNote } from '@/reader/annotations/annotations';
+import { readFeedBook } from '@/reader/convert/feedBook';
+import { bookIdOf, readLibrary, refreshLibrary } from '@/reader/library/library';
 import type { ArticleType } from '@/types/model';
 import { makeNote, useWebFs } from '@/testUtils';
 import { inBookOrder, saveFeedBook } from './feedToBook';

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { TbBookmark, TbBookmarkFilled, TbX } from 'react-icons/tb';
 import { IconButton, Spinner } from '@/ui/ui';
 import { useStore } from '@/state/store';
-import { findBookPath, readLibrary, titleOfFile, type BookEntry } from '../library';
+import { findBookPath, readLibrary, titleOfFile, type BookEntry } from '../library/library';
 import { useReaderStore, useSideStore } from '../readerStore';
 import { bookmarkAt, toggleBookmark } from '../actions';
 import { withDefaults } from '../settings';

@@ -337,7 +337,7 @@
   background-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
 }
 
-/* a table of a book, zoomed: see reader/components/MediaViewer.tsx */
+/* a table of a book, zoomed: see reader/media/MediaViewer.tsx */
 .media-table table {
   border-collapse: collapse;
   border: 1px solid var(--table-border);

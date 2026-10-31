@@ -35,21 +35,21 @@ export function searchIssues(text: string, limit = 10): LinkSearchResult[] {
  * and the place linked; no path if the book is not on this device.
  */
 async function findLinkedBook(href: string): Promise<{ path?: string; cfi?: string } | undefined> {
-  const { parseBookLink, findBook, isBookId } = await import('@/reader/bookLinks');
+  const { parseBookLink, findBook, isBookId } = await import('@/reader/annotations/bookLinks');
   const link = parseBookLink(href);
   const ws = store.getState().initDir;
   if (!link || !ws) return link;
   // by id: maybe not in the library yet, findBookPath looks in reading/
-  const { loadBooks } = await import('@/reader/books');
+  const { loadBooks } = await import('@/reader/library/books');
   const hash = isBookId(link.ref) ? link.ref : findBook(await loadBooks(), link.ref)?.hash;
   if (!hash) return { cfi: link.cfi };
-  const library = await import('@/reader/library');
+  const library = await import('@/reader/library/library');
   return { path: await library.findBookPath(ws, hash), cfi: link.cfi };
 }
 
 /** Books and their annotations, as editor link results: `{{` */
 async function searchItems(text: string): Promise<LinkSearchResult[]> {
-  const { searchBookItems } = await import('@/reader/bookLinks');
+  const { searchBookItems } = await import('@/reader/annotations/bookLinks');
   return searchBookItems(text);
 }
 

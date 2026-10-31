@@ -1,4 +1,4 @@
-import type { HighlightColor, HighlightStyle } from './annotations';
+import type { HighlightColor, HighlightStyle } from './annotations/annotations';
 import type { CodeLanguage } from './highlight';
 
 /** The colors of the pages: of the app theme, or of paper. */

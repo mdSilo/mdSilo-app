@@ -2,20 +2,20 @@ import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
 import { withContents } from '@/lib/contentCache';
 import { fromWorkspacePath, toWorkspacePath } from '@/workspace/util';
-import { annotationsPathOf, parseAnnotations, parseBookHref } from '@/reader/annotations';
+import { annotationsPathOf, parseAnnotations, parseBookHref } from '@/reader/annotations/annotations';
 import { indexBookText } from '@/reader/bookIndex';
 import { openBook } from '@/reader/document';
 import {
   articleOfCfi, makeFeedBook, readFeedBook, type FeedArticleInput, type FeedBookData, type FeedBookFiles,
-} from '@/reader/feedBook';
-import { bookHashOf, importBookData, readLibrary, saveBookEntry, writeBytes } from '@/reader/library';
+} from '@/reader/convert/feedBook';
+import { bookHashOf, importBookData, readLibrary, saveBookEntry, writeBytes } from '@/reader/library/library';
 import { useReaderStore, useSideStore } from '@/reader/readerStore';
-import { readVocabulary } from '@/reader/vocabulary';
+import { readVocabulary } from '@/reader/vocabulary/vocabulary';
 import type { ArticleType } from '@/types/model';
 import { fetchImage, fullTextOf } from './fullText';
 
 /**
- * Feed articles made a book, see reader/feedBook.ts: the book of
+ * Feed articles made a book, see reader/convert/feedBook.ts: the book of
  * a name made, or the new articles added to it. The articles in the book
  * stay as they are, so do the annotations on them.
  */

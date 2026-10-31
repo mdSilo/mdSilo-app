@@ -14,17 +14,17 @@ import {
   clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, 
   wheelGesture, wheelPixels, wheelScrolls, zoomKey, type TurnHint,
 } from '../pagination';
-import { noteText, sectionOf, type BookNote } from '../annotations';
+import { noteText, sectionOf, type BookNote } from '../annotations/annotations';
 import { getDirection, type BookDoc } from '../document';
-import { fillsPage, imagesOf, markCaptions, mediaAt, type Media } from '../media';
+import { fillsPage, imagesOf, markCaptions, mediaAt, type Media } from '../media/media';
 import { highlightCode } from '../highlight';
-import { sentenceRangeAround } from '../vocabulary';
-import { frameOf } from '../rangeEdit';
-import { placeOf } from './BookPopups';
-import { ImageViewer, TableViewer } from './MediaViewer';
+import { sentenceRangeAround } from '../vocabulary/vocabulary';
+import { frameOf } from '../annotations/rangeEdit';
+import { ImageViewer, TableViewer } from '../media/MediaViewer';
+import RangeHandles from '../annotations/RangeHandles';
+import { useBookTranslation } from '../translation/useBookTranslation';
 import DoubleBorder from './DoubleBorder';
-import RangeHandles from './RangeHandles';
-import { useBookTranslation } from './useBookTranslation';
+import { placeOf } from './BookPopups';
 
 type Props = {
   book: BookDoc;

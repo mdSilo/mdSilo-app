@@ -17,7 +17,7 @@ import { joinPath, normalizeSlash } from '@/workspace/util';
 import { READING_DIR, WRITING_DIR } from '@/workspace/layout';
 import { isBookFile } from '@/reader/document';
 import BookIcon, { bookIconOf } from '@/reader/components/BookIcon';
-import { bookPathOfAnnotations } from '@/reader/annotations';
+import { bookPathOfAnnotations } from '@/reader/annotations/annotations';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';

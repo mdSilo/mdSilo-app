@@ -12,8 +12,8 @@ import { flushSave } from '@/workspace/pendingSaves';
 import { DATA_DIR, LOCAL_DIR } from '@/workspace/layout';
 import { isTauri, isWeb, joinPath } from '@/workspace/util';
 import { useIssueStore } from '@/issue/issueStore';
-import { annotationsPathOf } from '@/reader/annotations';
-import { loadBooks } from '@/reader/books';
+import { annotationsPathOf } from '@/reader/annotations/annotations';
+import { loadBooks } from '@/reader/library/books';
 import { siteRenderers } from './renderers';
 
 /**

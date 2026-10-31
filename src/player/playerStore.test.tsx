@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
 import { useCurrentViewContext } from '@/state/useCurrentView';
-import { useTTS } from '@/reader/tts';
+import { useTTS } from '@/reader/tts/tts';
 import { useEngines } from '@/speech/speech';
 import SideMenu from '@/shell/SideMenu';
 import { mockInvoke, renderWithView } from '../testUtils';

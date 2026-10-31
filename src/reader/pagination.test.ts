@@ -7,7 +7,7 @@ import { withDefaults } from './settings';
 import { anchorOf } from './components/BookPopups';
 import { pathTo } from './components/TocView';
 import type { FoliateView } from './view';
-import type { BookNote } from './annotations';
+import type { BookNote } from './annotations/annotations';
 
 const viewOf = (dir = 'ltr', scrolled = false) => ({
   book: { dir },

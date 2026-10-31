@@ -12,7 +12,7 @@ import { openFilePath } from '@/workspace/open';
 import useLoadNotes from '@/lib/hooks/useLoadNotes';
 import { checkFileIsMd } from '@/workspace/process';
 import { useWritingRoot } from '@/workspace/useWorkspace';
-import { readingTimeByDay } from '@/reader/stats';
+import { readingTimeByDay } from '@/reader/library/stats';
 
 export default function Chronicle() {
   useLoadNotes();
