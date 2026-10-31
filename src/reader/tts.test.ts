@@ -1,5 +1,5 @@
 import type { Speech } from '@/speech/speech';
-import { parseSSML, TTSController } from './tts';
+import { inView, parseSSML, TTSController } from './tts';
 import type { FoliateView, TTSApi } from './view';
 
 const ssml = (body: string) =>
@@ -27,7 +27,8 @@ function setup(sections: string[][]) {
     start: () => { block = 0; return sections[section][0]; },
     resume: () => sections[section][Math.max(block, 0)],
     next: () => { block += 1; return sections[section][block]; },
-    prev: () => { block = Math.max(0, block - 1); return sections[section][block]; },
+    // as foliate's: nothing before the first block
+    prev: () => (block <= 0 ? undefined : sections[section][--block]),
     from: () => { block = 0; return sections[section][0]; },
     setMark: (mark) => { marks.push(`${section}:${mark}`); },
   });
@@ -108,6 +109,40 @@ describe('TTSController', () => {
     expect(statuses.at(-1)).toBe('idle');
   });
 
+  test('next clicked twice at once: one block further, read once', async () => {
+    const { tts, spoken, speech } = setup([[
+      ssml('<mark name="0"/>One.'), ssml('<mark name="1"/>Two.'), ssml('<mark name="2"/>Three.'),
+    ]]);
+    // the speech ends only when canceled
+    let cancel: (v: 'cancel') => void = () => undefined;
+    vi.mocked(speech.speak).mockImplementation((text: string) => {
+      spoken.push(text);
+      return new Promise((resolve) => { cancel = resolve; });
+    });
+    vi.mocked(speech.cancel).mockImplementation(() => cancel('cancel'));
+    await tts.start();
+    await settle();
+    await Promise.all([tts.skip(true), tts.skip(true)]);
+    for (let i = 0; i < 10; i++) await settle();
+    // the first click gave way: not Two and Three at once, by two loops
+    expect(spoken).toEqual(['One.', 'Two.']);
+  });
+
+  test('back from the first block: it again, not the second', async () => {
+    const { tts, spoken, speech } = setup([[ssml('<mark name="0"/>One.'), ssml('<mark name="1"/>Two.')]]);
+    let cancel: (v: 'cancel') => void = () => undefined;
+    vi.mocked(speech.speak).mockImplementation((text: string) => {
+      spoken.push(text);
+      return new Promise((resolve) => { cancel = resolve; });
+    });
+    vi.mocked(speech.cancel).mockImplementation(() => cancel('cancel'));
+    await tts.start();
+    await settle();
+    await tts.skip(false);
+    await settle();
+    expect(spoken).toEqual(['One.', 'One.']);
+  });
+
   test('makes the next sentences ahead', async () => {
     const { tts, speech } = setup([[ssml('<mark name="0"/>One. <mark name="1"/>Two. <mark name="2"/>Three. <mark name="3"/>Four.')]]);
     await tts.start();
@@ -155,5 +190,38 @@ describe('TTSController', () => {
     await tts.resume();
     for (let i = 0; i < 10; i++) await settle();
     expect(spoken).toEqual(['other One.', 'other Two.']);
+  });
+});
+
+describe('inView', () => {
+  const rect = (left: number, top: number, width = 100, height = 20) =>
+    ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top }) as DOMRect;
+  /** a range at (x, y) of a frame at (fx, fy), the renderer at 0,0 800x600 */
+  function place(x: number, y: number, fx = 0, fy = 0) {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const doc = frame.contentDocument!;
+    doc.body.textContent = 'text';
+    Object.defineProperty(frame, 'offsetWidth', { value: 800, configurable: true });
+    frame.getBoundingClientRect = () => rect(fx, fy, 800, 600);
+    const range = doc.createRange();
+    range.selectNodeContents(doc.body);
+    range.getClientRects = () => [rect(x, y)] as unknown as DOMRectList;
+    const renderer = document.createElement('div');
+    renderer.getBoundingClientRect = () => rect(0, 0, 800, 600);
+    return { range, renderer, frame };
+  }
+  test('shown or not', () => {
+    const shown = place(100, 100);
+    expect(inView(shown.range, shown.renderer)).toBe(true);
+    // the next page: the frame scrolled left of it
+    const next = place(900, 100);
+    expect(inView(next.range, next.renderer)).toBe(false);
+    const scrolledTo = place(900, 100, -800);
+    expect(inView(scrolledTo.range, scrolledTo.renderer)).toBe(true);
+    // below, scrolled mode
+    const below = place(100, 700);
+    expect(inView(below.range, below.renderer)).toBe(false);
+    expect(inView(shown.range, undefined)).toBe(false);
   });
 });

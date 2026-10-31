@@ -41,6 +41,8 @@ export type TTSStatus = 'idle' | 'playing' | 'paused';
 
 type TTSStore = {
   status: TTSStatus;
+  /** a book read aloud, its controls in the player, even stopped; until closed */
+  active: boolean;
   /** why the reading stopped, if it failed */
   error?: string;
   setStatus: (status: TTSStatus) => void;
@@ -49,7 +51,8 @@ type TTSStore = {
 
 export const useTTS = create<TTSStore>((set) => ({
   status: 'idle',
-  setStatus: (status) => set(status === 'playing' ? { status, error: undefined } : { status }),
+  active: false,
+  setStatus: (status) => set(status === 'playing' ? { status, active: true, error: undefined } : { status }),
   setError: (error) => set({ error }),
 }));
 
@@ -68,6 +71,23 @@ function clearHighlight(view: FoliateView | null) {
   for (const { doc } of view?.renderer?.getContents?.() ?? []) {
     (doc.defaultView as Window & { CSS?: { highlights?: Map<string, unknown> } })?.CSS?.highlights?.delete(HIGHLIGHT);
   }
+}
+
+/**
+ * The start of the range is in the view: its frame's place plus its own,
+ * within the renderer (the pages shown, or the part scrolled to).
+ */
+export function inView(range: Range, renderer: Element | undefined): boolean {
+  const frame = range.startContainer.ownerDocument?.defaultView?.frameElement as HTMLElement | null | undefined;
+  const rect = Array.from(range.getClientRects()).find((r) => r.width > 0 && r.height > 0);
+  if (!frame || !rect || !renderer?.getBoundingClientRect) return false;
+  const f = frame.getBoundingClientRect();
+  // a fixed layout page is scaled
+  const scale = frame.offsetWidth ? f.width / frame.offsetWidth : 1;
+  const x = f.left + rect.left * scale;
+  const y = f.top + rect.top * scale;
+  const view = renderer.getBoundingClientRect();
+  return x >= view.left && x < view.right && y >= view.top && y < view.bottom;
 }
 
 /** The CSS of the sentence read, in the pages of the book. */
@@ -106,7 +126,12 @@ export class TTSController {
   private async tts(): Promise<TTSApi | undefined> {
     await this.view.initTTS('sentence', undefined, (range: Range) => {
       highlight(range);
-      this.view.renderer.scrollToAnchor?.(range, true);
+      // to the sentence only if not shown: scrolled to each one, the
+      // scrolled mode jumped by every sentence; not as a selection (`true`),
+      // which selected the sentence in the page
+      if (!inView(range, this.view.renderer as unknown as Element)) {
+        void this.view.renderer.scrollToAnchor?.(range);
+      }
     });
     return this.view.tts ?? undefined;
   }
@@ -114,8 +139,10 @@ export class TTSController {
   /** Read from the range (e.g. the text selected), or the page shown. */
   async start(from?: Range) {
     this.stop();
+    const run = this.run;
     const tts = await this.tts();
-    if (!tts) return;
+    // started, skipped, stopped again meanwhile: that one goes on
+    if (!tts || run !== this.run) return;
     const range = from ?? (this.view.lastLocation as { range?: Range } | undefined)?.range;
     const ssml = range ? tts.from(range) : tts.start();
     this.segments = ssml ? parseSSML(ssml) : [];
@@ -129,7 +156,10 @@ export class TTSController {
   }
 
   async resume() {
+    const run = ++this.run;
+    this.cancel();
     const tts = await this.tts();
+    if (run !== this.run) return;
     const ssml = tts?.resume();
     this.segments = ssml ? parseSSML(ssml) : [];
     void this.loop();
@@ -145,10 +175,13 @@ export class TTSController {
 
   /** The next or previous block. */
   async skip(forward: boolean) {
-    this.run += 1;
+    const run = ++this.run;
     this.cancel();
     const tts = await this.tts();
-    const ssml = forward ? tts?.next() : tts?.prev();
+    // clicked again meanwhile: the last click goes on, not two at once
+    if (run !== this.run) return;
+    // back from the first block: it again, not on to the second
+    const ssml = forward ? tts?.next() : (tts?.prev() ?? tts?.start());
     this.segments = ssml ? parseSSML(ssml) : [];
     void this.loop();
   }
@@ -229,4 +262,5 @@ export const ttsView = () => controller?.view;
 export function stopTTS() {
   controller?.tts.stop();
   controller = undefined;
+  useTTS.setState({ active: false, error: undefined });
 }

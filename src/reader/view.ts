@@ -26,7 +26,8 @@ export interface FoliateRenderer extends HTMLElement {
   pages?: number;
   atStart?: boolean;
   atEnd?: boolean;
-  scrollToAnchor?: (anchor: Range | number, smooth?: boolean) => void;
+  /** `select`: the anchor selected in the page once there */
+  scrollToAnchor?: (anchor: Range | number, select?: boolean, smooth?: boolean) => Promise<void>;
 }
 
 export type SearchMatch = { cfi: string; cfis?: string[]; excerpt: { pre: string; match: string; post: string } };

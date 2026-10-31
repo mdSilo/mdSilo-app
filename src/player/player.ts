@@ -8,11 +8,16 @@ import { create } from 'zustand';
 type PlayerStore = {
   shown: boolean;
   setShown: (shown: boolean) => void;
+  /** the settings of the speech engines, open over the player */
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
 };
 
 export const usePlayer = create<PlayerStore>((set) => ({
   shown: false,
   setShown: (shown) => set({ shown }),
+  settingsOpen: false,
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
 }));
 
 export type PlayerSource = 'podcast' | 'tts';

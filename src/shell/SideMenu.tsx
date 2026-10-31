@@ -530,7 +530,7 @@ const BottomSection = () => {
 const PlayerButton = () => {
   const tooltipPlacement = useTooltipPlacement();
   const shown = usePlayer((state) => state.shown);
-  const reading = useTTS((state) => state.status !== 'idle');
+  const reading = useTTS((state) => state.active);
   const hasPod = useStore((state) => Boolean(state.currentPod));
   return (
     <MenuItem isHighlighted={shown}>

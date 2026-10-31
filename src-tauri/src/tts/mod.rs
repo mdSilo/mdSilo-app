@@ -11,6 +11,8 @@
 
 mod online;
 mod piper;
+#[cfg(target_os = "linux")]
+mod speechd;
 mod system;
 
 use serde::{Deserialize, Serialize};

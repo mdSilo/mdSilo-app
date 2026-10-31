@@ -82,9 +82,40 @@ describe('AudioPlayer', () => {
     await act(async () => {
       render(<AudioPlayer currentPod={{ title: 'Ep', url: 'x.mp3', article_url: 'a', feed_link: 'f' }} />);
     });
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(screen.getByTitle('Playlist'));
     expect(store.getState().isSidebarOpen).toBe(true);
     expect(store.getState().sidebarTab).toBe(SidebarTab.Playlist);
+  });
+
+  test('its controls: play, pause, seek, rate, the episodes before and after, close', async () => {
+    mockInvoke(invoke, { get_articles: pods });
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
+    store.getState().setCurrentPod({ title: 'Ep 1', url: 'ep1.mp3', article_url: 'a1', feed_link: 'f' });
+    await act(async () => {
+      render(<AudioPlayer currentPod={{ title: 'Ep 1', url: 'ep1.mp3', article_url: 'a1', feed_link: 'f' }} />);
+    });
+    const audio = document.querySelector('audio') as HTMLAudioElement;
+    expect(audio).not.toHaveAttribute('controls');
+    await waitFor(() => expect(screen.getByTitle('Next episode')).toBeInTheDocument());
+    expect(screen.queryByTitle('Previous episode')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByTitle('Play'));
+    expect(play).toHaveBeenCalled();
+    fireEvent.play(audio);
+    await userEvent.click(screen.getByTitle('Pause'));
+    expect(pause).toHaveBeenCalled();
+    Object.defineProperty(audio, 'duration', { value: 600, configurable: true });
+    fireEvent.durationChange(audio);
+    fireEvent.change(screen.getByLabelText('Position'), { target: { value: '75' } });
+    expect(audio.currentTime).toBe(75);
+    expect(screen.getByText('1:15 / 10:00')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Speed'), '1.5');
+    expect(audio.playbackRate).toBe(1.5);
+    await userEvent.click(screen.getByTitle('Next episode'));
+    expect(store.getState().currentPod?.url).toBe('ep2.mp3');
+    await userEvent.click(screen.getByTitle('Close'));
+    expect(store.getState().currentPod).toBeNull();
+    vi.restoreAllMocks();
   });
 });
 

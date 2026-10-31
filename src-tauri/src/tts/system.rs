@@ -1,71 +1,22 @@
-//! The speech of the system: speech-dispatcher on Linux (`spd-say`), `say` on
-//! macOS, System.Speech on Windows (by PowerShell). The programs are run,
-//! nothing linked, so the app starts without them.
+//! The speech of the system: speech-dispatcher on Linux (see speechd.rs),
+//! `say` on macOS, System.Speech on Windows (by PowerShell). The programs are
+//! run, nothing linked, so the app starts without them.
 
 use std::io::Write;
-use std::process::{Child, Command, Stdio};
-use std::sync::Mutex;
+use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Duration;
 
-use super::{
-  Audio, Config, Engine, EngineInfo, Kind, Result, SpeakOptions, Spoken, Voice,
-};
+#[allow(unused_imports)]
+use super::{Audio, Config, Engine, EngineInfo, Kind, Result, SpeakOptions, Voice};
 
+#[cfg(target_os = "linux")]
 pub fn engine() -> Box<dyn Engine> {
-  Box::new(System::default())
+  Box::new(super::speechd::Speechd::default())
 }
 
-/// The program speaking, killed to stop it: a killed client of
-/// speech-dispatcher has its speech canceled.
-#[derive(Default)]
-struct Speaking {
-  child: Mutex<Option<(u64, Child)>>,
-  next: AtomicU64,
-}
-
-impl Speaking {
-  fn run(&self, mut command: Command) -> Result<Spoken> {
-    self.stop();
-    let child = command
-      .stdin(Stdio::null())
-      .stdout(Stdio::null())
-      .stderr(Stdio::piped())
-      .spawn()
-      .map_err(|e| e.to_string())?;
-    let id = self.next.fetch_add(1, Ordering::SeqCst);
-    *self.child.lock().unwrap() = Some((id, child));
-    loop {
-      {
-        let mut guard = self.child.lock().unwrap();
-        // stopped, maybe another one started since
-        let Some((running, child)) = guard.as_mut().filter(|(i, _)| *i == id) else {
-          return Ok(Spoken::Cancel);
-        };
-        debug_assert_eq!(*running, id);
-        if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
-          let (_, child) = guard.take().unwrap();
-          if status.success() {
-            return Ok(Spoken::End);
-          }
-          let mut error = String::new();
-          if let Some(mut stderr) = child.stderr {
-            use std::io::Read;
-            let _ = stderr.read_to_string(&mut error);
-          }
-          return Err(format!("The speech failed: {}", error.trim()));
-        }
-      }
-      std::thread::sleep(Duration::from_millis(20));
-    }
-  }
-
-  fn stop(&self) {
-    if let Some((_, mut child)) = self.child.lock().unwrap().take() {
-      let _ = child.kill();
-      let _ = child.wait();
-    }
-  }
+#[cfg(not(target_os = "linux"))]
+pub fn engine() -> Box<dyn Engine> {
+  Box::new(System)
 }
 
 /// Run the program with the text as its input, its output returned.
@@ -108,105 +59,8 @@ pub(super) fn audio_of(
   Ok(Audio { bytes: made?, ext })
 }
 
-#[derive(Default)]
-struct System {
-  #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
-  speaking: Speaking,
-}
-
-// Linux: speech-dispatcher
-
-/// The voices of `spd-say -L`: NAME LANGUAGE VARIANT, right aligned, names
-/// with spaces; the variants (espeak has some 80 for each voice) left out.
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
-fn parse_spd_voices(list: &str) -> Vec<Voice> {
-  list
-    .lines()
-    .skip(1)
-    .filter_map(|line| {
-      let words: Vec<&str> = line.split_whitespace().collect();
-      let [name @ .., lang, variant] = words.as_slice() else {
-        return None;
-      };
-      let name = name.join(" ");
-      (*variant == "none" && !name.is_empty()).then(|| Voice {
-        id: name.to_string(),
-        name: name.to_string(),
-        lang: spd_lang(lang),
-      })
-    })
-    .collect()
-}
-
-/// The language of espeak as BCP 47, e.g. its Mandarin `cmn` as `zh`.
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
-fn spd_lang(lang: &str) -> String {
-  match lang {
-    "cmn" => "zh".into(),
-    "yue" => "zh-yue".into(),
-    "hak" => "zh-hak".into(),
-    _ => lang.to_string(),
-  }
-}
-
-/// The rate of speech-dispatcher, -100 to 100, of a rate, 1 the normal one:
-/// 100 is about 2.5 times as fast.
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
-fn spd_rate(rate: f32) -> i32 {
-  ((rate.max(0.1).ln() / 2.5f32.ln()) * 100.0)
-    .round()
-    .clamp(-100.0, 100.0) as i32
-}
-
-#[cfg(target_os = "linux")]
-impl Engine for System {
-  fn info(&self) -> EngineInfo {
-    EngineInfo {
-      id: "system",
-      name: "System (speech-dispatcher)",
-      kind: Kind::Live,
-      online: false,
-      fields: vec![],
-    }
-  }
-
-  fn available(&self, _: &Config) -> bool {
-    Command::new("spd-say")
-      .arg("-v")
-      .stdout(Stdio::null())
-      .stderr(Stdio::null())
-      .status()
-      .is_ok_and(|s| s.success())
-  }
-
-  fn voices(&self, _: &Config) -> Result<Vec<Voice>> {
-    let output = Command::new("spd-say")
-      .arg("-L")
-      .output()
-      .map_err(|e| format!("No speech-dispatcher (spd-say): {e}"))?;
-    Ok(parse_spd_voices(&String::from_utf8_lossy(&output.stdout)))
-  }
-
-  fn speak(&self, text: &str, options: &SpeakOptions, _: &Config) -> Result<Spoken> {
-    let mut command = Command::new("spd-say");
-    command
-      .arg("-w")
-      .args(["-r", &spd_rate(options.rate.unwrap_or(1.0)).to_string()]);
-    match (&options.voice, &options.lang) {
-      (Some(voice), _) => command.args(["-y", voice]),
-      (None, Some(lang)) => command.args(["-l", lang]),
-      (None, None) => &mut command,
-    };
-    self.speaking.run({
-      command.arg("--").arg(text);
-      command
-    })
-  }
-
-  fn stop(&self) {
-    self.speaking.stop();
-  }
-}
+#[cfg_attr(target_os = "linux", allow(dead_code))]
+struct System;
 
 // macOS: say
 
@@ -429,38 +283,6 @@ mod tests {
   use super::*;
 
   #[test]
-  fn spd_voices_without_variants() {
-    let list =
-      "                     NAME                 LANGUAGE                  VARIANT
-                Afrikaans                       af                     none
-English (Caribbean)+Andrea                   en-029                   Andrea
-English (Received Pronunciation)               en-GB-X-RP                     none
-       Chinese (Mandarin)                      cmn                     none
-";
-    let voices = parse_spd_voices(list);
-    assert_eq!(
-      voices
-        .iter()
-        .map(|v| (v.name.as_str(), v.lang.as_str()))
-        .collect::<Vec<_>>(),
-      [
-        ("Afrikaans", "af"),
-        ("English (Received Pronunciation)", "en-GB-X-RP"),
-        ("Chinese (Mandarin)", "zh"),
-      ]
-    );
-  }
-
-  #[test]
-  fn spd_rates() {
-    assert_eq!(spd_rate(1.0), 0);
-    assert_eq!(spd_rate(2.5), 100);
-    assert_eq!(spd_rate(0.4), -100);
-    assert_eq!(spd_rate(10.0), 100);
-    assert!(spd_rate(1.5) > 0 && spd_rate(0.75) < 0);
-  }
-
-  #[test]
   fn say_voices() {
     let list = "Albert              en_US    # Hello! My name is Albert.
 Eddy (English (UK)) en_GB    # Hello! My name is Eddy.
@@ -498,24 +320,5 @@ Tingting            zh_CN    # 你好，我叫婷婷。
     assert_eq!(base64(b"fo"), "Zm8=");
     assert_eq!(base64(b"foo"), "Zm9v");
     assert_eq!(base64(b"foob"), "Zm9vYg==");
-  }
-
-  #[cfg(target_os = "linux")]
-  #[test]
-  fn speaking_stopped() {
-    let speaking = std::sync::Arc::new(Speaking::default());
-    let other = speaking.clone();
-    let run = std::thread::spawn(move || {
-      let mut command = Command::new("sleep");
-      command.arg("5");
-      other.run(command)
-    });
-    std::thread::sleep(Duration::from_millis(200));
-    speaking.stop();
-    assert_eq!(run.join().unwrap(), Ok(Spoken::Cancel));
-    let mut command = Command::new("true");
-    command.arg("");
-    assert_eq!(speaking.run(command), Ok(Spoken::End));
-    assert!(speaking.run(Command::new("false")).is_err());
   }
 }

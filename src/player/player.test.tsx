@@ -17,7 +17,7 @@ const ViewProbe = () => {
 
 beforeEach(() => {
   usePlayer.setState({ shown: false });
-  useTTS.setState({ status: 'idle', error: undefined });
+  useTTS.setState({ status: 'idle', active: false, error: undefined });
   useEngines.setState({ engines: [], loaded: true });
 });
 
@@ -60,7 +60,7 @@ describe('Player', () => {
     return waitFor(() => expect(document.querySelector('audio')).toHaveAttribute('src', 'ep2.mp3'));
   });
 
-  test('a book read aloud: its controls; the error of the engine, dismissed', async () => {
+  test('a book read aloud: its controls, kept once stopped; the error of the engine; closed', async () => {
     useEngines.setState({
       engines: [
         { id: 'system', name: 'System', kind: 'live', online: false, fields: [], available: true, config: {} },
@@ -68,15 +68,21 @@ describe('Player', () => {
       ],
     });
     mockInvoke(invoke, { tts_voices: [] });
-    useTTS.setState({ status: 'paused' });
+    useTTS.getState().setStatus('paused');
+    useTTS.setState({ active: true });
     usePlayer.setState({ shown: true });
     renderWithView(<Player />);
-    expect(screen.getByTitle('Resume')).toBeInTheDocument();
+    expect(screen.getByTitle('Play')).toBeInTheDocument();
+    expect(screen.getByTitle('Stop')).toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText('Engine'), 'web');
     expect(store.getState().readerSettings?.ttsEngine).toBe('web');
-    useTTS.setState({ status: 'idle', error: 'No voice' });
+    // stopped: the controls still there, to play again
+    useTTS.getState().setStatus('idle');
+    expect(await screen.findByTitle('Play')).toBeInTheDocument();
+    expect(screen.queryByTitle('Stop')).not.toBeInTheDocument();
+    useTTS.setState({ error: 'No voice' });
     expect(await screen.findByRole('alert')).toHaveTextContent('No voice');
-    await userEvent.click(screen.getByTitle('Dismiss'));
+    await userEvent.click(screen.getByTitle('Close'));
     expect(screen.queryByTestId('tts-bar')).not.toBeInTheDocument();
     expect(screen.getByText(/Nothing playing/)).toBeInTheDocument();
   });
@@ -88,12 +94,23 @@ describe('Player', () => {
     mockInvoke(invoke, {
       tts_voices: [{ id: 'a', name: 'Alice', lang: 'en-US' }, { id: 'b', name: 'Bob', lang: 'en-GB' }],
     });
-    useTTS.setState({ status: 'playing' });
+    useTTS.getState().setStatus('playing');
     usePlayer.setState({ shown: true });
     renderWithView(<Player />);
     await userEvent.selectOptions(await screen.findByLabelText('Voice'), 'b');
     expect(store.getState().readerSettings?.ttsVoices).toEqual({ system: 'b' });
   });
+});
+
+test('the speech engines: opened from the player, kept open once it is hidden', async () => {
+  usePlayer.setState({ shown: true, settingsOpen: false });
+  renderWithView(<Player />);
+  await userEvent.click(screen.getByTitle('Speech engines'));
+  expect(await screen.findByText('Speech engines', { selector: 'h3, h2, [id*=headlessui-dialog-title]' })).toBeInTheDocument();
+  // not inside the player
+  expect(screen.getByTestId('player')).not.toContainElement(screen.getByRole('dialog'));
+  await userEvent.click(screen.getByTitle('Hide'));
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
 });
 
 test('SideMenu: the player shown and hidden', async () => {
