@@ -102,13 +102,6 @@ export const wikipediaSearchUrl = (text: string, lang?: string) =>
 export const targetLanguage = (setting?: string) =>
   setting || (typeof navigator !== 'undefined' ? navigator.language : '') || 'en';
 
-/** The languages to translate to, offered: the code, the name in the language. */
-export const TRANSLATE_LANGUAGES: [string, string][] = [
-  ['en', 'English'], ['zh-CN', '简体中文'], ['zh-TW', '繁體中文'], ['ja', '日本語'], ['ko', '한국어'],
-  ['fr', 'Français'], ['de', 'Deutsch'], ['es', 'Español'], ['pt', 'Português'], ['it', 'Italiano'],
-  ['ru', 'Русский'], ['ar', 'العربية'],
-];
-
 /** The page of Google Translate for the text. */
 export const translateUrl = (text: string, to: string) =>
   `https://translate.google.com/?sl=auto&tl=${encodeURIComponent(to)}&text=${encodeURIComponent(text)}&op=translate`;

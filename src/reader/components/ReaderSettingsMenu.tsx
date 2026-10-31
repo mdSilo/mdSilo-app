@@ -1,18 +1,23 @@
 import { memo } from 'react';
 import { useStore } from '@/state/store';
 import { Range, Segmented, Select, Toggle } from '@/ui/ui';
+import { CODE_LANGUAGES, HUMAN_LANGUAGES } from '@/lib/constants';
 import {
   DEFAULT_READER_SETTINGS, KEPT_ON_RESET, MAX_ZOOM, MIN_ZOOM, withDefaults, zoomBy,
   type PageTheme, type ReaderSettings, type WritingMode,
 } from '../settings';
 import { useReaderStore } from '../readerStore';
 import { bookDir, pagesDirection, rtlPagesMode, themeColors } from '../styles';
-import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
+import { type CodeLanguage } from '../highlight';
 import TranslationSwitches from '../translation/TranslationSwitches';
 import { RULER_COLORS, RULER_SWATCHES } from '../ruler/ruler';
 
 const PAGE_THEMES: [PageTheme, string][] = [
-  ['auto', 'As the app'], ['light', 'White'], ['sepia', 'Sepia'], ['gray', 'Gray'], ['dark', 'Dark'],
+  ['auto', 'As the app'],
+  ['light', 'White'],
+  ['sepia', 'Sepia'],
+  ['gray', 'Gray'],
+  ['dark', 'Dark'],
 ];
 
 const WRITING_MODES: [WritingMode, string][] = [
@@ -136,10 +141,23 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
         </>
       ) : (
         <>
-          <Range label="Font size" min={12} max={32} value={settings.fontSize} format={String}
-            onChange={(fontSize) => update({ fontSize })} />
-          <Range label="Line height" min={1} max={2.4} step={0.1} value={settings.lineHeight}
-            format={(v) => v.toFixed(1)} onChange={(lineHeight) => update({ lineHeight })} />
+          <Range 
+            label="Font size" 
+            min={12} 
+            max={32} 
+            value={settings.fontSize} 
+            format={String}
+            onChange={(fontSize) => update({ fontSize })} 
+          />
+          <Range 
+            label="Line height" 
+            min={1} 
+            max={2.4} 
+            step={0.1} 
+            value={settings.lineHeight}
+            format={(v) => v.toFixed(1)} 
+            onChange={(lineHeight) => update({ lineHeight })} 
+          />
           <Select label="Font" value={settings.font}
             onChange={(font) => update({ font: font as ReaderSettings['font'] })}>
             <option value="book">Of the book</option>
@@ -147,26 +165,79 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             <option value="sans-serif">Sans serif</option>
           </Select>
           {hasBook ? (
-            <Select label="Writing Mode" value={writingMode}
-              onChange={(mode) => useReaderStore.getState().setWritingMode(mode as WritingMode)}>
-              {WRITING_MODES.map(([mode, name]) => <option key={mode} value={mode}>{name}</option>)}
+            <Select 
+              label="Writing Mode" 
+              value={writingMode}
+              onChange={(mode) => useReaderStore.getState().setWritingMode(mode as WritingMode)}
+            >
+              {WRITING_MODES.map(
+                ([mode, name]) => <option key={mode} value={mode}>{name}</option>
+              )}
             </Select>
           ) : null}
           {vertical ? (
-            <Toggle label="Double border" checked={settings.doubleBorder} onChange={(doubleBorder) => update({ doubleBorder })} />
+            <Toggle 
+              label="Double border" 
+              checked={settings.doubleBorder} 
+              onChange={(doubleBorder) => update({ doubleBorder })} 
+            />
           ) : null}
-          <Segmented label="Columns" value={settings.maxColumns} options={[[1, '1'], [2, '2']]}
-            onChange={(maxColumns) => update({ maxColumns })} />
-          <Range label="Width" ariaLabel="Column width" min={400} max={1200} step={20} value={settings.maxInlineSize}
-            onChange={(maxInlineSize) => update({ maxInlineSize })} />
-          <Range label="Margins" min={16} max={96} step={4} value={settings.margin}
-            onChange={(margin) => update({ margin })} />
-          <Toggle label="Justify" checked={settings.justify} onChange={(justify) => update({ justify })} />
-          <Toggle label="Hyphenate" checked={settings.hyphenate} onChange={(hyphenate) => update({ hyphenate })} />
-          <Toggle label="Chapter above" checked={settings.showHeader} onChange={(showHeader) => update({ showHeader })} />
-          <Toggle label="Progress below" checked={settings.showFooter} onChange={(showFooter) => update({ showFooter })} />
-          <Toggle label="Image descriptions below images" checked={settings.imageCaptions} onChange={(imageCaptions) => update({ imageCaptions })} />
-          <Toggle label="Highlight code" checked={settings.codeHighlight} onChange={(codeHighlight) => update({ codeHighlight })} />
+          <div className="divider my-0" />
+          <Segmented 
+            label="Columns" 
+            value={settings.maxColumns} 
+            options={[[1, '1'], [2, '2']]}
+            onChange={(maxColumns) => update({ maxColumns })} 
+          />
+          <Range 
+            label="Width" 
+            ariaLabel="Column width" 
+            min={400} 
+            max={1200} 
+            step={20} 
+            value={settings.maxInlineSize}
+            format={String}
+            onChange={(maxInlineSize) => update({ maxInlineSize })} 
+          />
+          <Range 
+            label="Margins" 
+            min={16} 
+            max={96} 
+            step={4} 
+            value={settings.margin}
+            format={String}
+            onChange={(margin) => update({ margin })} 
+          />
+          <Toggle 
+            label="Justify" 
+            checked={settings.justify} 
+            onChange={(justify) => update({ justify })} 
+          />
+          <Toggle 
+            label="Hyphenate" 
+            checked={settings.hyphenate} 
+            onChange={(hyphenate) => update({ hyphenate })} 
+          />
+          <Toggle 
+            label="Chapter above" 
+            checked={settings.showHeader} 
+            onChange={(showHeader) => update({ showHeader })} 
+          />
+          <Toggle 
+            label="Progress below" 
+            checked={settings.showFooter} 
+            onChange={(showFooter) => update({ showFooter })} 
+          />
+          <Toggle 
+            label="Image descriptions attached" 
+            checked={settings.imageCaptions} 
+            onChange={(imageCaptions) => update({ imageCaptions })} 
+          />
+          <Toggle 
+            label="Highlight code" 
+            checked={settings.codeHighlight} 
+            onChange={(codeHighlight) => update({ codeHighlight })} 
+          />
           {settings.codeHighlight ? (
             <Select label="Code language" value={settings.codeLanguage}
               onChange={(lang) => update({ codeLanguage: lang as CodeLanguage })}>
@@ -175,20 +246,51 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           ) : null}
         </>
       )}
-      <Toggle label="Invert image colors" checked={settings.invertImages} onChange={(invertImages) => update({ invertImages })} />
+      <Toggle 
+        label="Invert image colors" 
+        checked={settings.invertImages} 
+        onChange={(invertImages) => update({ invertImages })} 
+      />
       <div className="divider my-0" />
-      <Toggle label="Page turn animation" checked={settings.animated} onChange={(animated) => update({ animated })} />
-      <Toggle label="Click the sides to turn pages" checked={settings.clickToTurn} onChange={(clickToTurn) => update({ clickToTurn })} />
+      <Toggle 
+        label="Page turn animation" 
+        checked={settings.animated} 
+        onChange={(animated) => update({ animated })} 
+      />
+      <Toggle 
+        label="Click the sides to turn pages" 
+        checked={settings.clickToTurn} 
+        onChange={(clickToTurn) => update({ clickToTurn })} 
+      />
       {settings.clickToTurn ? (
-        <Toggle label="Click left to go forward" checked={settings.swapClickArea} onChange={(swapClickArea) => update({ swapClickArea })} />
+        <Toggle 
+          label="Click left to go forward" 
+          checked={settings.swapClickArea} 
+          onChange={(swapClickArea) => update({ swapClickArea })} 
+        />
       ) : null}
       {fixedLayout ? null : (
         <>
           <Toggle label="Reading ruler" checked={settings.readingRuler} onChange={(readingRuler) => update({ readingRuler })} />
           {settings.readingRuler ? (
             <>
-              <Range label="Ruler lines" min={1} max={6} value={settings.rulerLines} format={String}
-                onChange={(rulerLines) => update({ rulerLines })} />
+              <Range 
+                label="Ruler lines" 
+                min={1} 
+                max={6} 
+                value={settings.rulerLines} 
+                format={String}
+                onChange={(rulerLines) => update({ rulerLines })} 
+              />
+              <Range 
+                label="Opacity" 
+                min={0.1} 
+                max={0.9} 
+                step={0.1} 
+                value={settings.rulerOpacity}
+                format={(v) => v.toFixed(1)} 
+                onChange={(rulerOpacity) => update({ rulerOpacity })} 
+              />
               <div className="flex items-center justify-between gap-2">
                 <span>Ruler color</span>
                 <div className="flex gap-1.5">
@@ -205,11 +307,19 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
                   ))}
                 </div>
               </div>
-              <Range label="Ruler opacity" min={0.1} max={0.9} step={0.1} value={settings.rulerOpacity}
-                format={(v) => v.toFixed(1)} onChange={(rulerOpacity) => update({ rulerOpacity })} />
             </>
           ) : null}
         </>
+      )}
+      {!fixedLayout && (
+        <Select
+          label="Translate to"
+          value={settings.translateTo}
+          onChange={(translateTo) => update({ translateTo })}
+        >
+          <option value="">Default</option>
+          {HUMAN_LANGUAGES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+        </Select>
       )}
       <TranslationSwitches />
       <button

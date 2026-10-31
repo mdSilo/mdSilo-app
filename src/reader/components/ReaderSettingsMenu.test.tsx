@@ -14,8 +14,6 @@ describe('the settings of a fixed layout', () => {
     render(<ReaderSettingsMenu fixedLayout />);
     // not of the text
     expect(screen.queryByText('Font size')).not.toBeInTheDocument();
-    // the language to translate to: chosen in the popup of a translation, not here
-    expect(screen.queryByText('Translate to')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Zoom in'));
     fireEvent.click(screen.getByLabelText('Zoom in'));
@@ -103,12 +101,26 @@ describe('the reading ruler', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Reading ruler' }));
     expect(settings().readingRuler).toBe(true);
     expect(screen.getByText('Ruler lines')).toBeInTheDocument();
-    expect(screen.getByText('Ruler opacity')).toBeInTheDocument();
+    expect(screen.getByText('Opacity')).toBeInTheDocument();
     expect(screen.getByLabelText('Ruler green')).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByLabelText('Ruler no color'));
     expect(settings().rulerColor).toBe('transparent');
     unmount();
     render(<ReaderSettingsMenu fixedLayout />);
     expect(screen.queryByText('Reading ruler')).not.toBeInTheDocument();
+  });
+});
+
+describe('Translate to', () => {
+  beforeEach(() => store.getState().setReaderSettings(DEFAULT_READER_SETTINGS));
+
+  test('Translate to; not for a fixed layout', () => {
+    const { unmount } = render(<ReaderSettingsMenu fixedLayout={false} />);
+    // the language to translate to in the popup of a translation, 
+    // also here, not for fixed-layout
+    expect(screen.queryByText('Translate to')).toBeInTheDocument();
+    unmount();
+    render(<ReaderSettingsMenu fixedLayout />);
+    expect(screen.queryByText('Translate to')).not.toBeInTheDocument();
   });
 });

@@ -194,7 +194,17 @@ type RowProps = {
   className?: string;
 };
 
-function Row({ label, className, children, as: Tag = 'label' }: RowProps & { children: ReactNode; as?: 'label' | 'div' }) {
+function Row(
+  { 
+    label, 
+    className, 
+    children, 
+    as: Tag = 'label' 
+  }: RowProps & { 
+    children: ReactNode; 
+    as?: 'label' | 'div' 
+  }
+) {
   return (
     <Tag className={join('flex items-center justify-between gap-2', className)}>
       <span>{label}</span>
@@ -270,11 +280,30 @@ const RANGE_COLORS: Record<Color, string> = {
 
 /** A slider, the value shown on its right if `format` is given. */
 export function Range(
-  { label, value, min, max, step = 1, format, onChange, size = 'xs', color, width = 'w-36', className, ariaLabel }:
-  RowProps & {
-    value: number; min: number; max: number; step?: number;
-    format?: (v: number) => string; onChange: (v: number) => void;
-    size?: Size; color?: Color; width?: string; ariaLabel?: string;
+  { 
+    label, 
+    value, 
+    min, 
+    max, 
+    step = 1, 
+    format, 
+    onChange, 
+    size = 'xs', 
+    color, 
+    width = 'w-36', 
+    className, 
+    ariaLabel 
+  }: RowProps & {
+    value: number; 
+    min: number; 
+    max: number; 
+    step?: number;
+    format?: (v: number) => string; 
+    onChange: (v: number) => void;
+    size?: Size; 
+    color?: Color; 
+    width?: string;
+    ariaLabel?: string;
   }
 ) {
   return (

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { BaseModal } from '@/ui/BaseModal';
 import { Spinner } from '@/ui/ui';
 import { useStore } from '@/state/store';
+import { HUMAN_LANGUAGES } from '@/lib/constants';
 import { useReaderChrome } from '../chrome';
 import { readBytes } from '../library/library';
-import { TRANSLATE_LANGUAGES, targetLanguage, translatorOf } from '../lookup/lookup';
+import { targetLanguage, translatorOf } from '../lookup/lookup';
 import { useActiveStore } from '../readerStore';
 import { withDefaults } from '../settings';
 import { translatedCountOfBook, translatedEpubOfBook } from './bookToEpub';
@@ -38,7 +39,7 @@ export default function TranslatedBookDialog() {
   const [error, setError] = useState('');
   const [made, setMade] = useState('');
   const abort = useRef<AbortController | undefined>(undefined);
-  const language = TRANSLATE_LANGUAGES.find(([code]) => code === lang)?.[1] ?? lang;
+  const language = HUMAN_LANGUAGES.find(([code]) => code === lang)?.[1] ?? lang;
 
   const recount = async () => {
     if (!ws || !hash || !path) return;

@@ -1,15 +1,10 @@
 import hljs from 'highlight.js/lib/common';
+import { CODE_LANGUAGES } from '@/lib/constants';
 
 /**
  * The code blocks of a book, highlighted by highlight.js (ported from readup:
  * utils/highlightjs.ts). The colors are in `codeStyles`, of the page theme.
  */
-
-export const CODE_LANGUAGES = [
-  'auto', 'bash', 'c', 'cpp', 'csharp', 'css', 'diff', 'go', 'graphql', 'ini', 'java', 'javascript', 'json',
-  'kotlin', 'less', 'lua', 'makefile', 'markdown', 'objectivec', 'perl', 'php', 'python', 'r', 'ruby', 'rust',
-  'scss', 'shell', 'sql', 'swift', 'typescript', 'vbnet', 'xml', 'yaml',
-] as const;
 
 export type CodeLanguage = (typeof CODE_LANGUAGES)[number];
 

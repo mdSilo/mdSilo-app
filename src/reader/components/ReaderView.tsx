@@ -443,7 +443,7 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
           type="range"
           min={0}
           max={1000}
-          className="w-full range range-xs range-primary"
+          className="w-full range range-xs range-primary h-4"
           value={Math.round(shown * 1000)}
           onChange={(e) => {
             const value = Number(e.target.value) / 1000;

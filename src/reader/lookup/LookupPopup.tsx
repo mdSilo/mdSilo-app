@@ -3,6 +3,7 @@ import { TbCheck, TbExternalLink, TbNote, TbVocabulary } from 'react-icons/tb';
 import { openUrl } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
 import { Spinner } from '@/ui/ui';
+import { HUMAN_LANGUAGES } from '@/lib/constants';
 import { withDefaults, type ReaderSettings } from '../settings';
 import { usePopups } from '../popups';
 import { annotateSelection } from '../actions';
@@ -13,7 +14,7 @@ import { Popup } from '../components/BookPopups';
 import TranslationSwitches from '../translation/TranslationSwitches';
 import {
   lookupWikipedia, lookupWiktionary, openLinkOutside, targetLanguage, translatorOf, wikipediaSearchUrl,
-  TRANSLATE_LANGUAGES, TRANSLATORS, type DictionaryResult, type TranslationResult, type WikipediaResult,
+  TRANSLATORS, type DictionaryResult, type TranslationResult, type WikipediaResult,
 } from './lookup';
 
 type Result =
@@ -77,8 +78,15 @@ function LookupPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | null> })
     <Popup box={selection.box} rootRef={rootRef} testId="lookup-popup" height={260} width={360}>
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-semibold uppercase text-base-content/60">{TITLES[kind]}</span>
-        {kind === 'translate' ? <TranslateOptions translator={translator.name} to={translateTo} /> : null}
-        <button className="btn btn-ghost btn-xs" title="Open on the web" onClick={() => void openUrl(webUrl)}>
+        {kind === 'translate' 
+          ? <TranslateOptions translator={translator.name} to={translateTo} /> 
+          : null
+        }
+        <button 
+          className="btn btn-ghost btn-xs" 
+          title="Open on the web" 
+          onClick={() => void openUrl(webUrl)}
+        >
           <TbExternalLink />
         </button>
       </div>
@@ -152,14 +160,24 @@ function TranslateOptions({ translator, to }: { translator: string; to: string }
   return (
     <div className="flex items-center gap-1 ml-auto">
       {TRANSLATORS.length > 1 ? (
-        <select className={select} aria-label="Translate by" value={translator} onChange={(e) => update({ translator: e.target.value })}>
+        <select 
+          className={select} 
+          aria-label="Translate by" 
+          value={translator} 
+          onChange={(e) => update({ translator: e.target.value })}
+        >
           {TRANSLATORS.map((t) => <option key={t.name} value={t.name}>{t.label}</option>)}
         </select>
       ) : null}
-      <select className={select} aria-label="Translate to" value={to} onChange={(e) => update({ translateTo: e.target.value })}>
+      <select 
+        className={select} 
+        aria-label="Translate to" 
+        value={to} 
+        onChange={(e) => update({ translateTo: e.target.value })}
+      >
         {/* the language of the app, if not one offered */}
-        {TRANSLATE_LANGUAGES.some(([code]) => code === to) ? null : <option value={to}>{to}</option>}
-        {TRANSLATE_LANGUAGES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+        {HUMAN_LANGUAGES.some(([code]) => code === to) ? null : <option value={to}>{to}</option>}
+        {HUMAN_LANGUAGES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
       </select>
     </div>
   );
