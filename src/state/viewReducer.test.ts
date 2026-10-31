@@ -44,6 +44,11 @@ describe('viewReducer', () => {
     expect(store.getState().currentNoteId).toBe('');
   });
 
+  test('a view of a plugin keeps the plugin and the view', () => {
+    expect(viewReducer({ view: 'graph' }, { view: 'plugin', plugin: 'stats', viewId: 'reading' }))
+      .toEqual({ view: 'plugin', pluginId: 'stats', pluginViewId: 'reading' });
+  });
+
   test('md view sets params and the current note', () => {
     const params = { noteId: '/a.md', hash: '0-1' };
     expect(viewReducer(initialState, { view: 'md', params })).toEqual({ view: 'md', params });

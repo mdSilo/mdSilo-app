@@ -29,8 +29,8 @@ export type PluginMode = 'sandboxed' | 'trusted';
 /** Opens files of these extensions, in place of the editor or the reader */
 export type ViewerContribution = { extensions: string[]; title: string };
 
-/** A view of the whole workspace, in the side menu */
-export type ViewContribution = { id: string; title: string; icon?: string };
+/** A view of the whole workspace, in the side menu; its page is `page`, or the main page */
+export type ViewContribution = { id: string; title: string; icon?: string; page?: string };
 
 export type Contributes = {
   viewers: ViewerContribution[];
@@ -105,7 +105,12 @@ function parseContributes(value: unknown): Contributes {
     if (!isObject(view)) throw new Error(`"${field}" should be an object`);
     const id = text(view.id, `${field}.id`);
     if (!ID.test(id)) throw new Error(`"${field}.id" should be lowercase letters, digits, . _ -`);
-    return { id, title: text(view.title, `${field}.title`), icon: optionalText(view.icon, `${field}.icon`) };
+    return {
+      id,
+      title: text(view.title, `${field}.title`),
+      icon: optionalText(view.icon, `${field}.icon`),
+      page: view.page === undefined ? undefined : innerPath(view.page, `${field}.page`),
+    };
   });
   return { viewers, views };
 }

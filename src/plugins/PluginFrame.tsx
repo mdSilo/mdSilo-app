@@ -5,6 +5,8 @@ import { isEnabled, pluginUrl, type InstalledPlugin } from './registry';
 
 type Props = {
   plugin: InstalledPlugin;
+  /** the page, in the folder of the plugin; its main page by default */
+  page?: string;
   /** the methods of this place, besides app.info and app.style */
   methods?: PluginMethods;
   /** gets the host, to tell the plugin of changes */
@@ -16,7 +18,7 @@ type Props = {
  * The page of a plugin, sandboxed: scripts run, but in an opaque origin,
  * so it reaches the app only by the calls of src/plugins/host.ts.
  */
-export default function PluginFrame({ plugin, methods, onHost, className = '' }: Props) {
+export default function PluginFrame({ plugin, page, methods, onHost, className = '' }: Props) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const pluginStates = useStore((state) => state.pluginStates);
   const font = useStore((state) => state.font);
@@ -52,7 +54,7 @@ export default function PluginFrame({ plugin, methods, onHost, className = '' }:
   if (!enabled) {
     return <div className="p-4 text-sm text-base-content/70">{plugin.manifest?.name ?? plugin.id} is not enabled.</div>;
   }
-  const main = plugin.manifest?.main ?? 'index.html';
+  const main = page ?? plugin.manifest?.main ?? 'index.html';
   return (
     <iframe
       ref={frameRef}

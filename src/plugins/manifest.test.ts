@@ -51,11 +51,11 @@ describe('parseManifest', () => {
       ...minimal,
       contributes: {
         viewers: [{ extensions: ['.CSV', 'tsv'], title: 'Table' }],
-        views: [{ id: 'stats', title: 'Reading stats', icon: 'chart' }],
+        views: [{ id: 'stats', title: 'Reading stats', icon: 'chart', page: './stats.html' }],
       },
     });
     expect(contributes.viewers).toEqual([{ extensions: ['csv', 'tsv'], title: 'Table' }]);
-    expect(contributes.views).toEqual([{ id: 'stats', title: 'Reading stats', icon: 'chart' }]);
+    expect(contributes.views).toEqual([{ id: 'stats', title: 'Reading stats', icon: 'chart', page: 'stats.html' }]);
   });
 
   it('says which contribution is wrong', () => {
@@ -65,6 +65,8 @@ describe('parseManifest', () => {
       .toThrow('contributes.viewers[0].extensions[0]');
     expect(() => parseManifest({ ...minimal, contributes: { views: [{ id: 'A B', title: 'x' }] } }))
       .toThrow('contributes.views[0].id');
+    expect(() => parseManifest({ ...minimal, contributes: { views: [{ id: 'a', title: 'x', page: '../x.html' }] } }))
+      .toThrow('contributes.views[0].page');
   });
 });
 

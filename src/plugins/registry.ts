@@ -5,7 +5,7 @@ import { store, useStore } from '@/state/store';
 import { isTauri, joinPath } from '@/workspace/util';
 import { getFileExt } from '@/workspace/process';
 import {
-  MANIFEST_FILE, parseManifest, supportsApp, type Permission, type PluginManifest, type ViewerContribution,
+  MANIFEST_FILE, parseManifest, supportsApp, type Permission, type PluginManifest, type ViewContribution, type ViewerContribution,
 } from './manifest';
 
 /**
@@ -129,6 +129,14 @@ export function viewersOf(
       .filter((viewer) => viewer.extensions.includes(ext))
       .map((viewer) => ({ plugin, viewer })));
 }
+
+/** The views of the enabled plugins, for the side menu */
+export const pluginViews = (
+  plugins = store.getState().installedPlugins,
+  states = store.getState().pluginStates,
+): { plugin: InstalledPlugin; view: ViewContribution }[] =>
+  enabledPlugins(plugins, states).flatMap((plugin) =>
+    (plugin.manifest?.contributes.views ?? []).map((view) => ({ plugin, view })));
 
 export const PLUGIN_SCHEME = 'mdsplugin';
 

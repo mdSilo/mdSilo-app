@@ -5,6 +5,7 @@ import {
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
   TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
   TbPizza, TbInfoCircle, TbHeadphones, TbCurrentLocation, TbDatabaseExport, TbBook, TbBooks, TbEraser, TbWorldUpload,
+  TbPuzzle,
 } from 'react-icons/tb';
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
@@ -25,6 +26,7 @@ import SyncButton from '@/sync/SyncButton';
 import { isPublishAvailable, usePublishUi } from '@/publish/publish';
 import { usePlayer } from '@/player/playerStore';
 import { useTTS } from '@/reader/tts/tts';
+import { pluginViews } from '@/plugins/registry';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
 
@@ -129,6 +131,7 @@ export default function SideMenu() {
             <ProjectButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'project'})} />
             <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
             <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
+            <PluginsButton viewTy={viewTy} onDispatch={dispatchView} />
           </>) : null}
           <FileButton />
         </div>
@@ -406,6 +409,39 @@ const ProjectButton = (props: ButtonProps) => {
           <TbLayoutKanban size={22} className={btnIconClass} />
         </button>
       </Tooltip>
+    </MenuItem>
+  );
+};
+
+/** The views of the enabled plugins, in one menu */
+const PluginsButton = ({ viewTy, onDispatch }: { viewTy: string; onDispatch: (view: ViewAction) => void }) => {
+  const isHorizontal = useIsHorizontalMenu();
+  const tooltipPlacement = useTooltipPlacement();
+  const installedPlugins = useStore((state) => state.installedPlugins);
+  const pluginStates = useStore((state) => state.pluginStates);
+  const views = pluginViews(installedPlugins, pluginStates);
+  if (views.length === 0) return null;
+
+  return (
+    <MenuItem isHighlighted={viewTy === 'plugin'}>
+      <Dropdown
+        buttonChildren={<><TbPuzzle size={22} className={btnIconClass} /><span className="sr-only">Plugins</span></>}
+        buttonClassName={btnClass}
+        itemsClassName="w-56"
+        placement={isHorizontal ? 'bottom-start' : 'right-start'}
+        tooltipContent="Plugins"
+        tooltipPlacement={tooltipPlacement}
+      >
+        {views.map(({ plugin, view }) => (
+          <DropdownItem
+            key={`${plugin.id}/${view.id}`}
+            onClick={() => onDispatch({ view: 'plugin', plugin: plugin.id, viewId: view.id })}
+          >
+            <span className="truncate">{view.title}</span>
+            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">{plugin.manifest?.name}</span>
+          </DropdownItem>
+        ))}
+      </Dropdown>
     </MenuItem>
   );
 };
