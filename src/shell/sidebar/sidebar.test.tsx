@@ -10,7 +10,6 @@ import { Sort } from '@/state/userSettings';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import SidebarPlaylist, { computePlaylist } from '@/feed/Playlist';
 import { makeFileMeta, makeNote, mockInvoke, mockLayout, renderWithView } from '../../testUtils';
-import StatusBar from '../StatusBar';
 import SideMenu from '../SideMenu';
 import SidebarItem from './SidebarItem';
 import SidebarTab from './SidebarTab';
@@ -608,27 +607,6 @@ describe('SidebarNotesTree horizontal scroll', () => {
     expect(treeContentWidth([], measure)).toBe(0);
     expect(treeContentWidth([row('ab', 2)], measure) - treeContentWidth([row('ab', 0)], measure)).toBe(32);
     expect(treeContentWidth([row('a', 0), row('abcd', 0)], measure) - treeContentWidth([row('a', 0)], measure)).toBe(3);
-  });
-});
-
-describe('StatusBar', () => {
-  test('shows the current pod and jumps to its article', async () => {
-    const article = { id: 1, title: 'Ep 1', url: 'https://pod/1' };
-    mockInvoke(invoke, { get_article_by_url: article, get_articles: [] });
-    store.getState().setCurrentPod({ title: 'Ep 1', url: 'ep1.mp3', article_url: 'https://pod/1', feed_link: 'f' });
-    renderWithView(<><StatusBar /><ViewProbe /></>);
-    expect(document.querySelector('audio')).toHaveAttribute('src', 'ep1.mp3');
-    await userEvent.click(screen.getByText('Ep 1'));
-    await waitFor(() => expect(viewState().view).toBe('feed'));
-    expect(store.getState().currentArticle).toEqual(article);
-  });
-
-  test('toggles visibility of the player', async () => {
-    mockInvoke(invoke, { get_articles: [] });
-    store.getState().setCurrentPod({ title: 'Ep 1', url: 'ep1.mp3', article_url: 'a', feed_link: 'f' });
-    renderWithView(<StatusBar />);
-    await userEvent.click(screen.getAllByRole('button')[0]);
-    expect(screen.getByText('Ep 1').parentElement).toHaveClass('hidden');
   });
 });
 

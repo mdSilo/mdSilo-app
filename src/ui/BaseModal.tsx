@@ -23,7 +23,7 @@ export const BaseModal = ({ title, children, isOpen, handleClose, panelClassName
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
         as="div"
-        className="fixed z-20 inset-0 overflow-y-auto"
+        className="fixed z-40 inset-0 overflow-y-auto"
         onClose={handleClose}
       >
         <div className="flex items-center justify-center min-h-screen p-2 text-center">

@@ -86,6 +86,19 @@ Double-click a word, or choose *Dictionary*. The popup shows the Wiktionary defi
 
 ## Read aloud
 
-If your system provides speech synthesis, the *Read aloud* button speaks the book from the selection or the page, highlighting the sentence as it goes, and moves on to the next chapter. Choose the voice and speed in the player. (It is not shown where the system has no speech.)
+The *Read aloud* button speaks the book from the selection or the page, highlighting the sentence as it goes, and moves on to the next chapter. The controls are in the player (the headphones of the side menu): pause, the previous or next paragraph, the speed, the engine and the voice. The voices offered are those of the language of the book.
+
+The engines:
+
+| Engine | |
+|---|---|
+| System | The speech of your computer: speech-dispatcher on Linux, the voices of macOS (AVSpeechSynthesizer, with the Enhanced and Premium voices you download in System Settings → Accessibility → Spoken Content), the voices of Windows (WinRT). Used unless you choose another. |
+| System, by a program | macOS and Windows: the same by `say`, or by PowerShell with the older SAPI voices of Windows. |
+| Piper | Natural voices, offline. Install [Piper](https://github.com/OHF-Voice/piper1-gpl), download voices (an `.onnx` file and its `.onnx.json` each) into a folder, and give the folder in the settings. |
+| Azure Speech | Online, with your own key and region of an Azure Speech resource. |
+| OpenAI or alike | Online, with your own key; the API URL, the model and the voices can be changed for a service or a server of your own with the same API (e.g. Kokoro). |
+| Browser | The Web Speech API of the window, when it has voices. |
+
+Set them up with the gear of the player. The keys are kept on this computer, in the app's data folder, never in the workspace. With the online engines, the text read is sent to the service. The audio made by Piper and the online engines is kept in the cache, so a sentence read again costs nothing; *Clear the audio made* removes it.
 
 Next: [[6 Feeds|Feeds]].

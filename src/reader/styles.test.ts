@@ -1,7 +1,7 @@
 import {
   applyLayout, bookDir, pageLayout, pagesDirection, rtlPagesMode, setBookDir, setSpread, writingModeStyles,
 } from './styles';
-import { DEFAULT_READER_SETTINGS, MAX_ZOOM, MIN_ZOOM, zoomBy } from './settings';
+import { DEFAULT_READER_SETTINGS, lookKey, MAX_ZOOM, MIN_ZOOM, zoomBy } from './settings';
 import type { BookDoc } from './document';
 import type { FoliateView } from './view';
 
@@ -91,6 +91,13 @@ describe('a fixed layout', () => {
     expect(zoomBy(100, -0.25)).toBe(98);
     expect(zoomBy(MAX_ZOOM, 1)).toBe(MAX_ZOOM);
     expect(zoomBy(MIN_ZOOM + 5, -1)).toBe(MIN_ZOOM);
+  });
+
+  test('laid out again for the look of the pages only, not a translation chosen', () => {
+    const key = lookKey(DEFAULT_READER_SETTINGS);
+    expect(lookKey({ ...DEFAULT_READER_SETTINGS, translator: 'google', translateTo: 'zh-CN' })).toBe(key);
+    expect(lookKey({ ...DEFAULT_READER_SETTINGS, highlightStyle: 'underline' })).toBe(key);
+    expect(lookKey({ ...DEFAULT_READER_SETTINGS, fontSize: 20 })).not.toBe(key);
   });
 });
 

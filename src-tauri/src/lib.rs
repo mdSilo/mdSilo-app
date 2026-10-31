@@ -20,6 +20,7 @@ mod storage;
 mod sync;
 mod tests;
 mod tray;
+mod tts;
 mod window;
 mod wsfs;
 
@@ -119,6 +120,13 @@ pub fn run() {
       sync::sync_run,
       publish::publish_write,
       publish::publish_push,
+      tts::tts_engines,
+      tts::tts_voices,
+      tts::tts_speak,
+      tts::tts_audio,
+      tts::tts_stop,
+      tts::tts_configure,
+      tts::tts_clear_cache,
     ])
     // the main window gone, the app quits, other windows (web_window) too
     .on_window_event(|window, event| {

@@ -22,6 +22,8 @@ const acceptNode = node => {
     if (node.nodeType === 1) {
         const name = node.tagName.toLowerCase()
         if (name === 'script' || name === 'style') return NodeFilter.FILTER_REJECT
+        // invisible to CFI (e.g. a translation added to the text): not searched, not read
+        if (node.hasAttribute('cfi-inert')) return NodeFilter.FILTER_REJECT
         return NodeFilter.FILTER_SKIP
     }
     return NodeFilter.FILTER_ACCEPT

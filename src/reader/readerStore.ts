@@ -60,6 +60,8 @@ type ReaderStore = {
   updateNote: (id: string, patch: Partial<BookNote>) => void;
   removeNote: (id: string) => void;
   setWritingMode: (mode: WritingMode) => void;
+  /** the book translated as it is read, or not; kept with its entry */
+  setTranslating: (on: boolean) => void;
   setVertical: (vertical: boolean) => void;
   /** write the pending changes now */
   flush: () => Promise<void>;
@@ -315,6 +317,15 @@ export function createReaderStore() {
       set({ writingMode: mode, ...(entry ? { entry: { ...entry, writingMode } } : {}) });
       if (!ws || !hash || !entry) return;
       saveBookEntry(ws, { hash, writingMode }).catch((e: unknown) => console.error('Failed to save the writing mode', e));
+    },
+
+    setTranslating: (on) => {
+      const { ws, hash, entry } = get();
+      if (!entry) return;
+      const translate = on || undefined;
+      set({ entry: { ...entry, translate } });
+      if (!ws || !hash) return;
+      saveBookEntry(ws, { hash, translate }).catch((e: unknown) => console.error('Failed to save the translation', e));
     },
 
     setVertical: (vertical) => {

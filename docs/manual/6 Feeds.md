@@ -24,7 +24,7 @@ The **Clip** button of an article saves it as a note in `reading/clips/` (title 
 
 ## Podcasts
 
-A feed with audio enclosures is a podcast. Play an episode from the built-in player. The **Playlist** (the fourth tab of the sidebar, `Mod + Shift + P`) lists the episodes of all your podcast channels, so you can keep listening while you write.
+A feed with audio enclosures is a podcast. Play an episode from the built-in player (the headphones of the side menu show or hide it; it keeps playing when hidden). It is the same player as a book read aloud: one plays at a time, starting one pauses the other. The **Playlist** (the fourth tab of the sidebar, `Mod + Shift + P`) lists the episodes of all your podcast channels, so you can keep listening while you write.
 
 ## Turn a channel into a book
 

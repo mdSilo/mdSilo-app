@@ -43,7 +43,7 @@ export type Anchor = {
 
 /**
  * Where a popup goes for a box of text, in the root: on the side with the
- * more room (as readup does), unless the popup fits under it; centered on
+ * more room, unless the popup fits under it; centered on
  * the text, kept in the root.
  */
 export function anchorOf(box: Box, root: DOMRect, width: number, height: number): Anchor {
@@ -246,6 +246,8 @@ function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
 const TOOLBAR_WIDTH = 380;
 // the toolbar and the highlight options, to choose the side
 const TOOLBAR_HEIGHT = 44 + 8 + 28;
+// the note of a bubble, about
+const NOTE_HEIGHT = 120;
 
 /**
  * The popups over the book, as in readup: the toolbar of the text selected
@@ -258,13 +260,11 @@ function BookPopups({ rootRef, tools }: {
 }) {
   const selection = usePopups((state) => state.selection);
   const annotation = usePopups((state) => state.annotation);
+  const adjusting = usePopups((state) => state.adjusting);
   const notes = useActiveStore((state) => state.notes);
   const note = annotation ? notes.find((n) => n.id === annotation.id) : undefined;
-  const [editing, setEditing] = useState(false);
-
-  useEffect(() => {
-    setEditing(Boolean(annotation?.edit));
-  }, [annotation]);
+  // its note written: in the store, the handles of its range not shown meanwhile
+  const editing = Boolean(annotation?.edit);
 
   // close on Escape
   useEffect(() => {
@@ -276,7 +276,8 @@ function BookPopups({ rootRef, tools }: {
   }, []);
 
   const root = rootRef.current?.getBoundingClientRect();
-  if (!root || (!selection && !(annotation && note))) return null;
+  // none while a handle changes the range
+  if (!root || adjusting || (!selection && !(annotation && note))) return null;
   const width = Math.min(TOOLBAR_WIDTH, root.width - 16);
   const clear = () => usePopups.getState().clear();
 
@@ -290,7 +291,7 @@ function BookPopups({ rootRef, tools }: {
         return;
       }
       const created = annotateSelection(selection);
-      usePopups.getState().setAnnotation({ id: created.id, box: selection.box });
+      usePopups.getState().setAnnotation({ id: created.id, box: selection.box, range: selection.range });
     };
     const list: Tool[] = [
       { 
@@ -328,7 +329,7 @@ function BookPopups({ rootRef, tools }: {
         // highlighted, the issue made of it: shown on the highlight, to open it
         onClick: async () => {
           const created = annotateSelection(selection);
-          usePopups.getState().setAnnotation({ id: created.id, box: selection.box });
+          usePopups.getState().setAnnotation({ id: created.id, box: selection.box, range: selection.range });
           await issueOfNote(created);
         },
       },
@@ -347,7 +348,9 @@ function BookPopups({ rootRef, tools }: {
   }
 
   if (!annotation || !note) return null;
-  const anchor = anchorOf(annotation.box, root, width, TOOLBAR_HEIGHT + (note.note ? 80 : 0));
+  // written, it stays: not gone with the pointer
+  const edit = () => usePopups.getState().setAnnotation({ ...annotation, edit: 'existing', hover: undefined });
+  const anchor = anchorOf(annotation.box, root, width, annotation.bubble ? NOTE_HEIGHT : TOOLBAR_HEIGHT);
   if (editing) {
     const cancel = () => {
       // a highlight made to write a note on: not wanted
@@ -364,6 +367,20 @@ function BookPopups({ rootRef, tools }: {
             clear();
           }}
         />
+      </AnchoredBox>
+    );
+  }
+  // from its bubble: the note alone; hovered, gone once the pointer leaves it
+  if (annotation.bubble) {
+    const { hover } = annotation;
+    return (
+      <AnchoredBox anchor={anchor} width={width} testId="note-popup">
+        <div
+          onMouseEnter={() => hover && usePopups.getState().setAnnotation({ ...annotation, hover: 'note' })}
+          onMouseLeave={() => hover && clear()}
+        >
+          <NoteCard note={note} onEdit={edit} />
+        </div>
       </AnchoredBox>
     );
   }
@@ -389,7 +406,7 @@ function BookPopups({ rootRef, tools }: {
       id: 'note', 
       title: note.note ? 'Edit the note' : 'Write a note', 
       icon: <TbBallpen size={18} />, 
-      onClick: () => setEditing(true) 
+      onClick: edit 
     },
     ...(asSelection ? tools?.(asSelection) ?? [] : []),
     { 
@@ -418,7 +435,6 @@ function BookPopups({ rootRef, tools }: {
       <HighlightOptions note={note} onDone={clear}>
         <NoteIssues note={note} className="justify-center flex-1 min-w-0 mx-1" />
       </HighlightOptions>
-      {noteText(note.note) ? <NoteCard note={note} onEdit={() => setEditing(true)} /> : null}
     </AnchoredBox>
   );
 }

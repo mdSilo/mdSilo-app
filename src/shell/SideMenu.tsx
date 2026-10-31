@@ -4,7 +4,7 @@ import { ask } from '@tauri-apps/plugin-dialog';
 import { 
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
   TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
-  TbPizza, TbInfoCircle, TbCurrentLocation, TbDatabaseExport, TbBooks, TbEraser, TbWorldUpload,
+  TbPizza, TbInfoCircle, TbHeadphones, TbCurrentLocation, TbDatabaseExport, TbBooks, TbEraser, TbWorldUpload,
 } from 'react-icons/tb';
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
@@ -23,6 +23,8 @@ import Portal from '@/ui/Portal';
 import Logo from '@/ui/Logo';
 import SyncButton from '@/sync/SyncButton';
 import { isPublishAvailable, usePublishUi } from '@/publish/publish';
+import { usePlayer } from '@/player/player';
+import { useTTS } from '@/reader/tts';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
 
@@ -517,11 +519,33 @@ const BottomSection = () => {
   const isHorizontal = useIsHorizontalMenu();
   return (
     <div className={isHorizontal ? 'flex' : 'flex flex-col'}>
+      <PlayerButton />
       <SyncButton className={btnClass} iconClassName={btnIconClass} tooltipPlacement={tooltipPlacement} />
       <SettingsButton />
     </div>
   )
 }
+
+/** Show or hide the player; colored while something is in it. */
+const PlayerButton = () => {
+  const tooltipPlacement = useTooltipPlacement();
+  const shown = usePlayer((state) => state.shown);
+  const reading = useTTS((state) => state.active);
+  const hasPod = useStore((state) => Boolean(state.currentPod));
+  return (
+    <MenuItem isHighlighted={shown}>
+      <Tooltip content={shown ? 'Hide the player' : 'Show the player'} placement={tooltipPlacement}>
+        <button
+          aria-label="Player"
+          className={btnClass}
+          onClick={() => usePlayer.getState().setShown(!shown)}
+        >
+          <TbHeadphones size={22} className={reading || hasPod ? 'shrink-0 mx-px text-primary' : btnIconClass} />
+        </button>
+      </Tooltip>
+    </MenuItem>
+  );
+};
 
 const SettingsButton = () => {
   const tooltipPlacement = useTooltipPlacement();

@@ -8,6 +8,7 @@ import {
 import { useReaderStore } from '../readerStore';
 import { bookDir, pagesDirection, rtlPagesMode, themeColors } from '../styles';
 import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
+import TranslationSwitches from './TranslationSwitches';
 
 const PAGE_THEMES: [PageTheme, string][] = [
   ['auto', 'As the app'], ['light', 'White'], ['sepia', 'Sepia'], ['gray', 'Gray'], ['dark', 'Dark'],
@@ -21,13 +22,7 @@ const WRITING_MODES: [WritingMode, string][] = [
   ['horizontal-rtl', 'Horizontal, right to left'],
 ];
 
-const LANGUAGES = [
-  ['en', 'English'], ['zh-CN', '简体中文'], ['zh-TW', '繁體中文'], ['ja', '日本語'], ['ko', '한국어'],
-  ['fr', 'Français'], ['de', 'Deutsch'], ['es', 'Español'], ['pt', 'Português'], ['it', 'Italiano'],
-  ['ru', 'Русский'], ['ar', 'العربية'],
-];
-
-/** How the books show: font, spacing, layout; and the language to translate to. */
+/** How the books show: font, spacing, layout. */
 function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const darkMode = useStore((state) => state.darkMode);
@@ -186,11 +181,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       {settings.clickToTurn ? (
         <Toggle label="Click left to go forward" checked={settings.swapClickArea} onChange={(swapClickArea) => update({ swapClickArea })} />
       ) : null}
-      <Select label="Translate to" value={settings.translateTo}
-        onChange={(translateTo) => update({ translateTo })}>
-        <option value="">App language</option>
-        {LANGUAGES.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
-      </Select>
+      <TranslationSwitches />
       <button
         className="self-end btn btn-ghost btn-xs"
         onClick={() => setReaderSettings({

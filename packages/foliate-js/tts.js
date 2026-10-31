@@ -449,8 +449,11 @@ export class TTS {
     }
     from(range) {
         this.#lastMark = null
+        // no block from there (e.g. Firefox gives the range of the page
+        // past the last block): from the start
         const [doc] = this.#list.find(range_ =>
-            range.compareBoundaryPoints(Range.END_TO_START, range_) <= 0)
+            range.compareBoundaryPoints(Range.END_TO_START, range_) <= 0) ?? []
+        if (!doc) return this.start()
         // Pick the mark whose sentence contains the selection: the last mark
         // that begins at or before it. Taking the first mark beginning at or
         // after the selection skipped to the next sentence whenever the

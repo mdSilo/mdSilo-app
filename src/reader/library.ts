@@ -64,6 +64,8 @@ export type BookEntry = {
   fileHash?: string;
   /** the writing of the book, if not as it says */
   writingMode?: WritingMode;
+  /** translated as it is read (see translation.ts) */
+  translate?: boolean;
   /** a book made of feed articles: its name, to add the new articles to it (see feedBook.ts) */
   feed?: string;
 };
@@ -430,7 +432,7 @@ export const IMPORT_EXTS = [...Object.keys(BOOK_EXTS), ...Object.keys(CONVERTIBL
 /** A file imported as a book: a book file, or a text file converted. */
 export const isImportable = (path: string) => isBookFile(path) || Boolean(convertibleFormatOf(path));
 
-const readBytes = async (path: string) => {
+export const readBytes = async (path: string) => {
   const data = await invoke<ArrayBuffer | Uint8Array | number[]>('read_file_bytes', { filePath: path });
   return data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
 };

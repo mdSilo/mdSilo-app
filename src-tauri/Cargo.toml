@@ -53,6 +53,18 @@ libsqlite3-sys = { version = "0.38.2", features = ["bundled"] }
 # reqwest (sync/http.rs), which builds for mobile as it is
 git2 = { version = "0.21.0", default-features = false, features = ["vendored-libgit2"] }
 
+# read aloud, in process: WinRT speech on Windows, AVSpeechSynthesizer on
+# macOS, see tts/winrt.rs, tts/avspeech.rs
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.62.2", features = ["Media_SpeechSynthesis", "Media_Core", "Storage_Streams", "Foundation", "Foundation_Collections", "Win32_System_Com"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.4"
+objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSString", "NSData"] }
+objc2-avf-audio = { version = "0.3.2", features = ["AVSpeechSynthesis", "AVAudioBuffer", "AVAudioFormat", "AVAudioTypes", "block2"] }
+block2 = "0.6.2"
+dispatch2 = "0.3.1"
+
 [dev-dependencies]
 tokio = { version = "1.54.1", features = ["full"] }
 

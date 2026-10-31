@@ -178,7 +178,9 @@ describe('reader', () => {
 
     await act(async () => { await useReaderStore.getState().flush(); });
     const md = await invoke<string>('read_file', { filePath: `${BOOK}.md` });
-    expect(md).toContain('> a bright cold day\n\nSee [[1984]]');
+    // the quote links back to its place
+    const hash = await invoke<string>('book_hash', { filePath: BOOK });
+    expect(md).toContain(`> a bright cold day [↗ in book](${bookHref(hash, 'epubcfi(/6/4!/4/4,/1:9,/1:26)')})\n\nSee [[1984]]`);
 
     // a bookmark
     fireEvent.click(screen.getByTitle('Bookmark this page'));
@@ -270,10 +272,32 @@ describe('reader', () => {
     fireEvent.change(screen.getByPlaceholderText(/A note/), { target: { value: 'Orwell' } });
     fireEvent.click(screen.getByText('Save'));
     expect(useReaderStore.getState().notes[0].note).toBe('Orwell');
+    // the highlight clicked: the toolbar, not the note
     act(() => {
       usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 } });
     });
+    expect(screen.queryByTestId('note-card')).not.toBeInTheDocument();
+    // its bubble hovered: the note alone, gone once the pointer leaves it
+    act(() => {
+      usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 }, bubble: true, hover: 'bubble' });
+    });
     expect(screen.getByTestId('note-card')).toHaveTextContent('Orwell');
+    expect(screen.queryByTestId('annotation-toolbar')).not.toBeInTheDocument();
+    fireEvent.mouseEnter(screen.getByTestId('note-card'));
+    expect(usePopups.getState().annotation?.hover).toBe('note');
+    fireEvent.mouseLeave(screen.getByTestId('note-card'));
+    expect(screen.queryByTestId('note-popup')).not.toBeInTheDocument();
+    // clicked: it stays; its note edited from there
+    act(() => {
+      usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 }, bubble: true });
+    });
+    fireEvent.click(screen.getByTitle('Edit the note'));
+    fireEvent.change(screen.getByPlaceholderText(/A note/), { target: { value: 'Orwell, 1984' } });
+    fireEvent.click(screen.getByText('Save'));
+    expect(useReaderStore.getState().notes[0].note).toBe('Orwell, 1984');
+    act(() => {
+      usePopups.getState().setAnnotation({ id: 'x', box: { left: 0, top: 0, right: 10, bottom: 10 } });
+    });
 
     fireEvent.click(screen.getByLabelText('Delete the highlight'));
     expect(useReaderStore.getState().notes).toEqual([]);
@@ -879,8 +903,25 @@ describe('reader, the second part', () => {
     expect(screen.queryByLabelText('Dictionary')).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Translate'));
     expect(await screen.findByText('un jour froid')).toBeInTheDocument();
+    // the language to translate to, chosen in the popup: translated again, and so from then on
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    fetchMock.mockImplementation(async () => ({ ok: true, status: 200, json: async () => [[['寒冷的一天', 'a cold day']], null, 'en'] }));
+    fireEvent.change(screen.getByLabelText('Translate to'), { target: { value: 'zh-CN' } });
+    expect(await screen.findByText('寒冷的一天')).toBeInTheDocument();
+    expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('tl=zh-CN');
+    expect(store.getState().readerSettings).toMatchObject({ translator: 'google', translateTo: 'zh-CN' });
+    // one service so far: no choice of it shown
+    expect(screen.queryByLabelText('Translate by')).not.toBeInTheDocument();
+    // the book translated as it is read: switched on from here, kept with the book
+    expect(screen.queryByLabelText('Translation only')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Translate the book'));
+    expect(useReaderStore.getState().entry?.translate).toBe(true);
+    expect(screen.getByLabelText('Translation only')).toBeInTheDocument();
+    expect(screen.getByText('Make the translated book…')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Translate the book'));
+    expect(useReaderStore.getState().entry?.translate).toBeUndefined();
     fireEvent.click(screen.getByText('Keep as note'));
-    expect(useReaderStore.getState().notes[0]).toMatchObject({ text: 'a bright cold day', note: 'un jour froid' });
+    expect(useReaderStore.getState().notes[0]).toMatchObject({ text: 'a bright cold day', note: '寒冷的一天' });
     expect(screen.queryByTestId('lookup-popup')).not.toBeInTheDocument();
   });
 

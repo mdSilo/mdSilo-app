@@ -1,7 +1,7 @@
 {
   "name": "foliate-js",
   "version": "0.0.0",
-  "description": "Render e-books in the browser; the fork of readup (https://github.com/johnfactotum/foliate-js upstream)",
+  "description": "Render e-books in the browser; the fork of (https://github.com/johnfactotum/foliate-js)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/johnfactotum/foliate-js.git"

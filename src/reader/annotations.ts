@@ -12,12 +12,13 @@
  *   ## Chapter
  *
  *   <!-- mdsilo:note {"id":"...","cfi":"epubcfi(...)","color":"yellow",...} -->
- *   > the text highlighted
+ *   > the text highlighted [↗ in book](book:<hash>#<cfi>)
  *
  *   The note on it, any markdown.
  *
- * The chapter headings and the quotes are written by the reader; the note
- * is what follows the quote, until the next annotation.
+ * The chapter headings and the quotes are written by the reader, each quote
+ * with a link back to its place in the book; the note is what follows the
+ * quote, until the next annotation.
  */
 
 export type BookNoteType = 'annotation' | 'bookmark';
@@ -73,16 +74,19 @@ export const bookPathOfAnnotations = (mdPath: string) =>
 /** A comment can not contain `-->`: escape it in the JSON. */
 const toJson = (data: unknown) => JSON.stringify(data).replace(/-->/g, '--\\u003e');
 
-const quote = (text: string) =>
-  text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => `> ${line}`)
-    .join('\n');
+/** the link back to the place of a quote, at its end */
+const BACK = '↗ in book';
+// also a bare ↗, as first written
+const BACK_LINK = /\s*\[↗(?: in book)?\]\(book:\S*\)\s*$/;
+
+const quote = (text: string, href?: string) => {
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (href && lines.length) lines[lines.length - 1] += ` [${BACK}](${href})`;
+  return lines.map((line) => `> ${line}`).join('\n');
+};
 
 const unquote = (lines: string[]) =>
-  lines.map((line) => line.replace(/^>\s?/, '')).join('\n').trim();
+  lines.map((line) => line.replace(/^>\s?/, '').replace(BACK_LINK, '')).join('\n').trim();
 
 /** The markdown of the annotations of a book. */
 export function serializeAnnotations(doc: AnnotationsDoc): string {
@@ -103,7 +107,7 @@ export function serializeAnnotations(doc: AnnotationsDoc): string {
     chapter = note.chapter ?? chapter;
     const { text, note: body, ...data } = note;
     out.push(`<!-- ${NOTE_MARK} ${toJson(data)} -->`);
-    if (text?.trim()) out.push(quote(text));
+    if (text?.trim()) out.push(quote(text, header?.hash ? bookHref(header.hash, note.cfi) : undefined));
     out.push('');
     if (body.trim()) out.push(body.trim(), '');
   }

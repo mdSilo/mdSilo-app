@@ -7,7 +7,7 @@ use std::path::Path;
 /// for i in 0..=10 (1 KiB, 4 KiB, ... 1 GiB), as KOReader and readup do.
 const CHUNK: u64 = 1024;
 
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
   bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 

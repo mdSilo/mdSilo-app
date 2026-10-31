@@ -39,6 +39,7 @@ The narrow bar at the edge of the window switches between views.
 | Calendar | Chronicle | `Ctrl/Cmd + Shift + C` |
 | Graph | Graph | `Ctrl/Cmd + Shift + G` |
 | Folder | File menu: open a folder or file; **Publish** (desktop), **Backup** (web) | |
+| Headphones | Show or hide the player: a podcast, a book read aloud | |
 | Circling arrows | Sync, see [[9 Sync and Publish\|Sync and Publish]] | |
 | Gear | Settings | |
 

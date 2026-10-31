@@ -1,26 +1,30 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { openUrl } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
-import { DEFAULT_READER_SETTINGS, withDefaults, zoomBy } from '../settings';
+import { DEFAULT_READER_SETTINGS, lookKey, withDefaults, zoomBy } from '../settings';
 import {
-  applyLayout, bookStyles, HIGHLIGHT_CSS, isVerticalMode, pageLayout, pagesDirection, setBookDir, setSpread, themeColors,
+  applyLayout, bookStyles, HIGHLIGHT_CSS, isVerticalMode, pageLayout, 
+  pagesDirection, setBookDir, setSpread, themeColors,
 } from '../styles';
 import { storeOf } from '../readerStore';
 import { boxOfRange, usePopups, type Box } from '../popups';
 import { activePane, setActivePane, setView, type FoliateView, type Pane } from '../view';
 import { useReaderChrome } from '../chrome';
 import {
-  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, wheelGesture, wheelPixels, wheelScrolls, zoomKey,
-  type TurnHint,
+  clickAction, cornerAt, cornerTurner, DWELL_MS, keyAction, runKeyAction, turn, 
+  wheelGesture, wheelPixels, wheelScrolls, zoomKey, type TurnHint,
 } from '../pagination';
-import { sectionOf, type BookNote } from '../annotations';
+import { noteText, sectionOf, type BookNote } from '../annotations';
 import { getDirection, type BookDoc } from '../document';
 import { fillsPage, imagesOf, markCaptions, mediaAt, type Media } from '../media';
 import { highlightCode } from '../highlight';
 import { sentenceRangeAround } from '../vocabulary';
+import { frameOf } from '../rangeEdit';
 import { placeOf } from './BookPopups';
 import { ImageViewer, TableViewer } from './MediaViewer';
 import DoubleBorder from './DoubleBorder';
+import RangeHandles from './RangeHandles';
+import { useBookTranslation } from './useBookTranslation';
 
 type Props = {
   book: BookDoc;
@@ -29,15 +33,12 @@ type Props = {
   pane?: Pane;
 };
 
-type Overlayer = Record<'highlight' | 'underline' | 'squiggly', unknown>;
+type Overlayer = Record<'highlight' | 'underline' | 'squiggly' | 'bubble', unknown>;
 
 /** An image of the pages zoomed, among those of the chapter; or a table. */
 type Zoomed =
   | { type: 'image'; images: Extract<Media, { type: 'image' }>[]; start: number }
   | { type: 'table'; html: string };
-
-/** The annotation drawn for a note: the value is its CFI. */
-export const toAnnotation = (note: BookNote) => ({ value: note.cfi, id: note.id });
 
 /** The place gone to, marked for a moment: its annotation, and the timer to remove it. */
 export type Flash = { value: string; timer: ReturnType<typeof setTimeout> };
@@ -46,16 +47,42 @@ const FLASH_MS = 2000;
 /** the prefix of the mark: drawn apart from the notes, which have their bare CFI */
 const FLASH_PREFIX = 'foliate-note:';
 const FLASH_COLOR = HIGHLIGHT_CSS.blue;
+/** the bubble on a highlight with a note: its CFI, as the marks apart from the notes */
+const bubbleOf = (cfi: string) => FLASH_PREFIX + cfi;
+const hasNote = (note: BookNote) => Boolean(noteText(note.note));
+/** ms the note shown by the bubble hovered stays, the pointer gone: to get to it */
+const HOVER_MS = 300;
+/** px: the bubble, and the room around it to click */
+const BUBBLE = { size: 16, padding: 2 };
+type Rect = { left: number; top: number; right: number; bottom: number };
 
-function clearFlash(view: FoliateView, flash: { current?: Flash }) {
+/** the highlight whose range a handle changes: drawn over the range dragged, apart from the notes */
+type Preview = { value: string; note: BookNote };
+
+/** The note of a bubble drawn, by its value; not the highlight dragged, nor a place marked. */
+function noteOfBubble(value: string, drawn: Map<string, BookNote>, preview?: Preview) {
+  if (!value.startsWith(FLASH_PREFIX) || value === preview?.value) return undefined;
+  const note = drawn.get(value.slice(FLASH_PREFIX.length));
+  return note && hasNote(note) ? note : undefined;
+}
+
+/** A highlight drawn, and the bubble on it if it has a note; or removed, both. */
+function drawNote(view: FoliateView, note: BookNote, remove = false) {
+  const draw = (value: string) => (remove ? view.deleteAnnotation({ value }) : view.addAnnotation({ value, id: note.id }));
+  void draw(note.cfi).catch(() => undefined);
+  if (remove || hasNote(note)) void draw(bubbleOf(note.cfi)).catch(() => undefined);
+}
+
+function clearFlash(view: FoliateView, flash: { current?: Flash; cleared?: (value: string) => void }) {
   if (!flash.current) return;
+  const { value } = flash.current;
   clearTimeout(flash.current.timer);
-  void view.deleteAnnotation({ value: flash.current.value }).catch(() => undefined);
   flash.current = undefined;
+  void view.deleteAnnotation({ value }).then(() => flash.cleared?.(value)).catch(() => undefined);
 }
 
 /** Mark the sentence at a place gone to for a moment, to find it on the page. */
-export async function flashPlace(view: FoliateView, cfi: string, flash: { current?: Flash }) {
+export async function flashPlace(view: FoliateView, cfi: string, flash: { current?: Flash; cleared?: (value: string) => void }) {
   const target = view.resolveNavigation(cfi);
   if (!target?.anchor) return;
   const doc = view.renderer.getContents().find((c) => c.index === target.index)?.doc;
@@ -126,6 +153,12 @@ function readingArea(view: FoliateView | null, vertical = false): Box | undefine
     : { left: rect.left, top: rect.top + margins.top, right: rect.right, bottom: rect.bottom - margins.bottom };
 }
 
+/** A box in a page of the book, in the window. */
+function windowBox(doc: Document | undefined, rect: Box): Box {
+  const { left, top, scale } = frameOf(doc);
+  return { left: left + rect.left * scale, top: top + rect.top * scale, right: left + rect.right * scale, bottom: top + rect.bottom * scale };
+}
+
 /** Typing there: the keys are not for turning pages. */
 const isEditable = (target: EventTarget | null) => {
   const el = target as HTMLElement | null;
@@ -159,14 +192,27 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
   const theme = useStore((state) => state.theme);
   const notes = bookStore((state) => state.notes);
   const fixed = book.rendition?.layout === 'pre-paginated';
-  // a fixed layout: its pages from right to left or from left to right, as chosen; no text to write otherwise
-  const writingMode = bookStore((state) => (fixed ? pagesDirection(state.writingMode) : state.writingMode));
+  // a fixed layout: its pages from right to left or from left to right, as chosen; 
+  // no text to write otherwise
+  const writingMode = bookStore((state) => (
+    fixed ? pagesDirection(state.writingMode) : state.writingMode
+  ));
   const textMode = fixed ? 'auto' : writingMode;
   const vertical = bookStore((state) => state.vertical);
   const drawnRef = useRef(new Map<string, BookNote>());
-  const flashRef = useRef<Flash | undefined>(undefined);
+  const flashRef = useRef<Flash | undefined>(undefined) as { current?: Flash; cleared?: (value: string) => void };
+  const previewRef = useRef<Preview | undefined>(undefined);
+  // a bubble at the place marked: drawn again, the mark gone
+  flashRef.cleared = (value) => {
+    if (viewRef.current && noteOfBubble(value, drawnRef.current, previewRef.current)) {
+      void viewRef.current.addAnnotation({ value }).catch(() => undefined);
+    }
+  };
   const [turnHint, setTurnHint] = useState<TurnHint>();
   const [zoomed, setZoomed] = useState<Zoomed>();
+  // the view opened, for what goes with it
+  const [opened, setOpened] = useState<FoliateView | null>(null);
+  useBookTranslation(opened, pane);
 
   // open the book, once per book; again in another writing
   useEffect(() => {
@@ -179,7 +225,8 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     const onRelocate = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail?.cfi) return;
-      if (detail.reason !== 'selection') usePopups.getState().clear();
+      // a page turned by a handle dragged to a corner: the range goes on
+      if (detail.reason !== 'selection' && !usePopups.getState().adjusting) usePopups.getState().clear();
       const renderer = viewRef.current?.renderer;
       const paged = renderer && !viewRef.current?.isFixedLayout && !renderer.scrolled;
       bookStore.getState().setLocation({
@@ -325,32 +372,95 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     };
 
     const onDraw = (e: Event) => {
-      const { draw, annotation } = (e as CustomEvent).detail;
+      const { draw, annotation, doc, range } = (e as CustomEvent).detail;
       if (overlayer && annotation.value === flashRef.current?.value) {
         draw(overlayer.highlight, { color: FLASH_COLOR });
         return;
       }
-      const note = drawnRef.current.get(annotation.value);
+      const preview = previewRef.current;
+      if (
+        overlayer && 
+        preview?.value !== annotation.value && 
+        annotation.value.startsWith(FLASH_PREFIX)
+      ) {
+        const note = drawnRef.current.get(annotation.value.slice(FLASH_PREFIX.length));
+        if (!note || !hasNote(note)) return;
+        const start = range.startContainer.nodeType === Node.ELEMENT_NODE 
+          ? range.startContainer 
+          : range.startContainer.parentElement;
+        const { writingMode } = doc.defaultView.getComputedStyle(start);
+        // small, above the end of the first line: a click on the text is on the highlight
+        draw(writingMode.startsWith('vertical') ? besideColumn : overlayer.bubble, 
+          { 
+            writingMode, 
+            color: HIGHLIGHT_CSS[note.color ?? 'yellow'], 
+            ...BUBBLE 
+          }
+        );
+        return;
+      }
+      const note = preview && preview.value === annotation.value ? preview.note : drawnRef.current.get(annotation.value);
       if (!note || !overlayer) return;
       const color = HIGHLIGHT_CSS[note.color ?? 'yellow'] ?? HIGHLIGHT_CSS.yellow;
       const style = note.style ?? 'highlight';
       draw(overlayer[style] ?? overlayer.highlight, { color });
     };
 
+    // written down the page, above the line is on the right of it: the bubble there, at the end
+    // of the first column, not on its text (foliate-js puts it over the corner); its box, so
+    // moved, is where it is clicked
+    const besideColumn = (rects: Rect[], options: object) => {
+      if (rects[0]) rects[0].right += BUBBLE.size - BUBBLE.padding;
+      return (overlayer?.bubble as (rects: Rect[], options: object) => unknown)(rects, options);
+    };
+
     const onShow = (e: Event) => {
-      const { value, range } = (e as CustomEvent).detail;
+      const { value, range, rect, index } = (e as CustomEvent).detail;
+      const bubbled = noteOfBubble(value, drawnRef.current, previewRef.current);
+      if (bubbled) {
+        annotationAt = Date.now();
+        const doc = viewRef.current?.renderer.getContents().find((c) => c.index === index)?.doc;
+        if (rect) usePopups.getState().setAnnotation({ id: bubbled.id, box: windowBox(doc, rect), bubble: true });
+        return;
+      }
       const note = drawnRef.current.get(value);
       if (!note || !range) return;
       annotationAt = Date.now();
-      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range, readingArea(viewRef.current, bookStore.getState().vertical)) });
+      usePopups.getState().setAnnotation({ id: note.id, box: boxOfRange(range, readingArea(viewRef.current, bookStore.getState().vertical)), range });
     };
 
     // the annotations of a section, once it shows
     const onOverlay = (e: Event) => {
       const { index } = (e as CustomEvent).detail;
+      const view = viewRef.current;
       for (const note of drawnRef.current.values()) {
-        if (sectionOf(note.cfi) === index) void viewRef.current?.addAnnotation(toAnnotation(note));
+        if (view && sectionOf(note.cfi) === index) drawNote(view, note);
       }
+    };
+
+    // the bubble of a note hovered: the note shown, as long as the pointer is on it or on the note
+    let hoverTimer: ReturnType<typeof setTimeout> | undefined;
+    const onHover = (e: MouseEvent, doc: Document) => {
+      if (e.buttons) return;
+      const overlay = viewRef.current?.renderer.getContents().find((c) => c.doc === doc)?.overlayer;
+      const [value, , rect] = overlay?.hitTest({ x: e.clientX, y: e.clientY }) ?? [];
+      const note = value ? noteOfBubble(value, drawnRef.current, previewRef.current) : undefined;
+      const popups = usePopups.getState();
+      if (note && rect) {
+        clearTimeout(hoverTimer);
+        hoverTimer = undefined;
+        // not over another popup, nor the note shown already
+        const shown = popups.selection || popups.lookup || popups.footnote || popups.annotation;
+        if (!shown || (popups.annotation?.hover && popups.annotation.id !== note.id)) {
+          popups.setAnnotation({ id: note.id, box: windowBox(doc, rect), bubble: true, hover: 'bubble' });
+        }
+        return;
+      }
+      if (popups.annotation?.hover !== 'bubble' || hoverTimer) return;
+      hoverTimer = setTimeout(() => {
+        hoverTimer = undefined;
+        if (usePopups.getState().annotation?.hover === 'bubble') usePopups.getState().clear();
+      }, HOVER_MS);
     };
 
     const onExternalLink = (e: Event) => {
@@ -389,6 +499,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       doc.addEventListener('pointerdown', onPointerDown);
       doc.addEventListener('pointerup', onPointerUp);
       doc.addEventListener('pointermove', (ev) => onSelectDrag(ev, doc));
+      doc.addEventListener('mousemove', (ev) => onHover(ev, doc));
       doc.addEventListener('click', (ev) => onClick(ev, doc));
       // an image in a link zooms: the link not followed by foliate-js, whose listener comes first
       doc.addEventListener('click', (ev) => {
@@ -517,6 +628,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       applyLayout(view, current, state.vertical);
       view.renderer.setStyles?.(bookStyles(current, themeColors(store.getState().darkMode, current.pageTheme), textMode));
       setView(view, pane);
+      setOpened(view);
       // the notes to draw
       drawnRef.current = new Map(state.notes.filter((n) => n.text).map((n) => [n.cfi, n]));
       // opened again in another writing: where the reader is
@@ -557,6 +669,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       if (flashRef.current) clearTimeout(flashRef.current.timer);
       flashRef.current = undefined;
       setView(null, pane);
+      setOpened(null);
       usePopups.getState().clear();
       footnoteHost?.replaceChildren();
       if (view) {
@@ -586,7 +699,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     applyLayout(view, settings, vertical);
     view.renderer.setStyles?.(bookStyles(settings, themeColors(darkMode, settings.pageTheme), textMode));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(settings), darkMode, theme, vertical]);
+  }, [lookKey(settings), darkMode, theme, vertical]);
 
   // the code blocks of the sections shown; the sections loaded later, on load
   useEffect(() => {
@@ -606,12 +719,17 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     }
     for (const [cfi, note] of drawn) {
       const now = next.get(cfi);
-      if (!now) void view.deleteAnnotation({ value: cfi });
+      if (!now) drawNote(view, note, true);
       else if (now.color !== note.color || now.style !== note.style) drawn.delete(cfi);
+      // its note written, or gone: the bubble
+      else if (hasNote(now) !== hasNote(note)) {
+        if (hasNote(note)) void view.deleteAnnotation({ value: bubbleOf(cfi) }).catch(() => undefined);
+        else void view.addAnnotation({ value: bubbleOf(cfi) }).catch(() => undefined);
+      }
     }
     drawnRef.current = next;
     for (const [cfi, note] of next) {
-      if (!drawn.has(cfi)) void view.addAnnotation(toAnnotation(note)).catch(() => undefined);
+      if (!drawn.has(cfi)) drawNote(view, note);
     }
   }, [notes]);
 
@@ -624,6 +742,24 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
     }
     host.replaceChildren();
   }, [footnote]);
+
+  // a highlight drawn over the range dragged, in place of it; or as saved, the drag over
+  const preview = (note: BookNote, range?: Range) => {
+    const view = viewRef.current;
+    if (!view) return;
+    if (previewRef.current) void view.deleteAnnotation({ value: previewRef.current.value }).catch(() => undefined);
+    previewRef.current = undefined;
+    if (!range) {
+      // still there, not changed
+      const kept = bookStore.getState().notes.find((n) => n.cfi === note.cfi);
+      if (kept) drawNote(view, kept);
+      return;
+    }
+    drawNote(view, note, true);
+    const index = sectionOf(note.cfi);
+    previewRef.current = { value: FLASH_PREFIX + view.getCFI(index, range), note };
+    void view.addAnnotation({ value: previewRef.current.value }).catch(() => undefined);
+  };
 
   // the keys back to the pages
   const closeZoomed = () => {
@@ -665,6 +801,14 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       {zoomed?.type === 'table' ? (
         <TableViewer html={zoomed.html} colors={themeColors(darkMode, settings.pageTheme)} onClose={closeZoomed} />
       ) : null}
+      <RangeHandles
+        pane={pane}
+        view={() => viewRef.current}
+        area={() => readingArea(viewRef.current, vertical)}
+        vertical={vertical}
+        onTurnHint={setTurnHint}
+        preview={preview}
+      />
       {turnHint ? <TurnMark key={turnHint.corner} hint={turnHint} area={readingArea(viewRef.current, vertical)} rtl={book.dir === 'rtl'} /> : null}
     </>
   );
