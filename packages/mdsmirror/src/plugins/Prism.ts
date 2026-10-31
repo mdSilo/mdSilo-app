@@ -8,6 +8,7 @@ export const LANGUAGES = {
   mermaid: "Mermaid",
   echarts: "Echarts",
   abcjs: "ABC Notation",
+  smiles: "SMILES",
   bash: "Bash",
   css: "CSS",
   clike: "C",

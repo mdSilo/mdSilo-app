@@ -80,3 +80,33 @@ describe("Diagram", () => {
     expect(wrappers[1]).toBe(second);
   });
 });
+
+describe("SMILES", () => {
+  const draw = async (md: string) => {
+    const view = new EditorView(document.createElement("div"), {
+      state: EditorState.create({
+        doc: parser.parse(md),
+        plugins: [
+          Diagram({ pluginKey: "smiles", name: "code_block", dark: true }),
+        ],
+      }),
+    });
+    await settle();
+    return view;
+  };
+
+  test("draws a structure per line", async () => {
+    const view = await draw("```smiles\nCCO\nC1=CC=CC=C1\n```");
+    const wrapper = view.dom.querySelector(".smiles-diagram-wrapper");
+    expect(wrapper?.querySelectorAll(":scope > svg")).toHaveLength(2);
+    view.destroy();
+  });
+
+  test("shows the error of a wrong SMILES", async () => {
+    const view = await draw("```smiles\nC1CC(\n```");
+    expect(
+      view.dom.querySelector(".smiles-diagram-wrapper")?.textContent
+    ).toMatch(/^SMILES: .*parentheses/);
+    view.destroy();
+  });
+});

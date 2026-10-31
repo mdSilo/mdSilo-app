@@ -47,6 +47,7 @@
     "refractor": "^5.0.0",
     "scroll-into-view-if-needed": "^3.1.0",
     "slugify": "^1.6.6",
+    "smiles-drawer": "2.4.1",
     "styled-components": "^6.6.0",
     "stylis": "^4.3.6"
   },

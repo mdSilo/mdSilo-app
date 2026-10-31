@@ -1,4 +1,5 @@
 import type { Renderers } from 'mdsilo-publish';
+import { renderSmiles } from 'mdsmirror';
 
 /**
  * The diagrams of the site drawn here, where a browser is, as SVG: the site
@@ -31,4 +32,5 @@ export const siteRenderers: Renderers = {
       chart.dispose();
     }
   },
+  smiles: (code) => renderSmiles(code),
 };

@@ -13,7 +13,7 @@ import {
   type Built, type Pushed,
 } from './publish';
 
-type Kind = 'backlinks' | 'graph' | 'tags' | 'books' | 'issues' | 'journals' | 'math' | 'mermaid' | 'echarts';
+type Kind = 'backlinks' | 'graph' | 'tags' | 'books' | 'issues' | 'journals' | 'math' | 'mermaid' | 'echarts' | 'smiles';
 
 const CONTENT: [Kind, string, string][] = [
   ['backlinks', 'Backlinks', 'the published notes linking to a note'],
@@ -29,6 +29,7 @@ const DRAWN: [Kind, string, string][] = [
   ['math', 'Math', '$...$ and $$...$$, as MathML'],
   ['mermaid', 'Mermaid', 'diagrams, as pictures'],
   ['echarts', 'ECharts', 'charts, as pictures'],
+  ['smiles', 'SMILES', 'chemical structures, as pictures'],
 ];
 
 /** Choose what to publish, then export the site or push it to GitHub Pages. */

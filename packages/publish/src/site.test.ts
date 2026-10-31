@@ -229,6 +229,15 @@ describe('math and diagrams', () => {
     const none = text(await buildSite(input(page(md))), 'notes/Blog/M.html');
     expect(none).toContain('language-mermaid');
   });
+
+  test('smiles drawn by its renderer, its code when off', async () => {
+    const md = '```smiles\nCCO\n```';
+    const renderers = { smiles: async (code: string) => `<svg aria-label="${code.trim()}"></svg>` };
+    const html = text(await buildSite(input(page(md)), renderers), 'notes/Blog/M.html');
+    expect(html).toContain('<figure class="diagram smiles"><svg aria-label="CCO"></svg></figure>');
+    const off = text(await buildSite(input(page(md), { smiles: false }), renderers), 'notes/Blog/M.html');
+    expect(off).toContain('<code class="language-smiles">CCO');
+  });
 });
 
 describe('the issues', () => {

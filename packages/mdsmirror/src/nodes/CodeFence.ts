@@ -51,6 +51,8 @@ import { Dispatch } from "../types";
 import Node from "./Node";
 
 const DEFAULT_LANGUAGE = "javascript";
+/** The languages of the code blocks drawn: a toggle between code and picture */
+const DIAGRAM_LANGUAGES = ["mermaid", "echarts", "abcjs", "smiles"];
 
 [
   bash,
@@ -148,7 +150,7 @@ export default class CodeFence extends Node {
           // For the diagram language we add an extra button to toggle between
           // source code and a rendered diagram view.
           const lang = node.attrs.language;
-          if (lang === "mermaid" || lang === "echarts" || lang === "abcjs") {
+          if (DIAGRAM_LANGUAGES.includes(lang)) {
             const showSourceButton = document.createElement("button");
             showSourceButton.innerText = "Source";
             showSourceButton.type = "button";
@@ -295,24 +297,14 @@ export default class CodeFence extends Node {
   get plugins() {
     return [
       Prism({ name: this.name, lineNumbers: this.options.showLineNumber }),
-      Diagram({
-        pluginKey: "mermaid",
-        name: this.name,
-        dark: this.options.dark,
-        onSave: this.options.onSaveDiagram,
-      }),
-      Diagram({
-        pluginKey: "echarts",
-        name: this.name,
-        dark: this.options.dark,
-        onSave: this.options.onSaveDiagram,
-      }),
-      Diagram({
-        pluginKey: "abcjs",
-        name: this.name,
-        dark: this.options.dark,
-        onSave: this.options.onSaveDiagram,
-      }),
+      ...DIAGRAM_LANGUAGES.map((pluginKey) =>
+        Diagram({
+          pluginKey,
+          name: this.name,
+          dark: this.options.dark,
+          onSave: this.options.onSaveDiagram,
+        })
+      ),
     ];
   }
 
