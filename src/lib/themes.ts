@@ -26,9 +26,14 @@ export const DARK_QUERY = '(prefers-color-scheme: dark)';
 export const isSystemDark = () =>
   typeof window !== 'undefined' && (window.matchMedia?.(DARK_QUERY)?.matches ?? false);
 
-/** The theme to apply for a theme setting, `system` or unknown theme by the system mode. */
-export function resolveTheme(theme: string, systemDark: boolean): ThemeInfo {
-  return THEMES.find((t) => t.name === theme) ?? (systemDark ? DARK_THEME : LIGHT_THEME);
+/**
+ * The theme to apply for a theme setting, `system` or unknown theme by the
+ * system mode; `custom` the themes made by the user.
+ */
+export function resolveTheme(theme: string, systemDark: boolean, custom: readonly ThemeInfo[] = []): ThemeInfo {
+  return THEMES.find((t) => t.name === theme)
+    ?? custom.find((t) => t.name === theme)
+    ?? (systemDark ? DARK_THEME : LIGHT_THEME);
 }
 
 const v = (name: string) => `var(--color-${name})`;

@@ -4,6 +4,7 @@ import '@/styles/styles.css';
 import 'tippy.js/dist/tippy.css';
 import useTheme from '@/lib/hooks/useTheme';
 import { useCustomFonts } from '@/custom/fonts';
+import { useCustomThemes } from '@/custom/themes';
 import { onStoreHydrated, store } from '@/state/store';
 import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
 import type { BookWindowParams } from '@/state/windowKind';
@@ -27,6 +28,7 @@ const Reader = lazy(() => import('@/reader/components/ReaderView'));
 export default function BookWindow(props: BookWindowParams) {
   useTheme();
   useCustomFonts();
+  useCustomThemes();
   const route = useMemo(() => routeBook(props.path), [props.path]);
   useEffect(() => shareSettings(), []);
 

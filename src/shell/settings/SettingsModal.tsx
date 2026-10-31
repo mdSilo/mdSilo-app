@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useStore } from '@/state/store';
 import {
   STARTUP_VIEWS, type OpenOnStartup, type SideMenuOrientation, type StartupView,
 } from '@/state/userSettings';
 import { SYSTEM_THEME, THEMES } from '@/lib/themes';
 import { Select } from '@/ui/ui';
+import { allCustomThemes } from '@/custom/themes';
 import { BaseModal } from '@/ui/BaseModal';
+import ThemeEditor from './ThemeEditor';
 import FontsSetting from './FontsSetting';
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
@@ -29,6 +32,12 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
 
   const theme = useStore((state) => state.theme);
   const setTheme = useStore((state) => state.setTheme);
+  const customThemes = useStore((state) => state.customThemes);
+  const workspaceThemes = useStore((state) => state.workspaceThemes);
+  const userThemes = allCustomThemes({ customThemes, workspaceThemes });
+  const current = userThemes.find((t) => `user-${t.id}` === theme);
+  // the theme edited: a theme made by the user, or 'new'
+  const [editing, setEditing] = useState<string | null>(null);
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
   const setSideMenuOrientation = useStore((state) => state.setSideMenuOrientation);
   const openOnStartup = useStore((state) => state.openOnStartup);
@@ -46,7 +55,26 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
               {t.label}
             </option>
           ))}
+          {userThemes.length > 0 ? (
+            <optgroup label="My Themes">
+              {userThemes.map((t) => <option key={t.id} value={`user-${t.id}`}>{t.name}</option>)}
+            </optgroup>
+          ) : null}
         </Select>
+        {editing ? (
+          <ThemeEditor
+            key={editing}
+            theme={userThemes.find((t) => t.id === editing)}
+            onDone={() => setEditing(null)}
+          />
+        ) : (
+          <div className="flex justify-end gap-2">
+            {current ? (
+              <button type="button" className="btn btn-xs" onClick={() => setEditing(current.id)}>Edit Theme</button>
+            ) : null}
+            <button type="button" className="btn btn-xs" onClick={() => setEditing('new')}>New Theme</button>
+          </div>
+        )}
         <Select
           label="Side Menu Orientation"
           value={sideMenuOrientation}

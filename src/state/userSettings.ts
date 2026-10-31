@@ -3,6 +3,7 @@ import { DEFAULT_READER_SETTINGS, type ReaderSettings } from '@/reader/settings'
 import { DEFAULT_LIBRARY_SETTINGS, type LibrarySettings } from '@/reader/library/shelf';
 import { isSystemDark, SYSTEM_THEME } from '@/lib/themes';
 import type { CustomFont } from '@/custom/fonts';
+import type { CustomTheme } from '@/custom/themes';
 import { setter, Setter, Store } from './store';
 
 export enum Sort {
@@ -59,6 +60,10 @@ export type UserSettings = {
   setUserId: Setter<string>;
   theme: string; // daisyUI theme name, or 'system'
   setTheme: Setter<string>;
+  customThemes: CustomTheme[]; // themes made by the user, kept on this device
+  setCustomThemes: Setter<CustomTheme[]>;
+  workspaceThemes: CustomTheme[]; // themes of the workspace, not persisted
+  setWorkspaceThemes: Setter<CustomTheme[]>;
   darkMode: boolean; // the applied theme is dark, follows `theme`
   setDarkMode: Setter<boolean>;
   font: string; // a font id, see custom/fonts
@@ -137,6 +142,10 @@ const userSettingsSlice = (
   setUserId: setter(set, 'userId'),
   theme: SYSTEM_THEME,
   setTheme: setter(set, 'theme'),
+  customThemes: [],
+  setCustomThemes: setter(set, 'customThemes'),
+  workspaceThemes: [],
+  setWorkspaceThemes: setter(set, 'workspaceThemes'),
   // as the system theme, not to re-render the editors on start
   darkMode: isSystemDark(),
   setDarkMode: setter(set, 'darkMode'),

@@ -144,7 +144,7 @@ export type Store = {
 
 // user settings kept in LOCAL_DATA_DIR, see partialize
 type PersistedState = Pick<Store,
-  | 'userId' | 'theme' | 'darkMode' | 'font' | 'customFonts' | 'fontSize' | 'fontWt' | 'lineHeight'
+  | 'userId' | 'theme' | 'customThemes' | 'darkMode' | 'font' | 'customFonts' | 'fontSize' | 'fontWt' | 'lineHeight'
   | 'isRTL' | 'isCheckSpellOn' | 'openOnStartup' | 'startupView' | 'lastBooks' | 'noteSort' | 'recentDir'
   | 'pinnedDir' | 'sidebarWidth' | 'sideMenuOrientation' | 'feedChannelWidth' | 'feedArticleWidth' | 'readerSidebarWidth'
   | 'useAsset' | 'activities' | 'readerSettings' | 'librarySettings' | 'syncSettings'
@@ -323,6 +323,7 @@ export const store = createStore<Store>()(
         // user setting related
         userId: state.userId,
         theme: state.theme,
+        customThemes: state.customThemes,
         darkMode: state.darkMode,
         font: state.font,
         customFonts: state.customFonts,
