@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { fromWorkspacePath, isTauri, joinPath, toWorkspacePath } from '@/workspace/util';
+import { announce } from '@/state/windowSync';
 import { DATA_DIR, READING_DIR, WRITING_DIR } from '@/workspace/layout';
 import { updateGitignore } from '@/workspace/gitignore';
 import {
@@ -177,6 +178,7 @@ export async function writeLibrary(ws: string, lib: Library) {
   const books = Object.fromEntries(Object.entries(lib.books).sort(([a], [b]) => (a < b ? -1 : 1)));
   await writeJson(libraryPath(ws), { version: LIBRARY_VERSION, books });
   setLibraryBooks(ws, { ...lib.books });
+  announce('library', ws);
 }
 
 export async function readBookState(ws: string, hash: string): Promise<BookState | undefined> {
@@ -185,6 +187,8 @@ export async function readBookState(ws: string, hash: string): Promise<BookState
 
 export async function writeBookState(ws: string, hash: string, state: BookState) {
   await writeJson(statePath(ws, hash), state);
+  // the progress, in the library of another window
+  announce('library', ws);
 }
 
 export const bookHashOf = (path: string) => invoke<string>('book_hash', { filePath: path });

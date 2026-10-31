@@ -6,10 +6,12 @@ import { ProvideCurrentView } from '@/state/useCurrentView';
 import useHotkeys from '@/lib/hooks/useHotkeys';
 import useTheme from '@/lib/hooks/useTheme';
 import { useStore, onStoreHydrated, SidebarTab } from '@/state/store';
+import { shareSettings } from '@/state/windowSync';
 import { isWeb } from '@/workspace/util';
 import { openWebWorkspace } from '@/workspace/useOpen';
 import FindOrCreateModal from '@/writer/NoteNewModal';
 import SideMenu from '@/shell/SideMenu';
+import { routeMain } from '@/shell/windows';
 import { useAutoSync } from '@/sync/autoSync';
 import PublishModal from '@/publish/PublishModal';
 import Sidebar from '@/shell/sidebar/Sidebar';
@@ -82,6 +84,9 @@ const App = () => {
   // sync every few minutes and on exit, if set
   useAutoSync();
 
+  // the settings changed in the book windows, and theirs
+  useEffect(() => shareSettings(), []);
+
   useEffect(() => {
     void invoke('close_splashscreen').catch((error) => {
       console.error('Failed to close splashscreen:', error);
@@ -90,7 +95,7 @@ const App = () => {
 
 
   return (
-    <ProvideCurrentView>
+    <ProvideCurrentView route={routeMain}>
       <div id="app-container" className="h-screen flex flex-col">
         <div className={`flex w-full h-full bg-base-100 ${
           sideMenuOrientation === 'horizontal'

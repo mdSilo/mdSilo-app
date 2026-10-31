@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import { store, useStore } from '@/state/store';
+import { onAnnounce } from '@/state/windowSync';
 import type { BookEntry } from './library';
 
 type BooksState = {
@@ -19,6 +20,11 @@ export const useBooks = create<BooksState>(() => ({ books: {} }));
 export function setLibraryBooks(ws: string, books: Record<string, BookEntry>) {
   useBooks.setState({ ws, books });
 }
+
+// written in another window: read again
+onAnnounce('library', (ws) => {
+  if (useBooks.getState().ws === ws) void import('./library').then((l) => l.readLibrary(ws));
+});
 
 let loading: Promise<unknown> | undefined;
 

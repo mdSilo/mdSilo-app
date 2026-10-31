@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import copy from 'copy-to-clipboard';
 import {
-  TbBook, TbBookmarks, TbCloud, TbCloudOff, TbLink, TbNotes, TbPencil, TbPhoto, TbPhotoOff, TbRestore, TbTrash,
+  TbAppWindow, TbBook, TbBookmarks, TbCloud, TbCloudOff, TbLink, TbNotes, TbPencil, TbPhoto, TbPhotoOff, TbRestore, TbTrash,
 } from 'react-icons/tb';
 import { BaseModal } from '@/ui/BaseModal';
 import { IconButton } from '@/ui/ui';
 import { openFileDilog, openFilePath } from '@/workspace/open';
 import { useCurrentViewContext } from '@/state/useCurrentView';
+import { canOpenBookWindow, readBook } from '@/shell/windows';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { annotationsPathOf, bookHref } from '../annotations/annotations';
 import { COVER_EXTS, coverUrl, deleteCovers, setCustomCover } from './covers';
@@ -15,6 +16,7 @@ import { formOf, metaOfForm, validateMeta, type Form } from './metaForm';
 import { allGroups, formatSeries, STATUSES, type ShelfBook } from './shelf';
 import { formatDuration, totalSeconds } from './stats';
 import BookCover from './BookCover';
+import { useLibrarySettings } from './ViewMenu';
 import { deleteBook, normalizeGroup, saveBookEntry, setBookSynced, type BookEntry } from './library';
 
 type Props = {
@@ -67,6 +69,11 @@ function ViewBook({ ws, book, cover, onMode, onClose, onChanged }: {
   ws: string; book: ShelfBook; cover?: string; onMode: (mode: Mode) => void; onClose: () => void; onChanged: () => void;
 }) {
   const { dispatch } = useCurrentViewContext();
+  const [{ openIn }] = useLibrarySettings();
+  const read = (inWindow: boolean) => {
+    onClose();
+    readBook(dispatch, book.path, inWindow);
+  };
   const [size, setSize] = useState<number | undefined>();
   const [hasNotes, setHasNotes] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -112,8 +119,16 @@ function ViewBook({ ws, book, cover, onMode, onClose, onChanged }: {
           </div>
           <div className="flex flex-wrap gap-1 mt-auto">
             {book.here ? (
-              <Action title="Read" onClick={() => { onClose(); dispatch({ view: 'book', path: book.path }); }}>
+              <Action title="Read" onClick={() => read(openIn === 'window')}>
                 <TbBook size={16} />
+              </Action>
+            ) : null}
+            {book.here && canOpenBookWindow ? (
+              <Action
+                title={openIn === 'window' ? 'Read in this window' : 'Read in a new window'}
+                onClick={() => read(openIn !== 'window')}
+              >
+                <TbAppWindow size={16} />
               </Action>
             ) : null}
             <Action title="Edit metadata" onClick={() => onMode('edit')}><TbPencil size={16} /></Action>

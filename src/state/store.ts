@@ -11,6 +11,7 @@ import type { ActivityRecord } from '@/insight/activity';
 import { NoteMap } from '@/lib/noteMap';
 import { DARK_THEME, LIGHT_THEME } from '@/lib/themes';
 import userSettingsSlice, { UserSettings } from './userSettings';
+import { isBookWindow } from './windowKind';
 
 export { NoteMap } from '@/lib/noteMap';
 
@@ -48,6 +49,8 @@ const storage: PersistStorage<PersistedState> = {
     }
   },
   setItem: async (name: string, value: StorageValue<PersistedState>): Promise<void> => {
+    // the main window writes them, with what a book window changed
+    if (isBookWindow) return;
     // persist runs on every store update: skip writing what's already saved
     const serialized = serializePersisted(value);
     if (lastSaved[name] === serialized) return;

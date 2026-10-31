@@ -105,9 +105,10 @@ describe('shelf', () => {
     expect(breadcrumbs('')).toEqual([]);
     expect(newGroupName({ title: 'Pride and Prejudice' }, { title: 'A/B' }, 'Fiction')).toBe('Fiction/Pride-A B');
     expect(allGroups([{ group: 'A/B' }, { group: 'C' }, {}])).toEqual(['A', 'A/B', 'C']);
-    expect(withLibraryDefaults({ view: 'list', sortBy: 'nope' as never })).toEqual({
-      view: 'list', groupBy: 'group', sortBy: 'read', ascending: false,
+    expect(withLibraryDefaults({ view: 'list', sortBy: 'nope' as never, openIn: 'nope' as never })).toEqual({
+      view: 'list', groupBy: 'group', sortBy: 'read', ascending: false, openIn: 'here',
     });
+    expect(withLibraryDefaults({ openIn: 'window' }).openIn).toBe('window');
   });
 
   test('a book dropped onto a book, a group, a breadcrumb', () => {

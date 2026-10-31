@@ -11,6 +11,18 @@ describe('useCurrentViewContext', () => {
     vi.restoreAllMocks();
   });
 
+  test('a route shows some views elsewhere', () => {
+    const route = vi.fn((action: { view: string }) => action.view === 'graph');
+    const { result } = renderHook(() => useCurrentViewContext(), {
+      wrapper: ({ children }: { children: ReactNode }) => <ProvideCurrentView route={route}>{children}</ProvideCurrentView>,
+    });
+    act(() => result.current.dispatch({ view: 'graph' }));
+    expect(result.current.state.view).toBe('default');
+    act(() => result.current.dispatch({ view: 'feed' }));
+    expect(result.current.state.view).toBe('feed');
+    expect(route).toHaveBeenCalledTimes(2);
+  });
+
   test('provides state and dispatch', () => {
     const { result } = renderHook(() => useCurrentViewContext(), {
       wrapper: ({ children }: { children: ReactNode }) => <ProvideCurrentView>{children}</ProvideCurrentView>,

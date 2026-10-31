@@ -22,3 +22,8 @@ export async function once<T>(event: string, handler: EventCallback<T>): Promise
 export async function emit(event: string, payload?: unknown): Promise<void> {
   busEmit(event, payload);
 }
+
+/** one page, one window: to it */
+export async function emitTo(_target: string, event: string, payload?: unknown): Promise<void> {
+  busEmit(event, payload);
+}

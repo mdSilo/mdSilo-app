@@ -11,9 +11,11 @@ import {
 import ErrorBoundary from '@/ui/ErrorBoundary';
 import { IconButton, Spinner } from '@/ui/ui';
 import { useCurrentViewContext } from '@/state/useCurrentView';
+import { readBook } from '@/shell/windows';
 import { listDir, openFileDilog } from '@/workspace/open';
 import { fromWorkspacePath, joinPath } from '@/workspace/util';
 import { useStore } from '@/state/store';
+import { onAnnounce } from '@/state/windowSync';
 import { READING_DIR } from '@/workspace/layout';
 import { BOOK_EXTS, CONVERTIBLE_EXTS } from '../document';
 import {
@@ -90,6 +92,20 @@ export default function Library() {
     void load();
   }, [load]);
 
+  // read in a book window: its progress, once it stops changing
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = onAnnounce('library', (ws) => {
+      if (ws !== initDir) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => void load(), 1000);
+    });
+    return () => {
+      clearTimeout(timer);
+      stop();
+    };
+  }, [initDir, load]);
+
   const changed = useCallback(async () => {
     await load();
     setVersion((v) => v + 1);
@@ -154,7 +170,7 @@ export default function Library() {
       setMessage(failed.length ? `Could not add: ${failed.join(', ')}` : '', failed.length > 0);
       await addBooks(added);
       // one book added: to read
-      if (added.length === 1) dispatch({ view: 'book', path: added[0] });
+      if (added.length === 1) readBook(dispatch, added[0], settings.openIn === 'window');
     } finally {
       setBusy(false);
     }
@@ -254,7 +270,7 @@ export default function Library() {
   const onOpen = (item: ShelfItem) => {
     if (selecting && !isGroup(item)) select([item.hash], !selected.has(item.hash));
     else if (isGroup(item)) setOpened(item.key);
-    else if (item.here) dispatch({ view: 'book', path: item.path });
+    else if (item.here) readBook(dispatch, item.path, settings.openIn === 'window');
     else setDetails(item.hash);
   };
 

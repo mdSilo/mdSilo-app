@@ -11,12 +11,19 @@ type CurrentView = {
 
 const CurrentViewContext = createContext<CurrentView | undefined>(undefined);
 
-export function ProvideCurrentView({ children }: {children: ReactNode;}) {
+type Props = {
+  children: ReactNode;
+  /** to show a view elsewhere, e.g. in another window: true if done */
+  route?: (action: ViewAction) => boolean;
+};
+
+export function ProvideCurrentView({ children, route }: Props) {
   const [state, reduce] = useReducer(viewReducer, initialState);
   const dispatch = useCallback((action: ViewAction) => {
+    if (route?.(action)) return;
     viewEffects(action);
     reduce(action);
-  }, []);
+  }, [route]);
   return (
     <CurrentViewContext.Provider value={{ state, dispatch }}>
       {children}

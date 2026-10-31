@@ -7,6 +7,7 @@ import { Spinner } from '@/ui/ui';
 import useNoteTaskSync from '@/issue/useNoteTaskSync';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useStartupView from '@/state/useStartupView';
+import { useViewsOfBookWindows } from '@/shell/windows';
 import NotePage from '@/writer/MdView';
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
@@ -42,7 +43,10 @@ export default function MainView() {
   // issues created from note tasks follow their tasks, whatever the view
   useNoteTaskSync();
   useStartupView();
-  const viewTy = useCurrentViewContext().state.view;
+  const { state, dispatch } = useCurrentViewContext();
+  // the views asked by the book windows, e.g. a note linking to the book
+  useViewsOfBookWindows(dispatch);
+  const viewTy = state.view;
   const View = VIEWS[viewTy] ?? NotePage;
   return (
     <Suspense fallback={<ViewLoading />}>

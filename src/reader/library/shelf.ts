@@ -28,11 +28,15 @@ export type GroupBy = 'none' | 'group' | 'author' | 'series' | 'status';
 export type SortBy = 'title' | 'author' | 'format' | 'series' | 'read' | 'added' | 'published';
 
 /** How the library shows; kept with the user settings. */
+export type OpenIn = 'here' | 'window';
+
 export type LibrarySettings = {
   view: ViewMode;
   groupBy: GroupBy;
   sortBy: SortBy;
   ascending: boolean;
+  /** where a book opens: here, or in a window of its own (desktop) */
+  openIn: OpenIn;
   /** the choices of the last import from a folder */
   folderImport?: FolderImportOptions;
 };
@@ -42,6 +46,7 @@ export const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = {
   groupBy: 'group',
   sortBy: 'read',
   ascending: false,
+  openIn: 'here',
 };
 
 /** The statuses offered, others can be typed. */
@@ -261,6 +266,7 @@ export function withLibraryDefaults(settings?: Partial<LibrarySettings>): Librar
     groupBy: pick(settings?.groupBy, ['none', 'group', 'author', 'series', 'status'], d.groupBy),
     sortBy: pick(settings?.sortBy, ['title', 'author', 'format', 'series', 'read', 'added', 'published'], d.sortBy),
     ascending: typeof settings?.ascending === 'boolean' ? settings.ascending : d.ascending,
+    openIn: pick(settings?.openIn, ['here', 'window'], d.openIn),
     ...(settings?.folderImport ? { folderImport: settings.folderImport } : {}),
   };
 }

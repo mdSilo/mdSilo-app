@@ -2,8 +2,9 @@ import { MenuSeparator } from '@headlessui/react';
 import { TbCheck, TbLayoutGrid, TbList, TbSortAscending, TbSortDescending } from 'react-icons/tb';
 import Dropdown, { DropdownItem } from '@/ui/Dropdown';
 import { useStore } from '@/state/store';
+import { canOpenBookWindow } from '@/shell/windows';
 import { 
-  withLibraryDefaults, type GroupBy, type LibrarySettings, type SortBy, type ViewMode 
+  withLibraryDefaults, type GroupBy, type LibrarySettings, type OpenIn, type SortBy, type ViewMode 
 } from './shelf';
 
 const VIEWS: [ViewMode, string][] = [['grid', 'Grid'], ['list', 'List']];
@@ -15,6 +16,7 @@ const SORT_BYS: [SortBy, string][] = [
   ['read', 'Date read'], ['added', 'Date added'], ['published', 'Date published'],
 ];
 const ORDERS: [boolean, string][] = [[true, 'Ascending'], [false, 'Descending']];
+const OPEN_INS: [OpenIn, string][] = [['here', 'This window'], ['window', 'A new window']];
 
 /** The settings of the library, as stored. */
 export function useLibrarySettings() {
@@ -24,7 +26,7 @@ export function useLibrarySettings() {
   return [settings, update] as const;
 }
 
-/** How the library shows: as a grid or list, grouped by, sorted by. */
+/** How the library shows: as a grid or list, grouped by, sorted by; where books open. */
 export default function ViewMenu({ onGroupBy }: { onGroupBy: (groupBy: GroupBy) => void }) {
   const [settings, update] = useLibrarySettings();
   const section = <T,>(title: string, options: [T, string][], current: T, choose: (value: T) => void) => (
@@ -47,12 +49,19 @@ export default function ViewMenu({ onGroupBy }: { onGroupBy: (groupBy: GroupBy) 
           {settings.ascending ? <TbSortAscending size={18} /> : <TbSortDescending size={18} />}
         </span>
       }
-      tooltipContent="View, group by, sort by"
+      tooltipContent={canOpenBookWindow ? 'View, open books in, group by, sort by' : 'View, group by, sort by'}
       placement="bottom-end"
-      itemsClassName="py-1"
+      // long: within the window, scrolled
+      itemsClassName="py-1 max-h-[calc(100vh-6rem)] overflow-y-auto!"
     >
       <div aria-label="View menu">
         {section('View', VIEWS, settings.view, (view) => update({ view }))}
+        {canOpenBookWindow ? (
+          <>
+            <MenuSeparator className="my-1 border-t border-base-300" />
+            {section('Open books in', OPEN_INS, settings.openIn, (openIn) => update({ openIn }))}
+          </>
+        ) : null}
         <MenuSeparator className="my-1 border-t border-base-300" />
         {section('Group by', GROUP_BYS, settings.groupBy, onGroupBy)}
         <MenuSeparator className="my-1 border-t border-base-300" />

@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import FileAPI from '@/workspace/files';
 import { fromWorkspacePath, toWorkspacePath } from '@/workspace/util';
 import { store, useStore } from '@/state/store';
+import { announce, onAnnounce } from '@/state/windowSync';
 import { dataDirOf, type Layout } from '@/workspace/layout';
 import {
   createIssue as createIssueOp, defaultIssueData, NewIssue, normalizeIssueData, renameNoteRefs,
@@ -82,6 +83,7 @@ async function writeIssues(dir: string, data: IssueData, layout: Layout = 'legac
     await new FileAPI(ISSUE_FILE, dir).writeFile(JSON.stringify(stored, null, 2));
   }
   saved.set(dir, data);
+  announce('issues', dir);
 }
 
 /** Read the issues of a workspace in the workspace layout. */
@@ -197,6 +199,13 @@ export const useIssueStore = create<IssueStore>((set, get) => ({
     }
   },
 }));
+
+// written in another window, e.g. an issue made of a highlight in a book
+// window: read again, unless changes of here are waiting to be written
+onAnnounce('issues', (dir) => {
+  const { dir: loaded, isLoaded, layout, load } = useIssueStore.getState();
+  if (isLoaded && loaded === dir && pending?.dir !== dir) void load(dir, true, layout);
+});
 
 export const issueStore = useIssueStore;
 
