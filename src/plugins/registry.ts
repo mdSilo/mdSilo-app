@@ -1,7 +1,7 @@
-import { invoke } from '@tauri-apps/api/core';
+import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
 import { useEffect } from 'react';
-import { store } from '@/state/store';
+import { store, useStore } from '@/state/store';
 import { isTauri, joinPath } from '@/workspace/util';
 import { MANIFEST_FILE, parseManifest, supportsApp, type Permission, type PluginManifest } from './manifest';
 
@@ -113,9 +113,37 @@ export const enabledPlugins = (
   states = store.getState().pluginStates,
 ) => plugins.filter((plugin) => isEnabled(plugin, states));
 
+export const PLUGIN_SCHEME = 'mdsplugin';
+
+/**
+ * The URL of a file of a plugin, served by src-tauri/src/plugin_scheme.rs:
+ * `mdsplugin://localhost/<id>/<path>`, `http://mdsplugin.localhost/…` on Windows.
+ */
+export function pluginUrl(id: string, path = '') {
+  const encoded = path.split('/').map(encodeURIComponent).join('/');
+  return `${convertFileSrc('', PLUGIN_SCHEME)}${encodeURIComponent(id)}/${encoded}`;
+}
+
+/** The plugins that may reach the network: the CSP of their pages lets them. */
+export const netPlugins = (
+  plugins = store.getState().installedPlugins,
+  states = store.getState().pluginStates,
+) => enabledPlugins(plugins, states)
+  .filter((plugin) => grantedPermissions(plugin, states).includes('net'))
+  .map((plugin) => plugin.id);
+
 /** Reads the plugins installed on startup (desktop only, for now). */
 export function usePlugins() {
+  const installedPlugins = useStore((state) => state.installedPlugins);
+  const pluginStates = useStore((state) => state.pluginStates);
+
   useEffect(() => {
     if (isTauri) loadPlugins().catch((e) => console.error('Error on loading plugins:', e));
   }, []);
+
+  useEffect(() => {
+    if (!isTauri) return;
+    invoke('set_plugin_net', { ids: netPlugins(installedPlugins, pluginStates) })
+      .catch((e) => console.error('Error on setting plugin network:', e));
+  }, [installedPlugins, pluginStates]);
 }

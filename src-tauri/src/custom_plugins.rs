@@ -29,7 +29,8 @@ pub(crate) fn is_valid_id(id: &str) -> bool {
   let mut chars = id.chars();
   matches!(chars.next(), Some(c) if c.is_ascii_lowercase() || c.is_ascii_digit())
     && id.len() <= 64
-    && chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || "._-".contains(c))
+    && chars
+      .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || "._-".contains(c))
 }
 
 fn list_in(base: &Path) -> Vec<PluginFolder> {
@@ -142,7 +143,8 @@ mod tests {
   use super::*;
 
   fn temp(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("mdsilo-plugins-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir()
+      .join(format!("mdsilo-plugins-{name}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir
@@ -175,7 +177,10 @@ mod tests {
     fs::create_dir_all(&base).unwrap();
 
     let dir = install_in(&base, &src, "csv").unwrap();
-    assert_eq!(fs::read_to_string(Path::new(&dir).join("assets/app.js")).unwrap(), "1");
+    assert_eq!(
+      fs::read_to_string(Path::new(&dir).join("assets/app.js")).unwrap(),
+      "1"
+    );
     let listed = list_in(&base);
     assert_eq!(listed.len(), 1);
     assert_eq!(listed[0].id, "csv");

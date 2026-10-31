@@ -1,8 +1,8 @@
-import { invoke } from '@tauri-apps/api/core';
+import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
 import {
   disablePlugin, enabledPlugins, enablePlugin, grantedPermissions, installPlugin, isEnabled,
-  loadPlugins, readPlugin, uninstallPlugin,
+  loadPlugins, netPlugins, pluginUrl, readPlugin, uninstallPlugin,
 } from './registry';
 
 const manifest = (more: Record<string, unknown> = {}) => JSON.stringify({
@@ -110,5 +110,33 @@ describe('enabling', () => {
     await loadPlugins();
     expect(isEnabled(plugin())).toBe(false);
     expect(() => enablePlugin(plugin())).toThrow('No manifest.json');
+  });
+});
+
+describe('pluginUrl', () => {
+  it('puts the id and the path after the base of the scheme', () => {
+    vi.mocked(convertFileSrc).mockImplementationOnce((path, protocol) => `${protocol}://localhost/${path}`);
+    expect(pluginUrl('csv', 'a b/index.html')).toBe('mdsplugin://localhost/csv/a%20b/index.html');
+  });
+
+  it('serves the Windows form as well', () => {
+    vi.mocked(convertFileSrc).mockImplementationOnce((path, protocol) => `http://${protocol}.localhost/${path}`);
+    expect(pluginUrl('csv')).toBe('http://mdsplugin.localhost/csv/');
+  });
+});
+
+describe('netPlugins', () => {
+  it('lists the enabled plugins granted the network', async () => {
+    folders = [
+      { id: 'a', dir: '/data/a', manifest: manifest({ id: 'a', permissions: ['net'] }) },
+      { id: 'b', dir: '/data/b', manifest: manifest({ id: 'b', permissions: ['net'] }) },
+      { id: 'c', dir: '/data/c', manifest: manifest({ id: 'c', permissions: ['net'] }) },
+    ];
+    const [a, b, c] = await loadPlugins();
+    enablePlugin(a);
+    enablePlugin(b, []);
+    enablePlugin(c);
+    disablePlugin('c');
+    expect(netPlugins()).toEqual(['a']);
   });
 });

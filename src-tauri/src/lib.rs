@@ -14,6 +14,7 @@ mod index;
 mod input_method;
 mod models;
 mod paths;
+mod plugin_scheme;
 mod plugins;
 mod publish;
 mod schema;
@@ -57,6 +58,9 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(plugins::inject_plugin())
     .plugin(tauri_plugin_dialog::init())
+    .register_uri_scheme_protocol(plugin_scheme::SCHEME, |_ctx, request| {
+      plugin_scheme::handle(&request)
+    })
     // .plugin(tauri_plugin_updater::Builder::new().build())
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
@@ -98,6 +102,7 @@ pub fn run() {
       custom_plugins::list_plugins,
       custom_plugins::install_plugin,
       custom_plugins::remove_plugin,
+      plugin_scheme::set_plugin_net,
       files::listen_dir,
       files::open_url,
       files::open_link,
