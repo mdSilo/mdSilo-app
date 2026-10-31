@@ -1,6 +1,6 @@
 # Changelog 
 
-## app-v0.7.1 
+## app-v0.8.0 
 
 2026-XX-XX
 

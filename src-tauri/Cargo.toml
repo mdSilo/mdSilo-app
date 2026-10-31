@@ -1,6 +1,6 @@
 [package]
 name = "mdsilo"
-version = "0.7.0"
+version = "0.8.0"
 description = "mdSilo"
 authors = ["dloh"]
 license = "AGPL-3.0-or-later"
@@ -59,7 +59,7 @@ git2 = { version = "0.21.0", default-features = false, features = ["vendored-lib
 windows = { version = "0.62.2", features = ["Media_SpeechSynthesis", "Media_Core", "Storage_Streams", "Foundation", "Foundation_Collections", "Win32_System_Com"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2 = "0.6.4"
+objc2 = "0.6.5"
 objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSString", "NSData"] }
 objc2-avf-audio = { version = "0.3.2", features = ["AVSpeechSynthesis", "AVAudioBuffer", "AVAudioFormat", "AVAudioTypes", "block2"] }
 block2 = "0.6.2"
