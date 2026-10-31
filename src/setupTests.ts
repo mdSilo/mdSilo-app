@@ -36,6 +36,7 @@ vi.mock('@tauri-apps/api/app', () => ({
 vi.mock('@tauri-apps/plugin-dialog', () => ({
   open: vi.fn(async () => null),
   save: vi.fn(async () => null),
+  ask: vi.fn(async () => false),
 }));
 
 // jsdom lacks ResizeObserver, which headlessui and others rely on
@@ -85,6 +86,7 @@ afterEach(async () => {
   const dialog = await import('@tauri-apps/plugin-dialog');
   vi.mocked(dialog.open).mockReset().mockImplementation(async () => null);
   vi.mocked(dialog.save).mockReset().mockImplementation(async () => null);
+  vi.mocked(dialog.ask).mockReset().mockImplementation(async () => false);
   localStorage.clear();
   resetStore();
   // the theme is applied on <html> (useTheme)

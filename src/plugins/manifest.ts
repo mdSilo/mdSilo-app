@@ -13,6 +13,17 @@ export const PERMISSIONS = [
 
 export type Permission = typeof PERMISSIONS[number];
 
+/** What a permission lets a plugin do, to show the user */
+export const PERMISSION_LABELS: Record<Permission, string> = {
+  'file:read': 'Read the file it opens',
+  'file:write': 'Change the file it opens',
+  'notes:read': 'Read your notes',
+  'notes:write': 'Change your notes',
+  'books:read': 'Read your library',
+  'issues:read': 'Read your issues',
+  'net': 'Reach the internet',
+};
+
 export type PluginMode = 'sandboxed' | 'trusted';
 
 /** Opens files of these extensions, in place of the editor or the reader */

@@ -82,3 +82,11 @@ describe('versions', () => {
     expect(supportsApp(parseManifest(minimal), '0.1.0')).toBe(true);
   });
 });
+
+describe('the sample plugins', () => {
+  it('have valid manifests', async () => {
+    const { readFileSync } = await import('node:fs');
+    const text = readFileSync('examples/plugins/csv-viewer/manifest.json', 'utf8');
+    expect(parseManifest(text).contributes.viewers[0].extensions).toEqual(['csv', 'tsv']);
+  });
+});
