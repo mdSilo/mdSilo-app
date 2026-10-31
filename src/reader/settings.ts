@@ -9,7 +9,8 @@ export type PageTheme = 'auto' | 'light' | 'sepia' | 'gray' | 'dark';
  * The writing of a book, chosen for it: as the book says; across, left to
  * right; down, the lines right to left or left to right; across, right to left.
  */
-export type WritingMode = 'auto' | 'horizontal-tb' | 'vertical-rl' | 'vertical-lr' | 'horizontal-rtl';
+export type WritingMode = 
+  'auto' | 'horizontal-tb' | 'vertical-rl' | 'vertical-lr' | 'horizontal-rtl';
 
 /** How books are shown, for all books; kept with the user settings. */
 export type ReaderSettings = {
@@ -151,16 +152,24 @@ const OVER_PAGES = ['readingRuler', 'rulerLines', 'rulerColor', 'rulerOpacity'] 
  * (a translation's language, the highlight remembered) lays nothing out again.
  */
 export const lookKey = (settings: ReaderSettings) =>
-  JSON.stringify({ ...settings, ...Object.fromEntries([...KEPT_ON_RESET, ...OVER_PAGES].map((key) => [key, undefined])) });
+  JSON.stringify({ 
+    ...settings, 
+    ...Object.fromEntries([...KEPT_ON_RESET, ...OVER_PAGES].map((key) => [key, undefined])) 
+  });
 
 /** The settings stored, completed with the defaults (new settings, older versions). */
-export const withDefaults = (settings?: Partial<ReaderSettings> & { ttsVoice?: string }): ReaderSettings => {
+export const withDefaults = (
+  settings?: Partial<ReaderSettings> & { ttsVoice?: string }
+): ReaderSettings => {
   // the voice of the browser, before the engines
   const { ttsVoice, ...rest } = settings ?? {};
   return {
     ...DEFAULT_READER_SETTINGS,
     ...rest,
-    highlightColors: { ...DEFAULT_READER_SETTINGS.highlightColors, ...(settings?.highlightColors ?? {}) },
+    highlightColors: { 
+      ...DEFAULT_READER_SETTINGS.highlightColors, 
+      ...(settings?.highlightColors ?? {}) 
+    },
     ttsVoices: rest.ttsVoices ?? (ttsVoice ? { web: ttsVoice } : {}),
   };
 };

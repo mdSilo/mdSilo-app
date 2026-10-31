@@ -37,8 +37,19 @@ export function themeColors(dark: boolean, pageTheme: PageTheme = 'auto'): Theme
 const SERIF = `'Literata', 'Georgia', 'Noto Serif', 'Songti SC', 'Noto Serif CJK SC', serif`;
 const SANS = `'Inter', 'Helvetica Neue', 'Noto Sans', 'PingFang SC', 'Noto Sans CJK SC', sans-serif`;
 
-export function bookStyles(settings: ReaderSettings, colors: ThemeColors, writingMode: WritingMode = 'auto'): string {
-  const { fontSize, lineHeight, font, justify, hyphenate, invertImages, imageCaptions, codeHighlight } = settings;
+export function bookStyles(
+  settings: ReaderSettings, colors: ThemeColors, writingMode: WritingMode = 'auto'
+): string {
+  const { 
+    fontSize, 
+    lineHeight, 
+    font, 
+    justify, 
+    hyphenate, 
+    invertImages, 
+    imageCaptions, 
+    codeHighlight 
+  } = settings;
   const family = font === 'serif' ? SERIF : font === 'sans-serif' ? SANS : '';
   const { bg, fg, primary, dark } = colors;
   return `

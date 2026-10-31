@@ -111,19 +111,6 @@ export default function Editor(props: Props) {
             }, Math.random() * 500);
           });
         }}
-        onSearchRemote={async (term) => {
-          console.log("search text remote:", term);
-          // Simulate remote search returning SearchResult[]
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              resolve(
-                docSearchResults.filter((result) =>
-                  result.title.toLowerCase().includes(term.toLowerCase())
-                )
-              );
-            }, Math.random() * 500);
-          });
-        }}
         onSearchHashTag={async (term) => {
           console.log("Searched hashtag: ", term);
           // Delay to simulate time taken for remote API request to complete
