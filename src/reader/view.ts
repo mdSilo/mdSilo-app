@@ -24,6 +24,8 @@ export interface FoliateRenderer extends HTMLElement {
   /** the page in the section shown, and its pages; not in a fixed layout */
   page?: number;
   pages?: number;
+  /** the columns of the view, side by side */
+  columnCount?: number;
   atStart?: boolean;
   atEnd?: boolean;
   /** `select`: the anchor selected in the page once there */

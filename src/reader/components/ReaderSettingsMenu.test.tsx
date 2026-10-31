@@ -93,3 +93,22 @@ describe('the settings of a fixed layout', () => {
     expect(screen.queryByText('Two pages')).not.toBeInTheDocument();
   });
 });
+
+describe('the reading ruler', () => {
+  beforeEach(() => store.getState().setReaderSettings(DEFAULT_READER_SETTINGS));
+
+  test('on, its lines, color and opacity; not for a fixed layout', () => {
+    const { unmount } = render(<ReaderSettingsMenu fixedLayout={false} />);
+    expect(screen.queryByText('Ruler lines')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Reading ruler' }));
+    expect(settings().readingRuler).toBe(true);
+    expect(screen.getByText('Ruler lines')).toBeInTheDocument();
+    expect(screen.getByText('Ruler opacity')).toBeInTheDocument();
+    expect(screen.getByLabelText('Ruler green')).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByLabelText('Ruler no color'));
+    expect(settings().rulerColor).toBe('transparent');
+    unmount();
+    render(<ReaderSettingsMenu fixedLayout />);
+    expect(screen.queryByText('Reading ruler')).not.toBeInTheDocument();
+  });
+});

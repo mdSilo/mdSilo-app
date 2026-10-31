@@ -9,6 +9,7 @@ import { useReaderStore } from '../readerStore';
 import { bookDir, pagesDirection, rtlPagesMode, themeColors } from '../styles';
 import { CODE_LANGUAGES, type CodeLanguage } from '../highlight';
 import TranslationSwitches from '../translation/TranslationSwitches';
+import { RULER_COLORS, RULER_SWATCHES } from '../ruler/ruler';
 
 const PAGE_THEMES: [PageTheme, string][] = [
   ['auto', 'As the app'], ['light', 'White'], ['sepia', 'Sepia'], ['gray', 'Gray'], ['dark', 'Dark'],
@@ -181,6 +182,35 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       {settings.clickToTurn ? (
         <Toggle label="Click left to go forward" checked={settings.swapClickArea} onChange={(swapClickArea) => update({ swapClickArea })} />
       ) : null}
+      {fixedLayout ? null : (
+        <>
+          <Toggle label="Reading ruler" checked={settings.readingRuler} onChange={(readingRuler) => update({ readingRuler })} />
+          {settings.readingRuler ? (
+            <>
+              <Range label="Ruler lines" min={1} max={6} value={settings.rulerLines} format={String}
+                onChange={(rulerLines) => update({ rulerLines })} />
+              <div className="flex items-center justify-between gap-2">
+                <span>Ruler color</span>
+                <div className="flex gap-1.5">
+                  {RULER_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      className={`w-5 h-5 rounded-full border border-base-300 ${settings.rulerColor === color ? 'ring-2 ring-primary' : ''}`}
+                      style={{ background: RULER_SWATCHES[color] }}
+                      title={color === 'transparent' ? 'None' : color}
+                      aria-label={`Ruler ${color === 'transparent' ? 'no color' : color}`}
+                      aria-pressed={settings.rulerColor === color}
+                      onClick={() => update({ rulerColor: color })}
+                    />
+                  ))}
+                </div>
+              </div>
+              <Range label="Ruler opacity" min={0.1} max={0.9} step={0.1} value={settings.rulerOpacity}
+                format={(v) => v.toFixed(1)} onChange={(rulerOpacity) => update({ rulerOpacity })} />
+            </>
+          ) : null}
+        </>
+      )}
       <TranslationSwitches />
       <button
         className="self-end btn btn-ghost btn-xs"

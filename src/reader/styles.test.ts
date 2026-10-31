@@ -97,6 +97,8 @@ describe('a fixed layout', () => {
     const key = lookKey(DEFAULT_READER_SETTINGS);
     expect(lookKey({ ...DEFAULT_READER_SETTINGS, translator: 'google', translateTo: 'zh-CN' })).toBe(key);
     expect(lookKey({ ...DEFAULT_READER_SETTINGS, highlightStyle: 'underline' })).toBe(key);
+    // drawn over the pages
+    expect(lookKey({ ...DEFAULT_READER_SETTINGS, readingRuler: true, rulerLines: 3, rulerColor: 'rose' })).toBe(key);
     expect(lookKey({ ...DEFAULT_READER_SETTINGS, fontSize: 20 })).not.toBe(key);
   });
 });

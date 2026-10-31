@@ -22,6 +22,8 @@ import { sentenceRangeAround } from '../vocabulary/vocabulary';
 import { frameOf } from '../annotations/rangeEdit';
 import { ImageViewer, TableViewer } from '../media/MediaViewer';
 import RangeHandles from '../annotations/RangeHandles';
+import ReadingRuler from '../ruler/ReadingRuler';
+import { moveRuler } from '../ruler/ruler';
 import { useBookTranslation } from '../translation/useBookTranslation';
 import DoubleBorder from './DoubleBorder';
 import { placeOf } from './BookPopups';
@@ -313,6 +315,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         chrome.setBarsVisible(false);
         return;
       }
+      if (moveRuler(pane, action, { dir: viewRef.current?.book?.dir, vertical: bookStore.getState().vertical, key: false })) return;
       void turn(viewRef.current, action);
     };
     const onClick = (e: MouseEvent, doc?: Document) => {
@@ -554,7 +557,10 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       const action = keyAction(e);
       if (!action) return;
       e.preventDefault();
-      void runKeyAction(view, action);
+      // the ruler shown moves first; the page turns past its last lines
+      const ruled = 'turn' in action && !action.mode
+        && moveRuler(pane, action.turn, { dir: view.book?.dir, vertical: bookStore.getState().vertical, key: true });
+      if (!ruled) void runKeyAction(view, action);
     };
     // the keys of the window: for the book last used, of the two read side by side
     const onWindowKeydown = (e: KeyboardEvent) => {
@@ -796,6 +802,23 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       />
       {vertical && settings.doubleBorder && !fixed ? (
         <DoubleBorder header={settings.showHeader} footer={settings.showFooter} />
+      ) : null}
+      {settings.readingRuler && opened && !fixed ? (
+        <div className="absolute pointer-events-none" style={inset}>
+          <ReadingRuler
+            pane={pane}
+            view={() => viewRef.current}
+            vertical={vertical}
+            rtl={book.dir === 'rtl'}
+            scrolled={settings.flow === 'scrolled'}
+            lines={settings.rulerLines}
+            opacity={settings.rulerOpacity}
+            color={settings.rulerColor}
+            fontSize={settings.fontSize}
+            lineHeight={settings.lineHeight}
+            background={paper?.bg}
+          />
+        </div>
       ) : null}
       {zoomed?.type === 'image' ? <ImageViewer images={zoomed.images} start={zoomed.start} onClose={closeZoomed} /> : null}
       {zoomed?.type === 'table' ? (

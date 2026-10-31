@@ -66,7 +66,7 @@ Please follow these guidelines when contributing code to mdSilo:
 | `src/publish` | the static site: what to publish, export, push to GitHub Pages; the generator is `packages/publish` |
 | `src/insight` | views across features: graph, chronicle, heatmap, tags, journals |
 
-Inside `src/reader`, the reading engine (opening books, the view, store, settings, styles, page turning) and the reading view's components (`components/`) are at the top; each feature has its own folder with its logic, components and tests: `library`, `annotations` (notes, links, range handles), `lookup`, `vocabulary`, `translation`, `tts`, `media`, `convert` (files and feed articles made EPUBs). A feature's main module is named after its folder (`tts/tts.ts`, imported as `@/reader/tts/tts`).
+Inside `src/reader`, the reading engine (opening books, the view, store, settings, styles, page turning) and the reading view's components (`components/`) are at the top; each feature has its own folder with its logic, components and tests: `library`, `annotations` (notes, links, range handles), `lookup`, `vocabulary`, `translation`, `tts`, `media`, `ruler` (the reading ruler), `convert` (files and feed articles made EPUBs). A feature's main module is named after its folder (`tts/tts.ts`, imported as `@/reader/tts/tts`).
 
 Shared folders (`ui`, `state`, `workspace`, `host`, `lib`) should not import from the feature folders or `shell`. Known exceptions to clean up: the settings and store in `state/` (reader settings, activity), workspace migration (issue files) and `workspace/useOpen` (feed sync).
 

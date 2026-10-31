@@ -1,5 +1,6 @@
 import type { HighlightColor, HighlightStyle } from './annotations/annotations';
 import type { CodeLanguage } from './highlight';
+import type { RulerColor } from './ruler/ruler';
 
 /** The colors of the pages: of the app theme, or of paper. */
 export type PageTheme = 'auto' | 'light' | 'sepia' | 'gray' | 'dark';
@@ -62,6 +63,12 @@ export type ReaderSettings = {
   showFooter: boolean;
   /** written down the page: a double border around the text, as books printed so */
   doubleBorder: boolean;
+  /** a band over a few lines, the rest of the page dimmed; moved by the clicks and the arrows */
+  readingRuler: boolean;
+  rulerLines: number;
+  rulerColor: RulerColor;
+  /** of the dimming, and of the tint of the band */
+  rulerOpacity: number;
   /** the panel of contents and notes; on mobile it starts hidden */
   showSidebar: boolean;
   /** the highlight made by the toolbar, and the color of each style */
@@ -107,6 +114,10 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   showHeader: true,
   showFooter: true,
   doubleBorder: true,
+  readingRuler: false,
+  rulerLines: 2,
+  rulerColor: 'green',
+  rulerOpacity: 0.6,
   showSidebar: true,
   highlightStyle: 'highlight',
   highlightColors: { highlight: 'yellow', underline: 'green', squiggly: 'blue' },
@@ -132,12 +143,15 @@ export const KEPT_ON_RESET = [
   'showSidebar', 'highlightStyle', 'highlightColors', 'ttsEngine', 'ttsVoices', 'ttsRate', 'translator', 'translateTo',
 ] as const;
 
+/** The settings drawn over the pages, not in them: reset, but nothing laid out again. */
+const OVER_PAGES = ['readingRuler', 'rulerLines', 'rulerColor', 'rulerOpacity'] as const;
+
 /**
  * The settings about the look of the pages, as a key: a change of the others
  * (a translation's language, the highlight remembered) lays nothing out again.
  */
 export const lookKey = (settings: ReaderSettings) =>
-  JSON.stringify({ ...settings, ...Object.fromEntries(KEPT_ON_RESET.map((key) => [key, undefined])) });
+  JSON.stringify({ ...settings, ...Object.fromEntries([...KEPT_ON_RESET, ...OVER_PAGES].map((key) => [key, undefined])) });
 
 /** The settings stored, completed with the defaults (new settings, older versions). */
 export const withDefaults = (settings?: Partial<ReaderSettings> & { ttsVoice?: string }): ReaderSettings => {
