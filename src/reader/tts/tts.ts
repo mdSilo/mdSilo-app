@@ -52,7 +52,9 @@ type TTSStore = {
 export const useTTS = create<TTSStore>((set) => ({
   status: 'idle',
   active: false,
-  setStatus: (status) => set(status === 'playing' ? { status, active: true, error: undefined } : { status }),
+  setStatus: (status) => set(
+    status === 'playing' ? { status, active: true, error: undefined } : { status }
+  ),
   setError: (error) => set({ error }),
 }));
 
@@ -61,7 +63,10 @@ const HIGHLIGHT = 'mdsilo-tts';
 /** Highlight the sentence read (CSS Custom Highlight API, where supported). */
 function highlight(range: Range | undefined) {
   const win = range?.startContainer.ownerDocument?.defaultView as
-    | (Window & { CSS?: { highlights?: Map<string, unknown> }; Highlight?: new (r: Range) => unknown })
+    | (Window & { 
+        CSS?: { highlights?: Map<string, unknown> }; 
+        Highlight?: new (r: Range) => unknown 
+      })
     | undefined;
   if (!range || !win?.CSS?.highlights || !win.Highlight) return;
   win.CSS.highlights.set(HIGHLIGHT, new win.Highlight(range));
@@ -232,7 +237,8 @@ export class TTSController {
   }
 
   private async nextSection(): Promise<boolean> {
-    const renderer = this.view.renderer as { nextSection?: () => Promise<void>; primaryIndex: number };
+    const renderer = 
+      this.view.renderer as { nextSection?: () => Promise<void>; primaryIndex: number };
     const before = renderer.primaryIndex;
     if (renderer.nextSection) await renderer.nextSection();
     else await this.view.next();

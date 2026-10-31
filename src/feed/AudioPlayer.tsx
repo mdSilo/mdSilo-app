@@ -64,7 +64,9 @@ export default function AudioPlayer(props: Props) {
         onPlay={() => { setPaused(false); playing('podcast'); }}
         onPause={() => setPaused(true)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => { setDuration(e.currentTarget.duration); e.currentTarget.playbackRate = rate; }}
+        onLoadedMetadata={(e) => { 
+          setDuration(e.currentTarget.duration); e.currentTarget.playbackRate = rate; 
+        }}
         onDurationChange={(e) => setDuration(e.currentTarget.duration)}
         onEnded={playNextTrack}
         onError={playNextTrack}
@@ -99,7 +101,11 @@ export default function AudioPlayer(props: Props) {
           store.getState().setCurrentPod(null);
         }}
       >
-        <button className="btn btn-ghost btn-xs btn-circle" title="Playlist" onClick={TriggerPlaylist}>
+        <button 
+          className="btn btn-ghost btn-xs btn-circle" 
+          title="Playlist" 
+          onClick={TriggerPlaylist}
+        >
           <IconPlaylist />
         </button>
       </MediaControls>

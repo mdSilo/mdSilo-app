@@ -16,7 +16,8 @@ function useFraction(view: ReturnType<typeof getView>) {
   useEffect(() => {
     if (!view) return;
     setFraction(view.lastLocation?.fraction ?? 0);
-    const onRelocate = (e: Event) => setFraction((e as CustomEvent<{ fraction?: number }>).detail?.fraction ?? 0);
+    const onRelocate = 
+      (e: Event) => setFraction((e as CustomEvent<{ fraction?: number }>).detail?.fraction ?? 0);
     view.addEventListener('relocate', onRelocate);
     return () => view.removeEventListener('relocate', onRelocate);
   }, [view]);
@@ -112,7 +113,11 @@ function TTSControls() {
             {shown.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
           </select>
         ) : null}
-        <button className="btn btn-ghost btn-xs btn-circle" title="Speech engines" onClick={() => usePlayer.getState().setSettingsOpen(true)}>
+        <button 
+          className="btn btn-ghost btn-xs btn-circle" 
+          title="Speech engines" 
+          onClick={() => usePlayer.getState().setSettingsOpen(true)}
+        >
           <TbSettings />
         </button>
       </MediaControls>

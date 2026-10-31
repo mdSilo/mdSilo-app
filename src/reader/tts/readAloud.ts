@@ -28,7 +28,8 @@ export function readAloud(from?: Range, pane?: Pane) {
   return readerAloud(getView(pane))?.start(from);
 }
 
-const hasEngine = (state: ReturnType<typeof useEngines.getState>) => state.engines.some((e) => e.available);
+const hasEngine = 
+  (state: ReturnType<typeof useEngines.getState>) => state.engines.some((e) => e.available);
 
 /** An engine is there to read aloud. */
 export const canReadAloud = () => hasEngine(useEngines.getState());
@@ -38,6 +39,7 @@ export const useCanReadAloud = () => useEngines(hasEngine);
 useTTS.subscribe((state, prev) => {
   if (state.status === 'playing' && prev.status !== 'playing') playing('tts');
 });
+
 onPauseRequest('tts', () => {
   const view = ttsView();
   if (view && useTTS.getState().status === 'playing') readerAloud(view)?.pause();

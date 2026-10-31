@@ -548,7 +548,11 @@ const BottomSection = () => {
   return (
     <div className={isHorizontal ? 'flex' : 'flex flex-col'}>
       <PlayerButton />
-      <SyncButton className={btnClass} iconClassName={btnIconClass} tooltipPlacement={tooltipPlacement} />
+      <SyncButton 
+        className={btnClass} 
+        iconClassName={btnIconClass} 
+        tooltipPlacement={tooltipPlacement} 
+      />
       <SettingsButton />
     </div>
   )
@@ -559,16 +563,25 @@ const PlayerButton = () => {
   const tooltipPlacement = useTooltipPlacement();
   const shown = usePlayer((state) => state.shown);
   const reading = useTTS((state) => state.active);
-  const hasPod = useStore((state) => Boolean(state.currentPod));
+  const playingPod = useStore((state) => state.currentPod); // TODO: show the title
+  const hasPod = Boolean(playingPod);
+  const tooltipContent = 
+    `${shown ? 'Hide' : 'Show'} ${hasPod || reading ? ' | ' : ''} ${hasPod ? 'Podcast' : reading ? 'Read aloud' : ''}`;
   return (
     <MenuItem isHighlighted={shown}>
-      <Tooltip content={shown ? 'Hide the player' : 'Show the player'} placement={tooltipPlacement}>
+      <Tooltip 
+        content={tooltipContent} 
+        placement={tooltipPlacement}
+      >
         <button
           aria-label="Player"
           className={btnClass}
           onClick={() => usePlayer.getState().setShown(!shown)}
         >
-          <TbHeadphones size={22} className={reading || hasPod ? 'shrink-0 mx-px text-primary' : btnIconClass} />
+          <TbHeadphones 
+            size={22} 
+            className={reading || hasPod ? 'shrink-0 mx-px text-primary' : btnIconClass} 
+          />
         </button>
       </Tooltip>
     </MenuItem>

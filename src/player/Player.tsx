@@ -61,7 +61,11 @@ function Player() {
         {!reading && !hasPod ? (
           <div className="flex items-center gap-2 text-xs text-base-content/60">
             <span className="flex-1">Nothing playing: read a book aloud, or play a podcast</span>
-            <button className="btn btn-ghost btn-xs btn-circle" title="Speech engines" onClick={() => usePlayer.getState().setSettingsOpen(true)}>
+            <button 
+              className="btn btn-ghost btn-xs btn-circle" 
+              title="Speech engines" 
+              onClick={() => usePlayer.getState().setSettingsOpen(true)}
+            >
               <TbSettings />
             </button>
             <button className="btn btn-ghost btn-xs btn-circle" title="Hide" onClick={() => usePlayer.getState().setShown(false)}>
@@ -71,7 +75,10 @@ function Player() {
         ) : null}
       </div>
       {/* out of the player: not hidden with it */}
-      <SpeechSettings isOpen={settingsOpen} handleClose={() => usePlayer.getState().setSettingsOpen(false)} />
+      <SpeechSettings 
+        isOpen={settingsOpen} 
+        handleClose={() => usePlayer.getState().setSettingsOpen(false)} 
+      />
     </>
   );
 }

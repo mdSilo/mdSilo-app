@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import {
   TbPlayerPause, TbPlayerPlay, TbPlayerSkipBack, TbPlayerSkipForward, TbPlayerStop, TbX,
 } from 'react-icons/tb';
+import { MdMinimize } from "react-icons/md";
+import { usePlayer } from './playerStore';
 
 export const RATES = [0.75, 1, 1.25, 1.5, 2];
 
@@ -47,27 +49,63 @@ const button = 'btn btn-ghost btn-xs btn-circle';
 /** The controls of a source of the player, the same for each. */
 export default function MediaControls(props: Props) {
   const {
-    title, playing, onPlay, onPause, onPrev, onNext, prevTitle = 'Previous', nextTitle = 'Next',
-    onStop, progress, rate, onRate, children, onClose, testId,
+    title, 
+    playing, 
+    onPlay, 
+    onPause, 
+    onPrev, 
+    onNext, 
+    prevTitle = 'Previous', 
+    nextTitle = 'Next',
+    onStop, 
+    progress, 
+    rate, 
+    onRate, 
+    children, 
+    onClose, 
+    testId,
   } = props;
   return (
     <div className="flex flex-col w-full gap-0.5" data-testid={testId}>
       <div className="flex items-center gap-1 min-w-0">
         <div className="flex-1 min-w-0 text-xs truncate">{title}</div>
         {children}
+        <button 
+          className={button} 
+          title="Hide" 
+          onClick={() => usePlayer.getState().setShown(false)}
+        >
+          <MdMinimize />
+        </button>
         {onClose ? (
           <button className={button} title="Close" onClick={onClose}><TbX /></button>
         ) : null}
       </div>
       <div className="flex items-center gap-1">
-        {onPrev ? <button className={button} title={prevTitle} onClick={onPrev}><TbPlayerSkipBack /></button> : null}
+        {onPrev ? (
+          <button className={button} title={prevTitle} onClick={onPrev}>
+            <TbPlayerSkipBack />
+          </button>
+        ) : null}
         {playing ? (
-          <button className={`${button} btn-primary btn-soft`} title="Pause" onClick={onPause}><TbPlayerPause /></button>
+          <button className={`${button} btn-primary btn-soft`} title="Pause" onClick={onPause}>
+            <TbPlayerPause />
+          </button>
         ) : (
-          <button className={`${button} btn-primary btn-soft`} title="Play" onClick={onPlay}><TbPlayerPlay /></button>
+          <button className={`${button} btn-primary btn-soft`} title="Play" onClick={onPlay}>
+            <TbPlayerPlay />
+          </button>
         )}
-        {onNext ? <button className={button} title={nextTitle} onClick={onNext}><TbPlayerSkipForward /></button> : null}
-        {onStop ? <button className={button} title="Stop" onClick={onStop}><TbPlayerStop /></button> : null}
+        {onNext ? (
+          <button className={button} title={nextTitle} onClick={onNext}>
+            <TbPlayerSkipForward />
+          </button>
+        ) : null}
+        {onStop ? (
+          <button className={button} title="Stop" onClick={onStop}>
+            <TbPlayerStop />
+          </button>
+        ) : null}
         {progress ? (
           <>
             <input
@@ -81,7 +119,9 @@ export default function MediaControls(props: Props) {
               title={progress.title}
               onChange={(e) => progress.onSeek(Number(e.target.value))}
             />
-            <span className="text-xs tabular-nums whitespace-nowrap text-base-content/70">{progress.label}</span>
+            <span className="text-xs tabular-nums whitespace-nowrap text-base-content/70">
+              {progress.label}
+            </span>
           </>
         ) : <div className="flex-1" />}
         <select
