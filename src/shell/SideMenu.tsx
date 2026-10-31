@@ -563,14 +563,21 @@ const PlayerButton = () => {
   const tooltipPlacement = useTooltipPlacement();
   const shown = usePlayer((state) => state.shown);
   const reading = useTTS((state) => state.active);
-  const playingPod = useStore((state) => state.currentPod); // TODO: show the title
-  const hasPod = Boolean(playingPod);
-  const tooltipContent = 
-    `${shown ? 'Hide' : 'Show'} ${hasPod || reading ? ' | ' : ''} ${hasPod ? 'Podcast' : reading ? 'Read aloud' : ''}`;
+  const pod = useStore((state) => state.currentPod);
+  const hasPod = Boolean(pod);
+
+  // const book = useTTS((state) => state.book);
+  // const pbTitle = hasPod 
+  //   ? `Podcast${pod ? `: ${pod.title}` : ''}` 
+  //   : reading 
+  //     ? `Read aloud${book ? `: ${book}` : ''}` 
+  //     : '';
+  // const tooltipContent = `${shown ? 'Hide' : 'Show'} ${hasPod || reading ? ' | ' : ''} ${pbTitle}`;
+
   return (
     <MenuItem isHighlighted={shown}>
       <Tooltip 
-        content={tooltipContent} 
+        content={shown ? 'Hide' : 'Show'} 
         placement={tooltipPlacement}
       >
         <button

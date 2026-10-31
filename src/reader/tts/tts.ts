@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Speech } from '@/speech/speech';
+import { formatLanguageMap } from '../document';
 import type { FoliateView, TTSApi } from '../view';
 
 /**
@@ -45,8 +46,11 @@ type TTSStore = {
   active: boolean;
   /** why the reading stopped, if it failed */
   error?: string;
+  /** the title of the book read aloud */
+  book?: string;
   setStatus: (status: TTSStatus) => void;
   setError: (error?: string) => void;
+  setBook: (book?: string) => void;
 };
 
 export const useTTS = create<TTSStore>((set) => ({
@@ -56,6 +60,7 @@ export const useTTS = create<TTSStore>((set) => ({
     status === 'playing' ? { status, active: true, error: undefined } : { status }
   ),
   setError: (error) => set({ error }),
+  setBook: (book) => set({ book }),
 }));
 
 const HIGHLIGHT = 'mdsilo-tts';
@@ -258,6 +263,7 @@ export function ttsOf(
   if (controller?.view === view) return controller.tts;
   controller?.tts.stop();
   controller = { view, tts: new TTSController(view, speech, options) };
+  useTTS.getState().setBook(formatLanguageMap(view.book?.metadata?.title) || undefined);
   return controller.tts;
 }
 
@@ -268,5 +274,5 @@ export const ttsView = () => controller?.view;
 export function stopTTS() {
   controller?.tts.stop();
   controller = undefined;
-  useTTS.setState({ active: false, error: undefined });
+  useTTS.setState({ active: false, error: undefined, book: undefined });
 }

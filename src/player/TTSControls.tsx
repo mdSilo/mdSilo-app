@@ -2,7 +2,6 @@ import { memo, useEffect, useState } from 'react';
 import { TbSettings } from 'react-icons/tb';
 import { useStore } from '@/state/store';
 import { speechOf, useEngines, voicesOf, type Voice } from '@/speech/speech';
-import { formatLanguageMap } from '@/reader/document';
 import { withDefaults } from '@/reader/settings';
 import { stopTTS, ttsView, useTTS } from '@/reader/tts/tts';
 import { readerAloud, ttsEngine } from '@/reader/tts/readAloud';
@@ -28,6 +27,7 @@ function useFraction(view: ReturnType<typeof getView>) {
 function TTSControls() {
   const status = useTTS((state) => state.status);
   const error = useTTS((state) => state.error);
+  const book = useTTS((state) => state.book);
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const setReaderSettings = useStore((state) => state.setReaderSettings);
   const engines = useEngines((state) => state.engines);
@@ -57,12 +57,10 @@ function TTSControls() {
       void tts()?.resume();
     }
   };
-  const title = view ? formatLanguageMap(view.book?.metadata?.title) : '';
-
   return (
     <div className="flex flex-col w-full gap-0.5" data-testid="tts-bar">
       <MediaControls
-        title={title ? `Read aloud: ${title}` : 'Read aloud'}
+        title={book ? `Read aloud: ${book}` : 'Read aloud'}
         playing={status === 'playing'}
         onPlay={() => void (status === 'paused' ? tts()?.resume() : tts()?.start())}
         onPause={() => tts()?.pause()}
