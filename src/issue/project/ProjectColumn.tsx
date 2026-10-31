@@ -94,7 +94,7 @@ export default function ProjectColumn(props: Props) {
               : 'Make this a Done column: items moved here are closed, and closed issues move here'
           }
           className={`flex items-center gap-1 text-xs ${
-            status.closes ? 'text-purple-600' : 'text-base-content/50 opacity-0 group-hover:opacity-100'
+            status.closes ? 'text-secondary' : 'text-base-content/50 opacity-0 group-hover:opacity-100'
           }`}
           onClick={onToggleCloses}
         >

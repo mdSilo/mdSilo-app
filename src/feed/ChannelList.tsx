@@ -47,7 +47,7 @@ export function ChannelList(props: Props) {
                 <span className="text-sm">{unread}</span>
                 {ty === 'rss' 
                   ? <IconRss size={12} className="ml-1 text-orange-500" /> 
-                  : <IconHeadphones size={12} className="ml-1 text-purple-500" />
+                  : <IconHeadphones size={12} className="ml-1 text-secondary" />
                 }
               </span>
             </div>

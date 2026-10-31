@@ -8,12 +8,12 @@ export function StateIcon({ state, size = 18, className }: IconProps) {
   return state === 'open' ? (
     <IconOpen size={size} className={`shrink-0 ${className ?? 'text-success'}`} aria-label="open" />
   ) : (
-    <IconClosed size={size} className={`shrink-0 ${className ?? 'text-purple-600'}`} aria-label="closed" />
+    <IconClosed size={size} className={`shrink-0 ${className ?? 'text-secondary'}`} aria-label="closed" />
   );
 }
 
 export function StateBadge({ state }: { state: IssueState }) {
-  const cls = state === 'open' ? 'bg-success text-success-content' : 'bg-purple-600 text-white';
+  const cls = state === 'open' ? 'bg-success text-success-content' : 'bg-secondary text-secondary-content';
   return (
     <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full ${cls}`}>
       <StateIcon state={state} size={16} className="text-current" />

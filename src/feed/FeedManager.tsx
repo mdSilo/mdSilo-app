@@ -169,7 +169,7 @@ export function FeedManager(props: Props) {
               <span className="flex items-center justify-between">
                 {channel.ty === 'rss' 
                   ? <IconRss size={12} className="mr-1 text-orange-500" /> 
-                  : <IconHeadphones size={12} className="mr-1 text-purple-500" />
+                  : <IconHeadphones size={12} className="mr-1 text-secondary" />
                 }
                 <span className="text-sm">{channel.title}</span>
               </span>

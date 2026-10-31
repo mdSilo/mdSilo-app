@@ -8,25 +8,30 @@ import {tags as t} from "@lezer/highlight"
 
 // Using https://github.com/one-dark/vscode-one-dark-theme/ as reference for the colors
 
-const chalky = "#e5c07b",
-  coral = "#e06c75",
-  cyan = "#56b6c2",
-  invalid = "#ffffff",
-  ivory = "#abb2bf",
-  stone = "#7d8799", // Brightened compared to original to increase contrast
-  malibu = "#61afef",
-  sage = "#98c379",
-  whiskey = "#d19a66",
-  violet = "#c678dd",
-  darkBackground = "#21252b",
-  highlightBackground = "#2c313a",
-  background = "var(--color-base-100)", // the daisyUI theme
-  tooltipBackground = "#353a42",
-  selection = "#3E4451",
-  cursor = "#528bff"
+// the colors of the daisyUI theme, so the code editor follows any theme
+const v = (name: string) => `var(--color-${name})`
+const mix = (name: string, percent: number) =>
+  `color-mix(in oklch, var(--color-${name}) ${percent}%, transparent)`
 
-// The editor theme styles for One Dark.
-export const oneDarkTheme = EditorView.theme({
+const chalky = v("warning"),
+  coral = v("error"),
+  cyan = v("info"),
+  invalid = v("error-content"),
+  ivory = v("base-content"),
+  stone = mix("base-content", 55),
+  malibu = v("secondary"),
+  sage = v("success"),
+  whiskey = v("accent"),
+  violet = v("primary"),
+  darkBackground = v("base-200"),
+  highlightBackground = mix("base-content", 6),
+  background = v("base-100"),
+  tooltipBackground = v("base-200"),
+  selection = mix("primary", 25),
+  cursor = v("base-content")
+
+// The editor theme styles, after One Dark, in the colors of the app theme.
+const themeStyles = {
   "&": {
     color: ivory,
     backgroundColor: background
@@ -40,23 +45,23 @@ export const oneDarkTheme = EditorView.theme({
   "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": {backgroundColor: selection},
 
   ".cm-panels": {backgroundColor: darkBackground, color: ivory},
-  ".cm-panels.cm-panels-top": {borderBottom: "2px solid black"},
-  ".cm-panels.cm-panels-bottom": {borderTop: "2px solid black"},
+  ".cm-panels.cm-panels-top": {borderBottom: `2px solid ${v("base-300")}`},
+  ".cm-panels.cm-panels-bottom": {borderTop: `2px solid ${v("base-300")}`},
 
   ".cm-searchMatch": {
-    backgroundColor: "#72a1ff59",
-    outline: "1px solid #457dff"
+    backgroundColor: mix("warning", 35),
+    outline: `1px solid ${v("warning")}`
   },
   ".cm-searchMatch.cm-searchMatch-selected": {
-    backgroundColor: "#6199ff2f"
+    backgroundColor: mix("warning", 20)
   },
 
   ".cm-activeLine": {backgroundColor: highlightBackground},
-  ".cm-selectionMatch": {backgroundColor: "#aafe661a"},
+  ".cm-selectionMatch": {backgroundColor: mix("success", 15)},
 
   "&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket": {
-    backgroundColor: "#bad0f847",
-    outline: "1px solid #515a6b"
+    backgroundColor: mix("info", 25),
+    outline: `1px solid ${stone}`
   },
 
   ".cm-gutters": {
@@ -72,7 +77,7 @@ export const oneDarkTheme = EditorView.theme({
   ".cm-foldPlaceholder": {
     backgroundColor: "transparent",
     border: "none",
-    color: "#ddd"
+    color: stone
   },
 
   ".cm-tooltip": {
@@ -93,7 +98,10 @@ export const oneDarkTheme = EditorView.theme({
       color: ivory
     }
   }
-}, {dark: true})
+}
+
+export const oneDarkTheme = EditorView.theme(themeStyles, {dark: true})
+export const oneLightTheme = EditorView.theme(themeStyles, {dark: false})
 
 // The highlighting style for code in the One Dark theme.
 export const oneDarkHighlightStyle = HighlightStyle.define([
@@ -136,3 +144,4 @@ export const oneDarkHighlightStyle = HighlightStyle.define([
 // Extension to enable the One Dark theme (both the editor theme and
 // the highlight style).
 export const oneDark: Extension = [oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)]
+export const oneLight: Extension = [oneLightTheme, syntaxHighlighting(oneDarkHighlightStyle)]
