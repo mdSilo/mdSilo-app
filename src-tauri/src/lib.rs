@@ -5,6 +5,7 @@
 
 mod atomic;
 mod books;
+mod custom_plugins;
 mod db;
 mod feed;
 mod files;
@@ -94,6 +95,9 @@ pub fn run() {
       files::copy_file_to_assets,
       files::delete_files,
       files::list_directory,
+      custom_plugins::list_plugins,
+      custom_plugins::install_plugin,
+      custom_plugins::remove_plugin,
       files::listen_dir,
       files::open_url,
       files::open_link,

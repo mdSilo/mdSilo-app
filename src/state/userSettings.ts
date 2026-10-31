@@ -4,6 +4,7 @@ import { DEFAULT_LIBRARY_SETTINGS, type LibrarySettings } from '@/reader/library
 import { isSystemDark, SYSTEM_THEME } from '@/lib/themes';
 import type { CustomFont } from '@/custom/fonts';
 import type { CustomTheme } from '@/custom/themes';
+import type { InstalledPlugin, PluginState } from '@/plugins/registry';
 import { setter, Setter, Store } from './store';
 
 export enum Sort {
@@ -70,6 +71,12 @@ export type UserSettings = {
   setFont: Setter<string>;
   customFonts: CustomFont[]; // the fonts added by the user, see custom/fonts
   setCustomFonts: Setter<CustomFont[]>;
+  /** the plugins installed on this device, read on startup, not persisted */
+  installedPlugins: InstalledPlugin[];
+  setInstalledPlugins: Setter<InstalledPlugin[]>;
+  /** enabled and granted on this device, by plugin id; never synced, see plugins/registry */
+  pluginStates: Record<string, PluginState>;
+  setPluginStates: Setter<Record<string, PluginState>>;
   fontSize: number;
   setFontSize: Setter<number>;
   fontWt: number;
@@ -153,6 +160,10 @@ const userSettingsSlice = (
   setFont: setter(set, 'font'),
   customFonts: [],
   setCustomFonts: setter(set, 'customFonts'),
+  installedPlugins: [],
+  setInstalledPlugins: setter(set, 'installedPlugins'),
+  pluginStates: {},
+  setPluginStates: setter(set, 'pluginStates'),
   fontSize: 1.1,
   setFontSize: setter(set, 'fontSize'),
   fontWt: 400,

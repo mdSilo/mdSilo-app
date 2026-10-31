@@ -7,6 +7,7 @@ import useHotkeys from '@/lib/hooks/useHotkeys';
 import useTheme from '@/lib/hooks/useTheme';
 import { useCustomFonts } from '@/custom/fonts';
 import { useCustomThemes } from '@/custom/themes';
+import { usePlugins } from '@/plugins/registry';
 import { useStore, onStoreHydrated, SidebarTab } from '@/state/store';
 import { shareSettings } from '@/state/windowSync';
 import { isWeb } from '@/workspace/util';
@@ -29,6 +30,7 @@ const App = () => {
   useTheme();
   useCustomFonts();
   useCustomThemes();
+  usePlugins();
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
