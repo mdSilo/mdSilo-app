@@ -18,6 +18,7 @@
 | `Mod + Shift + P` | Sidebar: Playlist |
 | `Mod + Shift + R` | View: Feeds |
 | `Mod + Shift + L` | View: Library |
+| `Mod + Shift + B` | View: the book last read |
 | `Mod + Shift + I` | View: Issues |
 | `Mod + Shift + T` | View: Tasks |
 | `Mod + Shift + K` | View: Projects |
@@ -51,7 +52,7 @@ The gear at the bottom of the side menu opens the global settings:
 
 - **Theme**: mdSilo light and dark, or follow the system, plus eight built-in themes.
 - **Side menu orientation**: vertical or horizontal.
-- **Open on startup**: the last folder, a fixed folder, or none; and the **view on startup**.
+- **Open on startup**: the last folder, a fixed folder, or none; and the **view on startup**, e.g. the Library or the last book read in that folder.
 
 Settings of one area are kept where you use them: the editor's in the gear of a note (font, size, spell check, attachment folder), the reader's in *Font and layout* of the top bar, the feed's in *Manage Channels and Settings*.
 

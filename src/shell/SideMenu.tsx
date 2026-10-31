@@ -4,7 +4,7 @@ import { ask } from '@tauri-apps/plugin-dialog';
 import { 
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
   TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
-  TbPizza, TbInfoCircle, TbHeadphones, TbCurrentLocation, TbDatabaseExport, TbBooks, TbEraser, TbWorldUpload,
+  TbPizza, TbInfoCircle, TbHeadphones, TbCurrentLocation, TbDatabaseExport, TbBook, TbBooks, TbEraser, TbWorldUpload,
 } from 'react-icons/tb';
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
@@ -44,6 +44,12 @@ export default function SideMenu() {
     (view: ViewAction) => dispatch(view), [dispatch]
   );
 
+  const currentDir = useStore((state) => state.currentDir);
+  // books are in the workspace layout only
+  const hasReading = useStore((state) => state.layout === 'workspace');
+  // the book last read in the workspace, to go back to
+  const lastBook = useStore((state) => state.initDir ? state.lastBooks[state.initDir] : undefined);
+
   const hotkeys = useMemo(
     () => [
       {
@@ -76,14 +82,16 @@ export default function SideMenu() {
         hotkey: 'mod+shift+l',
         callback: () => dispatchView({view: 'library'}),
       },
+      {
+        hotkey: 'mod+shift+b',
+        callback: () => {
+          if (hasReading && lastBook) dispatchView({view: 'book', path: lastBook});
+        },
+      },
     ],
-    [dispatchView]
+    [dispatchView, hasReading, lastBook]
   );
   useHotkeys(hotkeys);
-
-  const currentDir = useStore((state) => state.currentDir);
-  // books are in the workspace layout only
-  const hasReading = useStore((state) => state.layout === 'workspace');
   const orientation = useStore((state) => state.sideMenuOrientation);
   const menuClassName = orientation === 'horizontal'
     ? 'flex flex-row items-center w-full px-1 bg-base-200'
@@ -110,6 +118,9 @@ export default function SideMenu() {
           <FeedButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'feed'})} />
           {hasReading ? (
             <LibraryButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'library'})} />
+          ) : null}
+          {hasReading && lastBook ? (
+            <BookButton viewTy={viewTy} path={lastBook} onDispatch={() => dispatchView({view: 'book', path: lastBook})} />
           ) : null}
           {currentDir ? (
           <>
@@ -300,10 +311,27 @@ const LibraryButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <MenuItem isHighlighted={viewTy === 'library' || viewTy === 'book' || viewTy === 'vocabulary'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === 'library' || viewTy === 'vocabulary'} onClick={onClick}>
       <Tooltip content="Library (Ctrl/⌘+Shift+L)" placement={tooltipPlacement}>
         <button className={btnClass} onClick={onDispatch}>
           <TbBooks size={22} className="shrink-0 mx-px text-base-content/70" />
+        </button>
+      </Tooltip>
+    </MenuItem>
+  );
+}
+
+/** Back to the book last read, where it was left. */
+const BookButton = (props: ButtonProps & { path: string }) => {
+  const tooltipPlacement = useTooltipPlacement();
+  const { viewTy, path, onClick, onDispatch } = props;
+  const name = path.split('/').pop() ?? path;
+
+  return (
+    <MenuItem isHighlighted={viewTy === 'book'} onClick={onClick}>
+      <Tooltip content={`${name} (Ctrl/⌘+Shift+B)`} placement={tooltipPlacement}>
+        <button aria-label="Last Book" className={btnClass} onClick={onDispatch}>
+          <TbBook size={22} className="shrink-0 mx-px text-primary" />
         </button>
       </Tooltip>
     </MenuItem>

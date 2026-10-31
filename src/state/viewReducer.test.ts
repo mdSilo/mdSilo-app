@@ -24,6 +24,18 @@ describe('viewReducer', () => {
     expect(store.getState().isSidebarOpen).toBe(false);
   });
 
+  test('a book is kept as the last book of the workspace', () => {
+    viewEffects({ view: 'book', path: '/ws/reading/a.epub' });
+    expect(store.getState().lastBooks).toEqual({});
+    store.getState().setInitDir('/ws');
+    viewEffects({ view: 'book', path: '/ws/reading/a.epub' });
+    store.getState().setInitDir('/other');
+    viewEffects({ view: 'book', path: '/other/reading/b.epub' });
+    expect(store.getState().lastBooks).toEqual({
+      '/ws': '/ws/reading/a.epub', '/other': '/other/reading/b.epub',
+    });
+  });
+
   test('md view sets params and the current note', () => {
     const params = { noteId: '/a.md', hash: '0-1' };
     expect(viewReducer(initialState, { view: 'md', params })).toEqual({ view: 'md', params });

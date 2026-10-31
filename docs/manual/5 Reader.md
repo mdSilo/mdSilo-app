@@ -30,6 +30,7 @@ Open a book and the page fills the window. The bars appear when you move the mou
 
 - **Turn pages** by clicking the left or right part of the page, with the arrow keys, with the mouse wheel, or with the slider at the bottom. Clicking the middle shows or hides the bars.
 - **Top bar**: back to the Library, contents and notes, bookmark, copy a link to this page, parallel reading, and *Font and layout*.
+- **Back to the book**: once you have read a book in a workspace, an open-book button in the side menu (`Ctrl/Cmd + Shift + B`) takes you back to it, at the page you left. In Settings, *View on Startup* → *Last Book* opens it when mdSilo starts.
 - **Bottom bar**: back and forward in your reading history, previous and next chapter, a progress slider, and the time left in the book.
 - **Contents and notes** (the side panel): the table of contents, your annotations, the in-book search, and the **Links** tab.
 - **Font and layout**: font, size, spacing, margins, page colour (follow the app, white, sepia, grey, dark), paging or scrolling, animation, which header and footer to show, image options and code highlighting.

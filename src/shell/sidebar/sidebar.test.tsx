@@ -652,6 +652,27 @@ describe('SideMenu', () => {
     }
   });
 
+  test('goes back to the book last read in the workspace', async () => {
+    act(() => {
+      store.getState().setLayout('workspace');
+      store.getState().setInitDir('/ws');
+    });
+    renderWithView(withContainer(<><SideMenu /><ViewProbe /></>));
+    expect(screen.queryByRole('button', { name: 'Last Book' })).toBeNull();
+
+    act(() => store.getState().setLastBook('/other', '/other/reading/b.epub'));
+    expect(screen.queryByRole('button', { name: 'Last Book' })).toBeNull();
+    act(() => store.getState().setLastBook('/ws', '/ws/reading/a.epub'));
+    await userEvent.click(screen.getByRole('button', { name: 'Last Book' }));
+    expect(viewState()).toMatchObject({ view: 'book', bookPath: '/ws/reading/a.epub' });
+
+    act(() => store.getState().setLastBook('/ws', '/ws/reading/c.epub'));
+    act(() => {
+      fireEvent.keyDown(document, { key: 'b', keyCode: 66, which: 66, ctrlKey: true, shiftKey: true });
+    });
+    expect(viewState()).toMatchObject({ view: 'book', bookPath: '/ws/reading/c.epub' });
+  });
+
   test('hotkeys switch views', () => {
     renderWithView(withContainer(<><SideMenu /><ViewProbe /></>));
     const press = (key: string, keyCode: number) =>

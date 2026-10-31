@@ -18,13 +18,14 @@ export type SideMenuOrientation = 'auto' | 'vertical' | 'horizontal';
 /** the folder opened on startup */
 export type OpenOnStartup = 'previous' | 'pinned' | 'none';
 
-/** the view shown on startup; explorer: the explorer in the sidebar */
+/** the view shown on startup; explorer: the explorer in the sidebar; book: the book last read */
 export type StartupView =
-  | 'notes' | 'library' | 'feed' | 'issues' | 'project' | 'chronicle' | 'graph' | 'journal';
+  | 'notes' | 'library' | 'book' | 'feed' | 'issues' | 'project' | 'chronicle' | 'graph' | 'journal';
 
 export const STARTUP_VIEWS: [StartupView, string][] = [
   ['notes', 'Explorer'],
   ['library', 'Library'],
+  ['book', 'Last Book'],
   ['feed', 'Feed Reader'],
   ['issues', 'Issues'],
   ['project', 'Projects'],
@@ -85,6 +86,9 @@ export type UserSettings = {
   setOpenOnStartup: Setter<OpenOnStartup>;
   startupView: StartupView;
   setStartupView: Setter<StartupView>;
+  /** the book last read in each workspace, by the folder of the workspace */
+  lastBooks: Record<string, string>;
+  setLastBook: (dir: string, path: string) => void;
   showHistory: boolean,
   setShowHistory: Setter<boolean>;
   readMode: boolean;
@@ -159,6 +163,12 @@ const userSettingsSlice = (
   setOpenOnStartup: setter(set, 'openOnStartup'),
   startupView: 'notes' as StartupView,
   setStartupView: setter(set, 'startupView'),
+  lastBooks: {},
+  setLastBook: (dir: string, path: string) => {
+    set((state) => {
+      state.lastBooks = { ...state.lastBooks, [dir]: path };
+    });
+  },
   showHistory: false,
   setShowHistory:setter(set, 'showHistory'),
   readMode: false,

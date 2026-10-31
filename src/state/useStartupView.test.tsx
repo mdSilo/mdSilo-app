@@ -67,4 +67,25 @@ describe('useStartupView', () => {
     openFolder('legacy');
     expect(result.current.state.view).toBe('default');
   });
+
+  test('opens the last book of the workspace, or the library', () => {
+    store.getState().setStartupView('book');
+    store.getState().setLastBook('/other', '/other/reading/b.epub');
+    const { result, unmount } = renderStartup();
+    openFolder();
+    expect(result.current.state.view).toBe('library');
+    unmount();
+
+    store.getState().setLastBook('/ws', '/ws/reading/a.epub');
+    const next = renderStartup();
+    expect(next.result.current.state).toMatchObject({ view: 'book', bookPath: '/ws/reading/a.epub' });
+  });
+
+  test('opens the last book in a workspace only', () => {
+    store.getState().setStartupView('book');
+    store.getState().setLastBook('/ws', '/ws/reading/a.epub');
+    const { result } = renderStartup();
+    openFolder('legacy');
+    expect(result.current.state.view).toBe('default');
+  });
 });

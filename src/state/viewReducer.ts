@@ -58,6 +58,11 @@ export function viewEffects(action: ViewAction) {
   if (view === 'issue') setWindowTitle(`${issueLabel(action.number)} - mdSilo`);
   else if (view === 'book') setWindowTitle(`${action.path.split('/').pop()} - mdSilo`);
   else setWindowTitle(`${view} - mdSilo`);
+  // to go back to it from the side menu, or on startup
+  if (view === 'book') {
+    const { initDir, setLastBook } = store.getState();
+    if (initDir) setLastBook(initDir, action.path);
+  }
   // the books take the room of the note tree
   if (view === 'library' || view === 'book' || view === 'vocabulary') store.getState().setIsSidebarOpen(false);
 }
