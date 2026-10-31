@@ -20,6 +20,9 @@ export interface ViewState {
   bookPath?: string;
   /** the place to open the book at, a CFI */
   bookCfi?: string;
+  /** a file opened by a plugin, see plugins/ */
+  pluginId?: string;
+  filePath?: string;
 }
 
 export type ViewAction = 
@@ -34,6 +37,7 @@ export type ViewAction =
   | { view: 'library' }
   | { view: 'vocabulary' }
   | { view: 'book'; path: string; cfi?: string }
+  | { view: 'plugin-file'; plugin: string; path: string }
   | {
       view: 'md';
       params: ViewParams;
@@ -56,6 +60,7 @@ export function viewEffects(action: ViewAction) {
   }
   store.getState().setCurrentNoteId('');
   if (view === 'issue') setWindowTitle(`${issueLabel(action.number)} - mdSilo`);
+  else if (view === 'plugin-file') setWindowTitle(`${action.path.split('/').pop()} - mdSilo`);
   else if (view === 'book') setWindowTitle(`${action.path.split('/').pop()} - mdSilo`);
   else setWindowTitle(`${view} - mdSilo`);
   // to go back to it from the side menu, or on startup
@@ -92,6 +97,8 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
       return {view: 'vocabulary'};
     case 'book':
       return {view: 'book', bookPath: action.path, bookCfi: action.cfi};
+    case 'plugin-file':
+      return {view: 'plugin-file', pluginId: action.plugin, filePath: action.path};
     case 'md':
       return {view: 'md', params: action.params};
     case 'tag':

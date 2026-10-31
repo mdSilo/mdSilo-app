@@ -3,7 +3,10 @@ import { getVersion } from '@tauri-apps/api/app';
 import { useEffect } from 'react';
 import { store, useStore } from '@/state/store';
 import { isTauri, joinPath } from '@/workspace/util';
-import { MANIFEST_FILE, parseManifest, supportsApp, type Permission, type PluginManifest } from './manifest';
+import { getFileExt } from '@/workspace/process';
+import {
+  MANIFEST_FILE, parseManifest, supportsApp, type Permission, type PluginManifest, type ViewerContribution,
+} from './manifest';
 
 /**
  * The plugins installed on this device (src-tauri/src/custom_plugins.rs), and
@@ -112,6 +115,20 @@ export const enabledPlugins = (
   plugins = store.getState().installedPlugins,
   states = store.getState().pluginStates,
 ) => plugins.filter((plugin) => isEnabled(plugin, states));
+
+/** The enabled plugins that open files with the extension of `path`. */
+export function viewersOf(
+  path: string,
+  plugins = store.getState().installedPlugins,
+  states = store.getState().pluginStates,
+): { plugin: InstalledPlugin; viewer: ViewerContribution }[] {
+  const ext = getFileExt(path.split(/[/\\]/).pop() ?? '').toLowerCase();
+  if (!ext) return [];
+  return enabledPlugins(plugins, states).flatMap((plugin) =>
+    (plugin.manifest?.contributes.viewers ?? [])
+      .filter((viewer) => viewer.extensions.includes(ext))
+      .map((viewer) => ({ plugin, viewer })));
+}
 
 export const PLUGIN_SCHEME = 'mdsplugin';
 

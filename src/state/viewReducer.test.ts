@@ -36,6 +36,14 @@ describe('viewReducer', () => {
     });
   });
 
+  test('a file opened by a plugin keeps the plugin and the file only', () => {
+    const next = viewReducer({ view: 'book', bookPath: '/a.epub' }, { view: 'plugin-file', plugin: 'csv', path: '/n/a.csv' });
+    expect(next).toEqual({ view: 'plugin-file', pluginId: 'csv', filePath: '/n/a.csv' });
+    store.getState().setCurrentNoteId('/a.md');
+    viewEffects({ view: 'plugin-file', plugin: 'csv', path: '/n/a.csv' });
+    expect(store.getState().currentNoteId).toBe('');
+  });
+
   test('md view sets params and the current note', () => {
     const params = { noteId: '/a.md', hash: '0-1' };
     expect(viewReducer(initialState, { view: 'md', params })).toEqual({ view: 'md', params });

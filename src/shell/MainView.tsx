@@ -22,6 +22,7 @@ const HashTags = lazy(() => import('@/insight/Hashtags'));
 const Library = lazy(() => import('@/reader/library/LibraryView'));
 const Reader = lazy(() => import('@/reader/components/ReaderView'));
 const Vocabulary = lazy(() => import('@/reader/vocabulary/VocabularyView'));
+const PluginFileView = lazy(() => import('@/plugins/PluginFileView'));
 
 /** the view of each view type; any other type is a note */
 const VIEWS: Record<string, ComponentType> = {
@@ -37,6 +38,7 @@ const VIEWS: Record<string, ComponentType> = {
   library: Library,
   book: Reader,
   vocabulary: Vocabulary,
+  'plugin-file': PluginFileView,
 };
 
 export default function MainView() {
