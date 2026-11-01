@@ -1,5 +1,5 @@
 import { memo, useEffect, useState, type RefObject } from 'react';
-import { TbNote } from 'react-icons/tb';
+import { TbNote, TbX } from 'react-icons/tb';
 import { useStore } from '@/state/store';
 import { Spinner } from '@/ui/ui';
 import { runSelectionAction, selectionActionsIn, textOf, type SelectionResult } from '@/plugins/selection';
@@ -48,7 +48,12 @@ function PluginActionPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | nu
 
   return (
     <Popup box={target.selection.box} rootRef={rootRef} testId="plugin-action-popup" height={260} width={360}>
-      <div className="mb-1 text-xs font-semibold uppercase text-base-content/60">{target.title}</div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-semibold uppercase text-base-content/60">{target.title}</span>
+        <button className="btn btn-ghost btn-xs" title="Close" aria-label="Close" onClick={() => usePopups.getState().clear()}>
+          <TbX />
+        </button>
+      </div>
       <div className="overflow-y-auto text-sm max-h-60" style={{ contain: 'paint' }} onClick={openLinkOutside}>
         {error ? (
           <p className="text-error">{error}</p>

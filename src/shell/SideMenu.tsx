@@ -13,7 +13,7 @@ import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useHotkeys from '@/lib/hooks/useHotkeys';
 import { onOpenFile, onListDir, onSave, openJsonFile } from '@/workspace/useOpen';
-import { isWeb } from '@/workspace/util';
+import { isTauri, isWeb } from '@/workspace/util';
 import { store, useStore } from '@/state/store';
 import type { SideMenuOrientation } from '@/state/userSettings';
 import { isMobile } from '@/lib/helper';
@@ -131,8 +131,8 @@ export default function SideMenu() {
             <ProjectButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'project'})} />
             <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
             <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
-            <PluginsButton viewTy={viewTy} onDispatch={dispatchView} />
           </>) : null}
+          {isTauri ? <PluginsButton viewTy={viewTy} hasWorkspace={Boolean(currentDir)} onDispatch={dispatchView} /> : null}
           <FileButton />
         </div>
         <div className={bottomClassName}>
@@ -413,14 +413,16 @@ const ProjectButton = (props: ButtonProps) => {
   );
 };
 
-/** The views of the enabled plugins, in one menu */
-const PluginsButton = ({ viewTy, onDispatch }: { viewTy: string; onDispatch: (view: ViewAction) => void }) => {
+/** The plugins: their views (of a workspace), and the plugin manager */
+const PluginsButton = ({ viewTy, hasWorkspace, onDispatch }: {
+  viewTy: string; hasWorkspace: boolean; onDispatch: (view: ViewAction) => void;
+}) => {
   const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
-  const views = pluginViews(installedPlugins, pluginStates);
-  if (views.length === 0) return null;
+  const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
+  const views = hasWorkspace ? pluginViews(installedPlugins, pluginStates) : [];
 
   return (
     <MenuItem isHighlighted={viewTy === 'plugin'}>
@@ -441,6 +443,10 @@ const PluginsButton = ({ viewTy, onDispatch }: { viewTy: string; onDispatch: (vi
             <span className="ml-auto pl-2 text-xs truncate text-base-content/60">{plugin.manifest?.name}</span>
           </DropdownItem>
         ))}
+        <DropdownItem className={views.length ? 'border-t border-base-300' : ''} onClick={() => setIsPluginsOpen(true)}>
+          <TbSettings size={18} className="mr-1" />
+          <span>Manage Plugins</span>
+        </DropdownItem>
       </Dropdown>
     </MenuItem>
   );

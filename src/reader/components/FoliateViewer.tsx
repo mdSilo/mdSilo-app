@@ -8,7 +8,7 @@ import {
   pagesDirection, setBookDir, setSpread, themeColors,
 } from '../styles';
 import { storeOf } from '../readerStore';
-import { boxOfRange, usePopups, type Box } from '../popups';
+import { boxOfRange, isPopupShown, usePopups, type Box } from '../popups';
 import { activePane, setActivePane, setView, type FoliateView, type Pane } from '../view';
 import { useReaderChrome } from '../chrome';
 import {
@@ -261,7 +261,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
       downAt = Date.now();
       pressed = true;
       const popups = usePopups.getState();
-      popupAtDown = Boolean(popups.selection || popups.annotation || popups.lookup || popups.footnote);
+      popupAtDown = isPopupShown(popups);
       if (popupAtDown) popups.clear();
     };
     const onPointerUp = () => {
@@ -456,7 +456,7 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
         clearTimeout(hoverTimer);
         hoverTimer = undefined;
         // not over another popup, nor the note shown already
-        const shown = popups.selection || popups.lookup || popups.footnote || popups.annotation;
+        const shown = isPopupShown(popups);
         if (!shown || (popups.annotation?.hover && popups.annotation.id !== note.id)) {
           popups.setAnnotation({ id: note.id, box: windowBox(doc, rect), bubble: true, hover: 'bubble' });
         }

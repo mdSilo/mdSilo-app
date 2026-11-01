@@ -8,6 +8,7 @@ import useTheme from '@/lib/hooks/useTheme';
 import { useCustomFonts } from '@/custom/fonts';
 import { useCustomThemes } from '@/custom/themes';
 import { usePlugins } from '@/plugins/registry';
+import { PluginsModal } from '@/plugins/PluginManager';
 import { useStore, onStoreHydrated, SidebarTab } from '@/state/store';
 import { shareSettings } from '@/state/windowSync';
 import { isWeb } from '@/workspace/util';
@@ -131,6 +132,7 @@ const App = () => {
             isOpen={isAboutOpen}
             handleClose={() => setIsAboutOpen(false)} 
           />
+          <PluginsModal />
         </div>
       </div>
     </ProvideCurrentView>

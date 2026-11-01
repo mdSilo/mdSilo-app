@@ -7,9 +7,9 @@ import { SYSTEM_THEME, THEMES } from '@/lib/themes';
 import { Select } from '@/ui/ui';
 import { allCustomThemes } from '@/custom/themes';
 import { BaseModal } from '@/ui/BaseModal';
+import { isTauri } from '@/workspace/util';
 import ThemeEditor from './ThemeEditor';
 import FontsSetting from './FontsSetting';
-import PluginsSetting from './PluginsSetting';
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
   value === 'auto' || value === 'vertical' || value === 'horizontal';
@@ -30,6 +30,7 @@ type Props = {
  * have their own settings, in their views.
  */
 export default function SettingsModal({ isOpen, handleClose }: Props) {
+  const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
 
   const theme = useStore((state) => state.theme);
   const setTheme = useStore((state) => state.setTheme);
@@ -110,7 +111,18 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           ))}
         </Select>
         <FontsSetting />
-        <PluginsSetting />
+        {isTauri ? (
+          <div className="flex items-center justify-between">
+            <span>Plugins</span>
+            <button
+              type="button"
+              className="btn btn-xs"
+              onClick={() => { handleClose(); setIsPluginsOpen(true); }}
+            >
+              Manage Plugins
+            </button>
+          </div>
+        ) : null}
         <p className="mt-2 text-xs text-center text-base-content/70">
           The editor, the reader and the feed reader have their own settings, in their views; the fonts added here show in their font lists.
         </p>

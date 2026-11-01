@@ -5,6 +5,7 @@ import { askPlugin } from '@/plugins/background';
 import { parseManifest } from '@/plugins/manifest';
 import { enablePlugin, type InstalledPlugin } from '@/plugins/registry';
 import { usePopups, type TextSelection } from '../popups';
+import { isPopupShown } from '../popups';
 import PluginActionPopup from './PluginActionPopup';
 
 vi.mock('@/plugins/background', () => ({ askPlugin: vi.fn() }));
@@ -43,6 +44,9 @@ describe('PluginActionPopup', () => {
     expect(await screen.findByText('disorder')).toBeInTheDocument();
     expect(document.querySelector('[data-testid="plugin-action-popup"] script')).toBeNull();
     expect(screen.getByRole('button', { name: /Keep as a note/ })).toBeInTheDocument();
+    act(() => screen.getByRole('button', { name: 'Close' }).click());
+    expect(usePopups.getState().pluginAction).toBeUndefined();
+    expect(screen.queryByTestId('plugin-action-popup')).toBeNull();
     expect(askPlugin).toHaveBeenCalledWith(plugin, 'selection.action', expect.objectContaining({ action: 'explain', text: 'entropy', where: 'reader' }));
   });
 
@@ -59,5 +63,11 @@ describe('PluginActionPopup', () => {
     act(() => usePopups.getState().setPluginAction({ plugin: 'ai', action: 'explain', title: 'Explain', selection }));
     expect(await screen.findByText('The plugin is not enabled')).toBeInTheDocument();
     expect(askPlugin).not.toHaveBeenCalled();
+  });
+
+  it('counts as a popup shown, to close on a click in the book', () => {
+    expect(isPopupShown(usePopups.getState())).toBe(false);
+    usePopups.getState().setPluginAction({ plugin: 'ai', action: 'explain', title: 'Explain', selection });
+    expect(isPopupShown(usePopups.getState())).toBe(true);
   });
 });

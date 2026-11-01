@@ -88,6 +88,9 @@ export type UserSettings = {
   isSettingsOpen: boolean;
   setIsSettingsOpen: Setter<boolean>;
   isAboutOpen: boolean;
+  /** the plugin manager shown, see plugins/PluginManager */
+  isPluginsOpen: boolean;
+  setIsPluginsOpen: Setter<boolean>;
   setIsAboutOpen: Setter<boolean>;
   isFindOrCreateModalOpen: boolean;
   setIsFindOrCreateModalOpen: Setter<boolean>;
@@ -176,6 +179,8 @@ const userSettingsSlice = (
   setIsSettingsOpen: setter(set, 'isSettingsOpen'),
   isAboutOpen: false,
   setIsAboutOpen: setter(set, 'isAboutOpen'),
+  isPluginsOpen: false,
+  setIsPluginsOpen: setter(set, 'isPluginsOpen'),
   isFindOrCreateModalOpen: false,
   setIsFindOrCreateModalOpen: setter(set, 'isFindOrCreateModalOpen'),
   isRTL: false,

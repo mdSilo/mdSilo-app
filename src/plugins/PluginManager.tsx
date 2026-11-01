@@ -2,17 +2,29 @@ import { useState } from 'react';
 import { ask, open } from '@tauri-apps/plugin-dialog';
 import { TbRefresh as IconRefresh, TbTrash as IconTrash } from 'react-icons/tb';
 import { useStore } from '@/state/store';
+import { BaseModal } from '@/ui/BaseModal';
 import { isTauri } from '@/workspace/util';
-import { PERMISSION_LABELS, type Permission } from '@/plugins/manifest';
+import { PERMISSION_LABELS, type Permission } from './manifest';
 import {
   disablePlugin, enablePlugin, grantedPermissions, installPlugin, isEnabled, loadPlugins, uninstallPlugin,
   type InstalledPlugin,
-} from '@/plugins/registry';
+} from './registry';
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
+/** The plugin manager, a dialog of its own: from the Plugins menu of the side menu, or the settings */
+export function PluginsModal() {
+  const isOpen = useStore((state) => state.isPluginsOpen);
+  const setIsOpen = useStore((state) => state.setIsPluginsOpen);
+  return (
+    <BaseModal title="Plugins" isOpen={isOpen} handleClose={() => setIsOpen(false)}>
+      <PluginManager />
+    </BaseModal>
+  );
+}
+
 /** The plugins installed on this device: install, enable with permissions, uninstall. */
-export default function PluginsSetting() {
+export default function PluginManager() {
   const plugins = useStore((state) => state.installedPlugins);
   const [error, setError] = useState('');
 
@@ -34,7 +46,7 @@ export default function PluginsSetting() {
 
   if (!isTauri) {
     return (
-      <div className="flex items-center justify-between" data-testid="plugins-setting">
+      <div className="flex items-center justify-between" data-testid="plugin-manager">
         <span>Plugins</span>
         <span className="text-xs text-base-content/60">In the desktop app</span>
       </div>
@@ -42,7 +54,7 @@ export default function PluginsSetting() {
   }
 
   return (
-    <div className="flex flex-col gap-2" data-testid="plugins-setting">
+    <div className="flex flex-col gap-2" data-testid="plugin-manager">
       <div className="flex items-center justify-between gap-2">
         <span className="flex-1">Plugins</span>
         <button type="button" className="btn btn-ghost btn-xs" aria-label="Reload Plugins" onClick={onReload}>

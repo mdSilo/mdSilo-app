@@ -59,6 +59,10 @@ const NONE = {
   selection: undefined, annotation: undefined, lookup: undefined, pluginAction: undefined, footnote: undefined, adjusting: false,
 };
 
+/** A popup is shown over the book (not counting a range being adjusted) */
+export const isPopupShown = (popups: Pick<Popups, 'selection' | 'annotation' | 'lookup' | 'pluginAction' | 'footnote'>) =>
+  Boolean(popups.selection || popups.annotation || popups.lookup || popups.pluginAction || popups.footnote);
+
 /** The popups over the book: one at a time. */
 export const usePopups = create<Popups>((set) => ({
   setSelection: (selection) => set({ ...NONE, selection }),

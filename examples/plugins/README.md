@@ -1,7 +1,8 @@
 # mdSilo plugins
 
-A plugin is a folder with a `manifest.json` and a page (`index.html` by default). Install it in
-Settings → Plugins → Install from Folder, then enable it and choose what it may do. Plugins are
+A plugin is a folder with a `manifest.json` and a page (`index.html` by default). Install it from the
+Plugins button of the side menu → Manage Plugins → Install from Folder, then enable it and choose
+what it may do. Plugins are
 kept on each device: a plugin is never enabled by a sync.
 
 Two samples here:

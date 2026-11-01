@@ -6,7 +6,8 @@ import { store } from '@/state/store';
 import { mockInvoke } from '@/testUtils';
 import { parseManifest } from '@/plugins/manifest';
 import type { InstalledPlugin } from '@/plugins/registry';
-import PluginsSetting from './PluginsSetting';
+import SettingsModal from '@/shell/settings/SettingsModal';
+import PluginManager, { PluginsModal } from './PluginManager';
 
 vi.mock('@/workspace/util', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/workspace/util')>(),
@@ -28,16 +29,16 @@ beforeEach(() => {
   store.setState({ installedPlugins: [installed(csvManifest)], pluginStates: {} });
 });
 
-describe('PluginsSetting', () => {
+describe('PluginManager', () => {
   it('lists the plugins, what they open', () => {
-    render(<PluginsSetting />);
+    render(<PluginManager />);
     expect(item('csv').getByText('CSV Viewer')).toBeInTheDocument();
     expect(item('csv').getByText('Opens .csv')).toBeInTheDocument();
     expect(item('csv').getByText('Tables')).toBeInTheDocument();
   });
 
   it('enables a plugin with the permissions chosen', async () => {
-    render(<PluginsSetting />);
+    render(<PluginManager />);
     await userEvent.click(screen.getByLabelText('Enable CSV Viewer'));
     expect(store.getState().pluginStates.csv).toBeUndefined();
     expect(item('csv').getByText('CSV Viewer asks to:')).toBeInTheDocument();
@@ -48,7 +49,7 @@ describe('PluginsSetting', () => {
   });
 
   it('enabling can be cancelled', async () => {
-    render(<PluginsSetting />);
+    render(<PluginManager />);
     await userEvent.click(screen.getByLabelText('Enable CSV Viewer'));
     await userEvent.click(item('csv').getByRole('button', { name: 'Cancel' }));
     expect(store.getState().pluginStates.csv).toBeUndefined();
@@ -57,7 +58,7 @@ describe('PluginsSetting', () => {
 
   it('changes the permissions of an enabled plugin, and disables it', async () => {
     store.setState({ pluginStates: { csv: { enabled: true, granted: ['file:read'] } } });
-    render(<PluginsSetting />);
+    render(<PluginManager />);
     await userEvent.click(item('csv').getByLabelText('Change the file it opens'));
     expect(store.getState().pluginStates.csv.granted).toEqual(['file:read', 'file:write']);
     await userEvent.click(screen.getByLabelText('Enable CSV Viewer'));
@@ -66,7 +67,7 @@ describe('PluginsSetting', () => {
 
   it('enables a plugin that asks nothing at once', async () => {
     store.setState({ installedPlugins: [installed({ id: 'clock', name: 'Clock', version: '1.0.0' })] });
-    render(<PluginsSetting />);
+    render(<PluginManager />);
     await userEvent.click(screen.getByLabelText('Enable Clock'));
     expect(store.getState().pluginStates.clock).toEqual({ enabled: true, granted: [] });
   });
@@ -78,7 +79,7 @@ describe('PluginsSetting', () => {
         installed({ id: 'deep', name: 'Deep', version: '1.0.0', mode: 'trusted' }),
       ],
     });
-    render(<PluginsSetting />);
+    render(<PluginManager />);
     expect(screen.getByLabelText('Enable Old')).toBeDisabled();
     expect(screen.getByText('Needs mdSilo 9.0.0 or later')).toBeInTheDocument();
     expect(screen.getByLabelText('Enable Deep')).toBeDisabled();
@@ -88,7 +89,7 @@ describe('PluginsSetting', () => {
   it('installs from a folder, and says what is wrong', async () => {
     vi.mocked(open).mockResolvedValueOnce('/src/bad');
     mockInvoke(invoke, { read_file: '{"id":"Bad"}' });
-    render(<PluginsSetting />);
+    render(<PluginManager />);
     await userEvent.click(screen.getByRole('button', { name: 'Install from Folder' }));
     expect(await screen.findByText(/"id" should be/)).toBeInTheDocument();
     expect(invoke).not.toHaveBeenCalledWith('install_plugin', expect.anything());
@@ -108,7 +109,7 @@ describe('PluginsSetting', () => {
     store.setState({ pluginStates: { csv: { enabled: true, granted: ['file:read'] } } });
     mockInvoke(invoke, { remove_plugin: undefined, list_plugins: [] });
     vi.mocked(ask).mockResolvedValueOnce(false);
-    render(<PluginsSetting />);
+    render(<PluginManager />);
     await userEvent.click(screen.getByLabelText('Uninstall CSV Viewer'));
     expect(invoke).not.toHaveBeenCalledWith('remove_plugin', expect.anything());
     vi.mocked(ask).mockResolvedValueOnce(true);
@@ -116,5 +117,13 @@ describe('PluginsSetting', () => {
     await waitFor(() => expect(screen.queryByText('CSV Viewer')).toBeNull());
     expect(invoke).toHaveBeenCalledWith('remove_plugin', { id: 'csv' });
     expect(store.getState().pluginStates).toEqual({});
+  });
+
+  it('is a dialog of its own, opened from the settings too', async () => {
+    render(<><SettingsModal isOpen handleClose={() => store.getState().setIsSettingsOpen(false)} /><PluginsModal /></>);
+    expect(screen.queryByTestId('plugin-manager')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Manage Plugins' }));
+    expect(store.getState().isPluginsOpen).toBe(true);
+    expect(await screen.findByTestId('plugin-manager')).toBeInTheDocument();
   });
 });

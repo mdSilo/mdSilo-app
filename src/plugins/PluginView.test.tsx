@@ -8,6 +8,11 @@ import { parseManifest } from './manifest';
 import { enablePlugin, pluginViews, type InstalledPlugin } from './registry';
 import PluginView from './PluginView';
 
+vi.mock('@/workspace/util', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/workspace/util')>(),
+  isTauri: true,
+}));
+
 const stats: InstalledPlugin = {
   id: 'stats',
   dir: '/data/stats',
@@ -34,9 +39,21 @@ describe('the views of plugins', () => {
     expect(pluginViews().map(({ view }) => view.id)).toEqual(['reading', 'notes']);
   });
 
-  it('has no menu without a view', () => {
+  it('has the plugin manager in the menu, without views', async () => {
     renderWithView(<div id="app-container"><SideMenu /></div>);
-    expect(screen.queryByRole('button', { name: 'Plugins' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Plugins' }));
+    expect(screen.queryByText('Reading Stats')).toBeNull();
+    await userEvent.click(screen.getByText('Manage Plugins'));
+    expect(store.getState().isPluginsOpen).toBe(true);
+  });
+
+  it('lists no view without a workspace', async () => {
+    enablePlugin(stats);
+    store.getState().setCurrentDir('');
+    renderWithView(<div id="app-container"><SideMenu /></div>);
+    await userEvent.click(screen.getByRole('button', { name: 'Plugins' }));
+    expect(screen.queryByText('Reading Stats')).toBeNull();
+    expect(screen.getByText('Manage Plugins')).toBeInTheDocument();
   });
 
   it('opens a view from the side menu, on its own page', async () => {
