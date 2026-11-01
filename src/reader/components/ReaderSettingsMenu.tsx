@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { useStore } from '@/state/store';
 import { Range, Segmented, Select, Toggle } from '@/ui/ui';
+import FontSelect from '@/ui/FontSelect';
 import { CODE_LANGUAGES, HUMAN_LANGUAGES } from '@/lib/constants';
 import {
   DEFAULT_READER_SETTINGS, KEPT_ON_RESET, MAX_ZOOM, MIN_ZOOM, withDefaults, zoomBy,
@@ -158,12 +159,8 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             format={(v) => v.toFixed(1)} 
             onChange={(lineHeight) => update({ lineHeight })} 
           />
-          <Select label="Font" value={settings.font}
-            onChange={(font) => update({ font: font as ReaderSettings['font'] })}>
-            <option value="book">Of the book</option>
-            <option value="serif">Serif</option>
-            <option value="sans-serif">Sans serif</option>
-          </Select>
+          <FontSelect label="Font" value={settings.font} onChange={(font) => update({ font })}
+            defaultOption={['book', 'Of the book']} />
           {hasBook ? (
             <Select 
               label="Writing Mode" 

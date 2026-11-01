@@ -5,6 +5,7 @@ import {
 import { SYSTEM_THEME, THEMES } from '@/lib/themes';
 import { Select } from '@/ui/ui';
 import { BaseModal } from '@/ui/BaseModal';
+import FontsSetting from './FontsSetting';
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
   value === 'auto' || value === 'vertical' || value === 'horizontal';
@@ -79,8 +80,9 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             <option key={view} value={view}>{name}</option>
           ))}
         </Select>
+        <FontsSetting />
         <p className="mt-2 text-xs text-center text-base-content/70">
-          The editor, the reader and the feed reader have their own settings, in their views.
+          The editor, the reader and the feed reader have their own settings, in their views; the fonts added here show in their font lists.
         </p>
       </div>
     </BaseModal>

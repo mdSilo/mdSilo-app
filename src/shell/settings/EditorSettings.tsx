@@ -1,13 +1,6 @@
 import { useStore } from '@/state/store';
-import { NumberInput, Select, Toggle } from '@/ui/ui';
-
-const FONTS = [
-  { name: 'Default', font: '' },
-  { name: 'Sniglet', font: 'Sniglet' },
-  { name: 'RobotoMono', font: 'RobotoMono' },
-  { name: 'Serif', font: 'IBMPlexSerif' },
-  { name: 'SansSerif', font: 'KaTeX_SansSerif' },
-];
+import { NumberInput, Toggle } from '@/ui/ui';
+import FontSelect from '@/ui/FontSelect';
 
 /** How notes are written and shown: font, spacing, direction, assets, spelling. */
 export default function EditorSettings() {
@@ -28,9 +21,8 @@ export default function EditorSettings() {
 
   return (
     <div className="flex flex-col gap-3 p-3 text-sm w-72" data-testid="editor-settings">
-      <Select label="Font" ariaLabel="Editor Font Family" value={font} onChange={setFont}>
-        {FONTS.map((f) => <option key={f.name} value={f.font}>{f.name}</option>)}
-      </Select>
+      <FontSelect label="Font" ariaLabel="Editor Font Family" value={font} onChange={setFont}
+        defaultOption={['', 'Default']} />
       <NumberInput label="Font Size" value={fontSize} step={0.1} digits={1} unit="em"
         onChange={(v) => setFontSize(v || 1.1)} />
       <NumberInput label="Line Height" value={lineHeight} step={0.1} digits={1} unit="em"

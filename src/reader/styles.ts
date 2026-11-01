@@ -1,3 +1,4 @@
+import { fontFaceCss, fontFamilyOf, type CustomFont } from '@/custom/fonts';
 import type { PageTheme, ReaderSettings, WritingMode } from './settings';
 import { ttsStyles } from './tts/tts';
 import { codeStyles } from './highlight';
@@ -34,11 +35,10 @@ export function themeColors(dark: boolean, pageTheme: PageTheme = 'auto'): Theme
   };
 }
 
-const SERIF = `'Literata', 'Georgia', 'Noto Serif', 'Songti SC', 'Noto Serif CJK SC', serif`;
-const SANS = `'Inter', 'Helvetica Neue', 'Noto Sans', 'PingFang SC', 'Noto Sans CJK SC', sans-serif`;
 
 export function bookStyles(
-  settings: ReaderSettings, colors: ThemeColors, writingMode: WritingMode = 'auto'
+  settings: ReaderSettings, colors: ThemeColors, writingMode: WritingMode = 'auto',
+  customFonts: CustomFont[] = []
 ): string {
   const { 
     fontSize, 
@@ -50,10 +50,11 @@ export function bookStyles(
     imageCaptions, 
     codeHighlight 
   } = settings;
-  const family = font === 'serif' ? SERIF : font === 'sans-serif' ? SANS : '';
+  const family = fontFamilyOf(font, customFonts);
   const { bg, fg, primary, dark } = colors;
   return `
     @namespace epub "http://www.idpf.org/2007/ops";
+    ${fontFaceCss(font, customFonts)}
     html {
       color-scheme: ${dark ? 'dark' : 'light'};
       --theme-bg-color: ${bg};

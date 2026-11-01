@@ -29,6 +29,7 @@ import {
 } from '@/workspace/util';
 import { getFileExt } from '@/workspace/process';
 import { useWritingRoot } from '@/workspace/useWorkspace';
+import { fontFamilyOf } from '@/custom/fonts';
 import NoteHeader from './NoteHeader';
 import Backlinks from './backlinks/Backlinks';
 import IssueRefs from './IssueRefs';
@@ -66,6 +67,7 @@ function Note(props: Props) {
 
   const darkMode = useStore((state) => state.darkMode);
   const font = useStore((state) => state.font);
+  const customFonts = useStore((state) => state.customFonts);
   const fontSize = useStore((state) => state.fontSize);
   const fontWt = useStore((state) => state.fontWt);
   const lineHt = useStore((state) => state.lineHeight);
@@ -313,7 +315,7 @@ function Note(props: Props) {
 
   const customTheme = {
     ...EDITOR_THEME,
-    fontFamily: `${font}`,
+    fontFamily: fontFamilyOf(font, customFonts),
     fontScale: [fontSize / 1.1, lineHt / 1.6, fontWt / 400],
   };
 

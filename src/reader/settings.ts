@@ -17,8 +17,8 @@ export type ReaderSettings = {
   /** px */
   fontSize: number;
   lineHeight: number;
-  /** the font of the text: as the book says, or one of the app */
-  font: 'book' | 'serif' | 'sans-serif';
+  /** the font of the text: `book` as the book says, or a font id, see custom/fonts */
+  font: string;
   justify: boolean;
   hyphenate: boolean;
   /** page by page, or one long scroll */
