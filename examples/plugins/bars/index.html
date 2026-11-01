@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Bars</title></head>
+<body>
+<script>
+// Draws ```bars code blocks: one `label: number` per line. The app loads this
+// page in a hidden frame and asks `code.render`, see examples/plugins/README.md
+const escape = (text) => text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+function parse(code) {
+  const rows = [];
+  for (const [i, line] of code.split('\n').entries()) {
+    if (!line.trim()) continue;
+    const match = line.match(/^(.*?):\s*(-?\d+(?:\.\d+)?)\s*$/);
+    if (!match) throw new Error(`Line ${i + 1}: write "label: number"`);
+    rows.push({ label: match[1].trim(), value: Number(match[2]) });
+  }
+  if (!rows.length) throw new Error('No bars: write "label: number" lines');
+  return rows;
+}
+
+function render(code, dark) {
+  const rows = parse(code);
+  const max = Math.max(...rows.map((r) => Math.abs(r.value)), 1);
+  const labelWidth = 120, barWidth = 360, row = 28, width = labelWidth + barWidth + 60;
+  const text = dark ? '#e5e7eb' : '#1f2937';
+  const bar = dark ? '#60a5fa' : '#2563eb';
+  const bars = rows.map((r, i) => {
+    const y = i * row;
+    const w = Math.max(1, (Math.abs(r.value) / max) * barWidth);
+    return `<text x="${labelWidth - 8}" y="${y + 18}" text-anchor="end" fill="${text}">${escape(r.label)}</text>`
+      + `<rect x="${labelWidth}" y="${y + 5}" width="${w}" height="18" rx="3" fill="${bar}"/>`
+      + `<text x="${labelWidth + w + 6}" y="${y + 18}" fill="${text}">${r.value}</text>`;
+  }).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${rows.length * row}" `
+    + `viewBox="0 0 ${width} ${rows.length * row}" font-family="system-ui, sans-serif" font-size="13">${bars}</svg>`;
+}
+
+window.addEventListener('message', (event) => {
+  const msg = event.data;
+  if (event.source !== parent || !msg || msg.mdsilo !== 1 || msg.request === undefined) return;
+  if (msg.method !== 'code.render') {
+    parent.postMessage({ mdsilo: 1, reply: msg.request, error: `Unknown method: ${msg.method}` }, '*');
+    return;
+  }
+  try {
+    const { code, dark } = msg.params;
+    parent.postMessage({ mdsilo: 1, reply: msg.request, result: render(code, dark) }, '*');
+  } catch (e) {
+    parent.postMessage({ mdsilo: 1, reply: msg.request, error: e.message }, '*');
+  }
+});
+</script>
+</body>
+</html>

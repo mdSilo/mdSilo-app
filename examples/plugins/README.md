@@ -8,6 +8,8 @@ Two samples here:
 
 - `csv-viewer/`: install it, enable it, then click a `.csv` file in the explorer.
 - `tag-index/`: a view of the notes by tag; open it from the Plugins button of the side menu.
+- `bars/`: draws ```` ```bars ```` code blocks (`label: number` lines) as a bar chart, in the editor
+  and in the published site.
 
 ## manifest.json
 

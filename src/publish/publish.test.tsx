@@ -7,9 +7,11 @@ import { store } from '@/state/store';
 import { issueStore, resetIssueStore } from '@/issue/issueStore';
 import { defaultIssueData } from '@/issue/issueOps';
 import { makeNote, mockInvoke, resetStore } from '@/testUtils';
+import { parseManifest } from '@/plugins/manifest';
+import { enablePlugin } from '@/plugins/registry';
 import { buildSiteTo, gatherSite, noteFolders, publishSite, readPublishOptions, siteDirOf, usePublishUi } from './publish';
 import PublishModal from './PublishModal';
-import { siteRenderers } from './renderers';
+import { allSiteRenderers, siteRenderers } from './renderers';
 
 const WS = '/ws';
 
@@ -181,6 +183,18 @@ describe('the diagrams drawn', () => {
     expect(svg).toMatch(/^<svg[^>]*viewBox="0 0 720 400"/);
     expect(svg).toContain('<path');
     await expect(siteRenderers.echarts!('not json')).rejects.toThrow();
+  });
+  test('the code blocks of the enabled plugins too, not the built-in ones', () => {
+    const plugin = {
+      id: 'uml', dir: '/data/uml',
+      manifest: parseManifest({ id: 'uml', name: 'UML', version: '1.0.0', contributes: { codeBlocks: ['plantuml', 'mermaid'] } }),
+    };
+    store.setState({ installedPlugins: [plugin], pluginStates: {} });
+    expect(Object.keys(allSiteRenderers()).sort()).toEqual(['echarts', 'mermaid', 'smiles']);
+    enablePlugin(plugin);
+    const renderers = allSiteRenderers();
+    expect(Object.keys(renderers).sort()).toEqual(['echarts', 'mermaid', 'plantuml', 'smiles']);
+    expect(renderers.mermaid).toBe(siteRenderers.mermaid);
   });
 });
 

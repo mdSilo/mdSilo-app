@@ -1,0 +1,11 @@
+{
+  "id": "bars",
+  "name": "Bars",
+  "version": "0.1.0",
+  "minAppVersion": "0.8.0",
+  "author": "mdSilo",
+  "description": "Draws ```bars code blocks, one `label: number` per line, as a bar chart.",
+  "contributes": {
+    "codeBlocks": ["bars"]
+  }
+}

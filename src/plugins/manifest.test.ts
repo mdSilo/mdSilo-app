@@ -99,5 +99,7 @@ describe('the sample plugins', () => {
     expect(parseManifest(text).contributes.viewers[0].extensions).toEqual(['csv', 'tsv']);
     const tags = readFileSync('examples/plugins/tag-index/manifest.json', 'utf8');
     expect(parseManifest(tags).contributes.views[0].id).toBe('tags');
+    const bars = readFileSync('examples/plugins/bars/manifest.json', 'utf8');
+    expect(parseManifest(bars).contributes.codeBlocks).toEqual(['bars']);
   });
 });
