@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Text Stats</title></head>
+<body>
+<script>
+// Answers `selection.action` on the text selected, see examples/plugins/README.md
+function stats(text) {
+  // words of scripts without spaces (CJK) count one per character
+  const CJK = /[぀-ヿ㐀-鿿가-힯]/g;
+  const cjk = (text.match(CJK) ?? []).length;
+  const words = text.replace(CJK, ' ').split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length + cjk;
+  const sentences = (text.match(/[^.!?。！？]+[.!?。！？]+/g) ?? []).length || (text.trim() ? 1 : 0);
+  const minutes = Math.max(1, Math.round(words / 230));
+  return `<p><b>${words}</b> words, <b>${text.length}</b> characters, <b>${sentences}</b> sentences.</p>`
+    + `<p>About ${minutes} min to read.</p>`;
+}
+
+window.addEventListener('message', (event) => {
+  const msg = event.data;
+  if (event.source !== parent || !msg || msg.mdsilo !== 1 || msg.request === undefined) return;
+  const reply = (answer) => parent.postMessage({ mdsilo: 1, reply: msg.request, ...answer }, '*');
+  if (msg.method === 'selection.action' && msg.params.action === 'count') reply({ result: { html: stats(msg.params.text) } });
+  else reply({ error: `Unknown method: ${msg.method}` });
+});
+</script>
+</body>
+</html>

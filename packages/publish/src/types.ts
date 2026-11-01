@@ -122,7 +122,12 @@ export type Renderers = {
   mermaid?: (code: string) => Promise<string>;
   echarts?: (code: string) => Promise<string>;
   smiles?: (code: string) => Promise<string>;
+  /** other languages, e.g. drawn by the plugins of the app: always drawn, no option */
+  [lang: string]: ((code: string) => Promise<string>) | undefined;
 };
+
+/** The languages drawn when their option is on */
+export const OPTIONAL_DIAGRAMS = ['mermaid', 'echarts', 'smiles'] as const;
 
 /** A file of the site: its text, or a file of the workspace to copy. */
 export type SiteFile = { path: string; text: string } | { path: string; copy: string };

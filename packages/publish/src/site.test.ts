@@ -238,6 +238,14 @@ describe('math and diagrams', () => {
     const off = text(await buildSite(input(page(md), { smiles: false }), renderers), 'notes/Blog/M.html');
     expect(off).toContain('<code class="language-smiles">CCO');
   });
+
+  test('other languages drawn by their renderers, with no option', async () => {
+    const md = '```plantuml\nA -> B\n```\n\n```abc\nX:1\n```';
+    const renderers = { plantuml: async (code: string) => `<svg data-code="${code.trim()}"></svg>` };
+    const html = text(await buildSite(input(page(md), { mermaid: false, echarts: false, smiles: false }), renderers), 'notes/Blog/M.html');
+    expect(html).toContain('<figure class="diagram plantuml"><svg data-code="A -> B"></svg></figure>');
+    expect(html).toContain('<code class="language-abc">X:1');
+  });
 });
 
 describe('the issues', () => {

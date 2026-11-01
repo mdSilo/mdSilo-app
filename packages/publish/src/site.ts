@@ -5,6 +5,7 @@ import {
 } from './issues';
 import { escapeHtml, normalizePath, PathSet, relHref, slug } from './paths';
 import { diagramMark, frontMatter, renderNote, textOf, type Features, type Rendered, type Resolver } from './render';
+import { OPTIONAL_DIAGRAMS } from './types';
 import type { PublishOptions, Renderers, SiteBook, SiteFile, SiteInput, SiteIssue, SiteNote } from './types';
 
 const WRITING = 'writing/';
@@ -67,7 +68,7 @@ export function publishedIssues(issues: SiteIssue[], options: PublishOptions): S
 async function drawDiagrams(rendered: Rendered[], renderers: Renderers) {
   for (const r of rendered) {
     for (const d of r.diagrams) {
-      const draw = renderers[d.lang as keyof Renderers];
+      const draw = renderers[d.lang];
       let html = `<pre><code class="language-${escapeHtml(d.lang)}">${escapeHtml(d.code)}</code></pre>`;
       try {
         if (draw) html = `<figure class="diagram ${escapeHtml(d.lang)}">${await draw(d.code)}</figure>`;
@@ -81,7 +82,8 @@ async function drawDiagrams(rendered: Rendered[], renderers: Renderers) {
 
 /**
  * The files of the static site of a workspace; the mermaid, echarts and smiles code
- * blocks drawn by `renderers`, where a browser is.
+ * blocks (if on in the options), and those of other languages, drawn by `renderers`,
+ * where a browser is.
  */
 export async function buildSite(input: SiteInput, renderers: Renderers = {}): Promise<SiteFile[]> {
   const { options } = input;
@@ -171,7 +173,10 @@ export async function buildSite(input: SiteInput, renderers: Renderers = {}): Pr
   let diagramId = 0;
   const features: Features = {
     math: options.math,
-    diagrams: new Set((['mermaid', 'echarts', 'smiles'] as const).filter((lang) => options[lang] && renderers[lang])),
+    diagrams: new Set(Object.keys(renderers).filter((lang) => {
+      const optional = OPTIONAL_DIAGRAMS.find((name) => name === lang);
+      return Boolean(renderers[lang]) && (!optional || options[optional]);
+    })),
     nextId: () => (diagramId += 1),
   };
   const rendered: Rendered[] = [];

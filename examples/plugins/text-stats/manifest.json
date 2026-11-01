@@ -1,0 +1,11 @@
+{
+  "id": "text-stats",
+  "name": "Text Stats",
+  "version": "0.1.0",
+  "minAppVersion": "0.8.0",
+  "author": "mdSilo",
+  "description": "Counts the words, characters and sentences of the text selected, and the time to read it.",
+  "contributes": {
+    "selectionActions": [{ "id": "count", "title": "Count words" }]
+  }
+}

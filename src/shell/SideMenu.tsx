@@ -5,6 +5,7 @@ import {
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
   TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
   TbPizza, TbInfoCircle, TbHeadphones, TbCurrentLocation, TbDatabaseExport, TbBook, TbBooks, TbEraser, TbWorldUpload,
+  TbPuzzle, TbPlayerPlay,
 } from 'react-icons/tb';
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
@@ -12,7 +13,7 @@ import { usePopper } from 'react-popper';
 import { useCurrentViewContext } from '@/state/useCurrentView';
 import useHotkeys from '@/lib/hooks/useHotkeys';
 import { onOpenFile, onListDir, onSave, openJsonFile } from '@/workspace/useOpen';
-import { isWeb } from '@/workspace/util';
+import { isTauri, isWeb } from '@/workspace/util';
 import { store, useStore } from '@/state/store';
 import type { SideMenuOrientation } from '@/state/userSettings';
 import { isMobile } from '@/lib/helper';
@@ -25,6 +26,8 @@ import SyncButton from '@/sync/SyncButton';
 import { isPublishAvailable, usePublishUi } from '@/publish/publish';
 import { usePlayer } from '@/player/playerStore';
 import { useTTS } from '@/reader/tts/tts';
+import { pluginViews } from '@/plugins/registry';
+import { pluginCommands, runCommand } from '@/plugins/commands';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
 
@@ -130,6 +133,7 @@ export default function SideMenu() {
             <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
             <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
           </>) : null}
+          {isTauri ? <PluginsButton viewTy={viewTy} hasWorkspace={Boolean(currentDir)} onDispatch={dispatchView} /> : null}
           <FileButton />
         </div>
         <div className={bottomClassName}>
@@ -406,6 +410,60 @@ const ProjectButton = (props: ButtonProps) => {
           <TbLayoutKanban size={22} className={btnIconClass} />
         </button>
       </Tooltip>
+    </MenuItem>
+  );
+};
+
+/** The plugins: their views (of a workspace), and the plugin manager */
+const PluginsButton = ({ viewTy, hasWorkspace, onDispatch }: {
+  viewTy: string; hasWorkspace: boolean; onDispatch: (view: ViewAction) => void;
+}) => {
+  const isHorizontal = useIsHorizontalMenu();
+  const tooltipPlacement = useTooltipPlacement();
+  const installedPlugins = useStore((state) => state.installedPlugins);
+  const pluginStates = useStore((state) => state.pluginStates);
+  const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
+  const views = hasWorkspace ? pluginViews(installedPlugins, pluginStates) : [];
+  const commands = pluginCommands(installedPlugins, pluginStates);
+
+  return (
+    <MenuItem isHighlighted={viewTy === 'plugin'}>
+      <Dropdown
+        buttonChildren={<><TbPuzzle size={22} className={btnIconClass} /><span className="sr-only">Plugins</span></>}
+        buttonClassName={btnClass}
+        itemsClassName="w-56"
+        placement={isHorizontal ? 'bottom-start' : 'right-start'}
+        tooltipContent="Plugins"
+        tooltipPlacement={tooltipPlacement}
+      >
+        {views.map(({ plugin, view }) => (
+          <DropdownItem
+            key={`${plugin.id}/${view.id}`}
+            onClick={() => onDispatch({ view: 'plugin', plugin: plugin.id, viewId: view.id })}
+          >
+            <span className="truncate">{view.title}</span>
+            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">{plugin.manifest?.name}</span>
+          </DropdownItem>
+        ))}
+        {commands.map((found, i) => (
+          <DropdownItem
+            key={`${found.plugin.id}:${found.command.id}`}
+            className={i === 0 && views.length ? 'border-t border-base-300' : ''}
+            onClick={() => void runCommand(found)}
+          >
+            <TbPlayerPlay size={18} className="mr-1 shrink-0" />
+            <span className="truncate">{found.command.title}</span>
+            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">{found.plugin.manifest?.name}</span>
+          </DropdownItem>
+        ))}
+        <DropdownItem
+          className={views.length || commands.length ? 'border-t border-base-300' : ''}
+          onClick={() => setIsPluginsOpen(true)}
+        >
+          <TbSettings size={18} className="mr-1" />
+          <span>Manage Plugins</span>
+        </DropdownItem>
+      </Dropdown>
     </MenuItem>
   );
 };

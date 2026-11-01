@@ -22,3 +22,18 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
 export function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(html, EXTERNAL_HTML);
 }
+
+/*
+  A picture drawn by a plugin, e.g. a code block as SVG: shapes and their
+  styles, ids for gradients and markers, but no scripts, no style sheets
+  (they would restyle the app), no forms, no frames, nothing foreign.
+*/
+const PLUGIN_PICTURE: Config = {
+  USE_PROFILES: { html: true, svg: true, svgFilters: true },
+  FORBID_TAGS: ['style', 'form', 'input', 'button', 'textarea', 'select', 'option', 'foreignObject', 'iframe'],
+};
+
+/** Sanitize the SVG or HTML drawn by a plugin; show it in a box that contains its layout (`contain: paint`). */
+export function sanitizePluginPicture(html: string): string {
+  return DOMPurify.sanitize(html, PLUGIN_PICTURE);
+}

@@ -19,6 +19,7 @@ import { isBookFile } from '@/reader/document';
 import BookIcon, { bookIconOf } from '@/reader/components/BookIcon';
 import { bookPathOfAnnotations } from '@/reader/annotations/annotations';
 import { useCurrentViewContext } from '@/state/useCurrentView';
+import { viewersOf } from '@/plugins/registry';
 import SidebarItem from './SidebarItem';
 import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
 
@@ -73,7 +74,10 @@ const SidebarNoteLink = (
     } else if (isBook) {
       dispatch({ view: 'book', path: node.id });
     } else if (isNonMd) {
-      await openUrl(node.id)
+      // a plugin opens it, or the app of the system
+      const [opener] = viewersOf(node.id);
+      if (opener) dispatch({ view: 'plugin-file', plugin: opener.plugin.id, path: node.id });
+      else await openUrl(node.id);
     } else {
       await onNoteLinkClick(node.id);
     }

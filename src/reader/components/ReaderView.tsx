@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'rea
 import {
   TbArrowBackUp, TbArrowForwardUp, TbArrowLeft, TbBookmark, TbBookmarkFilled, TbChevronLeft, 
   TbBrandWikipedia, TbChevronRight, TbChevronsLeft, TbChevronsRight, TbLanguage, TbLayoutSidebar, 
-  TbLink, TbSearch, TbColumns2, TbTypography, TbVocabulary, TbVolume, 
+  TbLink, TbSearch, TbColumns2, TbTypography, TbVocabulary, TbVolume, TbPuzzle,
 } from 'react-icons/tb';
 import { FaList, FaSearch } from "react-icons/fa";
 import { CgNotes } from "react-icons/cg";
@@ -15,6 +15,7 @@ import { openFilePath } from '@/workspace/open';
 import { store, useStore } from '@/state/store';
 import { READER_SIDEBAR_WIDTH } from '@/state/userSettings';
 import { isMobile } from '@/lib/helper';
+import { selectionActionsIn } from '@/plugins/selection';
 import { annotationsPathOf } from '../annotations/annotations';
 import { useActiveStore, useReaderStore, useSideStore } from '../readerStore';
 import { bookmarkAt, copyLink, toggleBookmark } from '../actions';
@@ -30,6 +31,7 @@ import NotesView from '../annotations/NotesView';
 import LinksView from '../annotations/LinksView';
 import TranslatedBookDialog from '../translation/TranslatedBookDialog';
 import LookupPopup from '../lookup/LookupPopup';
+import PluginActionPopup from '../lookup/PluginActionPopup';
 import FoliateViewer from './FoliateViewer';
 import TocView from './TocView';
 import BookPopups, { type Tool } from './BookPopups';
@@ -505,6 +507,14 @@ function lookupTools(selection: TextSelection): Tool[] {
       hidden: l.kind === 'dictionary' && words > 3,
       onClick: () => usePopups.getState().setLookup({ kind: l.kind, selection }),
     })),
+    ...selectionActionsIn('reader').map(({ plugin, action }) => ({
+      id: `plugin:${plugin.id}:${action.id}`,
+      title: action.title,
+      icon: <TbPuzzle size={18} />,
+      onClick: () => usePopups.getState().setPluginAction({
+        plugin: plugin.id, action: action.id, title: action.title, selection,
+      }),
+    })),
     {
       id: 'tts',
       title: 'Read aloud from here',
@@ -528,7 +538,7 @@ export default function ReaderView() {
           <TbVolume size={18} />
         </IconButton>
       ) : null}
-      overlay={(rootRef) => <LookupPopup rootRef={rootRef} />}
+      overlay={(rootRef) => <><LookupPopup rootRef={rootRef} /><PluginActionPopup rootRef={rootRef} /></>}
     />
   );
 }

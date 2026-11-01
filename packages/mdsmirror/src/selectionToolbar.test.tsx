@@ -56,4 +56,54 @@ describe("selection toolbar", () => {
     expect(button("Copy")).not.toBeNull();
     expect(button("New issue of it")).toBeNull();
   });
+
+  test("an action given replaces the text selected", async () => {
+    const run = vi.fn(async (text: string) => ({
+      replace: text.toUpperCase(),
+    }));
+    const view = await setup({
+      selectionActions: [{ id: "up", title: "Upper case", run }],
+    });
+    await act(async () => {
+      fireEvent.click(button("Upper case")!);
+    });
+    expect(run).toHaveBeenCalledWith("selected");
+    expect(view.state.doc.textContent).toBe("hello SELECTED world");
+  });
+
+  test("an action given puts its answer after the text", async () => {
+    const run = vi.fn(async () => ({ insert: "(1)" }));
+    const view = await setup({
+      selectionActions: [{ id: "cite", title: "Cite", run }],
+    });
+    await act(async () => {
+      fireEvent.click(button("Cite")!);
+    });
+    expect(view.state.doc.textContent).toBe("hello selected (1) world");
+  });
+
+  test("an action changing nothing, or failing", async () => {
+    const onShowToast = vi.fn();
+    const view = await setup({
+      onShowToast,
+      selectionActions: [
+        { id: "show", title: "Show", run: async () => undefined },
+        {
+          id: "fail",
+          title: "Fail",
+          run: async () => {
+            throw new Error("offline");
+          },
+        },
+      ],
+    });
+    await act(async () => {
+      fireEvent.click(button("Show")!);
+    });
+    await act(async () => {
+      fireEvent.click(button("Fail")!);
+    });
+    expect(view.state.doc.textContent).toBe("hello selected world");
+    expect(onShowToast).toHaveBeenCalledWith("Fail: offline", "error");
+  });
 });

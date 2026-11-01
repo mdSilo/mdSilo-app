@@ -1,5 +1,6 @@
 import type { Renderers } from 'mdsilo-publish';
 import { renderSmiles } from 'mdsmirror';
+import { codeBlockPlugins, renderCode } from '@/plugins/codeBlocks';
 
 /**
  * The diagrams of the site drawn here, where a browser is, as SVG: the site
@@ -34,3 +35,11 @@ export const siteRenderers: Renderers = {
   },
   smiles: (code) => renderSmiles(code),
 };
+
+/** The code blocks the enabled plugins draw, in the light theme as the site */
+export const pluginSiteRenderers = (): Renderers => Object.fromEntries(
+  [...codeBlockPlugins().keys()].map((lang) => [lang, (code: string) => renderCode(lang, code, false)]),
+);
+
+/** The diagrams of the site, and the code blocks of the plugins; a plugin draws no built-in one */
+export const allSiteRenderers = (): Renderers => ({ ...pluginSiteRenderers(), ...siteRenderers });

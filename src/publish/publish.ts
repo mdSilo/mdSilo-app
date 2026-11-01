@@ -14,7 +14,7 @@ import { isTauri, isWeb, joinPath } from '@/workspace/util';
 import { useIssueStore } from '@/issue/issueStore';
 import { annotationsPathOf } from '@/reader/annotations/annotations';
 import { loadBooks } from '@/reader/library/books';
-import { siteRenderers } from './renderers';
+import { allSiteRenderers } from './renderers';
 
 /**
  * The static site of the workspace, built by packages/publish: written to a
@@ -143,7 +143,7 @@ export type Built = { pages: number; files: number; missing: string[] };
  * publish, or a folder chosen to export to (written over, not emptied).
  */
 export async function buildSiteTo(
-  ws: string, options: PublishOptions, target = siteDirOf(ws), renderers: Renderers = siteRenderers
+  ws: string, options: PublishOptions, target = siteDirOf(ws), renderers: Renderers = allSiteRenderers()
 ): Promise<Built> {
   const files = await buildSite(await gatherSite(ws, options), renderers);
   const clear = target === siteDirOf(ws);

@@ -1,0 +1,12 @@
+{
+  "id": "csv-viewer",
+  "name": "CSV Viewer",
+  "version": "0.1.0",
+  "minAppVersion": "0.8.0",
+  "author": "mdSilo",
+  "description": "Shows .csv and .tsv files as a table you can edit.",
+  "permissions": ["file:read", "file:write"],
+  "contributes": {
+    "viewers": [{ "extensions": ["csv", "tsv"], "title": "Table" }]
+  }
+}

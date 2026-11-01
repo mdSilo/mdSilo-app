@@ -4,6 +4,7 @@ import { DEFAULT_LIBRARY_SETTINGS, type LibrarySettings } from '@/reader/library
 import { isSystemDark, SYSTEM_THEME } from '@/lib/themes';
 import type { CustomFont } from '@/custom/fonts';
 import type { CustomTheme } from '@/custom/themes';
+import type { InstalledPlugin, PluginState } from '@/plugins/registry';
 import { setter, Setter, Store } from './store';
 
 export enum Sort {
@@ -70,6 +71,12 @@ export type UserSettings = {
   setFont: Setter<string>;
   customFonts: CustomFont[]; // the fonts added by the user, see custom/fonts
   setCustomFonts: Setter<CustomFont[]>;
+  /** the plugins installed on this device, read on startup, not persisted */
+  installedPlugins: InstalledPlugin[];
+  setInstalledPlugins: Setter<InstalledPlugin[]>;
+  /** enabled and granted on this device, by plugin id; never synced, see plugins/registry */
+  pluginStates: Record<string, PluginState>;
+  setPluginStates: Setter<Record<string, PluginState>>;
   fontSize: number;
   setFontSize: Setter<number>;
   fontWt: number;
@@ -81,6 +88,9 @@ export type UserSettings = {
   isSettingsOpen: boolean;
   setIsSettingsOpen: Setter<boolean>;
   isAboutOpen: boolean;
+  /** the plugin manager shown, see plugins/PluginManager */
+  isPluginsOpen: boolean;
+  setIsPluginsOpen: Setter<boolean>;
   setIsAboutOpen: Setter<boolean>;
   isFindOrCreateModalOpen: boolean;
   setIsFindOrCreateModalOpen: Setter<boolean>;
@@ -153,6 +163,10 @@ const userSettingsSlice = (
   setFont: setter(set, 'font'),
   customFonts: [],
   setCustomFonts: setter(set, 'customFonts'),
+  installedPlugins: [],
+  setInstalledPlugins: setter(set, 'installedPlugins'),
+  pluginStates: {},
+  setPluginStates: setter(set, 'pluginStates'),
   fontSize: 1.1,
   setFontSize: setter(set, 'fontSize'),
   fontWt: 400,
@@ -165,6 +179,8 @@ const userSettingsSlice = (
   setIsSettingsOpen: setter(set, 'isSettingsOpen'),
   isAboutOpen: false,
   setIsAboutOpen: setter(set, 'isAboutOpen'),
+  isPluginsOpen: false,
+  setIsPluginsOpen: setter(set, 'isPluginsOpen'),
   isFindOrCreateModalOpen: false,
   setIsFindOrCreateModalOpen: setter(set, 'isFindOrCreateModalOpen'),
   isRTL: false,

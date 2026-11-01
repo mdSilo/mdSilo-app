@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSV Viewer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; font: 14px/1.4 var(--font, system-ui, sans-serif);
+    background: var(--color-base-100, #fff); color: var(--color-base-content, #222);
+  }
+  header { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--color-base-300, #ddd); }
+  header .grow { flex: 1; opacity: .7; font-size: 12px; }
+  button {
+    font: inherit; font-size: 12px; padding: 2px 10px; border-radius: var(--radius-field, 4px); cursor: pointer;
+    border: 1px solid var(--color-base-300, #ccc); background: var(--color-base-200, #f4f4f4); color: inherit;
+  }
+  button.primary { background: var(--color-primary, #36c); color: var(--color-primary-content, #fff); border-color: transparent; }
+  button:disabled { opacity: .5; cursor: default; }
+  main { overflow: auto; height: calc(100vh - 37px); }
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid var(--color-base-300, #ddd); padding: 2px 8px; white-space: pre; min-width: 3em; }
+  thead th { position: sticky; top: 0; background: var(--color-base-200, #f4f4f4); }
+  td:focus { outline: 2px solid var(--color-primary, #36c); outline-offset: -2px; }
+  .error { color: var(--color-error, #c00); padding: 10px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="grow" id="status">Loading…</span>
+  <button id="reload">Reload</button>
+  <button id="add">Add Row</button>
+  <button id="save" class="primary" disabled>Save</button>
+</header>
+<main id="main"></main>
+<script>
+// A sandboxed mdSilo plugin talks to the app by messages, see src/plugins/host.ts
+let seq = 0;
+const waiting = new Map();
+function call(method, params) {
+  const id = ++seq;
+  parent.postMessage({ mdsilo: 1, id, method, params }, '*');
+  return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
+}
+const handlers = {};
+window.addEventListener('message', (event) => {
+  const msg = event.data;
+  if (event.source !== parent || !msg || msg.mdsilo !== 1) return;
+  if (msg.event) return handlers[msg.event]?.(msg.data);
+  const pending = waiting.get(msg.id);
+  if (!pending) return;
+  waiting.delete(msg.id);
+  if ('error' in msg) pending.reject(new Error(msg.error));
+  else pending.resolve(msg.result);
+});
+
+function applyStyle(style) {
+  const root = document.documentElement.style;
+  for (const [key, value] of Object.entries(style.vars)) root.setProperty(key, value);
+  root.setProperty('--font', style.font || 'system-ui, sans-serif');
+  root.colorScheme = style.dark ? 'dark' : 'light';
+}
+handlers.style = applyStyle;
+
+// CSV of RFC 4180: quotes, quoted separators and new lines
+function parse(text, sep) {
+  const rows = [[]];
+  let field = '', quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"' && field === '') quoted = true;
+    else if (c === sep) { rows.at(-1).push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      rows.at(-1).push(field); field = ''; rows.push([]);
+    } else field += c;
+  }
+  rows.at(-1).push(field);
+  // no empty row for the last new line
+  if (rows.length > 1 && rows.at(-1).length === 1 && rows.at(-1)[0] === '') rows.pop();
+  return rows;
+}
+
+function stringify(rows, sep) {
+  const cell = (v) => (/["\r\n]/.test(v) || v.includes(sep) ? `"${v.replace(/"/g, '""')}"` : v);
+  return rows.map((row) => row.map(cell).join(sep)).join('\n') + '\n';
+}
+
+const $ = (id) => document.getElementById(id);
+let sep = ',', rows = [], dirty = false;
+
+function setDirty(value) {
+  dirty = value;
+  $('save').disabled = !dirty;
+  $('status').textContent = `${rows.length} rows${dirty ? ' · changed' : ''}`;
+}
+
+function render() {
+  const width = Math.max(1, ...rows.map((r) => r.length));
+  const table = document.createElement('table');
+  rows.forEach((row, r) => {
+    const tr = document.createElement(r === 0 ? 'thead' : 'tr');
+    const line = r === 0 ? document.createElement('tr') : tr;
+    for (let c = 0; c < width; c++) {
+      const td = document.createElement(r === 0 ? 'th' : 'td');
+      td.textContent = row[c] ?? '';
+      td.contentEditable = 'plaintext-only';
+      td.addEventListener('input', () => { rows[r][c] = td.textContent; setDirty(true); });
+      line.append(td);
+    }
+    if (r === 0) tr.append(line);
+    table.append(tr);
+  });
+  $('main').replaceChildren(table);
+  setDirty(dirty);
+}
+
+async function load() {
+  try {
+    const info = await call('file.info');
+    sep = info.ext === 'tsv' ? '\t' : ',';
+    rows = parse(await call('file.read'), sep);
+    dirty = false;
+    render();
+  } catch (e) {
+    $('main').innerHTML = '';
+    const p = document.createElement('p');
+    p.className = 'error';
+    p.textContent = e.message;
+    $('main').append(p);
+    $('status').textContent = '';
+  }
+}
+
+// a sandboxed page can't open dialogs (no allow-modals): say it, and keep the changes
+handlers['file.changed'] = () => {
+  if (!dirty) return load();
+  $('status').textContent = 'Changed outside: Reload drops your changes, Save overwrites';
+};
+
+$('reload').addEventListener('click', load);
+
+$('save').addEventListener('click', async () => {
+  try {
+    await call('file.write', { text: stringify(rows, sep) });
+    setDirty(false);
+  } catch (e) {
+    $('status').textContent = e.message;
+  }
+});
+
+$('add').addEventListener('click', () => {
+  rows.push(new Array(Math.max(1, rows[0]?.length ?? 1)).fill(''));
+  setDirty(true);
+  render();
+});
+
+call('app.style').then(applyStyle).catch(() => {});
+load();
+</script>
+</body>
+</html>

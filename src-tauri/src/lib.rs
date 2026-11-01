@@ -5,6 +5,7 @@
 
 mod atomic;
 mod books;
+mod custom_plugins;
 mod db;
 mod feed;
 mod files;
@@ -13,7 +14,7 @@ mod index;
 mod input_method;
 mod models;
 mod paths;
-mod plugins;
+mod plugin_scheme;
 mod publish;
 mod schema;
 mod storage;
@@ -54,13 +55,14 @@ pub fn run() {
     .expect("Error on migrating");
 
   tauri::Builder::default()
-    .plugin(plugins::inject_plugin())
     .plugin(tauri_plugin_dialog::init())
+    .register_uri_scheme_protocol(plugin_scheme::SCHEME, |_ctx, request| {
+      plugin_scheme::handle(&request)
+    })
     // .plugin(tauri_plugin_updater::Builder::new().build())
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
       window::msg_dialog,
-      window::web_window,
       feed::fetch_feed,
       feed::add_channel,
       feed::import_channels,
@@ -94,6 +96,10 @@ pub fn run() {
       files::copy_file_to_assets,
       files::delete_files,
       files::list_directory,
+      custom_plugins::list_plugins,
+      custom_plugins::install_plugin,
+      custom_plugins::remove_plugin,
+      plugin_scheme::set_plugin_net,
       files::listen_dir,
       files::open_url,
       files::open_link,
@@ -128,7 +134,7 @@ pub fn run() {
       tts::tts_configure,
       tts::tts_clear_cache,
     ])
-    // the main window gone, the app quits, other windows (web_window) too
+    // the main window gone, the app quits, other windows too
     .on_window_event(|window, event| {
       if window.label() == tray::MAIN_WIN
         && matches!(event, tauri::WindowEvent::Destroyed)
