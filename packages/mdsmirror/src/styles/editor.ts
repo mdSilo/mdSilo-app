@@ -741,7 +741,8 @@ export const StyledEditor = styled("div")<{
   .abcjs-diagram-wrapper,
   .mermaid-diagram-wrapper,
   .echarts-diagram-wrapper,
-  .smiles-diagram-wrapper {
+  .smiles-diagram-wrapper,
+  .rendered-diagram-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -758,6 +759,17 @@ export const StyledEditor = styled("div")<{
   
     &.diagram-hidden {
       display: none;
+    }
+  }
+
+  /* drawn outside the editor: kept in its box, whatever its styles */
+  .rendered-diagram-wrapper {
+    contain: paint;
+    overflow: auto;
+
+    svg {
+      max-width: 100%;
+      height: auto;
     }
   }
 

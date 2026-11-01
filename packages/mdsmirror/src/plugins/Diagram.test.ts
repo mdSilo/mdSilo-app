@@ -110,3 +110,45 @@ describe("SMILES", () => {
     view.destroy();
   });
 });
+
+describe("Diagram drawn by a renderer given", () => {
+  const plantuml = "```plantuml\nA -> B\n```";
+
+  const mount = (renderer: (code: string, dark: boolean) => Promise<string>) =>
+    new EditorView(document.createElement("div"), {
+      state: EditorState.create({
+        doc: parser.parse(plantuml),
+        plugins: [
+          Diagram({
+            pluginKey: "plantuml",
+            name: "code_block",
+            dark: true,
+            render: renderer,
+          }),
+        ],
+      }),
+    });
+
+  test("puts what it draws in its box", async () => {
+    const renderer = vi.fn(
+      async (code: string) => `<svg data-code="${code}"></svg>`
+    );
+    const view = mount(renderer);
+    await settle();
+    expect(renderer).toHaveBeenCalledWith("A -> B", true);
+    const box = view.dom.querySelector(".rendered-diagram-wrapper");
+    expect(box?.querySelector("svg")?.getAttribute("data-code")).toBe("A -> B");
+    view.destroy();
+  });
+
+  test("shows the error", async () => {
+    const view = mount(async () => {
+      throw new Error("No plugin draws plantuml");
+    });
+    await settle();
+    expect(
+      view.dom.querySelector(".rendered-diagram-wrapper")?.textContent
+    ).toBe("plantuml: No plugin draws plantuml");
+    view.destroy();
+  });
+});

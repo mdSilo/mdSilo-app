@@ -1,4 +1,6 @@
-import { store } from '@/state/store';
+import { useMemo } from 'react';
+import type { CodeRenderer } from 'mdsmirror';
+import { store, useStore } from '@/state/store';
 import { sanitizePluginPicture } from '@/lib/sanitize';
 import { createHost, type PluginHost } from './host';
 import { enabledPlugins, pluginUrl, type InstalledPlugin } from './registry';
@@ -74,4 +76,21 @@ export async function renderCode(lang: string, code: string, dark = store.getSta
   const result = await host.call('code.render', { lang: lang.toLowerCase(), code, dark });
   if (typeof result !== 'string') throw new Error(`${plugin.manifest?.name ?? plugin.id} drew no SVG or HTML`);
   return sanitizePluginPicture(result);
+}
+
+/**
+ * The renderers of the languages the enabled plugins draw, for the editor,
+ * and a key to make a new editor when they change (it reads them on creation).
+ */
+export function useCodeRenderers(): { codeRenderers: Record<string, CodeRenderer>; key: string } {
+  const installedPlugins = useStore((state) => state.installedPlugins);
+  const pluginStates = useStore((state) => state.pluginStates);
+  const languages = [...codeBlockPlugins(installedPlugins, pluginStates).keys()].sort().join(',');
+  return useMemo(() => {
+    const codeRenderers: Record<string, CodeRenderer> = {};
+    for (const lang of languages ? languages.split(',') : []) {
+      codeRenderers[lang] = (code, dark) => renderCode(lang, code, dark);
+    }
+    return { codeRenderers, key: languages };
+  }, [languages]);
 }

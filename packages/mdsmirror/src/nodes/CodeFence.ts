@@ -87,8 +87,22 @@ export default class CodeFence extends Node {
     super(options);
   }
 
+  /** the languages drawn by the renderers given, besides the built-in diagrams */
+  get renderedLanguages(): string[] {
+    return Object.keys(this.options.codeRenderers ?? {}).filter(
+      (lang) => !DIAGRAM_LANGUAGES.includes(lang)
+    );
+  }
+
+  get diagramLanguages() {
+    return [...DIAGRAM_LANGUAGES, ...this.renderedLanguages];
+  }
+
   get languageOptions() {
-    return Object.entries(LANGUAGES);
+    const extra = this.renderedLanguages
+      .filter((lang) => !(lang in LANGUAGES))
+      .map((lang) => [lang, lang]);
+    return [...Object.entries(LANGUAGES), ...extra];
   }
 
   get name() {
@@ -150,7 +164,7 @@ export default class CodeFence extends Node {
           // For the diagram language we add an extra button to toggle between
           // source code and a rendered diagram view.
           const lang = node.attrs.language;
-          if (DIAGRAM_LANGUAGES.includes(lang)) {
+          if (this.diagramLanguages.includes(lang)) {
             const showSourceButton = document.createElement("button");
             showSourceButton.innerText = "Source";
             showSourceButton.type = "button";
@@ -303,6 +317,14 @@ export default class CodeFence extends Node {
           name: this.name,
           dark: this.options.dark,
           onSave: this.options.onSaveDiagram,
+        })
+      ),
+      ...this.renderedLanguages.map((pluginKey) =>
+        Diagram({
+          pluginKey,
+          name: this.name,
+          dark: this.options.dark,
+          render: this.options.codeRenderers[pluginKey],
         })
       ),
     ];

@@ -3,6 +3,7 @@ import { invoke , convertFileSrc } from '@tauri-apps/api/core';
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
 import MsEditor, { Attach, embeds } from "mdsmirror";
+import { useCodeRenderers } from '@/plugins/codeBlocks';
 import { EDITOR_THEME } from '@/lib/themes';
 import Title from '@/writer/Title';
 import Toc, { Heading } from '@/writer/Toc';
@@ -55,6 +56,8 @@ function Note(props: Props) {
   const [showBacklink, setShowBacklink] = useState(false);
   const [headings, setHeadings] = useState<Heading[]>([]);
   const editorInstance = useRef<MsEditor>(null);
+  // code blocks drawn by plugins, ```plantuml
+  const { codeRenderers, key: codeRenderersKey } = useCodeRenderers();
   const getHeading = useCallback(() => {
     setHeadings(editorInstance.current?.getHeadings() ?? []);
   }, []);
@@ -388,7 +391,7 @@ function Note(props: Props) {
                   />
                 ) : (
                   <MsEditor
-                    key={`wys-${noteId}`}
+                    key={`wys-${noteId}-${codeRenderersKey}`}
                     ref={editorInstance}
                     value={mdContent}
                     dark={darkMode}
@@ -407,6 +410,7 @@ function Note(props: Props) {
                     attachFile={onAttachFile}
                     onClickAttachment={onClickAttachment}
                     onSaveDiagram={onSaveDiagram}
+                    codeRenderers={codeRenderers}
                     onCopyHash={onCopyHash}
                     embeds={embeds}
                     disables={['sub']}

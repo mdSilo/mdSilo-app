@@ -98,6 +98,7 @@ import SmartText from "./plugins/SmartText";
 import QuickAction from "./plugins/QuickAction";
 import TrailingNode from "./plugins/TrailingNode";
 import PasteHandler from "./plugins/PasteHandler";
+import type { CodeRenderer } from "./plugins/Diagram";
 import { resolveImageSrc } from "./lib/resolveImageSrc";
 import { firstStrongDir } from "./lib/textDirection";
 
@@ -119,6 +120,7 @@ export { Heading, getHeadings } from "./core/queries/getHeadings";
 export { HashTag, getHashtags } from "./core/queries/getHashtags";
 export { Task, getTasks } from "./core/queries/getTasks";
 export { renderSmiles } from "./lib/smiles";
+export type { CodeRenderer } from "./plugins/Diagram";
 
 export const theme = lightTheme;
 
@@ -231,6 +233,11 @@ export type Props = {
   onClickAttachment?: (href: string) => void;
   /** Callback on save diagram svg */
   onSaveDiagram?: (svg: string, ty: string) => void;
+  /**
+   * Draw the code blocks of other languages, ```plantuml, as SVG or HTML,
+   * sanitized: read on creation, so give the editor a new key to change them
+   */
+  codeRenderers?: Record<string, CodeRenderer>;
   /** Callback on copy heading hash or hashtag hash */
   onCopyHash?: (text: string) => void;
   /** Callback when user presses any key with document focused */
@@ -432,6 +439,7 @@ class MsEditor extends React.PureComponent<Props, State> {
         dark: this.props.dark,
         showLineNumber: this.props.showLineNumber,
         onSaveDiagram: this.props.onSaveDiagram,
+        codeRenderers: this.props.codeRenderers,
       }),
       new Comment(),
       new Text(),

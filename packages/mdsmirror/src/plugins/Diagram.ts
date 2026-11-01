@@ -11,6 +11,9 @@ type PluginState = {
 
 type SaveDiagram = (svg: string, ty: string) => void;
 
+/** Draws a code block of a language not drawn here, as SVG or HTML, safe to insert */
+export type CodeRenderer = (code: string, dark: boolean) => Promise<string>;
+
 // the libraries are loaded on the first diagram of their kind, once
 let mermaidModule: Promise<typeof import("mermaid")> | undefined;
 let echartsModule: Promise<typeof import("echarts")> | undefined;
@@ -24,8 +27,9 @@ type StateProps = {
   name: string;
   dark: boolean;
   pluginState: PluginState;
-  pluginKey: string; // 'mermaid' | 'echats' | 'abcjs' | 'smiles';
+  pluginKey: string; // 'mermaid' | 'echats' | 'abcjs' | 'smiles', or one of render
   onSave?: SaveDiagram;
+  render?: CodeRenderer;
 };
 
 function getNewState({
@@ -35,6 +39,7 @@ function getNewState({
   pluginState,
   pluginKey,
   onSave,
+  render,
 }: StateProps) {
   const decorations: Decoration[] = [];
 
@@ -66,13 +71,15 @@ function getNewState({
     const visible = pluginState.diagramVisibility[diagramId] !== false;
     const diagramDecoration = Decoration.widget(
       block.pos + block.node.nodeSize,
-      pluginKey === "mermaid"
-        ? mermaidWidget(pluginState, diagramId, block, dark, onSave)
-        : pluginKey === "echarts"
-          ? echartsWidget(pluginState, diagramId, block, dark, onSave)
-          : pluginKey === "smiles"
-            ? smilesWidget(pluginState, diagramId, block, dark, onSave)
-            : abcWidget(pluginState, diagramId, block, dark, onSave),
+      render
+        ? renderedWidget(pluginState, diagramId, block, dark, pluginKey, render)
+        : pluginKey === "mermaid"
+          ? mermaidWidget(pluginState, diagramId, block, dark, onSave)
+          : pluginKey === "echarts"
+            ? echartsWidget(pluginState, diagramId, block, dark, onSave)
+            : pluginKey === "smiles"
+              ? smilesWidget(pluginState, diagramId, block, dark, onSave)
+              : abcWidget(pluginState, diagramId, block, dark, onSave),
       {
         diagramId,
         // what the widget is drawn from: keep the drawn diagram while it is
@@ -204,6 +211,39 @@ const smilesWidget =
       .catch((error) => {
         console.error(error);
         diagramWrapper.textContent = `SMILES: ${error?.message ?? error}`;
+      });
+
+    return mainWrapper;
+  };
+
+/** A code block drawn by the renderer given, e.g. by a plugin of the app */
+const renderedWidget =
+  (
+    pluginState: PluginState,
+    diagramId: string,
+    block: any,
+    dark: boolean,
+    lang: string,
+    render: CodeRenderer
+  ) =>
+  () => {
+    const mainWrapper = document.createElement("div");
+    const diagramWrapper = document.createElement("div");
+    diagramWrapper.classList.add("rendered-diagram-wrapper");
+    mainWrapper.append(diagramWrapper);
+
+    if (pluginState.diagramVisibility[diagramId] === false) {
+      mainWrapper.classList.add("diagram-hidden");
+      return mainWrapper;
+    }
+
+    render(block.node.textContent, dark)
+      .then((html) => {
+        diagramWrapper.innerHTML = html;
+      })
+      .catch((error) => {
+        console.error(error);
+        diagramWrapper.textContent = `${lang}: ${error?.message ?? error}`;
       });
 
     return mainWrapper;
@@ -386,6 +426,7 @@ type PluginProps = {
   name: string;
   dark: boolean;
   onSave?: SaveDiagram;
+  render?: CodeRenderer;
 };
 
 export default function Diagram({
@@ -393,6 +434,7 @@ export default function Diagram({
   name,
   dark,
   onSave,
+  render,
 }: PluginProps) {
   let diagramShown = false;
 
@@ -434,6 +476,7 @@ export default function Diagram({
             pluginState,
             pluginKey,
             onSave,
+            render,
           });
         }
 

@@ -1,5 +1,6 @@
+import { act, renderHook } from '@testing-library/react';
 import { store } from '@/state/store';
-import { codeBlockPlugins, renderCode } from './codeBlocks';
+import { codeBlockPlugins, renderCode, useCodeRenderers } from './codeBlocks';
 import { parseManifest } from './manifest';
 import { disablePlugin, enablePlugin, type InstalledPlugin } from './registry';
 
@@ -74,5 +75,22 @@ describe('renderCode', () => {
     const drawn = renderCode('plantuml', 'a');
     answerWith('uml', () => 42);
     await expect(drawn).rejects.toThrow('UML drew no SVG or HTML');
+  });
+});
+
+describe('useCodeRenderers', () => {
+  it('gives a renderer per language, and a new key when they change', async () => {
+    const { result } = renderHook(() => useCodeRenderers());
+    expect(result.current).toEqual({ codeRenderers: {}, key: '' });
+    act(() => enablePlugin(other));
+    expect(Object.keys(result.current.codeRenderers)).toEqual(['abc', 'plantuml']);
+    expect(result.current.key).toBe('abc,plantuml');
+    const before = result.current;
+    act(() => enablePlugin(uml));
+    expect(result.current).toBe(before);
+
+    const drawn = result.current.codeRenderers.abc('X:1', true);
+    answerWith('other', ({ lang, dark }) => `<svg data-lang="${lang}" data-dark="${dark}"/>`);
+    expect(await drawn).toContain('data-dark="true"');
   });
 });
