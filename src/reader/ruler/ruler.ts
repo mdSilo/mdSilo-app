@@ -2,7 +2,7 @@ import type { Pane } from '../view';
 import type { Side } from '../pagination';
 
 /**
- * The reading ruler (ported from readup): a band over a few lines of the
+ * The reading ruler: a band over a few lines of the
  * page, the rest dimmed. A click on the sides or the arrow keys move it to
  * the next lines, by the real lines of the text; past the last, the page turns.
  * Written down the page, the band stands across it and moves sideways.
@@ -137,7 +137,9 @@ function medianHeight(lines: LineBox[]) {
  * none past the last (the page turns then). From -Infinity, the first lines;
  * back from Infinity, the last.
  */
-export function snapToLines(start: number, end: number, count: number, direction: Direction, lines: LineBox[]): LineBox | null {
+export function snapToLines(
+  start: number, end: number, count: number, direction: Direction, lines: LineBox[]
+): LineBox | null {
   if (!lines.length) return null;
   const n = Math.max(1, Math.floor(count));
   const eps = medianHeight(lines) * 0.3;

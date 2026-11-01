@@ -42,7 +42,7 @@ const GROUP_LABELS: Record<GroupBy, string> = {
 let lastOpened = { groupBy: 'group' as GroupBy, key: '' };
 
 /**
- * The books of the workspace, as in readup: as a grid or a list, grouped by
+ * The books of the workspace: as a grid or a list, grouped by
  * the groups of the user, by author, series or status, sorted, searched; a
  * book dragged onto another one or onto a group to group them; the details
  * and metadata of a book edited; books added, dropped from the device too.
@@ -147,7 +147,9 @@ export default function Library() {
     await refreshLibrary(initDir);
     if (groupBy === 'group' && opened) {
       const lib = await readLibrary(initDir);
-      const hashes = (await Promise.all(paths.map(bookHashOf))).filter(Boolean).map((hash) => bookIdOf(lib, hash) ?? hash);
+      const hashes = (await Promise.all(paths.map(bookHashOf)))
+        .filter(Boolean)
+        .map((hash) => bookIdOf(lib, hash) ?? hash);
       await setBooksGroup(initDir, hashes, opened);
     }
     await changed();
@@ -210,9 +212,14 @@ export default function Library() {
         return;
       }
       const target = groupBy === 'group' ? opened : '';
-      const result = await importFolder(initDir, found, { flatten: options.flatten, group: target }, (done, total) => {
-        setMessage(`Importing the books: ${done} of ${total}…`, false);
-      });
+      const result = await importFolder(
+        initDir, 
+        found, 
+        { flatten: options.flatten, group: target }, 
+        (done, total) => {
+          setMessage(`Importing the books: ${done} of ${total}…`, false);
+        }
+      );
       void listDir(joinPath(initDir, READING_DIR), false);
       const parts = [
         `${result.added} book${result.added === 1 ? '' : 's'} added`,
@@ -228,7 +235,10 @@ export default function Library() {
     }
   };
 
-  const draggingFiles = useBookDrop(pageRef, (dropped, skipped) => void onDropFiles(dropped, skipped));
+  const draggingFiles = useBookDrop(
+    pageRef, 
+    (dropped, skipped) => void onDropFiles(dropped, skipped)
+  );
 
   // a book dropped onto a book: both in a new group; onto a group or a
   // breadcrumb: in that group
@@ -285,7 +295,9 @@ export default function Library() {
   const detailsBook = rows?.find((r) => r.hash === details);
   const count = countBooks(items);
   // the books shown, those in groups too
-  const shownHashes = [...new Set(items.flatMap((i) => (isGroup(i) ? i.books : [i]).map((b) => b.hash)))];
+  const shownHashes = [
+    ...new Set(items.flatMap((i) => (isGroup(i) ? i.books : [i]).map((b) => b.hash)))
+  ];
   const chosen = rows?.filter((r) => selected.has(r.hash)) ?? [];
 
   return (
@@ -298,7 +310,10 @@ export default function Library() {
         <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 p-4 bg-base-100">
           <h1 className="text-xl font-semibold me-2">Library</h1>
           <label className="relative flex items-center flex-1 min-w-40 max-w-md">
-            <TbSearch size={14} className="absolute z-10 left-3 pointer-events-none text-base-content/50" />
+            <TbSearch 
+              size={14} 
+              className="absolute z-10 left-3 pointer-events-none text-base-content/50" 
+            />
             <input
               className="w-full rounded-full input input-sm ps-8 pe-8"
               placeholder={count > 1 ? `Search in ${count} books` : 'Search books'}
@@ -383,13 +398,19 @@ export default function Library() {
             >
               <span className="me-auto">
                 {chosen.length} selected
-                {chosen.length ? ` · ${chosen.filter((b) => b.synced).length} file${chosen.filter((b) => b.synced).length === 1 ? '' : 's'} synced` : ''}
+                {chosen.length 
+                  ? ` · ${chosen.filter((b) => b.synced).length} file${chosen.filter((b) => b.synced).length === 1 ? '' : 's'} synced` 
+                  : ''
+                }
               </span>
               <button
                 className="btn btn-xs btn-ghost"
                 onClick={() => select(shownHashes, !shownHashes.every((h) => selected.has(h)))}
               >
-                {shownHashes.length && shownHashes.every((h) => selected.has(h)) ? 'Unselect all' : 'Select all'}
+                {shownHashes.length && shownHashes.every((h) => selected.has(h)) 
+                  ? 'Unselect all' 
+                  : 'Select all'
+                }
               </button>
               <button
                 className="btn btn-xs btn-ghost"
@@ -427,7 +448,10 @@ export default function Library() {
             </div>
           ) : null}
           {message.text ? (
-            <div role="status" className={`flex items-center gap-2 px-3 py-2 mx-6 mb-2 text-sm rounded-md ${message.warn ? 'bg-warning/15' : 'bg-base-200'}`}>
+            <div 
+              role="status" 
+              className={`flex items-center gap-2 px-3 py-2 mx-6 mb-2 text-sm rounded-md ${message.warn ? 'bg-warning/15' : 'bg-base-200'}`}
+            >
               <span className="flex-1">{message.text}</span>
               <button aria-label="Close" onClick={() => setMessage('')}><TbX size={14} /></button>
             </div>

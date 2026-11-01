@@ -15,7 +15,7 @@ const STEM = 12;
 type End = 'start' | 'end';
 
 /**
- * A handle at an end of a range, as readup draws it: a stem along the line
+ * A handle at an end of a range: a stem along the line
  * and a dot past it; above the start, below the end (on the right of the
  * start and the left of the end, written down the page).
  */
@@ -67,7 +67,8 @@ type Target =
 
 type Drag = { end: End; anchor: Place; range: Range; point: Point; changed: boolean };
 
-const inside = (p: Point, area: Box) => p.x >= area.left - 2 && p.x <= area.right + 2 && p.y >= area.top - 2 && p.y <= area.bottom + 2;
+const inside = (p: Point, area: Box) => 
+  p.x >= area.left - 2 && p.x <= area.right + 2 && p.y >= area.top - 2 && p.y <= area.bottom + 2;
 
 /**
  * The handles at the ends of the text selected and of a highlight clicked,
@@ -95,7 +96,9 @@ export default function RangeHandles({ pane, view, area, vertical, onTurnHint, p
   const rerender = () => setMoved((n) => n + 1);
 
   // its note written, a highlight is not changed meanwhile
-  const note = annotation && !annotation.edit ? notes.find((n) => n.id === annotation.id) : undefined;
+  const note = annotation && !annotation.edit 
+    ? notes.find((n) => n.id === annotation.id) 
+    : undefined;
   const target: Target | undefined = selection?.range
     ? { kind: 'selection', range: selection.range, index: selection.index }
     : note?.text && annotation?.range
@@ -151,14 +154,22 @@ export default function RangeHandles({ pane, view, area, vertical, onTurnHint, p
     }
     // the pages of a chapter only: scrolled, the handle is dragged in view
     const box = latest.current.area();
-    if (box && !v.isFixedLayout && !v.renderer.scrolled) turner.note(cornerAt(point, box, v.book?.dir === 'rtl'));
+    if (box && !v.isFixedLayout && !v.renderer.scrolled) { 
+      turner.note(cornerAt(point, box, v.book?.dir === 'rtl'));
+    }
     rerender();
   }
 
   latest.current.move = move;
 
   const down = (end: End) => (e: ReactPointerEvent) => {
-    dragRef.current = { end, anchor: fixedEnd(target.range, end), range: target.range, point: { x: e.clientX, y: e.clientY }, changed: false };
+    dragRef.current = { 
+      end, 
+      anchor: fixedEnd(target.range, end), 
+      range: target.range, 
+      point: { x: e.clientX, y: e.clientY }, 
+      changed: false 
+    };
     usePopups.getState().setAdjusting(true);
     if (target.kind === 'annotation') preview(target.note, target.range);
     rerender();
@@ -176,7 +187,9 @@ export default function RangeHandles({ pane, view, area, vertical, onTurnHint, p
     const cfi = v && changed ? v.getCFI(target.index, range) : undefined;
     if (target.kind === 'selection') {
       const { selection: now } = usePopups.getState();
-      usePopups.getState().setSelection(cfi && now ? { ...now, text, cfi, box, range } : now && { ...now, box });
+      usePopups.getState().setSelection(
+        cfi && now ? { ...now, text, cfi, box, range } : now && { ...now, box }
+      );
       return;
     }
     const { note: edited } = target;
@@ -191,7 +204,9 @@ export default function RangeHandles({ pane, view, area, vertical, onTurnHint, p
   // the end dragged at the pointer, until it is let go
   if (drag) points[drag.end] = drag.point;
   const box = area();
-  const color = HIGHLIGHT_CSS[target.kind === 'annotation' ? target.note.color ?? 'yellow' : defaultHighlight().color];
+  const color = HIGHLIGHT_CSS[
+    target.kind === 'annotation' ? target.note.color ?? 'yellow' : defaultHighlight().color
+  ];
   return (
     <>
       {(['start', 'end'] as const).map((end) => (

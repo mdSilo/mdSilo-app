@@ -250,7 +250,7 @@ const TOOLBAR_HEIGHT = 44 + 8 + 28;
 const NOTE_HEIGHT = 120;
 
 /**
- * The popups over the book, as in readup: the toolbar of the text selected
+ * The popups over the book: the toolbar of the text selected
  * (copy, highlight, note, look up...); on a highlight, its style, color, note.
  */
 function BookPopups({ rootRef, tools }: {
@@ -291,7 +291,11 @@ function BookPopups({ rootRef, tools }: {
         return;
       }
       const created = annotateSelection(selection);
-      usePopups.getState().setAnnotation({ id: created.id, box: selection.box, range: selection.range });
+      usePopups.getState().setAnnotation({ 
+        id: created.id, 
+        box: selection.box, 
+        range: selection.range 
+      });
     };
     const list: Tool[] = [
       { 
@@ -349,8 +353,16 @@ function BookPopups({ rootRef, tools }: {
 
   if (!annotation || !note) return null;
   // written, it stays: not gone with the pointer
-  const edit = () => usePopups.getState().setAnnotation({ ...annotation, edit: 'existing', hover: undefined });
-  const anchor = anchorOf(annotation.box, root, width, annotation.bubble ? NOTE_HEIGHT : TOOLBAR_HEIGHT);
+  const edit = () => usePopups.getState().setAnnotation({ 
+    ...annotation, 
+    edit: 'existing', 
+    hover: undefined 
+  });
+  const anchor = anchorOf(
+    annotation.box, 
+    root, width, 
+    annotation.bubble ? NOTE_HEIGHT : TOOLBAR_HEIGHT
+  );
   if (editing) {
     const cancel = () => {
       // a highlight made to write a note on: not wanted
@@ -376,7 +388,10 @@ function BookPopups({ rootRef, tools }: {
     return (
       <AnchoredBox anchor={anchor} width={width} testId="note-popup">
         <div
-          onMouseEnter={() => hover && usePopups.getState().setAnnotation({ ...annotation, hover: 'note' })}
+          onMouseEnter={() => hover && usePopups.getState().setAnnotation({ 
+            ...annotation, 
+            hover: 'note' 
+          })}
           onMouseLeave={() => hover && clear()}
         >
           <NoteCard note={note} onEdit={edit} />

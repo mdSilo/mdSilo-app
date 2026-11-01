@@ -5,9 +5,14 @@ import type { FoliateView } from '../view';
 import ReadingRuler from './ReadingRuler';
 import { moveRuler, rulerPositions, type RulerColor } from './ruler';
 
-// ported from readup's ReadingRuler tests
-
-type TestRect = { top: number; bottom: number; left: number; right: number; width: number; height: number };
+type TestRect = { 
+  top: number; 
+  bottom: number; 
+  left: number; 
+  right: number; 
+  width: number; 
+  height: number 
+};
 
 let range: unknown = null;
 let contents: { doc: unknown }[] = [];

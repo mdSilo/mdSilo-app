@@ -1,7 +1,7 @@
 import { buildEpub, escapeXml, hrefOf, type TocEntry } from './epub';
 
 /**
- * Plain text as a book, after readup's TxtToEpubConverter: the encoding
+ * Plain text as a book: the encoding
  * found, the chapters by their headings (第一章, Chapter 1...), the volumes
  * (第一卷, Part One...) above them; without headings, parts of about the
  * same length.
@@ -9,9 +9,15 @@ import { buildEpub, escapeXml, hrefOf, type TocEntry } from './epub';
 
 /** The text of a file: UTF-8 (or UTF-16, by its BOM); else GB18030, as Chinese text files often are. */
 export function decodeText(data: Uint8Array): string {
-  if (data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf) return new TextDecoder('utf-8').decode(data.subarray(3));
-  if (data[0] === 0xff && data[1] === 0xfe) return new TextDecoder('utf-16le').decode(data.subarray(2));
-  if (data[0] === 0xfe && data[1] === 0xff) return new TextDecoder('utf-16be').decode(data.subarray(2));
+  if (data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf) {
+    return new TextDecoder('utf-8').decode(data.subarray(3));
+  }
+  if (data[0] === 0xff && data[1] === 0xfe) {
+    return new TextDecoder('utf-16le').decode(data.subarray(2));
+  }
+  if (data[0] === 0xfe && data[1] === 0xff) {
+    return new TextDecoder('utf-16be').decode(data.subarray(2));
+  }
   try {
     return new TextDecoder('utf-8', { fatal: true }).decode(data);
   } catch {
@@ -120,7 +126,11 @@ export function chaptersOf(text: string, title: string): TextChapter[] {
   let size = PART_SIZE;
   for (const p of paragraphs) {
     if (size >= PART_SIZE) {
-      parts.push({ title: parts.length ? p.slice(0, 24) + (p.length > 24 ? '…' : '') : title, level: 2, paragraphs: [] });
+      parts.push({ 
+        title: parts.length ? p.slice(0, 24) + (p.length > 24 ? '…' : '') : title, 
+        level: 2, 
+        paragraphs: [] 
+      });
       size = 0;
     }
     parts[parts.length - 1].paragraphs.push(p);
@@ -151,7 +161,8 @@ export function titleOfTextFile(name: string): { title: string; author?: string 
   const clean = (s?: string) => s?.replace(/^[\p{P}\p{S}\s]+|[\p{P}\p{S}\s]+$/gu, '') || undefined;
   if (!m) return { title: base, author: clean(labeled(base)) };
   const rest = m[2].trim();
-  const author = labeled(rest) ?? rest.match(/[[(（【［]\s*([^\])）】］]+?)\s*[\])）】］]/)?.[1] ?? rest;
+  const author = 
+    labeled(rest) ?? rest.match(/[[(（【［]\s*([^\])）】］]+?)\s*[\])）】］]/)?.[1] ?? rest;
   return { title: m[1].trim(), author: clean(author) };
 }
 
@@ -172,7 +183,9 @@ export async function txtToBook(name: string, data: Uint8Array): Promise<Uint8Ar
     title,
     author: authorInText(text) ?? author,
     language: guessLanguage(text),
-    chapters: chapters.map((c, i) => ({ path: `text/${i + 1}.xhtml`, title: c.title, body: textBody(c) })),
+    chapters: chapters.map(
+      (c, i) => ({ path: `text/${i + 1}.xhtml`, title: c.title, body: textBody(c) })
+    ),
     toc: tocOfText(chapters),
     css: TEXT_CSS,
   });

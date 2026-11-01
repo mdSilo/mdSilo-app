@@ -129,7 +129,7 @@ function pageColumns(view: FoliateView | null, range: Range, box: DOMRect, count
 const EASE = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
 /**
- * The reading ruler over the pages (ported from readup): the band on a few
+ * The reading ruler over the pages: the band on a few
  * lines, moved by the clicks on the sides and the arrows (see moveRuler), or
  * dragged by its edges; the rest of the page dimmed. In two columns, it is on
  * one of them. It stays on the same text as the pages are laid out again.
@@ -235,20 +235,24 @@ export default function ReadingRuler({
       const cy = (r.top + r.bottom) / 2;
       if (cx < 0 || cx > box.width || cy < 0 || cy > box.height) return null;
       const main = vertical ? (rtl ? box.width - cx : cx) : cy;
-      return multiColumn ? snapColumnsToAnchor(main, cx, lines, columnsRef.current) : snapToAnchor(main, lines, linesRef.current);
+      return multiColumn 
+        ? snapColumnsToAnchor(main, cx, lines, columnsRef.current) 
+        : snapToAnchor(main, lines, linesRef.current);
     } catch {
       return null;
     }
   }, [vertical, rtl, lines, multiColumn]);
 
   // the band on lines: as large as they are and the room around, centered on them
-  const applyBlock = useCallback((start: number, end: number, dimension: number, animated: boolean) => {
-    const band = Math.min(end - start + 2 * padding, maxBand);
-    bandRef.current = band;
-    setBandSize(band);
-    setRulerPosition(dimension > 0 ? ((start + end) / 2 / dimension) * 100 : positionRef.current, animated);
-    captureAnchor(start, end);
-  }, [padding, maxBand, setRulerPosition, captureAnchor]);
+  const applyBlock = useCallback(
+    (start: number, end: number, dimension: number, animated: boolean) => {
+      const band = Math.min(end - start + 2 * padding, maxBand);
+      bandRef.current = band;
+      setBandSize(band);
+      setRulerPosition(dimension > 0 ? ((start + end) / 2 / dimension) * 100 : positionRef.current, animated);
+      captureAnchor(start, end);
+    }, [padding, maxBand, setRulerPosition, captureAnchor]
+  );
 
   const toColumn = (block: { columnIndex?: number }) => {
     if (block.columnIndex === undefined) return;
@@ -294,7 +298,9 @@ export default function ReadingRuler({
         setColumnRect(cols[index] ? { left: cols[index].left, right: cols[index].right } : null);
         if (!moved) {
           // the text anchored, not shown yet as the pages are laid out again: kept, for the relocate
-          const block = anchor.current ? anchorBlock(box) : snapColumns(index, from, from, lines, 'forward', cols);
+          const block = anchor.current 
+            ? anchorBlock(box) 
+            : snapColumns(index, from, from, lines, 'forward', cols);
           if (block) {
             toColumn(block);
             applyBlock(block.start, block.end, dimension, false);
@@ -302,7 +308,9 @@ export default function ReadingRuler({
         }
         return;
       }
-      linesRef.current = scrolled ? scrolledLines(view(), box, vertical, rtl) : pageLines(pageRange, box, vertical, rtl);
+      linesRef.current = scrolled 
+        ? scrolledLines(view(), box, vertical, rtl) 
+        : pageLines(pageRange, box, vertical, rtl);
       columnsRef.current = [];
       setColumnRect(null);
       // the band on the lines shown; the others, to scroll to
@@ -333,7 +341,19 @@ export default function ReadingRuler({
       setColumnRect(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location, size.width, size.height, vertical, rtl, multiColumn, columnCount, lines, scrolled, applyBlock, anchorBlock]);
+  }, [
+    location, 
+    size.width, 
+    size.height, 
+    vertical, 
+    rtl, 
+    multiColumn, 
+    columnCount, 
+    lines, 
+    scrolled, 
+    applyBlock, 
+    anchorBlock
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 30);
@@ -346,7 +366,9 @@ export default function ReadingRuler({
     const cfi = location.cfi;
     const fraction = location.fraction;
     const turned = lastCfi.current !== null && lastCfi.current !== cfi;
-    const direction: Direction = lastFraction.current !== null && fraction < lastFraction.current ? 'backward' : 'forward';
+    const direction: Direction = lastFraction.current !== null && fraction < lastFraction.current 
+      ? 'backward' 
+      : 'forward';
     lastCfi.current = cfi;
     lastFraction.current = fraction;
     if (!turned) return;
@@ -393,7 +415,19 @@ export default function ReadingRuler({
     });
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location, scrolled, vertical, rtl, multiColumn, lines, fallbackSize, applyBlock, anchorBlock, clamp, setRulerPosition]);
+  }, [
+    location, 
+    scrolled, 
+    vertical, 
+    rtl, 
+    multiColumn, 
+    lines, 
+    fallbackSize, 
+    applyBlock, 
+    anchorBlock, 
+    clamp, 
+    setRulerPosition
+  ]);
 
   useEffect(() => () => {
     if (animateTimer.current) clearTimeout(animateTimer.current);
@@ -576,8 +610,14 @@ export default function ReadingRuler({
 
   return (
     <div ref={containerRef} className={root} data-testid="reading-ruler" aria-hidden>
-      <div className={`${dimClass} inset-x-0 top-0`} style={{ ...dim, height: bandStart, transition: transition(['height']) }} />
-      <div className={`${dimClass} inset-x-0 bottom-0`} style={{ ...dim, height: size.height - bandEnd, transition: transition(['height']) }} />
+      <div 
+        className={`${dimClass} inset-x-0 top-0`} 
+        style={{ ...dim, height: bandStart, transition: transition(['height']) }} 
+      />
+      <div 
+        className={`${dimClass} inset-x-0 bottom-0`} 
+        style={{ ...dim, height: size.height - bandEnd, transition: transition(['height']) }} 
+      />
       <div
         className={`absolute inset-x-0 mx-2 rounded-2xl pointer-events-none ${outline}`}
         style={{ top: `${position}%`, height: band, transform: 'translateY(-50%)', transition: transition(['top']), ...bandStyle }}

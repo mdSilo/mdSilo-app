@@ -29,8 +29,8 @@ const isNoteRef = (a: Element) => {
 
 /**
  * The image or table under a click, if any. A note mark is a link to its
- * footnote, not a picture to zoom; an image in another link zooms, as
- * readup does. A link in a table is followed.
+ * footnote, not a picture to zoom; an image in another link zooms. 
+ * A link in a table is followed.
  */
 export function mediaAt(target: EventTarget | null): Media | null {
   const el = target as Element | null;
@@ -57,7 +57,9 @@ export function fillsPage(target: EventTarget | null): boolean {
   const el = (target as Element | null)?.closest?.('img, svg, table');
   if (!el) return false;
   const { style } = el.ownerDocument.documentElement;
-  const page = parseFloat(style.getPropertyValue('--available-width')) * parseFloat(style.getPropertyValue('--available-height'));
+  const page = parseFloat(
+    style.getPropertyValue('--available-width')) * parseFloat(style.getPropertyValue('--available-height')
+  );
   const { width, height } = el.getBoundingClientRect();
   return page > 0 && width * height >= page / 2;
 }
@@ -102,7 +104,11 @@ const textOf = (el: Element) => {
 
 /** The images, an <img> or an <svg> drawing one, not in another svg. */
 const imagesIn = (root: Element) =>
-  Array.from(root.querySelectorAll('img, svg')).filter((el) => el.localName === 'img' ? (el as HTMLImageElement).src : !el.parentElement?.closest('svg') && svgImageOf(el));
+  Array.from(root.querySelectorAll('img, svg'))
+    .filter((el) => el.localName === 'img' 
+      ? (el as HTMLImageElement).src 
+      : !el.parentElement?.closest('svg') && svgImageOf(el)
+    );
 
 /** The book has a caption for the image already, before or after it. */
 const hasCaption = (el: Element, block: Element, alt: string) => {
@@ -112,7 +118,8 @@ const hasCaption = (el: Element, block: Element, alt: string) => {
     if (!near) return false;
     const looks = `${near.localName} ${near.getAttribute('class') ?? ''} ${near.getAttribute('epub:type') ?? ''}`;
     const text = normalize(textOf(near));
-    return /caption/i.test(looks) || (text.length > 0 && (text.includes(said) || said.includes(text)));
+    return /caption/i.test(looks) || 
+      (text.length > 0 && (text.includes(said) || said.includes(text)));
   });
 };
 

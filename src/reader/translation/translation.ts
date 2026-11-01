@@ -5,7 +5,7 @@ import { createZip } from '@/host/web/zip';
 import { readZip } from '../convert';
 
 /**
- * The book translated as it is read (as readup does): each paragraph shown
+ * The book translated as it is read: each paragraph shown
  * gets its translation under it, or in place of it. The translations are
  * kept per book, to show them again at once and to make of them a whole
  * translated book (an EPUB, see `translatedEpub`).

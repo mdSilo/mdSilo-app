@@ -13,7 +13,7 @@ type Props = {
   onImport: (options: FolderImportOptions) => void;
 };
 
-/** The folder to import books from, the formats, the size, the groups: as in readup. */
+/** The folder to import books from, the formats, the size, the groups */
 export default function ImportFolderDialog({ initial, group, onClose, onImport }: Props) {
   const [options, setOptions] = useState(() => withImportDefaults(initial));
   const [picking, setPicking] = useState(false);
@@ -54,7 +54,9 @@ export default function ImportFolderDialog({ initial, group, onClose, onImport }
               {options.dir || 'Choose a folder'}
             </span>
           </button>
-          <span className="text-xs text-base-content/60">With its sub folders; the books are copied into the reading folder.</span>
+          <span className="text-xs text-base-content/60">
+            With its sub folders; the books are copied into the reading folder.
+          </span>
         </div>
 
         <fieldset className="flex flex-col gap-1">
@@ -67,7 +69,9 @@ export default function ImportFolderDialog({ initial, group, onClose, onImport }
                   className="checkbox checkbox-sm"
                   checked={options.formats.includes(g.id)}
                   onChange={(e) => set({
-                    formats: e.target.checked ? [...options.formats, g.id] : options.formats.filter((id) => id !== g.id),
+                    formats: e.target.checked 
+                      ? [...options.formats, g.id] 
+                      : options.formats.filter((id) => id !== g.id),
                   })}
                 />
                 {g.label}
@@ -98,7 +102,13 @@ export default function ImportFolderDialog({ initial, group, onClose, onImport }
         <fieldset className="flex flex-col gap-1">
           <legend className="mb-1 text-xs text-base-content/70">Groups</legend>
           <label className="flex items-start gap-2 px-1 py-1 text-sm rounded-md cursor-pointer hover:bg-base-200/50">
-            <input type="radio" name="folder-import-mode" className="radio radio-sm mt-0.5" checked={!options.flatten} onChange={() => set({ flatten: false })} />
+            <input 
+              type="radio" 
+              name="folder-import-mode" 
+              className="radio radio-sm mt-0.5" 
+              checked={!options.flatten} 
+              onChange={() => set({ flatten: false })} 
+            />
             <span>
               <span className="block">Groups from the folders</span>
               <span className="block text-xs text-base-content/60">
@@ -107,18 +117,34 @@ export default function ImportFolderDialog({ initial, group, onClose, onImport }
             </span>
           </label>
           <label className="flex items-start gap-2 px-1 py-1 text-sm rounded-md cursor-pointer hover:bg-base-200/50">
-            <input type="radio" name="folder-import-mode" className="radio radio-sm mt-0.5" checked={options.flatten} onChange={() => set({ flatten: true })} />
+            <input 
+              type="radio" 
+              name="folder-import-mode" 
+              className="radio radio-sm mt-0.5" 
+              checked={options.flatten} 
+              onChange={() => set({ flatten: true })} 
+            />
             <span>
-              <span className="block">All in {group ? `the group ${group}` : 'the library, no group'}</span>
-              <span className="block text-xs text-base-content/60">Every book found, whatever its folder.</span>
+              <span className="block">
+                All in {group ? `the group ${group}` : 'the library, no group'}
+              </span>
+              <span className="block text-xs text-base-content/60">
+                Every book found, whatever its folder.
+              </span>
             </span>
           </label>
-          <span className="text-xs text-base-content/60">The books in the library already are not copied again, but go in the group too.</span>
+          <span className="text-xs text-base-content/60">
+            The books in the library already are not copied again, but go in the group too.
+          </span>
         </fieldset>
 
         <div className="flex justify-end gap-2">
           <button type="button" className="btn btn-sm btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="submit" className="btn btn-sm btn-primary" disabled={!options.dir || options.formats.length === 0}>
+          <button 
+            type="submit" 
+            className="btn btn-sm btn-primary" 
+            disabled={!options.dir || options.formats.length === 0}
+          >
             Import
           </button>
         </div>

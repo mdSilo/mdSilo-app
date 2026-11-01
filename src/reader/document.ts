@@ -1,6 +1,6 @@
 /**
  * Open e-book files with foliate-js (packages/foliate-js), adapted from the
- * DocumentLoader of readup: EPUB, PDF, MOBI/AZW/AZW3, FB2/FBZ and CBZ.
+ * DocumentLoader of reader: EPUB, PDF, MOBI/AZW/AZW3, FB2/FBZ and CBZ.
  */
 
 export type BookFormat = 'EPUB' | 'PDF' | 'MOBI' | 'AZW' | 'AZW3' | 'CBZ' | 'FB2' | 'FBZ';

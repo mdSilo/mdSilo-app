@@ -4,8 +4,6 @@ import {
   setRulerMover, snapColumns, snapColumnsToAnchor, snapToAnchor, snapToLines, stepPosition, visibleLines,
 } from './ruler';
 
-// ported from readup's reading-ruler tests
-
 describe('the size and place of the band', () => {
   it('is the lines of the text, by font size and line height', () => {
     expect(rulerSize(2, { fontSize: 18, lineHeight: 1.4 })).toBe(50);

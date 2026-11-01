@@ -6,8 +6,8 @@ import { newNoteId } from '../annotations/annotations';
 import type { DictionaryResult } from '../lookup/lookup';
 
 /**
- * The words to learn, met in the books and looked up in the dictionary, as in
- * the vocabulary book of readup; with the sentence each was met in and a link
+ * The words to learn, met in the books and looked up in the dictionary; 
+ * with the sentence each was met in and a link
  * back to it. In the workspace, synced with it:
  *
  *   .mdsilo/vocabulary.json   { version, entries: [...] }, the newest first

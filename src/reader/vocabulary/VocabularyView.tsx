@@ -98,7 +98,7 @@ function StudyCard({ entry, flipped, onFlip }: { entry: VocabularyEntry; flipped
   );
 }
 
-/** The vocabulary: words to learn, by cards or all at once; as in readup. */
+/** The vocabulary: words to learn, by cards or all at once; */
 export default function Vocabulary() {
   const { dispatch } = useCurrentViewContext();
   const ws = useStore((state) => state.initDir);

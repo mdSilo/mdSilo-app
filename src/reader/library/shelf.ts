@@ -2,7 +2,7 @@ import type { FolderImportOptions } from './folderImport';
 import type { BookEntry, BookState } from './library';
 
 /**
- * The library as a shelf, as in readup: the books filtered, grouped by the
+ * The library as a shelf: the books filtered, grouped by the
  * groups of the user (nested by `/`), by author, series or status, sorted.
  */
 export type ShelfBook = BookEntry & {
@@ -90,7 +90,13 @@ export function filterBooks(books: ShelfBook[], query: string) {
     test = (text) => text.toLowerCase().includes(lower);
   }
   return books.filter((b) => [
-    b.title, b.author, b.format, b.group, b.status, b.series, ...(b.subjects ?? []), plainText(b.description),
+    b.title, 
+    b.author, 
+    b.format, 
+    b.group, 
+    b.status, 
+    b.series, 
+    ...(b.subjects ?? []), plainText(b.description),
   ].some((text) => text && test(text)));
 }
 
@@ -137,7 +143,9 @@ function groupLevel(books: ShelfBook[], parent: string): ShelfItem[] {
 
 /** Whether a group of the shelf has books. */
 export function hasGroup(books: ShelfBook[], groupBy: GroupBy, key: string) {
-  if (groupBy === 'group') return books.some((b) => b.group === key || b.group?.startsWith(`${key}/`));
+  if (groupBy === 'group') {
+    return books.some((b) => b.group === key || b.group?.startsWith(`${key}/`));
+  }
   return shelfItems(books, groupBy, key).length > 0;
 }
 
@@ -163,9 +171,13 @@ function bookValue(book: ShelfBook, sortBy: SortBy): SortValue {
 
 function groupValue(group: ShelfGroup, sortBy: SortBy, groupBy: GroupBy): SortValue {
   const values = group.books.map((b) => bookValue(b, sortBy));
-  if (typeof values[0] === 'number') return Math.max(...(values as number[]));
+  if (typeof values[0] === 'number') {
+    return Math.max(...(values as number[]));
+  }
   // the books of a series, of a group: by the author of the first one
-  if (sortBy === 'author' && groupBy !== 'author' && group.books[0]) return group.books[0].author;
+  if (sortBy === 'author' && groupBy !== 'author' && group.books[0]) {
+    return group.books[0].author;
+  }
   return group.name;
 }
 
@@ -185,17 +197,29 @@ const bySeriesIndex = (a: ShelfBook, b: ShelfBook) =>
  * (the latest read, the name...). The books of a series by their index
  * first, always ascending; the books of each group sorted too.
  */
-export function sortShelf(items: ShelfItem[], sortBy: SortBy, ascending: boolean, groupBy: GroupBy, opened = '') {
+export function sortShelf(
+  items: ShelfItem[], 
+  sortBy: SortBy, 
+  ascending: boolean, 
+  groupBy: GroupBy, 
+  opened = ''
+) {
   const dir = ascending ? 1 : -1;
-  const byValue = (a: ShelfBook, b: ShelfBook) => dir * compare(bookValue(a, sortBy), bookValue(b, sortBy));
+  const byValue = 
+    (a: ShelfBook, b: ShelfBook) => dir * compare(bookValue(a, sortBy), bookValue(b, sortBy));
   const sortBooks = (a: ShelfBook, b: ShelfBook) =>
     (byValue(a, b) || (sortBy === 'series' ? bySeriesIndex(a, b) : 0)) || compare(a.title, b.title);
   const inSeries = (a: ShelfBook, b: ShelfBook) => bySeriesIndex(a, b) || sortBooks(a, b);
   const inGroup = groupBy === 'series' ? inSeries : sortBooks;
-  const value = (item: ShelfItem) => (isGroup(item) ? groupValue(item, sortBy, groupBy) : bookValue(item, sortBy));
-  const sorted = items.map((item) => (isGroup(item) ? { ...item, books: [...item.books].sort(inGroup) } : item));
+  const value = (item: ShelfItem) => 
+    (isGroup(item) ? groupValue(item, sortBy, groupBy) : bookValue(item, sortBy));
+  const sorted = items.map(
+    (item) => (isGroup(item) ? { ...item, books: [...item.books].sort(inGroup) } : item)
+  );
   // in a series: by its order
-  if (opened && groupBy === 'series') return (sorted as ShelfBook[]).sort(inSeries);
+  if (opened && groupBy === 'series') {
+    return (sorted as ShelfBook[]).sort(inSeries);
+  }
   return sorted.sort((a, b) => {
     if (!isGroup(a) && !isGroup(b)) return sortBooks(a, b);
     return dir * compare(value(a), value(b)) || compare(isGroup(a) ? a.name : a.title, isGroup(b) ? b.name : b.title);
@@ -213,7 +237,11 @@ export const breadcrumbs = (path: string) => {
 };
 
 /** The name of a new group of two books dropped one on the other. */
-export function newGroupName(a: Pick<BookEntry, 'title'>, b: Pick<BookEntry, 'title'>, parent = '') {
+export function newGroupName(
+  a: Pick<BookEntry, 'title'>, 
+  b: Pick<BookEntry, 'title'>, 
+  parent = ''
+) {
   const part = (title: string) => title.replace(/\//g, ' ').trim().slice(0, 5).trim() || 'Book';
   const name = `${part(a.title)}-${part(b.title)}`;
   return parent ? `${parent}/${name}` : name;
@@ -228,7 +256,11 @@ export type DropResult = { hashes: string[]; group: string };
  * (`crumb:<path>`), in that group, `crumb:` for none.
  */
 export function dropResult(
-  books: ShelfBook[], active: string, over: string, groupBy: GroupBy, opened = '',
+  books: ShelfBook[], 
+  active: string, 
+  over: string, 
+  groupBy: GroupBy, 
+  opened = '',
 ): DropResult | undefined {
   if (active === over) return undefined;
   const split = (id: string) => [id.slice(0, id.indexOf(':')), id.slice(id.indexOf(':') + 1)];
@@ -238,7 +270,9 @@ export function dropResult(
   if (typeA !== 'book' || !a) return undefined;
   if (typeB === 'book') {
     const b = books.find((book) => book.hash === keyB);
-    return b ? { hashes: [a.hash, b.hash], group: newGroupName(a, b, groupBy === 'group' ? opened : '') } : undefined;
+    return b 
+      ? { hashes: [a.hash, b.hash], group: newGroupName(a, b, groupBy === 'group' ? opened : '') } 
+      : undefined;
   }
   if ((typeB === 'group' && groupBy === 'group') || typeB === 'crumb') {
     return a.group === keyB || (!a.group && !keyB) ? undefined : { hashes: [a.hash], group: keyB };

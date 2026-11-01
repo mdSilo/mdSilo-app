@@ -9,13 +9,16 @@ type Props = {
 
 /**
  * The double border around the text written down the page, as books are
- * printed so (ported from readup): a thick line, a thin one in it, and the
+ * printed so: a thick line, a thin one in it, and the
  * bands of the chapter and the progress inside.
  */
 export default function DoubleBorder({ header, footer }: Props) {
   const line = { borderColor: 'currentColor' };
   return (
-    <div className="absolute inset-0 pointer-events-none opacity-50" data-testid="double-border" aria-hidden>
+    <div 
+      className="absolute inset-0 pointer-events-none opacity-50" 
+      data-testid="double-border" aria-hidden
+    >
       <div className="absolute border-2" style={{ ...line, inset: FRAME_OUTER }} />
       <div className="absolute border" style={{ ...line, inset: FRAME_INNER }} />
       {header ? (

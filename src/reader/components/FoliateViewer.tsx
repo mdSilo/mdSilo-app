@@ -841,8 +841,8 @@ function FoliateViewer({ book, initialCfi, pane = 'main' }: Props) {
 }
 
 /**
- * The edge of the page a selection dragged will turn, as readup marks it: a
- * bar along it runs the length of the wait, to keep holding there.
+ * The edge of the page a selection dragged will turn: 
+ * a bar along it runs the length of the wait, to keep holding there.
  */
 function TurnMark({ hint, area, rtl }: { hint: TurnHint; area?: Box; rtl: boolean }) {
   const [grown, setGrown] = useState(false);
@@ -867,8 +867,18 @@ function TurnMark({ hint, area, rtl }: { hint: TurnHint; area?: Box; rtl: boolea
       data-testid="turn-mark"
       aria-hidden
     >
-      <div className={`absolute inset-y-0 w-[3px] rounded-full bg-base-content ${right ? 'right-0' : 'left-0'}`} style={bar(false)} />
-      <div className={`absolute inset-x-0 h-[3px] rounded-full bg-base-content ${end ? 'bottom-0' : 'top-0'}`} style={bar(true)} />
+      <div 
+        className={
+          `absolute inset-y-0 w-[3px] rounded-full bg-base-content ${right ? 'right-0' : 'left-0'}`
+        } 
+        style={bar(false)} 
+      />
+      <div 
+        className={
+          `absolute inset-x-0 h-[3px] rounded-full bg-base-content ${end ? 'bottom-0' : 'top-0'}`
+        } 
+        style={bar(true)} 
+      />
     </div>
   );
 }

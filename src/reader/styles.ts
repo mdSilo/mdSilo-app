@@ -8,7 +8,7 @@ import type { BookDoc, SectionItem } from './document';
 
 /**
  * The CSS set in the pages of a book (foliate-js renderer `setStyles`),
- * trimmed from the styles of readup: the font and the paragraphs as set,
+ * the font and the paragraphs as set,
  * the colors of the app theme.
  */
 

@@ -215,7 +215,7 @@ function GroupItem({ group, mode, covers, onSync }: Props & { group: ShelfGroup 
 }
 
 /**
- * The covers of a group in a row, scrolled; by arrows too, as in readup:
+ * The covers of a group in a row, scrolled; by arrows too:
  * each shown when there is more on its side, half a row a click.
  */
 function CoverRow({ group, covers }: { group: ShelfGroup; covers: Record<string, string> }) {
@@ -258,7 +258,12 @@ function CoverRow({ group, covers }: { group: ShelfGroup; covers: Record<string,
   );
   return (
     <div className="relative min-w-0 shrink" data-testid="cover-row">
-      <div ref={ref} className="flex h-24 gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }} onScroll={check}>
+      <div 
+        ref={ref} 
+        className="flex h-24 gap-2 overflow-x-auto" 
+        style={{ scrollbarWidth: 'none' }} 
+        onScroll={check}
+      >
         {group.books.map((book) => (
           <div key={book.hash} className="h-full aspect-28/41 shrink-0">
             <BookCover book={book} url={covers[book.hash]} small />
@@ -272,7 +277,9 @@ function CoverRow({ group, covers }: { group: ShelfGroup; covers: Record<string,
 }
 
 /** Not a drag of the item, not a click on it. */
-function ShelfButton({ title, onClick, children }: { title: string; onClick: () => void; children: ReactNode }) {
+function ShelfButton(
+  { title, onClick, children }: { title: string; onClick: () => void; children: ReactNode }
+) {
   return (
     <IconButton
       size="xs"

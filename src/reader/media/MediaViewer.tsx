@@ -6,7 +6,7 @@ import type { Media } from './media';
 
 /**
  * An image or a table of the book, alone over the pages, to zoom and pan
- * (ported from readup: ImageViewer, TableViewer, ZoomControls).
+ * ImageViewer, TableViewer, ZoomControls
  */
 
 const MIN_SCALE = 0.5;
@@ -59,7 +59,9 @@ function useZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
   /** A point of the window, from the center of the container. */
   const anchorOf = (clientX: number, clientY: number): Point | undefined => {
     const rect = containerRef.current?.getBoundingClientRect();
-    return rect ? { x: clientX - rect.left - rect.width / 2, y: clientY - rect.top - rect.height / 2 } : undefined;
+    return rect 
+      ? { x: clientX - rect.left - rect.width / 2, y: clientY - rect.top - rect.height / 2 } 
+      : undefined;
   };
 
   // the wheel with Ctrl (and a pinch of a trackpad) zooms; not passive, to keep the page from zooming
@@ -102,8 +104,11 @@ function useZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
   const touchProps = {
     onTouchStart: (e: React.TouchEvent) => {
       const [a, b] = [e.touches[0], e.touches[1]];
-      if (a && b) pinch.current = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-      else if (a && scale > 1) dragStart.current = { x: a.clientX - pos.x, y: a.clientY - pos.y };
+      if (a && b) {
+        pinch.current = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      } else if (a && scale > 1) {
+        dragStart.current = { x: a.clientX - pos.x, y: a.clientY - pos.y };
+      }
       dragged.current = false;
     },
     onTouchMove: (e: React.TouchEvent) => {
@@ -111,7 +116,10 @@ function useZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
       dragged.current = true;
       if (a && b && pinch.current) {
         const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-        zoomTo(scale * (distance / pinch.current), anchorOf((a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2));
+        zoomTo(
+          scale * (distance / pinch.current), 
+          anchorOf((a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2)
+        );
         pinch.current = distance;
       } else if (a && scale > 1) {
         setPos({ x: a.clientX - dragStart.current.x, y: a.clientY - dragStart.current.y });
@@ -152,7 +160,8 @@ function useZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
   };
 }
 
-const ROUND = 'flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70';
+const ROUND = 
+  'flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70';
 
 type Zoom = ReturnType<typeof useZoom>;
 
@@ -196,21 +205,44 @@ function Overlay(
     >
       {children}
       <div className="absolute z-10 grid gap-3 right-4 top-4" onClick={(e) => e.stopPropagation()}>
-        <button className={`${ROUND} w-9 h-9`} onClick={onClose} aria-label="Close" title="Close (Esc)">
+        <button 
+          className={`${ROUND} w-9 h-9`} 
+          onClick={onClose} 
+          aria-label="Close" 
+          title="Close (Esc)"
+        >
           <TbX size={20} />
         </button>
-        <button className={`${ROUND} w-9 h-9`} onClick={zoom.zoomIn} aria-label="Zoom in" title="Zoom in (Ctrl +)">
+        <button 
+          className={`${ROUND} w-9 h-9`} 
+          onClick={zoom.zoomIn} 
+          aria-label="Zoom in" 
+          title="Zoom in (Ctrl +)"
+        >
           <TbPlus size={20} />
         </button>
-        <button className={`${ROUND} w-9 h-9`} onClick={zoom.zoomOut} aria-label="Zoom out" title="Zoom out (Ctrl -)">
+        <button 
+          className={`${ROUND} w-9 h-9`} 
+          onClick={zoom.zoomOut} 
+          aria-label="Zoom out" 
+          title="Zoom out (Ctrl -)"
+        >
           <TbMinus size={20} />
         </button>
-        <button className={`${ROUND} w-9 h-9`} onClick={zoom.reset} aria-label="Reset zoom" title="Reset zoom (Ctrl 0)">
+        <button 
+          className={`${ROUND} w-9 h-9`} 
+          onClick={zoom.reset} 
+          aria-label="Reset zoom" 
+          title="Reset zoom (Ctrl 0)"
+        >
           <TbMaximize size={20} />
         </button>
       </div>
       {zoom.labelShown ? (
-        <div className="absolute px-3 py-1 text-sm text-white -translate-x-1/2 rounded-full pointer-events-none left-1/2 top-4 bg-black/50" aria-label="Zoom level">
+        <div 
+          className="absolute px-3 py-1 text-sm text-white -translate-x-1/2 rounded-full pointer-events-none left-1/2 top-4 bg-black/50" 
+          aria-label="Zoom level"
+        >
           {Math.round(zoom.scale * 100)}%
         </div>
       ) : null}
@@ -222,7 +254,11 @@ function Overlay(
 
 /** An image, and the others of the chapter: the arrows go through them. */
 export const ImageViewer = memo(function ImageViewer(
-  { images, start, onClose }: { images: Extract<Media, { type: 'image' }>[]; start: number; onClose: () => void },
+  { images, start, onClose }: { 
+    images: Extract<Media, { type: 'image' }>[]; 
+    start: number; 
+    onClose: () => void 
+  },
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoom = useZoom(containerRef);
@@ -320,7 +356,11 @@ export const ImageViewer = memo(function ImageViewer(
 
 /** A table, wider than the page: alone, on the colors of the page. */
 export const TableViewer = memo(function TableViewer(
-  { html, colors, onClose }: { html: string; colors: { bg: string; fg: string }; onClose: () => void },
+  { html, colors, onClose }: { 
+    html: string; 
+    colors: { bg: string; fg: string }; 
+    onClose: () => void 
+  },
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoom = useZoom(containerRef);

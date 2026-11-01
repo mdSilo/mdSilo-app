@@ -192,6 +192,15 @@ So each kind has its own code (or none), and no shared module ties them together
 - Hotkeys for commands, or a command palette.
 - Plugin code blocks in the editor, and plugin selection actions: both are tested, but I haven't seen them run in the real app.
 - Plugin code blocks are drawn only in the light theme on published sites.
+- note mode plugin, such as adding another view mode with read or write or both permission besides wysiwyg, raw, mindmap.
+
+**What it would take to add real note modes**
+- A new `contributes.noteModes: [{ id, title }]`, listed in the mode switch of the note header.
+- When the mode is chosen, `Note.tsx` shows the plugin's sandboxed frame in the place of the editor, the way file viewers already do.
+- A small set of methods for the open note: `note.read` and `note.write` (with the existing `notes:read` and `notes:write` permissions), and a `note.changed` event when it changes elsewhere. The content would be passed on every edit, the way the raw editor does.
+- Switching to another mode must not lose unsaved changes, so the frame would write through the same save path as the other modes.
+
+That is a small step on top of the file viewer and the views already built. 
 
 **Later**
 - The Obsidian compatibility layer (needs trusted mode first).

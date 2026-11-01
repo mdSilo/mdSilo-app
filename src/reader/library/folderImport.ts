@@ -6,7 +6,7 @@ import {
 } from './library';
 
 /**
- * Books imported from a folder of the device, as in readup: the files of the
+ * Books imported from a folder of the device: the files of the
  * formats chosen, larger than a size, in the folder and its sub folders.
  * Copied into reading/; grouped by their folders, or all in one group.
  */
@@ -39,15 +39,21 @@ export type FolderImportOptions = {
 export const DEFAULT_FOLDER_IMPORT: FolderImportOptions = { dir: '', formats: ['epub', 'pdf'], minSizeKB: 20, flatten: false };
 
 /** The options stored, valid ones only. */
-export function withImportDefaults(options?: Partial<FolderImportOptions>): FolderImportOptions {
+export function withImportDefaults(
+  options?: Partial<FolderImportOptions>
+): FolderImportOptions {
   const formats = (options?.formats ?? []).filter((id) => FORMAT_GROUPS.some((g) => g.id === id));
   const size = options?.minSizeKB;
   return {
     dir: typeof options?.dir === 'string' ? options.dir : '',
     // none ticked would block the import at once
     formats: formats.length ? formats : DEFAULT_FOLDER_IMPORT.formats,
-    minSizeKB: typeof size === 'number' && Number.isFinite(size) && size >= 0 ? Math.floor(size) : DEFAULT_FOLDER_IMPORT.minSizeKB,
-    flatten: typeof options?.flatten === 'boolean' ? options.flatten : DEFAULT_FOLDER_IMPORT.flatten,
+    minSizeKB: typeof size === 'number' && Number.isFinite(size) && size >= 0 
+      ? Math.floor(size) 
+      : DEFAULT_FOLDER_IMPORT.minSizeKB,
+    flatten: typeof options?.flatten === 'boolean' 
+      ? options.flatten 
+      : DEFAULT_FOLDER_IMPORT.flatten,
   };
 }
 
@@ -64,7 +70,9 @@ const nameOf = (path: string) => path.replace(/[\\/]+$/, '').split(/[\\/]/).pop(
 
 /** The book files of the folder and its sub folders, hidden ones skipped, by the options. */
 export async function scanFolder(options: FolderImportOptions): Promise<FoundBook[]> {
-  const exts = new Set<string>(FORMAT_GROUPS.filter((g) => options.formats.includes(g.id)).flatMap((g) => [...g.exts]));
+  const exts = new Set<string>(
+    FORMAT_GROUPS.filter((g) => options.formats.includes(g.id)).flatMap((g) => [...g.exts])
+  );
   const minSize = Math.max(0, options.minSizeKB) * 1024;
   const found: FoundBook[] = [];
   const walk = async (dir: string, folders: string[]) => {
@@ -96,7 +104,7 @@ export type FolderImportResult = {
 /**
  * Import the books found: copied into reading/, unless in the library
  * already (same content). Each in the group of its folder, or all in the
- * group given, '' for none; the books already there moved too, as readup.
+ * group given, '' for none; the books already there moved too.
  */
 export async function importFolder(
   ws: string,
@@ -134,8 +142,10 @@ export async function importFolder(
       continue;
     }
     const known = lib.books[hash];
-    const here = seen.has(hash)
-      || (known && (await invoke<boolean>('file_exist', { filePath: fromWorkspacePath(ws, known.file) })));
+    const here = seen.has(hash) || 
+      (known && (
+        await invoke<boolean>('file_exist', { filePath: fromWorkspacePath(ws, known.file) })
+      ));
     seen.add(hash);
     if (here) {
       result.existing += 1;

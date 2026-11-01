@@ -305,8 +305,10 @@ export type KeyAction =
 
 type Keys = { key: string; shiftKey: boolean; altKey: boolean; ctrlKey: boolean; metaKey: boolean };
 
-/** The keys of reading, as in readup. */
-export function keyAction({ key, shiftKey, altKey, ctrlKey, metaKey }: Keys): KeyAction | undefined {
+/** The keys of reading. */
+export function keyAction(
+  { key, shiftKey, altKey, ctrlKey, metaKey }: Keys
+): KeyAction | undefined {
   if (ctrlKey || metaKey) return undefined;
   if (altKey) {
     if (key === 'ArrowLeft') return { go: 'back' };
@@ -364,7 +366,9 @@ export type Progress = {
  * The progress shown below the text: what is left on the left, where the
  * reader is on the right.
  */
-export function formatProgress(p: Progress | undefined, fixedLayout: boolean): { left: string; right: string } {
+export function formatProgress(
+  p: Progress | undefined, fixedLayout: boolean
+): { left: string; right: string } {
   if (!p) return { left: '', right: '' };
   const percent = `${Math.round(p.fraction * 100)}%`;
   if (fixedLayout) {

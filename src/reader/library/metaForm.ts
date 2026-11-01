@@ -1,6 +1,6 @@
 import type { BookEntry, BookMeta } from './library';
 
-/** The metadata of a book edited in a form, as text: as in readup. */
+/** The metadata of a book edited in a form, as text. */
 export type Form = Record<'title' | 'subtitle' | 'author' | 'series' | 'seriesIndex' | 'seriesTotal' | 'publisher'
   | 'published' | 'language' | 'identifier' | 'subjects' | 'description', string>;
 

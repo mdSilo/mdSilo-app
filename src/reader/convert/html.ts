@@ -3,8 +3,8 @@ import type { EpubChapter, TocEntry } from './epub';
 import { hrefOf } from './epub';
 
 /**
- * An HTML page (or Markdown, rendered) as a book, after readup's Markdown
- * books: the scripts and forms out, the page split in chapters at its first
+ * An HTML page (or Markdown, rendered) as a book: 
+ * the scripts and forms out, the page split in chapters at its first
  * level of headings, the headings below them in the contents.
  */
 
@@ -13,7 +13,9 @@ export function cleanHtml(html: string): Document {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const body = DOMPurify.sanitize(doc.body, {
     RETURN_DOM: true,
-    FORBID_TAGS: ['style', 'link', 'form', 'input', 'button', 'textarea', 'select', 'iframe', 'object', 'embed'],
+    FORBID_TAGS: [
+      'style', 'link', 'form', 'input', 'button', 'textarea', 'select', 'iframe', 'object', 'embed'
+    ],
   }) as HTMLElement;
   doc.body.replaceChildren(...Array.from(body.childNodes));
   return doc;
@@ -30,7 +32,11 @@ export function metaOfHtml(doc: Document) {
 }
 
 const slugify = (text: string) =>
-  text.toLowerCase().trim().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '') || 'section';
+  text.toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'section';
 
 const HEADINGS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 
@@ -49,7 +55,9 @@ function contentOf(body: HTMLElement): Element {
  * The chapters of a page: split at its first level of headings found twice
  * or more (h1, else h2), in `dir` of the book; one chapter if none.
  */
-export function chaptersOfHtml(doc: Document, title: string, dir = 'text'): { chapters: EpubChapter[]; toc: TocEntry[] } {
+export function chaptersOfHtml(
+  doc: Document, title: string, dir = 'text'
+): { chapters: EpubChapter[]; toc: TocEntry[] } {
   const content = contentOf(doc.body);
   const nodes = Array.from(content.childNodes);
   // ids unique, the headings with one: the anchors of the contents
@@ -62,13 +70,18 @@ export function chaptersOfHtml(doc: Document, title: string, dir = 'text'): { ch
     used.add(id);
     h.id = id;
   }
-  const split = ['H1', 'H2'].find((tag) => nodes.filter((n) => (n as Element).tagName === tag).length >= 2);
+  const split = ['H1', 'H2'].find(
+    (tag) => nodes.filter((n) => (n as Element).tagName === tag).length >= 2
+  );
   const groups: Node[][] = [[]];
   for (const node of nodes) {
-    if (split && (node as Element).tagName === split && groups[groups.length - 1].length) groups.push([]);
+    if (split && (node as Element).tagName === split && groups[groups.length - 1].length) {
+      groups.push([]);
+    }
     groups[groups.length - 1].push(node);
   }
-  const hasContent = (g: Node[]) => g.some((n) => n.nodeType === Node.ELEMENT_NODE || n.textContent?.trim());
+  const hasContent = 
+    (g: Node[]) => g.some((n) => n.nodeType === Node.ELEMENT_NODE || n.textContent?.trim());
   const kept = groups.filter(hasContent);
   if (!kept.length) kept.push([]);
 
@@ -79,7 +92,9 @@ export function chaptersOfHtml(doc: Document, title: string, dir = 'text'): { ch
   kept.forEach((g, i) => g.forEach((n) => {
     if (n.nodeType !== Node.ELEMENT_NODE) return;
     const el = n as Element;
-    for (const x of [el, ...Array.from(el.querySelectorAll('[id]'))]) if (x.id) idPath.set(x.id, pathOf(i));
+    for (const x of [el, ...Array.from(el.querySelectorAll('[id]'))]) {
+      if (x.id) idPath.set(x.id, pathOf(i));
+    } 
   }));
   const toc: TocEntry[] = [];
   const chapters = kept.map((g, i) => {
@@ -89,7 +104,9 @@ export function chaptersOfHtml(doc: Document, title: string, dir = 'text'): { ch
       for (const a of Array.from(el.querySelectorAll('a[href^="#"]'))) {
         const id = decodeURIComponent(a.getAttribute('href')!.slice(1));
         const at = idPath.get(id);
-        if (at && at !== path) a.setAttribute('href', `${at.split('/').pop()}#${encodeURIComponent(id)}`);
+        if (at && at !== path) {
+          a.setAttribute('href', `${at.split('/').pop()}#${encodeURIComponent(id)}`);
+        }
       }
     }
     const first = elements[0];
@@ -99,9 +116,19 @@ export function chaptersOfHtml(doc: Document, title: string, dir = 'text'): { ch
     const level = split ? Number(split[1]) + 1 : 1;
     const subs = elements.flatMap((el) => [el, ...Array.from(el.querySelectorAll('*'))])
       .filter((el) => el !== heading && el.tagName === `H${level}` && el.textContent?.trim())
-      .map((el) => ({ label: el.textContent!.trim(), href: `${hrefOf(path)}#${encodeURIComponent(el.id)}` }));
-    toc.push({ label: chapterTitle, href: hrefOf(path), ...(subs.length ? { children: subs } : {}) });
-    return { path, title: chapterTitle, body: g.map((n) => serializer.serializeToString(n)).join('') };
+      .map((el) => (
+        { label: el.textContent!.trim(), href: `${hrefOf(path)}#${encodeURIComponent(el.id)}` }
+      ));
+    toc.push({ 
+      label: chapterTitle, 
+      href: hrefOf(path), 
+      ...(subs.length ? { children: subs } : {}) 
+    });
+    return { 
+      path, 
+      title: chapterTitle, 
+      body: g.map((n) => serializer.serializeToString(n)).join('') 
+    };
   });
   return { chapters, toc };
 }
