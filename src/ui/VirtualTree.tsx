@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback, memo, useRef } from 'react';
-import { useVirtual } from 'react-virtual';
-import { FlattenedTreeNode, TreeNode as TreeNodeType } from './Tree';
-import TreeNodeElement from './TreeNodeElement';
+import { useState, useMemo, useCallback, memo, useRef } from "react";
+import { useVirtual } from "react-virtual";
+import { FlattenedTreeNode, TreeNode as TreeNodeType } from "./Tree";
+import TreeNodeElement from "./TreeNodeElement";
 
 type Props = {
   data: TreeNodeType[];
@@ -13,17 +13,17 @@ function VirtualTree(props: Props) {
   const { data, className, collapseAll = false } = props;
 
   const [closedNodeIds, setClosedNodeIds] = useState<string[]>(
-    collapseAll ? data.map((node) => node.id) : []
+    collapseAll ? data.map((node) => node.id) : [],
   );
 
   const onNodeClick = useCallback(
     (node: FlattenedTreeNode) =>
       node.collapsed
         ? setClosedNodeIds((closedNodeIds) =>
-            closedNodeIds.filter((id) => id !== node.id)
+            closedNodeIds.filter((id) => id !== node.id),
           )
         : setClosedNodeIds((closedNodeIds) => [...closedNodeIds, node.id]),
-    []
+    [],
   );
 
   const flattenNode = useCallback(
@@ -45,7 +45,7 @@ function VirtualTree(props: Props) {
         }
       }
     },
-    [closedNodeIds]
+    [closedNodeIds],
   );
 
   const flattenedData = useMemo(() => {
@@ -67,8 +67,8 @@ function VirtualTree(props: Props) {
       <div
         style={{
           height: `${rowVirtualizer.totalSize}px`,
-          width: '100%',
-          position: 'relative',
+          width: "100%",
+          position: "relative",
         }}
       >
         {rowVirtualizer.virtualItems.map((virtualRow, index) => {
@@ -80,10 +80,10 @@ function VirtualTree(props: Props) {
               node={node}
               onClick={onNodeClick}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 0,
                 left: 0,
-                width: '100%',
+                width: "100%",
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             />

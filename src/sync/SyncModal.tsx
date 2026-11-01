@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
-import { store, useStore } from '@/state/store';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { BaseModal } from '@/ui/BaseModal';
-import { Select, Spinner, Toggle } from '@/ui/ui';
-import { openFilePath } from '@/workspace/open';
-import { joinPath } from '@/workspace/util';
-import { syncInfo, syncSetup, type SyncInfo } from './api';
-import { syncWorkspace, useSyncState } from './syncWorkspace';
+import { useCallback, useEffect, useState } from "react";
+import { store, useStore } from "@/state/store";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { BaseModal } from "@/ui/BaseModal";
+import { Select, Spinner, Toggle } from "@/ui/ui";
+import { openFilePath } from "@/workspace/open";
+import { joinPath } from "@/workspace/util";
+import { syncInfo, syncSetup, type SyncInfo } from "./api";
+import { syncWorkspace, useSyncState } from "./syncWorkspace";
 
 type Props = {
   ws: string;
@@ -14,25 +14,31 @@ type Props = {
   handleClose: () => void;
 };
 
-type Form = { url: string; username: string; token: string; authorName: string; authorEmail: string };
+type Form = {
+  url: string;
+  username: string;
+  token: string;
+  authorName: string;
+  authorEmail: string;
+};
 
 const formOf = (info?: SyncInfo): Form => ({
-  url: info?.remoteUrl ?? '',
-  username: info?.username ?? '',
-  token: '',
-  authorName: info?.authorName ?? '',
-  authorEmail: info?.authorEmail ?? '',
+  url: info?.remoteUrl ?? "",
+  username: info?.username ?? "",
+  token: "",
+  authorName: info?.authorName ?? "",
+  authorEmail: info?.authorEmail ?? "",
 });
 
-const inputClass = 'input input-sm w-full';
+const inputClass = "input input-sm w-full";
 
 /** minutes between automatic syncs */
 const INTERVALS: [number, string][] = [
-  [0, 'Never'],
-  [5, '5 minutes'],
-  [15, '15 minutes'],
-  [30, '30 minutes'],
-  [60, 'Hour'],
+  [0, "Never"],
+  [5, "5 minutes"],
+  [15, "15 minutes"],
+  [30, "30 minutes"],
+  [60, "Hour"],
 ];
 
 /** Set up the sync of the workspace with a git remote, and sync. */
@@ -77,7 +83,7 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
       const next = await syncSetup(ws, {
         url: form.url,
         username: form.username,
-        token: forgetToken ? '' : form.token || undefined,
+        token: forgetToken ? "" : form.token || undefined,
         authorName: form.authorName,
         authorEmail: form.authorEmail,
       });
@@ -96,7 +102,7 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
     const file = joinPath(ws, path);
     await openFilePath(file, true);
     store.getState().setCurrentNoteId(file);
-    dispatch({ view: 'md', params: { noteId: file } });
+    dispatch({ view: "md", params: { noteId: file } });
     handleClose();
   };
 
@@ -105,23 +111,36 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
   const lastError = syncedWs === ws ? error : undefined;
 
   return (
-    <BaseModal title="Sync" isOpen={isOpen} handleClose={handleClose} panelClassName="max-w-md">
+    <BaseModal
+      title="Sync"
+      isOpen={isOpen}
+      handleClose={handleClose}
+      panelClassName="max-w-md"
+    >
       <div className="flex flex-col gap-3 p-3 text-sm text-left bg-base-200">
         <p className="text-base-content/80">
-          The workspace syncs as a git repository with a remote such as GitHub or Gitea, over HTTPS
-          with a personal access token. Books sync only if chosen in the library.
+          The workspace syncs as a git repository with a remote such as GitHub
+          or Gitea, over HTTPS with a personal access token. Books sync only if
+          chosen in the library.
         </p>
 
         {ready && !editing ? (
           <div className="flex flex-col gap-1">
             <div className="break-all">
-              <span className="text-base-content/70">Remote: </span>{info?.remoteUrl}
-              {info?.branch ? <span className="text-base-content/70"> ({info.branch})</span> : null}
+              <span className="text-base-content/70">Remote: </span>
+              {info?.remoteUrl}
+              {info?.branch ? (
+                <span className="text-base-content/70"> ({info.branch})</span>
+              ) : null}
             </div>
             <div className="text-base-content/70">
-              {info?.hasToken ? 'Token saved' : 'No token'} · {info?.changes ?? 0} changed since the last sync
+              {info?.hasToken ? "Token saved" : "No token"} ·{" "}
+              {info?.changes ?? 0} changed since the last sync
             </div>
-            <button className="self-start link link-primary text-xs" onClick={() => setEditing(true)}>
+            <button
+              className="self-start link link-primary text-xs"
+              onClick={() => setEditing(true)}
+            >
               Change the remote
             </button>
           </div>
@@ -133,11 +152,18 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
                 className={inputClass}
                 placeholder="https://github.com/me/notes.git"
                 value={form.url}
-                onChange={set('url')}
+                onChange={set("url")}
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span>Token {info?.hasToken ? <span className="text-base-content/70">(saved; empty to keep it)</span> : null}</span>
+              <span>
+                Token{" "}
+                {info?.hasToken ? (
+                  <span className="text-base-content/70">
+                    (saved; empty to keep it)
+                  </span>
+                ) : null}
+              </span>
               <input
                 className={inputClass}
                 type="password"
@@ -145,7 +171,7 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
                 placeholder="a personal access token, with write access to the repository"
                 value={form.token}
                 disabled={forgetToken}
-                onChange={set('token')}
+                onChange={set("token")}
               />
             </label>
             {info?.hasToken ? (
@@ -160,28 +186,62 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
               </label>
             ) : null}
             <p className="text-xs text-base-content/70">
-              The token is kept in the app data of this device, never in the workspace.
+              The token is kept in the app data of this device, never in the
+              workspace.
             </p>
             <label className="flex flex-col gap-1">
-              <span>User name <span className="text-base-content/70">(if the host needs it with the token)</span></span>
-              <input className={inputClass} value={form.username} onChange={set('username')} />
+              <span>
+                User name{" "}
+                <span className="text-base-content/70">
+                  (if the host needs it with the token)
+                </span>
+              </span>
+              <input
+                className={inputClass}
+                value={form.username}
+                onChange={set("username")}
+              />
             </label>
             <label className="flex flex-col flex-1 gap-1">
               <span>Author(optional)</span>
-              <input className={inputClass} placeholder="Name" value={form.authorName} onChange={set('authorName')} />
+              <input
+                className={inputClass}
+                placeholder="Name"
+                value={form.authorName}
+                onChange={set("authorName")}
+              />
             </label>
             <label className="flex flex-col flex-1 gap-1">
               <span>Email(optional)</span>
-              <input className={inputClass} placeholder="me@example.com" value={form.authorEmail} onChange={set('authorEmail')} />
+              <input
+                className={inputClass}
+                placeholder="me@example.com"
+                value={form.authorEmail}
+                onChange={set("authorEmail")}
+              />
             </label>
-            {setupError ? <div role="alert" className="text-error">{setupError}</div> : null}
+            {setupError ? (
+              <div role="alert" className="text-error">
+                {setupError}
+              </div>
+            ) : null}
             <div className="flex justify-end gap-2">
               {ready ? (
-                <button className="btn btn-sm btn-ghost" onClick={() => { setEditing(false); setForm(formOf(info)); }}>
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => {
+                    setEditing(false);
+                    setForm(formOf(info));
+                  }}
+                >
                   Cancel
                 </button>
               ) : null}
-              <button className="btn btn-sm btn-primary" disabled={!form.url.trim() || saving} onClick={save}>
+              <button
+                className="btn btn-sm btn-primary"
+                disabled={!form.url.trim() || saving}
+                onClick={save}
+              >
                 Save
               </button>
             </div>
@@ -189,9 +249,13 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
         )}
 
         {ready && !editing ? (
-          <button className="btn btn-sm btn-primary" disabled={syncing} onClick={() => void syncWorkspace(ws)}>
+          <button
+            className="btn btn-sm btn-primary"
+            disabled={syncing}
+            onClick={() => void syncWorkspace(ws)}
+          >
             {syncing ? <Spinner size="xs" color="neutral" /> : null}
-            {syncing ? 'Syncing…' : 'Sync now'}
+            {syncing ? "Syncing…" : "Sync now"}
           </button>
         ) : null}
 
@@ -201,41 +265,54 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
             <Select
               label="Every"
               value={String(syncSettings.interval)}
-              onChange={(v) => setSyncSettings({ ...syncSettings, interval: Number(v) })}
+              onChange={(v) =>
+                setSyncSettings({ ...syncSettings, interval: Number(v) })
+              }
             >
               {INTERVALS.map(([minutes, name]) => (
-                <option key={minutes} value={minutes}>{name}</option>
+                <option key={minutes} value={minutes}>
+                  {name}
+                </option>
               ))}
             </Select>
             <Toggle
               label="When the app closes"
               checked={syncSettings.onExit}
-              onChange={(onExit) => setSyncSettings({ ...syncSettings, onExit })}
+              onChange={(onExit) =>
+                setSyncSettings({ ...syncSettings, onExit })
+              }
             />
           </div>
         ) : null}
 
-        {lastError ? <div role="alert" className="break-words text-error">{lastError}</div> : null}
+        {lastError ? (
+          <div role="alert" className="break-words text-error">
+            {lastError}
+          </div>
+        ) : null}
         {lastReport && !lastError ? (
           <div className="flex flex-col gap-1">
             <div className="text-base-content/70">
               {lastReport.pulled.length} changed from the remote
-              {lastReport.pushed ? ', changes sent' : ''}
-              {at ? ` · ${new Date(at).toLocaleTimeString()}` : ''}
+              {lastReport.pushed ? ", changes sent" : ""}
+              {at ? ` · ${new Date(at).toLocaleTimeString()}` : ""}
             </div>
             {lastReport.conflicts.some((c) => c.copy) ? (
               <div className="flex flex-col gap-1">
                 <div className="text-warning">
-                  Changed on both sides: the remote version is in the note, this device&apos;s beside it.
+                  Changed on both sides: the remote version is in the note, this
+                  device&apos;s beside it.
                 </div>
                 <ul className="flex flex-col gap-1">
-                  {lastReport.conflicts.filter((c) => c.copy).map((c) => (
-                    <li key={c.path} className="break-all">
-                      <FileLink path={c.path} open={openNote} />
-                      {' ← '}
-                      <FileLink path={c.copy!} open={openNote} />
-                    </li>
-                  ))}
+                  {lastReport.conflicts
+                    .filter((c) => c.copy)
+                    .map((c) => (
+                      <li key={c.path} className="break-all">
+                        <FileLink path={c.path} open={openNote} />
+                        {" ← "}
+                        <FileLink path={c.copy!} open={openNote} />
+                      </li>
+                    ))}
                 </ul>
               </div>
             ) : null}
@@ -247,7 +324,17 @@ export default function SyncModal({ ws, isOpen, handleClose }: Props) {
 }
 
 /** A note opens on click; other files are only named. */
-function FileLink({ path, open }: { path: string; open: (path: string) => Promise<void> }) {
-  if (!path.toLowerCase().endsWith('.md')) return <span>{path}</span>;
-  return <button className="link" onClick={() => void open(path)}>{path}</button>;
+function FileLink({
+  path,
+  open,
+}: {
+  path: string;
+  open: (path: string) => Promise<void>;
+}) {
+  if (!path.toLowerCase().endsWith(".md")) return <span>{path}</span>;
+  return (
+    <button className="link" onClick={() => void open(path)}>
+      {path}
+    </button>
+  );
 }

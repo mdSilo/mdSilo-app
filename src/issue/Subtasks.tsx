@@ -1,25 +1,33 @@
-import { useState } from 'react';
-import { TbTrash as IconTrash } from 'react-icons/tb';
-import { useIssueStore } from './issueStore';
-import { addSubtask, removeSubtask, subtaskProgress, updateSubtask } from './issueOps';
-import { inputClass } from './common';
-import type { Issue } from './types';
+import { useState } from "react";
+import { TbTrash as IconTrash } from "react-icons/tb";
+import { useIssueStore } from "./issueStore";
+import {
+  addSubtask,
+  removeSubtask,
+  subtaskProgress,
+  updateSubtask,
+} from "./issueOps";
+import { inputClass } from "./common";
+import type { Issue } from "./types";
 
 /** The sub-tasks of an issue: a checklist, done one by one. */
 export default function Subtasks({ issue }: { issue: Issue }) {
   const apply = useIssueStore((s) => s.apply);
-  const [text, setText] = useState('');
-  const [editing, setEditing] = useState<{ id: string; text: string } | undefined>();
+  const [text, setText] = useState("");
+  const [editing, setEditing] = useState<
+    { id: string; text: string } | undefined
+  >();
   const num = issue.number;
   const progress = subtaskProgress(issue);
 
   const add = () => {
     if (!text.trim()) return;
     apply((d) => addSubtask(d, num, text));
-    setText('');
+    setText("");
   };
   const saveEdit = () => {
-    if (editing) apply((d) => updateSubtask(d, num, editing.id, { text: editing.text }));
+    if (editing)
+      apply((d) => updateSubtask(d, num, editing.id, { text: editing.text }));
     setEditing(undefined);
   };
 
@@ -29,8 +37,14 @@ export default function Subtasks({ issue }: { issue: Issue }) {
         Sub-tasks
         {progress ? (
           <>
-            <progress className="w-24 progress progress-success" value={progress.done} max={progress.total} />
-            <span className="font-normal">{progress.done}/{progress.total}</span>
+            <progress
+              className="w-24 progress progress-success"
+              value={progress.done}
+              max={progress.total}
+            />
+            <span className="font-normal">
+              {progress.done}/{progress.total}
+            </span>
           </>
         ) : null}
       </div>
@@ -42,7 +56,11 @@ export default function Subtasks({ issue }: { issue: Issue }) {
               className="checkbox checkbox-sm"
               checked={task.done}
               aria-label={`Done: ${task.text}`}
-              onChange={(e) => apply((d) => updateSubtask(d, num, task.id, { done: e.target.checked }))}
+              onChange={(e) =>
+                apply((d) =>
+                  updateSubtask(d, num, task.id, { done: e.target.checked }),
+                )
+              }
             />
             {editing?.id === task.id ? (
               <input
@@ -50,17 +68,19 @@ export default function Subtasks({ issue }: { issue: Issue }) {
                 value={editing.text}
                 autoFocus
                 aria-label="Sub-task"
-                onChange={(e) => setEditing({ id: task.id, text: e.target.value })}
+                onChange={(e) =>
+                  setEditing({ id: task.id, text: e.target.value })
+                }
                 onBlur={saveEdit}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') saveEdit();
-                  if (e.key === 'Escape') setEditing(undefined);
+                  if (e.key === "Enter") saveEdit();
+                  if (e.key === "Escape") setEditing(undefined);
                 }}
               />
             ) : (
               <button
                 type="button"
-                className={`flex-1 text-left text-sm ${task.done ? 'line-through text-base-content/50' : ''}`}
+                className={`flex-1 text-left text-sm ${task.done ? "line-through text-base-content/50" : ""}`}
                 onClick={() => setEditing({ id: task.id, text: task.text })}
               >
                 {task.text}
@@ -84,7 +104,7 @@ export default function Subtasks({ issue }: { issue: Issue }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') add();
+          if (e.key === "Enter") add();
         }}
       />
     </div>

@@ -1,16 +1,16 @@
-import type { HighlightColor, HighlightStyle } from './annotations/annotations';
-import type { CodeLanguage } from './highlight';
-import type { RulerColor } from './ruler/ruler';
+import type { HighlightColor, HighlightStyle } from "./annotations/annotations";
+import type { CodeLanguage } from "./highlight";
+import type { RulerColor } from "./ruler/ruler";
 
 /** The colors of the pages: of the app theme, or of paper. */
-export type PageTheme = 'auto' | 'light' | 'sepia' | 'gray' | 'dark';
+export type PageTheme = "auto" | "light" | "sepia" | "gray" | "dark";
 
 /**
  * The writing of a book, chosen for it: as the book says; across, left to
  * right; down, the lines right to left or left to right; across, right to left.
  */
-export type WritingMode = 
-  'auto' | 'horizontal-tb' | 'vertical-rl' | 'vertical-lr' | 'horizontal-rtl';
+export type WritingMode =
+  "auto" | "horizontal-tb" | "vertical-rl" | "vertical-lr" | "horizontal-rtl";
 
 /** How books are shown, for all books; kept with the user settings. */
 export type ReaderSettings = {
@@ -22,7 +22,7 @@ export type ReaderSettings = {
   justify: boolean;
   hyphenate: boolean;
   /** page by page, or one long scroll */
-  flow: 'paginated' | 'scrolled';
+  flow: "paginated" | "scrolled";
   /** columns side by side, if wide enough */
   maxColumns: number;
   /** px, the width of a column */
@@ -40,15 +40,15 @@ export type ReaderSettings = {
   codeHighlight: boolean;
   codeLanguage: CodeLanguage;
   /** a fixed layout (PDF, comics): the page fit to the view, or to its width */
-  zoomMode: 'fit-page' | 'fit-width';
+  zoomMode: "fit-page" | "fit-width";
   /** %, of the fit; a fixed layout */
   zoomLevel: number;
   /** a fixed layout: two pages side by side if wide enough, or one */
-  spreadMode: 'auto' | 'none';
+  spreadMode: "auto" | "none";
   /** a fixed layout in spreads: the cover alone, the pages after it in pairs */
   separateCover: boolean;
   /** a fixed layout scrolled: the pages one below the other, or side by side */
-  scrollDirection: 'vertical' | 'horizontal';
+  scrollDirection: "vertical" | "horizontal";
   /** a fixed layout scrolled down: no gaps between the pages, a strip of a webtoon */
   webtoon: boolean;
   /** a fixed layout: a touch moves the page up and down only, its sides cut off by the zoom stay so */
@@ -89,24 +89,24 @@ export type ReaderSettings = {
 export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   fontSize: 18,
   lineHeight: 1.6,
-  font: 'book',
+  font: "book",
   justify: true,
   hyphenate: true,
-  flow: 'paginated',
+  flow: "paginated",
   maxColumns: 2,
   maxInlineSize: 720,
   gap: 6,
   margin: 44,
-  pageTheme: 'auto',
+  pageTheme: "auto",
   invertImages: false,
   imageCaptions: true,
   codeHighlight: false,
-  codeLanguage: 'auto',
-  zoomMode: 'fit-page',
+  codeLanguage: "auto",
+  zoomMode: "fit-page",
   zoomLevel: 100,
-  spreadMode: 'auto',
+  spreadMode: "auto",
   separateCover: true,
-  scrollDirection: 'vertical',
+  scrollDirection: "vertical",
   webtoon: false,
   lockPanX: false,
   animated: true,
@@ -117,16 +117,20 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   doubleBorder: true,
   readingRuler: false,
   rulerLines: 2,
-  rulerColor: 'green',
+  rulerColor: "green",
   rulerOpacity: 0.6,
   showSidebar: true,
-  highlightStyle: 'highlight',
-  highlightColors: { highlight: 'yellow', underline: 'green', squiggly: 'blue' },
-  ttsEngine: '',
+  highlightStyle: "highlight",
+  highlightColors: {
+    highlight: "yellow",
+    underline: "green",
+    squiggly: "blue",
+  },
+  ttsEngine: "",
   ttsVoices: {},
   ttsRate: 1,
-  translator: 'google',
-  translateTo: '',
+  translator: "google",
+  translateTo: "",
   translationOnly: false,
 };
 
@@ -141,34 +145,48 @@ export const zoomBy = (level: number, steps: number) =>
 
 /** The settings not about the look of the pages, kept on a reset. */
 export const KEPT_ON_RESET = [
-  'showSidebar', 'highlightStyle', 'highlightColors', 'ttsEngine', 'ttsVoices', 'ttsRate', 'translator', 'translateTo',
+  "showSidebar",
+  "highlightStyle",
+  "highlightColors",
+  "ttsEngine",
+  "ttsVoices",
+  "ttsRate",
+  "translator",
+  "translateTo",
 ] as const;
 
 /** The settings drawn over the pages, not in them: reset, but nothing laid out again. */
-const OVER_PAGES = ['readingRuler', 'rulerLines', 'rulerColor', 'rulerOpacity'] as const;
+const OVER_PAGES = [
+  "readingRuler",
+  "rulerLines",
+  "rulerColor",
+  "rulerOpacity",
+] as const;
 
 /**
  * The settings about the look of the pages, as a key: a change of the others
  * (a translation's language, the highlight remembered) lays nothing out again.
  */
 export const lookKey = (settings: ReaderSettings) =>
-  JSON.stringify({ 
-    ...settings, 
-    ...Object.fromEntries([...KEPT_ON_RESET, ...OVER_PAGES].map((key) => [key, undefined])) 
+  JSON.stringify({
+    ...settings,
+    ...Object.fromEntries(
+      [...KEPT_ON_RESET, ...OVER_PAGES].map((key) => [key, undefined]),
+    ),
   });
 
 /** The settings stored, completed with the defaults (new settings, older versions). */
 export const withDefaults = (
-  settings?: Partial<ReaderSettings> & { ttsVoice?: string }
+  settings?: Partial<ReaderSettings> & { ttsVoice?: string },
 ): ReaderSettings => {
   // the voice of the browser, before the engines
   const { ttsVoice, ...rest } = settings ?? {};
   return {
     ...DEFAULT_READER_SETTINGS,
     ...rest,
-    highlightColors: { 
-      ...DEFAULT_READER_SETTINGS.highlightColors, 
-      ...(settings?.highlightColors ?? {}) 
+    highlightColors: {
+      ...DEFAULT_READER_SETTINGS.highlightColors,
+      ...(settings?.highlightColors ?? {}),
     },
     ttsVoices: rest.ttsVoices ?? (ttsVoice ? { web: ttsVoice } : {}),
   };

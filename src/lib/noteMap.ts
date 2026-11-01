@@ -1,4 +1,4 @@
-import type { Note } from '@/types/model';
+import type { Note } from "@/types/model";
 
 // Number of buckets: an update copies one bucket (~size/BUCKETS notes)
 // plus the bucket array, rather than every note.
@@ -49,7 +49,9 @@ export class NoteMap implements Iterable<Note> {
   ) {}
 
   /** Build from notes, a record of id to note (e.g. JSON), or a NoteMap. */
-  static from(source?: Iterable<Note> | Record<string, Note> | NoteMap | null): NoteMap {
+  static from(
+    source?: Iterable<Note> | Record<string, Note> | NoteMap | null,
+  ): NoteMap {
     if (!source) return NoteMap.EMPTY;
     if (source instanceof NoteMap) return source;
     const notes = isIterable(source) ? source : Object.values(source);
@@ -106,7 +108,9 @@ export class NoteMap implements Iterable<Note> {
 
   /** Insert notes, or merge them into the existing ones with the same id. */
   upsertMany(notes: Iterable<Note>): NoteMap {
-    return this.change(notes, (old, note) => (old ? { ...old, ...note } : note));
+    return this.change(notes, (old, note) =>
+      old ? { ...old, ...note } : note,
+    );
   }
 
   upsert(note: Note): NoteMap {
@@ -156,4 +160,4 @@ export class NoteMap implements Iterable<Note> {
 }
 
 const isIterable = (value: object): value is Iterable<Note> =>
-  typeof (value as Iterable<Note>)[Symbol.iterator] === 'function';
+  typeof (value as Iterable<Note>)[Symbol.iterator] === "function";

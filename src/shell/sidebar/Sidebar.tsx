@@ -1,10 +1,10 @@
-import { memo } from 'react';
-import { useTransition, animated, SpringConfig } from '@react-spring/web';
-import { isMobile } from '@/lib/helper';
-import { useStore } from '@/state/store';
-import { SIDEBAR_WIDTH } from '@/state/userSettings';
-import ResizeHandle, { useResizableWidth } from '@/ui/ResizeHandle';
-import SidebarContent from './SidebarContent';
+import { memo } from "react";
+import { useTransition, animated, SpringConfig } from "@react-spring/web";
+import { isMobile } from "@/lib/helper";
+import { useStore } from "@/state/store";
+import { SIDEBAR_WIDTH } from "@/state/userSettings";
+import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
+import SidebarContent from "./SidebarContent";
 
 const SPRING_CONFIG: SpringConfig = {
   mass: 1,
@@ -18,20 +18,25 @@ type Props = {
 };
 
 function Sidebar(props: Props) {
-  const { className='' } = props; 
+  const { className = "" } = props;
 
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const sidebarWidth = useStore((state) => state.sidebarWidth);
   const setSidebarWidth = useStore((state) => state.setSidebarWidth);
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
-  const horizontalMenu = sideMenuOrientation === 'horizontal'
-    ? 'top-12 md:top-0'
-    : sideMenuOrientation === 'vertical'
-      ? 'top-0'
-      : 'top-12 md:top-0';
+  const horizontalMenu =
+    sideMenuOrientation === "horizontal"
+      ? "top-12 md:top-0"
+      : sideMenuOrientation === "vertical"
+        ? "top-0"
+        : "top-12 md:top-0";
   // width while dragging, saved to store (persisted) on release
-  const { width, onResize, onResizeEnd } = useResizableWidth(sidebarWidth, setSidebarWidth, SIDEBAR_WIDTH);
+  const { width, onResize, onResizeEnd } = useResizableWidth(
+    sidebarWidth,
+    setSidebarWidth,
+    SIDEBAR_WIDTH,
+  );
 
   const transition = useTransition<
     boolean,
@@ -43,28 +48,28 @@ function Sidebar(props: Props) {
     }
   >(isSidebarOpen, {
     initial: {
-      transform: 'translateX(0%)',
+      transform: "translateX(0%)",
       dspl: 1,
       backgroundOpacity: 0.3,
-      backgroundColor: 'black',
+      backgroundColor: "black",
     },
     from: {
-      transform: 'translateX(-100%)',
+      transform: "translateX(-100%)",
       dspl: 0,
       backgroundOpacity: 0,
-      backgroundColor: 'transparent',
+      backgroundColor: "transparent",
     },
     enter: {
-      transform: 'translateX(0%)',
+      transform: "translateX(0%)",
       dspl: 1,
       backgroundOpacity: 0.3,
-      backgroundColor: 'black',
+      backgroundColor: "black",
     },
     leave: {
-      transform: 'translateX(-100%)',
+      transform: "translateX(-100%)",
       dspl: 0,
       backgroundOpacity: 0,
-      backgroundColor: 'transparent',
+      backgroundColor: "transparent",
     },
     config: SPRING_CONFIG,
     expires: (item) => !item,
@@ -80,9 +85,9 @@ function Sidebar(props: Props) {
               style={{
                 backgroundColor: styles.backgroundColor,
                 opacity: styles.backgroundOpacity,
-                top: sideMenuOrientation === 'vertical' ? 0 : '3rem',
+                top: sideMenuOrientation === "vertical" ? 0 : "3rem",
                 display: styles.dspl.to((displ) =>
-                  displ === 0 ? 'none' : 'initial'
+                  displ === 0 ? "none" : "initial",
                 ),
               }}
               onClick={() => setIsSidebarOpen(false)}
@@ -93,10 +98,10 @@ function Sidebar(props: Props) {
             style={{
               width,
               // overlay on mobile: keep some of the page visible
-              maxWidth: isMobile(768) ? '85vw' : undefined,
+              maxWidth: isMobile(768) ? "85vw" : undefined,
               transform: styles.transform,
               display: styles.dspl.to((displ) =>
-                displ === 0 ? 'none' : 'initial'
+                displ === 0 ? "none" : "initial",
               ),
             }}
           >
@@ -114,7 +119,7 @@ function Sidebar(props: Props) {
             />
           </animated.div>
         </>
-      )
+      ),
   );
 }
 

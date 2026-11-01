@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 type ReaderChrome = {
   /** the header and footer bars over the book, shown on hover or a tap in the middle */
@@ -24,14 +24,21 @@ let searchSeq = 0;
 export const useReaderChrome = create<ReaderChrome>((set) => ({
   barsVisible: false,
   menuOpen: false,
-  tab: 'toc',
+  tab: "toc",
   translatedBook: false,
   setBarsVisible: (barsVisible) => set({ barsVisible }),
   setMenuOpen: (menuOpen) => set({ menuOpen }),
   setTab: (tab) => set({ tab }),
-  requestSearch: (query) => set({ tab: 'search', searchRequest: { query, seq: ++searchSeq } }),
+  requestSearch: (query) =>
+    set({ tab: "search", searchRequest: { query, seq: ++searchSeq } }),
   setTranslatedBook: (translatedBook) => set({ translatedBook }),
 }));
 
 export const resetReaderChrome = () =>
-  useReaderChrome.setState({ barsVisible: false, menuOpen: false, tab: 'toc', searchRequest: undefined, translatedBook: false });
+  useReaderChrome.setState({
+    barsVisible: false,
+    menuOpen: false,
+    tab: "toc",
+    searchRequest: undefined,
+    translatedBook: false,
+  });

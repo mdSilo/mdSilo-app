@@ -1,25 +1,35 @@
-import { useStore as useZustandStore, type StoreApi } from 'zustand';
-import { createStore } from 'zustand/vanilla';
-import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
-import { produce, type Draft } from 'immer';
-import type { Note } from '@/types/model';
-import type { PickPartial } from '@/types/utils';
-import { ArticleType, PodType } from '@/types/model';
-import * as Storage from '@/state/storage';
-import type { Layout } from '@/workspace/layout';
-import type { ActivityRecord } from '@/insight/activity';
-import { NoteMap } from '@/lib/noteMap';
-import { DARK_THEME, LIGHT_THEME } from '@/lib/themes';
-import userSettingsSlice, { UserSettings } from './userSettings';
-import { isBookWindow } from './windowKind';
+import { useStore as useZustandStore, type StoreApi } from "zustand";
+import { createStore } from "zustand/vanilla";
+import {
+  persist,
+  type PersistStorage,
+  type StorageValue,
+} from "zustand/middleware";
+import { produce, type Draft } from "immer";
+import type { Note } from "@/types/model";
+import type { PickPartial } from "@/types/utils";
+import { ArticleType, PodType } from "@/types/model";
+import * as Storage from "@/state/storage";
+import type { Layout } from "@/workspace/layout";
+import type { ActivityRecord } from "@/insight/activity";
+import { NoteMap } from "@/lib/noteMap";
+import { DARK_THEME, LIGHT_THEME } from "@/lib/themes";
+import userSettingsSlice, { UserSettings } from "./userSettings";
+import { isBookWindow } from "./windowKind";
 
-export { NoteMap } from '@/lib/noteMap';
+export { NoteMap } from "@/lib/noteMap";
 
-export { shallow as shallowEqual } from 'zustand/shallow';
+export { shallow as shallowEqual } from "zustand/shallow";
 
 type NoteUpdate = PickPartial<
   Note, // id required
-  'title' | 'content' | 'file_path' | 'cover' | 'created_at' | 'updated_at' | 'is_daily'
+  | "title"
+  | "content"
+  | "file_path"
+  | "cover"
+  | "created_at"
+  | "updated_at"
+  | "is_daily"
 >;
 
 type ImmerSet<T> = (fn: (draft: Draft<T>) => void) => void;
@@ -27,7 +37,7 @@ type ImmerSet<T> = (fn: (draft: Draft<T>) => void) => void;
 // update state by mutating an immer draft
 const immer =
   <T>(config: (set: ImmerSet<T>, get: () => T, api: StoreApi<T>) => T) =>
-  (set: StoreApi<T>['setState'], get: () => T, api: StoreApi<T>): T =>
+  (set: StoreApi<T>["setState"], get: () => T, api: StoreApi<T>): T =>
     config((fn) => set(produce<T>(fn)), get, api);
 
 // last value written per storage key
@@ -35,11 +45,13 @@ const lastSaved: Record<string, string> = {};
 
 // storage in LOCAL_DATA_DIR, saved as a JSON string (same format as before)
 const storage: PersistStorage<PersistedState> = {
-  getItem: async (name: string): Promise<StorageValue<PersistedState> | null> => {
+  getItem: async (
+    name: string,
+  ): Promise<StorageValue<PersistedState> | null> => {
     // missing key is `{}`: return null, otherwise zustand fails to parse it
     // and never finishes hydrating on the first launch
     const value = await Storage.get(name);
-    if (typeof value !== 'string') return null;
+    if (typeof value !== "string") return null;
     // as saved: no need to write it back unchanged
     lastSaved[name] = value;
     try {
@@ -48,7 +60,10 @@ const storage: PersistStorage<PersistedState> = {
       return null;
     }
   },
-  setItem: async (name: string, value: StorageValue<PersistedState>): Promise<void> => {
+  setItem: async (
+    name: string,
+    value: StorageValue<PersistedState>,
+  ): Promise<void> => {
     // the main window writes them, with what a book window changed
     if (isBookWindow) return;
     // persist runs on every store update: skip writing what's already saved
@@ -69,27 +84,27 @@ const storage: PersistStorage<PersistedState> = {
 };
 
 // plain record of notes, e.g. in JSON data; the store keeps a NoteMap
-export type Notes = Record<Note['id'], Note>;
+export type Notes = Record<Note["id"], Note>;
 
 export type NoteTreeItem = {
-  id: Note['id']; 
+  id: Note["id"];
   title: string;
   created_at: string;
-  updated_at: string; 
+  updated_at: string;
   is_dir: boolean;
   children: NoteTreeItem[]; // to del
-  collapsed: boolean;       // to del
+  collapsed: boolean; // to del
 };
 
 // dir map notes
-export type NoteTree = Record<Note['id'], NoteTreeItem[]>;
+export type NoteTree = Record<Note["id"], NoteTreeItem[]>;
 
 export type NotesData = {
   isloaded: boolean;
   notesobj: Notes;
   notetree: NoteTree;
   activities?: ActivityRecord;
-}
+};
 
 export enum SidebarTab {
   Silo,
@@ -110,11 +125,11 @@ export type Store = {
   deleteNote: (noteId: string) => void;
   currentNoteId: string;
   setCurrentNoteId: Setter<string>;
-  currentNote: Notes;  // one record only
+  currentNote: Notes; // one record only
   setCurrentNote: Setter<Notes>;
   noteTree: NoteTree;
   setNoteTree: Setter<NoteTree>;
-  expandedDirs: Record<string, boolean>;  // dir path -> expanded in sidebar tree
+  expandedDirs: Record<string, boolean>; // dir path -> expanded in sidebar tree
   setExpandedDirs: Setter<Record<string, boolean>>;
   toggleExpandedDir: (dirPath: string, expanded?: boolean) => void;
   activities: ActivityRecord;
@@ -125,29 +140,54 @@ export type Store = {
   setSidebarSearchQuery: Setter<string>;
   sidebarSearchType: string; // content or hashtag
   setSidebarSearchType: Setter<string>;
-  initDir: string | undefined;  // first open dir path
+  initDir: string | undefined; // first open dir path
   setInitDir: Setter<string | undefined>;
-  layout: Layout | undefined;  // of initDir, see workspace/layout
+  layout: Layout | undefined; // of initDir, see workspace/layout
   setLayout: Setter<Layout | undefined>;
-  isLoading: boolean;  // is loading all?
+  isLoading: boolean; // is loading all?
   setIsLoading: Setter<boolean>;
-  isLoaded: boolean;  // is all loaded?
+  isLoaded: boolean; // is all loaded?
   setIsLoaded: Setter<boolean>;
-  currentDir: string | undefined;  // dir path
+  currentDir: string | undefined; // dir path
   setCurrentDir: Setter<string | undefined>;
   // input end
-  currentArticle: ArticleType | null;   // feed article
+  currentArticle: ArticleType | null; // feed article
   setCurrentArticle: Setter<ArticleType | null>;
-  currentPod: PodType | null; 
+  currentPod: PodType | null;
   setCurrentPod: Setter<PodType | null>;
 } & UserSettings;
 
 // user settings kept in LOCAL_DATA_DIR, see partialize
-type PersistedState = Pick<Store,
-  | 'userId' | 'theme' | 'customThemes' | 'darkMode' | 'font' | 'customFonts' | 'pluginStates' | 'fontSize' | 'fontWt' | 'lineHeight'
-  | 'isRTL' | 'isCheckSpellOn' | 'openOnStartup' | 'startupView' | 'lastBooks' | 'noteSort' | 'recentDir'
-  | 'pinnedDir' | 'sidebarWidth' | 'sideMenuOrientation' | 'feedChannelWidth' | 'feedArticleWidth' | 'readerSidebarWidth'
-  | 'useAsset' | 'activities' | 'readerSettings' | 'librarySettings' | 'syncSettings'
+type PersistedState = Pick<
+  Store,
+  | "userId"
+  | "theme"
+  | "customThemes"
+  | "darkMode"
+  | "font"
+  | "customFonts"
+  | "pluginStates"
+  | "fontSize"
+  | "fontWt"
+  | "lineHeight"
+  | "isRTL"
+  | "isCheckSpellOn"
+  | "openOnStartup"
+  | "startupView"
+  | "lastBooks"
+  | "noteSort"
+  | "recentDir"
+  | "pinnedDir"
+  | "sidebarWidth"
+  | "sideMenuOrientation"
+  | "feedChannelWidth"
+  | "feedArticleWidth"
+  | "readerSidebarWidth"
+  | "useAsset"
+  | "activities"
+  | "readerSettings"
+  | "librarySettings"
+  | "syncSettings"
 >;
 
 type FunctionPropertyNames<T> = {
@@ -160,10 +200,10 @@ export type Setter<T> = (value: T | ((value: T) => T)) => void;
 export const setter =
   <K extends keyof StoreWithoutFunctions>(
     set: (fn: (draft: Draft<Store>) => void) => void,
-    key: K
+    key: K,
   ) =>
   (value: Store[K] | ((value: Store[K]) => Store[K])) => {
-    if (typeof value === 'function') {
+    if (typeof value === "function") {
       set((state) => {
         state[key] = value(state[key] as Store[K]);
       });
@@ -178,8 +218,8 @@ export const store = createStore<Store>()(
   persist(
     immer<Store>((set) => ({
       //  Map of note id to notes, see NoteMap
-      notes: NoteMap.EMPTY,  // all private notes
-      setNotes: setter(set, 'notes'),
+      notes: NoteMap.EMPTY, // all private notes
+      setNotes: setter(set, "notes"),
       /**
        * update or insert the note
        * @param {Note} note the note to upsert
@@ -200,14 +240,14 @@ export const store = createStore<Store>()(
       },
       upsertTree: (targetDir: string, noteList: Note[]) => {
         set((state) => {
-          const itemsToInsert: NoteTreeItem[] = noteList.map(note => ({ 
-            id: note.id, 
+          const itemsToInsert: NoteTreeItem[] = noteList.map((note) => ({
+            id: note.id,
             title: note.title,
             created_at: note.created_at,
             updated_at: note.updated_at,
             is_dir: note.is_dir ?? false,
-            children: [], 
-            collapsed: true, 
+            children: [],
+            collapsed: true,
           }));
           const targetList = state.noteTree[targetDir] || [];
           const newTargetList = [...targetList, ...itemsToInsert];
@@ -229,7 +269,7 @@ export const store = createStore<Store>()(
           state.notes = state.notes.update(note.id, {
             ...note,
             // the content known: what the index parsed is no longer needed
-            ...('content' in note ? { parsed: undefined } : {}),
+            ...("content" in note ? { parsed: undefined } : {}),
             updated_at: new Date().toISOString(),
           });
         });
@@ -245,20 +285,21 @@ export const store = createStore<Store>()(
             if (id.startsWith(prefix)) state.notes = state.notes.delete(id);
           }
           for (const dir of Object.keys(state.noteTree)) {
-            if (dir === noteId || dir.startsWith(prefix)) delete state.noteTree[dir];
+            if (dir === noteId || dir.startsWith(prefix))
+              delete state.noteTree[dir];
           }
         });
       },
-      currentNoteId: '',
-      setCurrentNoteId: setter(set, 'currentNoteId'),
+      currentNoteId: "",
+      setCurrentNoteId: setter(set, "currentNoteId"),
       currentNote: {},
-      setCurrentNote: setter(set, 'currentNote'),
+      setCurrentNote: setter(set, "currentNote"),
       // The tree of notes visible in the sidebar
       noteTree: {},
-      setNoteTree: setter(set, 'noteTree'),
+      setNoteTree: setter(set, "noteTree"),
       // expanded dirs in the sidebar tree, not persisted
       expandedDirs: {},
-      setExpandedDirs: setter(set, 'expandedDirs'),
+      setExpandedDirs: setter(set, "expandedDirs"),
       toggleExpandedDir: (dirPath: string, expanded?: boolean) => {
         set((state) => {
           const toExpand = expanded ?? !state.expandedDirs[dirPath];
@@ -269,53 +310,65 @@ export const store = createStore<Store>()(
           }
         });
       },
-      // daily activities 
+      // daily activities
       activities: {},
-      setActivities: setter(set, 'activities'),
+      setActivities: setter(set, "activities"),
 
       sidebarTab: SidebarTab.Silo,
-      setSidebarTab: setter(set, 'sidebarTab'), 
+      setSidebarTab: setter(set, "sidebarTab"),
       // search note
-      sidebarSearchQuery: '',
-      setSidebarSearchQuery: setter(set, 'sidebarSearchQuery'),
-      sidebarSearchType: 'content',
-      setSidebarSearchType: setter(set, 'sidebarSearchType'),
+      sidebarSearchQuery: "",
+      setSidebarSearchQuery: setter(set, "sidebarSearchQuery"),
+      sidebarSearchType: "content",
+      setSidebarSearchType: setter(set, "sidebarSearchType"),
       initDir: undefined,
-      setInitDir: setter(set, 'initDir'),
+      setInitDir: setter(set, "initDir"),
       layout: undefined,
-      setLayout: setter(set, 'layout'),
+      setLayout: setter(set, "layout"),
       isLoading: false,
-      setIsLoading: setter(set, 'isLoading'),
+      setIsLoading: setter(set, "isLoading"),
       isLoaded: false,
-      setIsLoaded: setter(set, 'isLoaded'),
+      setIsLoaded: setter(set, "isLoaded"),
       currentDir: undefined,
-      setCurrentDir: setter(set, 'currentDir'),
+      setCurrentDir: setter(set, "currentDir"),
       // input end
       currentArticle: null,
-      setCurrentArticle: setter(set, 'currentArticle'),
+      setCurrentArticle: setter(set, "currentArticle"),
       currentPod: null,
-      setCurrentPod: setter(set, 'currentPod'),
+      setCurrentPod: setter(set, "currentPod"),
       ...userSettingsSlice(set),
     })),
     {
-      name: 'mdsilo-storage',
+      name: "mdsilo-storage",
       version: 4,
       storage,
       // v1 had a dark mode switch only: keep the mode as the mdSilo theme
       // v2 had a switch to open the previous folder: keep it as openOnStartup
       // v3 hid the contents of the reader by default: shown now, as the default
       migrate: (persisted, version) => {
-        const state = (persisted ?? {}) as Partial<PersistedState> & { isOpenPreOn?: boolean };
-        if (version < 2 && state.theme === undefined && typeof state.darkMode === 'boolean') {
+        const state = (persisted ?? {}) as Partial<PersistedState> & {
+          isOpenPreOn?: boolean;
+        };
+        if (
+          version < 2 &&
+          state.theme === undefined &&
+          typeof state.darkMode === "boolean"
+        ) {
           state.theme = state.darkMode ? DARK_THEME.name : LIGHT_THEME.name;
         }
-        if (version < 3 && state.openOnStartup === undefined && typeof state.isOpenPreOn === 'boolean') {
-          state.openOnStartup = state.isOpenPreOn ? 'previous' : 'none';
+        if (
+          version < 3 &&
+          state.openOnStartup === undefined &&
+          typeof state.isOpenPreOn === "boolean"
+        ) {
+          state.openOnStartup = state.isOpenPreOn ? "previous" : "none";
         }
         delete state.isOpenPreOn;
         if (version < 4 && state.readerSettings) {
-          const { showSidebar: _hidden, ...readerSettings } = state.readerSettings;
-          state.readerSettings = readerSettings as PersistedState['readerSettings'];
+          const { showSidebar: _hidden, ...readerSettings } =
+            state.readerSettings;
+          state.readerSettings =
+            readerSettings as PersistedState["readerSettings"];
         }
         return state as PersistedState;
       },
@@ -350,8 +403,8 @@ export const store = createStore<Store>()(
         librarySettings: state.librarySettings,
         syncSettings: state.syncSettings,
       }),
-    }
-  )
+    },
+  ),
 );
 
 /** Select from the store in a component, re-rendering when the selection changes. */
@@ -361,8 +414,9 @@ export function useStore<U>(selector: (state: Store) => U): U {
 
 // Cache the serialized persisted state: persist serializes it on every store
 // update, but the persisted fields rarely change (e.g. not when notes load).
-let lastPersisted: { state: Record<string, unknown>; version?: number } | null = null;
-let lastSerialized = '';
+let lastPersisted: { state: Record<string, unknown>; version?: number } | null =
+  null;
+let lastSerialized = "";
 function serializePersisted(value: StorageValue<PersistedState>): string {
   const state = value.state as unknown as Record<string, unknown>;
   const prev = lastPersisted;
@@ -399,14 +453,10 @@ export const onStoreHydrated = (fn: () => void): (() => void) => {
   return api.onFinishHydration(fn);
 };
 
-
 /**
  * Deletes the tree item with the given id and returns it.
  */
-const deleteTreeItem = (
-  tree: NoteTree,
-  id: string
-): NoteTreeItem | null => {
+const deleteTreeItem = (tree: NoteTree, id: string): NoteTreeItem | null => {
   for (const [key, treeList] of Object.entries(tree)) {
     for (let i = 0; i < treeList.length; i++) {
       const item = treeList[i];
@@ -425,7 +475,7 @@ const deleteTreeItem = (
  */
 export const getNoteTreeItem = (
   tree: NoteTreeItem[],
-  id: string
+  id: string,
 ): NoteTreeItem | null => {
   for (let i = 0; i < tree.length; i++) {
     const item = tree[i];

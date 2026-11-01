@@ -1,21 +1,29 @@
-import { invoke } from '@tauri-apps/api/core';
-import { flushSave } from '@/workspace/pendingSaves';
-import { joinPath, toWorkspacePath } from '@/workspace/util';
-import { ISSUE_FILE, issueDirOf, issueStore } from '@/issue/issueStore';
-import { LEGACY_KANBAN_FILE } from '@/issue/migrateKanban';
-import { writeIssueDir } from '@/issue/issueFiles';
-import type { Issue, IssueData } from '@/issue/types';
+import { invoke } from "@tauri-apps/api/core";
+import { flushSave } from "@/workspace/pendingSaves";
+import { joinPath, toWorkspacePath } from "@/workspace/util";
+import { ISSUE_FILE, issueDirOf, issueStore } from "@/issue/issueStore";
+import { LEGACY_KANBAN_FILE } from "@/issue/migrateKanban";
+import { writeIssueDir } from "@/issue/issueFiles";
+import type { Issue, IssueData } from "@/issue/types";
 import {
-  CLIPS_DIR, DATA_DIR, LAYOUT_ENTRIES, READING_DIR, WRITING_DIR, initLayout,
-} from './layout';
+  CLIPS_DIR,
+  DATA_DIR,
+  LAYOUT_ENTRIES,
+  READING_DIR,
+  WRITING_DIR,
+  initLayout,
+} from "./layout";
 
 /** Data files of a legacy workspace: kept in .mdsilo/legacy/ once migrated. */
 const LEGACY_DATA_FILES = [
-  ISSUE_FILE, `${ISSUE_FILE}.bak`, LEGACY_KANBAN_FILE, `${LEGACY_KANBAN_FILE}.bak`,
+  ISSUE_FILE,
+  `${ISSUE_FILE}.bak`,
+  LEGACY_KANBAN_FILE,
+  `${LEGACY_KANBAN_FILE}.bak`,
 ];
 /** The notes snapshot of old versions, no longer read or written. */
-const NOTES_SNAPSHOT = 'mdsilo.json';
-export const LEGACY_DIR = 'legacy';
+const NOTES_SNAPSHOT = "mdsilo.json";
+export const LEGACY_DIR = "legacy";
 
 export type MigrationResult = {
   /** entries moved, by their name at the root */
@@ -29,7 +37,7 @@ export type MigrationResult = {
  * the notes and anything else to writing/.
  */
 export function migratedRelPath(rel: string): string {
-  const top = rel.split('/')[0];
+  const top = rel.split("/")[0];
   if (LAYOUT_ENTRIES.has(top)) return rel;
   return top === CLIPS_DIR ? `${READING_DIR}/${rel}` : `${WRITING_DIR}/${rel}`;
 }
@@ -40,16 +48,22 @@ export function migratedPath(ws: string, path: string): string {
   return rel === path ? path : joinPath(ws, migratedRelPath(rel));
 }
 
-const mapIssuePaths = (data: IssueData, map: (path: string) => string): IssueData => ({
+const mapIssuePaths = (
+  data: IssueData,
+  map: (path: string) => string,
+): IssueData => ({
   ...data,
   issues: data.issues.map((issue) => ({
     ...issue,
     notes: issue.notes.map(map),
-    ...(issue.noteTask ? { noteTask: { ...issue.noteTask, note: map(issue.noteTask.note) } } : {}),
+    ...(issue.noteTask
+      ? { noteTask: { ...issue.noteTask, note: map(issue.noteTask.note) } }
+      : {}),
   })),
 });
 
-const exists = (path: string) => invoke<boolean>('file_exist', { filePath: path });
+const exists = (path: string) =>
+  invoke<boolean>("file_exist", { filePath: path });
 
 /**
  * Move a legacy workspace into the workspace layout:
@@ -63,23 +77,28 @@ const exists = (path: string) => invoke<boolean>('file_exist', { filePath: path 
 export async function migrateToWorkspace(ws: string): Promise<MigrationResult> {
   await flushSave();
   // the issues as they are, kanban.json migrated if any
-  await issueStore.getState().load(ws, true, 'legacy');
+  await issueStore.getState().load(ws, true, "legacy");
   await issueStore.getState().flush();
   const issues = issueStore.getState().data;
 
-  for (const dir of [READING_DIR, WRITING_DIR, joinPath(DATA_DIR, LEGACY_DIR)]) {
-    await invoke('create_dir_recursive', { dirPath: joinPath(ws, dir) });
+  for (const dir of [
+    READING_DIR,
+    WRITING_DIR,
+    joinPath(DATA_DIR, LEGACY_DIR),
+  ]) {
+    await invoke("create_dir_recursive", { dirPath: joinPath(ws, dir) });
   }
 
   const result: MigrationResult = { moved: [], skipped: [] };
   const entries = await invoke<{ file_name: string; is_hidden: boolean }[]>(
-    'list_directory', { dir: ws }
+    "list_directory",
+    { dir: ws },
   );
   for (const { file_name: name, is_hidden } of entries ?? []) {
     if (is_hidden || LAYOUT_ENTRIES.has(name)) continue;
     const from = joinPath(ws, name);
     if (name === NOTES_SNAPSHOT) {
-      await invoke('delete_files', { paths: [from] });
+      await invoke("delete_files", { paths: [from] });
       continue;
     }
     const to = LEGACY_DATA_FILES.includes(name)
@@ -89,7 +108,7 @@ export async function migrateToWorkspace(ws: string): Promise<MigrationResult> {
       result.skipped.push(name);
       continue;
     }
-    if (await invoke<boolean>('rename_file', { fromPath: from, toPath: to })) {
+    if (await invoke<boolean>("rename_file", { fromPath: from, toPath: to })) {
       result.moved.push(name);
     } else {
       result.skipped.push(name);
@@ -102,10 +121,18 @@ export async function migrateToWorkspace(ws: string): Promise<MigrationResult> {
     ...issue,
     notes: issue.notes.map((path) => toWorkspacePath(ws, path)),
     ...(issue.noteTask
-      ? { noteTask: { ...issue.noteTask, note: toWorkspacePath(ws, issue.noteTask.note) } }
+      ? {
+          noteTask: {
+            ...issue.noteTask,
+            note: toWorkspacePath(ws, issue.noteTask.note),
+          },
+        }
       : {}),
   });
-  if (migrated.issues.length > 0 || (await exists(joinPath(ws, DATA_DIR, LEGACY_DIR, ISSUE_FILE)))) {
+  if (
+    migrated.issues.length > 0 ||
+    (await exists(joinPath(ws, DATA_DIR, LEGACY_DIR, ISSUE_FILE)))
+  ) {
     await writeIssueDir(issueDirOf(ws), undefined, migrated, toStored);
   }
 

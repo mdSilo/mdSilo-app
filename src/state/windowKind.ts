@@ -8,13 +8,13 @@ export type BookWindowParams = {
 };
 
 export function bookWindowParams(
-  search = typeof location === 'undefined' ? '' : location.search
+  search = typeof location === "undefined" ? "" : location.search,
 ): BookWindowParams | undefined {
   const params = new URLSearchParams(search);
-  const path = params.get('book');
-  const ws = params.get('ws');
+  const path = params.get("book");
+  const ws = params.get("ws");
   if (!path || !ws) return undefined;
-  const cfi = params.get('cfi');
+  const cfi = params.get("cfi");
   return cfi ? { path, ws, cfi } : { path, ws };
 }
 

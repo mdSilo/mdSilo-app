@@ -1,6 +1,6 @@
-import { invoke } from '@tauri-apps/api/core'
-import DirectoryAPI, { FileMetaData } from './directory';
-import { hasFs, normalizeSlash, joinPath, joinPaths, getDirPath } from './util';
+import { invoke } from "@tauri-apps/api/core";
+import DirectoryAPI, { FileMetaData } from "./directory";
+import { hasFs, normalizeSlash, joinPath, joinPaths, getDirPath } from "./util";
 
 /** Invoke Rust command to handle files */
 class FileAPI {
@@ -8,12 +8,12 @@ class FileAPI {
   readonly parentDir: string | undefined;
 
   constructor(fileName: string, parentDir?: string) {
-		if (parentDir && typeof fileName === 'string') {
-			this.parentDir = parentDir;
-			this.fileName = normalizeSlash(joinPath(parentDir, fileName));
-		} else {
-			this.fileName = normalizeSlash(fileName);
-		} 
+    if (parentDir && typeof fileName === "string") {
+      this.parentDir = parentDir;
+      this.fileName = normalizeSlash(joinPath(parentDir, fileName));
+    } else {
+      this.fileName = normalizeSlash(fileName);
+    }
   }
 
   /**
@@ -21,21 +21,19 @@ class FileAPI {
    * @returns {Promise<any>}
    */
   readFile(): Promise<string> {
-		return new Promise((resolve, reject) => {
-			if (typeof this.fileName === 'string') {
-				if (hasFs) {
-					invoke<string>(
-						'read_file', { filePath: this.fileName}
-					).then(
-						(fileContent: string) => resolve(fileContent)
-					);
-				} else {
-					reject('Read file is not supported without a file system backend');
-				}
-			} else {
-				reject('File name is not a string');
-			}
-		});
+    return new Promise((resolve, reject) => {
+      if (typeof this.fileName === "string") {
+        if (hasFs) {
+          invoke<string>("read_file", { filePath: this.fileName }).then(
+            (fileContent: string) => resolve(fileContent),
+          );
+        } else {
+          reject("Read file is not supported without a file system backend");
+        }
+      } else {
+        reject("File name is not a string");
+      }
+    });
   }
 
   /**
@@ -43,8 +41,8 @@ class FileAPI {
    * @returns {Promise<JSON>}
    */
   async readJSONFile(): Promise<JSON> {
-		const content = await this.readFile();
-		return JSON.parse(content);
+    const content = await this.readFile();
+    return JSON.parse(content);
   }
 
   /**
@@ -52,29 +50,27 @@ class FileAPI {
    * @returns {boolean}
    */
   async exists(): Promise<boolean> {
-		return await invoke<boolean>(
-			'file_exist', { filePath: this.fileName }
-		);
+    return await invoke<boolean>("file_exist", { filePath: this.fileName });
   }
 
-	/**
+  /**
    * get basename of file or dir
    * @returns {Promise<[string, boolean]>}
    */
-	async getBasename(): Promise<[string, boolean]> {
-		return await invoke<[string, boolean]>(
-			'get_basename', { filePath: this.fileName }
-		);
+  async getBasename(): Promise<[string, boolean]> {
+    return await invoke<[string, boolean]>("get_basename", {
+      filePath: this.fileName,
+    });
   }
 
-	/**
+  /**
    * Read metadata of a file
    * @returns {Promise<FileMetaData>}
    */
-	async getMetadata(): Promise<FileMetaData> {
-		return await invoke<FileMetaData>(
-			'get_file_meta', { filePath: this.fileName }
-		);
+  async getMetadata(): Promise<FileMetaData> {
+    return await invoke<FileMetaData>("get_file_meta", {
+      filePath: this.fileName,
+    });
   }
 
   /**
@@ -82,11 +78,11 @@ class FileAPI {
    * @returns {Promise<boolean>}
    */
   async isFile(): Promise<boolean> {
-		return new Promise((resolve) => {
-			invoke<boolean>('is_file', { path: this.fileName }).then(
-				(result: boolean) => resolve(result)
-			);
-		});
+    return new Promise((resolve) => {
+      invoke<boolean>("is_file", { path: this.fileName }).then(
+        (result: boolean) => resolve(result),
+      );
+    });
   }
 
   /**
@@ -94,62 +90,61 @@ class FileAPI {
    * @returns {Promise<void>}
    */
   async createFile(): Promise<void> {
-		if (typeof this.fileName === 'string') {
-			if (hasFs) {
-				const dirPath = await getDirPath(this.fileName);
-				await invoke('create_dir_recursive', { dirPath });
-				return await invoke('create_file', { filePath: this.fileName });
-			} else {
-				return;
-			}
-		}
-  }
-
-	/**
-   * write to file
-   * @returns {Promise<void>}
-   */
-	async writeFile(text: string): Promise<void> {
-		if (typeof this.fileName === 'string') {
-			if (hasFs) {
-				return await invoke('write_file', { filePath: this.fileName, text });
-			} else {
-				return;
-			}
-		}
+    if (typeof this.fileName === "string") {
+      if (hasFs) {
+        const dirPath = await getDirPath(this.fileName);
+        await invoke("create_dir_recursive", { dirPath });
+        return await invoke("create_file", { filePath: this.fileName });
+      } else {
+        return;
+      }
+    }
   }
 
   /**
-	 * delete file
-	 * @returns boolean, if deleted
-	 */
-  async deleteFiles(): Promise<boolean> {
-		return await invoke<boolean>(
-			'delete_files', { paths: [this.fileName] }
-		);
+   * write to file
+   * @returns {Promise<void>}
+   */
+  async writeFile(text: string): Promise<void> {
+    if (typeof this.fileName === "string") {
+      if (hasFs) {
+        return await invoke("write_file", { filePath: this.fileName, text });
+      } else {
+        return;
+      }
+    }
   }
 
-	/**
+  /**
+   * delete file
+   * @returns boolean, if deleted
+   */
+  async deleteFiles(): Promise<boolean> {
+    return await invoke<boolean>("delete_files", { paths: [this.fileName] });
+  }
+
+  /**
    * move file to dir
    * @returns new file path
    */
-	async moveFile(tar: string): Promise<string | undefined> {
-		if (typeof this.fileName === 'string') {
-			if (hasFs) {
-				const tarDir = new DirectoryAPI(tar);
-				if (await tarDir.isDir()) {
-					const fileBaseName = (await this.getBasename())[0];
-					const tarPath = await joinPaths(tar, [fileBaseName]);
-					const done = await invoke<boolean>(
-						'copy_file', { srcPath: this.fileName, toPath: tarPath }
-					);
-					if (done) {
-						this.deleteFiles();
-						return tarPath;
-					}
-				}
-			}
-		}
+  async moveFile(tar: string): Promise<string | undefined> {
+    if (typeof this.fileName === "string") {
+      if (hasFs) {
+        const tarDir = new DirectoryAPI(tar);
+        if (await tarDir.isDir()) {
+          const fileBaseName = (await this.getBasename())[0];
+          const tarPath = await joinPaths(tar, [fileBaseName]);
+          const done = await invoke<boolean>("copy_file", {
+            srcPath: this.fileName,
+            toPath: tarPath,
+          });
+          if (done) {
+            this.deleteFiles();
+            return tarPath;
+          }
+        }
+      }
+    }
   }
 }
 

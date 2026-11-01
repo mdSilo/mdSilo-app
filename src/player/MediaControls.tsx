@@ -1,18 +1,27 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 import {
-  TbPlayerPause, TbPlayerPlay, TbPlayerSkipBack, TbPlayerSkipForward, TbPlayerStop, TbX,
-} from 'react-icons/tb';
+  TbPlayerPause,
+  TbPlayerPlay,
+  TbPlayerSkipBack,
+  TbPlayerSkipForward,
+  TbPlayerStop,
+  TbX,
+} from "react-icons/tb";
 import { MdMinimize } from "react-icons/md";
-import { usePlayer } from './playerStore';
+import { usePlayer } from "./playerStore";
 
 export const RATES = [0.75, 1, 1.25, 1.5, 2];
 
 /** 75 → 1:15, 3725 → 1:02:05 */
 export function formatTime(seconds: number) {
-  if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   const s = Math.floor(seconds);
-  const [h, m, sec] = [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60];
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const [h, m, sec] = [
+    Math.floor(s / 3600),
+    Math.floor((s % 3600) / 60),
+    s % 60,
+  ];
+  const pad = (n: number) => String(n).padStart(2, "0");
   return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
 }
 
@@ -44,25 +53,25 @@ type Props = {
   testId?: string;
 };
 
-const button = 'btn btn-ghost btn-xs btn-circle';
+const button = "btn btn-ghost btn-xs btn-circle";
 
 /** The controls of a source of the player, the same for each. */
 export default function MediaControls(props: Props) {
   const {
-    title, 
-    playing, 
-    onPlay, 
-    onPause, 
-    onPrev, 
-    onNext, 
-    prevTitle = 'Previous', 
-    nextTitle = 'Next',
-    onStop, 
-    progress, 
-    rate, 
-    onRate, 
-    children, 
-    onClose, 
+    title,
+    playing,
+    onPlay,
+    onPause,
+    onPrev,
+    onNext,
+    prevTitle = "Previous",
+    nextTitle = "Next",
+    onStop,
+    progress,
+    rate,
+    onRate,
+    children,
+    onClose,
     testId,
   } = props;
   return (
@@ -70,15 +79,17 @@ export default function MediaControls(props: Props) {
       <div className="flex items-center gap-1 min-w-0">
         <div className="flex-1 min-w-0 text-xs truncate">{title}</div>
         {children}
-        <button 
-          className={button} 
-          title="Hide" 
+        <button
+          className={button}
+          title="Hide"
           onClick={() => usePlayer.getState().setShown(false)}
         >
           <MdMinimize />
         </button>
         {onClose ? (
-          <button className={button} title="Close" onClick={onClose}><TbX /></button>
+          <button className={button} title="Close" onClick={onClose}>
+            <TbX />
+          </button>
         ) : null}
       </div>
       <div className="flex items-center gap-1">
@@ -88,11 +99,19 @@ export default function MediaControls(props: Props) {
           </button>
         ) : null}
         {playing ? (
-          <button className={`${button} btn-primary btn-soft`} title="Pause" onClick={onPause}>
+          <button
+            className={`${button} btn-primary btn-soft`}
+            title="Pause"
+            onClick={onPause}
+          >
             <TbPlayerPause />
           </button>
         ) : (
-          <button className={`${button} btn-primary btn-soft`} title="Play" onClick={onPlay}>
+          <button
+            className={`${button} btn-primary btn-soft`}
+            title="Play"
+            onClick={onPlay}
+          >
             <TbPlayerPlay />
           </button>
         )}
@@ -123,14 +142,20 @@ export default function MediaControls(props: Props) {
               {progress.label}
             </span>
           </>
-        ) : <div className="flex-1" />}
+        ) : (
+          <div className="flex-1" />
+        )}
         <select
           className="w-16 select select-xs"
           value={rate}
           aria-label="Speed"
           onChange={(e) => onRate(Number(e.target.value))}
         >
-          {RATES.map((r) => <option key={r} value={r}>{r}×</option>)}
+          {RATES.map((r) => (
+            <option key={r} value={r}>
+              {r}×
+            </option>
+          ))}
         </select>
       </div>
     </div>

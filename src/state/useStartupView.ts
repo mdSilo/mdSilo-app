@@ -1,10 +1,18 @@
-import { useEffect, useRef } from 'react';
-import { onStoreHydrated, SidebarTab, store } from '@/state/store';
-import { useCurrentViewContext } from './useCurrentView';
+import { useEffect, useRef } from "react";
+import { onStoreHydrated, SidebarTab, store } from "@/state/store";
+import { useCurrentViewContext } from "./useCurrentView";
 
 /** the startup views of a folder, shown once it is open */
-const FOLDER_VIEWS = ['library', 'book', 'issues', 'project', 'chronicle', 'graph', 'journal'] as const;
-type FolderView = typeof FOLDER_VIEWS[number];
+const FOLDER_VIEWS = [
+  "library",
+  "book",
+  "issues",
+  "project",
+  "chronicle",
+  "graph",
+  "journal",
+] as const;
+type FolderView = (typeof FOLDER_VIEWS)[number];
 const isFolderView = (view: string): view is FolderView =>
   (FOLDER_VIEWS as readonly string[]).includes(view);
 
@@ -23,9 +31,9 @@ export default function useStartupView() {
     let unsubscribe = () => {};
     const stopHydrated = onStoreHydrated(() => {
       const view = store.getState().startupView;
-      if (view === 'feed') {
+      if (view === "feed") {
         store.getState().setIsSidebarOpen(false);
-        dispatch({ view: 'feed' });
+        dispatch({ view: "feed" });
         return;
       }
       if (!isFolderView(view)) {
@@ -35,12 +43,13 @@ export default function useStartupView() {
       const show = () => {
         const { initDir, layout, lastBooks } = store.getState();
         if (!initDir) return false;
-        const available = (view !== 'library' && view !== 'book') || layout === 'workspace';
-        if (!available || viewRef.current !== 'default') return true;
-        if (view !== 'book') dispatch({ view });
+        const available =
+          (view !== "library" && view !== "book") || layout === "workspace";
+        if (!available || viewRef.current !== "default") return true;
+        if (view !== "book") dispatch({ view });
         else {
           const path = lastBooks[initDir];
-          dispatch(path ? { view: 'book', path } : { view: 'library' });
+          dispatch(path ? { view: "book", path } : { view: "library" });
         }
         return true;
       };

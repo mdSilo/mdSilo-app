@@ -1,4 +1,4 @@
-import type { Parsed } from '@/lib/parseNote';
+import type { Parsed } from "@/lib/parseNote";
 
 // READING
 //
@@ -39,9 +39,9 @@ export interface PodType {
 }
 
 // WRITING
-// 
+//
 export type Note = {
-  id: string;  // !!Important!! id === file_path
+  id: string; // !!Important!! id === file_path
   title: string;
   content: string;
   file_path: string;
@@ -57,11 +57,11 @@ export type Note = {
   parsed?: Parsed;
 };
 
-export const defaultNote =  {
-  title: 'untitled',
-  content: ' ',
-  file_path: '',
-  cover: '',
+export const defaultNote = {
+  title: "untitled",
+  content: " ",
+  file_path: "",
+  cover: "",
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   is_daily: false,

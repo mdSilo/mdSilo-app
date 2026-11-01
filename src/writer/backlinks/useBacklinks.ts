@@ -1,12 +1,17 @@
-import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { NoteMap, useStore } from '@/state/store';
-import useDebounce from '@/lib/hooks/useDebounce';
-import { linkTitlesOf } from '@/lib/mdlink';
-import { getMarkdownTextBlocks, indexOf, LinkIndex, type TextBlock } from '@/lib/linkIndex';
-import { withContents } from '@/lib/contentCache';
-import useLoadNotes from '@/lib/hooks/useLoadNotes';
-import type { Note } from '@/types/model';
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { NoteMap, useStore } from "@/state/store";
+import useDebounce from "@/lib/hooks/useDebounce";
+import { linkTitlesOf } from "@/lib/mdlink";
+import {
+  getMarkdownTextBlocks,
+  indexOf,
+  LinkIndex,
+  type TextBlock,
+} from "@/lib/linkIndex";
+import { withContents } from "@/lib/contentCache";
+import useLoadNotes from "@/lib/hooks/useLoadNotes";
+import type { Note } from "@/types/model";
 
 const DEBOUNCE_MS = 1000;
 
@@ -35,19 +40,23 @@ export default function useBacklinks(noteId: string): Backlinks {
   useLoadNotes();
 
   // the title is not debounced: be right at once on switching or renaming note
-  const noteTitle = useStore((state) => state.notes.get(noteId)?.title) || '';
+  const noteTitle = useStore((state) => state.notes.get(noteId)?.title) || "";
   const [notes] = useDebounce(
     useStore((state) => state.notes),
-    DEBOUNCE_MS
+    DEBOUNCE_MS,
   );
   const [backlinks, setBacklinks] = useState<Backlinks>(EMPTY);
 
   useEffect(() => {
     let cancelled = false;
     loadBacklinks(notes, noteTitle, noteId)
-      .then((found) => { if (!cancelled) setBacklinks(found); })
-      .catch((e) => console.error('Failed to find the backlinks', e));
-    return () => { cancelled = true; };
+      .then((found) => {
+        if (!cancelled) setBacklinks(found);
+      })
+      .catch((e) => console.error("Failed to find the backlinks", e));
+    return () => {
+      cancelled = true;
+    };
   }, [notes, noteTitle, noteId]);
 
   return backlinks;
@@ -58,12 +67,14 @@ export default function useBacklinks(noteId: string): Backlinks {
  * where it is not available.
  */
 export async function searchMentions(text: string): Promise<string[]> {
-  const phrase = text.replace(/["\\]/g, ' ').trim();
+  const phrase = text.replace(/["\\]/g, " ").trim();
   if (!phrase) return [];
   try {
-    const hits = await invoke<{ path: string }[] | undefined>(
-      'index_search', { query: `"${phrase}"`, kind: 'note', limit: 500 }
-    );
+    const hits = await invoke<{ path: string }[] | undefined>("index_search", {
+      query: `"${phrase}"`,
+      kind: "note",
+      limit: 500,
+    });
     return (hits ?? []).map((hit) => hit.path).filter(Boolean);
   } catch {
     return [];
@@ -78,7 +89,7 @@ export async function searchMentions(text: string): Promise<string[]> {
 export async function loadBacklinks(
   notes: NoteMap,
   noteTitle: string,
-  noteId?: string
+  noteId?: string,
 ): Promise<Backlinks> {
   const title = noteTitle.trim();
   if (!title) return EMPTY;
@@ -91,7 +102,7 @@ export async function loadBacklinks(
       if (notes.has(id)) candidates.add(id);
     }
   }
-  candidates.delete(noteId ?? '');
+  candidates.delete(noteId ?? "");
   // in the order of the notes
   const found: Note[] = notes.values().filter((n) => candidates.has(n.id));
   const loaded = await withContents(found);
@@ -108,7 +119,7 @@ export async function loadBacklinks(
 export const computeBacklinks = (
   notes: NoteMap,
   noteTitle: string,
-  noteId?: string
+  noteId?: string,
 ): Backlinks => {
   const title = noteTitle.trim();
   if (!title) {
@@ -162,7 +173,9 @@ function backlinksIn(
         // unlinked: title in text, not in a link
         let at = run.text.indexOf(title);
         while (at >= 0) {
-          unlinked.push(toMatch(block, blockIndex, run.from + at, title.length));
+          unlinked.push(
+            toMatch(block, blockIndex, run.from + at, title.length),
+          );
           at = run.text.indexOf(title, at + title.length);
         }
       }
@@ -172,7 +185,11 @@ function backlinksIn(
       linkedBacklinks.push({ id: note.id, title: note.title, matches: linked });
     }
     if (unlinked.length > 0) {
-      unlinkedBacklinks.push({ id: note.id, title: note.title, matches: unlinked });
+      unlinkedBacklinks.push({
+        id: note.id,
+        title: note.title,
+        matches: unlinked,
+      });
     }
   }
 
@@ -183,21 +200,21 @@ function backlinksIn(
 export const computeLinkedBacklinks = (
   notes: NoteMap,
   noteTitle: string,
-  noteId?: string
+  noteId?: string,
 ): Backlink[] => computeBacklinks(notes, noteTitle, noteId).linkedBacklinks;
 
 // Searches the notes text-matched to the given title
 export const computeUnlinkedBacklinks = (
   notes: NoteMap,
   noteTitle: string,
-  noteId?: string
+  noteId?: string,
 ): Backlink[] => computeBacklinks(notes, noteTitle, noteId).unlinkedBacklinks;
 
 const toMatch = (
   block: TextBlock,
   index: number,
   from: number,
-  len: number
+  len: number,
 ): BacklinkMatch => ({
   text: block.text.slice(from, from + len),
   from,

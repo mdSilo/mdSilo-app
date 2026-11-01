@@ -1,4 +1,4 @@
-import logo from '@/asset/logo.svg';
+import logo from "@/asset/logo.svg";
 
 type Props = {
   width?: number;
@@ -9,7 +9,10 @@ type Props = {
 
 export default function Logo(props: Props) {
   const {
-    width = 32, height = 32, className = 'rounded-sm img-effect', wrapperClassName = 'text-center p-2',
+    width = 32,
+    height = 32,
+    className = "rounded-sm img-effect",
+    wrapperClassName = "text-center p-2",
   } = props;
   return (
     <div className={wrapperClassName}>

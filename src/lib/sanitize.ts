@@ -1,4 +1,4 @@
-import DOMPurify, { type Config } from 'dompurify';
+import DOMPurify, { type Config } from "dompurify";
 
 /*
   HTML from outside, e.g. feed articles. Besides scripts and event handlers
@@ -6,15 +6,23 @@ import DOMPurify, { type Config } from 'dompurify';
   no style sheets, inline styles, classes (e.g. `fixed inset-0`), ids or forms.
 */
 const EXTERNAL_HTML: Config = {
-  FORBID_TAGS: ['style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
-  FORBID_ATTR: ['style', 'class', 'id'],
+  FORBID_TAGS: [
+    "style",
+    "form",
+    "input",
+    "button",
+    "textarea",
+    "select",
+    "option",
+  ],
+  FORBID_ATTR: ["style", "class", "id"],
 };
 
 // links open outside the app, without access to it
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'A' && node.hasAttribute('href')) {
-    node.setAttribute('target', '_blank');
-    node.setAttribute('rel', 'noopener noreferrer');
+DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+  if (node.tagName === "A" && node.hasAttribute("href")) {
+    node.setAttribute("target", "_blank");
+    node.setAttribute("rel", "noopener noreferrer");
   }
 });
 
@@ -30,7 +38,17 @@ export function sanitizeHtml(html: string): string {
 */
 const PLUGIN_PICTURE: Config = {
   USE_PROFILES: { html: true, svg: true, svgFilters: true },
-  FORBID_TAGS: ['style', 'form', 'input', 'button', 'textarea', 'select', 'option', 'foreignObject', 'iframe'],
+  FORBID_TAGS: [
+    "style",
+    "form",
+    "input",
+    "button",
+    "textarea",
+    "select",
+    "option",
+    "foreignObject",
+    "iframe",
+  ],
 };
 
 /** Sanitize the SVG or HTML drawn by a plugin; show it in a box that contains its layout (`contain: paint`). */

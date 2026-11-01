@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { openFilePath } from '@/workspace/open';
+import { useCallback } from "react";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { openFilePath } from "@/workspace/open";
 
 export default function useOnNoteLinkClick() {
   const currentView = useCurrentViewContext();
@@ -12,11 +12,11 @@ export default function useOnNoteLinkClick() {
       const note = await openFilePath(toId, true);
       if (!note) return;
       const noteId = note.id;
-      const hash = highlightedPath ? `0-${highlightedPath}` : ''; // TODO
-      dispatch({view: 'md', params: {noteId, hash}});
+      const hash = highlightedPath ? `0-${highlightedPath}` : ""; // TODO
+      dispatch({ view: "md", params: { noteId, hash } });
       return;
     },
-    [dispatch]
+    [dispatch],
   );
 
   return { onClick };

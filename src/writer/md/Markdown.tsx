@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo } from "react";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { json } from "@codemirror/lang-json";
 import { languages } from "@codemirror/language-data";
@@ -15,24 +15,25 @@ type Props = {
 };
 
 function Markdown(props: Props) {
-  const { 
+  const {
     lang = "markdown",
-    initialContent, 
-    onChange, 
+    initialContent,
+    onChange,
     onFocus,
     dark,
     readMode = false,
-    className = '',
+    className = "",
   } = props;
 
-  //const readMode = useStore((state) => state.readMode); 
+  //const readMode = useStore((state) => state.readMode);
 
   // keep the same extensions across renders: new ones reconfigure the editor
   const extensions = useMemo(
-    () => lang === "markdown"
-      ? [markdown({ base: markdownLanguage, codeLanguages: languages })]
-      : [json()],
-    [lang]
+    () =>
+      lang === "markdown"
+        ? [markdown({ base: markdownLanguage, codeLanguages: languages })]
+        : [json()],
+    [lang],
   );
 
   const onValueChange = (value: string, _viewUpdate: unknown) => {
@@ -47,7 +48,7 @@ function Markdown(props: Props) {
       onFocus={onFocus}
       extensions={extensions}
       className={`border-none focus:outline-hidden p-0 wrap-break-word ${className}`}
-      theme={dark ? 'dark' : 'light'}
+      theme={dark ? "dark" : "light"}
       editable={!readMode}
     />
   );

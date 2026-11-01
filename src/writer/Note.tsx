@@ -1,46 +1,72 @@
-import React, { lazy, memo, Suspense, useCallback, useMemo, useEffect, useRef, useState } from 'react';
-import { invoke , convertFileSrc } from '@tauri-apps/api/core';
+import React, {
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import copy from "copy-to-clipboard";
-import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
+import { TbCaretRight as IconCaretRight } from "react-icons/tb";
 import MsEditor, { Attach, embeds } from "mdsmirror";
-import { useCodeRenderers } from '@/plugins/codeBlocks';
-import { useEditorSelectionActions } from '@/plugins/EditorSelectionActions';
-import { EDITOR_THEME } from '@/lib/themes';
-import Title from '@/writer/Title';
-import Toc, { Heading } from '@/writer/Toc';
-import { Spinner } from '@/ui/ui';
-import ErrorBoundary from '@/ui/ErrorBoundary';
-import { updateIssueNoteLinks } from '@/issue/issueStore';
-import { issueOfNoteText } from '@/issue/issueOfText';
-import { SidebarTab, store, useStore } from '@/state/store';
-import type { Note as NoteType } from '@/types/model';
-import { defaultNote } from '@/types/model';
-import useLinkHandlers from '@/writer/hooks/useLinkHandlers';
-import { listDirPath } from '@/workspace/useOpen';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { ProvideCurrentMd } from '@/writer/useCurrentMd';
-import { ciStringEqual, regDateStr, decodeHTMLEntity, emitCustomEvent } from '@/lib/helper';
-import { imageExtensions, docExtensions } from '@/lib/file-extensions';
-import { encodeHref } from '@/lib/mdlink';
-import FileAPI from '@/workspace/files';
-import { writeFile, deleteFile } from '@/workspace/write';
-import { scheduleSave, flushSave } from '@/workspace/pendingSaves';
-import { openFileDilog, openFilePath, openFilePaths, openUrl, saveDilog } from '@/workspace/open';
+import { useCodeRenderers } from "@/plugins/codeBlocks";
+import { useEditorSelectionActions } from "@/plugins/EditorSelectionActions";
+import { EDITOR_THEME } from "@/lib/themes";
+import Title from "@/writer/Title";
+import Toc, { Heading } from "@/writer/Toc";
+import { Spinner } from "@/ui/ui";
+import ErrorBoundary from "@/ui/ErrorBoundary";
+import { updateIssueNoteLinks } from "@/issue/issueStore";
+import { issueOfNoteText } from "@/issue/issueOfText";
+import { SidebarTab, store, useStore } from "@/state/store";
+import type { Note as NoteType } from "@/types/model";
+import { defaultNote } from "@/types/model";
+import useLinkHandlers from "@/writer/hooks/useLinkHandlers";
+import { listDirPath } from "@/workspace/useOpen";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { ProvideCurrentMd } from "@/writer/useCurrentMd";
 import {
-  joinPaths, getDirPath, setWindowTitle, normalizeSlash, getParentDir, getAssetProtocol
-} from '@/workspace/util';
-import { getFileExt } from '@/workspace/process';
-import { useWritingRoot } from '@/workspace/useWorkspace';
-import { fontFamilyOf } from '@/custom/fonts';
-import NoteHeader from './NoteHeader';
-import Backlinks from './backlinks/Backlinks';
-import IssueRefs from './IssueRefs';
-import updateBacklinks from './backlinks/updateBacklinks';
+  ciStringEqual,
+  regDateStr,
+  decodeHTMLEntity,
+  emitCustomEvent,
+} from "@/lib/helper";
+import { imageExtensions, docExtensions } from "@/lib/file-extensions";
+import { encodeHref } from "@/lib/mdlink";
+import FileAPI from "@/workspace/files";
+import { writeFile, deleteFile } from "@/workspace/write";
+import { scheduleSave, flushSave } from "@/workspace/pendingSaves";
+import {
+  openFileDilog,
+  openFilePath,
+  openFilePaths,
+  openUrl,
+  saveDilog,
+} from "@/workspace/open";
+import {
+  joinPaths,
+  getDirPath,
+  setWindowTitle,
+  normalizeSlash,
+  getParentDir,
+  getAssetProtocol,
+} from "@/workspace/util";
+import { getFileExt } from "@/workspace/process";
+import { useWritingRoot } from "@/workspace/useWorkspace";
+import { fontFamilyOf } from "@/custom/fonts";
+import NoteHeader from "./NoteHeader";
+import Backlinks from "./backlinks/Backlinks";
+import IssueRefs from "./IssueRefs";
+import updateBacklinks from "./backlinks/updateBacklinks";
 
 // the raw markdown (CodeMirror) and mindmap (markmap) modes, loaded on use
-const RawMarkdown = lazy(() => import('@/writer/md/Markdown'));
-const Mindmap = lazy(() => import('@/writer/mindmap/mindmap').then((m) => ({ default: m.Mindmap })));
-
+const RawMarkdown = lazy(() => import("@/writer/md/Markdown"));
+const Mindmap = lazy(() =>
+  import("@/writer/mindmap/mindmap").then((m) => ({ default: m.Mindmap })),
+);
 
 const CONTENT_SYNC_MS = 800;
 
@@ -65,7 +91,9 @@ function Note(props: Props) {
     setHeadings(editorInstance.current?.getHeadings() ?? []);
   }, []);
 
-  useEffect(() => { getHeading(); }, [noteId, getHeading]); // to trigger change on dep change
+  useEffect(() => {
+    getHeading();
+  }, [noteId, getHeading]); // to trigger change on dep change
 
   useEffect(() => {
     emitCustomEvent("PageLoaded", noteId);
@@ -95,8 +123,8 @@ function Note(props: Props) {
   // get note and properties: title,  content value....
   const thisNote: NoteType = useStore((state) => state.currentNote[noteId]);
   const isDaily = thisNote?.is_daily ?? false;
-  const title = thisNote?.title || '';
-  const mdContent = thisNote?.content || ' '; // show ' ' if null
+  const title = thisNote?.title || "";
+  const mdContent = thisNote?.content || " "; // show ' ' if null
 
   // const doc = parser.parse(mdContent);
   // console.log(">> doc: ", doc);
@@ -104,21 +132,26 @@ function Note(props: Props) {
   // console.log(">>json: ", json);
 
   const notePath = thisNote?.file_path;
-  const shortNotePath = initDir && notePath
-    ? notePath.replace(initDir, normalizeSlash(initDir).split('/').pop() || '.')
-    : notePath;
+  const shortNotePath =
+    initDir && notePath
+      ? notePath.replace(
+          initDir,
+          normalizeSlash(initDir).split("/").pop() || ".",
+        )
+      : notePath;
   // dir of this note, relative image paths like `img/a.png` are relative to it
   const noteDir = notePath
-    ? normalizeSlash(notePath).replace(/\/[^/]*$/, '') || '/'
+    ? normalizeSlash(notePath).replace(/\/[^/]*$/, "") || "/"
     : undefined;
 
   // for context
   const currentView = useCurrentViewContext();
   const state = currentView.state;
   const dispatch = currentView.dispatch;
-  const currentNoteValue = useMemo(() => (
-    { ty: 'note', id: noteId, state, dispatch }
-  ), [dispatch, noteId, state]);
+  const currentNoteValue = useMemo(
+    () => ({ ty: "note", id: noteId, state, dispatch }),
+    [dispatch, noteId, state],
+  );
 
   // note action
   const deleteNote = useStore((state) => state.deleteNote);
@@ -127,23 +160,30 @@ function Note(props: Props) {
 
   // Keep the note content in the store fresh too (tasks, issue sync,
   // backlinks and search read it), debounced to not re-render on each key.
-  const contentTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const contentTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const pendingContent = useRef<string | null>(null);
   const flushContent = useCallback(() => {
     if (contentTimer.current) clearTimeout(contentTimer.current);
     contentTimer.current = undefined;
     if (pendingContent.current !== null) {
-      store.getState().updateNote({ id: noteId, content: pendingContent.current });
+      store
+        .getState()
+        .updateNote({ id: noteId, content: pendingContent.current });
       pendingContent.current = null;
       // update TOC if any
       getHeading();
     }
   }, [noteId, getHeading]);
-  const syncContent = useCallback((text: string) => {
-    pendingContent.current = text;
-    if (contentTimer.current) clearTimeout(contentTimer.current);
-    contentTimer.current = setTimeout(flushContent, CONTENT_SYNC_MS);
-  }, [flushContent]);
+  const syncContent = useCallback(
+    (text: string) => {
+      pendingContent.current = text;
+      if (contentTimer.current) clearTimeout(contentTimer.current);
+      contentTimer.current = setTimeout(flushContent, CONTENT_SYNC_MS);
+    },
+    [flushContent],
+  );
   useEffect(() => flushContent, [flushContent]);
 
   // write to local file, once the typing pauses
@@ -151,10 +191,10 @@ function Note(props: Props) {
     (text: string) => {
       if (!notePath) return;
       // end the file with a newline, as a text file should
-      scheduleSave(notePath, text && !text.endsWith('\n') ? `${text}\n` : text);
+      scheduleSave(notePath, text && !text.endsWith("\n") ? `${text}\n` : text);
       syncContent(text);
     },
-    [notePath, syncContent]
+    [notePath, syncContent],
   );
 
   const onMarkdownChange = useCallback(
@@ -163,14 +203,20 @@ function Note(props: Props) {
       scheduleSave(notePath, text);
       syncContent(text);
     },
-    [notePath, syncContent]
+    [notePath, syncContent],
   );
   // the note is closed or another one is opened: save it now
-  useEffect(() => () => {
-    if (notePath) void flushSave(notePath);
-  }, [notePath]);
+  useEffect(
+    () => () => {
+      if (notePath) void flushSave(notePath);
+    },
+    [notePath],
+  );
 
-  setWindowTitle(`/ ${title} - mdSilo`, useStore((state) => state.isLoading));
+  setWindowTitle(
+    `/ ${title} - mdSilo`,
+    useStore((state) => state.isLoading),
+  );
   // update locally
   const onTitleChange = useCallback(
     async (newtitle: string) => {
@@ -178,7 +224,7 @@ function Note(props: Props) {
       const newTitle = newtitle.trim() || getUntitledTitle(noteId);
       const isTitleUnique = () => {
         const notesArr = storeNotes.values();
-        return notesArr.findIndex((n) => (n.title === newTitle)) === -1;
+        return notesArr.findIndex((n) => n.title === newTitle) === -1;
       };
       if (isTitleUnique()) {
         // the file is read again, then moved: with all the changes
@@ -192,7 +238,8 @@ function Note(props: Props) {
         const dirPath = await getDirPath(oldPath);
         const newPath = await joinPaths(dirPath, [`${newTitle}.md`]);
         // 2- swap value on disk: delete then write
-        const swapContent = store.getState().notes.get(noteId)?.content || mdContent;
+        const swapContent =
+          store.getState().notes.get(noteId)?.content || mdContent;
         await deleteFile(oldPath);
         await writeFile(newPath, swapContent);
         // 3- delete the old redundant in store before upsert note
@@ -210,28 +257,34 @@ function Note(props: Props) {
         await updateIssueNoteLinks(oldPath, newPath, title, newTitle);
         // 5- nav to renamed note
         await openFilePath(newPath, true);
-        dispatch({view: 'md', params: {noteId: newPath}});
+        dispatch({ view: "md", params: { noteId: newPath } });
       }
     },
-    [noteId, storeNotes, title, mdContent, deleteNote, upsertNote, upsertTree, dispatch]
+    [
+      noteId,
+      storeNotes,
+      title,
+      mdContent,
+      deleteNote,
+      upsertNote,
+      upsertTree,
+      dispatch,
+    ],
   );
 
   // Search
-  const onSearchText = useCallback(
-    async (text: string, ty?: string) => {
-      store.getState().setSidebarTab(SidebarTab.Search);
-      store.getState().setSidebarSearchQuery(text);
-      store.getState().setSidebarSearchType(ty || 'content');
-      store.getState().setIsSidebarOpen(true);
-    },
-    []
-  );
+  const onSearchText = useCallback(async (text: string, ty?: string) => {
+    store.getState().setSidebarTab(SidebarTab.Search);
+    store.getState().setSidebarSearchQuery(text);
+    store.getState().setSidebarSearchType(ty || "content");
+    store.getState().setIsSidebarOpen(true);
+  }, []);
 
   // Create new note, return encoded title as url: [title](encoded title as url)
   const onCreateNote = useCallback(
     async (title: string) => {
       title = title.trim();
-      const existingNote = storeNotes.values().find((n) => (n.title === title));
+      const existingNote = storeNotes.values().find((n) => n.title === title);
       if (existingNote) {
         return encodeHref(existingNote.title);
       }
@@ -240,7 +293,7 @@ function Note(props: Props) {
 
       return encodeHref(title);
     },
-    [notePath, storeNotes]
+    [notePath, storeNotes],
   );
 
   // open link: url, note title or issue:N; missing notes are created
@@ -249,23 +302,26 @@ function Note(props: Props) {
       const parentDir = await getDirPath(notePath);
       return await createNewNote(parentDir, title);
     },
-    [notePath]
+    [notePath],
   );
-  const { onSearchLink, onSearchItem, onOpenLink } = useLinkHandlers({ onMissingNote });
+  const { onSearchLink, onSearchItem, onOpenLink } = useLinkHandlers({
+    onMissingNote,
+  });
 
   // attach file
   const onAttachFile = useCallback(
     async (accept: string) => {
-      const ext = accept === 'image/*' ? imageExtensions : docExtensions;
+      const ext = accept === "image/*" ? imageExtensions : docExtensions;
       const filePath = await openFileDilog(ext, false);
-      if (filePath && typeof filePath === 'string') {
+      if (filePath && typeof filePath === "string") {
         let fullPath = filePath;
         let fileUrl: string;
         // console.log("use asset", useAsset)
         if (notesRoot && useAsset) {
-          const assetPath = await invoke<string[]>(
-            'copy_file_to_assets', { srcPath: filePath, workDir: notesRoot }
-          );
+          const assetPath = await invoke<string[]>("copy_file_to_assets", {
+            srcPath: filePath,
+            workDir: notesRoot,
+          });
           fullPath = assetPath[0] || filePath;
           // now it is relative path
           fileUrl = encodeURI(assetPath[1] || filePath);
@@ -283,40 +339,50 @@ function Note(props: Props) {
           const fname = fileMeta.file_name;
           const fileExt = getFileExt(fname);
           const attach: Attach = {
-            type: accept === 'image/*' ? `image/${fileExt}` : fileExt,
+            type: accept === "image/*" ? `image/${fileExt}` : fileExt,
             name: fname,
             size: fileMeta.size,
-            src:  fileUrl,
+            src: fileUrl,
           };
           return [attach];
         }
       }
       return [];
     },
-    [notesRoot, useAsset]
+    [notesRoot, useAsset],
   );
 
-   // open Attachment file using defult application
-  const onClickAttachment = useCallback(async (href: string) => {
-    const realHref = href.startsWith('./') && notesRoot
-      ? href.replace('.', notesRoot)
-      : href;
-    await openUrl(decodeURI(realHref));
-  }, [notesRoot]);
+  // open Attachment file using defult application
+  const onClickAttachment = useCallback(
+    async (href: string) => {
+      const realHref =
+        href.startsWith("./") && notesRoot
+          ? href.replace(".", notesRoot)
+          : href;
+      await openUrl(decodeURI(realHref));
+    },
+    [notesRoot],
+  );
 
-  const onSaveDiagram = useCallback(async (svg: string, ty: string) => {
-    if (!notesRoot) return;
-    const rawSVG = decodeHTMLEntity(svg);
-    const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-${ty}.svg`
-    const dir = await saveDilog(fname);
-    const defaultDir = `${notesRoot}/mindmap/${fname}`;
-    const saveDir = normalizeSlash(dir || defaultDir);
-    await writeFile(saveDir, rawSVG);
-  }, [notesRoot, title]);
+  const onSaveDiagram = useCallback(
+    async (svg: string, ty: string) => {
+      if (!notesRoot) return;
+      const rawSVG = decodeHTMLEntity(svg);
+      const fname = `${title.trim().replaceAll(" ", "-") || "untitled"}-${ty}.svg`;
+      const dir = await saveDilog(fname);
+      const defaultDir = `${notesRoot}/mindmap/${fname}`;
+      const saveDir = normalizeSlash(dir || defaultDir);
+      await writeFile(saveDir, rawSVG);
+    },
+    [notesRoot, title],
+  );
 
   // copy heading hash or hashtag hash
   const onCopyHash = useCallback(
-    (hash: string) => { copy(`${title}${hash}`); }, [title]
+    (hash: string) => {
+      copy(`${title}${hash}`);
+    },
+    [title],
   );
 
   const customTheme = {
@@ -325,12 +391,13 @@ function Note(props: Props) {
     fontScale: [fontSize / 1.1, lineHt / 1.6, fontWt / 400],
   };
 
-  const noteContainerClassName =
-    'flex flex-col w-full bg-base-100';
-  const errorContainerClassName =
-    `${noteContainerClassName} items-center justify-center h-full p-4`;
+  const noteContainerClassName = "flex flex-col w-full bg-base-100";
+  const errorContainerClassName = `${noteContainerClassName} items-center justify-center h-full p-4`;
 
-  const isNoteExists = useMemo(() => storeNotes.has(noteId), [noteId, storeNotes]);
+  const isNoteExists = useMemo(
+    () => storeNotes.has(noteId),
+    [noteId, storeNotes],
+  );
 
   if (!isNoteExists) {
     return (
@@ -370,60 +437,67 @@ function Note(props: Props) {
                 onChange={onTitleChange}
                 isDaily={isDaily}
               />
-              {(rawMode === 'wysiwyg') && headings.length > 0
-                ? (<Toc headings={headings} />)
-                : null
-              }
-              <div className="flex-1 px-2 pt-2 pb-8" id="note-content" spellCheck={isCheckSpellOn}>
+              {rawMode === "wysiwyg" && headings.length > 0 ? (
+                <Toc headings={headings} />
+              ) : null}
+              <div
+                className="flex-1 px-2 pt-2 pb-8"
+                id="note-content"
+                spellCheck={isCheckSpellOn}
+              >
                 <Suspense fallback={<Spinner className="mx-auto" />}>
-                {rawMode === 'raw' ? (
-                  <RawMarkdown
-                    key={`raw-${noteId}`}
-                    initialContent={mdContent}
-                    onChange={onMarkdownChange}
-                    dark={darkMode}
-                    readMode={readMode}
-                    className={"text-xl"}
-                  />
-                ) : rawMode === 'mindmap' ? (
-                  <Mindmap
-                    key={`mp-${noteId}`}
-                    title={title}
-                    mdValue={mdContent}
-                    initDir={notesRoot}
-                  />
-                ) : (
-                  <MsEditor
-                    key={`wys-${noteId}-${codeRenderersKey}`}
-                    ref={editorInstance}
-                    value={mdContent}
-                    dark={darkMode}
-                    readOnly={readMode}
-                    readOnlyWriteCheckboxes={readMode}
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                    theme={customTheme}
-                    onChange={onContentChange}
-                    onSearchLink={onSearchLink}
-                    onSearchItem={onSearchItem}
-                    onCreateLink={onCreateNote}
-                    onSearchSelectText={(txt: string) => onSearchText(txt)}
-                    onCreateIssue={(txt: string) => issueOfNoteText(txt, noteId, title)}
-                    onClickHashtag={(txt: string) => onSearchText(txt, 'hashtag')}
-                    onOpenLink={onOpenLink}
-                    attachFile={onAttachFile}
-                    onClickAttachment={onClickAttachment}
-                    onSaveDiagram={onSaveDiagram}
-                    codeRenderers={codeRenderers}
-                    selectionActions={selectionActions}
-                    onCopyHash={onCopyHash}
-                    embeds={embeds}
-                    disables={['sub']}
-                    rootPath={notesRoot}
-                    docPath={noteDir}
-                    protocol={protocol}
-                    resolveSrc={convertFileSrc}
-                  />
-                )}
+                  {rawMode === "raw" ? (
+                    <RawMarkdown
+                      key={`raw-${noteId}`}
+                      initialContent={mdContent}
+                      onChange={onMarkdownChange}
+                      dark={darkMode}
+                      readMode={readMode}
+                      className={"text-xl"}
+                    />
+                  ) : rawMode === "mindmap" ? (
+                    <Mindmap
+                      key={`mp-${noteId}`}
+                      title={title}
+                      mdValue={mdContent}
+                      initDir={notesRoot}
+                    />
+                  ) : (
+                    <MsEditor
+                      key={`wys-${noteId}-${codeRenderersKey}`}
+                      ref={editorInstance}
+                      value={mdContent}
+                      dark={darkMode}
+                      readOnly={readMode}
+                      readOnlyWriteCheckboxes={readMode}
+                      dir={isRTL ? "rtl" : "ltr"}
+                      theme={customTheme}
+                      onChange={onContentChange}
+                      onSearchLink={onSearchLink}
+                      onSearchItem={onSearchItem}
+                      onCreateLink={onCreateNote}
+                      onSearchSelectText={(txt: string) => onSearchText(txt)}
+                      onCreateIssue={(txt: string) =>
+                        issueOfNoteText(txt, noteId, title)
+                      }
+                      onClickHashtag={(txt: string) =>
+                        onSearchText(txt, "hashtag")
+                      }
+                      onOpenLink={onOpenLink}
+                      attachFile={onAttachFile}
+                      onClickAttachment={onClickAttachment}
+                      onSaveDiagram={onSaveDiagram}
+                      codeRenderers={codeRenderers}
+                      selectionActions={selectionActions}
+                      onCopyHash={onCopyHash}
+                      embeds={embeds}
+                      disables={["sub"]}
+                      rootPath={notesRoot}
+                      docPath={noteDir}
+                      protocol={protocol}
+                      resolveSrc={convertFileSrc}
+                    />
+                  )}
                 </Suspense>
               </div>
               <button
@@ -434,14 +508,16 @@ function Note(props: Props) {
                 }}
               >
                 <IconCaretRight
-                  className={`mr-1 text-base-content/60 ${showBacklink ? 'rotate-90' : ''}`}
+                  className={`mr-1 text-base-content/60 ${showBacklink ? "rotate-90" : ""}`}
                   size={16}
                   fill="currentColor"
                 />
-                  BackLinks
+                BackLinks
               </button>
               <div className="pt-2 border-t-2 border-base-300">
-                {showBacklink ? (<Backlinks className="mx-4 mb-8" isCollapse={false} />) : null}
+                {showBacklink ? (
+                  <Backlinks className="mx-4 mb-8" isCollapse={false} />
+                ) : null}
               </div>
               <IssueRefs noteId={noteId} title={title} className="mb-8" />
             </div>
@@ -456,7 +532,7 @@ export default memo(Note);
 
 // Get a unique "Untitled" title, ignoring the specified noteId.
 const getUntitledTitle = (noteId: string) => {
-  const title = 'Untitled';
+  const title = "Untitled";
 
   const getResult = () => (suffix > 0 ? `${title} ${suffix}` : title);
 
@@ -464,9 +540,7 @@ const getUntitledTitle = (noteId: string) => {
   const notesArr: readonly NoteType[] = store.getState().notes.values();
   while (
     notesArr.findIndex(
-      (note) =>
-        note?.id !== noteId &&
-        ciStringEqual(note?.title, getResult())
+      (note) => note?.id !== noteId && ciStringEqual(note?.title, getResult()),
     ) > -1
   ) {
     suffix += 1;
@@ -486,7 +560,7 @@ const createNewNote = async (parentDir: string, title: string) => {
   };
   store.getState().upsertNote(newNote);
   store.getState().upsertTree(parentDir, [newNote]);
-  await writeFile(notePath, ' ');
+  await writeFile(notePath, " ");
 
   return notePath;
 };

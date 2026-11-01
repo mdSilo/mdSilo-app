@@ -1,26 +1,39 @@
-import { useMemo, useState } from 'react';
-import { TbArrowLeft as IconBack, TbTrash as IconTrash } from 'react-icons/tb';
-import { useStore } from '@/state/store';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import useDebounce from '@/lib/hooks/useDebounce';
-import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
-import ErrorBoundary from '@/ui/ErrorBoundary';
-import { ConfirmModal } from '@/ui/Dialogs';
-import { useIssueData, useIssueStore } from './issueStore';
+import { useMemo, useState } from "react";
+import { TbArrowLeft as IconBack, TbTrash as IconTrash } from "react-icons/tb";
+import { useStore } from "@/state/store";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import useDebounce from "@/lib/hooks/useDebounce";
+import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
+import ErrorBoundary from "@/ui/ErrorBoundary";
+import { ConfirmModal } from "@/ui/Dialogs";
+import { useIssueData, useIssueStore } from "./issueStore";
 import {
-  addComment, commentCount, deleteIssue, getIssue, isOverdue, setDueOn, setState, updateIssue,
-} from './issueOps';
-import { computeNoteMentions, issueLabel } from './refs';
-import { StateBadge, TimeAgo, btnClass, inputClass, primaryBtnClass } from './common';
-import IssueEditor from './IssueEditor';
-import Timeline from './Timeline';
-import LabelPicker from './pickers/LabelPicker';
-import MilestonePicker from './pickers/MilestonePicker';
-import ProjectPicker from './pickers/ProjectPicker';
-import NotePicker from './pickers/NotePicker';
-import BookPicker from './pickers/BookPicker';
-import Subtasks from './Subtasks';
-import type { Issue } from './types';
+  addComment,
+  commentCount,
+  deleteIssue,
+  getIssue,
+  isOverdue,
+  setDueOn,
+  setState,
+  updateIssue,
+} from "./issueOps";
+import { computeNoteMentions, issueLabel } from "./refs";
+import {
+  StateBadge,
+  TimeAgo,
+  btnClass,
+  inputClass,
+  primaryBtnClass,
+} from "./common";
+import IssueEditor from "./IssueEditor";
+import Timeline from "./Timeline";
+import LabelPicker from "./pickers/LabelPicker";
+import MilestonePicker from "./pickers/MilestonePicker";
+import ProjectPicker from "./pickers/ProjectPicker";
+import NotePicker from "./pickers/NotePicker";
+import BookPicker from "./pickers/BookPicker";
+import Subtasks from "./Subtasks";
+import type { Issue } from "./types";
 
 type Props = {
   number: number;
@@ -40,7 +53,13 @@ export default function IssueDetail({ number, onClose }: Props) {
     return (
       <div className="p-8">
         <p className="mb-4">Issue {issueLabel(number)} does not exist.</p>
-        <button type="button" className="ms-link" onClick={() => dispatch({ view: 'issues' })}>Back to issues</button>
+        <button
+          type="button"
+          className="ms-link"
+          onClick={() => dispatch({ view: "issues" })}
+        >
+          Back to issues
+        </button>
       </div>
     );
   }
@@ -57,15 +76,16 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
   const { dispatch } = useCurrentViewContext();
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(issue.title);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [commentKey, setCommentKey] = useState(0);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const num = issue.number;
 
   const submitComment = (close?: boolean) => {
     if (comment.trim()) apply((d) => addComment(d, num, comment));
-    if (close !== undefined) apply((d) => setState(d, num, close ? 'closed' : 'open'));
-    setComment('');
+    if (close !== undefined)
+      apply((d) => setState(d, num, close ? "closed" : "open"));
+    setComment("");
     setCommentKey((k) => k + 1);
   };
 
@@ -77,10 +97,17 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
   const comments = commentCount(issue);
 
   return (
-    <div className="flex flex-col w-full h-full overflow-y-auto bg-base-100" data-testid="issue-detail">
+    <div
+      className="flex flex-col w-full h-full overflow-y-auto bg-base-100"
+      data-testid="issue-detail"
+    >
       <div className="w-full max-w-5xl px-6 py-4 mx-auto">
         {onClose ? null : (
-          <button type="button" className="flex items-center gap-1 mb-2 text-sm ms-link" onClick={() => dispatch({ view: 'issues' })}>
+          <button
+            type="button"
+            className="flex items-center gap-1 mb-2 text-sm ms-link"
+            onClick={() => dispatch({ view: "issues" })}
+          >
             <IconBack size={14} /> Issues
           </button>
         )}
@@ -95,26 +122,45 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
                 autoFocus
                 onChange={(e) => setTitleDraft(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') saveTitle();
-                  if (e.key === 'Escape') setEditingTitle(false);
+                  if (e.key === "Enter") saveTitle();
+                  if (e.key === "Escape") setEditingTitle(false);
                 }}
               />
-              <button type="button" className={btnClass} onClick={saveTitle}>Save</button>
-              <button type="button" className={btnClass} onClick={() => setEditingTitle(false)}>Cancel</button>
+              <button type="button" className={btnClass} onClick={saveTitle}>
+                Save
+              </button>
+              <button
+                type="button"
+                className={btnClass}
+                onClick={() => setEditingTitle(false)}
+              >
+                Cancel
+              </button>
             </div>
           ) : (
             <div className="flex items-start gap-2">
               <h1 className="flex-1 text-2xl">
-                {issue.title} <span className="text-base-content/50">{issueLabel(num)}</span>
+                {issue.title}{" "}
+                <span className="text-base-content/50">{issueLabel(num)}</span>
               </h1>
-              <button type="button" className={btnClass} onClick={() => { setTitleDraft(issue.title); setEditingTitle(true); }}>
+              <button
+                type="button"
+                className={btnClass}
+                onClick={() => {
+                  setTitleDraft(issue.title);
+                  setEditingTitle(true);
+                }}
+              >
                 Edit
               </button>
             </div>
           )}
           <div className="flex items-center gap-2 mt-2 text-sm text-base-content/60">
             <StateBadge state={issue.state} />
-            <span>opened <TimeAgo iso={issue.createdAt} /> · {comments} comment{comments === 1 ? '' : 's'}</span>
+            <span>
+              opened <TimeAgo iso={issue.createdAt} /> · {comments} comment
+              {comments === 1 ? "" : "s"}
+            </span>
           </div>
         </div>
 
@@ -134,15 +180,33 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
             </div>
             <div className="mt-4 border border-base-300 rounded-sm">
               <div className="px-3 py-2 min-h-24">
-                <IssueEditor key={`new-comment-${commentKey}`} defaultValue="" placeholder="Leave a comment" onChange={setComment} />
+                <IssueEditor
+                  key={`new-comment-${commentKey}`}
+                  defaultValue=""
+                  placeholder="Leave a comment"
+                  onChange={setComment}
+                />
               </div>
               <div className="flex justify-end gap-2 px-3 py-2 border-t border-base-300">
-                <button type="button" className={btnClass} onClick={() => submitComment(issue.state === 'open')}>
-                  {issue.state === 'open'
-                    ? (comment.trim() ? 'Close with comment' : 'Close issue')
-                    : (comment.trim() ? 'Reopen with comment' : 'Reopen issue')}
+                <button
+                  type="button"
+                  className={btnClass}
+                  onClick={() => submitComment(issue.state === "open")}
+                >
+                  {issue.state === "open"
+                    ? comment.trim()
+                      ? "Close with comment"
+                      : "Close issue"
+                    : comment.trim()
+                      ? "Reopen with comment"
+                      : "Reopen issue"}
                 </button>
-                <button type="button" className={primaryBtnClass} disabled={!comment.trim()} onClick={() => submitComment()}>
+                <button
+                  type="button"
+                  className={primaryBtnClass}
+                  disabled={!comment.trim()}
+                  onClick={() => submitComment()}
+                >
                   Comment
                 </button>
               </div>
@@ -173,7 +237,8 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
               isOpen={confirmDelete}
               onConfirm={() => {
                 apply((d) => deleteIssue(d, num));
-                if (onClose) onClose(); else dispatch({ view: 'issues' });
+                if (onClose) onClose();
+                else dispatch({ view: "issues" });
               }}
               handleClose={() => setConfirmDelete(false)}
             />
@@ -190,17 +255,25 @@ function DueDate({ issue }: { issue: Issue }) {
   const num = issue.number;
   return (
     <div className="py-3 border-b border-base-300">
-      <div className="mb-1 text-xs font-semibold text-base-content/60">Due date</div>
+      <div className="mb-1 text-xs font-semibold text-base-content/60">
+        Due date
+      </div>
       <div className="flex items-center gap-2">
         <input
           type="date"
           aria-label="Due date"
-          className={`${inputClass} flex-1 ${isOverdue(issue) ? 'text-error' : ''}`}
-          value={issue.dueOn ?? ''}
-          onChange={(e) => apply((d) => setDueOn(d, num, e.target.value || undefined))}
+          className={`${inputClass} flex-1 ${isOverdue(issue) ? "text-error" : ""}`}
+          value={issue.dueOn ?? ""}
+          onChange={(e) =>
+            apply((d) => setDueOn(d, num, e.target.value || undefined))
+          }
         />
         {issue.dueOn ? (
-          <button type="button" className="text-xs ms-link" onClick={() => apply((d) => setDueOn(d, num, undefined))}>
+          <button
+            type="button"
+            className="text-xs ms-link"
+            onClick={() => apply((d) => setDueOn(d, num, undefined))}
+          >
             Clear
           </button>
         ) : null}
@@ -211,21 +284,34 @@ function DueDate({ issue }: { issue: Issue }) {
 
 /** Notes linking this issue with `issue:N`. */
 function NoteMentions({ num }: { num: number }) {
-  const [notes] = useDebounce(useStore((state) => state.notes), 500);
+  const [notes] = useDebounce(
+    useStore((state) => state.notes),
+    500,
+  );
   const mentions = useMemo(() => computeNoteMentions(notes, num), [notes, num]);
   const { onClick: openNote } = useOnNoteLinkClick();
   return (
     <div className="py-3 border-b border-base-300">
-      <div className="mb-1 text-xs font-semibold text-base-content/60">Mentioned in notes</div>
+      <div className="mb-1 text-xs font-semibold text-base-content/60">
+        Mentioned in notes
+      </div>
       {mentions.length ? (
         <ul className="space-y-1 text-sm">
           {mentions.map((m) => (
             <li key={m.id}>
-              <button type="button" className="text-left ms-link" onClick={() => openNote(m.id)}>{m.title}</button>
+              <button
+                type="button"
+                className="text-left ms-link"
+                onClick={() => openNote(m.id)}
+              >
+                {m.title}
+              </button>
             </li>
           ))}
         </ul>
-      ) : (<span className="text-sm text-base-content/60">None</span>)}
+      ) : (
+        <span className="text-sm text-base-content/60">None</span>
+      )}
     </div>
   );
 }

@@ -3,50 +3,53 @@
  * DocumentLoader of reader: EPUB, PDF, MOBI/AZW/AZW3, FB2/FBZ and CBZ.
  */
 
-export type BookFormat = 'EPUB' | 'PDF' | 'MOBI' | 'AZW' | 'AZW3' | 'CBZ' | 'FB2' | 'FBZ';
+export type BookFormat =
+  "EPUB" | "PDF" | "MOBI" | "AZW" | "AZW3" | "CBZ" | "FB2" | "FBZ";
 
 /** The extensions of the book files, lower case, by format. */
 export const BOOK_EXTS: Record<string, BookFormat> = {
-  epub: 'EPUB',
-  pdf: 'PDF',
-  mobi: 'MOBI',
-  azw: 'AZW',
-  azw3: 'AZW3',
-  cbz: 'CBZ',
-  fb2: 'FB2',
-  fbz: 'FBZ',
+  epub: "EPUB",
+  pdf: "PDF",
+  mobi: "MOBI",
+  azw: "AZW",
+  azw3: "AZW3",
+  cbz: "CBZ",
+  fb2: "FB2",
+  fbz: "FBZ",
 };
 
 const extOf = (path: string) => {
-  const name = path.split(/[\\/]/).pop() ?? '';
-  const dot = name.lastIndexOf('.');
-  return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+  const name = path.split(/[\\/]/).pop() ?? "";
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 };
 
 /** A book file to read, by its extension. */
 export const isBookFile = (path: string) => extOf(path) in BOOK_EXTS;
 
-export const bookFormatOf = (path: string): BookFormat | undefined => BOOK_EXTS[extOf(path)];
+export const bookFormatOf = (path: string): BookFormat | undefined =>
+  BOOK_EXTS[extOf(path)];
 
 /** The text files made books when imported: converted to EPUB, see convert/. */
-export type TextFormat = 'TXT' | 'Markdown' | 'HTML' | 'ZIP';
+export type TextFormat = "TXT" | "Markdown" | "HTML" | "ZIP";
 
 export const CONVERTIBLE_EXTS: Record<string, TextFormat> = {
-  txt: 'TXT',
-  md: 'Markdown',
-  markdown: 'Markdown',
-  html: 'HTML',
-  htm: 'HTML',
-  xhtml: 'HTML',
-  zip: 'ZIP',
+  txt: "TXT",
+  md: "Markdown",
+  markdown: "Markdown",
+  html: "HTML",
+  htm: "HTML",
+  xhtml: "HTML",
+  zip: "ZIP",
 };
 
 /** A file converted to a book when imported, by its extension. */
-export const convertibleFormatOf = 
-  (path: string): TextFormat | undefined => CONVERTIBLE_EXTS[extOf(path)];
+export const convertibleFormatOf = (path: string): TextFormat | undefined =>
+  CONVERTIBLE_EXTS[extOf(path)];
 
 export type LanguageMap = Record<string, string>;
-export type Contributor = string | { name?: string | LanguageMap } | Contributor[];
+export type Contributor =
+  string | { name?: string | LanguageMap } | Contributor[];
 
 export interface TOCItem {
   id?: number;
@@ -61,7 +64,7 @@ export interface SectionItem {
   size: number;
   linear?: string;
   /** a fixed layout: the side of a spread the page is on; '' as the layout goes */
-  pageSpread?: 'left' | 'right' | 'center' | '';
+  pageSpread?: "left" | "right" | "center" | "";
   createDocument: () => Promise<Document>;
   /** the page as shown: a URL of it, its images and styles as blob: URLs */
   load?: () => string | Promise<string>;
@@ -79,14 +82,21 @@ export interface BookMetadata {
 
 export interface BookDoc {
   metadata: BookMetadata;
-  rendition?: { layout?: 'pre-paginated' | 'reflowable'; spread?: string };
+  rendition?: { layout?: "pre-paginated" | "reflowable"; spread?: string };
   dir?: string;
   toc?: TOCItem[];
   sections: SectionItem[];
   splitTOCHref?(href: string): Array<string | number>;
   /** a link in the book: its section, and the element it goes to there */
-  resolveHref?(href: string): { index: number; anchor?: (doc: Document) => Element | null } | undefined
-    | Promise<{ index: number; anchor?: (doc: Document) => Element | null } | undefined>;
+  resolveHref?(
+    href: string,
+  ):
+    | { index: number; anchor?: (doc: Document) => Element | null }
+    | undefined
+    | Promise<
+        | { index: number; anchor?: (doc: Document) => Element | null }
+        | undefined
+      >;
   isExternal?(href: string): boolean;
   getCover(): Promise<Blob | null>;
   destroy?(): void | Promise<void>;
@@ -95,7 +105,7 @@ export interface BookDoc {
 // where packages/foliate-js/pdf.js loads the files of pdf.js, served by the
 // pdfjsVendor plugin of vite.config.mts
 (globalThis as { FOLIATE_PDFJS_BASE?: string }).FOLIATE_PDFJS_BASE =
-  `${import.meta.env.BASE_URL ?? '/'}vendor/pdfjs/`;
+  `${import.meta.env.BASE_URL ?? "/"}vendor/pdfjs/`;
 
 type ZipEntry = {
   filename: string;
@@ -106,7 +116,7 @@ type ZipEntry = {
 
 const formatOfMobi = (name: string): BookFormat => {
   const ext = extOf(name);
-  return ext === 'azw' ? 'AZW' : ext === 'azw3' ? 'AZW3' : 'MOBI';
+  return ext === "azw" ? "AZW" : ext === "azw3" ? "AZW3" : "MOBI";
 };
 
 async function isZip(file: Blob) {
@@ -118,7 +128,12 @@ async function isZip(file: Blob) {
   if (size < 22) return false;
   const tail = new Uint8Array(await file.slice(file.size - size).arrayBuffer());
   for (let i = tail.length - 22; i >= 0; i--) {
-    if (tail[i] === 0x50 && tail[i + 1] === 0x4b && tail[i + 2] === 0x05 && tail[i + 3] === 0x06) {
+    if (
+      tail[i] === 0x50 &&
+      tail[i + 1] === 0x4b &&
+      tail[i + 2] === 0x05 &&
+      tail[i + 3] === 0x06
+    ) {
       return true;
     }
   }
@@ -127,11 +142,17 @@ async function isZip(file: Blob) {
 
 async function isPDF(file: Blob) {
   const arr = new Uint8Array(await file.slice(0, 5).arrayBuffer());
-  return arr[0] === 0x25 && arr[1] === 0x50 && arr[2] === 0x44 && arr[3] === 0x46 && arr[4] === 0x2d;
+  return (
+    arr[0] === 0x25 &&
+    arr[1] === 0x50 &&
+    arr[2] === 0x44 &&
+    arr[3] === 0x46 &&
+    arr[4] === 0x2d
+  );
 }
 
 async function makeZipLoader(file: File) {
-  const zip = await import('foliate-js/vendor/zip.js');
+  const zip = await import("foliate-js/vendor/zip.js");
   zip.configure({ useWebWorkers: false });
   const reader = new zip.ZipReader(new zip.BlobReader(file));
   const entries = (await reader.getEntries()) as ZipEntry[];
@@ -141,9 +162,13 @@ async function makeZipLoader(file: File) {
   for (const entry of entries) {
     const key = entry.filename.toLowerCase();
     const existing = lower.get(key);
-    lower.set(key, existing && existing.filename !== entry.filename ? null : entry);
+    lower.set(
+      key,
+      existing && existing.filename !== entry.filename ? null : entry,
+    );
   }
-  const getEntry = (name: string) => map.get(name) ?? lower.get(name.toLowerCase()) ?? null;
+  const getEntry = (name: string) =>
+    map.get(name) ?? lower.get(name.toLowerCase()) ?? null;
   const loadText = (name: string) => {
     const entry = getEntry(name);
     return entry && !entry.directory && entry.getData
@@ -160,9 +185,16 @@ async function makeZipLoader(file: File) {
   // the comment of the archive, comic books keep metadata there
   const getComment = async () => {
     const size = Math.min(1024 * 64, file.size);
-    const tail = new Uint8Array(await file.slice(file.size - size).arrayBuffer());
+    const tail = new Uint8Array(
+      await file.slice(file.size - size).arrayBuffer(),
+    );
     for (let i = tail.length - 22; i >= 0; i--) {
-      if (tail[i] === 0x50 && tail[i + 1] === 0x4b && tail[i + 2] === 0x05 && tail[i + 3] === 0x06) {
+      if (
+        tail[i] === 0x50 &&
+        tail[i + 1] === 0x4b &&
+        tail[i + 2] === 0x05 &&
+        tail[i + 3] === 0x06
+      ) {
         const length = tail[i + 20] + (tail[i + 21] << 8);
         return new TextDecoder().decode(tail.slice(i + 22, i + 22 + length));
       }
@@ -173,54 +205,77 @@ async function makeZipLoader(file: File) {
 }
 
 /** Open a book file, by its content (its name for the zip based formats). */
-export async function openBook(file: File): Promise<{ book: BookDoc; format: BookFormat }> {
-  if (!file.size) throw new Error('The book file is empty');
+export async function openBook(
+  file: File,
+): Promise<{ book: BookDoc; format: BookFormat }> {
+  if (!file.size) throw new Error("The book file is empty");
   const name = file.name.toLowerCase();
   if (await isZip(file)) {
     const loader = await makeZipLoader(file);
-    if (name.endsWith('.cbz') || file.type === 'application/vnd.comicbook+zip') {
-      const { makeComicBook } = await import('foliate-js/comic-book.js');
-      return { book: (await makeComicBook(loader, file)) as unknown as BookDoc, format: 'CBZ' };
+    if (
+      name.endsWith(".cbz") ||
+      file.type === "application/vnd.comicbook+zip"
+    ) {
+      const { makeComicBook } = await import("foliate-js/comic-book.js");
+      return {
+        book: (await makeComicBook(loader, file)) as unknown as BookDoc,
+        format: "CBZ",
+      };
     }
-    if (name.endsWith('.fbz') || name.endsWith('.fb2.zip') || name.endsWith('.fb.zip')) {
-      const entry = loader.entries.find((e) => e.filename.endsWith('.fb2')) ?? loader.entries[0];
+    if (
+      name.endsWith(".fbz") ||
+      name.endsWith(".fb2.zip") ||
+      name.endsWith(".fb.zip")
+    ) {
+      const entry =
+        loader.entries.find((e) => e.filename.endsWith(".fb2")) ??
+        loader.entries[0];
       const blob = await loader.loadBlob(entry.filename);
-      const { makeFB2 } = await import('foliate-js/fb2.js');
-      return { book: (await makeFB2(blob)) as unknown as BookDoc, format: 'FBZ' };
+      const { makeFB2 } = await import("foliate-js/fb2.js");
+      return {
+        book: (await makeFB2(blob)) as unknown as BookDoc,
+        format: "FBZ",
+      };
     }
-    const { EPUB } = await import('foliate-js/epub.js');
-    return { book: (await new EPUB(loader).init()) as unknown as BookDoc, format: 'EPUB' };
+    const { EPUB } = await import("foliate-js/epub.js");
+    return {
+      book: (await new EPUB(loader).init()) as unknown as BookDoc,
+      format: "EPUB",
+    };
   }
   if (await isPDF(file)) {
-    const { makePDF } = await import('foliate-js/pdf.js');
-    return { book: (await makePDF(file)) as unknown as BookDoc, format: 'PDF' };
+    const { makePDF } = await import("foliate-js/pdf.js");
+    return { book: (await makePDF(file)) as unknown as BookDoc, format: "PDF" };
   }
-  const mobi = await import('foliate-js/mobi.js');
+  const mobi = await import("foliate-js/mobi.js");
   if (await mobi.isMOBI(file)) {
-    const fflate = await import('foliate-js/vendor/fflate.js');
+    const fflate = await import("foliate-js/vendor/fflate.js");
     const book = await new mobi.MOBI({ unzlib: fflate.unzlibSync }).open(file);
     return { book: book as unknown as BookDoc, format: formatOfMobi(name) };
   }
-  if (name.endsWith('.fb2') || file.type === 'application/x-fictionbook+xml') {
-    const { makeFB2 } = await import('foliate-js/fb2.js');
-    return { book: (await makeFB2(file)) as unknown as BookDoc, format: 'FB2' };
+  if (name.endsWith(".fb2") || file.type === "application/x-fictionbook+xml") {
+    const { makeFB2 } = await import("foliate-js/fb2.js");
+    return { book: (await makeFB2(file)) as unknown as BookDoc, format: "FB2" };
   }
-  throw new Error('Unsupported book format');
+  throw new Error("Unsupported book format");
 }
 
 /** A string of a value in several languages: the first one. */
-export function formatLanguageMap(value: string | LanguageMap | undefined): string {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
+export function formatLanguageMap(
+  value: string | LanguageMap | undefined,
+): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
   const keys = Object.keys(value);
-  return keys.length ? value[keys[0]] : '';
+  return keys.length ? value[keys[0]] : "";
 }
 
 /** The names of the contributors, comma separated. */
 export function formatContributors(value: Contributor | undefined): string {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value)) return value.map(formatContributors).filter(Boolean).join(', ');
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (Array.isArray(value))
+    return value.map(formatContributors).filter(Boolean).join(", ");
   return formatLanguageMap(value.name);
 }
 
@@ -231,13 +286,18 @@ export function getDirection(doc: Document) {
   const { direction } = view.getComputedStyle(doc.body);
   let { writingMode } = view.getComputedStyle(doc.body);
   // some books set it on the first child of the body
-  if (!writingMode || writingMode === 'horizontal-tb') {
+  if (!writingMode || writingMode === "horizontal-tb") {
     const child = doc.body.firstElementChild;
-    const childMode = child ? view.getComputedStyle(child).writingMode : '';
-    if (childMode === 'vertical-rl' || childMode === 'vertical-lr') writingMode = childMode;
+    const childMode = child ? view.getComputedStyle(child).writingMode : "";
+    if (childMode === "vertical-rl" || childMode === "vertical-lr")
+      writingMode = childMode;
   }
-  const vertical = writingMode === 'vertical-rl' || writingMode === 'vertical-lr';
-  const rtl = writingMode === 'vertical-rl' || direction === 'rtl' || doc.body.dir === 'rtl'
-    || doc.documentElement.dir === 'rtl';
+  const vertical =
+    writingMode === "vertical-rl" || writingMode === "vertical-lr";
+  const rtl =
+    writingMode === "vertical-rl" ||
+    direction === "rtl" ||
+    doc.body.dir === "rtl" ||
+    doc.documentElement.dir === "rtl";
   return { vertical, rtl };
 }

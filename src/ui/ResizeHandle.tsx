@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useRef, useState } from "react";
 
 export type WidthBounds = {
   readonly min: number;
@@ -22,10 +22,13 @@ export function useResizableWidth(
 ) {
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const width = clampWidth(dragWidth ?? savedWidth, bounds);
-  const onResizeEnd = useCallback((w: number) => {
-    saveWidth(clampWidth(w, bounds));
-    setDragWidth(null);
-  }, [saveWidth, bounds]);
+  const onResizeEnd = useCallback(
+    (w: number) => {
+      saveWidth(clampWidth(w, bounds));
+      setDragWidth(null);
+    },
+    [saveWidth, bounds],
+  );
 
   return { width, onResize: setDragWidth, onResizeEnd };
 }
@@ -44,45 +47,64 @@ type Props = {
  * Double click to reset, arrow keys to resize by keyboard.
  */
 function ResizeHandle(props: Props) {
-  const { width, bounds, label, onResize, onResizeEnd, className = '' } = props;
-  const dragRef = useRef<{ startX: number; startWidth: number; width: number } | null>(null);
+  const { width, bounds, label, onResize, onResizeEnd, className = "" } = props;
+  const dragRef = useRef<{
+    startX: number;
+    startWidth: number;
+    width: number;
+  } | null>(null);
 
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-    dragRef.current = { startX: e.clientX, startWidth: width, width };
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, [width]);
-
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    drag.width = clampWidth(drag.startWidth + e.clientX - drag.startX, bounds);
-    onResize(drag.width);
-  }, [onResize, bounds]);
-
-  const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    dragRef.current = null;
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-    onResizeEnd(drag.width);
-  }, [onResizeEnd]);
-
-  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    const step = e.shiftKey ? 64 : 16;
-    if (e.key === 'ArrowLeft') {
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return;
       e.preventDefault();
-      onResizeEnd(width - step);
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      onResizeEnd(width + step);
-    }
-  }, [onResizeEnd, width]);
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      dragRef.current = { startX: e.clientX, startWidth: width, width };
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    },
+    [width],
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      drag.width = clampWidth(
+        drag.startWidth + e.clientX - drag.startX,
+        bounds,
+      );
+      onResize(drag.width);
+    },
+    [onResize, bounds],
+  );
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      dragRef.current = null;
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      onResizeEnd(drag.width);
+    },
+    [onResizeEnd],
+  );
+
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const step = e.shiftKey ? 64 : 16;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        onResizeEnd(width - step);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        onResizeEnd(width + step);
+      }
+    },
+    [onResizeEnd, width],
+  );
 
   return (
     <div

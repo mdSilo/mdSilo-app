@@ -1,11 +1,11 @@
 /* Shared helpers for unit tests. Not imported by app code. */
-import { vi, type Mock } from 'vitest';
-import type { ReactElement, ReactNode } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { store } from '@/state/store';
-import { ProvideCurrentView } from '@/state/useCurrentView';
-import type { Note } from '@/types/model';
-import type { FileMetaData } from '@/workspace/directory';
+import { vi, type Mock } from "vitest";
+import type { ReactElement, ReactNode } from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import { store } from "@/state/store";
+import { ProvideCurrentView } from "@/state/useCurrentView";
+import type { Note } from "@/types/model";
+import type { FileMetaData } from "@/workspace/directory";
 
 const initialState = store.getState();
 
@@ -16,27 +16,30 @@ export function resetStore() {
 
 /** Build a Note with sensible defaults. `id` and `file_path` default to each other. */
 export function makeNote(partial: Partial<Note> & { id?: string } = {}): Note {
-  const id = partial.id ?? partial.file_path ?? `/notes/${partial.title ?? 'note'}.md`;
+  const id =
+    partial.id ?? partial.file_path ?? `/notes/${partial.title ?? "note"}.md`;
   return {
     id,
-    title: 'note',
-    content: '',
+    title: "note",
+    content: "",
     file_path: id,
-    cover: '',
-    created_at: '2022-01-01T00:00:00.000Z',
-    updated_at: '2022-01-01T00:00:00.000Z',
+    cover: "",
+    created_at: "2022-01-01T00:00:00.000Z",
+    updated_at: "2022-01-01T00:00:00.000Z",
     is_daily: false,
     ...partial,
   };
 }
 
 /** Build file metadata as returned by the Rust backend. */
-export function makeFileMeta(partial: Partial<FileMetaData> = {}): FileMetaData {
+export function makeFileMeta(
+  partial: Partial<FileMetaData> = {},
+): FileMetaData {
   const time = { secs_since_epoch: 1640995200, nanos_since_epoch: 0 }; // 2022-01-01
   return {
-    file_path: '/notes/a.md',
-    file_name: 'a.md',
-    file_text: '',
+    file_path: "/notes/a.md",
+    file_name: "a.md",
+    file_text: "",
     created: time,
     last_modified: time,
     last_accessed: time,
@@ -65,12 +68,14 @@ type InvokeHandler = unknown | ((args: Record<string, unknown>) => unknown);
  */
 export function mockInvoke(
   invoke: unknown,
-  handlers: Record<string, InvokeHandler> = {}
+  handlers: Record<string, InvokeHandler> = {},
 ) {
-  (invoke as Mock).mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
-    const handler = handlers[cmd];
-    return typeof handler === 'function' ? handler(args ?? {}) : handler;
-  });
+  (invoke as Mock).mockImplementation(
+    async (cmd: string, args: Record<string, unknown>) => {
+      const handler = handlers[cmd];
+      return typeof handler === "function" ? handler(args ?? {}) : handler;
+    },
+  );
 }
 
 /**
@@ -95,13 +100,16 @@ export function leaveTauri() {
  * Restore with vi.restoreAllMocks().
  */
 export function mockLayout() {
-  vi.spyOn(globalThis, 'ResizeObserver').mockImplementation(
+  vi.spyOn(globalThis, "ResizeObserver").mockImplementation(
     class implements ResizeObserver {
       constructor(private callback: ResizeObserverCallback) {}
 
       observe(target: Element) {
         const contentRect = target.getBoundingClientRect();
-        const size = { inlineSize: contentRect.width, blockSize: contentRect.height };
+        const size = {
+          inlineSize: contentRect.width,
+          blockSize: contentRect.height,
+        };
         this.callback(
           [
             {
@@ -112,29 +120,44 @@ export function mockLayout() {
               devicePixelContentBoxSize: [size],
             },
           ],
-          this
+          this,
         );
       }
 
       unobserve() {}
       disconnect() {}
-    }
+    },
   );
-  const size = (el: HTMLElement) => (el.style.position === 'absolute' ? 32 : 1000);
-  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
-    return size(this);
-  });
-  vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(300);
-  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
-    const height = size(this);
-    return { width: 300, height, top: 0, left: 0, bottom: height, right: 300, x: 0, y: 0, toJSON: () => ({}) };
-  });
+  const size = (el: HTMLElement) =>
+    el.style.position === "absolute" ? 32 : 1000;
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(
+    function (this: HTMLElement) {
+      return size(this);
+    },
+  );
+  vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(300);
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: HTMLElement) {
+      const height = size(this);
+      return {
+        width: 300,
+        height,
+        top: 0,
+        left: 0,
+        bottom: height,
+        right: 300,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      };
+    },
+  );
 }
 
 /** Wait for the view loaded on first use (MainView, React.lazy) to show. */
 export async function waitForView() {
   await waitFor(() => {
-    if (screen.queryByTestId('view-loading')) throw new Error('view loading');
+    if (screen.queryByTestId("view-loading")) throw new Error("view loading");
   });
 }
 
@@ -144,16 +167,16 @@ export async function waitForView() {
  * Call in beforeEach; `/mdSilo` is a workspace already.
  */
 export async function useWebFs() {
-  const { IDBFactory, IDBKeyRange } = await import('fake-indexeddb');
-  const { closeDB } = await import('@/host/web/idb');
-  const { resetFsInit } = await import('@/host/web/fs');
-  const web = await import('@/host/web/core');
-  const { invoke } = await import('@tauri-apps/api/core');
+  const { IDBFactory, IDBKeyRange } = await import("fake-indexeddb");
+  const { closeDB } = await import("@/host/web/idb");
+  const { resetFsInit } = await import("@/host/web/fs");
+  const web = await import("@/host/web/core");
+  const { invoke } = await import("@tauri-apps/api/core");
   await closeDB();
   resetFsInit();
   Object.assign(globalThis, { indexedDB: new IDBFactory(), IDBKeyRange });
-  (invoke as Mock).mockImplementation((cmd: string, args?: Record<string, unknown>) =>
-    web.invoke(cmd, args)
+  (invoke as Mock).mockImplementation(
+    (cmd: string, args?: Record<string, unknown>) => web.invoke(cmd, args),
   );
   return web.invoke;
 }

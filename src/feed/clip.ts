@@ -1,32 +1,32 @@
-import { domToMarkdown } from 'mdsmirror';
-import { store } from '@/state/store';
-import type { ArticleType } from '@/types/model';
-import { sanitizeHtml } from '@/lib/sanitize';
-import { fmtDatetime } from '@/lib/helper';
-import { joinPaths } from '@/workspace/util';
-import { writeFile } from '@/workspace/write';
-import { openFilePaths } from '@/workspace/open';
-import FileAPI from '@/workspace/files';
-import { CLIPS_DIR, readingRoot } from '@/workspace/layout';
+import { domToMarkdown } from "mdsmirror";
+import { store } from "@/state/store";
+import type { ArticleType } from "@/types/model";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { fmtDatetime } from "@/lib/helper";
+import { joinPaths } from "@/workspace/util";
+import { writeFile } from "@/workspace/write";
+import { openFilePaths } from "@/workspace/open";
+import FileAPI from "@/workspace/files";
+import { CLIPS_DIR, readingRoot } from "@/workspace/layout";
 
 export { CLIPS_DIR };
 
 /** Markdown of HTML from outside: sanitized, then as the editor writes it. */
 export function htmlToMarkdown(html: string): string {
   // an inert document: nothing loads or runs while parsing
-  const dom = new DOMParser().parseFromString(sanitizeHtml(html), 'text/html');
+  const dom = new DOMParser().parseFromString(sanitizeHtml(html), "text/html");
   return domToMarkdown(dom.body).trim();
 }
 
 /** A file name of the title: no path separators or reserved characters. */
 export function clipFileName(title: string): string {
   const name = title
-    .replace(/[\\/:*?"<>|#^[\]\p{Cc}]/gu, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/[\\/:*?"<>|#^[\]\p{Cc}]/gu, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, 100)
     .trim();
-  return name || 'untitled';
+  return name || "untitled";
 }
 
 /** The first lines of a clip: title and where it is from. */
@@ -34,15 +34,15 @@ export function clipHeader(article: ArticleType): string {
   const from = [`[${article.url}](${article.url})`];
   if (article.author) from.push(article.author);
   if (article.published) from.push(fmtDatetime(article.published));
-  return `# ${article.title}\n\n> From ${from.join(' · ')}\n`;
+  return `# ${article.title}\n\n> From ${from.join(" · ")}\n`;
 }
 
 /** A selection as a quote. */
 export function quote(markdown: string): string {
   return markdown
-    .split('\n')
-    .map((line) => (line ? `> ${line}` : '>'))
-    .join('\n');
+    .split("\n")
+    .map((line) => (line ? `> ${line}` : ">"))
+    .join("\n");
 }
 
 /**
@@ -51,13 +51,18 @@ export function quote(markdown: string): string {
  * selection of it added to the clip as a quote.
  * @returns the note path, undefined without a workspace
  */
-export async function clipArticle(article: ArticleType, selectionHtml?: string) {
+export async function clipArticle(
+  article: ArticleType,
+  selectionHtml?: string,
+) {
   const initDir = store.getState().initDir;
   if (!initDir) return;
   const clipsDir = await joinPaths(readingRoot() ?? initDir, [CLIPS_DIR]);
-  const notePath = await joinPaths(clipsDir, [`${clipFileName(article.title)}.md`]);
+  const notePath = await joinPaths(clipsDir, [
+    `${clipFileName(article.title)}.md`,
+  ]);
   const file = new FileAPI(notePath);
-  const existing = (await file.exists()) ? await file.readFile() : '';
+  const existing = (await file.exists()) ? await file.readFile() : "";
 
   let content: string;
   if (selectionHtml !== undefined) {
@@ -66,7 +71,7 @@ export async function clipArticle(article: ArticleType, selectionHtml?: string) 
   } else if (existing) {
     content = existing;
   } else {
-    const body = htmlToMarkdown(article.content || article.description || '');
+    const body = htmlToMarkdown(article.content || article.description || "");
     content = `${clipHeader(article)}\n${body}\n`;
   }
   if (content !== existing) {

@@ -2,10 +2,18 @@
  * Virtual file system on IndexedDB for the web version.
  * Every file or directory is a record in the `files` store keyed by its path.
  */
-import { FILES, getAll, get, reqToPromise, tx } from './idb';
-import { ROOT, basename, isHidden, isTextFile, isWithin, normalize, parent } from './path';
-import { emitFsChange } from './watch';
-import { loadDemo } from './demo';
+import { FILES, getAll, get, reqToPromise, tx } from "./idb";
+import {
+  ROOT,
+  basename,
+  isHidden,
+  isTextFile,
+  isWithin,
+  normalize,
+  parent,
+} from "./path";
+import { emitFsChange } from "./watch";
+import { loadDemo } from "./demo";
 
 export type FileData = string | Blob;
 
@@ -21,7 +29,7 @@ export interface FsEntry {
   accessed: number;
 }
 
-export const DEFAULT_DIR = '/mdSilo';
+export const DEFAULT_DIR = "/mdSilo";
 
 const WELCOME = `# Welcome to mdSilo
 
@@ -36,16 +44,21 @@ Clearing site data in your browser will delete the notes, please back up regular
 
 function sizeOf(data?: FileData): number {
   if (data === undefined) return 0;
-  return typeof data === 'string' ? new Blob([data]).size : data.size;
+  return typeof data === "string" ? new Blob([data]).size : data.size;
 }
 
-function newEntry(path: string, isDir: boolean, data?: FileData, now = Date.now()): FsEntry {
+function newEntry(
+  path: string,
+  isDir: boolean,
+  data?: FileData,
+  now = Date.now(),
+): FsEntry {
   return {
     path,
     parent: parent(path),
     name: basename(path),
     is_dir: isDir,
-    data: isDir ? undefined : data ?? '',
+    data: isDir ? undefined : (data ?? ""),
     size: isDir ? 0 : sizeOf(data),
     created: now,
     modified: now,
@@ -55,7 +68,7 @@ function newEntry(path: string, isDir: boolean, data?: FileData, now = Date.now(
 
 /** key range of all descendants of dir */
 function descendantsRange(dir: string): IDBKeyRange {
-  const prefix = dir === ROOT ? '/' : `${dir}/`;
+  const prefix = dir === ROOT ? "/" : `${dir}/`;
   // lower bound open: excludes the root `/` itself, no other path ends with `/`
   return IDBKeyRange.bound(prefix, `${prefix}\uffff`, true, false);
 }
@@ -69,18 +82,25 @@ export function initFs(): Promise<void> {
       const root = await get<FsEntry>(FILES, ROOT);
       if (root) return;
       // the demo of the first run: the manual, a book and some issues; not in tests
-      const demo = import.meta.env.MODE === 'test' ? [] : await loadDemo().catch(() => []);
-      await tx(FILES, 'readwrite', (t) => {
+      const demo =
+        import.meta.env.MODE === "test" ? [] : await loadDemo().catch(() => []);
+      await tx(FILES, "readwrite", (t) => {
         const s = t.objectStore(FILES);
         s.put(newEntry(ROOT, true));
         s.put(newEntry(DEFAULT_DIR, true));
         // in the workspace layout, see src/workspace/layout.ts
-        for (const dir of ['reading', 'writing', '.mdsilo', '.mdsilo/local']) {
+        for (const dir of ["reading", "writing", ".mdsilo", ".mdsilo/local"]) {
           s.put(newEntry(`${DEFAULT_DIR}/${dir}`, true));
         }
-        s.put(newEntry(`${DEFAULT_DIR}/.mdsilo/.gitignore`, false, 'local/\n'));
+        s.put(newEntry(`${DEFAULT_DIR}/.mdsilo/.gitignore`, false, "local/\n"));
         const meta = { version: 1, createdAt: new Date().toISOString() };
-        s.put(newEntry(`${DEFAULT_DIR}/.mdsilo/workspace.json`, false, JSON.stringify(meta, null, 2)));
+        s.put(
+          newEntry(
+            `${DEFAULT_DIR}/.mdsilo/workspace.json`,
+            false,
+            JSON.stringify(meta, null, 2),
+          ),
+        );
         if (demo.length === 0) {
           s.put(newEntry(`${DEFAULT_DIR}/writing/Welcome.md`, false, WELCOME));
         }
@@ -88,7 +108,11 @@ export function initFs(): Promise<void> {
         for (const file of demo) {
           const path = `${DEFAULT_DIR}/${file.path}`;
           // the parent dirs, up to the workspace
-          for (let dir = parent(path); dir !== DEFAULT_DIR && !dirs.has(dir); dir = parent(dir)) {
+          for (
+            let dir = parent(path);
+            dir !== DEFAULT_DIR && !dirs.has(dir);
+            dir = parent(dir)
+          ) {
             dirs.add(dir);
             s.put(newEntry(dir, true));
           }
@@ -129,33 +153,42 @@ export async function isFile(path: string): Promise<boolean> {
 /** direct children of dir */
 export async function readDir(dir: string): Promise<FsEntry[]> {
   await initFs();
-  const entries = await getAll<FsEntry>(FILES, normalize(dir), 'parent');
+  const entries = await getAll<FsEntry>(FILES, normalize(dir), "parent");
   return entries.filter((e) => e.path !== ROOT);
 }
 
 /** all descendants of dir, recursively */
-export async function walk(dir: string, skipHidden = false): Promise<FsEntry[]> {
+export async function walk(
+  dir: string,
+  skipHidden = false,
+): Promise<FsEntry[]> {
   await initFs();
   const d = normalize(dir);
   const all = await getAll<FsEntry>(FILES, descendantsRange(d));
   if (!skipHidden) return all;
   // skip hidden entries and everything inside a hidden dir
   const base = d === ROOT ? 0 : d.length;
-  return all.filter((e) => !e.path.slice(base).split('/').some((seg) => seg.startsWith('.')));
+  return all.filter(
+    (e) =>
+      !e.path
+        .slice(base)
+        .split("/")
+        .some((seg) => seg.startsWith(".")),
+  );
 }
 
 export async function readText(path: string): Promise<string> {
   const entry = await stat(path);
   if (!entry || entry.is_dir) throw new Error(`No such file: ${path}`);
-  const data = entry.data ?? '';
-  return typeof data === 'string' ? data : await data.text();
+  const data = entry.data ?? "";
+  return typeof data === "string" ? data : await data.text();
 }
 
 export async function readBlob(path: string): Promise<Blob> {
   const entry = await stat(path);
   if (!entry || entry.is_dir) throw new Error(`No such file: ${path}`);
-  const data = entry.data ?? '';
-  return typeof data === 'string' ? new Blob([data]) : data;
+  const data = entry.data ?? "";
+  return typeof data === "string" ? new Blob([data]) : data;
 }
 
 /**
@@ -166,7 +199,7 @@ export async function mkdirp(dir: string): Promise<boolean> {
   await initFs();
   const d = normalize(dir);
   const created: string[] = [];
-  const ok = await tx(FILES, 'readwrite', async (t) => {
+  const ok = await tx(FILES, "readwrite", async (t) => {
     const s = t.objectStore(FILES);
     const chain: string[] = [];
     for (let p = d; p !== ROOT; p = parent(p)) chain.unshift(p);
@@ -181,19 +214,23 @@ export async function mkdirp(dir: string): Promise<boolean> {
     }
     return true;
   });
-  if (created.length) emitFsChange('create', created);
+  if (created.length) emitFsChange("create", created);
   return ok;
 }
 
 /** write file, create parent dirs if needed */
-export async function writeFile(path: string, data: FileData): Promise<boolean> {
+export async function writeFile(
+  path: string,
+  data: FileData,
+): Promise<boolean> {
   const p = normalize(path);
   if (p === ROOT) return false;
   if (!(await mkdirp(parent(p)))) return false;
   // keep text files as string, so they are searchable and cheap to read
-  const content = typeof data !== 'string' && isTextFile(p) ? await data.text() : data;
+  const content =
+    typeof data !== "string" && isTextFile(p) ? await data.text() : data;
   let isNew = false;
-  const ok = await tx(FILES, 'readwrite', async (t) => {
+  const ok = await tx(FILES, "readwrite", async (t) => {
     const s = t.objectStore(FILES);
     const old = await reqToPromise<FsEntry | undefined>(s.get(p));
     if (old?.is_dir) return false;
@@ -204,7 +241,7 @@ export async function writeFile(path: string, data: FileData): Promise<boolean> 
     await reqToPromise(s.put(entry));
     return true;
   });
-  if (ok) emitFsChange(isNew ? 'create' : 'write', [p]);
+  if (ok) emitFsChange(isNew ? "create" : "write", [p]);
   return ok;
 }
 
@@ -212,7 +249,7 @@ export async function writeFile(path: string, data: FileData): Promise<boolean> 
 export async function remove(paths: string[]): Promise<boolean> {
   await initFs();
   const removed: string[] = [];
-  await tx(FILES, 'readwrite', async (t) => {
+  await tx(FILES, "readwrite", async (t) => {
     const s = t.objectStore(FILES);
     for (const path of paths) {
       const p = normalize(path);
@@ -224,53 +261,64 @@ export async function remove(paths: string[]): Promise<boolean> {
       removed.push(p);
     }
   });
-  if (removed.length) emitFsChange('remove', removed);
+  if (removed.length) emitFsChange("remove", removed);
   return removed.length === paths.length;
 }
 
 /** rename or move file or dir, overwrite the target file if any */
-export async function rename(fromPath: string, toPath: string): Promise<boolean> {
+export async function rename(
+  fromPath: string,
+  toPath: string,
+): Promise<boolean> {
   const from = normalize(fromPath);
   const to = normalize(toPath);
   if (from === ROOT || to === ROOT) return false;
   if (from === to) return exists(from);
   if (isWithin(to, from)) return false; // can not move a dir into itself
   if (!(await mkdirp(parent(to)))) return false;
-  const ok = await tx(FILES, 'readwrite', async (t) => {
+  const ok = await tx(FILES, "readwrite", async (t) => {
     const s = t.objectStore(FILES);
     const entry = await reqToPromise<FsEntry | undefined>(s.get(from));
     if (!entry) return false;
     const target = await reqToPromise<FsEntry | undefined>(s.get(to));
     if (target && (target.is_dir || entry.is_dir)) return false;
     const moving = entry.is_dir
-      ? [entry, ...(await reqToPromise<FsEntry[]>(s.getAll(descendantsRange(from))))]
+      ? [
+          entry,
+          ...(await reqToPromise<FsEntry[]>(s.getAll(descendantsRange(from)))),
+        ]
       : [entry];
     if (entry.is_dir) await reqToPromise(s.delete(descendantsRange(from)));
     await reqToPromise(s.delete(from));
     for (const item of moving) {
       const newPath = to + item.path.slice(from.length);
-      await reqToPromise(s.put({
-        ...item,
-        path: newPath,
-        parent: parent(newPath),
-        name: basename(newPath),
-        modified: item.path === from ? Date.now() : item.modified,
-      }));
+      await reqToPromise(
+        s.put({
+          ...item,
+          path: newPath,
+          parent: parent(newPath),
+          name: basename(newPath),
+          modified: item.path === from ? Date.now() : item.modified,
+        }),
+      );
     }
     return true;
   });
   if (ok) {
-    emitFsChange('renameFrom', [from]);
-    emitFsChange('renameTo', [to]);
+    emitFsChange("renameFrom", [from]);
+    emitFsChange("renameTo", [to]);
   }
   return ok;
 }
 
 /** copy a file */
-export async function copyFile(srcPath: string, toPath: string): Promise<boolean> {
+export async function copyFile(
+  srcPath: string,
+  toPath: string,
+): Promise<boolean> {
   const entry = await stat(srcPath);
   if (!entry || entry.is_dir) return false;
-  return writeFile(toPath, entry.data ?? '');
+  return writeFile(toPath, entry.data ?? "");
 }
 
 /** simple metadata, the shape of Rust FileMetaData */
@@ -282,7 +330,7 @@ export function toMeta(entry: FsEntry, withText: boolean) {
   return {
     file_path: entry.path,
     file_name: entry.name,
-    file_text: withText && typeof entry.data === 'string' ? entry.data : '',
+    file_text: withText && typeof entry.data === "string" ? entry.data : "",
     created: time(entry.created),
     last_modified: time(entry.modified),
     last_accessed: time(entry.accessed),

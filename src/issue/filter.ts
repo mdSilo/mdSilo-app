@@ -1,9 +1,10 @@
-import { commentCount, isOverdue } from './issueOps';
-import type { Issue, IssueData, IssueState } from './types';
-import { issueLabel } from './refs';
+import { commentCount, isOverdue } from "./issueOps";
+import type { Issue, IssueData, IssueState } from "./types";
+import { issueLabel } from "./refs";
 
-export type SortKey = 'created' | 'updated' | 'comments' | 'number' | 'title' | 'due';
-export type SortDir = 'asc' | 'desc';
+export type SortKey =
+  "created" | "updated" | "comments" | "number" | "title" | "due";
+export type SortDir = "asc" | "desc";
 
 export type IssueQuery = {
   state?: IssueState;
@@ -18,8 +19,15 @@ export type IssueQuery = {
   text: string; // free text, matched against title and body
 };
 
-export const DEFAULT_SORT = { key: 'created', dir: 'desc' } as const;
-export const SORT_KEYS: SortKey[] = ['created', 'updated', 'comments', 'number', 'title', 'due'];
+export const DEFAULT_SORT = { key: "created", dir: "desc" } as const;
+export const SORT_KEYS: SortKey[] = [
+  "created",
+  "updated",
+  "comments",
+  "number",
+  "title",
+  "due",
+];
 
 /** Split on whitespace, keeping "quoted values" (also in key:"quoted value") together. */
 export function tokenize(query: string): string[] {
@@ -31,7 +39,7 @@ export function tokenize(query: string): string[] {
   return tokens;
 }
 
-const unquote = (s: string) => s.replace(/^"/, '').replace(/"$/, '');
+const unquote = (s: string) => s.replace(/^"/, "").replace(/"$/, "");
 
 /**
  * Parse a GitHub-style query, e.g.
@@ -44,7 +52,7 @@ export function parseQuery(query: string): IssueQuery {
     noLabel: false,
     noMilestone: false,
     sort: { ...DEFAULT_SORT },
-    text: '',
+    text: "",
   };
   const words: string[] = [];
   for (const token of tokenize(query)) {
@@ -56,27 +64,27 @@ export function parseQuery(query: string): IssueQuery {
     const [, neg, rawKey, rawVal] = m;
     const key = rawKey.toLowerCase();
     const val = unquote(rawVal);
-    if (key === 'is' || key === 'state') {
-      if (val === 'open' || val === 'closed') q.state = val;
-      if (val === 'overdue') q.overdue = true;
+    if (key === "is" || key === "state") {
+      if (val === "open" || val === "closed") q.state = val;
+      if (val === "overdue") q.overdue = true;
       // is:issue and others are accepted and ignored
-    } else if (key === 'label') {
+    } else if (key === "label") {
       (neg ? q.excludeLabels : q.labels).push(val);
-    } else if (key === 'milestone') {
+    } else if (key === "milestone") {
       q.milestone = val;
-    } else if (key === 'no') {
-      if (val === 'label') q.noLabel = true;
-      if (val === 'milestone') q.noMilestone = true;
-    } else if (key === 'sort') {
-      const [k, d] = val.split('-');
+    } else if (key === "no") {
+      if (val === "label") q.noLabel = true;
+      if (val === "milestone") q.noMilestone = true;
+    } else if (key === "sort") {
+      const [k, d] = val.split("-");
       if ((SORT_KEYS as string[]).includes(k)) {
-        q.sort = { key: k as SortKey, dir: d === 'asc' ? 'asc' : 'desc' };
+        q.sort = { key: k as SortKey, dir: d === "asc" ? "asc" : "desc" };
       }
     } else {
       words.push(token); // unknown qualifier: treat as text
     }
   }
-  q.text = words.join(' ').trim();
+  q.text = words.join(" ").trim();
   return q;
 }
 
@@ -85,35 +93,44 @@ export function stringifyQuery(q: IssueQuery): string {
   const quote = (s: string) => (/\s/.test(s) ? `"${s}"` : s);
   const parts: string[] = [];
   if (q.state) parts.push(`is:${q.state}`);
-  if (q.overdue) parts.push('is:overdue');
+  if (q.overdue) parts.push("is:overdue");
   q.labels.forEach((l) => parts.push(`label:${quote(l)}`));
   q.excludeLabels.forEach((l) => parts.push(`-label:${quote(l)}`));
   if (q.milestone) parts.push(`milestone:${quote(q.milestone)}`);
-  if (q.noLabel) parts.push('no:label');
-  if (q.noMilestone) parts.push('no:milestone');
+  if (q.noLabel) parts.push("no:label");
+  if (q.noMilestone) parts.push("no:milestone");
   if (q.sort.key !== DEFAULT_SORT.key || q.sort.dir !== DEFAULT_SORT.dir) {
     parts.push(`sort:${q.sort.key}-${q.sort.dir}`);
   }
   if (q.text) parts.push(q.text);
-  return parts.join(' ');
+  return parts.join(" ");
 }
 
-const cmp = (a: string | number, b: string | number) => (a < b ? -1 : a > b ? 1 : 0);
+const cmp = (a: string | number, b: string | number) =>
+  a < b ? -1 : a > b ? 1 : 0;
 
-export function sortIssues(issues: Issue[], sort: IssueQuery['sort']) {
-  const sign = sort.dir === 'asc' ? 1 : -1;
+export function sortIssues(issues: Issue[], sort: IssueQuery["sort"]) {
+  const sign = sort.dir === "asc" ? 1 : -1;
   const keyOf = (i: Issue): string | number => {
     switch (sort.key) {
-      case 'updated': return i.updatedAt;
-      case 'comments': return commentCount(i);
-      case 'number': return i.number;
-      case 'title': return i.title.toLowerCase();
+      case "updated":
+        return i.updatedAt;
+      case "comments":
+        return commentCount(i);
+      case "number":
+        return i.number;
+      case "title":
+        return i.title.toLowerCase();
       // no date: the farthest
-      case 'due': return i.dueOn ?? '9999-99-99';
-      default: return i.createdAt;
+      case "due":
+        return i.dueOn ?? "9999-99-99";
+      default:
+        return i.createdAt;
     }
   };
-  return [...issues].sort((a, b) => sign * cmp(keyOf(a), keyOf(b)) || sign * (a.number - b.number));
+  return [...issues].sort(
+    (a, b) => sign * cmp(keyOf(a), keyOf(b)) || sign * (a.number - b.number),
+  );
 }
 
 /**
@@ -121,27 +138,34 @@ export function sortIssues(issues: Issue[], sort: IssueQuery['sort']) {
  * `ignoreState` drops the is:open/closed qualifier, e.g. to count both tabs.
  */
 export function filterIssues(
-  data: Pick<IssueData, 'issues' | 'labels' | 'milestones'>,
+  data: Pick<IssueData, "issues" | "labels" | "milestones">,
   query: string | IssueQuery,
-  ignoreState = false
+  ignoreState = false,
 ): Issue[] {
-  const q = typeof query === 'string' ? parseQuery(query) : query;
+  const q = typeof query === "string" ? parseQuery(query) : query;
   const ci = (s: string) => s.toLowerCase();
   const labelName = new Map(data.labels.map((l) => [l.id, ci(l.name)]));
-  const milestone = q.milestone && data.milestones.find((m) => ci(m.title) === ci(q.milestone ?? ''));
+  const milestone =
+    q.milestone &&
+    data.milestones.find((m) => ci(m.title) === ci(q.milestone ?? ""));
   const words = ci(q.text).split(/\s+/).filter(Boolean);
 
   const result = data.issues.filter((issue) => {
     if (!ignoreState && q.state && issue.state !== q.state) return false;
-    const names = issue.labels.map((id) => labelName.get(id)).filter(Boolean) as string[];
+    const names = issue.labels
+      .map((id) => labelName.get(id))
+      .filter(Boolean) as string[];
     if (q.labels.some((l) => !names.includes(ci(l)))) return false;
     if (q.excludeLabels.some((l) => names.includes(ci(l)))) return false;
     if (q.noLabel && names.length > 0) return false;
     if (q.noMilestone && issue.milestone) return false;
-    if (q.milestone && (!milestone || issue.milestone !== milestone.id)) return false;
+    if (q.milestone && (!milestone || issue.milestone !== milestone.id))
+      return false;
     if (q.overdue && !isOverdue(issue)) return false;
     if (words.length > 0) {
-      const hay = ci(`${issueLabel(issue.number)} #${issue.number} ${issue.title} ${issue.body}`);
+      const hay = ci(
+        `${issueLabel(issue.number)} #${issue.number} ${issue.title} ${issue.body}`,
+      );
       if (!words.every((w) => hay.includes(w))) return false;
     }
     return true;

@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { store, useStore } from '@/state/store';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { store, useStore } from "@/state/store";
 import {
   countNoteActivities,
   mergeActivities,
   type ActivityData,
   type ActivityRecord,
-} from '@/insight/activity';
-import { getStrDate } from '@/lib/helper';
-import { Note } from '@/types/model';
+} from "@/insight/activity";
+import { getStrDate } from "@/lib/helper";
+import { Note } from "@/types/model";
 
 type HeatMapProps = {
   noteList: readonly Note[];
@@ -18,21 +18,29 @@ type HeatMapProps = {
 };
 
 /** What the heatmap counts: notes written, time read, or both. */
-export type HeatMapMode = 'all' | 'writing' | 'reading';
+export type HeatMapMode = "all" | "writing" | "reading";
 
-const MODES: Array<[HeatMapMode, string]> = [['all', 'All'], ['writing', 'Writing'], ['reading', 'Reading']];
+const MODES: Array<[HeatMapMode, string]> = [
+  ["all", "All"],
+  ["writing", "Writing"],
+  ["reading", "Reading"],
+];
 // the color of each kind of activity, as in the cells
-const MODE_DOT: Record<HeatMapMode, string> = { all: '', writing: 'bg-primary', reading: 'bg-secondary' };
+const MODE_DOT: Record<HeatMapMode, string> = {
+  all: "",
+  writing: "bg-primary",
+  reading: "bg-secondary",
+};
 
 export default function HeatMap(props: HeatMapProps) {
   const { noteList, reading, onClickCell } = props;
-  const [mode, setMode] = useState<HeatMapMode>('all');
+  const [mode, setMode] = useState<HeatMapMode>("all");
 
   // the stored record keeps the activities of notes since changed or deleted
   const stored = useStore((state) => state.activities);
   const activeRecord = useMemo(
     () => mergeActivities(stored, countNoteActivities(noteList)),
-    [stored, noteList]
+    [stored, noteList],
   );
   // persist, out of render; merged is the stored record if nothing new
   useEffect(() => {
@@ -41,25 +49,39 @@ export default function HeatMap(props: HeatMapProps) {
     }
   }, [activeRecord]);
 
-  const weeks = useMemo(() => buildWeeks(activeRecord, reading, mode), [activeRecord, reading, mode]);
+  const weeks = useMemo(
+    () => buildWeeks(activeRecord, reading, mode),
+    [activeRecord, reading, mode],
+  );
 
-  const onDayClick = useCallback((date: string) => onClickCell(date), [onClickCell]);
+  const onDayClick = useCallback(
+    (date: string) => onClickCell(date),
+    [onClickCell],
+  );
 
   const hmLabelClass = "text-xs fill-base-content/60";
 
   return (
     <div className="overflow-auto p-1 m-1">
       {reading ? (
-        <div role="tablist" className="tabs tabs-box tabs-xs w-fit mb-1" data-testid="heatmap-mode">
+        <div
+          role="tablist"
+          className="tabs tabs-box tabs-xs w-fit mb-1"
+          data-testid="heatmap-mode"
+        >
           {MODES.map(([value, label]) => (
             <button
               key={value}
               role="tab"
-              className={`tab ${mode === value ? 'tab-active' : ''}`}
+              className={`tab ${mode === value ? "tab-active" : ""}`}
               aria-selected={mode === value}
               onClick={() => setMode(value)}
             >
-              {MODE_DOT[value] ? <span className={`inline-block w-2 h-2 mr-1 rounded-xs ${MODE_DOT[value]}`} /> : null}
+              {MODE_DOT[value] ? (
+                <span
+                  className={`inline-block w-2 h-2 mr-1 rounded-xs ${MODE_DOT[value]}`}
+                />
+              ) : null}
               {label}
             </button>
           ))}
@@ -74,29 +96,44 @@ export default function HeatMap(props: HeatMapProps) {
         </defs>
         <g transform="translate(10, 20)">
           {weeks.map((days, weekIdx) => (
-            <WeekHeatMap 
-              key={`week-${weekIdx}`} 
+            <WeekHeatMap
+              key={`week-${weekIdx}`}
               days={days}
-              weekIdx={weekIdx} 
-              onClick={onDayClick} 
+              weekIdx={weekIdx}
+              onClick={onDayClick}
             />
           ))}
-          {Array.from(Array(12).keys()).map(monIdx => (
-            <text 
-              key={`mon-${monIdx}`} 
-              x={`${calcMonStart() * 16 + 66 * monIdx}`} 
-              y="-8" className={hmLabelClass}
+          {Array.from(Array(12).keys()).map((monIdx) => (
+            <text
+              key={`mon-${monIdx}`}
+              x={`${calcMonStart() * 16 + 66 * monIdx}`}
+              y="-8"
+              className={hmLabelClass}
             >
               {getMonthLabel(monIdx)}
             </text>
           ))}
-          <text textAnchor="start" className="hidden" dx="-10" dy="8">Sun</text>
-          <text textAnchor="start" className={hmLabelClass} dx="-10" dy="25">M</text>
-          <text textAnchor="start" className="hidden" dx="-10" dy="42">Tue</text>
-          <text textAnchor="start" className={hmLabelClass} dx="-10" dy="56">W</text>
-          <text textAnchor="start" className="hidden" dx="-10" dy="72">Thu</text>
-          <text textAnchor="start" className={hmLabelClass} dx="-10" dy="85">F</text>
-          <text textAnchor="start" className="hidden" dx="-10" dy="98">Sat</text>
+          <text textAnchor="start" className="hidden" dx="-10" dy="8">
+            Sun
+          </text>
+          <text textAnchor="start" className={hmLabelClass} dx="-10" dy="25">
+            M
+          </text>
+          <text textAnchor="start" className="hidden" dx="-10" dy="42">
+            Tue
+          </text>
+          <text textAnchor="start" className={hmLabelClass} dx="-10" dy="56">
+            W
+          </text>
+          <text textAnchor="start" className="hidden" dx="-10" dy="72">
+            Thu
+          </text>
+          <text textAnchor="start" className={hmLabelClass} dx="-10" dy="85">
+            F
+          </text>
+          <text textAnchor="start" className="hidden" dx="-10" dy="98">
+            Sat
+          </text>
         </g>
       </svg>
     </div>
@@ -124,16 +161,35 @@ function WeekHeatMap({ days, weekIdx, onClick }: WeekProps) {
         const x = 16 - weekIdx;
         const y = 15 * dayIdx;
         return (
-          <g key={`day-${dayIdx}`} className="cursor-pointer" onClick={() => onClick(day.date)}>
+          <g
+            key={`day-${dayIdx}`}
+            className="cursor-pointer"
+            onClick={() => onClick(day.date)}
+          >
             <title>{day.tip}</title>
-            <rect width={CELL} height={CELL} rx="2" ry="2" x={x} y={y} className={day.style} />
+            <rect
+              width={CELL}
+              height={CELL}
+              rx="2"
+              ry="2"
+              x={x}
+              y={y}
+              className={day.style}
+            />
             {day.read ? (
               <g clipPath="url(#hm-cell)" data-testid="hm-split">
                 <polygon
                   points={`${x + CELL},${y} ${x + CELL},${y + CELL} ${x},${y + CELL}`}
                   className={day.read}
                 />
-                <line x1={x + CELL} y1={y} x2={x} y2={y + CELL} className="stroke-base-100" strokeWidth="1" />
+                <line
+                  x1={x + CELL}
+                  y1={y}
+                  x2={x}
+                  y2={y + CELL}
+                  className="stroke-base-100"
+                  strokeWidth="1"
+                />
               </g>
             ) : null}
           </g>
@@ -148,7 +204,9 @@ export const READING_UNIT_SECONDS = 15 * 60;
 
 /** 53 weeks to this week, 7 days each: computed once, not per cell */
 export function buildWeeks(
-  data: ActivityRecord, reading: Record<string, number> = {}, mode: HeatMapMode = 'all'
+  data: ActivityRecord,
+  reading: Record<string, number> = {},
+  mode: HeatMapMode = "all",
 ): DayCell[][] {
   const today = new Date();
   const weekDay = today.getDay();
@@ -160,20 +218,25 @@ export function buildWeeks(
       const read = reading[date] ?? 0;
       const readUnits = Math.ceil(read / READING_UNIT_SECONDS);
       const written = aData?.activityNum ?? 0;
-      const writing = mode === 'reading' ? 0 : written;
-      const reads = mode === 'writing' ? 0 : readUnits;
+      const writing = mode === "reading" ? 0 : written;
+      const reads = mode === "writing" ? 0 : readUnits;
       const activity = writing + reads;
       const split = !isAfterToday && writing > 0 && reads > 0;
       return {
         date,
         style: isAfterToday
-          ? 'fill-transparent'
-          : writing > 0 ? writingStyle(writing) : reads > 0 ? readingStyle(reads) : 'fill-base-300',
+          ? "fill-transparent"
+          : writing > 0
+            ? writingStyle(writing)
+            : reads > 0
+              ? readingStyle(reads)
+              : "fill-base-300",
         ...(split ? { read: readingStyle(reads) } : {}),
-        tip: `${date}:\nActivity: ${activity}\nCreated: ${aData?.createNum || 0}\nUpdated: ${aData?.updateNum || 0}`
-          + (read > 0 ? `\nRead: ${Math.round(read / 60)} min` : ''),
+        tip:
+          `${date}:\nActivity: ${activity}\nCreated: ${aData?.createNum || 0}\nUpdated: ${aData?.updateNum || 0}` +
+          (read > 0 ? `\nRead: ${Math.round(read / 60)} min` : ""),
       };
-    })
+    }),
   );
 }
 
@@ -194,17 +257,31 @@ function calcMonStart() {
 
 /** Notes created and updated: the more, the darker. */
 const writingStyle = (n: number) =>
-  n >= 12 ? 'fill-primary' : n >= 6 ? 'fill-primary/60' : 'fill-primary/30';
+  n >= 12 ? "fill-primary" : n >= 6 ? "fill-primary/60" : "fill-primary/30";
 
 /** Quarters of an hour read: 2h and more the darkest, 1h, less. */
 const readingStyle = (units: number) =>
-  units >= 8 ? 'fill-secondary' : units >= 4 ? 'fill-secondary/60' : 'fill-secondary/30';
+  units >= 8
+    ? "fill-secondary"
+    : units >= 4
+      ? "fill-secondary/60"
+      : "fill-secondary/30";
 
 function getMonthLabel(idx: number) {
   if (idx > 11) return;
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
   const nowMonth = new Date().getMonth();
   const monIdx = nowMonth + idx + 1;

@@ -1,12 +1,12 @@
-import { memo } from 'react';
-import { TbArrowBarToUp as IconArrowBarToUp } from 'react-icons/tb';
-import { useStore } from '@/state/store';
-import { Sort } from '@/state/userSettings';
-import { Tooltip } from '@/ui/ui';
-import { normalizeSlash, getParentDir } from '@/workspace/util';
-import { listDirPath } from '@/workspace/useOpen';
-import SidebarNotesSortDropdown from './SidebarNotesSortDropdown';
-import { SidebarDirDropdown } from './SidebarDropdown';
+import { memo } from "react";
+import { TbArrowBarToUp as IconArrowBarToUp } from "react-icons/tb";
+import { useStore } from "@/state/store";
+import { Sort } from "@/state/userSettings";
+import { Tooltip } from "@/ui/ui";
+import { normalizeSlash, getParentDir } from "@/workspace/util";
+import { listDirPath } from "@/workspace/useOpen";
+import SidebarNotesSortDropdown from "./SidebarNotesSortDropdown";
+import { SidebarDirDropdown } from "./SidebarDropdown";
 
 type Props = {
   noteSort: Sort;
@@ -14,18 +14,18 @@ type Props = {
 };
 
 function SidebarNotesBar(props: Props) {
-  const { noteSort, numOfNotes} = props;
+  const { noteSort, numOfNotes } = props;
   const setNoteSort = useStore((state) => state.setNoteSort);
 
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
-  const checkInit: boolean = !currentDir || currentDir === initDir; 
+  const checkInit: boolean = !currentDir || currentDir === initDir;
 
-  const currentFolder = currentDir 
-    ? normalizeSlash(currentDir).split('/').pop() || '/'
-    : 'md';
-  const barClass = `px-2 text-sm bg-secondary text-secondary-content rounded-sm overflow-hidden`; 
-  
+  const currentFolder = currentDir
+    ? normalizeSlash(currentDir).split("/").pop() || "/"
+    : "md";
+  const barClass = `px-2 text-sm bg-secondary text-secondary-content rounded-sm overflow-hidden`;
+
   return (
     <div className="flex items-center justify-between border-t border-base-300">
       <div className="flex mx-2 my-1">
@@ -34,7 +34,7 @@ function SidebarNotesBar(props: Props) {
           setCurrentSort={setNoteSort}
         />
       </div>
-      <Tooltip content={currentDir ? currentDir : 'md'}>
+      <Tooltip content={currentDir ? currentDir : "md"}>
         <div className="flex mx-2 my-1">
           <div className="relative">
             {currentDir ? (

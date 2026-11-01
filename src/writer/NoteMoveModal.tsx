@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import useHotkeys from '@/lib/hooks/useHotkeys';
-import MoveToInput from './NoteMoveInput';
+import { useMemo } from "react";
+import useHotkeys from "@/lib/hooks/useHotkeys";
+import MoveToInput from "./NoteMoveInput";
 
 type Props = {
   noteId: string;
@@ -13,11 +13,11 @@ export default function MoveToModal(props: Props) {
   const hotkeys = useMemo(
     () => [
       {
-        hotkey: 'esc',
+        hotkey: "esc",
         callback: () => setIsOpen(false),
       },
     ],
-    [setIsOpen]
+    [setIsOpen],
   );
   useHotkeys(hotkeys);
 

@@ -1,4 +1,4 @@
-import { writeFile } from './write';
+import { writeFile } from "./write";
 
 /**
  * Note saves deferred while typing, by file path: a note is written once the
@@ -40,7 +40,10 @@ export function scheduleSave(path: string, content: string) {
   const current = pending.get(path);
   const since = current?.since ?? Date.now();
   if (current) clearTimeout(current.timer);
-  const delay = Math.max(0, Math.min(SAVE_DELAY_MS, since + MAX_WAIT_MS - Date.now()));
+  const delay = Math.max(
+    0,
+    Math.min(SAVE_DELAY_MS, since + MAX_WAIT_MS - Date.now()),
+  );
   const timer = setTimeout(() => void flushSave(path), delay);
   pending.set(path, { content, timer, since });
 }
@@ -58,7 +61,7 @@ export async function flushSave(path?: string): Promise<void> {
       }
       // the write already started, if any
       return writing.get(p) ?? Promise.resolve();
-    })
+    }),
   );
 }
 
@@ -77,12 +80,12 @@ export function hasPendingSave(path: string): boolean {
 }
 
 // the window may be closed or the app left: do not keep the changes waiting
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   const flushAll = () => void flushSave();
-  window.addEventListener('blur', flushAll);
-  window.addEventListener('pagehide', flushAll);
-  window.addEventListener('beforeunload', flushAll);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flushAll();
+  window.addEventListener("blur", flushAll);
+  window.addEventListener("pagehide", flushAll);
+  window.addEventListener("beforeunload", flushAll);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushAll();
   });
 }

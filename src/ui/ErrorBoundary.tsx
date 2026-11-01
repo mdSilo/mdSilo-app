@@ -1,5 +1,5 @@
-import { Component, ReactNode } from 'react';
-import { setLog } from '@/state/storage';
+import { Component, ReactNode } from "react";
+import { setLog } from "@/state/storage";
 
 type Props = {
   children: ReactNode;
@@ -22,7 +22,10 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error) {
     // sentry? TODO
-    setLog('Error', `${error.name}: ${error.message}, ${error.cause}, ${error.stack}`);
+    setLog(
+      "Error",
+      `${error.name}: ${error.message}, ${error.cause}, ${error.stack}`,
+    );
   }
 
   render() {

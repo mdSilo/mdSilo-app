@@ -1,12 +1,20 @@
-import { useMemo, useState } from 'react';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { TbPlus as IconPlus, TbTrash as IconTrash, TbCircleCheck as IconCloses } from 'react-icons/tb';
-import { ConfirmModal } from '@/ui/Dialogs';
-import { inputClass } from '../common';
-import type { Issue, IssueData, ProjectStatus } from '../types';
-import { issueLabel } from '../refs';
-import ProjectCard, { cardDndId } from './ProjectCard';
+import { useMemo, useState } from "react";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  TbPlus as IconPlus,
+  TbTrash as IconTrash,
+  TbCircleCheck as IconCloses,
+} from "react-icons/tb";
+import { ConfirmModal } from "@/ui/Dialogs";
+import { inputClass } from "../common";
+import type { Issue, IssueData, ProjectStatus } from "../types";
+import { issueLabel } from "../refs";
+import ProjectCard, { cardDndId } from "./ProjectCard";
 
 type Props = {
   status: ProjectStatus;
@@ -28,17 +36,36 @@ type Props = {
 export const columnDndId = (id: string) => `status-${id}`;
 
 export default function ProjectColumn(props: Props) {
-  const { status, issues, data, candidates, onOpen, onRename, onToggleCloses, onDelete, onAddItem, dropping = false, overlay = false } = props;
+  const {
+    status,
+    issues,
+    data,
+    candidates,
+    onOpen,
+    onRename,
+    onToggleCloses,
+    onDelete,
+    onAddItem,
+    dropping = false,
+    overlay = false,
+  } = props;
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(status.name);
   const [adding, setAdding] = useState(false);
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const ids = useMemo(() => issues.map((i) => cardDndId(i.number)), [issues]);
 
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: columnDndId(status.id),
-    data: { type: 'Column', status: status.id },
+    data: { type: "Column", status: status.id },
     disabled: editing || overlay,
   });
   const style = { transition, transform: CSS.Transform.toString(transform) };
@@ -50,7 +77,7 @@ export default function ProjectColumn(props: Props) {
   };
   const submit = () => {
     if (text.trim()) onAddItem(text.trim());
-    setText('');
+    setText("");
     setAdding(false);
   };
 
@@ -59,13 +86,13 @@ export default function ProjectColumn(props: Props) {
       ref={setNodeRef}
       style={style}
       data-testid="project-column"
-      className={`flex flex-col shrink-0 w-72 max-h-full bg-base-200 rounded-sm ${isDragging ? 'opacity-40' : ''} ${dropping ? 'ring-2 ring-primary' : ''}`}
+      className={`flex flex-col shrink-0 w-72 max-h-full bg-base-200 rounded-sm ${isDragging ? "opacity-40" : ""} ${dropping ? "ring-2 ring-primary" : ""}`}
     >
       <div
         {...attributes}
         {...listeners}
         className="flex items-center gap-2 px-3 py-2 cursor-grab group"
-        style={{ borderTop: `3px solid ${status.color || '#9ca3af'}` }}
+        style={{ borderTop: `3px solid ${status.color || "#9ca3af"}` }}
       >
         {editing ? (
           <input
@@ -75,10 +102,17 @@ export default function ProjectColumn(props: Props) {
             autoFocus
             onChange={(e) => setName(e.target.value)}
             onBlur={commitName}
-            onKeyDown={(e) => { if (e.key === 'Enter') commitName(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitName();
+            }}
           />
         ) : (
-          <button type="button" className="font-semibold text-left" title="Rename" onClick={() => setEditing(true)}>
+          <button
+            type="button"
+            className="font-semibold text-left"
+            title="Rename"
+            onClick={() => setEditing(true)}
+          >
             {status.name}
           </button>
         )}
@@ -86,15 +120,17 @@ export default function ProjectColumn(props: Props) {
         <span className="flex-1" />
         <button
           type="button"
-          aria-label={`Moving here closes issues: ${status.closes ? 'on' : 'off'}`}
+          aria-label={`Moving here closes issues: ${status.closes ? "on" : "off"}`}
           aria-pressed={!!status.closes}
           title={
             status.closes
-              ? 'Done column: items moved here are closed, and closed issues move here. Click to turn off.'
-              : 'Make this a Done column: items moved here are closed, and closed issues move here'
+              ? "Done column: items moved here are closed, and closed issues move here. Click to turn off."
+              : "Make this a Done column: items moved here are closed, and closed issues move here"
           }
           className={`flex items-center gap-1 text-xs ${
-            status.closes ? 'text-secondary' : 'text-base-content/50 opacity-0 group-hover:opacity-100'
+            status.closes
+              ? "text-secondary"
+              : "text-base-content/50 opacity-0 group-hover:opacity-100"
           }`}
           onClick={onToggleCloses}
         >
@@ -121,7 +157,13 @@ export default function ProjectColumn(props: Props) {
       <div className="flex flex-col flex-1 gap-2 px-2 pb-2 overflow-y-auto min-h-12">
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {issues.map((issue) => (
-            <ProjectCard key={issue.number} issue={issue} data={data} status={status.id} onOpen={onOpen} />
+            <ProjectCard
+              key={issue.number}
+              issue={issue}
+              data={data}
+              status={status.id}
+              onOpen={onOpen}
+            />
           ))}
         </SortableContext>
       </div>
@@ -136,14 +178,20 @@ export default function ProjectColumn(props: Props) {
               value={text}
               autoFocus
               onChange={(e) => setText(e.target.value)}
-              onBlur={() => { if (!text.trim()) setAdding(false); }}
+              onBlur={() => {
+                if (!text.trim()) setAdding(false);
+              }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') submit();
-                if (e.key === 'Escape') setAdding(false);
+                if (e.key === "Enter") submit();
+                if (e.key === "Escape") setAdding(false);
               }}
             />
             <datalist id={`candidates-${status.id}`}>
-              {candidates.map((i) => <option key={i.number} value={issueLabel(i.number)}>{i.title}</option>)}
+              {candidates.map((i) => (
+                <option key={i.number} value={issueLabel(i.number)}>
+                  {i.title}
+                </option>
+              ))}
             </datalist>
           </>
         ) : (

@@ -1,5 +1,5 @@
-import { useStore } from '@/state/store';
-import { readingRoot, writingRoot } from './layout';
+import { useStore } from "@/state/store";
+import { readingRoot, writingRoot } from "./layout";
 
 /** Where the notes are in the open workspace, see writingRoot. */
 export function useWritingRoot(): string | undefined {

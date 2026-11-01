@@ -2,10 +2,10 @@
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom/vitest';
-import { afterEach, beforeEach, vi } from 'vitest';
-import { cleanup, configure } from '@testing-library/react';
-import { resetStore } from './testUtils';
+import "@testing-library/jest-dom/vitest";
+import { afterEach, beforeEach, vi } from "vitest";
+import { cleanup, configure } from "@testing-library/react";
+import { resetStore } from "./testUtils";
 
 // findBy*/waitFor return as soon as they pass; the default 1s is too short
 // when the whole suite shares the CPU (e.g. books are parsed in the library)
@@ -14,12 +14,14 @@ configure({ asyncUtilTimeout: 5000 });
 // Tauri APIs talk to the Rust backend through window.__TAURI_INTERNALS__,
 // which does not exist in jsdom. Mock them globally so every module can be
 // imported and rendered; individual tests override the return values.
-vi.mock('@tauri-apps/api/core', () => ({
+vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(async () => undefined),
-  convertFileSrc: vi.fn((path: string) => `asset://localhost/${encodeURIComponent(path)}`),
+  convertFileSrc: vi.fn(
+    (path: string) => `asset://localhost/${encodeURIComponent(path)}`,
+  ),
 }));
 
-vi.mock('@tauri-apps/api/window', () => {
+vi.mock("@tauri-apps/api/window", () => {
   const win = {
     setTitle: vi.fn(async () => undefined),
     listen: vi.fn(async () => vi.fn()),
@@ -28,12 +30,12 @@ vi.mock('@tauri-apps/api/window', () => {
   return { getCurrentWindow: vi.fn(() => win) };
 });
 
-vi.mock('@tauri-apps/api/app', () => ({
-  getVersion: vi.fn(async () => '0.0.0-test'),
-  getTauriVersion: vi.fn(async () => '2.0.0-test'),
+vi.mock("@tauri-apps/api/app", () => ({
+  getVersion: vi.fn(async () => "0.0.0-test"),
+  getTauriVersion: vi.fn(async () => "2.0.0-test"),
 }));
 
-vi.mock('@tauri-apps/plugin-dialog', () => ({
+vi.mock("@tauri-apps/plugin-dialog", () => ({
   open: vi.fn(async () => null),
   save: vi.fn(async () => null),
   ask: vi.fn(async () => false),
@@ -41,26 +43,49 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
 
 // jsdom lacks ResizeObserver, which headlessui and others rely on
 class ResizeObserverStub {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 }
-globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
+globalThis.ResizeObserver ??=
+  ResizeObserverStub as unknown as typeof ResizeObserver;
 
 // jsdom does not implement layout on Range; editors (CodeMirror, ProseMirror) measure with it
-const emptyRect = () => ({ x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0, toJSON: () => ({}) });
-if (typeof Range !== 'undefined') {
+const emptyRect = () => ({
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  top: 0,
+  left: 0,
+  bottom: 0,
+  right: 0,
+  toJSON: () => ({}),
+});
+if (typeof Range !== "undefined") {
   Range.prototype.getClientRects ??= function () {
-    return { length: 0, item: () => null, [Symbol.iterator]: [][Symbol.iterator] } as unknown as DOMRectList;
+    return {
+      length: 0,
+      item: () => null,
+      [Symbol.iterator]: [][Symbol.iterator],
+    } as unknown as DOMRectList;
   };
-  Range.prototype.getBoundingClientRect ??= emptyRect as unknown as () => DOMRect;
+  Range.prototype.getBoundingClientRect ??=
+    emptyRect as unknown as () => DOMRect;
 }
 document.elementFromPoint ??= () => null;
 // jsdom logs "Not implemented" for canvas; return no context instead (tests can spy on it)
-HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext = (() =>
+  null) as typeof HTMLCanvasElement.prototype.getContext;
 
 beforeEach(() => {
-  Object.defineProperty(window, 'matchMedia', {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
     configurable: true,
     value: vi.fn().mockImplementation((query: string) => ({
@@ -81,15 +106,23 @@ afterEach(async () => {
   vi.clearAllMocks();
   // clearAllMocks keeps implementations; reset the shared Tauri mocks so
   // per-test mockInvoke/mockResolvedValue setups do not leak into other tests
-  const { invoke } = await import('@tauri-apps/api/core');
-  vi.mocked(invoke).mockReset().mockImplementation(async () => undefined);
-  const dialog = await import('@tauri-apps/plugin-dialog');
-  vi.mocked(dialog.open).mockReset().mockImplementation(async () => null);
-  vi.mocked(dialog.save).mockReset().mockImplementation(async () => null);
-  vi.mocked(dialog.ask).mockReset().mockImplementation(async () => false);
+  const { invoke } = await import("@tauri-apps/api/core");
+  vi.mocked(invoke)
+    .mockReset()
+    .mockImplementation(async () => undefined);
+  const dialog = await import("@tauri-apps/plugin-dialog");
+  vi.mocked(dialog.open)
+    .mockReset()
+    .mockImplementation(async () => null);
+  vi.mocked(dialog.save)
+    .mockReset()
+    .mockImplementation(async () => null);
+  vi.mocked(dialog.ask)
+    .mockReset()
+    .mockImplementation(async () => false);
   localStorage.clear();
   resetStore();
   // the theme is applied on <html> (useTheme)
   delete document.documentElement.dataset.theme;
-  document.documentElement.classList.remove('dark');
+  document.documentElement.classList.remove("dark");
 });

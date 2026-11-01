@@ -1,9 +1,10 @@
-// helper 
+// helper
 
 // date
 //
 // string: yyyy-mm-dd  or yyyy-m-d
-export const regDateStr = /^([0-9]{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$/;
+export const regDateStr =
+  /^([0-9]{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$/;
 
 /** yyyy-m-d */
 export function getStrDate(dateStr: string) {
@@ -26,12 +27,12 @@ export function dateCompare(d1: string | Date, d2: string | Date) {
 export function fmtDatetime(date: string | number | Date) {
   const dt = typeof date === "number" ? date * 1000 : date;
   return new Date(dt).toLocaleString(undefined, {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -43,8 +44,8 @@ export function decodeHTMLEntity(text: string) {
     /&(?!(?:amp|gt|lt|quot|apos);)(?:[a-z][a-z0-9]*|#\d+|#x[0-9a-f]+);/gi,
     (a: string) => {
       dummy.innerHTML = a;
-      return dummy.value || ' '; // real value
-    }
+      return dummy.value || " "; // real value
+    },
   );
 
   return txt;
@@ -59,11 +60,11 @@ export const isMobile = (breakpoint: number = SM_BREAKPOINT) => {
 };
 
 // string
-// 
+//
 // case Insensitive
 // shared collator: localeCompare with options builds a new one on every call
 const ciCollator = new Intl.Collator(undefined, {
-  sensitivity: 'base',
+  sensitivity: "base",
   numeric: true,
 });
 
@@ -81,11 +82,11 @@ export function shortenString(txt: string, centre: string, len = 128) {
   if (txtLen <= len) {
     return txt.replaceAll(centre, `==${centre}==`);
   }
-  
+
   const idx = txt.indexOf(centre);
   const cenLen = centre.length;
   const step = Math.floor((len - cenLen) / 2);
-  const span1 = idx - step; 
+  const span1 = idx - step;
   const span2 = idx + cenLen + step;
   const start = Math.max(span1 + Math.min(txtLen - span2, 0), 0);
   const end = Math.min(txtLen, span2 - Math.min(span1, 0));
@@ -94,13 +95,13 @@ export function shortenString(txt: string, centre: string, len = 128) {
 }
 
 export const countWords = (str: string) => {
-  // special characters such as middle-dot, etc.   
-  const str0 = str.replace(/[\u007F-\u00FE]/g, ' ');
+  // special characters such as middle-dot, etc.
+  const str0 = str.replace(/[\u007F-\u00FE]/g, " ");
   // remove all not ASCII
   // https://en.wikipedia.org/wiki/List_of_Unicode_characters
-  const str1 = str0.replace(/[^!-~\d\s]+/gi, ' ')
+  const str1 = str0.replace(/[^!-~\d\s]+/gi, " ");
   // remove characters, number
-  const str2 = str0.replace(/[!-~\d\s]+/gi, '')
+  const str2 = str0.replace(/[!-~\d\s]+/gi, "");
 
   const matches1 = str1.match(/[\u00FF-\uFFFF]|\S+/g);
   const matches2 = str2.match(/[\u00FF-\uFFFF]|\S+/g);
@@ -109,9 +110,9 @@ export const countWords = (str: string) => {
 
   const count = count1 + count2;
   return count;
-}
+};
 
-// url 
+// url
 // Adapted from https://stackoverflow.com/a/43467144
 export const isUrl = (str: string) => {
   let url;
@@ -122,7 +123,7 @@ export const isUrl = (str: string) => {
     return false;
   }
 
-  return url.protocol === 'http:' || url.protocol === 'https:';
+  return url.protocol === "http:" || url.protocol === "https:";
 };
 
 export const isSVG = (s: string) => /<\s*svg[^>]*>(.*?)<\/\s*svg>/g.test(s);
@@ -132,7 +133,7 @@ export const getFavicon = (url: string) => {
   return "https://icons.duckduckgo.com/ip3/" + hostname + ".ico";
 };
 
-// generate id 
+// generate id
 const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 export function genId(num = true) {
   if (num) {
@@ -154,4 +155,4 @@ export const emitCustomEvent = (ev: string, id: string) => {
     detail: { id },
   });
   document.dispatchEvent(evt);
-}
+};

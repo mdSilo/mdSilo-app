@@ -1,23 +1,35 @@
-import { invoke } from '@tauri-apps/api/core';
-import { create } from 'zustand';
-import { store } from '@/state/store';
-import { getStrDate } from '@/lib/helper';
-import { flushSave } from '@/workspace/pendingSaves';
-import { openFilePaths } from '@/workspace/open';
-import { toWorkspacePath } from '@/workspace/util';
+import { invoke } from "@tauri-apps/api/core";
+import { create } from "zustand";
+import { store } from "@/state/store";
+import { getStrDate } from "@/lib/helper";
+import { flushSave } from "@/workspace/pendingSaves";
+import { openFilePaths } from "@/workspace/open";
+import { toWorkspacePath } from "@/workspace/util";
 import {
-  annotationsPathOf, parseAnnotations, serializeAnnotations, sortNotes,
-  type BookHeader, type BookNote,
-} from './annotations/annotations';
-import { openBook, type BookDoc, type BookFormat } from './document';
+  annotationsPathOf,
+  parseAnnotations,
+  serializeAnnotations,
+  sortNotes,
+  type BookHeader,
+  type BookNote,
+} from "./annotations/annotations";
+import { openBook, type BookDoc, type BookFormat } from "./document";
 import {
-  bookIdOf, bookMetaOf, readBookState, readLibrary, saveBookEntry, titleOfFile, withBookMeta, writeBookState, type BookEntry,
-} from './library/library';
-import { cacheCover } from './library/covers';
-import { indexBookText } from './bookIndex';
-import type { Progress } from './pagination';
-import type { WritingMode } from './settings';
-import { activePane, usePane, type Pane } from './view';
+  bookIdOf,
+  bookMetaOf,
+  readBookState,
+  readLibrary,
+  saveBookEntry,
+  titleOfFile,
+  withBookMeta,
+  writeBookState,
+  type BookEntry,
+} from "./library/library";
+import { cacheCover } from "./library/covers";
+import { indexBookText } from "./bookIndex";
+import type { Progress } from "./pagination";
+import type { WritingMode } from "./settings";
+import { activePane, usePane, type Pane } from "./view";
 
 export type ReaderLocation = Progress & {
   cfi: string;
@@ -37,7 +49,7 @@ type ReaderStore = {
   entry?: BookEntry;
   book?: BookDoc;
   format?: BookFormat;
-  status: 'idle' | 'loading' | 'ready' | 'error';
+  status: "idle" | "loading" | "ready" | "error";
   error?: string;
   /** where to open the book: the place last read, or of a link */
   initialCfi?: string;
@@ -81,8 +93,14 @@ const nameOf = (path: string) => path.split(/[\\/]/).pop() ?? path;
 
 /** Read a book file as a File, binary. */
 export async function readBookFile(path: string): Promise<File> {
-  const data = await invoke<ArrayBuffer | Uint8Array | number[]>('read_file_bytes', { filePath: path });
-  const bytes = data instanceof ArrayBuffer || ArrayBuffer.isView(data) ? data : new Uint8Array(data);
+  const data = await invoke<ArrayBuffer | Uint8Array | number[]>(
+    "read_file_bytes",
+    { filePath: path },
+  );
+  const bytes =
+    data instanceof ArrayBuffer || ArrayBuffer.isView(data)
+      ? data
+      : new Uint8Array(data);
   return new File([bytes as BlobPart], nameOf(path));
 }
 
@@ -91,7 +109,7 @@ async function writeNotes(path: string, header: BookHeader, notes: BookNote[]) {
   const sorted = compareCfi ? sortNotes(notes, compareCfi) : notes;
   const content = serializeAnnotations({ header, notes: sorted });
   await flushSave(mdPath);
-  await invoke('write_file', { filePath: mdPath, text: content });
+  await invoke("write_file", { filePath: mdPath, text: content });
   // a note like the others: search, backlinks, graph
   const existing = store.getState().notes.get(mdPath);
   if (existing) {
@@ -102,9 +120,21 @@ async function writeNotes(path: string, header: BookHeader, notes: BookNote[]) {
 }
 
 const empty = (): Partial<ReaderStore> => ({
-  path: undefined, ws: undefined, hash: undefined, entry: undefined, book: undefined,
-  format: undefined, status: 'idle', error: undefined, initialCfi: undefined, targetCfi: undefined,
-  location: undefined, notes: [], time: {}, writingMode: 'auto', vertical: false,
+  path: undefined,
+  ws: undefined,
+  hash: undefined,
+  entry: undefined,
+  book: undefined,
+  format: undefined,
+  status: "idle",
+  error: undefined,
+  initialCfi: undefined,
+  targetCfi: undefined,
+  location: undefined,
+  notes: [],
+  time: {},
+  writingMode: "auto",
+  vertical: false,
 });
 
 /**
@@ -125,12 +155,16 @@ export function createReaderStore() {
     stopTicking();
     activeAt = Date.now();
     tickTimer = setInterval(() => {
-      const visible = typeof document === 'undefined' || document.visibilityState !== 'hidden';
+      const visible =
+        typeof document === "undefined" ||
+        document.visibilityState !== "hidden";
       if (!visible || Date.now() - activeAt > IDLE_MS) return;
       const { time, status } = useStore.getState();
-      if (status !== 'ready') return;
+      if (status !== "ready") return;
       const day = getStrDate(new Date().toString());
-      useStore.setState({ time: { ...time, [day]: (time[day] ?? 0) + TICK_MS / 1000 } });
+      useStore.setState({
+        time: { ...time, [day]: (time[day] ?? 0) + TICK_MS / 1000 },
+      });
       scheduleState();
     }, TICK_MS);
   }
@@ -143,13 +177,17 @@ export function createReaderStore() {
   function scheduleState() {
     stateDirty = true;
     if (stateTimer) clearTimeout(stateTimer);
-    stateTimer = setTimeout(() => { void saveState(); }, STATE_DELAY_MS);
+    stateTimer = setTimeout(() => {
+      void saveState();
+    }, STATE_DELAY_MS);
   }
 
   function scheduleNotes() {
     notesDirty = true;
     if (notesTimer) clearTimeout(notesTimer);
-    notesTimer = setTimeout(() => { void saveNotes(); }, SAVE_DELAY_MS);
+    notesTimer = setTimeout(() => {
+      void saveNotes();
+    }, SAVE_DELAY_MS);
   }
 
   async function saveNotes() {
@@ -168,7 +206,7 @@ export function createReaderStore() {
     try {
       await writeNotes(path, header, notes);
     } catch (e) {
-      console.error('Failed to save the annotations', e);
+      console.error("Failed to save the annotations", e);
     }
   }
 
@@ -188,7 +226,7 @@ export function createReaderStore() {
         updatedAt: new Date().toISOString(),
       });
     } catch (e) {
-      console.error('Failed to save the reading state', e);
+      console.error("Failed to save the reading state", e);
     }
   }
 
@@ -201,20 +239,20 @@ export function createReaderStore() {
     try {
       await book?.destroy?.();
     } catch (e) {
-      console.error('Failed to close the book', e);
+      console.error("Failed to close the book", e);
     }
   }
 
   const useStore = create<ReaderStore>((set, get) => ({
-    status: 'idle',
+    status: "idle",
     notes: [],
     time: {},
-    writingMode: 'auto',
+    writingMode: "auto",
     vertical: false,
 
     open: async (path, cfi) => {
       const current = get();
-      if (current.path === path && current.status !== 'error') {
+      if (current.path === path && current.status !== "error") {
         // the same book, maybe to another place
         if (cfi) set({ initialCfi: cfi, targetCfi: cfi });
         return;
@@ -225,20 +263,31 @@ export function createReaderStore() {
       if (seq !== openSeq) return;
       const ws = store.getState().initDir;
       set({
-        path, ws, status: 'loading', error: undefined, initialCfi: cfi, targetCfi: cfi, notes: [], location: undefined,
-        time: {}, writingMode: 'auto', vertical: false,
+        path,
+        ws,
+        status: "loading",
+        error: undefined,
+        initialCfi: cfi,
+        targetCfi: cfi,
+        notes: [],
+        location: undefined,
+        time: {},
+        writingMode: "auto",
+        vertical: false,
       });
       try {
         const [file, fileHash] = await Promise.all([
           readBookFile(path),
-          invoke<string>('book_hash', { filePath: path }),
+          invoke<string>("book_hash", { filePath: path }),
         ]);
         const { book, format } = await openBook(file);
-        const CFI = await import('foliate-js/epubcfi.js');
+        const CFI = await import("foliate-js/epubcfi.js");
         compareCfi = CFI.compare;
         const mdPath = annotationsPathOf(path);
         await flushSave(mdPath);
-        const mdText = await invoke<string>('read_file', { filePath: mdPath }).catch(() => '');
+        const mdText = await invoke<string>("read_file", {
+          filePath: mdPath,
+        }).catch(() => "");
         const notes = mdText ? parseAnnotations(mdText).notes : [];
         let entry: BookEntry | undefined;
         let initialCfi = cfi;
@@ -249,13 +298,20 @@ export function createReaderStore() {
           // a book written again (a feed book): by its first id
           hash = bookIdOf(lib, fileHash, toWorkspacePath(ws, path)) ?? fileHash;
           // the metadata of the file, unless edited in the library
-          entry = withBookMeta({
-            ...(lib.books[hash] ?? { addedAt: new Date().toISOString(), title: '', author: '' }),
-            hash,
-            file: toWorkspacePath(ws, path),
-            format,
-            ...(hash !== fileHash ? { fileHash } : {}),
-          }, bookMetaOf(book, path));
+          entry = withBookMeta(
+            {
+              ...(lib.books[hash] ?? {
+                addedAt: new Date().toISOString(),
+                title: "",
+                author: "",
+              }),
+              hash,
+              file: toWorkspacePath(ws, path),
+              format,
+              ...(hash !== fileHash ? { fileHash } : {}),
+            },
+            bookMetaOf(book, path),
+          );
           await saveBookEntry(ws, entry);
           const state = await readBookState(ws, hash);
           if (!initialCfi) initialCfi = state?.location;
@@ -265,7 +321,17 @@ export function createReaderStore() {
           await book.destroy?.();
           return;
         }
-        set({ hash, entry, book, format, notes, initialCfi, time, writingMode: entry?.writingMode ?? 'auto', status: 'ready' });
+        set({
+          hash,
+          entry,
+          book,
+          format,
+          notes,
+          initialCfi,
+          time,
+          writingMode: entry?.writingMode ?? "auto",
+          status: "ready",
+        });
         startTicking();
         // for the library; for the search of the workspace
         if (ws && hash) {
@@ -275,7 +341,10 @@ export function createReaderStore() {
       } catch (e) {
         if (seq !== openSeq) return;
         console.error(`Failed to open the book ${path}`, e);
-        set({ status: 'error', error: e instanceof Error ? e.message : String(e) });
+        set({
+          status: "error",
+          error: e instanceof Error ? e.message : String(e),
+        });
       }
     },
 
@@ -302,7 +371,11 @@ export function createReaderStore() {
 
     updateNote: (id, patch) => {
       const now = new Date().toISOString();
-      set({ notes: get().notes.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: now } : n)) });
+      set({
+        notes: get().notes.map((n) =>
+          n.id === id ? { ...n, ...patch, updatedAt: now } : n,
+        ),
+      });
       scheduleNotes();
     },
 
@@ -313,10 +386,15 @@ export function createReaderStore() {
 
     setWritingMode: (mode) => {
       const { ws, hash, entry } = get();
-      const writingMode = mode === 'auto' ? undefined : mode;
-      set({ writingMode: mode, ...(entry ? { entry: { ...entry, writingMode } } : {}) });
+      const writingMode = mode === "auto" ? undefined : mode;
+      set({
+        writingMode: mode,
+        ...(entry ? { entry: { ...entry, writingMode } } : {}),
+      });
       if (!ws || !hash || !entry) return;
-      saveBookEntry(ws, { hash, writingMode }).catch((e: unknown) => console.error('Failed to save the writing mode', e));
+      saveBookEntry(ws, { hash, writingMode }).catch((e: unknown) =>
+        console.error("Failed to save the writing mode", e),
+      );
     },
 
     setTranslating: (on) => {
@@ -325,7 +403,9 @@ export function createReaderStore() {
       const translate = on || undefined;
       set({ entry: { ...entry, translate } });
       if (!ws || !hash) return;
-      saveBookEntry(ws, { hash, translate }).catch((e: unknown) => console.error('Failed to save the translation', e));
+      saveBookEntry(ws, { hash, translate }).catch((e: unknown) =>
+        console.error("Failed to save the translation", e),
+      );
     },
 
     setVertical: (vertical) => {
@@ -359,7 +439,8 @@ export const useReaderStore = createReaderStore();
 export const useSideStore = createReaderStore();
 
 /** The store of the book of a pane. */
-export const storeOf = (pane: Pane): ReaderStoreHook => (pane === 'side' ? useSideStore : useReaderStore);
+export const storeOf = (pane: Pane): ReaderStoreHook =>
+  pane === "side" ? useSideStore : useReaderStore;
 
 /** The store of the book last used, e.g. to annotate the text selected. */
 export const activeStore = () => storeOf(activePane());
@@ -375,5 +456,5 @@ export function resetReaderStore() {
   useReaderStore.reset();
   useSideStore.reset();
   compareCfi = undefined;
-  usePane.setState({ active: 'main' });
+  usePane.setState({ active: "main" });
 }

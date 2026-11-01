@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { Transformer } from 'markmap-lib';
-import { Markmap } from 'markmap-view';
-import { writeFile } from '@/workspace/write';
-import { normalizeSlash } from '@/workspace/util';
-import { saveDilog } from '@/workspace/open';
-import './mindmap.css';
+import React, { useCallback, useEffect, useRef } from "react";
+import { Transformer } from "markmap-lib";
+import { Markmap } from "markmap-view";
+import { writeFile } from "@/workspace/write";
+import { normalizeSlash } from "@/workspace/util";
+import { saveDilog } from "@/workspace/open";
+import "./mindmap.css";
 
 type Props = {
   title: string;
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export function Mindmap(props: Props) {
-  const { title, mdValue, initDir, className = '' } = props;
+  const { title, mdValue, initDir, className = "" } = props;
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const markmapRef = useRef<Markmap | null>(null);
@@ -27,14 +27,20 @@ export function Mindmap(props: Props) {
     const transformer = new Transformer();
     const { root } = transformer.transform(mdValue);
     markmapRef.current?.destroy();
-    markmapRef.current = Markmap.create(svgRef.current, {
-      id: title,
-      embedGlobalCSS: true,
-    }, root);
+    markmapRef.current = Markmap.create(
+      svgRef.current,
+      {
+        id: title,
+        embedGlobalCSS: true,
+      },
+      root,
+    );
   }, [mdValue, title]);
 
   useEffect(() => {
-    if (!svgRef.current) { return; }
+    if (!svgRef.current) {
+      return;
+    }
 
     renderSVG();
     return () => {
@@ -51,12 +57,12 @@ export function Mindmap(props: Props) {
     if (w && h) {
       svgElement.setAttribute("viewBox", `0 0 ${w} ${h}`);
     }
-    svgElement.setAttribute('style', 'background-color:white');
+    svgElement.setAttribute("style", "background-color:white");
     // prepare to save
-    const fname = `${title.trim().replaceAll(' ', '-') || 'untitled'}-mindmap.svg`;
+    const fname = `${title.trim().replaceAll(" ", "-") || "untitled"}-mindmap.svg`;
     const dir = await saveDilog(fname);
     const defaultDir = `${initDir}/mindmap/${fname}`;
-    const saveDir = normalizeSlash(dir || defaultDir); 
+    const saveDir = normalizeSlash(dir || defaultDir);
     await writeFile(saveDir, svgElement.outerHTML);
   }, [initDir, title]);
 
@@ -65,10 +71,10 @@ export function Mindmap(props: Props) {
       <svg
         id="mindmap"
         ref={svgRef}
-        version="1.1" 
-        xmlns="http://www.w3.org/2000/svg" 
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
-        width="100%" 
+        width="100%"
       />
       <div className="flex items-center justify-center mt-2">
         <button className="text-xs hover:bg-base-content/15" onClick={saveSVG}>

@@ -1,12 +1,23 @@
-import { TbCheck as IconCheck } from 'react-icons/tb';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { useIssueStore } from '../issueStore';
-import { addProjectItem, issueProjects, moveProjectItem, removeProjectItem } from '../issueOps';
-import type { Issue, IssueData } from '../types';
-import Picker, { menuItemClass } from './Picker';
+import { TbCheck as IconCheck } from "react-icons/tb";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { useIssueStore } from "../issueStore";
+import {
+  addProjectItem,
+  issueProjects,
+  moveProjectItem,
+  removeProjectItem,
+} from "../issueOps";
+import type { Issue, IssueData } from "../types";
+import Picker, { menuItemClass } from "./Picker";
 
 /** Add the issue to projects and pick its status in each. */
-export default function ProjectPicker({ issue, data }: { issue: Issue; data: IssueData }) {
+export default function ProjectPicker({
+  issue,
+  data,
+}: {
+  issue: Issue;
+  data: IssueData;
+}) {
   const apply = useIssueStore((s) => s.apply);
   const { dispatch } = useCurrentViewContext();
   const inProjects = issueProjects(data, issue.number);
@@ -21,52 +32,70 @@ export default function ProjectPicker({ issue, data }: { issue: Issue; data: Iss
                 <button
                   type="button"
                   className="ms-link truncate"
-                  onClick={() => dispatch({ view: 'project', projectId: project.id })}
+                  onClick={() =>
+                    dispatch({ view: "project", projectId: project.id })
+                  }
                 >
                   {project.title}
                 </button>
                 <select
                   aria-label={`Status in ${project.title}`}
                   className="flex-1 py-0 pl-1 text-xs border-base-300 rounded-sm bg-base-100"
-                  value={status?.id ?? ''}
+                  value={status?.id ?? ""}
                   onChange={(e) => {
                     const sid = e.target.value;
-                    const order = project.items.filter((it) => it.status === sid).length;
-                    apply((d) => moveProjectItem(d, project.id, issue.number, sid, order));
+                    const order = project.items.filter(
+                      (it) => it.status === sid,
+                    ).length;
+                    apply((d) =>
+                      moveProjectItem(d, project.id, issue.number, sid, order),
+                    );
                   }}
                 >
                   {project.statuses.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
                   ))}
                 </select>
               </li>
             ))}
           </ul>
-        ) : (<span className="text-base-content/60">None yet</span>)
+        ) : (
+          <span className="text-base-content/60">None yet</span>
+        )
       }
     >
-      {() => (
+      {() =>
         data.projects.length === 0 ? (
           <p className="px-3 py-2 text-sm text-base-content/60">No projects.</p>
-        ) : data.projects.map((p) => {
-          const checked = inProjects.some((x) => x.project.id === p.id);
-          return (
-            <button
-              type="button"
-              role="menuitemcheckbox"
-              aria-checked={checked}
-              key={p.id}
-              className={menuItemClass}
-              onClick={() => apply((d) => (
-                checked ? removeProjectItem(d, p.id, issue.number) : addProjectItem(d, p.id, issue.number)
-              ))}
-            >
-              <span className="w-4">{checked ? <IconCheck size={14} /> : null}</span>
-              <span className="flex-1">{p.title}</span>
-            </button>
-          );
-        })
-      )}
+        ) : (
+          data.projects.map((p) => {
+            const checked = inProjects.some((x) => x.project.id === p.id);
+            return (
+              <button
+                type="button"
+                role="menuitemcheckbox"
+                aria-checked={checked}
+                key={p.id}
+                className={menuItemClass}
+                onClick={() =>
+                  apply((d) =>
+                    checked
+                      ? removeProjectItem(d, p.id, issue.number)
+                      : addProjectItem(d, p.id, issue.number),
+                  )
+                }
+              >
+                <span className="w-4">
+                  {checked ? <IconCheck size={14} /> : null}
+                </span>
+                <span className="flex-1">{p.title}</span>
+              </button>
+            );
+          })
+        )
+      }
     </Picker>
   );
 }

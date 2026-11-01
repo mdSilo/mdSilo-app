@@ -1,5 +1,12 @@
-import { useState, useMemo, useCallback, useEffect, ReactNode, memo } from 'react';
-import TreeNodeElement from './TreeNodeElement';
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  ReactNode,
+  memo,
+} from "react";
+import TreeNodeElement from "./TreeNodeElement";
 
 export type TreeNode = {
   id: string;
@@ -27,9 +34,9 @@ type Props = {
 };
 
 function Tree(props: Props) {
-  const { data, className, collapseAll = false, collapseIds = [] } = props; 
+  const { data, className, collapseAll = false, collapseIds = [] } = props;
   const [closedNodeIds, setClosedNodeIds] = useState<string[]>(
-    collapseAll ? data.map((node) => node.id) : collapseIds
+    collapseAll ? data.map((node) => node.id) : collapseIds,
   );
 
   const onNodeClick = useCallback(
@@ -39,12 +46,13 @@ function Tree(props: Props) {
       } else {
         setClosedNodeIds([...closedNodeIds, node.id]);
       }
-      
+
       // avoid trigger useEffect
-      while(collapseIds.length > 0) {
+      while (collapseIds.length > 0) {
         collapseIds.pop();
       }
-    },[closedNodeIds, collapseIds]
+    },
+    [closedNodeIds, collapseIds],
   );
 
   // change state per props changed
@@ -68,7 +76,7 @@ function Tree(props: Props) {
         collapsed,
       });
 
-      // collapse trigger: 
+      // collapse trigger:
       // if parent id in collapseIds, the children won't be flattened
       if (!collapsed && children) {
         for (const child of children) {
@@ -76,7 +84,7 @@ function Tree(props: Props) {
         }
       }
     },
-    [closedNodeIds]
+    [closedNodeIds],
   );
 
   const flattenedData = useMemo(() => {
@@ -90,10 +98,10 @@ function Tree(props: Props) {
   return (
     <div className={className}>
       {flattenedData.map((node, index) => (
-        <TreeNodeElement 
-          key={`${node.id}-${node.depth}-${index}`} 
-          node={node} 
-          onClick={onNodeClick} 
+        <TreeNodeElement
+          key={`${node.id}-${node.depth}-${index}`}
+          node={node}
+          onClick={onNodeClick}
         />
       ))}
     </div>

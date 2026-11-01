@@ -1,9 +1,9 @@
-import { invoke } from '@tauri-apps/api/core';
-import { useEffect } from 'react';
-import { store, useStore } from '@/state/store';
-import { joinPath } from '@/workspace/util';
-import { dataRoot } from '@/workspace/layout';
-import type { ThemeInfo } from '@/lib/themes';
+import { invoke } from "@tauri-apps/api/core";
+import { useEffect } from "react";
+import { store, useStore } from "@/state/store";
+import { joinPath } from "@/workspace/util";
+import { dataRoot } from "@/workspace/layout";
+import type { ThemeInfo } from "@/lib/themes";
 
 /**
  * Themes made by the user: the variables of a daisyUI theme, applied as
@@ -16,72 +16,104 @@ export type CustomTheme = {
   dark: boolean;
   /** `--color-base-100` ... `--radius-box`, values as CSS */
   vars: Record<string, string>;
-  where: 'workspace' | 'device';
+  where: "workspace" | "device";
 };
 
-export const THEME_FILE = 'themes.json';
+export const THEME_FILE = "themes.json";
 
 /** The colors of a daisyUI theme, a color and the color of its content side by side. */
 export const THEME_COLORS = [
-  'base-100', 'base-200', 'base-300', 'base-content',
-  'primary', 'primary-content', 'secondary', 'secondary-content',
-  'accent', 'accent-content', 'neutral', 'neutral-content',
-  'info', 'info-content', 'success', 'success-content',
-  'warning', 'warning-content', 'error', 'error-content',
+  "base-100",
+  "base-200",
+  "base-300",
+  "base-content",
+  "primary",
+  "primary-content",
+  "secondary",
+  "secondary-content",
+  "accent",
+  "accent-content",
+  "neutral",
+  "neutral-content",
+  "info",
+  "info-content",
+  "success",
+  "success-content",
+  "warning",
+  "warning-content",
+  "error",
+  "error-content",
 ];
 
 /** The other variables of a daisyUI theme */
 export const THEME_SIZES = [
-  '--radius-selector', '--radius-field', '--radius-box',
-  '--size-selector', '--size-field', '--border', '--depth', '--noise',
+  "--radius-selector",
+  "--radius-field",
+  "--radius-box",
+  "--size-selector",
+  "--size-field",
+  "--border",
+  "--depth",
+  "--noise",
 ];
 
-export const themeName = (theme: Pick<CustomTheme, 'id'>) => `user-${theme.id}`;
+export const themeName = (theme: Pick<CustomTheme, "id">) => `user-${theme.id}`;
 
-export const themeInfoOf = (theme: CustomTheme): ThemeInfo =>
-  ({ name: themeName(theme), label: theme.name, dark: theme.dark });
+export const themeInfoOf = (theme: CustomTheme): ThemeInfo => ({
+  name: themeName(theme),
+  label: theme.name,
+  dark: theme.dark,
+});
 
 // only variables, and values that can't end the rule
 const VAR = /^--[a-z0-9-]+$/;
-const cleanValue = (value: string) => value.replace(/[;{}<>]/g, '').trim();
+const cleanValue = (value: string) => value.replace(/[;{}<>]/g, "").trim();
 
 /** The CSS of themes, as daisyUI themes. */
 export function themeCss(themes: CustomTheme[]): string {
-  return themes.map((theme) => {
-    const vars = Object.entries(theme.vars)
-      .filter(([key]) => VAR.test(key))
-      .map(([key, value]) => `  ${key}: ${cleanValue(value)};`)
-      .join('\n');
-    return `[data-theme="${themeName(theme)}"] {\n  color-scheme: ${theme.dark ? 'dark' : 'light'};\n${vars}\n}`;
-  }).join('\n');
+  return themes
+    .map((theme) => {
+      const vars = Object.entries(theme.vars)
+        .filter(([key]) => VAR.test(key))
+        .map(([key, value]) => `  ${key}: ${cleanValue(value)};`)
+        .join("\n");
+      return `[data-theme="${themeName(theme)}"] {\n  color-scheme: ${theme.dark ? "dark" : "light"};\n${vars}\n}`;
+    })
+    .join("\n");
 }
 
 /**
  * Read a theme from CSS, e.g. from the daisyUI theme generator:
  * `name: "x"; color-scheme: dark; --color-base-100: oklch(...); ...`
  */
-export function parseThemeCss(text: string): Pick<CustomTheme, 'name' | 'dark' | 'vars'> {
+export function parseThemeCss(
+  text: string,
+): Pick<CustomTheme, "name" | "dark" | "vars"> {
   const vars: Record<string, string> = {};
-  let name = '';
+  let name = "";
   let dark = false;
   for (const [, key, raw] of text.matchAll(/([a-z0-9-]+)\s*:\s*([^;\n}]+)/gi)) {
-    const value = raw.trim().replace(/^["']|["']$/g, '');
-    if (key === 'name') name = value;
-    else if (key === 'color-scheme') dark = value === 'dark';
-    else if (key.startsWith('--') && VAR.test(key)) vars[key] = cleanValue(value);
+    const value = raw.trim().replace(/^["']|["']$/g, "");
+    if (key === "name") name = value;
+    else if (key === "color-scheme") dark = value === "dark";
+    else if (key.startsWith("--") && VAR.test(key))
+      vars[key] = cleanValue(value);
   }
   return { name, dark, vars };
 }
 
 /** The variables of a theme applied, read from the page (to start a theme from it). */
 export function themeVarsOf(dataTheme: string): Record<string, string> {
-  const el = document.createElement('div');
+  const el = document.createElement("div");
   el.dataset.theme = dataTheme;
   el.hidden = true;
   document.body.appendChild(el);
   const style = getComputedStyle(el);
   const vars: Record<string, string> = {};
-  for (const key of [...THEME_COLORS.map((c) => `--color-${c}`), ...THEME_SIZES]) {
+  for (const key of [
+    ...THEME_COLORS.map((c) => `--color-${c}`),
+    ...THEME_SIZES,
+  ]) {
     const value = style.getPropertyValue(key).trim();
     if (value) vars[key] = value;
   }
@@ -93,23 +125,27 @@ export function themeVarsOf(dataTheme: string): Record<string, string> {
 export function toHex(color: string): string {
   if (/^#[0-9a-f]{6}$/i.test(color)) return color.toLowerCase();
   try {
-    const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
-    if (!ctx) return '';
-    ctx.fillStyle = '#000';
+    const ctx = document
+      .createElement("canvas")
+      .getContext("2d", { willReadFrequently: true });
+    if (!ctx) return "";
+    ctx.fillStyle = "#000";
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, 1, 1);
     const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-    return `#${[r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')}`;
+    return `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
   } catch {
-    return '';
+    return "";
   }
 }
 
 const readThemes = async (path: string): Promise<CustomTheme[]> => {
   try {
-    const text = await invoke<string>('read_file', { filePath: path });
+    const text = await invoke<string>("read_file", { filePath: path });
     const themes = JSON.parse(text) as CustomTheme[];
-    return Array.isArray(themes) ? themes.map((t) => ({ ...t, where: 'workspace' })) : [];
+    return Array.isArray(themes)
+      ? themes.map((t) => ({ ...t, where: "workspace" }))
+      : [];
   } catch {
     return [];
   }
@@ -117,45 +153,60 @@ const readThemes = async (path: string): Promise<CustomTheme[]> => {
 
 async function writeWorkspaceThemes(themes: CustomTheme[]) {
   const data = dataRoot();
-  if (!data) throw new Error('No workspace to keep the theme in');
-  const text = `${JSON.stringify(themes.map(({ where: _, ...t }) => t), null, 2)}\n`;
-  await invoke('write_file', { filePath: joinPath(data, THEME_FILE), text });
+  if (!data) throw new Error("No workspace to keep the theme in");
+  const text = `${JSON.stringify(
+    themes.map(({ where: _, ...t }) => t),
+    null,
+    2,
+  )}\n`;
+  await invoke("write_file", { filePath: joinPath(data, THEME_FILE), text });
   store.getState().setWorkspaceThemes(themes);
 }
 
 /** Add or update a theme, where it is to be kept (moved there if it was elsewhere). */
 export async function saveTheme(theme: CustomTheme) {
   const { customThemes, workspaceThemes, setCustomThemes } = store.getState();
-  const others = <T extends CustomTheme>(list: T[]) => list.filter((t) => t.id !== theme.id);
-  if (theme.where === 'workspace') {
+  const others = <T extends CustomTheme>(list: T[]) =>
+    list.filter((t) => t.id !== theme.id);
+  if (theme.where === "workspace") {
     await writeWorkspaceThemes([...others(workspaceThemes), theme]);
-    if (customThemes.some((t) => t.id === theme.id)) setCustomThemes(others(customThemes));
+    if (customThemes.some((t) => t.id === theme.id))
+      setCustomThemes(others(customThemes));
   } else {
     setCustomThemes([...others(customThemes), theme]);
-    if (workspaceThemes.some((t) => t.id === theme.id)) await writeWorkspaceThemes(others(workspaceThemes));
+    if (workspaceThemes.some((t) => t.id === theme.id))
+      await writeWorkspaceThemes(others(workspaceThemes));
   }
 }
 
 export async function deleteTheme(id: string) {
-  const { customThemes, workspaceThemes, setCustomThemes, theme, setTheme } = store.getState();
+  const { customThemes, workspaceThemes, setCustomThemes, theme, setTheme } =
+    store.getState();
   setCustomThemes(customThemes.filter((t) => t.id !== id));
-  if (workspaceThemes.some((t) => t.id === id)) await writeWorkspaceThemes(workspaceThemes.filter((t) => t.id !== id));
-  if (theme === `user-${id}`) setTheme('system');
+  if (workspaceThemes.some((t) => t.id === id))
+    await writeWorkspaceThemes(workspaceThemes.filter((t) => t.id !== id));
+  if (theme === `user-${id}`) setTheme("system");
 }
 
 /** The themes of the user: of the workspace, then of this device. */
-export const allCustomThemes = (state: { customThemes: CustomTheme[]; workspaceThemes: CustomTheme[] }) => {
+export const allCustomThemes = (state: {
+  customThemes: CustomTheme[];
+  workspaceThemes: CustomTheme[];
+}) => {
   const ids = new Set(state.workspaceThemes.map((t) => t.id));
-  return [...state.workspaceThemes, ...state.customThemes.filter((t) => !ids.has(t.id))];
+  return [
+    ...state.workspaceThemes,
+    ...state.customThemes.filter((t) => !ids.has(t.id)),
+  ];
 };
 
-const STYLE_ID = 'mdsilo-custom-themes';
+const STYLE_ID = "mdsilo-custom-themes";
 
 /** Apply CSS of themes on the page, `draft` for a theme being edited. */
 export function applyThemeCss(themes: CustomTheme[], draft?: CustomTheme) {
   let style = document.getElementById(STYLE_ID);
   if (!style) {
-    style = document.createElement('style');
+    style = document.createElement("style");
     style.id = STYLE_ID;
     document.head.appendChild(style);
   }
@@ -179,7 +230,9 @@ export function useCustomThemes() {
     void readThemes(joinPath(data, THEME_FILE)).then((themes) => {
       if (live) store.getState().setWorkspaceThemes(themes);
     });
-    return () => { live = false; };
+    return () => {
+      live = false;
+    };
   }, [initDir, layout]);
 
   useEffect(() => {

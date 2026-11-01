@@ -1,14 +1,14 @@
-import { produce } from 'immer';
-import { genId } from '@/lib/helper';
-import { createIssue } from './issueOps';
-import type { IssueData, ProjectStatus } from './types';
+import { produce } from "immer";
+import { genId } from "@/lib/helper";
+import { createIssue } from "./issueOps";
+import type { IssueData, ProjectStatus } from "./types";
 
 /*
  * The free-form Kanban (kanban.json) was merged into Projects.
  * These are its old data types, kept only to read and convert old files.
  */
 
-export const LEGACY_KANBAN_FILE = 'kanban.json';
+export const LEGACY_KANBAN_FILE = "kanban.json";
 
 type LegacyId = string | number;
 
@@ -55,12 +55,18 @@ export function parseLegacyKanbans(text: string): LegacyKanbans | undefined {
   } catch {
     return undefined;
   }
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
   const boards: LegacyKanbans = {};
-  for (const [name, b] of Object.entries(raw as Record<string, Partial<LegacyBoard>>)) {
-    if (!b || typeof b !== 'object') continue;
-    const columns = arr<LegacyColumn>(b.columns).filter((c) => c && c.id !== undefined);
-    const cards = arr<LegacyCard>(b.cards).filter((c) => c && c.id !== undefined);
+  for (const [name, b] of Object.entries(
+    raw as Record<string, Partial<LegacyBoard>>,
+  )) {
+    if (!b || typeof b !== "object") continue;
+    const columns = arr<LegacyColumn>(b.columns).filter(
+      (c) => c && c.id !== undefined,
+    );
+    const cards = arr<LegacyCard>(b.cards).filter(
+      (c) => c && c.id !== undefined,
+    );
     if (columns.length || cards.length) boards[name] = { ...b, columns, cards };
   }
   return Object.keys(boards).length ? boards : undefined;
@@ -68,13 +74,13 @@ export function parseLegacyKanbans(text: string): LegacyKanbans | undefined {
 
 /** First line of a card is the issue title, the rest is its body. */
 function splitContent(content: string) {
-  const lines = (content ?? '').trim().split('\n');
-  const title = lines[0]?.trim() || 'Untitled';
-  const body = lines.slice(1).join('\n').trim();
+  const lines = (content ?? "").trim().split("\n");
+  const title = lines[0]?.trim() || "Untitled";
+  const body = lines.slice(1).join("\n").trim();
   return { title, body };
 }
 
-const isNoteItem = (it: LegacyCardItem) => it.category === 'note';
+const isNoteItem = (it: LegacyCardItem) => it.category === "note";
 
 /**
  * Convert old Kanban boards into Projects: every board becomes a project,
@@ -87,32 +93,48 @@ const isNoteItem = (it: LegacyCardItem) => it.category === 'note';
  * workspace so the old boards are what the user sees first.
  */
 export function migrateKanbans(
-  data: IssueData, kanbans: LegacyKanbans, replaceEmptyDefault = false
+  data: IssueData,
+  kanbans: LegacyKanbans,
+  replaceEmptyDefault = false,
 ): IssueData {
   let next = data;
   if (replaceEmptyDefault && next.issues.length === 0) {
     next = produce(next, (d) => {
-      d.projects = d.projects.filter((p) => p.items.length > 0 || p.title !== 'Default');
+      d.projects = d.projects.filter(
+        (p) => p.items.length > 0 || p.title !== "Default",
+      );
     });
   }
   const usedTitles = new Set(next.projects.map((p) => p.title));
 
   for (const [name, board] of Object.entries(kanbans)) {
-    let title = name.trim() || 'Kanban';
-    for (let n = 2; usedTitles.has(title); n++) title = `${name.trim() || 'Kanban'} (${n})`;
+    let title = name.trim() || "Kanban";
+    for (let n = 2; usedTitles.has(title); n++)
+      title = `${name.trim() || "Kanban"} (${n})`;
     usedTitles.add(title);
 
     const statusOf = new Map<string, string>();
     const statuses: ProjectStatus[] = board.columns.map((col) => {
       const id = genId(false) as string;
       statusOf.set(String(col.id), id);
-      return { id, name: col.title?.trim() || 'Untitled', ...(col.hdColor ? { color: col.hdColor } : {}) };
+      return {
+        id,
+        name: col.title?.trim() || "Untitled",
+        ...(col.hdColor ? { color: col.hdColor } : {}),
+      };
     });
-    if (statuses.length === 0) statuses.push({ id: genId(false) as string, name: 'Todo' });
+    if (statuses.length === 0)
+      statuses.push({ id: genId(false) as string, name: "Todo" });
 
     const projectId = genId(false) as string;
     next = produce(next, (d) => {
-      d.projects.push({ id: projectId, title, statuses, items: [], layout: 'board' });
+      d.projects.push({
+        id: projectId,
+        title,
+        statuses,
+        items: [],
+        layout: "board",
+      });
     });
 
     for (const card of board.cards) {
@@ -123,10 +145,19 @@ export function migrateKanbans(
         .map((it) => `- [${it.name || it.uri}](${encodeURI(it.uri)})`);
       next = createIssue(next, {
         title: issueTitle,
-        body: [body, attachments.length ? `Attachments:\n\n${attachments.join('\n')}` : '']
-          .filter(Boolean).join('\n\n'),
-        notes: items.filter((it) => isNoteItem(it) && it.uri).map((it) => it.uri),
-        project: { id: projectId, status: statusOf.get(String(card.columnId)) ?? statuses[0].id },
+        body: [
+          body,
+          attachments.length ? `Attachments:\n\n${attachments.join("\n")}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
+        notes: items
+          .filter((it) => isNoteItem(it) && it.uri)
+          .map((it) => it.uri),
+        project: {
+          id: projectId,
+          status: statusOf.get(String(card.columnId)) ?? statuses[0].id,
+        },
       });
     }
   }

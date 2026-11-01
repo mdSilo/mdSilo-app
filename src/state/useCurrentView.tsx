@@ -1,6 +1,18 @@
-import type { ReactNode } from 'react';
-import { useCallback, useContext, createContext, useReducer, Dispatch } from 'react';
-import { viewEffects, viewReducer, initialState, ViewAction, ViewState } from './viewReducer';
+import type { ReactNode } from "react";
+import {
+  useCallback,
+  useContext,
+  createContext,
+  useReducer,
+  Dispatch,
+} from "react";
+import {
+  viewEffects,
+  viewReducer,
+  initialState,
+  ViewAction,
+  ViewState,
+} from "./viewReducer";
 
 export type DispatchType = Dispatch<ViewAction>;
 
@@ -19,11 +31,14 @@ type Props = {
 
 export function ProvideCurrentView({ children, route }: Props) {
   const [state, reduce] = useReducer(viewReducer, initialState);
-  const dispatch = useCallback((action: ViewAction) => {
-    if (route?.(action)) return;
-    viewEffects(action);
-    reduce(action);
-  }, [route]);
+  const dispatch = useCallback(
+    (action: ViewAction) => {
+      if (route?.(action)) return;
+      viewEffects(action);
+      reduce(action);
+    },
+    [route],
+  );
   return (
     <CurrentViewContext.Provider value={{ state, dispatch }}>
       {children}
@@ -34,7 +49,7 @@ export function ProvideCurrentView({ children, route }: Props) {
 export const useCurrentViewContext = () => {
   const context = useContext(CurrentViewContext);
   if (context === undefined) {
-    throw new Error('useCurrentViewContext must be used within a provider');
+    throw new Error("useCurrentViewContext must be used within a provider");
   }
   return context;
 };

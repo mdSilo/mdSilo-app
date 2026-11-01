@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import Tree from '@/ui/Tree';
-import useBacklinks from './useBacklinks';
-import type { Backlink, BacklinkMatch } from './useBacklinks';
-import BacklinkBranch from './BacklinkBranch';
-import BacklinkMatchLeaf from './BacklinkMatchLeaf';
-import BacklinkNoteBranch from './BacklinkNoteBranch';
+import { useMemo } from "react";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import Tree from "@/ui/Tree";
+import useBacklinks from "./useBacklinks";
+import type { Backlink, BacklinkMatch } from "./useBacklinks";
+import BacklinkBranch from "./BacklinkBranch";
+import BacklinkMatchLeaf from "./BacklinkMatchLeaf";
+import BacklinkNoteBranch from "./BacklinkNoteBranch";
 
 const MAX_EXPANDED_MATCHES = 42;
 
@@ -18,19 +18,19 @@ export default function Backlinks(props: Props) {
   const { className, isCollapse = false } = props;
   const currentView = useCurrentViewContext();
   const params = currentView.state.params;
-  const noteId = params?.noteId || '';
+  const noteId = params?.noteId || "";
   const { linkedBacklinks, unlinkedBacklinks } = useBacklinks(noteId);
 
   const backlinkData = useMemo(
     () => getTreeData(linkedBacklinks, unlinkedBacklinks),
-    [linkedBacklinks, unlinkedBacklinks]
+    [linkedBacklinks, unlinkedBacklinks],
   );
 
   const collapseAll = useMemo(() => {
     const numOfLinkedMatches = getNumOfMatches(linkedBacklinks);
     const numOfUnlinkedMatches = getNumOfMatches(unlinkedBacklinks);
     return (
-      isCollapse || 
+      isCollapse ||
       numOfLinkedMatches > MAX_EXPANDED_MATCHES ||
       numOfUnlinkedMatches > MAX_EXPANDED_MATCHES
     );
@@ -38,32 +38,37 @@ export default function Backlinks(props: Props) {
 
   return (
     // keyed by note: reset the collapsed state on switching note
-    <Tree key={noteId} data={backlinkData} className={className} collapseAll={collapseAll} />
+    <Tree
+      key={noteId}
+      data={backlinkData}
+      className={className}
+      collapseAll={collapseAll}
+    />
   );
 }
 
 export const getNumOfMatches = (backlinks: Backlink[]) =>
   backlinks.reduce(
     (numOfMatches, backlink) => numOfMatches + backlink.matches.length,
-    0
+    0,
   );
 
 const getTreeData = (
   linkedBacklinks: Backlink[],
-  unlinkedBacklinks: Backlink[]
+  unlinkedBacklinks: Backlink[],
 ) => {
   const numOfLinkedMatches = getNumOfMatches(linkedBacklinks);
   const numOfUnlinkedMatches = getNumOfMatches(unlinkedBacklinks);
 
   return [
     {
-      id: 'linked-backlinks',
-      labelNode: (<BacklinkBranch title={`${numOfLinkedMatches} BackLinks`}/>),
+      id: "linked-backlinks",
+      labelNode: <BacklinkBranch title={`${numOfLinkedMatches} BackLinks`} />,
       children: linkedBacklinks.map(backlinkToTreeData(true)),
     },
     {
-      id: 'unlinked-backlinks',
-      labelNode: (<BacklinkBranch title={`${numOfUnlinkedMatches} Mentions`}/>),
+      id: "unlinked-backlinks",
+      labelNode: <BacklinkBranch title={`${numOfUnlinkedMatches} Mentions`} />,
       children: unlinkedBacklinks.map(backlinkToTreeData(false)),
     },
   ];
@@ -81,7 +86,7 @@ const backlinkToTreeData = (isLinked: boolean) => (backlink: Backlink) => {
     }
   }
 
-  const idPrefix = isLinked ? 'linked' : 'unlinked';
+  const idPrefix = isLinked ? "linked" : "unlinked";
 
   return {
     id: `${idPrefix}-${backlink.id}`,

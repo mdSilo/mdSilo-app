@@ -1,17 +1,23 @@
-import { memo, useCallback, useRef, useState } from 'react';
-import { Menu } from '@headlessui/react';
-import { 
-  TbCornerDownRight as IconCornerDownRight, TbDots as IconDots, TbDotsDiagonal as IconDotsDiagonal, TbFolder as IconFolder, TbId as IconId, TbPlus as IconPlus, TbTrash as IconTrash
-} from 'react-icons/tb';
-import { usePopper } from 'react-popper';
-import { DropdownItem } from '@/ui/Dropdown';
-import Portal from '@/ui/Portal';
-import MoveToModal from '@/writer/NoteMoveModal';
-import NoteMetadata from '@/writer/NoteMetadata';
-import DirNewModal from '@/shell/dir/DirNewModal';
-import DirRenameModal from '@/shell/dir/DirRenameModal';
-import DirDelModal from '@/shell/dir/DirDelModal';
-import { listDirPath } from '@/workspace/useOpen';
+import { memo, useCallback, useRef, useState } from "react";
+import { Menu } from "@headlessui/react";
+import {
+  TbCornerDownRight as IconCornerDownRight,
+  TbDots as IconDots,
+  TbDotsDiagonal as IconDotsDiagonal,
+  TbFolder as IconFolder,
+  TbId as IconId,
+  TbPlus as IconPlus,
+  TbTrash as IconTrash,
+} from "react-icons/tb";
+import { usePopper } from "react-popper";
+import { DropdownItem } from "@/ui/Dropdown";
+import Portal from "@/ui/Portal";
+import MoveToModal from "@/writer/NoteMoveModal";
+import NoteMetadata from "@/writer/NoteMetadata";
+import DirNewModal from "@/shell/dir/DirNewModal";
+import DirRenameModal from "@/shell/dir/DirRenameModal";
+import DirDelModal from "@/shell/dir/DirDelModal";
+import { listDirPath } from "@/workspace/useOpen";
 
 type NoteProps = {
   noteId: string;
@@ -22,13 +28,11 @@ const SidebarNoteLinkDropdown = (props: NoteProps) => {
   const { noteId, className } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLElement | null>(
-    null
-  );
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(null);
   const { styles, attributes } = usePopper(
     containerRef.current,
     popperElement,
-    { placement: 'right-start' }
+    { placement: "right-start" },
   );
 
   const [isMoveToModalOpen, setIsMoveToModalOpen] = useState(false);
@@ -78,7 +82,6 @@ const SidebarNoteLinkDropdown = (props: NoteProps) => {
 
 export const SidebarNoteDropdown = memo(SidebarNoteLinkDropdown);
 
-
 type DirProps = {
   dirPath: string;
   className?: string;
@@ -87,16 +90,14 @@ type DirProps = {
 };
 
 const SidebarDirLinkDropdown = (props: DirProps) => {
-  const { dirPath, className = '', isOnBar = false, menuBtn } = props;
+  const { dirPath, className = "", isOnBar = false, menuBtn } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLElement | null>(
-    null
-  );
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(null);
   const { styles, attributes } = usePopper(
     containerRef.current,
     popperElement,
-    { placement: 'right-start' }
+    { placement: "right-start" },
   );
 
   const [isNewDirModalOpen, setIsNewDirModalOpen] = useState(false);
@@ -109,14 +110,12 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
     setIsRenameDirModalOpen(false);
   }, []);
 
-  
   const onRenameDirClick = useCallback(() => {
     setIsDelDirModalOpen(false);
     setIsRenameDirModalOpen(true);
     setIsNewDirModalOpen(false);
   }, []);
 
-  
   const onDelDirClick = useCallback(() => {
     setIsDelDirModalOpen(true);
     setIsRenameDirModalOpen(false);
@@ -179,28 +178,28 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
       </Menu>
       {isNewDirModalOpen ? (
         <Portal>
-          <DirNewModal 
+          <DirNewModal
             dirPath={dirPath}
             isOpen={isNewDirModalOpen}
-            handleClose={() => setIsNewDirModalOpen(false)} 
+            handleClose={() => setIsNewDirModalOpen(false)}
           />
         </Portal>
       ) : null}
       {isRenameDirModalOpen ? (
         <Portal>
-          <DirRenameModal 
+          <DirRenameModal
             dirPath={dirPath}
             isOpen={isRenameDirModalOpen}
-            handleClose={() => setIsRenameDirModalOpen(false)} 
+            handleClose={() => setIsRenameDirModalOpen(false)}
           />
         </Portal>
       ) : null}
       {isDelDirModalOpen ? (
         <Portal>
-          <DirDelModal 
+          <DirDelModal
             dirPath={dirPath}
             isOpen={isDelDirModalOpen}
-            handleClose={() => setIsDelDirModalOpen(false)} 
+            handleClose={() => setIsDelDirModalOpen(false)}
           />
         </Portal>
       ) : null}

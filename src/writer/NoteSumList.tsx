@@ -1,11 +1,11 @@
-import { TbPencil as IconPencil } from 'react-icons/tb';
+import { TbPencil as IconPencil } from "react-icons/tb";
 import { parser, serializer } from "mdsmirror";
-import { useCurrentViewContext, DispatchType } from '@/state/useCurrentView';
-import { Note } from '@/types/model';
-import Tree from '@/ui/Tree';
-import { Tooltip } from '@/ui/ui';
-import { openFilePath } from '@/workspace/open';
-import { useNoteContent } from '@/lib/contentCache';
+import { useCurrentViewContext, DispatchType } from "@/state/useCurrentView";
+import { Note } from "@/types/model";
+import Tree from "@/ui/Tree";
+import { Tooltip } from "@/ui/ui";
+import { openFilePath } from "@/workspace/open";
+import { useNoteContent } from "@/lib/contentCache";
 
 type Props = {
   anchor: string;
@@ -28,7 +28,10 @@ export default function NoteSumList(props: Props) {
           <span className="py-1 text-xl text-base-content">{anchor}</span>
           {isDate ? (
             <Tooltip content={`Recap: ${anchor}`}>
-              <button className="px-2" onClick={onClick ? () => onClick(anchor) : undefined}>
+              <button
+                className="px-2"
+                onClick={onClick ? () => onClick(anchor) : undefined}
+              >
                 <IconPencil size={16} />
               </button>
             </Tooltip>
@@ -36,7 +39,7 @@ export default function NoteSumList(props: Props) {
         </div>
       ),
       children: notes.map(noteToTreeData(dispatch)),
-    }
+    },
   ];
 
   const collapseAll = false;
@@ -51,7 +54,7 @@ export function summaryOf(content: string): string {
   const doc = parser.parse(content);
   const value = doc.content.content
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((node: any) => node.type.name === 'paragraph')
+    .filter((node: any) => node.type.name === "paragraph")
     .slice(0, 2);
   return serializer.serialize(value);
 }
@@ -59,7 +62,7 @@ export function summaryOf(content: string): string {
 /** The summary of a note, its content read on use (see Note.parsed). */
 function NoteSum({ note }: { note: Note }) {
   const content = useNoteContent(note);
-  return <div>{content ? summaryOf(content) : ''}</div>;
+  return <div>{content ? summaryOf(content) : ""}</div>;
 }
 
 const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
@@ -67,11 +70,11 @@ const noteToTreeData = (dispatch: DispatchType) => (note: Note) => {
     id: note.id,
     labelNode: (
       <div className="flex flex-col w-full mx-auto overlfow-y-auto">
-        <button 
-          className="ms-link flex items-center py-2" 
+        <button
+          className="ms-link flex items-center py-2"
           onClick={async () => {
             await openFilePath(note.id, true);
-            dispatch({view: 'md', params: { noteId: note.id }});
+            dispatch({ view: "md", params: { noteId: note.id } });
           }}
         >
           <span className="text-2xl font-semibold overflow-x-hidden text-ellipsis whitespace-nowrap">

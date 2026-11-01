@@ -1,7 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { useStore } from '@/state/store';
-import { appStyle, createHost, type PluginHost, type PluginMethods } from './host';
-import { isEnabled, pluginUrl, type InstalledPlugin } from './registry';
+import { useEffect, useRef } from "react";
+import { useStore } from "@/state/store";
+import {
+  appStyle,
+  createHost,
+  type PluginHost,
+  type PluginMethods,
+} from "./host";
+import { isEnabled, pluginUrl, type InstalledPlugin } from "./registry";
 
 type Props = {
   plugin: InstalledPlugin;
@@ -18,7 +23,13 @@ type Props = {
  * The page of a plugin, sandboxed: scripts run, but in an opaque origin,
  * so it reaches the app only by the calls of src/plugins/host.ts.
  */
-export default function PluginFrame({ plugin, page, methods, onHost, className = '' }: Props) {
+export default function PluginFrame({
+  plugin,
+  page,
+  methods,
+  onHost,
+  className = "",
+}: Props) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const pluginStates = useStore((state) => state.pluginStates);
   const font = useStore((state) => state.font);
@@ -37,8 +48,11 @@ export default function PluginFrame({ plugin, page, methods, onHost, className =
     hostRef.current = host;
     onHostRef.current?.(host);
     // the look of the app, when it changes
-    const observer = new MutationObserver(() => host.emit('style', appStyle()));
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    const observer = new MutationObserver(() => host.emit("style", appStyle()));
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme", "class"],
+    });
     return () => {
       observer.disconnect();
       host.dispose();
@@ -48,13 +62,17 @@ export default function PluginFrame({ plugin, page, methods, onHost, className =
   }, [plugin, enabled]);
 
   useEffect(() => {
-    hostRef.current?.emit('style', appStyle());
+    hostRef.current?.emit("style", appStyle());
   }, [font]);
 
   if (!enabled) {
-    return <div className="p-4 text-sm text-base-content/70">{plugin.manifest?.name ?? plugin.id} is not enabled.</div>;
+    return (
+      <div className="p-4 text-sm text-base-content/70">
+        {plugin.manifest?.name ?? plugin.id} is not enabled.
+      </div>
+    );
   }
-  const main = page ?? plugin.manifest?.main ?? 'index.html';
+  const main = page ?? plugin.manifest?.main ?? "index.html";
   return (
     <iframe
       ref={frameRef}

@@ -1,8 +1,8 @@
-export type IssueState = 'open' | 'closed';
+export type IssueState = "open" | "closed";
 
-export type TaskTag = 'todo' | 'doing' | 'done';
+export type TaskTag = "todo" | "doing" | "done";
 /** tag: #todo# #doing# #done#; checkbox: - [ ] / - [x] */
-export type TaskKind = 'tag' | 'checkbox';
+export type TaskKind = "tag" | "checkbox";
 
 /** The note task an issue was created from, kept in sync with the note. */
 export type NoteTaskRef = {
@@ -31,21 +31,21 @@ export type Milestone = {
 };
 
 export type IssueEventKind =
-  | 'opened'
-  | 'closed'
-  | 'reopened'
-  | 'labeled'
-  | 'unlabeled'
-  | 'milestoned'
-  | 'demilestoned'
-  | 'renamed'
-  | 'status'
-  | 'due' // the due date set, changed or removed
-  | 'task'; // synced from the source task in a note
+  | "opened"
+  | "closed"
+  | "reopened"
+  | "labeled"
+  | "unlabeled"
+  | "milestoned"
+  | "demilestoned"
+  | "renamed"
+  | "status"
+  | "due" // the due date set, changed or removed
+  | "task"; // synced from the source task in a note
 
 export type CommentItem = {
   id: string;
-  kind: 'comment';
+  kind: "comment";
   body: string;
   createdAt: string;
   updatedAt?: string;
@@ -53,7 +53,7 @@ export type CommentItem = {
 
 export type EventItem = {
   id: string;
-  kind: 'event';
+  kind: "event";
   event: IssueEventKind;
   detail?: string;
   createdAt: string;
@@ -83,11 +83,16 @@ export type Issue = {
 };
 
 // closes => moving an item here closes the issue
-export type ProjectStatus = { id: string; name: string; color?: string; closes?: boolean };
+export type ProjectStatus = {
+  id: string;
+  name: string;
+  color?: string;
+  closes?: boolean;
+};
 
 export type ProjectItem = { issue: number; status: string; order: number };
 
-export type ProjectLayout = 'board' | 'table';
+export type ProjectLayout = "board" | "table";
 
 export type Project = {
   id: string;

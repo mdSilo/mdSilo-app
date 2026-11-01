@@ -1,5 +1,5 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { TbSettings as IconSettings } from 'react-icons/tb';
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { TbSettings as IconSettings } from "react-icons/tb";
 
 type Props = {
   title: string;
@@ -16,16 +16,17 @@ export default function Picker({ title, summary, children }: Props) {
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -56,4 +57,4 @@ export default function Picker({ title, summary, children }: Props) {
 }
 
 export const menuItemClass =
-  'flex items-center w-full gap-2 px-3 py-2 text-sm text-left hover:bg-base-content/5';
+  "flex items-center w-full gap-2 px-3 py-2 text-sm text-left hover:bg-base-content/5";

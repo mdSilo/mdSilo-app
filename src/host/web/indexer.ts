@@ -4,11 +4,11 @@
  * the full-text search, kept up to date with the changes of the files.
  * In memory: the notes are in IndexedDB already, read once per open.
  */
-import { parseNote, type Parsed } from '../../lib/parseNote';
-import * as fs from './fs';
-import { fileStem, isTextNote, isWithin, normalize } from './path';
-import { createSearch, type SearchApi } from './searchClient';
-import { onFsChange } from './watch';
+import { parseNote, type Parsed } from "../../lib/parseNote";
+import * as fs from "./fs";
+import { fileStem, isTextNote, isWithin, normalize } from "./path";
+import { createSearch, type SearchApi } from "./searchClient";
+import { onFsChange } from "./watch";
 
 export type IndexedNote = {
   id: string;
@@ -24,20 +24,32 @@ export type BookSection = { cfi: string; label: string; text: string };
 
 const EMPTY: Parsed = { links: [], tags: [], issues: [], has_tasks: false };
 
-type Index = { root: string; notes: Map<string, IndexedNote>; books: Set<string> };
+type Index = {
+  root: string;
+  notes: Map<string, IndexedNote>;
+  books: Set<string>;
+};
 
 let current: Index | undefined;
 let search: SearchApi | undefined;
 const searchApi = () => (search ??= createSearch());
 
 const isHiddenUnder = (root: string, path: string) =>
-  path.slice(root === '/' ? 1 : root.length + 1).split('/').some((part) => part.startsWith('.'));
+  path
+    .slice(root === "/" ? 1 : root.length + 1)
+    .split("/")
+    .some((part) => part.startsWith("."));
 
-async function noteOf(entry: fs.FsEntry): Promise<{ note: IndexedNote; body?: string }> {
+async function noteOf(
+  entry: fs.FsEntry,
+): Promise<{ note: IndexedNote; body?: string }> {
   let parsed = EMPTY;
   let body: string | undefined;
   if (!entry.is_dir && isTextNote(entry.path)) {
-    body = typeof entry.data === 'string' ? entry.data : await fs.readText(entry.path).catch(() => '');
+    body =
+      typeof entry.data === "string"
+        ? entry.data
+        : await fs.readText(entry.path).catch(() => "");
     parsed = parseNote(body);
   }
   return {
@@ -63,7 +75,14 @@ export async function indexOpen(dir: string): Promise<IndexedNote[]> {
   for (const entry of await fs.walk(root, true)) {
     const { note, body } = await noteOf(entry);
     notes.set(note.id, note);
-    if (body !== undefined) docs.push({ id: note.id, kind: 'note' as const, title: note.title, label: '', body });
+    if (body !== undefined)
+      docs.push({
+        id: note.id,
+        kind: "note" as const,
+        title: note.title,
+        label: "",
+        body,
+      });
   }
   current = { root, notes, books: new Set() };
   await searchApi().clear();
@@ -72,14 +91,21 @@ export async function indexOpen(dir: string): Promise<IndexedNote[]> {
 }
 
 /** Update the index for the paths changed. */
-export async function indexUpdate(paths: string[]): Promise<{ updated: IndexedNote[]; removed: string[] }> {
+export async function indexUpdate(
+  paths: string[],
+): Promise<{ updated: IndexedNote[]; removed: string[] }> {
   const index = current;
   const delta = { updated: [] as IndexedNote[], removed: [] as string[] };
   if (!index) return delta;
   const docs = [];
   for (const raw of paths) {
     const path = normalize(raw);
-    if (!isWithin(path, index.root) || path === index.root || isHiddenUnder(index.root, path)) continue;
+    if (
+      !isWithin(path, index.root) ||
+      path === index.root ||
+      isHiddenUnder(index.root, path)
+    )
+      continue;
     const entry = await fs.stat(path);
     if (!entry) {
       for (const id of [...index.notes.keys()]) {
@@ -90,34 +116,61 @@ export async function indexUpdate(paths: string[]): Promise<{ updated: IndexedNo
       delta.removed.push(path);
       continue;
     }
-    const entries = entry.is_dir ? [entry, ...(await fs.walk(path, true))] : [entry];
+    const entries = entry.is_dir
+      ? [entry, ...(await fs.walk(path, true))]
+      : [entry];
     for (const e of entries) {
       const { note, body } = await noteOf(e);
       index.notes.set(note.id, note);
       delta.updated.push(note);
-      if (body !== undefined) docs.push({ id: note.id, kind: 'note' as const, title: note.title, label: '', body });
+      if (body !== undefined)
+        docs.push({
+          id: note.id,
+          kind: "note" as const,
+          title: note.title,
+          label: "",
+          body,
+        });
     }
   }
   await searchApi().put(docs);
   return delta;
 }
 
-export async function indexSearch(query: string, kind: string | undefined, limit = 50) {
-  if (!current) throw new Error('no index open');
+export async function indexSearch(
+  query: string,
+  kind: string | undefined,
+  limit = 50,
+) {
+  if (!current) throw new Error("no index open");
   const hits = await searchApi().search(query, kind, limit);
-  return hits.map((hit) => ({ ...hit, path: hit.kind === 'note' ? hit.id : '' }));
+  return hits.map((hit) => ({
+    ...hit,
+    path: hit.kind === "note" ? hit.id : "",
+  }));
 }
 
-export async function indexBook(hash: string, title: string, sections: BookSection[]) {
-  if (!current) throw new Error('no index open');
+export async function indexBook(
+  hash: string,
+  title: string,
+  sections: BookSection[],
+) {
+  if (!current) throw new Error("no index open");
   await searchApi().deletePrefix(`book:${hash}#`);
-  await searchApi().put(sections.map((s) => ({
-    id: `book:${hash}#${s.cfi}`, kind: 'book' as const, title, label: s.label, body: s.text,
-  })));
+  await searchApi().put(
+    sections.map((s) => ({
+      id: `book:${hash}#${s.cfi}`,
+      kind: "book" as const,
+      title,
+      label: s.label,
+      body: s.text,
+    })),
+  );
   current.books.add(hash);
 }
 
-export const indexBookIndexed = (hash: string) => Boolean(current?.books.has(hash));
+export const indexBookIndexed = (hash: string) =>
+  Boolean(current?.books.has(hash));
 
 // the files changed: the index follows, the changes of a moment together
 let changed = new Set<string>();
@@ -132,7 +185,7 @@ onFsChange((_kind, paths) => {
     const batch = [...changed];
     changed = new Set();
     const update = indexUpdate(batch)
-      .catch((e) => console.error('Failed to update the index', e))
+      .catch((e) => console.error("Failed to update the index", e))
       .finally(() => updating.delete(update));
     updating.add(update);
   }, 0);

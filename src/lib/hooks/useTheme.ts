@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { store, useStore } from '@/state/store';
-import { DARK_QUERY, isSystemDark, resolveTheme } from '@/lib/themes';
-import { allCustomThemes, themeInfoOf } from '@/custom/themes';
+import { useEffect, useState } from "react";
+import { store, useStore } from "@/state/store";
+import { DARK_QUERY, isSystemDark, resolveTheme } from "@/lib/themes";
+import { allCustomThemes, themeInfoOf } from "@/custom/themes";
 
 /**
  * Apply the theme setting on <html>: daisyUI `data-theme` and the `dark`
@@ -18,16 +18,18 @@ export default function useTheme() {
     const query = window.matchMedia?.(DARK_QUERY);
     if (!query) return;
     const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-    query.addEventListener('change', onChange);
-    return () => query.removeEventListener('change', onChange);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
   }, []);
 
   useEffect(() => {
-    const custom = allCustomThemes({ customThemes, workspaceThemes }).map(themeInfoOf);
+    const custom = allCustomThemes({ customThemes, workspaceThemes }).map(
+      themeInfoOf,
+    );
     const { name, dark } = resolveTheme(theme, systemDark, custom);
     const root = document.documentElement;
     root.dataset.theme = name;
-    root.classList.toggle('dark', dark);
+    root.classList.toggle("dark", dark);
     if (store.getState().darkMode !== dark) store.getState().setDarkMode(dark);
   }, [theme, systemDark, customThemes, workspaceThemes]);
 }

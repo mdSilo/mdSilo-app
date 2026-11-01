@@ -1,24 +1,24 @@
-import { memo, useMemo } from 'react';
-import { NoteTree, NoteTreeItem, useStore } from '@/state/store';
-import { Sort } from '@/state/userSettings';
-import { ciStringCompare } from '@/lib/helper';
-import { onOpenFile, onListDir } from '@/workspace/useOpen';
-import { normalizeSlash } from '@/workspace/util';
-import ErrorBoundary from '@/ui/ErrorBoundary';
-import SidebarNotesBar from './SidebarNotesBar';
-import SidebarNotesTree, { NoteTreeRow } from './SidebarNotesTree';
-import SidebarHistory from './SidebarHistory';
-import WorkspaceUpgrade from './WorkspaceUpgrade';
+import { memo, useMemo } from "react";
+import { NoteTree, NoteTreeItem, useStore } from "@/state/store";
+import { Sort } from "@/state/userSettings";
+import { ciStringCompare } from "@/lib/helper";
+import { onOpenFile, onListDir } from "@/workspace/useOpen";
+import { normalizeSlash } from "@/workspace/util";
+import ErrorBoundary from "@/ui/ErrorBoundary";
+import SidebarNotesBar from "./SidebarNotesBar";
+import SidebarNotesTree, { NoteTreeRow } from "./SidebarNotesTree";
+import SidebarHistory from "./SidebarHistory";
+import WorkspaceUpgrade from "./WorkspaceUpgrade";
 
 type SidebarNotesProps = {
   className?: string;
 };
 
 function SidebarNotes(props: SidebarNotesProps) {
-  const { className='' } = props;
+  const { className = "" } = props;
 
   const currentDir = useStore((state) => state.currentDir);
-  
+
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
   const expandedDirs = useStore((state) => state.expandedDirs);
@@ -26,7 +26,12 @@ function SidebarNotes(props: SidebarNotesProps) {
   const [sortedNoteTree, numOfNotes] = useMemo(() => {
     if (currentDir) {
       const treeList = noteTree[currentDir] || [];
-      const rows = flattenNoteTree(noteTree, currentDir, expandedDirs, noteSort);
+      const rows = flattenNoteTree(
+        noteTree,
+        currentDir,
+        expandedDirs,
+        noteSort,
+      );
       return [rows, treeList.length];
     } else {
       return [[], 0];
@@ -34,18 +39,16 @@ function SidebarNotes(props: SidebarNotesProps) {
   }, [noteTree, currentDir, expandedDirs, noteSort]);
 
   // console.log("tree", numOfNotes, sortedNoteTree, currentDir)
-  
-  const btnClass = "p-1 mt-4 mx-4 text-secondary-content rounded-sm bg-secondary hover:bg-secondary/85";
+
+  const btnClass =
+    "p-1 mt-4 mx-4 text-secondary-content rounded-sm bg-secondary hover:bg-secondary/85";
 
   return (
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
         {currentDir ? (
-          <SidebarNotesBar
-            noteSort={noteSort}
-            numOfNotes={numOfNotes}
-          />
-        ) : null }
+          <SidebarNotesBar noteSort={noteSort} numOfNotes={numOfNotes} />
+        ) : null}
         {currentDir ? <WorkspaceUpgrade /> : null}
         {sortedNoteTree && sortedNoteTree.length > 0 ? (
           <SidebarNotesTree
@@ -54,8 +57,12 @@ function SidebarNotes(props: SidebarNotesProps) {
           />
         ) : currentDir ? null : (
           <>
-            <button className={btnClass} onClick={onListDir}>Open Folder</button>
-            <button className={btnClass} onClick={onOpenFile}>Open File</button>
+            <button className={btnClass} onClick={onListDir}>
+              Open Folder
+            </button>
+            <button className={btnClass} onClick={onOpenFile}>
+              Open File
+            </button>
             <SidebarHistory />
           </>
         )}
@@ -81,7 +88,7 @@ export const flattenNoteTree = (
     visited.add(dir);
     const items = sortNoteTreeCached(noteTree[dir] || [], noteSort);
     for (const node of items) {
-      const dirKey = node.is_dir ? normalizeSlash(node.id) : '';
+      const dirKey = node.is_dir ? normalizeSlash(node.id) : "";
       const isExpanded = node.is_dir && Boolean(expandedDirs[dirKey]);
       rows.push({ node, depth, isExpanded });
       if (isExpanded) {
@@ -96,10 +103,7 @@ export const flattenNoteTree = (
 /**
  * Sorts the tree item with the given noteSort, dirs first.
  */
-const sortNoteTree = (
-  tree: NoteTreeItem[],
-  noteSort: Sort
-): NoteTreeItem[] => {
+const sortNoteTree = (tree: NoteTreeItem[], noteSort: Sort): NoteTreeItem[] => {
   if (tree.length < 2) return [...tree];
 
   // compute sort keys once rather than in every comparison
@@ -115,16 +119,19 @@ const sortNoteTree = (
         return 0;
     }
   };
-  const isDesc = noteSort === Sort.DateModifiedDescending
-    || noteSort === Sort.DateCreatedDescending
-    || noteSort === Sort.TitleDescending;
-  const isByTitle = noteSort === Sort.TitleAscending
-    || noteSort === Sort.TitleDescending
-    || !Object.values(Sort).includes(noteSort);
+  const isDesc =
+    noteSort === Sort.DateModifiedDescending ||
+    noteSort === Sort.DateCreatedDescending ||
+    noteSort === Sort.TitleDescending;
+  const isByTitle =
+    noteSort === Sort.TitleAscending ||
+    noteSort === Sort.TitleDescending ||
+    !Object.values(Sort).includes(noteSort);
   const keyed = tree.map((item) => ({ item, date: byDate(item) }));
 
   keyed.sort((a, b) => {
-    const dirFirst = Number(Boolean(b.item.is_dir)) - Number(Boolean(a.item.is_dir));
+    const dirFirst =
+      Number(Boolean(b.item.is_dir)) - Number(Boolean(a.item.is_dir));
     if (dirFirst !== 0) return dirFirst;
     const [x, y] = isDesc ? [b, a] : [a, b];
     return isByTitle
@@ -136,9 +143,15 @@ const sortNoteTree = (
 };
 
 // sorted dir lists, by list (immutable in store) and sort
-const sortCache = new WeakMap<NoteTreeItem[], { sort: Sort; sorted: NoteTreeItem[] }>();
+const sortCache = new WeakMap<
+  NoteTreeItem[],
+  { sort: Sort; sorted: NoteTreeItem[] }
+>();
 
-const sortNoteTreeCached = (tree: NoteTreeItem[], noteSort: Sort): NoteTreeItem[] => {
+const sortNoteTreeCached = (
+  tree: NoteTreeItem[],
+  noteSort: Sort,
+): NoteTreeItem[] => {
   const cached = sortCache.get(tree);
   if (cached && cached.sort === noteSort) return cached.sorted;
   const sorted = sortNoteTree(tree, noteSort);

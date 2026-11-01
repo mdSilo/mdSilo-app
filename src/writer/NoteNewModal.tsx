@@ -1,6 +1,6 @@
-import { useCallback, useMemo } from 'react';
-import useHotkeys from '@/lib/hooks/useHotkeys';
-import FindOrCreateInput from './NoteNewInput';
+import { useCallback, useMemo } from "react";
+import useHotkeys from "@/lib/hooks/useHotkeys";
+import FindOrCreateInput from "./NoteNewInput";
 
 type Props = {
   setIsOpen: (isOpen: boolean) => void;
@@ -11,16 +11,16 @@ export default function FindOrCreateModal(props: Props) {
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
-  }, [setIsOpen])
+  }, [setIsOpen]);
 
   const hotkeys = useMemo(
     () => [
       {
-        hotkey: 'esc',
+        hotkey: "esc",
         callback: () => handleClose(),
       },
     ],
-    [handleClose]
+    [handleClose],
   );
   useHotkeys(hotkeys);
 

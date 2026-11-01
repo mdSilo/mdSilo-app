@@ -1,6 +1,6 @@
-import { memo, ReactNode } from 'react';
-import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
-import { BacklinkMatch } from './useBacklinks';
+import { memo, ReactNode } from "react";
+import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
+import { BacklinkMatch } from "./useBacklinks";
 
 const MAX_CONTEXT_LEN = 128;
 
@@ -39,13 +39,19 @@ export const highlightContext = (matches: BacklinkMatch[]): ReactNode[] => {
 
   // shorten the context, centered on the first match
   const first = ranges[0];
-  const half = Math.max(Math.floor((MAX_CONTEXT_LEN - (first.to - first.from)) / 2), 0);
+  const half = Math.max(
+    Math.floor((MAX_CONTEXT_LEN - (first.to - first.from)) / 2),
+    0,
+  );
   let start = Math.max(first.from - half, 0);
-  const end = Math.min(Math.max(first.to + half, start + MAX_CONTEXT_LEN), context.length);
+  const end = Math.min(
+    Math.max(first.to + half, start + MAX_CONTEXT_LEN),
+    context.length,
+  );
   start = Math.max(Math.min(start, end - MAX_CONTEXT_LEN), 0);
 
   const nodes: ReactNode[] = [];
-  if (start > 0) nodes.push('…');
+  if (start > 0) nodes.push("…");
   let pos = start;
   for (const { from, to } of ranges) {
     if (from < pos || from >= end) continue;
@@ -54,11 +60,11 @@ export const highlightContext = (matches: BacklinkMatch[]): ReactNode[] => {
     nodes.push(
       <mark key={from} className="bg-warning/40">
         {context.slice(from, hiEnd)}
-      </mark>
+      </mark>,
     );
     pos = hiEnd;
   }
   if (pos < end) nodes.push(context.slice(pos, end));
-  if (end < context.length) nodes.push('…');
+  if (end < context.length) nodes.push("…");
   return nodes;
 };

@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import { basicSetup } from 'codemirror';
-import { Annotation, EditorState, Extension, StateEffect } from '@codemirror/state';
-import { indentWithTab } from '@codemirror/commands';
-import { EditorView, keymap, ViewUpdate, placeholder } from '@codemirror/view';
-import { oneDark, oneLight } from './darkTheme';
-import { ReactCodeMirrorProps } from './ReactCodeMirror';
+import { useEffect, useRef, useState } from "react";
+import { basicSetup } from "codemirror";
+import {
+  Annotation,
+  EditorState,
+  Extension,
+  StateEffect,
+} from "@codemirror/state";
+import { indentWithTab } from "@codemirror/commands";
+import { EditorView, keymap, ViewUpdate, placeholder } from "@codemirror/view";
+import { oneDark, oneLight } from "./darkTheme";
+import { ReactCodeMirrorProps } from "./ReactCodeMirror";
 
 // stable default: a new array would reconfigure the editor on every render
 export const NO_EXTENSIONS: Extension[] = [];
@@ -24,14 +29,14 @@ export function useCodeMirror(props: UseCodeMirror) {
     onUpdate,
     extensions = NO_EXTENSIONS,
     autoFocus,
-    theme = 'light',
-    height = '',
-    minHeight = '',
-    maxHeight = '',
-    placeholder: placeholderStr = '',
-    width = '',
-    minWidth = '',
-    maxWidth = '',
+    theme = "light",
+    height = "",
+    minHeight = "",
+    maxHeight = "",
+    placeholder: placeholderStr = "",
+    width = "",
+    minWidth = "",
+    maxWidth = "",
     editable = true,
     readOnly = false,
     indentWithTab: defaultIndentWithTab = true,
@@ -48,7 +53,7 @@ export function useCodeMirror(props: UseCodeMirror) {
   onUpdateRef.current = onUpdate;
 
   const defaultThemeOption = EditorView.theme({
-    '&': {
+    "&": {
       height,
       minHeight,
       maxHeight,
@@ -62,7 +67,7 @@ export function useCodeMirror(props: UseCodeMirror) {
     const onChangeFn = onChangeRef.current;
     if (
       vu.docChanged &&
-      typeof onChangeFn === 'function' &&
+      typeof onChangeFn === "function" &&
       !vu.transactions.some((tr) => tr.annotation(External))
     ) {
       const doc = vu.state.doc;
@@ -82,10 +87,10 @@ export function useCodeMirror(props: UseCodeMirror) {
     getExtensions.unshift(placeholder(placeholderStr));
   }
   switch (theme) {
-    case 'light':
+    case "light":
       getExtensions.push(oneLight);
       break;
-    case 'dark':
+    case "dark":
       getExtensions.push(oneDark);
       break;
     default:
@@ -98,10 +103,12 @@ export function useCodeMirror(props: UseCodeMirror) {
   if (readOnly) {
     getExtensions.push(EditorState.readOnly.of(true));
   }
-  if (onUpdate && typeof onUpdate === 'function') {
-    getExtensions.push(EditorView.updateListener.of((vu) => onUpdateRef.current?.(vu)));
+  if (onUpdate && typeof onUpdate === "function") {
+    getExtensions.push(
+      EditorView.updateListener.of((vu) => onUpdateRef.current?.(vu)),
+    );
   }
-  getExtensions.push(EditorView.lineWrapping)
+  getExtensions.push(EditorView.lineWrapping);
   getExtensions = getExtensions.concat(extensions);
 
   // create the view once the container is set, destroy it on cleanup:
@@ -135,10 +142,10 @@ export function useCodeMirror(props: UseCodeMirror) {
   }, [autoFocus, view]);
 
   useEffect(() => {
-    const currentValue = view ? view.state.doc.toString() : '';
+    const currentValue = view ? view.state.doc.toString() : "";
     if (view && value !== currentValue) {
       view.dispatch({
-        changes: { from: 0, to: currentValue.length, insert: value || '' },
+        changes: { from: 0, to: currentValue.length, insert: value || "" },
         annotations: [External.of(true)],
       });
     }

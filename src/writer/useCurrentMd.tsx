@@ -1,12 +1,12 @@
-import type { ReactNode } from 'react';
-import { useContext, createContext, Dispatch } from 'react';
-import { ViewAction, ViewState } from '@/state/viewReducer';
+import type { ReactNode } from "react";
+import { useContext, createContext, Dispatch } from "react";
+import { ViewAction, ViewState } from "@/state/viewReducer";
 
 type CurrentMd = {
   ty: string;
   id: string;
   state: ViewState;
-  dispatch: Dispatch<ViewAction>; 
+  dispatch: Dispatch<ViewAction>;
 };
 
 const CurrContext = createContext<CurrentMd | undefined>(undefined);
@@ -23,7 +23,7 @@ export function ProvideCurrentMd({ children, value }: Props) {
 export const useCurrentMdContext = () => {
   const context = useContext(CurrContext);
   if (context === undefined) {
-    throw new Error('useCurrentContext must be used within a provider');
+    throw new Error("useCurrentContext must be used within a provider");
   }
   return context;
 };

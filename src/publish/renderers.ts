@@ -1,6 +1,6 @@
-import type { Renderers } from 'mdsilo-publish';
-import { renderSmiles } from 'mdsmirror';
-import { codeBlockPlugins, renderCode } from '@/plugins/codeBlocks';
+import type { Renderers } from "mdsilo-publish";
+import { renderSmiles } from "mdsmirror";
+import { codeBlockPlugins, renderCode } from "@/plugins/codeBlocks";
 
 /**
  * The diagrams of the site drawn here, where a browser is, as SVG: the site
@@ -11,23 +11,31 @@ let seq = 0;
 
 export const siteRenderers: Renderers = {
   mermaid: async (code) => {
-    const { default: mermaid } = await import('mermaid');
+    const { default: mermaid } = await import("mermaid");
     mermaid.initialize({
       startOnLoad: false,
-      securityLevel: 'strict',
+      securityLevel: "strict",
       htmlLabels: false,
       suppressErrorRendering: true,
-      fontFamily: 'system-ui, sans-serif',
-      theme: 'default',
+      fontFamily: "system-ui, sans-serif",
+      theme: "default",
     });
     const { svg } = await mermaid.render(`site-mermaid-${(seq += 1)}`, code);
     return svg;
   },
   echarts: async (code) => {
-    const echarts = await import('echarts');
-    const chart = echarts.init(null, null, { renderer: 'svg', ssr: true, width: 720, height: 400 });
+    const echarts = await import("echarts");
+    const chart = echarts.init(null, null, {
+      renderer: "svg",
+      ssr: true,
+      width: 720,
+      height: 400,
+    });
     try {
-      chart.setOption({ animation: false, ...(JSON.parse(code) as object) }, true);
+      chart.setOption(
+        { animation: false, ...(JSON.parse(code) as object) },
+        true,
+      );
       return chart.renderToSVGString({ useViewBox: true });
     } finally {
       chart.dispose();
@@ -37,9 +45,16 @@ export const siteRenderers: Renderers = {
 };
 
 /** The code blocks the enabled plugins draw, in the light theme as the site */
-export const pluginSiteRenderers = (): Renderers => Object.fromEntries(
-  [...codeBlockPlugins().keys()].map((lang) => [lang, (code: string) => renderCode(lang, code, false)]),
-);
+export const pluginSiteRenderers = (): Renderers =>
+  Object.fromEntries(
+    [...codeBlockPlugins().keys()].map((lang) => [
+      lang,
+      (code: string) => renderCode(lang, code, false),
+    ]),
+  );
 
 /** The diagrams of the site, and the code blocks of the plugins; a plugin draws no built-in one */
-export const allSiteRenderers = (): Renderers => ({ ...pluginSiteRenderers(), ...siteRenderers });
+export const allSiteRenderers = (): Renderers => ({
+  ...pluginSiteRenderers(),
+  ...siteRenderers,
+});

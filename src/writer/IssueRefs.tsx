@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { useIssueData } from '@/issue/issueStore';
-import { computeIssueRefs, issueLabel } from '@/issue/refs';
-import { StateIcon } from '@/issue/common';
+import { useMemo } from "react";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { useIssueData } from "@/issue/issueStore";
+import { computeIssueRefs, issueLabel } from "@/issue/refs";
+import { StateIcon } from "@/issue/common";
 
 type Props = {
   noteId: string;
@@ -11,10 +11,13 @@ type Props = {
 };
 
 /** "Referenced by issues": issues linking this note, explicitly or via [[title]]. */
-export default function IssueRefs({ noteId, title, className = '' }: Props) {
+export default function IssueRefs({ noteId, title, className = "" }: Props) {
   const { data, isLoaded } = useIssueData();
   const { dispatch } = useCurrentViewContext();
-  const refs = useMemo(() => computeIssueRefs(data.issues, noteId, title), [data.issues, noteId, title]);
+  const refs = useMemo(
+    () => computeIssueRefs(data.issues, noteId, title),
+    [data.issues, noteId, title],
+  );
 
   if (!isLoaded || refs.length === 0) return null;
 
@@ -28,11 +31,13 @@ export default function IssueRefs({ noteId, title, className = '' }: Props) {
             <button
               type="button"
               className="text-left ms-link"
-              onClick={() => dispatch({ view: 'issue', number: issue.number })}
+              onClick={() => dispatch({ view: "issue", number: issue.number })}
             >
               {issueLabel(issue.number)} {issue.title}
             </button>
-            {explicit ? null : <span className="text-xs text-base-content/60">mentioned</span>}
+            {explicit ? null : (
+              <span className="text-xs text-base-content/60">mentioned</span>
+            )}
           </li>
         ))}
       </ul>

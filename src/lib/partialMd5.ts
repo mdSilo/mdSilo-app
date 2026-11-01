@@ -1,4 +1,4 @@
-import { md5 } from 'js-md5';
+import { md5 } from "js-md5";
 
 const CHUNK = 1024;
 
@@ -13,7 +13,9 @@ export async function partialMd5(blob: Blob): Promise<string> {
   const hasher = md5.create();
   for (const offset of OFFSETS) {
     if (offset >= blob.size) break;
-    const chunk = await blob.slice(offset, Math.min(offset + CHUNK, blob.size)).arrayBuffer();
+    const chunk = await blob
+      .slice(offset, Math.min(offset + CHUNK, blob.size))
+      .arrayBuffer();
     hasher.update(new Uint8Array(chunk));
   }
   return hasher.hex();

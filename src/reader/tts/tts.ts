@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import type { Speech } from '@/speech/speech';
-import { formatLanguageMap } from '../document';
-import type { FoliateView, TTSApi } from '../view';
+import { create } from "zustand";
+import type { Speech } from "@/speech/speech";
+import { formatLanguageMap } from "../document";
+import type { FoliateView, TTSApi } from "../view";
 
 /**
  * Read a book aloud: foliate-js splits the text into blocks, as SSML with a
@@ -13,20 +13,30 @@ export type Segment = { mark?: string; text: string };
 
 /** The sentences of a block of SSML, with their marks. */
 export function parseSSML(ssml: string): Segment[] {
-  const doc = new DOMParser().parseFromString(ssml, 'application/xml');
+  const doc = new DOMParser().parseFromString(ssml, "application/xml");
   const segments: Segment[] = [];
-  let current: Segment = { text: '' };
+  let current: Segment = { text: "" };
   const push = () => {
-    if (current.text.trim()) segments.push({ ...current, text: current.text.replace(/\s+/g, ' ').trim() });
+    if (current.text.trim())
+      segments.push({
+        ...current,
+        text: current.text.replace(/\s+/g, " ").trim(),
+      });
   };
   const walk = (node: Node) => {
     for (const child of Array.from(node.childNodes)) {
-      if (child.nodeType === Node.TEXT_NODE || child.nodeType === Node.CDATA_SECTION_NODE) {
-        current.text += child.textContent ?? '';
+      if (
+        child.nodeType === Node.TEXT_NODE ||
+        child.nodeType === Node.CDATA_SECTION_NODE
+      ) {
+        current.text += child.textContent ?? "";
       } else if (child.nodeType === Node.ELEMENT_NODE) {
-        if ((child as Element).localName === 'mark') {
+        if ((child as Element).localName === "mark") {
           push();
-          current = { mark: (child as Element).getAttribute('name') ?? undefined, text: '' };
+          current = {
+            mark: (child as Element).getAttribute("name") ?? undefined,
+            text: "",
+          };
         } else {
           walk(child);
         }
@@ -38,7 +48,7 @@ export function parseSSML(ssml: string): Segment[] {
   return segments;
 }
 
-export type TTSStatus = 'idle' | 'playing' | 'paused';
+export type TTSStatus = "idle" | "playing" | "paused";
 
 type TTSStore = {
   status: TTSStatus;
@@ -54,23 +64,26 @@ type TTSStore = {
 };
 
 export const useTTS = create<TTSStore>((set) => ({
-  status: 'idle',
+  status: "idle",
   active: false,
-  setStatus: (status) => set(
-    status === 'playing' ? { status, active: true, error: undefined } : { status }
-  ),
+  setStatus: (status) =>
+    set(
+      status === "playing"
+        ? { status, active: true, error: undefined }
+        : { status },
+    ),
   setError: (error) => set({ error }),
   setBook: (book) => set({ book }),
 }));
 
-const HIGHLIGHT = 'mdsilo-tts';
+const HIGHLIGHT = "mdsilo-tts";
 
 /** Highlight the sentence read (CSS Custom Highlight API, where supported). */
 function highlight(range: Range | undefined) {
   const win = range?.startContainer.ownerDocument?.defaultView as
-    | (Window & { 
-        CSS?: { highlights?: Map<string, unknown> }; 
-        Highlight?: new (r: Range) => unknown 
+    | (Window & {
+        CSS?: { highlights?: Map<string, unknown> };
+        Highlight?: new (r: Range) => unknown;
       })
     | undefined;
   if (!range || !win?.CSS?.highlights || !win.Highlight) return;
@@ -79,7 +92,11 @@ function highlight(range: Range | undefined) {
 
 function clearHighlight(view: FoliateView | null) {
   for (const { doc } of view?.renderer?.getContents?.() ?? []) {
-    (doc.defaultView as Window & { CSS?: { highlights?: Map<string, unknown> } })?.CSS?.highlights?.delete(HIGHLIGHT);
+    (
+      doc.defaultView as Window & {
+        CSS?: { highlights?: Map<string, unknown> };
+      }
+    )?.CSS?.highlights?.delete(HIGHLIGHT);
   }
 }
 
@@ -88,8 +105,11 @@ function clearHighlight(view: FoliateView | null) {
  * within the renderer (the pages shown, or the part scrolled to).
  */
 export function inView(range: Range, renderer: Element | undefined): boolean {
-  const frame = range.startContainer.ownerDocument?.defaultView?.frameElement as HTMLElement | null | undefined;
-  const rect = Array.from(range.getClientRects()).find((r) => r.width > 0 && r.height > 0);
+  const frame = range.startContainer.ownerDocument?.defaultView
+    ?.frameElement as HTMLElement | null | undefined;
+  const rect = Array.from(range.getClientRects()).find(
+    (r) => r.width > 0 && r.height > 0,
+  );
   if (!frame || !rect || !renderer?.getBoundingClientRect) return false;
   const f = frame.getBoundingClientRect();
   // a fixed layout page is scaled
@@ -124,8 +144,10 @@ export class TTSController {
     private view: FoliateView,
     private speech: () => Speech | undefined,
     private options: () => TTSOptions,
-    private onStatus: (status: TTSStatus) => void = (s) => useTTS.getState().setStatus(s),
-    private onError: (error: string) => void = (e) => useTTS.getState().setError(e),
+    private onStatus: (status: TTSStatus) => void = (s) =>
+      useTTS.getState().setStatus(s),
+    private onError: (error: string) => void = (e) =>
+      useTTS.getState().setError(e),
   ) {}
 
   private cancel() {
@@ -134,7 +156,7 @@ export class TTSController {
   }
 
   private async tts(): Promise<TTSApi | undefined> {
-    await this.view.initTTS('sentence', undefined, (range: Range) => {
+    await this.view.initTTS("sentence", undefined, (range: Range) => {
       highlight(range);
       // to the sentence only if not shown: scrolled to each one, the
       // scrolled mode jumped by every sentence; not as a selection (`true`),
@@ -153,7 +175,8 @@ export class TTSController {
     const tts = await this.tts();
     // started, skipped, stopped again meanwhile: that one goes on
     if (!tts || run !== this.run) return;
-    const range = from ?? (this.view.lastLocation as { range?: Range } | undefined)?.range;
+    const range =
+      from ?? (this.view.lastLocation as { range?: Range } | undefined)?.range;
     const ssml = range ? tts.from(range) : tts.start();
     this.segments = ssml ? parseSSML(ssml) : [];
     void this.loop();
@@ -162,7 +185,7 @@ export class TTSController {
   pause() {
     this.run += 1;
     this.cancel();
-    this.onStatus('paused');
+    this.onStatus("paused");
   }
 
   async resume() {
@@ -180,7 +203,7 @@ export class TTSController {
     this.segments = [];
     this.cancel();
     clearHighlight(this.view);
-    this.onStatus('idle');
+    this.onStatus("idle");
   }
 
   /** The next or previous block. */
@@ -198,7 +221,7 @@ export class TTSController {
 
   private async loop() {
     const run = ++this.run;
-    this.onStatus('playing');
+    this.onStatus("playing");
     const lang = this.view.language?.canonical;
     while (run === this.run) {
       if (this.segments.length === 0) {
@@ -221,14 +244,15 @@ export class TTSController {
       if (segment.mark) this.view.tts?.setMark(segment.mark);
       const speech = this.speech();
       if (!speech) {
-        this.onError('No speech engine to read aloud');
+        this.onError("No speech engine to read aloud");
         break;
       }
       const { voice, rate } = this.options();
       const options = { lang, voice, rate };
-      for (const next of this.segments.slice(0, AHEAD)) speech.prepare?.(next.text, options);
+      for (const next of this.segments.slice(0, AHEAD))
+        speech.prepare?.(next.text, options);
       this.speaking = speech;
-      let ended: 'end' | 'cancel';
+      let ended: "end" | "cancel";
       try {
         ended = await speech.speak(segment.text, options);
       } catch (e) {
@@ -236,14 +260,16 @@ export class TTSController {
         this.onError(e instanceof Error ? e.message : String(e));
         break;
       }
-      if (ended === 'cancel' || run !== this.run) return;
+      if (ended === "cancel" || run !== this.run) return;
     }
     if (run === this.run) this.stop();
   }
 
   private async nextSection(): Promise<boolean> {
-    const renderer = 
-      this.view.renderer as { nextSection?: () => Promise<void>; primaryIndex: number };
+    const renderer = this.view.renderer as {
+      nextSection?: () => Promise<void>;
+      primaryIndex: number;
+    };
     const before = renderer.primaryIndex;
     if (renderer.nextSection) await renderer.nextSection();
     else await this.view.next();
@@ -263,7 +289,9 @@ export function ttsOf(
   if (controller?.view === view) return controller.tts;
   controller?.tts.stop();
   controller = { view, tts: new TTSController(view, speech, options) };
-  useTTS.getState().setBook(formatLanguageMap(view.book?.metadata?.title) || undefined);
+  useTTS
+    .getState()
+    .setBook(formatLanguageMap(view.book?.metadata?.title) || undefined);
   return controller.tts;
 }
 

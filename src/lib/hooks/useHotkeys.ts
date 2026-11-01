@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import isHotkey from 'is-hotkey';
+import { useEffect } from "react";
+import isHotkey from "is-hotkey";
 
 /**
  mod+n: new note
@@ -9,7 +9,7 @@ import isHotkey from 'is-hotkey';
  ...
 **/
 export default function useHotkeys(
-  hotkeys: { hotkey: string; callback: () => void }[]
+  hotkeys: { hotkey: string; callback: () => void }[],
 ) {
   useEffect(() => {
     const handleKeyboardShortcuts = (event: KeyboardEvent) => {
@@ -20,8 +20,8 @@ export default function useHotkeys(
         }
       }
     };
-    document.addEventListener('keydown', handleKeyboardShortcuts);
+    document.addEventListener("keydown", handleKeyboardShortcuts);
     return () =>
-      document.removeEventListener('keydown', handleKeyboardShortcuts);
+      document.removeEventListener("keydown", handleKeyboardShortcuts);
   }, [hotkeys]);
 }

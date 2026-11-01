@@ -1,7 +1,7 @@
-import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/state/store';
-import { joinPath } from '@/workspace/util';
-import { updateGitignore } from './gitignore';
+import { invoke } from "@tauri-apps/api/core";
+import { store } from "@/state/store";
+import { joinPath } from "@/workspace/util";
+import { updateGitignore } from "./gitignore";
 
 /**
  * The workspace layout:
@@ -15,16 +15,16 @@ import { updateGitignore } from './gitignore';
  * A folder without `.mdsilo/workspace.json` is a legacy workspace: notes and
  * issues.json at its root, as before. It keeps working, and can be migrated.
  */
-export const READING_DIR = 'reading';
-export const WRITING_DIR = 'writing';
-export const DATA_DIR = '.mdsilo';
-export const LOCAL_DIR = 'local';
+export const READING_DIR = "reading";
+export const WRITING_DIR = "writing";
+export const DATA_DIR = ".mdsilo";
+export const LOCAL_DIR = "local";
 /** the clipped feed articles, in reading/ (the root of legacy workspaces) */
-export const CLIPS_DIR = 'clips';
-export const WORKSPACE_FILE = 'workspace.json';
+export const CLIPS_DIR = "clips";
+export const WORKSPACE_FILE = "workspace.json";
 export const WORKSPACE_VERSION = 1;
 
-export type Layout = 'workspace' | 'legacy';
+export type Layout = "workspace" | "legacy";
 
 export type WorkspaceMeta = { version: number; createdAt: string };
 
@@ -38,31 +38,42 @@ export const localDirOf = (ws: string) => joinPath(ws, DATA_DIR, LOCAL_DIR);
 export async function detectLayout(ws: string): Promise<Layout> {
   try {
     const marker = joinPath(ws, DATA_DIR, WORKSPACE_FILE);
-    return (await invoke<boolean>('is_file', { path: marker })) ? 'workspace' : 'legacy';
+    return (await invoke<boolean>("is_file", { path: marker }))
+      ? "workspace"
+      : "legacy";
   } catch {
-    return 'legacy';
+    return "legacy";
   }
 }
 
 /** Create the dirs and files of the layout, keeping the existing ones. */
 export async function initLayout(ws: string): Promise<void> {
   for (const dir of [READING_DIR, WRITING_DIR, joinPath(DATA_DIR, LOCAL_DIR)]) {
-    await invoke('create_dir_recursive', { dirPath: joinPath(ws, dir) });
+    await invoke("create_dir_recursive", { dirPath: joinPath(ws, dir) });
   }
-  const gitignore = joinPath(ws, DATA_DIR, '.gitignore');
-  if (!(await invoke<boolean>('file_exist', { filePath: gitignore }))) {
-    await invoke('write_file', { filePath: gitignore, text: DATA_GITIGNORE });
+  const gitignore = joinPath(ws, DATA_DIR, ".gitignore");
+  if (!(await invoke<boolean>("file_exist", { filePath: gitignore }))) {
+    await invoke("write_file", { filePath: gitignore, text: DATA_GITIGNORE });
   }
   // the book files are not synced unless chosen, see reader/library
-  const readingGitignore = joinPath(ws, READING_DIR, '.gitignore');
-  if (!(await invoke<boolean>('file_exist', { filePath: readingGitignore }))) {
-    await invoke('write_file', { filePath: readingGitignore, text: updateGitignore('', []) });
+  const readingGitignore = joinPath(ws, READING_DIR, ".gitignore");
+  if (!(await invoke<boolean>("file_exist", { filePath: readingGitignore }))) {
+    await invoke("write_file", {
+      filePath: readingGitignore,
+      text: updateGitignore("", []),
+    });
   }
   // the marker last: a layout half created is still legacy
   const marker = joinPath(ws, DATA_DIR, WORKSPACE_FILE);
-  if (!(await invoke<boolean>('file_exist', { filePath: marker }))) {
-    const meta: WorkspaceMeta = { version: WORKSPACE_VERSION, createdAt: new Date().toISOString() };
-    await invoke('write_file', { filePath: marker, text: JSON.stringify(meta, null, 2) });
+  if (!(await invoke<boolean>("file_exist", { filePath: marker }))) {
+    const meta: WorkspaceMeta = {
+      version: WORKSPACE_VERSION,
+      createdAt: new Date().toISOString(),
+    };
+    await invoke("write_file", {
+      filePath: marker,
+      text: JSON.stringify(meta, null, 2),
+    });
   }
 }
 
@@ -74,25 +85,27 @@ const roots = (): Roots => store.getState();
 export function writingRoot(state: Roots = roots()): string | undefined {
   const { initDir, layout } = state;
   if (!initDir) return undefined;
-  return layout === 'workspace' ? joinPath(initDir, WRITING_DIR) : initDir;
+  return layout === "workspace" ? joinPath(initDir, WRITING_DIR) : initDir;
 }
 
 /** Where the books are; legacy workspaces have no reading root. */
 export function readingRoot(state: Roots = roots()): string | undefined {
   const { initDir, layout } = state;
-  return initDir && layout === 'workspace' ? joinPath(initDir, READING_DIR) : undefined;
+  return initDir && layout === "workspace"
+    ? joinPath(initDir, READING_DIR)
+    : undefined;
 }
 
 /** The data dir, `.mdsilo/`; legacy workspaces keep data at the root. */
 export function dataRoot(state: Roots = roots()): string | undefined {
   const { initDir, layout } = state;
-  return initDir && layout === 'workspace' ? dataDirOf(initDir) : undefined;
+  return initDir && layout === "workspace" ? dataDirOf(initDir) : undefined;
 }
 
 /** The dir of the device local data, `.mdsilo/local/`. */
 export function localRoot(state: Roots = roots()): string | undefined {
   const { initDir, layout } = state;
-  return initDir && layout === 'workspace' ? localDirOf(initDir) : undefined;
+  return initDir && layout === "workspace" ? localDirOf(initDir) : undefined;
 }
 
 /** Top level entries of a workspace, never moved into writing/ on migration. */
@@ -104,20 +117,25 @@ export const LAYOUT_ENTRIES = new Set([READING_DIR, WRITING_DIR, DATA_DIR]);
  */
 export async function resolveLayout(ws: string): Promise<Layout> {
   const layout = await detectLayout(ws);
-  if (layout === 'workspace') return layout;
+  if (layout === "workspace") return layout;
   try {
-    const entries = await invoke<{ is_hidden: boolean }[]>('list_directory', { dir: ws });
-    if (!entries || entries.some((e) => !e.is_hidden)) return 'legacy';
+    const entries = await invoke<{ is_hidden: boolean }[]>("list_directory", {
+      dir: ws,
+    });
+    if (!entries || entries.some((e) => !e.is_hidden)) return "legacy";
     await initLayout(ws);
-    return 'workspace';
+    return "workspace";
   } catch (e) {
-    console.error('Failed to create the workspace layout', e);
-    return 'legacy';
+    console.error("Failed to create the workspace layout", e);
+    return "legacy";
   }
 }
 
 /** The dir to create a note in from the current dir: writing/ at the root. */
-export function newNoteDir(currentDir: string | undefined, state: Roots = roots()): string | undefined {
+export function newNoteDir(
+  currentDir: string | undefined,
+  state: Roots = roots(),
+): string | undefined {
   const writing = writingRoot(state);
   if (!currentDir || currentDir === state.initDir) return writing ?? currentDir;
   return currentDir;

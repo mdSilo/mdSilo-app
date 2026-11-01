@@ -4,24 +4,24 @@ import {
   HTMLAttributes,
   memo,
   useCallback,
-} from 'react';
-import { TbCaretRight, TbMarkdown, TbNote, TbPhoto } from 'react-icons/tb';
-import { NoteTreeItem, store, useStore } from '@/state/store';
-import { isMobile } from '@/lib/helper';
-import { imageExtensions } from '@/lib/file-extensions';
-import useOnNoteLinkClick from '@/writer/hooks/useOnNoteLinkClick';
-import { Tooltip } from '@/ui/ui';
-import { checkFileIsMd, getFileExt } from '@/workspace/process';
-import { listDir, openUrl } from '@/workspace/open';
-import { joinPath, normalizeSlash } from '@/workspace/util';
-import { READING_DIR, WRITING_DIR } from '@/workspace/layout';
-import { isBookFile } from '@/reader/document';
-import BookIcon, { bookIconOf } from '@/reader/components/BookIcon';
-import { bookPathOfAnnotations } from '@/reader/annotations/annotations';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { viewersOf } from '@/plugins/registry';
-import SidebarItem from './SidebarItem';
-import { SidebarDirDropdown, SidebarNoteDropdown } from './SidebarDropdown';
+} from "react";
+import { TbCaretRight, TbMarkdown, TbNote, TbPhoto } from "react-icons/tb";
+import { NoteTreeItem, store, useStore } from "@/state/store";
+import { isMobile } from "@/lib/helper";
+import { imageExtensions } from "@/lib/file-extensions";
+import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
+import { Tooltip } from "@/ui/ui";
+import { checkFileIsMd, getFileExt } from "@/workspace/process";
+import { listDir, openUrl } from "@/workspace/open";
+import { joinPath, normalizeSlash } from "@/workspace/util";
+import { READING_DIR, WRITING_DIR } from "@/workspace/layout";
+import { isBookFile } from "@/reader/document";
+import BookIcon, { bookIconOf } from "@/reader/components/BookIcon";
+import { bookPathOfAnnotations } from "@/reader/annotations/annotations";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { viewersOf } from "@/plugins/registry";
+import SidebarItem from "./SidebarItem";
+import { SidebarDirDropdown, SidebarNoteDropdown } from "./SidebarDropdown";
 
 // indent of each nesting level in the tree
 export const INDENT_PER_LEVEL = 16;
@@ -35,10 +35,16 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
 
 const SidebarNoteLink = (
   props: Props,
-  forwardedRef: ForwardedRef<HTMLDivElement>
+  forwardedRef: ForwardedRef<HTMLDivElement>,
 ) => {
   const {
-    node, isHighlighted, depth = 0, isExpanded = false, className = '', style, ...otherProps
+    node,
+    isHighlighted,
+    depth = 0,
+    isExpanded = false,
+    className = "",
+    style,
+    ...otherProps
   } = props;
   // console.log("node: ", node)
   const filePath = node.id;
@@ -48,47 +54,64 @@ const SidebarNoteLink = (
   const { onClick: onNoteLinkClick } = useOnNoteLinkClick();
   const { dispatch } = useCurrentViewContext();
   // a book of a workspace: read in the app
-  const isBook = useStore((state) => state.layout === 'workspace') && isBookFile(node.id);
-  const isDir = node.is_dir; 
+  const isBook =
+    useStore((state) => state.layout === "workspace") && isBookFile(node.id);
+  const isDir = node.is_dir;
   const isNonMd = !isDir && !checkFileIsMd(node.id);
   const isImage = imageExtensions.includes(getFileExt(node.id).toLowerCase());
   // reading/ and writing/ of a workspace: the two roots of the tree
   const rootLabel = useStore((state) => {
-    if (!isDir || depth !== 0 || state.layout !== 'workspace' || !state.initDir) return '';
+    if (!isDir || depth !== 0 || state.layout !== "workspace" || !state.initDir)
+      return "";
     const id = normalizeSlash(node.id);
-    if (id === joinPath(state.initDir, READING_DIR)) return 'Reading';
-    if (id === joinPath(state.initDir, WRITING_DIR)) return 'Writing';
-    return '';
+    if (id === joinPath(state.initDir, READING_DIR)) return "Reading";
+    if (id === joinPath(state.initDir, WRITING_DIR)) return "Writing";
+    return "";
   });
-  const onClickFile = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    // console.log("click, isLoading", isLoading, node.id);
-    if (isDir) {
-      // expand or collapse in place, load the sub dir lazily
-      const dirPath = normalizeSlash(node.id);
-      if (!isExpanded && !store.getState().noteTree[dirPath]) {
-        await listDir(dirPath, false);
+  const onClickFile = useCallback(
+    async (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      // console.log("click, isLoading", isLoading, node.id);
+      if (isDir) {
+        // expand or collapse in place, load the sub dir lazily
+        const dirPath = normalizeSlash(node.id);
+        if (!isExpanded && !store.getState().noteTree[dirPath]) {
+          await listDir(dirPath, false);
+        }
+        toggleExpandedDir(dirPath, !isExpanded);
+        return;
+      } else if (isBook) {
+        dispatch({ view: "book", path: node.id });
+      } else if (isNonMd) {
+        // a plugin opens it, or the app of the system
+        const [opener] = viewersOf(node.id);
+        if (opener)
+          dispatch({
+            view: "plugin-file",
+            plugin: opener.plugin.id,
+            path: node.id,
+          });
+        else await openUrl(node.id);
+      } else {
+        await onNoteLinkClick(node.id);
       }
-      toggleExpandedDir(dirPath, !isExpanded);
-      return;
-    } else if (isBook) {
-      dispatch({ view: 'book', path: node.id });
-    } else if (isNonMd) {
-      // a plugin opens it, or the app of the system
-      const [opener] = viewersOf(node.id);
-      if (opener) dispatch({ view: 'plugin-file', plugin: opener.plugin.id, path: node.id });
-      else await openUrl(node.id);
-    } else {
-      await onNoteLinkClick(node.id);
-    }
-    if (isMobile()) {
-      setIsSidebarOpen(false);
-    }
-  }, [
-    dispatch, isBook, isDir, isExpanded, isNonMd, node.id, onNoteLinkClick, setIsSidebarOpen,
-    toggleExpandedDir,
-  ]);
-  
+      if (isMobile()) {
+        setIsSidebarOpen(false);
+      }
+    },
+    [
+      dispatch,
+      isBook,
+      isDir,
+      isExpanded,
+      isNonMd,
+      node.id,
+      onNoteLinkClick,
+      setIsSidebarOpen,
+      toggleExpandedDir,
+    ],
+  );
+
   // add 16px for every level of nesting, plus 8px base padding
   const leftPadding = depth * INDENT_PER_LEVEL + 8;
 
@@ -110,20 +133,20 @@ const SidebarNoteLink = (
         <div className="p-1 mr-1 rounded-sm hover:bg-base-content/15">
           {isDir ? (
             <TbCaretRight
-              className={`shrink-0 text-base-content/60 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              className={`shrink-0 text-base-content/60 transform transition-transform ${isExpanded ? "rotate-90" : ""}`}
               size={16}
               fill="currentColor"
             />
           ) : bookIconOf(node.id) ? (
             <BookIcon path={node.id} />
           ) : isImage ? (
-            <TbPhoto 
+            <TbPhoto
               className="shrink-0 text-base-content/60"
-              size={16} 
+              size={16}
               color="orange"
             />
           ) : (
-            <TbNote 
+            <TbNote
               className="shrink-0 text-base-content/60"
               size={16}
               color="purple"
@@ -140,10 +163,16 @@ const SidebarNoteLink = (
               {/* the annotations of a book, named after it */}
               {!isDir && bookPathOfAnnotations(node.id) ? (
                 <>
-                  <span className="text-sm text-base-content/50">{node.title}</span>
-                  <span className="ml-1 text-xs text-base-content/50">notes</span>
+                  <span className="text-sm text-base-content/50">
+                    {node.title}
+                  </span>
+                  <span className="ml-1 text-xs text-base-content/50">
+                    notes
+                  </span>
                 </>
-              ) : (<>{node.title}</>)}
+              ) : (
+                <>{node.title}</>
+              )}
             </span>
           )}
         </Tooltip>

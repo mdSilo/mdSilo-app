@@ -8,76 +8,80 @@ type FeedResult = {
 };
 
 export const fetchFeed = async (url: string): Promise<FeedResult> => {
-  return await invoke('fetch_feed', { url })
-}
+  return await invoke("fetch_feed", { url });
+};
 
 // the subscriptions and starred articles sync with the workspace, see feedSync
 
 export const addChannel = async (
-  url: string, ty: string, title: string | null
+  url: string,
+  ty: string,
+  title: string | null,
 ): Promise<number> => {
-  const added = await invoke<number>('add_channel', { url, ty, title });
+  const added = await invoke<number>("add_channel", { url, ty, title });
   scheduleFeedSync();
   return added;
-}
+};
 
 export const importChannels = async (list: string[]) => {
-  const imported = await invoke('import_channels', { list });
+  const imported = await invoke("import_channels", { list });
   scheduleFeedSync();
   return imported;
-}
+};
 
 export const getChannels = async (): Promise<ChannelType[]> => {
-  return await invoke('get_channels')
-}
+  return await invoke("get_channels");
+};
 
 export const deleteChannel = async (link: string) => {
-  const deleted = await invoke('delete_channel', { link });
+  const deleted = await invoke("delete_channel", { link });
   scheduleFeedSync();
   return deleted;
 };
 
 export const getArticleList = async (
-  feedLink: string | null, 
+  feedLink: string | null,
   readStatus: number | null,
   starStatus: number | null,
-) : Promise<ArticleType[]> => {
-  return await invoke('get_articles', { feedLink, readStatus, starStatus })
-}
+): Promise<ArticleType[]> => {
+  return await invoke("get_articles", { feedLink, readStatus, starStatus });
+};
 
-export const getArticleByUrl = async (url: string): Promise<ArticleType | null> => {
-  return await invoke('get_article_by_url', { url })
-}
+export const getArticleByUrl = async (
+  url: string,
+): Promise<ArticleType | null> => {
+  return await invoke("get_article_by_url", { url });
+};
 
 export const getUnreadNum = async (): Promise<{ [key: string]: number }> => {
-  return await invoke('get_unread_num')
-}
+  return await invoke("get_unread_num");
+};
 
 export const updateArticleStarStatus = async (
-  articleUrl: string, 
+  articleUrl: string,
   star_status: number, // 0 || 1
 ): Promise<number> => {
-  const updated = await invoke<number>('update_article_star_status', {
+  const updated = await invoke<number>("update_article_star_status", {
     url: articleUrl,
     status: star_status,
   });
   scheduleFeedSync();
   return updated;
-}
+};
 
 export const updateArticleReadStatus = async (
-  articleUrl: string, 
+  articleUrl: string,
   read_status: number,
 ): Promise<number> => {
-  return await invoke('update_article_read_status', {
+  return await invoke("update_article_read_status", {
     url: articleUrl,
     status: read_status,
-  })
-}
+  });
+};
 
 export const updateAllReadStatus = async (
-  feedLink: string, 
+  feedLink: string,
   readStatus: number,
 ): Promise<number> => {
-  return await invoke('update_all_read_status', { feedLink, readStatus })
-}
+  return await invoke("update_all_read_status", { feedLink, readStatus });
+};

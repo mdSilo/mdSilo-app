@@ -1,10 +1,13 @@
-import { useRef, useState, memo } from 'react';
-import { Menu } from '@headlessui/react';
-import { TbSortDescending as IconSortDescending, TbCheck as IconCheck } from 'react-icons/tb';
-import { usePopper } from 'react-popper';
-import { ReadableNameBySort, Sort } from '@/state/userSettings';
-import { Tooltip } from '@/ui/ui';
-import Portal from '@/ui/Portal';
+import { useRef, useState, memo } from "react";
+import { Menu } from "@headlessui/react";
+import {
+  TbSortDescending as IconSortDescending,
+  TbCheck as IconCheck,
+} from "react-icons/tb";
+import { usePopper } from "react-popper";
+import { ReadableNameBySort, Sort } from "@/state/userSettings";
+import { Tooltip } from "@/ui/ui";
+import Portal from "@/ui/Portal";
 
 type Props = {
   currentSort: Sort;
@@ -15,11 +18,9 @@ const SidebarNotesSortDropdown = (props: Props) => {
   const { currentSort, setCurrentSort } = props;
 
   const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLElement | null>(
-    null
-  );
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(null);
   const { styles, attributes } = usePopper(buttonRef.current, popperElement, {
-    placement: 'bottom-start',
+    placement: "bottom-start",
   });
 
   return (
@@ -57,16 +58,12 @@ const SidebarNotesSortDropdown = (props: Props) => {
                       {({ focus }) => (
                         <button
                           className={`flex w-full items-center px-4 py-2 text-left text-base-content text-sm ${
-                            showDivider ? 'border-b border-base-300' : ''
-                          } ${focus ? 'bg-base-content/10' : ''}`}
+                            showDivider ? "border-b border-base-300" : ""
+                          } ${focus ? "bg-base-content/10" : ""}`}
                           onClick={() => setCurrentSort(sort)}
                         >
                           <span
-                            className={
-                              isActive
-                                ? 'text-primary'
-                                : undefined
-                            }
+                            className={isActive ? "text-primary" : undefined}
                           >
                             {ReadableNameBySort[sort]}
                           </span>

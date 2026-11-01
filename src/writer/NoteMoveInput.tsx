@@ -1,15 +1,19 @@
-import type { ForwardedRef } from 'react';
-import { forwardRef, useCallback, useMemo, useState } from 'react';
-import { TbChevronsUp as IconChevronsUp, TbFolderPlus as IconFolderPlus, TbSearch as IconSearch } from 'react-icons/tb';
-import type { IconType as Icon } from 'react-icons';
-import useNoteSearch from '@/lib/hooks/useNoteSearch';
-import { store, useStore } from '@/state/store';
-import type { Note } from '@/types/model';
-import { ciStringCompare } from '@/lib/helper';
-import FileAPI from '@/workspace/files';
-import { flushSave } from '@/workspace/pendingSaves';
-import useLoadNotes from '@/lib/hooks/useLoadNotes';
-import { createDirRecursive, joinPaths } from '@/workspace/util';
+import type { ForwardedRef } from "react";
+import { forwardRef, useCallback, useMemo, useState } from "react";
+import {
+  TbChevronsUp as IconChevronsUp,
+  TbFolderPlus as IconFolderPlus,
+  TbSearch as IconSearch,
+} from "react-icons/tb";
+import type { IconType as Icon } from "react-icons";
+import useNoteSearch from "@/lib/hooks/useNoteSearch";
+import { store, useStore } from "@/state/store";
+import type { Note } from "@/types/model";
+import { ciStringCompare } from "@/lib/helper";
+import FileAPI from "@/workspace/files";
+import { flushSave } from "@/workspace/pendingSaves";
+import useLoadNotes from "@/lib/hooks/useLoadNotes";
+import { createDirRecursive, joinPaths } from "@/workspace/util";
 
 enum OptionType {
   DIR,
@@ -34,14 +38,14 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const {
     noteId,
     onOptionClick: onOptionClickCallback,
-    className = '',
+    className = "",
   } = props;
 
   useLoadNotes();
   const initDir = useStore((state) => state.initDir);
   const currentDir = useStore((state) => state.currentDir);
 
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
 
   const noteTree = useStore((state) => state.noteTree);
@@ -56,13 +60,14 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
     if (!inputTxt) {
       // Include the root and nine top-level notes sorted alphabetically
       result.push({
-        id: 'root',
+        id: "root",
         type: OptionType.ROOT,
-        text: 'Move to root',
+        text: "Move to root",
         icon: IconChevronsUp,
       });
       result.push(
-        ...Object.values(noteTree).flat()
+        ...Object.values(noteTree)
+          .flat()
           .filter((item) => item.is_dir && item.id !== noteId)
           .map((item) => ({
             id: item.id,
@@ -70,11 +75,11 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
             text: item.title,
           }))
           .sort((n1, n2) => ciStringCompare(n1.text, n2.text))
-          .slice(0, 9)
+          .slice(0, 9),
       );
     } else {
       result.push({
-        id: 'NEW_FOLDER',
+        id: "NEW_FOLDER",
         type: OptionType.NEW,
         text: `New Folder: ${inputTxt}`,
         icon: IconFolderPlus,
@@ -86,7 +91,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
             id: result.item.id,
             type: OptionType.DIR,
             text: result.item.title,
-          }))
+          })),
       );
     }
     return result;
@@ -119,25 +124,25 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         }
       }
     },
-    [onOptionClickCallback, initDir, currentDir, inputTxt, noteId, notes]
+    [onOptionClickCallback, initDir, currentDir, inputTxt, noteId, notes],
   );
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       // Update the selected option based on arrow key input
-      if (event.key === 'ArrowUp') {
+      if (event.key === "ArrowUp") {
         event.preventDefault();
         setSelectedOptionIndex((index) => {
           return index <= 0 ? options.length - 1 : index - 1;
         });
-      } else if (event.key === 'ArrowDown') {
+      } else if (event.key === "ArrowDown") {
         event.preventDefault();
         setSelectedOptionIndex((index) => {
           return index >= options.length - 1 ? 0 : index + 1;
         });
       }
     },
-    [options.length]
+    [options.length],
   );
 
   return (
@@ -148,14 +153,14 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           ref={ref}
           type="text"
           className={`w-full py-4 px-2 text-xl border-none rounded-tl rounded-tr focus:ring-0 bg-base-200 ${
-            options.length <= 0 ? 'rounded-bl rounded-br' : ''
+            options.length <= 0 ? "rounded-bl rounded-br" : ""
           }`}
           placeholder="Search to move to"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={onKeyDown}
           onKeyPress={(event) => {
-            if (event.key === 'Enter') {
+            if (event.key === "Enter") {
               event.preventDefault();
               onOptionClick(options[selectedOptionIndex]);
             }
@@ -190,13 +195,11 @@ const OptionItem = (props: OptionProps) => {
   return (
     <button
       className={`flex flex-row w-full items-center px-4 py-2 text-base-content hover:bg-base-content/5 active:bg-base-content/10 ${
-        isSelected ? 'bg-base-content/10' : ''
+        isSelected ? "bg-base-content/10" : ""
       }`}
       onClick={onClick}
     >
-      {option.icon ? (
-        <option.icon size={18} className="shrink-0 mr-1" />
-      ) : null}
+      {option.icon ? <option.icon size={18} className="shrink-0 mr-1" /> : null}
       <span className="overflow-hidden text-ellipsis whitespace-nowrap">
         {option.text}
       </span>
@@ -204,13 +207,12 @@ const OptionItem = (props: OptionProps) => {
   );
 };
 
-export default forwardRef(MoveToInput); 
-
+export default forwardRef(MoveToInput);
 
 //
 export const moveNoteTreeItem = (
-  srcPath: string, 
-  tarDir: string, 
+  srcPath: string,
+  tarDir: string,
   tarPath: string,
   oldNote: Note,
 ) => {
@@ -227,4 +229,4 @@ export const moveNoteTreeItem = (
   store.getState().upsertNote(newNote);
   store.getState().upsertTree(tarDir, [newNote]);
   // console.log("move item: ", srcPath, tarPath);
-}
+};

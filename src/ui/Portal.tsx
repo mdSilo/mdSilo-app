@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { useRef, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import type { ReactNode } from "react";
+import { useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Props = {
   children: ReactNode;
@@ -12,7 +12,7 @@ export default function Portal({ children, selector }: Props) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    ref.current = document.querySelector(selector ?? '#app-container');
+    ref.current = document.querySelector(selector ?? "#app-container");
     setMounted(true);
   }, [selector]);
 

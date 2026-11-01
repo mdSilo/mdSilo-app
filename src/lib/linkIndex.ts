@@ -1,7 +1,7 @@
-import { parser } from 'mdsmirror';
-import { findNoteLinks, hrefToTitle, isNoteHref } from '@/lib/mdlink';
-import type { NoteMap } from './noteMap';
-import { bookLinks, issueLinks, noteTags, type Parsed } from './parseNote';
+import { parser } from "mdsmirror";
+import { findNoteLinks, hrefToTitle, isNoteHref } from "@/lib/mdlink";
+import type { NoteMap } from "./noteMap";
+import { bookLinks, issueLinks, noteTags, type Parsed } from "./parseNote";
 
 export type TextRun = {
   text: string;
@@ -19,27 +19,27 @@ export const getMarkdownTextBlocks = (content: string): TextBlock[] => {
   const blocks: TextBlock[] = [];
 
   for (const token of parser.tokenizer.parse(content, {})) {
-    if (token.type !== 'inline' || !token.children?.length) {
+    if (token.type !== "inline" || !token.children?.length) {
       continue;
     }
 
-    let text = '';
+    let text = "";
     let link: string | undefined;
     const runs: TextRun[] = [];
 
     for (const child of token.children) {
-      if (child.type === 'link_open') {
-        const href = child.attrGet('href') || '';
+      if (child.type === "link_open") {
+        const href = child.attrGet("href") || "";
         // '' for the links not to note, e.g. url
-        link = isNoteHref(href) ? hrefToTitle(href) : '';
-      } else if (child.type === 'link_close') {
+        link = isNoteHref(href) ? hrefToTitle(href) : "";
+      } else if (child.type === "link_close") {
         link = undefined;
-      } else if (child.type === 'text' || child.type === 'code_inline') {
+      } else if (child.type === "text" || child.type === "code_inline") {
         if (!child.content) continue;
         runs.push({ text: child.content, from: text.length, link });
         text += child.content;
-      } else if (child.type === 'softbreak' || child.type === 'hardbreak') {
-        text += ' ';
+      } else if (child.type === "softbreak" || child.type === "hardbreak") {
+        text += " ";
       }
     }
 
@@ -109,7 +109,8 @@ export class LinkIndex {
       if (!note.content && !parsed) continue;
       seen.add(note.id);
       const old = this.entries.get(note.id);
-      if (parsed ? old?.parsed === parsed : old?.content === note.content) continue;
+      if (parsed ? old?.parsed === parsed : old?.content === note.content)
+        continue;
       if (old) this.unindex(note.id, old);
       const entry: Entry = parsed ? { parsed } : { content: note.content };
       this.entries.set(note.id, entry);
@@ -134,7 +135,9 @@ export class LinkIndex {
 
   /** The notes known by the index only: their content not loaded. */
   notLoaded(): string[] {
-    return [...this.entries].filter(([, e]) => e.content === undefined).map(([id]) => id);
+    return [...this.entries]
+      .filter(([, e]) => e.content === undefined)
+      .map(([id]) => id);
   }
 
   /** The text blocks of a note, parsed once per content; none if not loaded. */
@@ -172,9 +175,12 @@ export class LinkIndex {
       // (a mention may be escaped or an entity in the markdown though)
       const raw = entry.content;
       if (raw === undefined) continue;
-      if (!raw.includes(title) && !raw.includes('\\') && !raw.includes('&')) continue;
+      if (!raw.includes(title) && !raw.includes("\\") && !raw.includes("&"))
+        continue;
       if (entry.mention?.title !== title) {
-        entry.plain ??= this.blocks(id).map((b) => b.text).join('\n');
+        entry.plain ??= this.blocks(id)
+          .map((b) => b.text)
+          .join("\n");
         entry.mention = { title, found: entry.plain.includes(title) };
       }
       if (entry.mention.found) ids.add(id);
@@ -187,7 +193,9 @@ export class LinkIndex {
     const entry = this.entries.get(id);
     if (!entry) return [];
     if (entry.parsed) return entry.parsed.links;
-    return (entry.rawLinks ??= findNoteLinks(entry.content ?? '').map((link) => link.title));
+    return (entry.rawLinks ??= findNoteLinks(entry.content ?? "").map(
+      (link) => link.title,
+    ));
   }
 
   /** The #tags# of a note. */
@@ -195,14 +203,16 @@ export class LinkIndex {
     const entry = this.entries.get(id);
     if (!entry) return [];
     if (entry.parsed) return entry.parsed.tags;
-    return (entry.tags ??= noteTags(entry.content ?? ''));
+    return (entry.tags ??= noteTags(entry.content ?? ""));
   }
 
   /** The issues a note links to, [@12](issue:12). */
   issues(id: string): Set<number> {
     const entry = this.entries.get(id);
     if (!entry) return new Set();
-    return (entry.issues ??= new Set(entry.parsed ? entry.parsed.issues : issueLinks(entry.content ?? '')));
+    return (entry.issues ??= new Set(
+      entry.parsed ? entry.parsed.issues : issueLinks(entry.content ?? ""),
+    ));
   }
 
   /** The books a note links to, by id or by title, see bookLinks. */
@@ -210,7 +220,7 @@ export class LinkIndex {
     const entry = this.entries.get(id);
     if (!entry) return [];
     if (entry.parsed) return entry.parsed.books ?? [];
-    return (entry.books ??= bookLinks(entry.content ?? ''));
+    return (entry.books ??= bookLinks(entry.content ?? ""));
   }
 
   private linkTitles(id: string, entry: Entry): Set<string> {
@@ -230,7 +240,8 @@ export class LinkIndex {
 
   private index(id: string, entry: Entry) {
     if (!this.byTitle) return;
-    for (const title of this.linkTitles(id, entry)) addTo(this.byTitle, title, id);
+    for (const title of this.linkTitles(id, entry))
+      addTo(this.byTitle, title, id);
   }
 
   private unindex(id: string, entry: Entry) {

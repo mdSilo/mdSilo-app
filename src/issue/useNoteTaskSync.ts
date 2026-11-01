@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { useStore } from '@/state/store';
-import useDebounce from '@/lib/hooks/useDebounce';
-import { useIssueData, useIssueStore } from './issueStore';
-import { loadNoteTasks, syncNoteTasks } from './noteTasks';
+import { useEffect } from "react";
+import { useStore } from "@/state/store";
+import useDebounce from "@/lib/hooks/useDebounce";
+import { useIssueData, useIssueStore } from "./issueStore";
+import { loadNoteTasks, syncNoteTasks } from "./noteTasks";
 
 const SYNC_DEBOUNCE_MS = 1000;
 
@@ -13,7 +13,10 @@ const SYNC_DEBOUNCE_MS = 1000;
 export default function useNoteTaskSync() {
   const { data, isLoaded: issuesLoaded } = useIssueData();
   const notesLoaded = useStore((state) => state.isLoaded);
-  const [notes] = useDebounce(useStore((state) => state.notes), SYNC_DEBOUNCE_MS);
+  const [notes] = useDebounce(
+    useStore((state) => state.notes),
+    SYNC_DEBOUNCE_MS,
+  );
   const apply = useIssueStore((s) => s.apply);
   const hasTaskIssues = data.issues.some((i) => i.noteTask);
 
@@ -25,7 +28,9 @@ export default function useNoteTaskSync() {
       .then((tasks) => {
         if (!cancelled) apply((d) => syncNoteTasks(d, tasks, notes));
       })
-      .catch((e) => console.error('Failed to read the tasks of the notes', e));
-    return () => { cancelled = true; };
+      .catch((e) => console.error("Failed to read the tasks of the notes", e));
+    return () => {
+      cancelled = true;
+    };
   }, [issuesLoaded, notesLoaded, hasTaskIssues, notes, apply]);
 }

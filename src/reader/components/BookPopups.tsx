@@ -1,30 +1,59 @@
-import { memo, useEffect, useState, type ReactNode, type RefObject } from 'react';
 import {
-  TbCheck, TbCircleDot, TbCopy, TbHighlight, TbHighlightOff, TbLink, TbBallpen, TbQuote,
-} from 'react-icons/tb';
-import copy from 'copy-to-clipboard';
-import { useStore } from '@/state/store';
-import { IconButton } from '@/ui/ui';
+  memo,
+  useEffect,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import {
-  HIGHLIGHT_COLORS, noteText, sectionOf, type BookNote, type HighlightStyle,
-} from '../annotations/annotations';
-import { HIGHLIGHT_CSS } from '../styles';
-import { withDefaults } from '../settings';
-import { activeStore, useActiveStore } from '../readerStore';
-import { usePopups, type Box, type TextSelection } from '../popups';
+  TbCheck,
+  TbCircleDot,
+  TbCopy,
+  TbHighlight,
+  TbHighlightOff,
+  TbLink,
+  TbBallpen,
+  TbQuote,
+} from "react-icons/tb";
+import copy from "copy-to-clipboard";
+import { useStore } from "@/state/store";
+import { IconButton } from "@/ui/ui";
 import {
-  annotateSelection, copyLink, copyQuote, issueOfNote, rememberHighlight,
-} from '../actions';
-import NoteIssues from '../annotations/NoteIssues';
+  HIGHLIGHT_COLORS,
+  noteText,
+  sectionOf,
+  type BookNote,
+  type HighlightStyle,
+} from "../annotations/annotations";
+import { HIGHLIGHT_CSS } from "../styles";
+import { withDefaults } from "../settings";
+import { activeStore, useActiveStore } from "../readerStore";
+import { usePopups, type Box, type TextSelection } from "../popups";
+import {
+  annotateSelection,
+  copyLink,
+  copyQuote,
+  issueOfNote,
+  rememberHighlight,
+} from "../actions";
+import NoteIssues from "../annotations/NoteIssues";
 
 /** Where to show a popup for a box: under it, or above if no room. */
-export function placeOf(box: Box, root: DOMRect, height: number, width: number) {
+export function placeOf(
+  box: Box,
+  root: DOMRect,
+  height: number,
+  width: number,
+) {
   const left = Math.min(
     Math.max(8, (box.left + box.right) / 2 - root.left - width / 2),
     Math.max(8, root.width - width - 8),
   );
   const below = box.bottom - root.top + 8;
-  const top = below + height > root.height ? Math.max(8, box.top - root.top - height - 8) : below;
+  const top =
+    below + height > root.height
+      ? Math.max(8, box.top - root.top - height - 8)
+      : below;
   return { left, top };
 }
 
@@ -33,7 +62,7 @@ const GAP = 12;
 
 export type Anchor = {
   /** the popup is above the text ('up') or under it */
-  dir: 'up' | 'down';
+  dir: "up" | "down";
   left: number;
   /** from the top of the root, if down; from its bottom, if up */
   offset: number;
@@ -46,47 +75,102 @@ export type Anchor = {
  * more room, unless the popup fits under it; centered on
  * the text, kept in the root.
  */
-export function anchorOf(box: Box, root: DOMRect, width: number, height: number): Anchor {
+export function anchorOf(
+  box: Box,
+  root: DOMRect,
+  width: number,
+  height: number,
+): Anchor {
   const above = box.top - root.top;
   const below = root.bottom - box.bottom;
-  const dir = below >= height + GAP || below >= above ? 'down' : 'up';
-  const mid = (Math.max(box.left, root.left) + Math.min(box.right, root.right)) / 2 - root.left;
-  const left = Math.min(Math.max(8, mid - width / 2), Math.max(8, root.width - width - 8));
-  const offset = dir === 'down'
-    ? Math.min(Math.max(8, box.bottom - root.top + GAP), Math.max(8, root.height - height - 8))
-    : Math.min(Math.max(8, root.bottom - box.top + GAP), Math.max(8, root.height - height - 8));
-  return { dir, left, offset, arrow: Math.min(Math.max(14, mid - left), width - 14) };
+  const dir = below >= height + GAP || below >= above ? "down" : "up";
+  const mid =
+    (Math.max(box.left, root.left) + Math.min(box.right, root.right)) / 2 -
+    root.left;
+  const left = Math.min(
+    Math.max(8, mid - width / 2),
+    Math.max(8, root.width - width - 8),
+  );
+  const offset =
+    dir === "down"
+      ? Math.min(
+          Math.max(8, box.bottom - root.top + GAP),
+          Math.max(8, root.height - height - 8),
+        )
+      : Math.min(
+          Math.max(8, root.bottom - box.top + GAP),
+          Math.max(8, root.height - height - 8),
+        );
+  return {
+    dir,
+    left,
+    offset,
+    arrow: Math.min(Math.max(14, mid - left), width - 14),
+  };
 }
 
 /** A popup over the book, at a box of text, with an arrow to it. */
-export function Popup({ box, rootRef, children, testId, height = 140, width = 288, className = '' }: {
-  box: Box; rootRef: RefObject<HTMLDivElement | null>; children: ReactNode; testId: string;
+export function Popup({
+  box,
+  rootRef,
+  children,
+  testId,
+  height = 140,
+  width = 288,
+  className = "",
+}: {
+  box: Box;
+  rootRef: RefObject<HTMLDivElement | null>;
+  children: ReactNode;
+  testId: string;
   /** about: to choose the side */
-  height?: number; width?: number; className?: string;
+  height?: number;
+  width?: number;
+  className?: string;
 }) {
   const root = rootRef.current?.getBoundingClientRect();
   if (!root) return null;
   const anchor = anchorOf(box, root, Math.min(width, root.width - 16), height);
   return (
-    <AnchoredBox anchor={anchor} width={Math.min(width, root.width - 16)} testId={testId}>
-      <div className={`p-2 border rounded-lg shadow-xl bg-base-100 border-base-300 ${className}`}>{children}</div>
+    <AnchoredBox
+      anchor={anchor}
+      width={Math.min(width, root.width - 16)}
+      testId={testId}
+    >
+      <div
+        className={`p-2 border rounded-lg shadow-xl bg-base-100 border-base-300 ${className}`}
+      >
+        {children}
+      </div>
     </AnchoredBox>
   );
 }
 
-function AnchoredBox({ anchor, width, testId, children }: {
-  anchor: Anchor; width: number; testId: string; children: ReactNode;
+function AnchoredBox({
+  anchor,
+  width,
+  testId,
+  children,
+}: {
+  anchor: Anchor;
+  width: number;
+  testId: string;
+  children: ReactNode;
 }) {
   const { dir, left, offset, arrow } = anchor;
   return (
     <div
-      className={`absolute z-40 flex gap-2 ${dir === 'down' ? 'flex-col' : 'flex-col-reverse'}`}
-      style={{ left, width, ...(dir === 'down' ? { top: offset } : { bottom: offset }) }}
+      className={`absolute z-40 flex gap-2 ${dir === "down" ? "flex-col" : "flex-col-reverse"}`}
+      style={{
+        left,
+        width,
+        ...(dir === "down" ? { top: offset } : { bottom: offset }),
+      }}
       data-testid={testId}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <span
-        className={`absolute w-3 h-3 rotate-45 bg-base-300 ${dir === 'down' ? '-top-1.5' : '-bottom-1.5'}`}
+        className={`absolute w-3 h-3 rotate-45 bg-base-300 ${dir === "down" ? "-top-1.5" : "-bottom-1.5"}`}
         style={{ left: arrow - 6 }}
         aria-hidden
       />
@@ -121,24 +205,41 @@ function Toolbar({ tools }: { tools: Tool[] }) {
   return (
     <div
       className="relative flex items-center justify-between h-11 gap-0.5 px-1.5 overflow-x-auto rounded-lg shadow-xl bg-base-300 text-base-content"
-      style={{ scrollbarWidth: 'none' }}
+      style={{ scrollbarWidth: "none" }}
       data-testid="annotation-toolbar"
     >
-      {tools.filter((t) => !t.hidden).map((t) => <ToolButton key={t.id} tool={t} />)}
+      {tools
+        .filter((t) => !t.hidden)
+        .map((t) => (
+          <ToolButton key={t.id} tool={t} />
+        ))}
     </div>
   );
 }
 
-const STYLES: HighlightStyle[] = ['highlight', 'underline', 'squiggly'];
+const STYLES: HighlightStyle[] = ["highlight", "underline", "squiggly"];
 
 /** The style of a highlight, as a T: on color, underlined, or waved. */
-function StyleSample({ style, color }: { style: HighlightStyle; color: string }) {
+function StyleSample({
+  style,
+  color,
+}: {
+  style: HighlightStyle;
+  color: string;
+}) {
   return (
     <span
       className="w-4 text-sm font-semibold leading-none text-center"
-      style={style === 'highlight'
-        ? { backgroundColor: color, color: '#1f2937' }
-        : { textDecoration: 'underline', textDecorationColor: color, textDecorationThickness: 2, ...(style === 'squiggly' ? { textDecorationStyle: 'wavy' } : {}) }}
+      style={
+        style === "highlight"
+          ? { backgroundColor: color, color: "#1f2937" }
+          : {
+              textDecoration: "underline",
+              textDecorationColor: color,
+              textDecorationThickness: 2,
+              ...(style === "squiggly" ? { textDecorationStyle: "wavy" } : {}),
+            }
+      }
     >
       T
     </span>
@@ -146,23 +247,32 @@ function StyleSample({ style, color }: { style: HighlightStyle; color: string })
 }
 
 /** The style and color of a highlight: the toolbar uses them from then on. */
-export function HighlightOptions({ note, onDone, children }: {
+export function HighlightOptions({
+  note,
+  onDone,
+  children,
+}: {
   note: BookNote;
   onDone: () => void;
   /** more on the line, between the styles and the colors */
   children?: ReactNode;
 }) {
   const updateNote = useActiveStore((state) => state.updateNote);
-  const colors = withDefaults(useStore((state) => state.readerSettings)).highlightColors;
-  const style = note.style ?? 'highlight';
-  const color = note.color ?? 'yellow';
+  const colors = withDefaults(
+    useStore((state) => state.readerSettings),
+  ).highlightColors;
+  const style = note.style ?? "highlight";
+  const color = note.color ?? "yellow";
   return (
-    <div className="flex items-center justify-between" data-testid="highlight-options">
+    <div
+      className="flex items-center justify-between"
+      data-testid="highlight-options"
+    >
       <div className="flex gap-1.5">
         {STYLES.map((s) => (
           <button
             key={s}
-            className={`flex items-center justify-center rounded-full w-7 h-7 bg-base-300 shadow ${s === style ? 'ring-2 ring-base-content/50' : ''}`}
+            className={`flex items-center justify-center rounded-full w-7 h-7 bg-base-300 shadow ${s === style ? "ring-2 ring-base-content/50" : ""}`}
             title={`Style: ${s}`}
             aria-label={`Style ${s}`}
             aria-pressed={s === style}
@@ -172,7 +282,10 @@ export function HighlightOptions({ note, onDone, children }: {
               rememberHighlight(s, next);
             }}
           >
-            <StyleSample style={s} color={HIGHLIGHT_CSS[s === style ? color : colors[s]]} />
+            <StyleSample
+              style={s}
+              color={HIGHLIGHT_CSS[s === style ? color : colors[s]]}
+            />
           </button>
         ))}
       </div>
@@ -192,7 +305,9 @@ export function HighlightOptions({ note, onDone, children }: {
               onDone();
             }}
           >
-            {c === color ? <TbCheck size={12} className="text-gray-800" /> : null}
+            {c === color ? (
+              <TbCheck size={12} className="text-gray-800" />
+            ) : null}
           </button>
         ))}
       </div>
@@ -201,12 +316,21 @@ export function HighlightOptions({ note, onDone, children }: {
 }
 
 /** The note of an annotation, written: markdown, [[links]] work. */
-function NoteEditor({ value, onSave, onCancel }: {
-  value: string; onSave: (note: string) => void; onCancel: () => void;
+function NoteEditor({
+  value,
+  onSave,
+  onCancel,
+}: {
+  value: string;
+  onSave: (note: string) => void;
+  onCancel: () => void;
 }) {
   const [draft, setDraft] = useState(value);
   return (
-    <div className="flex flex-col gap-2 p-2 border rounded-lg shadow-xl bg-base-100 border-base-300" data-testid="note-editor">
+    <div
+      className="flex flex-col gap-2 p-2 border rounded-lg shadow-xl bg-base-100 border-base-300"
+      data-testid="note-editor"
+    >
       <textarea
         className="w-full textarea textarea-sm"
         rows={4}
@@ -215,17 +339,24 @@ function NoteEditor({ value, onSave, onCancel }: {
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Escape') {
+          if (e.key === "Escape") {
             e.stopPropagation();
             onCancel();
-          } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+          } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
             onSave(draft);
           }
         }}
       />
       <div className="flex justify-end gap-1">
-        <button className="btn btn-ghost btn-xs" onClick={onCancel}>Cancel</button>
-        <button className="btn btn-primary btn-xs" onClick={() => onSave(draft)}>Save</button>
+        <button className="btn btn-ghost btn-xs" onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          className="btn btn-primary btn-xs"
+          onClick={() => onSave(draft)}
+        >
+          Save
+        </button>
       </div>
     </div>
   );
@@ -234,9 +365,19 @@ function NoteEditor({ value, onSave, onCancel }: {
 /** The note of an annotation, shown with the toolbar. */
 function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
   return (
-    <div className="flex gap-2 p-2 text-sm border rounded-lg shadow-xl bg-base-100 border-base-300" data-testid="note-card">
-      <p className="flex-1 overflow-y-auto whitespace-pre-wrap max-h-40">{noteText(note.note)}</p>
-      <IconButton size="xs" className="self-start" title="Edit the note" onClick={onEdit}>
+    <div
+      className="flex gap-2 p-2 text-sm border rounded-lg shadow-xl bg-base-100 border-base-300"
+      data-testid="note-card"
+    >
+      <p className="flex-1 overflow-y-auto whitespace-pre-wrap max-h-40">
+        {noteText(note.note)}
+      </p>
+      <IconButton
+        size="xs"
+        className="self-start"
+        title="Edit the note"
+        onClick={onEdit}
+      >
         <TbBallpen />
       </IconButton>
     </div>
@@ -253,7 +394,10 @@ const NOTE_HEIGHT = 120;
  * The popups over the book: the toolbar of the text selected
  * (copy, highlight, note, look up...); on a highlight, its style, color, note.
  */
-function BookPopups({ rootRef, tools }: {
+function BookPopups({
+  rootRef,
+  tools,
+}: {
   rootRef: RefObject<HTMLDivElement | null>;
   /** more tools on the text selected, e.g. look up, translate */
   tools?: (selection: TextSelection) => Tool[];
@@ -262,17 +406,19 @@ function BookPopups({ rootRef, tools }: {
   const annotation = usePopups((state) => state.annotation);
   const adjusting = usePopups((state) => state.adjusting);
   const notes = useActiveStore((state) => state.notes);
-  const note = annotation ? notes.find((n) => n.id === annotation.id) : undefined;
+  const note = annotation
+    ? notes.find((n) => n.id === annotation.id)
+    : undefined;
   // its note written: in the store, the handles of its range not shown meanwhile
   const editing = Boolean(annotation?.edit);
 
   // close on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') usePopups.getState().clear();
+      if (e.key === "Escape") usePopups.getState().clear();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   const root = rootRef.current?.getBoundingClientRect();
@@ -283,7 +429,9 @@ function BookPopups({ rootRef, tools }: {
 
   if (selection) {
     const { text, cfi } = selection;
-    const highlighted = notes.find((n) => n.cfi === cfi && n.type === 'annotation');
+    const highlighted = notes.find(
+      (n) => n.cfi === cfi && n.type === "annotation",
+    );
     const highlight = () => {
       if (highlighted) {
         activeStore().getState().removeNote(highlighted.id);
@@ -291,61 +439,84 @@ function BookPopups({ rootRef, tools }: {
         return;
       }
       const created = annotateSelection(selection);
-      usePopups.getState().setAnnotation({ 
-        id: created.id, 
-        box: selection.box, 
-        range: selection.range 
+      usePopups.getState().setAnnotation({
+        id: created.id,
+        box: selection.box,
+        range: selection.range,
       });
     };
     const list: Tool[] = [
-      { 
-        id: 'copy', 
-        title: 'Copy', 
-        icon: <TbCopy size={18} />, 
-        onClick: () => { copy(text, { format: 'text/plain' }); clear(); } 
+      {
+        id: "copy",
+        title: "Copy",
+        icon: <TbCopy size={18} />,
+        onClick: () => {
+          copy(text, { format: "text/plain" });
+          clear();
+        },
       },
       {
-        id: 'highlight',
-        title: highlighted ? 'Delete the highlight' : 'Highlight',
-        icon: highlighted ? <TbHighlightOff size={18} /> : <TbHighlight size={18} />,
+        id: "highlight",
+        title: highlighted ? "Delete the highlight" : "Highlight",
+        icon: highlighted ? (
+          <TbHighlightOff size={18} />
+        ) : (
+          <TbHighlight size={18} />
+        ),
         onClick: highlight,
       },
       {
-        id: 'note',
-        title: 'Write a note',
+        id: "note",
+        title: "Write a note",
         icon: <TbBallpen size={18} />,
         onClick: () => {
           const created = annotateSelection(selection);
-          usePopups.getState().setAnnotation({ id: created.id, box: selection.box, edit: highlighted ? 'existing' : 'new' });
+          usePopups
+            .getState()
+            .setAnnotation({
+              id: created.id,
+              box: selection.box,
+              edit: highlighted ? "existing" : "new",
+            });
         },
       },
       ...(tools?.(selection) ?? []),
-      { 
-        id: 'quote', 
-        title: 'Copy as a quote with a link to here, to paste in a note', 
-        icon: <TbQuote size={18} />, 
-        onClick: () => copyQuote(text, cfi) 
+      {
+        id: "quote",
+        title: "Copy as a quote with a link to here, to paste in a note",
+        icon: <TbQuote size={18} />,
+        onClick: () => copyQuote(text, cfi),
       },
       {
-        id: 'issue',
-        title: 'New issue of it',
+        id: "issue",
+        title: "New issue of it",
         icon: <TbCircleDot size={18} />,
         // highlighted, the issue made of it: shown on the highlight, to open it
         onClick: async () => {
           const created = annotateSelection(selection);
-          usePopups.getState().setAnnotation({ id: created.id, box: selection.box, range: selection.range });
+          usePopups
+            .getState()
+            .setAnnotation({
+              id: created.id,
+              box: selection.box,
+              range: selection.range,
+            });
           await issueOfNote(created);
         },
       },
-      { 
-        id: 'link', 
-        title: 'Copy a link to here', 
-        icon: <TbLink size={18} />, 
-        onClick: () => copyLink(cfi) 
+      {
+        id: "link",
+        title: "Copy a link to here",
+        icon: <TbLink size={18} />,
+        onClick: () => copyLink(cfi),
       },
     ];
     return (
-      <AnchoredBox anchor={anchorOf(selection.box, root, width, TOOLBAR_HEIGHT)} width={width} testId="selection-popup">
+      <AnchoredBox
+        anchor={anchorOf(selection.box, root, width, TOOLBAR_HEIGHT)}
+        width={width}
+        testId="selection-popup"
+      >
         <Toolbar tools={list} />
       </AnchoredBox>
     );
@@ -353,20 +524,23 @@ function BookPopups({ rootRef, tools }: {
 
   if (!annotation || !note) return null;
   // written, it stays: not gone with the pointer
-  const edit = () => usePopups.getState().setAnnotation({ 
-    ...annotation, 
-    edit: 'existing', 
-    hover: undefined 
-  });
+  const edit = () =>
+    usePopups.getState().setAnnotation({
+      ...annotation,
+      edit: "existing",
+      hover: undefined,
+    });
   const anchor = anchorOf(
-    annotation.box, 
-    root, width, 
-    annotation.bubble ? NOTE_HEIGHT : TOOLBAR_HEIGHT
+    annotation.box,
+    root,
+    width,
+    annotation.bubble ? NOTE_HEIGHT : TOOLBAR_HEIGHT,
   );
   if (editing) {
     const cancel = () => {
       // a highlight made to write a note on: not wanted
-      if (annotation.edit === 'new' && !note.note) activeStore().getState().removeNote(note.id);
+      if (annotation.edit === "new" && !note.note)
+        activeStore().getState().removeNote(note.id);
       clear();
     };
     return (
@@ -375,7 +549,8 @@ function BookPopups({ rootRef, tools }: {
           value={note.note}
           onCancel={cancel}
           onSave={(draft) => {
-            if (draft !== note.note) activeStore().getState().updateNote(note.id, { note: draft });
+            if (draft !== note.note)
+              activeStore().getState().updateNote(note.id, { note: draft });
             clear();
           }}
         />
@@ -388,10 +563,13 @@ function BookPopups({ rootRef, tools }: {
     return (
       <AnchoredBox anchor={anchor} width={width} testId="note-popup">
         <div
-          onMouseEnter={() => hover && usePopups.getState().setAnnotation({ 
-            ...annotation, 
-            hover: 'note' 
-          })}
+          onMouseEnter={() =>
+            hover &&
+            usePopups.getState().setAnnotation({
+              ...annotation,
+              hover: "note",
+            })
+          }
           onMouseLeave={() => hover && clear()}
         >
           <NoteCard note={note} onEdit={edit} />
@@ -401,54 +579,68 @@ function BookPopups({ rootRef, tools }: {
   }
   // the text of the highlight, to look it up as if selected
   const asSelection: TextSelection | undefined = note.text
-    ? { text: note.text, cfi: note.cfi, index: sectionOf(note.cfi), box: annotation.box }
+    ? {
+        text: note.text,
+        cfi: note.cfi,
+        index: sectionOf(note.cfi),
+        box: annotation.box,
+      }
     : undefined;
   const list: Tool[] = [
     {
-      id: 'copy', 
-      title: 'Copy', 
-      icon: <TbCopy size={18} />, 
+      id: "copy",
+      title: "Copy",
+      icon: <TbCopy size={18} />,
       hidden: !note.text,
-      onClick: () => { copy(note.text ?? '', { format: 'text/plain' }); clear(); },
+      onClick: () => {
+        copy(note.text ?? "", { format: "text/plain" });
+        clear();
+      },
     },
     {
-      id: 'highlight', 
-      title: 'Delete the highlight', 
+      id: "highlight",
+      title: "Delete the highlight",
       icon: <TbHighlightOff size={18} />,
-      onClick: () => { activeStore().getState().removeNote(note.id); clear(); },
-    },
-    { 
-      id: 'note', 
-      title: note.note ? 'Edit the note' : 'Write a note', 
-      icon: <TbBallpen size={18} />, 
-      onClick: edit 
-    },
-    ...(asSelection ? tools?.(asSelection) ?? [] : []),
-    { 
-      id: 'quote', 
-      title: 'Copy as a quote with a link to here', 
-      icon: <TbQuote size={18} />, 
-      hidden: !note.text, 
-      onClick: () => copyQuote(note.text ?? '', note.cfi) 
+      onClick: () => {
+        activeStore().getState().removeNote(note.id);
+        clear();
+      },
     },
     {
-      id: 'issue',
-      title: 'New issue of it',
+      id: "note",
+      title: note.note ? "Edit the note" : "Write a note",
+      icon: <TbBallpen size={18} />,
+      onClick: edit,
+    },
+    ...(asSelection ? (tools?.(asSelection) ?? []) : []),
+    {
+      id: "quote",
+      title: "Copy as a quote with a link to here",
+      icon: <TbQuote size={18} />,
+      hidden: !note.text,
+      onClick: () => copyQuote(note.text ?? "", note.cfi),
+    },
+    {
+      id: "issue",
+      title: "New issue of it",
       icon: <TbCircleDot size={18} />,
       onClick: () => void issueOfNote(note),
     },
-    { 
-      id: 'link', 
-      title: 'Copy a link to here', 
-      icon: <TbLink size={18} />, 
-      onClick: () => copyLink(note.cfi) 
+    {
+      id: "link",
+      title: "Copy a link to here",
+      icon: <TbLink size={18} />,
+      onClick: () => copyLink(note.cfi),
     },
   ];
   return (
     <AnchoredBox anchor={anchor} width={width} testId="annotation-popup">
       <Toolbar tools={list} />
       <HighlightOptions note={note} onDone={clear}>
-        <NoteIssues note={note} className="justify-center flex-1 min-w-0 mx-1" />
+        <NoteIssues
+          note={note}
+          className="justify-center flex-1 min-w-0 mx-1"
+        />
       </HighlightOptions>
     </AnchoredBox>
   );

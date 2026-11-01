@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useStore } from '@/state/store';
-import { isSyncAvailable, syncInfo } from './api';
-import { runningSync, syncWorkspace } from './syncWorkspace';
+import { useEffect } from "react";
+import { useStore } from "@/state/store";
+import { isSyncAvailable, syncInfo } from "./api";
+import { runningSync, syncWorkspace } from "./syncWorkspace";
 
 /** how long closing the app waits for the sync */
 export const EXIT_SYNC_TIMEOUT_MS = 30_000;
@@ -21,9 +21,14 @@ export async function syncIfSetUp(ws: string) {
  * Before the app closes: the sync running finished, then one more for the
  * last edits; the app closes anyway after `timeout`.
  */
-export async function syncBeforeExit(ws: string, timeout = EXIT_SYNC_TIMEOUT_MS) {
+export async function syncBeforeExit(
+  ws: string,
+  timeout = EXIT_SYNC_TIMEOUT_MS,
+) {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const late = new Promise<void>((resolve) => (timer = setTimeout(resolve, timeout)));
+  const late = new Promise<void>(
+    (resolve) => (timer = setTimeout(resolve, timeout)),
+  );
   const sync = (async () => {
     await runningSync();
     await syncIfSetUp(ws);
@@ -51,13 +56,15 @@ export function useAutoSync() {
     if (!isSyncAvailable || !ws || !onExit) return;
     let unlisten: (() => void) | undefined;
     let cancelled = false;
-    void import('@tauri-apps/api/window')
-      .then(({ getCurrentWindow }) => getCurrentWindow().onCloseRequested(() => syncBeforeExit(ws)))
+    void import("@tauri-apps/api/window")
+      .then(({ getCurrentWindow }) =>
+        getCurrentWindow().onCloseRequested(() => syncBeforeExit(ws)),
+      )
       .then((off) => {
         if (cancelled) off();
         else unlisten = off;
       })
-      .catch((e) => console.error('Failed to sync on exit:', e));
+      .catch((e) => console.error("Failed to sync on exit:", e));
     return () => {
       cancelled = true;
       unlisten?.();

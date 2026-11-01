@@ -1,5 +1,5 @@
-import type { FoliateView } from './view';
-import type { Box } from './popups';
+import type { FoliateView } from "./view";
+import type { Box } from "./popups";
 
 /**
  * Turning the pages: by a click on the sides of the page, the
@@ -7,8 +7,8 @@ import type { Box } from './popups';
  * height shown, ending between two lines.
  */
 
-export type Side = 'left' | 'right' | 'up' | 'down';
-export type TurnMode = 'page' | 'section';
+export type Side = "left" | "right" | "up" | "down";
+export type TurnMode = "page" | "section";
 
 type Line = { start: number; end: number };
 
@@ -16,7 +16,11 @@ type Line = { start: number; end: number };
  * The lines of the sections around the view, from its start along the scroll:
  * across the page from its top, down the page (columns) from its right.
  */
-function linesAround(view: FoliateView, box: DOMRect, vertical: boolean): Line[] {
+function linesAround(
+  view: FoliateView,
+  box: DOMRect,
+  vertical: boolean,
+): Line[] {
   const size = vertical ? box.width : box.height;
   const lines: Line[] = [];
   for (const { doc } of view.renderer.getContents()) {
@@ -29,16 +33,26 @@ function linesAround(view: FoliateView, box: DOMRect, vertical: boolean): Line[]
     if (!near) continue;
     const range = doc.createRange();
     range.selectNodeContents(doc.body);
-    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 2 && r.height > 2);
+    const rects = Array.from(range.getClientRects()).filter(
+      (r) => r.width > 2 && r.height > 2,
+    );
     // the boxes of the blocks too: the lines are those no thicker than most
     const thickness = (r: DOMRect) => (vertical ? r.width : r.height);
     const sorted = rects.map(thickness).sort((a, b) => a - b);
     const maxLine = (sorted[Math.floor(sorted.length / 2)] ?? 0) * 1.8;
     for (const r of rects) {
       if (thickness(r) > maxLine) continue;
-      lines.push(vertical
-        ? { start: box.right - (frame.left + r.right), end: box.right - (frame.left + r.left) }
-        : { start: frame.top + r.top - box.top, end: frame.top + r.bottom - box.top });
+      lines.push(
+        vertical
+          ? {
+              start: box.right - (frame.left + r.right),
+              end: box.right - (frame.left + r.left),
+            }
+          : {
+              start: frame.top + r.top - box.top,
+              end: frame.top + r.bottom - box.top,
+            },
+      );
     }
   }
   return lines;
@@ -49,12 +63,16 @@ function linesAround(view: FoliateView, box: DOMRect, vertical: boolean): Line[]
  * at the start of the next, or the line cut at its start at the end of the
  * one before; else the distance asked.
  */
-function snapToLines(view: FoliateView, distance: number, forward: boolean): number {
+function snapToLines(
+  view: FoliateView,
+  distance: number,
+  forward: boolean,
+): number {
   try {
-    const container = view.renderer.shadowRoot?.querySelector('#container');
+    const container = view.renderer.shadowRoot?.querySelector("#container");
     if (!container) return distance;
     // foliate marks the text written down the page, scrolled across
-    const vertical = container.classList.contains('vertical');
+    const vertical = container.classList.contains("vertical");
     const box = container.getBoundingClientRect();
     const size = vertical ? box.width : box.height;
     const lines = linesAround(view, box, vertical);
@@ -81,7 +99,15 @@ function snapToLines(view: FoliateView, distance: number, forward: boolean): num
 export const wheelPixels = (delta: number, mode: number, page: number) =>
   mode === 1 ? delta * 16 : mode === 2 ? delta * page : delta;
 
-type Scroller = Pick<HTMLElement, 'scrollLeft' | 'scrollTop' | 'scrollWidth' | 'scrollHeight' | 'clientWidth' | 'clientHeight'>;
+type Scroller = Pick<
+  HTMLElement,
+  | "scrollLeft"
+  | "scrollTop"
+  | "scrollWidth"
+  | "scrollHeight"
+  | "clientWidth"
+  | "clientHeight"
+>;
 
 /** the part of the view a pan moves by: some of it still in view after */
 const PAN = 0.85;
@@ -91,38 +117,63 @@ const PAN = 0.85;
  * side: first panned there, across by the left and right if it is wider,
  * else down or up; at its edge, `axis` with no step, turned.
  */
-export function panStep(el: Scroller, side: Side, back: boolean): { axis: 'x' | 'y'; left: number; top: number } {
-  const across = side === 'left' || side === 'right';
+export function panStep(
+  el: Scroller,
+  side: Side,
+  back: boolean,
+): { axis: "x" | "y"; left: number; top: number } {
+  const across = side === "left" || side === "right";
   if (across && el.scrollWidth - el.clientWidth > 1) {
-    const right = side === 'right';
-    const room = right ? el.scrollWidth - el.clientWidth - el.scrollLeft : el.scrollLeft;
-    const left = room > 1 ? (right ? 1 : -1) * Math.min(room, el.clientWidth * PAN) : 0;
-    return { axis: 'x', left, top: 0 };
+    const right = side === "right";
+    const room = right
+      ? el.scrollWidth - el.clientWidth - el.scrollLeft
+      : el.scrollLeft;
+    const left =
+      room > 1 ? (right ? 1 : -1) * Math.min(room, el.clientWidth * PAN) : 0;
+    return { axis: "x", left, top: 0 };
   }
-  const room = back ? el.scrollTop : el.scrollHeight - el.clientHeight - el.scrollTop;
-  const top = room > 1 ? (back ? -1 : 1) * Math.min(room, el.clientHeight * PAN) : 0;
-  return { axis: 'y', left: 0, top };
+  const room = back
+    ? el.scrollTop
+    : el.scrollHeight - el.clientHeight - el.scrollTop;
+  const top =
+    room > 1 ? (back ? -1 : 1) * Math.min(room, el.clientHeight * PAN) : 0;
+  return { axis: "y", left: 0, top };
 }
 
 /** Turn a page, or go to a section, to a side of the screen. */
-export function turn(view: FoliateView | null, side: Side, mode: TurnMode = 'page') {
+export function turn(
+  view: FoliateView | null,
+  side: Side,
+  mode: TurnMode = "page",
+) {
   if (!view?.renderer) return;
   const { renderer } = view;
-  const rtl = view.book?.dir === 'rtl';
+  const rtl = view.book?.dir === "rtl";
   // to the left is back, but in a book written right to left
-  const back = side === 'up' || (side === 'left' ? !rtl : false) || (side === 'right' && rtl);
-  if (mode === 'section') {
+  const back =
+    side === "up" ||
+    (side === "left" ? !rtl : false) ||
+    (side === "right" && rtl);
+  if (mode === "section") {
     return back ? renderer.prevSection?.() : renderer.nextSection?.();
   }
   if (view.isFixedLayout && renderer.scrolled) {
     // a page zoomed larger than the strip: panned across it first, by the other keys
-    const horizontal = renderer.getAttribute('scroll-direction') === 'horizontal';
-    const across = side === 'left' || side === 'right';
+    const horizontal =
+      renderer.getAttribute("scroll-direction") === "horizontal";
+    const across = side === "left" || side === "right";
     // locked, the strip scrolled down is not panned across
-    if (across !== horizontal && !(across && renderer.hasAttribute('lock-pan-x'))) {
+    if (
+      across !== horizontal &&
+      !(across && renderer.hasAttribute("lock-pan-x"))
+    ) {
       const step = panStep(renderer, side, back);
-      if (step.axis === (across ? 'x' : 'y') && (step.left || step.top)) {
-        renderer.scrollBy({ left: step.left, top: step.top, behavior: 'smooth' });
+      if (step.axis === (across ? "x" : "y") && (step.left || step.top)) {
+        renderer.scrollBy({
+          left: step.left,
+          top: step.top,
+          behavior: "smooth",
+        });
         return Promise.resolve();
       }
     }
@@ -136,10 +187,13 @@ export function turn(view: FoliateView | null, side: Side, mode: TurnMode = 'pag
   if (view.isFixedLayout) {
     const step = panStep(renderer, side, back);
     if (step.left || step.top) {
-      renderer.scrollBy({ left: step.left, top: step.top, behavior: 'smooth' });
+      renderer.scrollBy({ left: step.left, top: step.top, behavior: "smooth" });
       return Promise.resolve();
     }
-    if (step.axis === 'y' && renderer.scrollHeight - renderer.clientHeight > 1) {
+    if (
+      step.axis === "y" &&
+      renderer.scrollHeight - renderer.clientHeight > 1
+    ) {
       // the page before from its bottom, to read on up; the next from its top
       return (back ? view.prev() : view.next()).then(() => {
         renderer.scrollTop = back ? renderer.scrollHeight : 0;
@@ -157,11 +211,11 @@ export function clickAction(
   x: number,
   box: { left: number; width: number },
   options: { clickToTurn: boolean; swap: boolean },
-): 'bars' | 'left' | 'right' {
+): "bars" | "left" | "right" {
   const at = (x - box.left) / (box.width || 1);
-  if (!options.clickToTurn || (at >= 0.375 && at <= 0.625)) return 'bars';
+  if (!options.clickToTurn || (at >= 0.375 && at <= 0.625)) return "bars";
   const left = at < 0.5;
-  return left !== options.swap ? 'left' : 'right';
+  return left !== options.swap ? "left" : "right";
 }
 
 /** ms a selection dragged rests at a corner of the page before the page turns */
@@ -171,7 +225,7 @@ const CORNER_FRACTION = 0.15;
 const CORNER_MAX_PX = 50;
 
 /** The corner a selection is dragged to: at the 'end' of the page it turns forward, at the 'start' back. */
-export type Corner = 'end' | 'start';
+export type Corner = "end" | "start";
 /** The corner armed, for its mark; `turned` once the page has turned. */
 export type TurnHint = { corner: Corner; turned: boolean };
 
@@ -195,14 +249,21 @@ export function cornerAt(
   const y = point.y - area.top;
   if (x < 0 || x > width || y < 0 || y > height) {
     // out of the window: not a pointer
-    if (point.x < 0 || point.x > view.width || point.y < 0 || point.y > view.height) return undefined;
-    return x > width || y > height ? 'end' : 'start';
+    if (
+      point.x < 0 ||
+      point.x > view.width ||
+      point.y < 0 ||
+      point.y > view.height
+    )
+      return undefined;
+    return x > width || y > height ? "end" : "start";
   }
   const rx = Math.min(width * CORNER_FRACTION, CORNER_MAX_PX);
   const ry = Math.min(height * CORNER_FRACTION, CORNER_MAX_PX);
-  const inCorner = (dx: number, dy: number) => (dx / rx) ** 2 + (dy / ry) ** 2 <= 1;
-  if (inCorner(width - x, height - y)) return 'end';
-  if (inCorner(x, y)) return 'start';
+  const inCorner = (dx: number, dy: number) =>
+    (dx / rx) ** 2 + (dy / ry) ** 2 <= 1;
+  if (inCorner(width - x, height - y)) return "end";
+  if (inCorner(x, y)) return "start";
   return undefined;
 }
 
@@ -248,7 +309,12 @@ export function cornerTurner(
   };
 }
 
-export type WheelSample = { deltaX: number; deltaY: number; deltaMode: number; timeStamp: number };
+export type WheelSample = {
+  deltaX: number;
+  deltaY: number;
+  deltaMode: number;
+  timeStamp: number;
+};
 
 /**
  * One page turned by a gesture of the wheel: the travel adds up to a
@@ -261,7 +327,8 @@ export function wheelGesture({ threshold = 30, idleMs = 200 } = {}) {
   let y = 0;
   let last = -Infinity;
   let turned = false;
-  const px = (delta: number, mode: number) => (mode === 1 ? delta * 40 : mode === 2 ? delta * 800 : delta);
+  const px = (delta: number, mode: number) =>
+    mode === 1 ? delta * 40 : mode === 2 ? delta * 800 : delta;
   return (e: WheelSample, scrolls = false): Side | undefined => {
     if (e.timeStamp - last > idleMs) {
       x = y = 0;
@@ -274,14 +341,25 @@ export function wheelGesture({ threshold = 30, idleMs = 200 } = {}) {
     y += px(e.deltaY, e.deltaMode);
     if (Math.abs(x) < threshold && Math.abs(y) < threshold) return undefined;
     turned = true;
-    const side: Side = Math.abs(x) > Math.abs(y) ? (x > 0 ? 'right' : 'left') : (y > 0 ? 'down' : 'up');
+    const side: Side =
+      Math.abs(x) > Math.abs(y)
+        ? x > 0
+          ? "right"
+          : "left"
+        : y > 0
+          ? "down"
+          : "up";
     x = y = 0;
     return side;
   };
 }
 
 /** The wheel scrolls the page there, larger than the view: not at its edge on the way of the wheel. */
-export function wheelScrolls(el: Scroller, deltaX: number, deltaY: number): boolean {
+export function wheelScrolls(
+  el: Scroller,
+  deltaX: number,
+  deltaY: number,
+): boolean {
   if (Math.abs(deltaY) >= Math.abs(deltaX)) {
     if (deltaY > 0) return el.scrollHeight - el.clientHeight - el.scrollTop > 1;
     return deltaY < 0 && el.scrollTop > 1;
@@ -291,58 +369,89 @@ export function wheelScrolls(el: Scroller, deltaX: number, deltaY: number): bool
 }
 
 /** The zoom of a fixed layout by Ctrl (⌘) with +, - and 0: steps in or out, or back to the fit. */
-export function zoomKey({ key, ctrlKey, metaKey, altKey }: Keys): number | 'reset' | undefined {
+export function zoomKey({
+  key,
+  ctrlKey,
+  metaKey,
+  altKey,
+}: Keys): number | "reset" | undefined {
   if (!(ctrlKey || metaKey) || altKey) return undefined;
-  if (key === '=' || key === '+') return 1;
-  if (key === '-' || key === '_') return -1;
-  if (key === '0') return 'reset';
+  if (key === "=" || key === "+") return 1;
+  if (key === "-" || key === "_") return -1;
+  if (key === "0") return "reset";
   return undefined;
 }
 
 export type KeyAction =
   | { turn: Side; mode?: TurnMode }
-  | { go: 'start' | 'end' | 'back' | 'forward' };
+  | { go: "start" | "end" | "back" | "forward" };
 
-type Keys = { key: string; shiftKey: boolean; altKey: boolean; ctrlKey: boolean; metaKey: boolean };
+type Keys = {
+  key: string;
+  shiftKey: boolean;
+  altKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+};
 
 /** The keys of reading. */
-export function keyAction(
-  { key, shiftKey, altKey, ctrlKey, metaKey }: Keys
-): KeyAction | undefined {
+export function keyAction({
+  key,
+  shiftKey,
+  altKey,
+  ctrlKey,
+  metaKey,
+}: Keys): KeyAction | undefined {
   if (ctrlKey || metaKey) return undefined;
   if (altKey) {
-    if (key === 'ArrowLeft') return { go: 'back' };
-    if (key === 'ArrowRight') return { go: 'forward' };
-    if (key === 'ArrowUp') return { turn: 'up', mode: 'section' };
-    if (key === 'ArrowDown') return { turn: 'down', mode: 'section' };
+    if (key === "ArrowLeft") return { go: "back" };
+    if (key === "ArrowRight") return { go: "forward" };
+    if (key === "ArrowUp") return { turn: "up", mode: "section" };
+    if (key === "ArrowDown") return { turn: "down", mode: "section" };
     return undefined;
   }
   if (shiftKey) {
-    if (key === ' ') return { turn: 'up' };
-    if (key === 'H' || key === 'ArrowLeft') return { go: 'back' };
-    if (key === 'L' || key === 'ArrowRight') return { go: 'forward' };
-    if (key === 'K' || key === 'ArrowUp') return { turn: 'up', mode: 'section' };
-    if (key === 'J' || key === 'ArrowDown') return { turn: 'down', mode: 'section' };
+    if (key === " ") return { turn: "up" };
+    if (key === "H" || key === "ArrowLeft") return { go: "back" };
+    if (key === "L" || key === "ArrowRight") return { go: "forward" };
+    if (key === "K" || key === "ArrowUp")
+      return { turn: "up", mode: "section" };
+    if (key === "J" || key === "ArrowDown")
+      return { turn: "down", mode: "section" };
     return undefined;
   }
   switch (key) {
-    case 'ArrowLeft': case 'h': return { turn: 'left' };
-    case 'ArrowRight': case 'l': return { turn: 'right' };
-    case 'ArrowUp': case 'k': case 'PageUp': return { turn: 'up' };
-    case 'ArrowDown': case 'j': case 'PageDown': case ' ': return { turn: 'down' };
-    case 'Home': return { go: 'start' };
-    case 'End': return { go: 'end' };
-    default: return undefined;
+    case "ArrowLeft":
+    case "h":
+      return { turn: "left" };
+    case "ArrowRight":
+    case "l":
+      return { turn: "right" };
+    case "ArrowUp":
+    case "k":
+    case "PageUp":
+      return { turn: "up" };
+    case "ArrowDown":
+    case "j":
+    case "PageDown":
+    case " ":
+      return { turn: "down" };
+    case "Home":
+      return { go: "start" };
+    case "End":
+      return { go: "end" };
+    default:
+      return undefined;
   }
 }
 
 /** Do what a key asks. */
 export function runKeyAction(view: FoliateView | null, action: KeyAction) {
   if (!view) return;
-  if ('turn' in action) return turn(view, action.turn, action.mode);
-  if (action.go === 'start') return view.goToFraction(0);
-  if (action.go === 'end') return view.goToFraction(1);
-  if (action.go === 'back') return view.history.back();
+  if ("turn" in action) return turn(view, action.turn, action.mode);
+  if (action.go === "start") return view.goToFraction(0);
+  if (action.go === "end") return view.goToFraction(1);
+  if (action.go === "back") return view.history.back();
   return view.history.forward();
 }
 
@@ -367,27 +476,36 @@ export type Progress = {
  * reader is on the right.
  */
 export function formatProgress(
-  p: Progress | undefined, fixedLayout: boolean
+  p: Progress | undefined,
+  fixedLayout: boolean,
 ): { left: string; right: string } {
-  if (!p) return { left: '', right: '' };
+  if (!p) return { left: "", right: "" };
   const percent = `${Math.round(p.fraction * 100)}%`;
   if (fixedLayout) {
-    if (!p.section?.total) return { left: '', right: percent };
+    if (!p.section?.total) return { left: "", right: percent };
     const left = p.section.total - p.section.current - 1;
     return {
-      left: left > 0 ? `${left} ${left === 1 ? 'page' : 'pages'} left` : 'Last page',
+      left:
+        left > 0
+          ? `${left} ${left === 1 ? "page" : "pages"} left`
+          : "Last page",
       right: `${p.section.current + 1} / ${p.section.total} · ${percent}`,
     };
   }
   const parts: string[] = [];
   const minutes = p.time ? Math.round(p.time.section) : undefined;
-  if (minutes !== undefined && minutes > 0) parts.push(`${formatMinutes(minutes)}`);
+  if (minutes !== undefined && minutes > 0)
+    parts.push(`${formatMinutes(minutes)}`);
   if (p.pages && p.page !== undefined) {
     const left = Math.max(0, p.pages - p.page - 1);
-    parts.push(left > 0 ? `${left} ${left === 1 ? 'page' : 'pages'}` : 'last page');
+    parts.push(
+      left > 0 ? `${left} ${left === 1 ? "page" : "pages"}` : "last page",
+    );
   }
-  const loc = p.location?.total ? `${p.location.current + 1} / ${p.location.total} · ` : '';
-  return { left: parts.join(' § '), right: `${loc}${percent}` };
+  const loc = p.location?.total
+    ? `${p.location.current + 1} / ${p.location.total} · `
+    : "";
+  return { left: parts.join(" § "), right: `${loc}${percent}` };
 }
 
 export function formatMinutes(minutes: number): string {

@@ -1,42 +1,79 @@
-import { createContext, type ReactNode, useEffect, useMemo, useCallback, useContext, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { ask } from '@tauri-apps/plugin-dialog';
-import { 
-  TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
-  TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
-  TbPizza, TbInfoCircle, TbHeadphones, TbCurrentLocation, TbDatabaseExport, TbBook, TbBooks, TbEraser, TbWorldUpload,
-  TbPuzzle, TbPlayerPlay,
-} from 'react-icons/tb';
+import {
+  createContext,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { ask } from "@tauri-apps/plugin-dialog";
+import {
+  TbMenu2,
+  TbDna,
+  TbCalendar,
+  TbFeather,
+  TbFolderPlus,
+  TbFileText,
+  TbDeviceFloppy,
+  TbClearAll,
+  TbFileImport,
+  TbRss,
+  TbSettings,
+  TbLayoutKanban,
+  TbCircleDot,
+  TbBrowser,
+  TbPizza,
+  TbInfoCircle,
+  TbHeadphones,
+  TbCurrentLocation,
+  TbDatabaseExport,
+  TbBook,
+  TbBooks,
+  TbEraser,
+  TbWorldUpload,
+  TbPuzzle,
+  TbPlayerPlay,
+} from "react-icons/tb";
 import { MdFolderOpen } from "react-icons/md";
-import { Menu } from '@headlessui/react';
-import { usePopper } from 'react-popper';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import useHotkeys from '@/lib/hooks/useHotkeys';
-import { onOpenFile, onListDir, onSave, openJsonFile } from '@/workspace/useOpen';
-import { isTauri, isWeb } from '@/workspace/util';
-import { store, useStore } from '@/state/store';
-import type { SideMenuOrientation } from '@/state/userSettings';
-import { isMobile } from '@/lib/helper';
-import { ViewAction } from '@/state/viewReducer';
-import Dropdown, { DropdownItem } from '@/ui/Dropdown';
-import { Tooltip } from '@/ui/ui';
-import Portal from '@/ui/Portal';
-import Logo from '@/ui/Logo';
-import SyncButton from '@/sync/SyncButton';
-import { isPublishAvailable, usePublishUi } from '@/publish/publish';
-import { usePlayer } from '@/player/playerStore';
-import { useTTS } from '@/reader/tts/tts';
-import { pluginViews } from '@/plugins/registry';
-import { pluginCommands, runCommand } from '@/plugins/commands';
+import { Menu } from "@headlessui/react";
+import { usePopper } from "react-popper";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import useHotkeys from "@/lib/hooks/useHotkeys";
+import {
+  onOpenFile,
+  onListDir,
+  onSave,
+  openJsonFile,
+} from "@/workspace/useOpen";
+import { isTauri, isWeb } from "@/workspace/util";
+import { store, useStore } from "@/state/store";
+import type { SideMenuOrientation } from "@/state/userSettings";
+import { isMobile } from "@/lib/helper";
+import { ViewAction } from "@/state/viewReducer";
+import Dropdown, { DropdownItem } from "@/ui/Dropdown";
+import { Tooltip } from "@/ui/ui";
+import Portal from "@/ui/Portal";
+import Logo from "@/ui/Logo";
+import SyncButton from "@/sync/SyncButton";
+import { isPublishAvailable, usePublishUi } from "@/publish/publish";
+import { usePlayer } from "@/player/playerStore";
+import { useTTS } from "@/reader/tts/tts";
+import { pluginViews } from "@/plugins/registry";
+import { pluginCommands, runCommand } from "@/plugins/commands";
 
-const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
+const SideMenuOrientationContext = createContext<SideMenuOrientation>("auto");
 
 const useIsHorizontalMenu = () => {
   const orientation = useContext(SideMenuOrientationContext);
-  return orientation === 'horizontal' || (orientation === 'auto' && isMobile(768));
+  return (
+    orientation === "horizontal" || (orientation === "auto" && isMobile(768))
+  );
 };
 
-const useTooltipPlacement = () => useIsHorizontalMenu() ? 'top' : 'right';
+const useTooltipPlacement = () => (useIsHorizontalMenu() ? "top" : "right");
 
 export default function SideMenu() {
   const currentView = useCurrentViewContext();
@@ -44,73 +81,80 @@ export default function SideMenu() {
   const dispatch = currentView.dispatch;
 
   const dispatchView = useCallback(
-    (view: ViewAction) => dispatch(view), [dispatch]
+    (view: ViewAction) => dispatch(view),
+    [dispatch],
   );
 
   const currentDir = useStore((state) => state.currentDir);
   // books are in the workspace layout only
-  const hasReading = useStore((state) => state.layout === 'workspace');
+  const hasReading = useStore((state) => state.layout === "workspace");
   // the book last read in the workspace, to go back to
-  const lastBook = useStore((state) => state.initDir ? state.lastBooks[state.initDir] : undefined);
+  const lastBook = useStore((state) =>
+    state.initDir ? state.lastBooks[state.initDir] : undefined,
+  );
 
   const hotkeys = useMemo(
     () => [
       {
-        hotkey: 'mod+shift+r',
-        callback: () => dispatchView({view: 'feed'}),
+        hotkey: "mod+shift+r",
+        callback: () => dispatchView({ view: "feed" }),
       },
       {
-        hotkey: 'mod+shift+g',
-        callback: () => dispatchView({view: 'graph'}),
+        hotkey: "mod+shift+g",
+        callback: () => dispatchView({ view: "graph" }),
       },
       {
-        hotkey: 'mod+shift+c',
-        callback: () => dispatchView({view: 'chronicle'}),
+        hotkey: "mod+shift+c",
+        callback: () => dispatchView({ view: "chronicle" }),
       },
       {
-        hotkey: 'mod+shift+t',
+        hotkey: "mod+shift+t",
         // the Task view became the Tasks tab of Issues
-        callback: () => dispatchView({view: 'issues', tab: 'tasks'}),
+        callback: () => dispatchView({ view: "issues", tab: "tasks" }),
       },
       // Projects replaced the Kanban board and keep its hotkey
       {
-        hotkey: 'mod+shift+k',
-        callback: () => dispatchView({view: 'project'}),
+        hotkey: "mod+shift+k",
+        callback: () => dispatchView({ view: "project" }),
       },
       {
-        hotkey: 'mod+shift+i',
-        callback: () => dispatchView({view: 'issues'}),
+        hotkey: "mod+shift+i",
+        callback: () => dispatchView({ view: "issues" }),
       },
       {
-        hotkey: 'mod+shift+l',
-        callback: () => dispatchView({view: 'library'}),
+        hotkey: "mod+shift+l",
+        callback: () => dispatchView({ view: "library" }),
       },
       {
-        hotkey: 'mod+shift+b',
+        hotkey: "mod+shift+b",
         callback: () => {
-          if (hasReading && lastBook) dispatchView({view: 'book', path: lastBook});
+          if (hasReading && lastBook)
+            dispatchView({ view: "book", path: lastBook });
         },
       },
     ],
-    [dispatchView, hasReading, lastBook]
+    [dispatchView, hasReading, lastBook],
   );
   useHotkeys(hotkeys);
   const orientation = useStore((state) => state.sideMenuOrientation);
-  const menuClassName = orientation === 'horizontal'
-    ? 'flex flex-row items-center w-full px-1 bg-base-200'
-    : orientation === 'vertical'
-      ? 'flex flex-col h-full pb-3 bg-base-200'
-      : 'flex flex-row items-center w-full px-1 bg-base-200 md:flex-col md:items-stretch md:w-auto md:h-full md:pb-3';
-  const buttonsClassName = orientation === 'horizontal'
-    ? 'flex flex-row items-center'
-    : orientation === 'vertical'
-      ? 'flex flex-col h-full'
-      : 'flex flex-row items-center md:flex-col md:flex-1 md:items-stretch';
-  const bottomClassName = orientation === 'horizontal'
-    ? 'ml-auto'
-    : orientation === 'vertical'
-      ? ''
-      : 'ml-auto md:ml-0';
+  const menuClassName =
+    orientation === "horizontal"
+      ? "flex flex-row items-center w-full px-1 bg-base-200"
+      : orientation === "vertical"
+        ? "flex flex-col h-full pb-3 bg-base-200"
+        : "flex flex-row items-center w-full px-1 bg-base-200 md:flex-col md:items-stretch md:w-auto md:h-full md:pb-3";
+  const buttonsClassName =
+    orientation === "horizontal"
+      ? "flex flex-row items-center"
+      : orientation === "vertical"
+        ? "flex flex-col h-full"
+        : "flex flex-row items-center md:flex-col md:flex-1 md:items-stretch";
+  const bottomClassName =
+    orientation === "horizontal"
+      ? "ml-auto"
+      : orientation === "vertical"
+        ? ""
+        : "ml-auto md:ml-0";
 
   return (
     <SideMenuOrientationContext.Provider value={orientation}>
@@ -118,22 +162,51 @@ export default function SideMenu() {
         <div className={buttonsClassName} id="side-menu-btns">
           <LogoMenu />
           <OpenButton />
-          <FeedButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'feed'})} />
+          <FeedButton
+            viewTy={viewTy}
+            onDispatch={() => dispatchView({ view: "feed" })}
+          />
           {hasReading ? (
-            <LibraryButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'library'})} />
+            <LibraryButton
+              viewTy={viewTy}
+              onDispatch={() => dispatchView({ view: "library" })}
+            />
           ) : null}
           {hasReading && lastBook ? (
-            <BookButton viewTy={viewTy} path={lastBook} onDispatch={() => dispatchView({view: 'book', path: lastBook})} />
+            <BookButton
+              viewTy={viewTy}
+              path={lastBook}
+              onDispatch={() => dispatchView({ view: "book", path: lastBook })}
+            />
           ) : null}
           {currentDir ? (
-          <>
-            <NewButton />
-            <IssuesButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'issues'})} />
-            <ProjectButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'project'})} />
-            <ChronButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'chronicle'})} />
-            <GraphButton viewTy={viewTy} onDispatch={() => dispatchView({view: 'graph'})} />
-          </>) : null}
-          {isTauri ? <PluginsButton viewTy={viewTy} hasWorkspace={Boolean(currentDir)} onDispatch={dispatchView} /> : null}
+            <>
+              <NewButton />
+              <IssuesButton
+                viewTy={viewTy}
+                onDispatch={() => dispatchView({ view: "issues" })}
+              />
+              <ProjectButton
+                viewTy={viewTy}
+                onDispatch={() => dispatchView({ view: "project" })}
+              />
+              <ChronButton
+                viewTy={viewTy}
+                onDispatch={() => dispatchView({ view: "chronicle" })}
+              />
+              <GraphButton
+                viewTy={viewTy}
+                onDispatch={() => dispatchView({ view: "graph" })}
+              />
+            </>
+          ) : null}
+          {isTauri ? (
+            <PluginsButton
+              viewTy={viewTy}
+              hasWorkspace={Boolean(currentDir)}
+              onDispatch={dispatchView}
+            />
+          ) : null}
           <FileButton />
         </div>
         <div className={bottomClassName}>
@@ -153,10 +226,12 @@ const LogoMenu = () => {
 
   return (
     <Dropdown
-      buttonChildren={<Logo width={24} height={24} wrapperClassName="text-center p-1.5" />}
+      buttonChildren={
+        <Logo width={24} height={24} wrapperClassName="text-center p-1.5" />
+      }
       buttonClassName="block focus:outline-hidden"
       itemsClassName="w-56"
-      placement={isHorizontal ? 'bottom-start' : 'right-start'}
+      placement={isHorizontal ? "bottom-start" : "right-start"}
       tooltipContent="mdSilo"
       tooltipPlacement={tooltipPlacement}
     >
@@ -194,8 +269,8 @@ const LogoMenu = () => {
       {!isWeb && (
         <DropdownItem
           onClick={async () => {
-            const dir_path = await invoke<string>('create_mdsilo_dir');
-            await invoke('open_url', { url: dir_path });
+            const dir_path = await invoke<string>("create_mdsilo_dir");
+            await invoke("open_url", { url: dir_path });
           }}
         >
           <TbCurrentLocation size={18} className="mr-1" />
@@ -206,8 +281,8 @@ const LogoMenu = () => {
   );
 };
 
-const btnClass = 'title flex items-center text-lg p-1.5';
-const btnIconClass = 'shrink-0 mx-px text-base-content/70';
+const btnClass = "title flex items-center text-lg p-1.5";
+const btnIconClass = "shrink-0 mx-px text-base-content/70";
 
 type MenuItemProps = {
   isHighlighted?: boolean;
@@ -219,12 +294,12 @@ const MenuItem = ({ isHighlighted, onClick, children }: MenuItemProps) => {
   const isHorizontal = useIsHorizontalMenu();
   // a tint plus an accent bar on the edge facing the content
   const highlightClass = isHorizontal
-    ? 'bg-primary/20 shadow-[inset_0_-2px_0_var(--color-primary)]'
-    : 'bg-primary/20 shadow-[inset_2px_0_0_var(--color-primary)]';
+    ? "bg-primary/20 shadow-[inset_0_-2px_0_var(--color-primary)]"
+    : "bg-primary/20 shadow-[inset_2px_0_0_var(--color-primary)]";
 
   return (
     <div
-      className={`text-base-content ${isHighlighted ? highlightClass : 'hover:bg-base-content/10'}`}
+      className={`text-base-content ${isHighlighted ? highlightClass : "hover:bg-base-content/10"}`}
       onClick={onClick}
     >
       {children}
@@ -250,13 +325,17 @@ const OpenButton = () => {
       </Tooltip>
     </MenuItem>
   );
-}
+};
 
 const NewButton = () => {
   const tooltipPlacement = useTooltipPlacement();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
-  const isFindOrCreateModalOpen = useStore((state) => state.isFindOrCreateModalOpen);
+  const setIsFindOrCreateModalOpen = useStore(
+    (state) => state.setIsFindOrCreateModalOpen,
+  );
+  const isFindOrCreateModalOpen = useStore(
+    (state) => state.isFindOrCreateModalOpen,
+  );
 
   const onCreateNoteClick = useCallback(() => {
     if (isMobile(768)) {
@@ -268,16 +347,13 @@ const NewButton = () => {
   return (
     <MenuItem isHighlighted={isFindOrCreateModalOpen}>
       <Tooltip content="New Writing" placement={tooltipPlacement}>
-        <button
-          className={btnClass}
-          onClick={onCreateNoteClick}
-        >
+        <button className={btnClass} onClick={onCreateNoteClick}>
           <TbFeather size={22} className="shrink-0 mx-px text-primary" />
         </button>
       </Tooltip>
     </MenuItem>
   );
-}
+};
 
 type ButtonProps = {
   viewTy: string;
@@ -297,7 +373,7 @@ const FeedButton = (props: ButtonProps) => {
   }, [setIsSidebarOpen, onDispatch]);
 
   return (
-    <MenuItem isHighlighted={viewTy === 'feed'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === "feed"} onClick={onClick}>
       <Tooltip
         content="Feed Reader (Ctrl/⌘+Shift+R)"
         placement={tooltipPlacement}
@@ -308,14 +384,17 @@ const FeedButton = (props: ButtonProps) => {
       </Tooltip>
     </MenuItem>
   );
-}
+};
 
 const LibraryButton = (props: ButtonProps) => {
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <MenuItem isHighlighted={viewTy === 'library' || viewTy === 'vocabulary'} onClick={onClick}>
+    <MenuItem
+      isHighlighted={viewTy === "library" || viewTy === "vocabulary"}
+      onClick={onClick}
+    >
       <Tooltip content="Library (Ctrl/⌘+Shift+L)" placement={tooltipPlacement}>
         <button className={btnClass} onClick={onDispatch}>
           <TbBooks size={22} className="shrink-0 mx-px text-base-content/70" />
@@ -323,31 +402,38 @@ const LibraryButton = (props: ButtonProps) => {
       </Tooltip>
     </MenuItem>
   );
-}
+};
 
 /** Back to the book last read, where it was left. */
 const BookButton = (props: ButtonProps & { path: string }) => {
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, path, onClick, onDispatch } = props;
-  const name = path.split('/').pop() ?? path;
+  const name = path.split("/").pop() ?? path;
 
   return (
-    <MenuItem isHighlighted={viewTy === 'book'} onClick={onClick}>
-      <Tooltip content={`${name} (Ctrl/⌘+Shift+B)`} placement={tooltipPlacement}>
-        <button aria-label="Last Book" className={btnClass} onClick={onDispatch}>
+    <MenuItem isHighlighted={viewTy === "book"} onClick={onClick}>
+      <Tooltip
+        content={`${name} (Ctrl/⌘+Shift+B)`}
+        placement={tooltipPlacement}
+      >
+        <button
+          aria-label="Last Book"
+          className={btnClass}
+          onClick={onDispatch}
+        >
           <TbBook size={22} className="shrink-0 mx-px text-primary" />
         </button>
       </Tooltip>
     </MenuItem>
   );
-}
+};
 
 const GraphButton = (props: ButtonProps) => {
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <MenuItem isHighlighted={viewTy === 'graph'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === "graph"} onClick={onClick}>
       <Tooltip
         content="Graph View (Ctrl/⌘+Shift+G)"
         placement={tooltipPlacement}
@@ -365,7 +451,7 @@ const ChronButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <MenuItem isHighlighted={viewTy === 'chronicle'} onClick={onClick}>
+    <MenuItem isHighlighted={viewTy === "chronicle"} onClick={onClick}>
       <Tooltip
         content="Chronicle View (Ctrl/⌘+Shift+C)"
         placement={tooltipPlacement}
@@ -383,7 +469,10 @@ const IssuesButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <MenuItem isHighlighted={viewTy === 'issues' || viewTy === 'issue'} onClick={onClick}>
+    <MenuItem
+      isHighlighted={viewTy === "issues" || viewTy === "issue"}
+      onClick={onClick}
+    >
       <Tooltip
         content="Issues (Ctrl/⌘+Shift+I), Tasks (Ctrl/⌘+Shift+T)"
         placement={tooltipPlacement}
@@ -401,11 +490,8 @@ const ProjectButton = (props: ButtonProps) => {
   const { viewTy, onClick, onDispatch } = props;
 
   return (
-    <MenuItem isHighlighted={viewTy === 'project'} onClick={onClick}>
-      <Tooltip
-        content="Projects (Ctrl/⌘+Shift+K)"
-        placement={tooltipPlacement}
-      >
+    <MenuItem isHighlighted={viewTy === "project"} onClick={onClick}>
+      <Tooltip content="Projects (Ctrl/⌘+Shift+K)" placement={tooltipPlacement}>
         <button aria-label="Projects" className={btnClass} onClick={onDispatch}>
           <TbLayoutKanban size={22} className={btnIconClass} />
         </button>
@@ -415,8 +501,14 @@ const ProjectButton = (props: ButtonProps) => {
 };
 
 /** The plugins: their views (of a workspace), and the plugin manager */
-const PluginsButton = ({ viewTy, hasWorkspace, onDispatch }: {
-  viewTy: string; hasWorkspace: boolean; onDispatch: (view: ViewAction) => void;
+const PluginsButton = ({
+  viewTy,
+  hasWorkspace,
+  onDispatch,
+}: {
+  viewTy: string;
+  hasWorkspace: boolean;
+  onDispatch: (view: ViewAction) => void;
 }) => {
   const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
@@ -427,37 +519,52 @@ const PluginsButton = ({ viewTy, hasWorkspace, onDispatch }: {
   const commands = pluginCommands(installedPlugins, pluginStates);
 
   return (
-    <MenuItem isHighlighted={viewTy === 'plugin'}>
+    <MenuItem isHighlighted={viewTy === "plugin"}>
       <Dropdown
-        buttonChildren={<><TbPuzzle size={22} className={btnIconClass} /><span className="sr-only">Plugins</span></>}
+        buttonChildren={
+          <>
+            <TbPuzzle size={22} className={btnIconClass} />
+            <span className="sr-only">Plugins</span>
+          </>
+        }
         buttonClassName={btnClass}
         itemsClassName="w-56"
-        placement={isHorizontal ? 'bottom-start' : 'right-start'}
+        placement={isHorizontal ? "bottom-start" : "right-start"}
         tooltipContent="Plugins"
         tooltipPlacement={tooltipPlacement}
       >
         {views.map(({ plugin, view }) => (
           <DropdownItem
             key={`${plugin.id}/${view.id}`}
-            onClick={() => onDispatch({ view: 'plugin', plugin: plugin.id, viewId: view.id })}
+            onClick={() =>
+              onDispatch({ view: "plugin", plugin: plugin.id, viewId: view.id })
+            }
           >
             <span className="truncate">{view.title}</span>
-            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">{plugin.manifest?.name}</span>
+            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">
+              {plugin.manifest?.name}
+            </span>
           </DropdownItem>
         ))}
         {commands.map((found, i) => (
           <DropdownItem
             key={`${found.plugin.id}:${found.command.id}`}
-            className={i === 0 && views.length ? 'border-t border-base-300' : ''}
+            className={
+              i === 0 && views.length ? "border-t border-base-300" : ""
+            }
             onClick={() => void runCommand(found)}
           >
             <TbPlayerPlay size={18} className="mr-1 shrink-0" />
             <span className="truncate">{found.command.title}</span>
-            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">{found.plugin.manifest?.name}</span>
+            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">
+              {found.plugin.manifest?.name}
+            </span>
           </DropdownItem>
         ))}
         <DropdownItem
-          className={views.length || commands.length ? 'border-t border-base-300' : ''}
+          className={
+            views.length || commands.length ? "border-t border-base-300" : ""
+          }
           onClick={() => setIsPluginsOpen(true)}
         >
           <TbSettings size={18} className="mr-1" />
@@ -473,21 +580,24 @@ export function FileDrop() {
   // the web version starts with a demo: the manual, a book and some issues
   const [hasDemo, setHasDemo] = useState(false);
   useEffect(() => {
-    if (isWeb) void invoke<boolean>('has_demo').then(setHasDemo).catch(() => setHasDemo(false));
+    if (isWeb)
+      void invoke<boolean>("has_demo")
+        .then(setHasDemo)
+        .catch(() => setHasDemo(false));
   }, []);
   const onRemoveDemo = useCallback(async () => {
     const ok = await ask(
-      'Remove the demo: the manual, the sample book with its highlight, and the sample issues and project? ' +
-      'What you added is kept. This cannot be undone.',
-      { title: 'Remove demo' }
+      "Remove the demo: the manual, the sample book with its highlight, and the sample issues and project? " +
+        "What you added is kept. This cannot be undone.",
+      { title: "Remove demo" },
     );
     if (!ok) return;
     try {
-      await invoke('remove_demo');
+      await invoke("remove_demo");
       // the notes, issues and the library are loaded again
       window.location.reload();
     } catch (e) {
-      console.error('Failed to remove the demo:', e);
+      console.error("Failed to remove the demo:", e);
     }
   }, []);
 
@@ -502,56 +612,69 @@ export function FileDrop() {
     <>
       <DropdownItem onClick={onListDir}>
         <TbFolderPlus size={18} className="mr-1" />
-        <Tooltip content="Open Folder"><span>Open Folder</span></Tooltip>
+        <Tooltip content="Open Folder">
+          <span>Open Folder</span>
+        </Tooltip>
       </DropdownItem>
       <DropdownItem onClick={onOpenFile}>
         <TbFileText size={18} className="mr-1" />
-        <Tooltip content="Open .md"><span>Open File</span></Tooltip>
+        <Tooltip content="Open .md">
+          <span>Open File</span>
+        </Tooltip>
       </DropdownItem>
       <DropdownItem onClick={openJsonFile}>
         <TbFileImport size={18} className="mr-1" />
-        <Tooltip content="Open JSON"><span>Import JSON</span></Tooltip>
+        <Tooltip content="Open JSON">
+          <span>Import JSON</span>
+        </Tooltip>
       </DropdownItem>
       {isWeb && (
         <DropdownItem
           className="border-t-2 border-base-300"
           onClick={async () => {
             try {
-              await invoke('export_backup');
+              await invoke("export_backup");
             } catch (e) {
-              console.error('Failed to export backup:', e);
+              console.error("Failed to export backup:", e);
             }
           }}
         >
           <TbDatabaseExport size={18} className="mr-1" />
-          <Tooltip content="Export Backup"><span>Backup</span></Tooltip>
+          <Tooltip content="Export Backup">
+            <span>Backup</span>
+          </Tooltip>
         </DropdownItem>
       )}
       {isWeb && hasDemo && (
         <DropdownItem onClick={onRemoveDemo}>
           <TbEraser size={18} className="mr-1" />
-          <Tooltip content="Remove the manual, sample book and sample issues"><span>Remove demo</span></Tooltip>
+          <Tooltip content="Remove the manual, sample book and sample issues">
+            <span>Remove demo</span>
+          </Tooltip>
         </DropdownItem>
       )}
       {isPublishAvailable && initDir && (
-        <DropdownItem className="border-t-2 border-base-300" onClick={() => usePublishUi.setState({ isOpen: true })}>
+        <DropdownItem
+          className="border-t-2 border-base-300"
+          onClick={() => usePublishUi.setState({ isOpen: true })}
+        >
           <TbWorldUpload size={18} className="mr-1" />
-          <Tooltip content="Publish the notes as a static site"><span>Publish</span></Tooltip>
+          <Tooltip content="Publish the notes as a static site">
+            <span>Publish</span>
+          </Tooltip>
         </DropdownItem>
       )}
-      <DropdownItem 
-        onClick={onClear} 
-        className="border-t-2 border-base-300"
-      >
+      <DropdownItem onClick={onClear} className="border-t-2 border-base-300">
         <TbClearAll size={18} className="mr-1" />
-        <Tooltip content="Open Recent History"><span>Recent</span></Tooltip>
+        <Tooltip content="Open Recent History">
+          <span>Recent</span>
+        </Tooltip>
       </DropdownItem>
-      <DropdownItem 
-        onClick={onSave} 
-        className="border-t-2 border-base-300"
-      >
+      <DropdownItem onClick={onSave} className="border-t-2 border-base-300">
         <TbDeviceFloppy size={18} className="mr-1" />
-        <Tooltip content="Save All Data"><span>Save</span></Tooltip>
+        <Tooltip content="Save All Data">
+          <span>Save</span>
+        </Tooltip>
       </DropdownItem>
     </>
   );
@@ -561,13 +684,10 @@ const FileButton = () => {
   const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
   const btnRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = 
-    useState<HTMLElement | null>(null);
-  const { styles, attributes } = usePopper(
-    btnRef.current, popperElement, {
-      placement: isHorizontal ? 'bottom-start' : 'right-start',
-    }
-  );
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(null);
+  const { styles, attributes } = usePopper(btnRef.current, popperElement, {
+    placement: isHorizontal ? "bottom-start" : "right-start",
+  });
 
   return (
     <Menu>
@@ -599,22 +719,21 @@ const FileButton = () => {
   );
 };
 
-
 const BottomSection = () => {
   const tooltipPlacement = useTooltipPlacement();
   const isHorizontal = useIsHorizontalMenu();
   return (
-    <div className={isHorizontal ? 'flex' : 'flex flex-col'}>
+    <div className={isHorizontal ? "flex" : "flex flex-col"}>
       <PlayerButton />
-      <SyncButton 
-        className={btnClass} 
-        iconClassName={btnIconClass} 
-        tooltipPlacement={tooltipPlacement} 
+      <SyncButton
+        className={btnClass}
+        iconClassName={btnIconClass}
+        tooltipPlacement={tooltipPlacement}
       />
       <SettingsButton />
     </div>
-  )
-}
+  );
+};
 
 /** Show or hide the player; colored while something is in it. */
 const PlayerButton = () => {
@@ -625,27 +744,26 @@ const PlayerButton = () => {
   const hasPod = Boolean(pod);
 
   // const book = useTTS((state) => state.book);
-  // const pbTitle = hasPod 
-  //   ? `Podcast${pod ? `: ${pod.title}` : ''}` 
-  //   : reading 
-  //     ? `Read aloud${book ? `: ${book}` : ''}` 
+  // const pbTitle = hasPod
+  //   ? `Podcast${pod ? `: ${pod.title}` : ''}`
+  //   : reading
+  //     ? `Read aloud${book ? `: ${book}` : ''}`
   //     : '';
   // const tooltipContent = `${shown ? 'Hide' : 'Show'} ${hasPod || reading ? ' | ' : ''} ${pbTitle}`;
 
   return (
     <MenuItem isHighlighted={shown}>
-      <Tooltip 
-        content={shown ? 'Hide' : 'Show'} 
-        placement={tooltipPlacement}
-      >
+      <Tooltip content={shown ? "Hide" : "Show"} placement={tooltipPlacement}>
         <button
           aria-label="Player"
           className={btnClass}
           onClick={() => usePlayer.getState().setShown(!shown)}
         >
-          <TbHeadphones 
-            size={22} 
-            className={reading || hasPod ? 'shrink-0 mx-px text-primary' : btnIconClass} 
+          <TbHeadphones
+            size={22}
+            className={
+              reading || hasPod ? "shrink-0 mx-px text-primary" : btnIconClass
+            }
           />
         </button>
       </Tooltip>
@@ -656,12 +774,12 @@ const PlayerButton = () => {
 const SettingsButton = () => {
   const tooltipPlacement = useTooltipPlacement();
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
-  
+
   return (
     <Tooltip content="Preferences" placement={tooltipPlacement}>
       <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
         <TbSettings size={22} className={btnIconClass} />
-        </button>
+      </button>
     </Tooltip>
-  )
-}
+  );
+};

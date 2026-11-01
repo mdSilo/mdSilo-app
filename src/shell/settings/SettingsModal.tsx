@@ -1,21 +1,24 @@
-import { useState } from 'react';
-import { useStore } from '@/state/store';
+import { useState } from "react";
+import { useStore } from "@/state/store";
 import {
-  STARTUP_VIEWS, type OpenOnStartup, type SideMenuOrientation, type StartupView,
-} from '@/state/userSettings';
-import { SYSTEM_THEME, THEMES } from '@/lib/themes';
-import { Select } from '@/ui/ui';
-import { allCustomThemes } from '@/custom/themes';
-import { BaseModal } from '@/ui/BaseModal';
-import { isTauri } from '@/workspace/util';
-import ThemeEditor from './ThemeEditor';
-import FontsSetting from './FontsSetting';
+  STARTUP_VIEWS,
+  type OpenOnStartup,
+  type SideMenuOrientation,
+  type StartupView,
+} from "@/state/userSettings";
+import { SYSTEM_THEME, THEMES } from "@/lib/themes";
+import { Select } from "@/ui/ui";
+import { allCustomThemes } from "@/custom/themes";
+import { BaseModal } from "@/ui/BaseModal";
+import { isTauri } from "@/workspace/util";
+import ThemeEditor from "./ThemeEditor";
+import FontsSetting from "./FontsSetting";
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
-  value === 'auto' || value === 'vertical' || value === 'horizontal';
+  value === "auto" || value === "vertical" || value === "horizontal";
 
 const isOpenOnStartup = (value: string): value is OpenOnStartup =>
-  value === 'previous' || value === 'pinned' || value === 'none';
+  value === "previous" || value === "pinned" || value === "none";
 
 const isStartupView = (value: string): value is StartupView =>
   STARTUP_VIEWS.some(([view]) => view === value);
@@ -23,7 +26,7 @@ const isStartupView = (value: string): value is StartupView =>
 type Props = {
   isOpen: boolean;
   handleClose: () => void;
-}
+};
 
 /**
  * The settings of the whole app. The editor, the reader and the feed reader
@@ -41,7 +44,9 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   // the theme edited: a theme made by the user, or 'new'
   const [editing, setEditing] = useState<string | null>(null);
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
-  const setSideMenuOrientation = useStore((state) => state.setSideMenuOrientation);
+  const setSideMenuOrientation = useStore(
+    (state) => state.setSideMenuOrientation,
+  );
   const openOnStartup = useStore((state) => state.openOnStartup);
   const setOpenOnStartup = useStore((state) => state.setOpenOnStartup);
   const startupView = useStore((state) => state.startupView);
@@ -59,7 +64,11 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           ))}
           {userThemes.length > 0 ? (
             <optgroup label="My Themes">
-              {userThemes.map((t) => <option key={t.id} value={`user-${t.id}`}>{t.name}</option>)}
+              {userThemes.map((t) => (
+                <option key={t.id} value={`user-${t.id}`}>
+                  {t.name}
+                </option>
+              ))}
             </optgroup>
           ) : null}
         </Select>
@@ -72,9 +81,21 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
         ) : (
           <div className="flex justify-end gap-2">
             {current ? (
-              <button type="button" className="btn btn-xs" onClick={() => setEditing(current.id)}>Edit Theme</button>
+              <button
+                type="button"
+                className="btn btn-xs"
+                onClick={() => setEditing(current.id)}
+              >
+                Edit Theme
+              </button>
             ) : null}
-            <button type="button" className="btn btn-xs" onClick={() => setEditing('new')}>New Theme</button>
+            <button
+              type="button"
+              className="btn btn-xs"
+              onClick={() => setEditing("new")}
+            >
+              New Theme
+            </button>
           </div>
         )}
         <Select
@@ -107,7 +128,9 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           }}
         >
           {STARTUP_VIEWS.map(([view, name]) => (
-            <option key={view} value={view}>{name}</option>
+            <option key={view} value={view}>
+              {name}
+            </option>
           ))}
         </Select>
         <FontsSetting />
@@ -117,14 +140,18 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             <button
               type="button"
               className="btn btn-xs"
-              onClick={() => { handleClose(); setIsPluginsOpen(true); }}
+              onClick={() => {
+                handleClose();
+                setIsPluginsOpen(true);
+              }}
             >
               Manage Plugins
             </button>
           </div>
         ) : null}
         <p className="mt-2 text-xs text-center text-base-content/70">
-          The editor, the reader and the feed reader have their own settings, in their views; the fonts added here show in their font lists.
+          The editor, the reader and the feed reader have their own settings, in
+          their views; the fonts added here show in their font lists.
         </p>
       </div>
     </BaseModal>

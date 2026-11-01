@@ -1,13 +1,13 @@
 // import { invoke } from '@tauri-apps/api';
-import type { NoteMap } from '@/state/store';
-import { withContents } from '@/lib/contentCache';
-import { buildNotesJson, joinPaths } from './util';
-import FileAPI from './files';
+import type { NoteMap } from "@/state/store";
+import { withContents } from "@/lib/contentCache";
+import { buildNotesJson, joinPaths } from "./util";
+import FileAPI from "./files";
 
 /**
  * Write file to disk
- * @param filePath 
- * @param content 
+ * @param filePath
+ * @param content
  */
 export async function writeFile(filePath: string, content: string) {
   const file = new FileAPI(filePath);
@@ -16,11 +16,11 @@ export async function writeFile(filePath: string, content: string) {
 
 /**
  * Write json containing all data to folder
- * @param parentDir 
+ * @param parentDir
  * @param json optional
  */
-export async function writeJsonFile(parentDir: string, json = '') {
-  const jsonFile = new FileAPI('mdsilo.json', parentDir);
+export async function writeJsonFile(parentDir: string, json = "") {
+  const jsonFile = new FileAPI("mdsilo.json", parentDir);
   const notesJson = json || buildNotesJson();
   await jsonFile.writeFile(notesJson);
   // await invoke('save_notes', { dir: parentDir, content: notesJson });

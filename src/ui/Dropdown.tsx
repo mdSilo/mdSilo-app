@@ -4,12 +4,12 @@ import {
   MouseEventHandler,
   useRef,
   useCallback,
-} from 'react';
-import { usePopper } from 'react-popper';
-import { Menu } from '@headlessui/react';
-import { Placement } from '@popperjs/core';
-import Portal from './Portal';
-import { Tooltip } from './ui';
+} from "react";
+import { usePopper } from "react-popper";
+import { Menu } from "@headlessui/react";
+import { Placement } from "@popperjs/core";
+import Portal from "./Portal";
+import { Tooltip } from "./ui";
 
 type Props = {
   buttonChildren: ReactNode;
@@ -26,8 +26,8 @@ export default function Dropdown(props: Props) {
   const {
     buttonChildren,
     children,
-    buttonClassName = '',
-    itemsClassName = '',
+    buttonClassName = "",
+    itemsClassName = "",
     placement,
     offset,
     tooltipContent,
@@ -35,16 +35,14 @@ export default function Dropdown(props: Props) {
   } = props;
 
   const referenceElementRef = useRef<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLElement | null>(
-    null
-  );
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(null);
   const { styles, attributes } = usePopper(
     referenceElementRef.current,
     popperElement,
     {
       placement,
-      modifiers: [{ name: 'offset', options: { offset } }],
-    }
+      modifiers: [{ name: "offset", options: { offset } }],
+    },
   );
 
   return (
@@ -89,40 +87,40 @@ type DropdownItemProps =
   | {
       children: ReactNode;
       onClick: MouseEventHandler<HTMLButtonElement>;
-      as?: 'button';
+      as?: "button";
       target?: string;
       className?: string;
     }
   | {
       children: ReactNode;
       href: string;
-      as: 'a';
+      as: "a";
       target?: string;
       className?: string;
     }
   | {
       children: ReactNode;
       href: string;
-      as: 'link';
+      as: "link";
       target?: string;
       className?: string;
     };
 
 export function DropdownItem(props: DropdownItemProps) {
-  const { children, target = '_blank', className = '' } = props;
+  const { children, target = "_blank", className = "" } = props;
 
   const itemClassName = useCallback(
     (focus: boolean) =>
       `flex w-full items-center px-4 py-2 text-left text-sm text-base-content select-none ${
-        focus ? 'bg-base-content/10' : ''
+        focus ? "bg-base-content/10" : ""
       } ${className}`,
-    [className]
+    [className],
   );
 
   return (
     <Menu.Item>
       {({ focus }) =>
-        (props.as === 'a' || props.as === 'link') ? (
+        props.as === "a" || props.as === "link" ? (
           <a
             className={itemClassName(focus)}
             href={props.href}

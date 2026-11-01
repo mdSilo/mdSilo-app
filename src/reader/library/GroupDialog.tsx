@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { BaseModal } from '@/ui/BaseModal';
-import { normalizeGroup, renameGroup } from './library';
+import { useState } from "react";
+import { BaseModal } from "@/ui/BaseModal";
+import { normalizeGroup, renameGroup } from "./library";
 
 type Props = {
   ws: string;
@@ -14,18 +14,26 @@ type Props = {
 /** A group of the library renamed or moved (by its path), or ungrouped. */
 export default function GroupDialog({ ws, group, onClose, onDone }: Props) {
   const [name, setName] = useState(group);
-  const parent = group.includes('/') ? group.slice(0, group.lastIndexOf('/')) : '';
+  const parent = group.includes("/")
+    ? group.slice(0, group.lastIndexOf("/"))
+    : "";
   const apply = async (to: string) => {
     await renameGroup(ws, group, to);
     onDone(normalizeGroup(to) || parent);
   };
   return (
-    <BaseModal title="Group" isOpen handleClose={onClose} panelClassName="max-w-md">
+    <BaseModal
+      title="Group"
+      isOpen
+      handleClose={onClose}
+      panelClassName="max-w-md"
+    >
       <form
         className="flex flex-col gap-3 text-left"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (normalizeGroup(name) && normalizeGroup(name) !== group) await apply(name);
+          if (normalizeGroup(name) && normalizeGroup(name) !== group)
+            await apply(name);
           else onClose();
         }}
       >
@@ -38,19 +46,29 @@ export default function GroupDialog({ ws, group, onClose, onDone }: Props) {
             onChange={(e) => setName(e.target.value)}
             autoFocus
           />
-          <span className="text-xs text-base-content/60">Nested by /, e.g. Fiction/Classics; its sub groups go with it.</span>
+          <span className="text-xs text-base-content/60">
+            Nested by /, e.g. Fiction/Classics; its sub groups go with it.
+          </span>
         </label>
         <div className="flex justify-end gap-2">
           <button
             type="button"
             className="btn btn-sm btn-ghost me-auto"
-            title={`The books go to ${parent || 'no group'}`}
-            onClick={() => apply('')}
+            title={`The books go to ${parent || "no group"}`}
+            onClick={() => apply("")}
           >
             Ungroup
           </button>
-          <button type="button" className="btn btn-sm btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="submit" className="btn btn-sm btn-primary">Rename</button>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="btn btn-sm btn-primary">
+            Rename
+          </button>
         </div>
       </form>
     </BaseModal>

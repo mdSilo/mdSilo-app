@@ -1,11 +1,11 @@
-import ErrorBoundary from '@/ui/ErrorBoundary';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { SearchTree } from '@/shell/sidebar/SidebarSearch';
+import ErrorBoundary from "@/ui/ErrorBoundary";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { SearchTree } from "@/shell/sidebar/SidebarSearch";
 
 export default function HashTags() {
-  const className = '';
+  const className = "";
   const currentView = useCurrentViewContext();
-  const tag = currentView.state.tag || '';
+  const tag = currentView.state.tag || "";
 
   return (
     <ErrorBoundary>

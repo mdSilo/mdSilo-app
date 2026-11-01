@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { TbHeadphones as IconHeadphones, TbRefresh as IconRefresh, TbRss as IconRss, TbSettings as IconSettings, TbStar as IconStar } from "react-icons/tb";
+import {
+  TbHeadphones as IconHeadphones,
+  TbRefresh as IconRefresh,
+  TbRss as IconRss,
+  TbSettings as IconSettings,
+  TbStar as IconStar,
+} from "react-icons/tb";
 import { getFavicon } from "@/lib/helper";
 import { Spinner, Tooltip } from "@/ui/ui";
 import { ChannelType } from "@/types/model";
@@ -15,20 +21,28 @@ type Props = {
 };
 
 export function ChannelList(props: Props) {
-  const { channelList, refreshList, onShowManager, onClickFeed, onClickStar, refreshing, doneNum } = props;
+  const {
+    channelList,
+    refreshList,
+    onShowManager,
+    onClickFeed,
+    onClickStar,
+    refreshing,
+    doneNum,
+  } = props;
 
   const [highlighted, setHighlighted] = useState<ChannelType>();
-  
+
   const renderFeedList = (): JSX.Element => {
     return (
       <>
         {channelList.map((channel: ChannelType, idx: number) => {
           const { unread = 0, title, ty, link } = channel;
           const ico = getFavicon(link);
-          const activeClass = `${highlighted?.link === link ? 'border-l-2 border-primary' : ''}`;
-          
+          const activeClass = `${highlighted?.link === link ? "border-l-2 border-primary" : ""}`;
+
           return (
-            <div 
+            <div
               key={`${title}-${idx}`}
               className={`m-1 flex flex-row items-center justify-between whitespace-nowrap cursor-pointer ${activeClass}`}
               onClick={() => {
@@ -45,10 +59,11 @@ export function ChannelList(props: Props) {
               {/* stick to the visible right edge when the list scrolls horizontally */}
               <span className="sticky right-0 flex flex-none items-center justify-between pl-1 bg-base-100">
                 <span className="text-sm">{unread}</span>
-                {ty === 'rss' 
-                  ? <IconRss size={12} className="ml-1 text-orange-500" /> 
-                  : <IconHeadphones size={12} className="ml-1 text-secondary" />
-                }
+                {ty === "rss" ? (
+                  <IconRss size={12} className="ml-1 text-orange-500" />
+                ) : (
+                  <IconHeadphones size={12} className="ml-1 text-secondary" />
+                )}
               </span>
             </div>
           );
@@ -76,24 +91,26 @@ export function ChannelList(props: Props) {
       {refreshing && (
         <div className="flex flex-col items-center justify-center">
           <Spinner size="xs" />
-          <span className="">{doneNum}/{channelList.length}</span>
+          <span className="">
+            {doneNum}/{channelList.length}
+          </span>
         </div>
       )}
       {/* long feed titles do not wrap: the list scrolls horizontally */}
       <div className="flex-1 overflow-auto" data-testid="channel-list-scroller">
-      {/* as wide as the longest title, at least the column */}
-      <div className="p-1 w-max min-w-full">
-        <div 
-          className="flex flex-row items-center justify-between cursor-pointer"
-          onClick={onClickStar}
-        >
-          <div className="flex flex-row items-center justify-start">
-            <IconStar size={18} className="m-1 fill-warning text-warning" />
-            <span className="m-1">Starred</span>
+        {/* as wide as the longest title, at least the column */}
+        <div className="p-1 w-max min-w-full">
+          <div
+            className="flex flex-row items-center justify-between cursor-pointer"
+            onClick={onClickStar}
+          >
+            <div className="flex flex-row items-center justify-start">
+              <IconStar size={18} className="m-1 fill-warning text-warning" />
+              <span className="m-1">Starred</span>
+            </div>
           </div>
+          {renderFeedList()}
         </div>
-        {renderFeedList()}
-      </div>
       </div>
     </div>
   );

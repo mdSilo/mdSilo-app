@@ -3,9 +3,9 @@
  * annotations and the issues, board and labels of the demo. What you added
  * stays: the issues you made, the labels they use, the other books.
  */
-import * as fs from './fs';
-import { DEFAULT_DIR } from './fs';
-import { DEMO_MARKER, type DemoMarker } from './demo';
+import * as fs from "./fs";
+import { DEFAULT_DIR } from "./fs";
+import { DEMO_MARKER, type DemoMarker } from "./demo";
 
 const at = (path: string) => `${DEFAULT_DIR}/${path}`;
 
@@ -17,7 +17,8 @@ async function readJson<T>(path: string): Promise<T | undefined> {
   }
 }
 
-const writeJson = (path: string, data: unknown) => fs.writeFile(at(path), JSON.stringify(data, null, 2));
+const writeJson = (path: string, data: unknown) =>
+  fs.writeFile(at(path), JSON.stringify(data, null, 2));
 
 async function readMarker(): Promise<DemoMarker | undefined> {
   if (!(await fs.isFile(at(DEMO_MARKER)))) return undefined;
@@ -29,7 +30,12 @@ export async function hasDemo(): Promise<boolean> {
   return Boolean(await readMarker());
 }
 
-type Issue = { number: number; labels?: string[]; milestone?: string; timeline?: { id?: string }[] };
+type Issue = {
+  number: number;
+  labels?: string[];
+  milestone?: string;
+  timeline?: { id?: string }[];
+};
 type Meta = {
   labels?: { id: string }[];
   milestones?: { id: string }[];
@@ -40,12 +46,16 @@ type Meta = {
 async function removeIssues(marker: DemoMarker): Promise<Issue[]> {
   const left: Issue[] = [];
   const gone: number[] = [];
-  const dir = '.mdsilo/issues';
+  const dir = ".mdsilo/issues";
   for (const entry of await fs.readDir(at(dir))) {
     const num = /^(\d+)\.json$/.exec(entry.name)?.[1];
     if (!num) continue;
     const issue = await readJson<Issue>(`${dir}/${entry.name}`);
-    if (issue && marker.issues.includes(issue.number) && issue.timeline?.[0]?.id === `demo-e${issue.number}`) {
+    if (
+      issue &&
+      marker.issues.includes(issue.number) &&
+      issue.timeline?.[0]?.id === `demo-e${issue.number}`
+    ) {
       gone.push(issue.number);
     } else if (issue) {
       left.push(issue);
@@ -57,29 +67,43 @@ async function removeIssues(marker: DemoMarker): Promise<Issue[]> {
   if (meta) {
     const usedLabels = new Set(left.flatMap((i) => i.labels ?? []));
     const usedMilestones = new Set(left.map((i) => i.milestone));
-    meta.labels = meta.labels?.filter((l) => !marker.labels.includes(l.id) || usedLabels.has(l.id));
-    meta.milestones = meta.milestones?.filter((m) => !marker.milestones.includes(m.id) || usedMilestones.has(m.id));
+    meta.labels = meta.labels?.filter(
+      (l) => !marker.labels.includes(l.id) || usedLabels.has(l.id),
+    );
+    meta.milestones = meta.milestones?.filter(
+      (m) => !marker.milestones.includes(m.id) || usedMilestones.has(m.id),
+    );
     meta.projects = meta.projects
-      ?.map((p) => (marker.projects.includes(p.id) ? { ...p, items: p.items?.filter((i) => !gone.includes(i.issue)) } : p))
-      .filter((p) => !marker.projects.includes(p.id) || (p.items?.length ?? 0) > 0);
+      ?.map((p) =>
+        marker.projects.includes(p.id)
+          ? { ...p, items: p.items?.filter((i) => !gone.includes(i.issue)) }
+          : p,
+      )
+      .filter(
+        (p) => !marker.projects.includes(p.id) || (p.items?.length ?? 0) > 0,
+      );
     await writeJson(`${dir}/meta.json`, meta);
   }
   return left;
 }
 
-async function removeBook(book: NonNullable<DemoMarker['book']>) {
+async function removeBook(book: NonNullable<DemoMarker["book"]>) {
   const { hash } = book;
-  const covers = '.mdsilo/local/covers';
-  const cached = (await fs.isDir(at(covers))) ? (await fs.readDir(at(covers))).filter((e) => e.name.startsWith(hash)) : [];
+  const covers = ".mdsilo/local/covers";
+  const cached = (await fs.isDir(at(covers)))
+    ? (await fs.readDir(at(covers))).filter((e) => e.name.startsWith(hash))
+    : [];
   await fs.remove([
     ...book.files.map(at),
     at(`.mdsilo/books/${hash}.json`),
     ...cached.map((e) => e.path),
   ]);
-  const library = await readJson<{ books?: Record<string, unknown> }>('.mdsilo/books.json');
+  const library = await readJson<{ books?: Record<string, unknown> }>(
+    ".mdsilo/books.json",
+  );
   if (library?.books && hash in library.books) {
     delete library.books[hash];
-    await writeJson('.mdsilo/books.json', library);
+    await writeJson(".mdsilo/books.json", library);
   }
 }
 

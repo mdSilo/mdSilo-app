@@ -1,4 +1,4 @@
-import type { JSX as ReactJSX } from 'react';
+import type { JSX as ReactJSX } from "react";
 
 declare global {
   namespace JSX {

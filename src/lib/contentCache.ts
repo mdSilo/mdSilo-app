@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import type { Note } from '@/types/model';
-import { store } from '@/state/store';
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import type { Note } from "@/types/model";
+import { store } from "@/state/store";
 
 /**
  * The content of notes not loaded in the store (see Note.parsed): read on
@@ -12,7 +12,8 @@ export const CACHE_SIZE = 300;
 
 const cache = new Map<string, string>();
 
-const keyOf = (note: Pick<Note, 'id' | 'updated_at'>) => `${note.updated_at}\n${note.id}`;
+const keyOf = (note: Pick<Note, "id" | "updated_at">) =>
+  `${note.updated_at}\n${note.id}`;
 
 function remember(key: string, content: string) {
   cache.delete(key);
@@ -35,9 +36,9 @@ export async function noteContent(id: string): Promise<string> {
     remember(key, cached);
     return cached;
   }
-  let content = '';
+  let content = "";
   try {
-    content = (await invoke<string>('read_file', { filePath: id })) ?? '';
+    content = (await invoke<string>("read_file", { filePath: id })) ?? "";
   } catch (e) {
     console.error(`Failed to read ${id}`, e);
   }
@@ -51,8 +52,14 @@ export async function withContents(notes: readonly Note[]): Promise<Note[]> {
   const BATCH = 16;
   for (let i = 0; i < notes.length; i += BATCH) {
     const batch = notes.slice(i, i + BATCH);
-    const contents = await Promise.all(batch.map((n) => (n.parsed ? noteContent(n.id) : n.content)));
-    batch.forEach((n, j) => out.push(n.parsed ? { ...n, content: contents[j], parsed: undefined } : n));
+    const contents = await Promise.all(
+      batch.map((n) => (n.parsed ? noteContent(n.id) : n.content)),
+    );
+    batch.forEach((n, j) =>
+      out.push(
+        n.parsed ? { ...n, content: contents[j], parsed: undefined } : n,
+      ),
+    );
   }
   return out;
 }
@@ -64,15 +71,21 @@ export function clearContentCache() {
 
 /** The content of a note, read on use if not loaded; undefined meanwhile. */
 export function useNoteContent(note: Note): string | undefined {
-  const [content, setContent] = useState<string | undefined>(note.parsed ? undefined : note.content);
+  const [content, setContent] = useState<string | undefined>(
+    note.parsed ? undefined : note.content,
+  );
   useEffect(() => {
     if (!note.parsed) {
       setContent(note.content);
       return;
     }
     let cancelled = false;
-    void noteContent(note.id).then((text) => { if (!cancelled) setContent(text); });
-    return () => { cancelled = true; };
+    void noteContent(note.id).then((text) => {
+      if (!cancelled) setContent(text);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [note]);
   return content;
 }

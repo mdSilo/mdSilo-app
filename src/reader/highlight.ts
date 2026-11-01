@@ -1,5 +1,5 @@
-import hljs from 'highlight.js/lib/common';
-import { CODE_LANGUAGES } from '@/lib/constants';
+import hljs from "highlight.js/lib/common";
+import { CODE_LANGUAGES } from "@/lib/constants";
 
 /**
  * The code blocks of a book, highlighted by highlight.js (ported from readup:
@@ -15,26 +15,37 @@ const originals = new WeakMap<Element, string>();
 
 /** The block to highlight: the <code> in a <pre>, or the <pre>. */
 const blocksOf = (doc: Document) =>
-  Array.from(doc.querySelectorAll('pre')).map((pre) => (pre.children.length === 1 && pre.firstElementChild?.localName === 'code' ? pre.firstElementChild : pre));
+  Array.from(doc.querySelectorAll("pre")).map((pre) =>
+    pre.children.length === 1 && pre.firstElementChild?.localName === "code"
+      ? pre.firstElementChild
+      : pre,
+  );
 
 /** Highlight the code of a section, in a language or guessed; or put it back as it was. */
-export function highlightCode(doc: Document, on: boolean, language: CodeLanguage = 'auto') {
+export function highlightCode(
+  doc: Document,
+  on: boolean,
+  language: CodeLanguage = "auto",
+) {
   for (const block of blocksOf(doc)) {
     const original = originals.get(block);
     if (original !== undefined) {
       block.innerHTML = original;
-      block.classList.remove('hljs');
-      block.removeAttribute('data-highlighted');
+      block.classList.remove("hljs");
+      block.removeAttribute("data-highlighted");
       if (!on) originals.delete(block);
     }
     if (!on) continue;
     if (original === undefined) originals.set(block, block.innerHTML);
-    const lang = language !== 'auto' && hljs.getLanguage(language) ? language : undefined;
-    const code = block.textContent ?? '';
-    const result = lang ? hljs.highlight(code, { language: lang }) : hljs.highlightAuto(code);
+    const lang =
+      language !== "auto" && hljs.getLanguage(language) ? language : undefined;
+    const code = block.textContent ?? "";
+    const result = lang
+      ? hljs.highlight(code, { language: lang })
+      : hljs.highlightAuto(code);
     block.innerHTML = result.value;
-    block.classList.add('hljs');
-    block.setAttribute('data-highlighted', 'yes');
+    block.classList.add("hljs");
+    block.setAttribute("data-highlighted", "yes");
   }
 }
 

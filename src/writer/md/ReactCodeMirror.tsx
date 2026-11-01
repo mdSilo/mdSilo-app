@@ -1,11 +1,17 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import { EditorState, EditorStateConfig, Extension } from '@codemirror/state';
-import { EditorView, ViewUpdate } from '@codemirror/view';
-import { NO_EXTENSIONS, useCodeMirror } from './useCodeMirror';
+import React, {
+  useEffect,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
+import { EditorState, EditorStateConfig, Extension } from "@codemirror/state";
+import { EditorView, ViewUpdate } from "@codemirror/view";
+import { NO_EXTENSIONS, useCodeMirror } from "./useCodeMirror";
 
 export interface ReactCodeMirrorProps
-  extends Omit<EditorStateConfig, 'doc' | 'extensions'>,
-    Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'placeholder'> {
+  extends
+    Omit<EditorStateConfig, "doc" | "extensions">,
+    Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "placeholder"> {
   value?: string;
   height?: string;
   minHeight?: string;
@@ -19,7 +25,7 @@ export interface ReactCodeMirrorProps
    * `light` / `dark` / `Extension` Defaults to `light`.
    * @default light
    */
-  theme?: 'light' | 'dark' | Extension;
+  theme?: "light" | "dark" | Extension;
   /**
    * Whether to optional basicSetup by default
    * @default true
@@ -49,74 +55,80 @@ export interface ReactCodeMirrorRef {
   view?: EditorView;
 }
 
-const ReactCodeMirror = forwardRef<ReactCodeMirrorRef, ReactCodeMirrorProps>((props, ref) => {
-  const {
-    className,
-    value = '',
-    selection,
-    extensions = NO_EXTENSIONS,
-    onChange,
-    onUpdate,
-    autoFocus,
-    theme = 'light',
-    height,
-    minHeight,
-    maxHeight,
-    width,
-    minWidth,
-    maxWidth,
-    basicSetup,
-    placeholder,
-    indentWithTab,
-    editable,
-    readOnly,
-    root,
-    ...other
-  } = props;
-  const editor = useRef<HTMLDivElement>(null);
-  const { state, view, container, setContainer } = useCodeMirror({
-    container: editor.current,
-    root,
-    value,
-    autoFocus,
-    theme,
-    height,
-    minHeight,
-    maxHeight,
-    width,
-    minWidth,
-    maxWidth,
-    basicSetup,
-    placeholder,
-    indentWithTab,
-    editable,
-    readOnly,
-    selection,
-    onChange,
-    onUpdate,
-    extensions,
-  });
-  useImperativeHandle(ref, () => ({ editor: container, state, view }), [container, state, view]);
-  useEffect(() => {
-    setContainer(editor.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+const ReactCodeMirror = forwardRef<ReactCodeMirrorRef, ReactCodeMirrorProps>(
+  (props, ref) => {
+    const {
+      className,
+      value = "",
+      selection,
+      extensions = NO_EXTENSIONS,
+      onChange,
+      onUpdate,
+      autoFocus,
+      theme = "light",
+      height,
+      minHeight,
+      maxHeight,
+      width,
+      minWidth,
+      maxWidth,
+      basicSetup,
+      placeholder,
+      indentWithTab,
+      editable,
+      readOnly,
+      root,
+      ...other
+    } = props;
+    const editor = useRef<HTMLDivElement>(null);
+    const { state, view, container, setContainer } = useCodeMirror({
+      container: editor.current,
+      root,
+      value,
+      autoFocus,
+      theme,
+      height,
+      minHeight,
+      maxHeight,
+      width,
+      minWidth,
+      maxWidth,
+      basicSetup,
+      placeholder,
+      indentWithTab,
+      editable,
+      readOnly,
+      selection,
+      onChange,
+      onUpdate,
+      extensions,
+    });
+    useImperativeHandle(ref, () => ({ editor: container, state, view }), [
+      container,
+      state,
+      view,
+    ]);
+    useEffect(() => {
+      setContainer(editor.current);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-  if (typeof value !== 'string') {
-    throw new Error(`value must be typeof string but got ${typeof value}`);
-  }
+    if (typeof value !== "string") {
+      throw new Error(`value must be typeof string but got ${typeof value}`);
+    }
 
-  const defaultClassNames = typeof theme === 'string' ? `cm-theme-${theme}` : 'cm-theme';
-  return (
-    <div 
-      ref={editor} 
-      className={`${defaultClassNames}${className ? ` ${className}` : ''}`} 
-      {...other}
-    >
-    </div>
-  );
-});
+    const defaultClassNames =
+      typeof theme === "string" ? `cm-theme-${theme}` : "cm-theme";
+    return (
+      <div
+        ref={editor}
+        className={`${defaultClassNames}${className ? ` ${className}` : ""}`}
+        {...other}
+      ></div>
+    );
+  },
+);
 
-ReactCodeMirror.displayName = 'CodeMirror';
+ReactCodeMirror.displayName = "CodeMirror";
 
 export default ReactCodeMirror;

@@ -1,33 +1,42 @@
-import { getVersion, getTauriVersion } from '@tauri-apps/api/app';
-import { useState, useEffect } from 'react';
-import { openUrl } from '@/workspace/open';
-import { getLog, clearLog } from '@/state/storage';
-import { isWeb } from '@/workspace/util';
-import { BaseModal } from '@/ui/BaseModal';
-
+import { getVersion, getTauriVersion } from "@tauri-apps/api/app";
+import { useState, useEffect } from "react";
+import { openUrl } from "@/workspace/open";
+import { getLog, clearLog } from "@/state/storage";
+import { isWeb } from "@/workspace/util";
+import { BaseModal } from "@/ui/BaseModal";
 
 type Props = {
   isOpen: boolean;
   handleClose: () => void;
-}
+};
 
 export default function AboutModal({ isOpen, handleClose }: Props) {
-  const [appVersion, setAppVersion] = useState('');
-  const [tauriVersion, setTauriVersion] = useState('');
+  const [appVersion, setAppVersion] = useState("");
+  const [tauriVersion, setTauriVersion] = useState("");
   const [hasVersion, setHasVersion] = useState(false);
 
   useEffect(() => {
     if (!hasVersion) {
-      getVersion().then(ver => setAppVersion(ver)).catch(() => {/**/});
-      getTauriVersion().then(ver => setTauriVersion(ver)).catch(() => {/**/});
+      getVersion()
+        .then((ver) => setAppVersion(ver))
+        .catch(() => {
+          /**/
+        });
+      getTauriVersion()
+        .then((ver) => setTauriVersion(ver))
+        .catch(() => {
+          /**/
+        });
     }
-    return () => { setHasVersion(true); };
+    return () => {
+      setHasVersion(true);
+    };
   }, [hasVersion]);
 
   return (
     <BaseModal title="About" isOpen={isOpen} handleClose={handleClose}>
       <div className="flex flex-col justify-center px-6">
-        <h1>{isWeb ? 'mdSilo Web' : 'mdSilo Desktop'}</h1>
+        <h1>{isWeb ? "mdSilo Web" : "mdSilo Desktop"}</h1>
         <p className="mt-4 font-bold">App Version: {appVersion}</p>
         {isWeb ? (
           <p className="mt-4">Notes are stored in this browser (IndexedDB).</p>
@@ -35,23 +44,27 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
           <p className="mt-4 font-bold">Tauri Version: {tauriVersion}</p>
         )}
         <div className="flex justify-center px-2">
-          <button 
+          <button
             className="ms-link m-2"
-            onClick={async () => { await clearLog(); }}
+            onClick={async () => {
+              await clearLog();
+            }}
           >
             Clear Log
           </button>
-          <button 
+          <button
             className="ms-link m-2"
-            onClick={async () => { 
-              await navigator.clipboard.writeText(`App: ${appVersion} \n Tauri: ${tauriVersion}`);
+            onClick={async () => {
+              await navigator.clipboard.writeText(
+                `App: ${appVersion} \n Tauri: ${tauriVersion}`,
+              );
             }}
           >
             Copy About
           </button>
-          <button 
+          <button
             className="ms-link m-2"
-            onClick={async () => { 
+            onClick={async () => {
               const log = await getLog();
               // console.log("log", log);
               await navigator.clipboard.writeText(JSON.stringify(log));
@@ -61,7 +74,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
           </button>
         </div>
         <button
-          className="mt-4 font-bold pop-btn" 
+          className="mt-4 font-bold pop-btn"
           onClick={async () => {
             await openUrl("https://github.com/mdSilo/mdSilo-app/releases");
           }}

@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import { TbCaretRight as IconCaretRight, TbPoint as IconPoint } from 'react-icons/tb';
+import { useState } from "react";
+import {
+  TbCaretRight as IconCaretRight,
+  TbPoint as IconPoint,
+} from "react-icons/tb";
 
 export type Heading = {
   title: string;
@@ -14,7 +17,7 @@ type Props = {
 };
 
 export default function Toc(props: Props) {
-  const { headings, metaInfo = '', className = '' } = props;
+  const { headings, metaInfo = "", className = "" } = props;
   const [showTOC, setShowTOC] = useState<boolean>(false);
 
   return (
@@ -27,7 +30,7 @@ export default function Toc(props: Props) {
         }}
       >
         <IconCaretRight
-          className={`mr-1 text-base-content/60 ${showTOC ? 'rotate-90' : ''}`}
+          className={`mr-1 text-base-content/60 ${showTOC ? "rotate-90" : ""}`}
           size={16}
           fill="currentColor"
         />
@@ -39,9 +42,9 @@ export default function Toc(props: Props) {
             <div
               key={heading.id}
               className="flex items-center select-none ms-link"
-              style={{ 
-                paddingLeft: `${heading.level * 12}px`, 
-                fontSize: `${Math.max((12 - heading.level) * 2, 16)}px` 
+              style={{
+                paddingLeft: `${heading.level * 12}px`,
+                fontSize: `${Math.max((12 - heading.level) * 2, 16)}px`,
               }}
             >
               <IconPoint size={12} className="mr-1" fill="currentColor" />

@@ -1,30 +1,46 @@
-import copy from 'copy-to-clipboard';
-import * as CFI from 'foliate-js/epubcfi.js';
-import { store } from '@/state/store';
-import { issueStore } from '@/issue/issueStore';
-import { issueHref, issueLabel } from '@/issue/refs';
-import { oneLine } from '@/issue/issueOfText';
+import copy from "copy-to-clipboard";
+import * as CFI from "foliate-js/epubcfi.js";
+import { store } from "@/state/store";
+import { issueStore } from "@/issue/issueStore";
+import { issueHref, issueLabel } from "@/issue/refs";
+import { oneLine } from "@/issue/issueOfText";
 import {
-  bookHref, newNoteId, type BookNote, type HighlightColor, type HighlightStyle,
-} from './annotations/annotations';
-import { activeStore, storeOf } from './readerStore';
-import { usePopups, type TextSelection } from './popups';
-import { getView, type Pane } from './view';
-import { withDefaults } from './settings';
+  bookHref,
+  newNoteId,
+  type BookNote,
+  type HighlightColor,
+  type HighlightStyle,
+} from "./annotations/annotations";
+import { activeStore, storeOf } from "./readerStore";
+import { usePopups, type TextSelection } from "./popups";
+import { getView, type Pane } from "./view";
+import { withDefaults } from "./settings";
 
 /** The highlight the toolbar makes: the style last used, and its color. */
-export function defaultHighlight(): { style: HighlightStyle; color: HighlightColor } {
+export function defaultHighlight(): {
+  style: HighlightStyle;
+  color: HighlightColor;
+} {
   const settings = withDefaults(store.getState().readerSettings);
-  return { style: settings.highlightStyle, color: settings.highlightColors[settings.highlightStyle] };
+  return {
+    style: settings.highlightStyle,
+    color: settings.highlightColors[settings.highlightStyle],
+  };
 }
 
 /** The highlight used from now on: of this style, of this color. */
-export function rememberHighlight(style: HighlightStyle, color?: HighlightColor) {
+export function rememberHighlight(
+  style: HighlightStyle,
+  color?: HighlightColor,
+) {
   const settings = withDefaults(store.getState().readerSettings);
   store.getState().setReaderSettings({
     ...settings,
     highlightStyle: style,
-    highlightColors: { ...settings.highlightColors, ...(color ? { [style]: color } : {}) },
+    highlightColors: {
+      ...settings.highlightColors,
+      ...(color ? { [style]: color } : {}),
+    },
   });
 }
 
@@ -40,7 +56,9 @@ export function annotateSelection(
 ): BookNote {
   const now = new Date().toISOString();
   const { notes, location, addNote, updateNote } = activeStore().getState();
-  const existing = notes.find((n) => n.cfi === selection.cfi && n.type === 'annotation');
+  const existing = notes.find(
+    (n) => n.cfi === selection.cfi && n.type === "annotation",
+  );
   if (existing) {
     const patch = { ...(color ? { color } : {}), ...(style ? { style } : {}) };
     if (Object.keys(patch).length) updateNote(existing.id, patch);
@@ -48,16 +66,18 @@ export function annotateSelection(
     return { ...existing, ...patch };
   }
   const defaults = defaultHighlight();
-  color ??= style ? withDefaults(store.getState().readerSettings).highlightColors[style] : defaults.color;
+  color ??= style
+    ? withDefaults(store.getState().readerSettings).highlightColors[style]
+    : defaults.color;
   style ??= defaults.style;
   const note: BookNote = {
     id: newNoteId(),
-    type: 'annotation',
+    type: "annotation",
     cfi: selection.cfi,
     text: selection.text,
     color,
     style,
-    note: '',
+    note: "",
     ...(location?.tocLabel ? { chapter: location.tocLabel.trim() } : {}),
     createdAt: now,
     updatedAt: now,
@@ -68,7 +88,7 @@ export function annotateSelection(
 }
 
 /** Bookmark the place read, or remove the bookmark there. */
-export function toggleBookmark(pane: Pane = 'main') {
+export function toggleBookmark(pane: Pane = "main") {
   const { location, notes, addNote, removeNote } = storeOf(pane).getState();
   if (!location) return;
   const existing = bookmarkAt(notes, location.cfi);
@@ -79,9 +99,9 @@ export function toggleBookmark(pane: Pane = 'main') {
   const now = new Date().toISOString();
   addNote({
     id: newNoteId(),
-    type: 'bookmark',
+    type: "bookmark",
     cfi: location.cfi,
-    note: '',
+    note: "",
     ...(location.tocLabel ? { chapter: location.tocLabel.trim() } : {}),
     createdAt: now,
     updatedAt: now,
@@ -90,7 +110,7 @@ export function toggleBookmark(pane: Pane = 'main') {
 
 /** The bookmark of a page: the CFI of the page, or a place in it. */
 export function bookmarkAt(notes: BookNote[], cfi: string) {
-  const bookmarks = notes.filter((n) => n.type === 'bookmark');
+  const bookmarks = notes.filter((n) => n.type === "bookmark");
   const exact = bookmarks.find((n) => n.cfi === cfi);
   if (exact || bookmarks.length === 0) return exact;
   try {
@@ -106,23 +126,31 @@ export function bookmarkAt(notes: BookNote[], cfi: string) {
 }
 
 /** The markdown to put the text in a note: a quote with a link back to it. */
-export function quoteMarkdown(text: string, cfi: string, reader = activeStore()): string {
+export function quoteMarkdown(
+  text: string,
+  cfi: string,
+  reader = activeStore(),
+): string {
   const { hash, entry } = reader.getState();
-  const quote = text.split(/\r?\n/).filter((l) => l.trim()).map((l) => `> ${l.trim()}`).join('\n');
+  const quote = text
+    .split(/\r?\n/)
+    .filter((l) => l.trim())
+    .map((l) => `> ${l.trim()}`)
+    .join("\n");
   if (!hash) return quote;
-  const title = (entry?.title ?? 'book').replace(/[[\]]/g, '');
+  const title = (entry?.title ?? "book").replace(/[[\]]/g, "");
   return `${quote}\n>\n> — [${title}](${bookHref(hash, cfi)})`;
 }
 
 export function copyQuote(text: string, cfi: string) {
-  copy(quoteMarkdown(text, cfi), { format: 'text/plain' });
+  copy(quoteMarkdown(text, cfi), { format: "text/plain" });
   usePopups.getState().clear();
 }
 
 /** A link to a place of a book: of the book last used, or of a pane. */
 export function copyLink(cfi: string, pane?: Pane) {
   const { hash } = (pane ? storeOf(pane) : activeStore()).getState();
-  if (hash) copy(bookHref(hash, cfi), { format: 'text/plain' });
+  if (hash) copy(bookHref(hash, cfi), { format: "text/plain" });
   usePopups.getState().clear();
 }
 
@@ -131,21 +159,34 @@ export function copyLink(cfi: string, pane?: Pane) {
  * to its place, and the note; the annotation links to the issue then.
  * @returns the number of the issue
  */
-export async function issueOfNote(note: BookNote, pane?: Pane): Promise<number | undefined> {
+export async function issueOfNote(
+  note: BookNote,
+  pane?: Pane,
+): Promise<number | undefined> {
   const ws = store.getState().initDir;
   if (!ws) return undefined;
   const reader = pane ? storeOf(pane) : activeStore();
   const { hash, entry } = reader.getState();
-  const bookTitle = (entry?.title ?? 'book').replace(/[[\]]/g, '');
+  const bookTitle = (entry?.title ?? "book").replace(/[[\]]/g, "");
   const body = note.note.trim();
   const place = note.text
     ? quoteMarkdown(note.text, note.cfi, reader)
-    : hash ? `[${[bookTitle, note.chapter].filter(Boolean).join(' · ')}](${bookHref(hash, note.cfi)})` : '';
+    : hash
+      ? `[${[bookTitle, note.chapter].filter(Boolean).join(" · ")}](${bookHref(hash, note.cfi)})`
+      : "";
   await issueStore.getState().load(ws);
   const num = issueStore.getState().createIssue({
-    title: oneLine(body.split('\n')[0] || note.text || `${bookTitle}${note.chapter ? ` · ${note.chapter}` : ''}`),
-    body: [place, body].filter(Boolean).join('\n\n'),
+    title: oneLine(
+      body.split("\n")[0] ||
+        note.text ||
+        `${bookTitle}${note.chapter ? ` · ${note.chapter}` : ""}`,
+    ),
+    body: [place, body].filter(Boolean).join("\n\n"),
   });
-  reader.getState().updateNote(note.id, { note: `${body}${body ? '\n\n' : ''}[${issueLabel(num)}](${issueHref(num)})` });
+  reader
+    .getState()
+    .updateNote(note.id, {
+      note: `${body}${body ? "\n\n" : ""}[${issueLabel(num)}](${issueHref(num)})`,
+    });
   return num;
 }

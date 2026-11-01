@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 /** A box on the screen, in the coordinates of the window. */
 export type Box = { left: number; top: number; right: number; bottom: number };
@@ -15,22 +15,27 @@ export type TextSelection = {
 
 export type Footnote = { box: Box; size: { width: number; height: number } };
 
-export type LookupKind = 'dictionary' | 'wikipedia' | 'translate';
+export type LookupKind = "dictionary" | "wikipedia" | "translate";
 
 /** An action of a plugin on the text selected, by plugin and action id */
-export type PluginActionTarget = { plugin: string; action: string; title: string; selection: TextSelection };
+export type PluginActionTarget = {
+  plugin: string;
+  action: string;
+  title: string;
+  selection: TextSelection;
+};
 
 export type AnnotationTarget = {
   id: string;
   box: Box;
   /** its note edited: of a highlight made for it (gone if cancelled), or there before */
-  edit?: 'new' | 'existing';
+  edit?: "new" | "existing";
   /** its range, while the section is shown: to change it by its handles */
   range?: Range;
   /** its note alone, from the bubble on it: not the toolbar */
   bubble?: boolean;
   /** shown while the pointer is on the bubble, or then on the note: gone once it leaves */
-  hover?: 'bubble' | 'note';
+  hover?: "bubble" | "note";
 };
 
 type Popups = {
@@ -56,12 +61,28 @@ type Popups = {
 };
 
 const NONE = {
-  selection: undefined, annotation: undefined, lookup: undefined, pluginAction: undefined, footnote: undefined, adjusting: false,
+  selection: undefined,
+  annotation: undefined,
+  lookup: undefined,
+  pluginAction: undefined,
+  footnote: undefined,
+  adjusting: false,
 };
 
 /** A popup is shown over the book (not counting a range being adjusted) */
-export const isPopupShown = (popups: Pick<Popups, 'selection' | 'annotation' | 'lookup' | 'pluginAction' | 'footnote'>) =>
-  Boolean(popups.selection || popups.annotation || popups.lookup || popups.pluginAction || popups.footnote);
+export const isPopupShown = (
+  popups: Pick<
+    Popups,
+    "selection" | "annotation" | "lookup" | "pluginAction" | "footnote"
+  >,
+) =>
+  Boolean(
+    popups.selection ||
+    popups.annotation ||
+    popups.lookup ||
+    popups.pluginAction ||
+    popups.footnote,
+  );
 
 /** The popups over the book: one at a time. */
 export const usePopups = create<Popups>((set) => ({
@@ -80,7 +101,7 @@ export const usePopups = create<Popups>((set) => ({
  * pages goes off it; all of it, if none is.
  */
 export function boxOfRange(range: Range | Element, area?: Box): Box {
-  const node = 'startContainer' in range ? range.startContainer : range;
+  const node = "startContainer" in range ? range.startContainer : range;
   const frame = node.ownerDocument?.defaultView?.frameElement;
   const offset = frame ? frame.getBoundingClientRect() : { left: 0, top: 0 };
   const inWindow = (rect: Box): Box => ({
@@ -90,11 +111,15 @@ export function boxOfRange(range: Range | Element, area?: Box): Box {
     bottom: rect.bottom + offset.top,
   });
   if (area) {
-    const lines = Array.from(range.getClientRects()).map(inWindow).filter((r) => {
-      const x = (r.left + r.right) / 2;
-      const y = (r.top + r.bottom) / 2;
-      return x > area.left && x < area.right && y > area.top && y < area.bottom;
-    });
+    const lines = Array.from(range.getClientRects())
+      .map(inWindow)
+      .filter((r) => {
+        const x = (r.left + r.right) / 2;
+        const y = (r.top + r.bottom) / 2;
+        return (
+          x > area.left && x < area.right && y > area.top && y < area.bottom
+        );
+      });
     if (lines.length) {
       return {
         left: Math.min(...lines.map((r) => r.left)),

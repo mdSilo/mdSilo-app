@@ -19,43 +19,62 @@ import {
   useEffect,
   useRef,
   useState,
-} from 'react';
-import { createPortal } from 'react-dom';
-import tippy, { type Instance, type Props as TippyOptions } from 'tippy.js';
+} from "react";
+import { createPortal } from "react-dom";
+import tippy, { type Instance, type Props as TippyOptions } from "tippy.js";
 
 /* Shared options */
 
-export type Size = 'xs' | 'sm' | 'md' | 'lg';
+export type Size = "xs" | "sm" | "md" | "lg";
 export type Color =
-  'primary' | 'secondary' | 'accent' | 'neutral' | 'info' | 'success' | 'warning' | 'error';
+  | "primary"
+  | "secondary"
+  | "accent"
+  | "neutral"
+  | "info"
+  | "success"
+  | "warning"
+  | "error";
 
-const join = (...classes: (string | false | undefined)[]) => classes.filter(Boolean).join(' ');
+const join = (...classes: (string | false | undefined)[]) =>
+  classes.filter(Boolean).join(" ");
 
 /* Spinner */
 
 const SPINNER_SIZES: Record<Size, string> = {
-  xs: 'w-4 h-4 border-2', sm: 'w-5 h-5 border-2', md: 'w-8 h-8 border-4', lg: 'w-12 h-12 border-4',
+  xs: "w-4 h-4 border-2",
+  sm: "w-5 h-5 border-2",
+  md: "w-8 h-8 border-4",
+  lg: "w-12 h-12 border-4",
 };
 const SPINNER_COLORS: Record<Color, string> = {
-  primary: 'border-t-primary border-r-primary',
-  secondary: 'border-t-secondary border-r-secondary',
-  accent: 'border-t-accent border-r-accent',
-  neutral: 'border-t-neutral border-r-neutral',
-  info: 'border-t-info border-r-info',
-  success: 'border-t-success border-r-success',
-  warning: 'border-t-warning border-r-warning',
-  error: 'border-t-error border-r-error',
+  primary: "border-t-primary border-r-primary",
+  secondary: "border-t-secondary border-r-secondary",
+  accent: "border-t-accent border-r-accent",
+  neutral: "border-t-neutral border-r-neutral",
+  info: "border-t-info border-r-info",
+  success: "border-t-success border-r-success",
+  warning: "border-t-warning border-r-warning",
+  error: "border-t-error border-r-error",
 };
 
-export function Spinner(
-  { size = 'md', color = 'primary', className }: { size?: Size; color?: Color; className?: string }
-) {
+export function Spinner({
+  size = "md",
+  color = "primary",
+  className,
+}: {
+  size?: Size;
+  color?: Color;
+  className?: string;
+}) {
   return (
     <div
       data-testid="spinner"
       className={join(
-        'ease-linear rounded-full animate-spin border-base-300',
-        SPINNER_SIZES[size], SPINNER_COLORS[color], className,
+        "ease-linear rounded-full animate-spin border-base-300",
+        SPINNER_SIZES[size],
+        SPINNER_COLORS[color],
+        className,
       )}
     />
   );
@@ -63,7 +82,7 @@ export function Spinner(
 
 /* Tooltip */
 
-type TooltipProps = Partial<Omit<TippyOptions, 'content'>> & {
+type TooltipProps = Partial<Omit<TippyOptions, "content">> & {
   content: ReactNode;
   children: ReactElement;
   disabled?: boolean;
@@ -76,7 +95,7 @@ const getElementRef = (element: ReactNode) =>
     : undefined;
 
 const setRef = <T,>(ref: Ref<T> | undefined, value: T | null) => {
-  if (typeof ref === 'function') {
+  if (typeof ref === "function") {
     ref(value);
   } else if (ref) {
     (ref as { current: T | null }).current = value;
@@ -96,12 +115,12 @@ export function Tooltip(props: TooltipProps) {
     duration = 0,
     arrow = false,
     offset = [0, 6],
-    touch = ['hold', 500],
+    touch = ["hold", 500],
     ...otherOptions
   } = props;
 
   const [target, setTarget] = useState<Element | null>(null);
-  const [container] = useState(() => document.createElement('div'));
+  const [container] = useState(() => document.createElement("div"));
   const instance = useRef<Instance | null>(null);
   const options = { duration, arrow, offset, touch, ...otherOptions };
 
@@ -138,7 +157,7 @@ export function Tooltip(props: TooltipProps) {
       setTarget(node instanceof Element ? node : null);
       setRef(childRef, node);
     },
-    [childRef]
+    [childRef],
   );
 
   return (
@@ -151,12 +170,28 @@ export function Tooltip(props: TooltipProps) {
 
 /* Buttons */
 
-const BTN_SIZES: Record<Size, string> = { xs: 'btn-xs', sm: 'btn-sm', md: 'btn-md', lg: 'btn-lg' };
-const BTN_COLORS: Record<Color, string> = {
-  primary: 'btn-primary', secondary: 'btn-secondary', accent: 'btn-accent', neutral: 'btn-neutral',
-  info: 'btn-info', success: 'btn-success', warning: 'btn-warning', error: 'btn-error',
+const BTN_SIZES: Record<Size, string> = {
+  xs: "btn-xs",
+  sm: "btn-sm",
+  md: "btn-md",
+  lg: "btn-lg",
 };
-const BTN_VARIANTS = { ghost: 'btn-ghost', soft: 'btn-soft', outline: 'btn-outline', solid: '' } as const;
+const BTN_COLORS: Record<Color, string> = {
+  primary: "btn-primary",
+  secondary: "btn-secondary",
+  accent: "btn-accent",
+  neutral: "btn-neutral",
+  info: "btn-info",
+  success: "btn-success",
+  warning: "btn-warning",
+  error: "btn-error",
+};
+const BTN_VARIANTS = {
+  ghost: "btn-ghost",
+  soft: "btn-soft",
+  outline: "btn-outline",
+  solid: "",
+} as const;
 
 type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   title: string;
@@ -167,15 +202,26 @@ type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 /** Square button with an icon, its title as the accessible name. Ghost by default. */
-export function IconButton(
-  { title, active, size = 'sm', color, variant = 'ghost', className, children, ...rest }: IconButtonProps
-) {
+export function IconButton({
+  title,
+  active,
+  size = "sm",
+  color,
+  variant = "ghost",
+  className,
+  children,
+  ...rest
+}: IconButtonProps) {
   return (
     <button
       type="button"
       className={join(
-        'btn btn-square', BTN_VARIANTS[variant], BTN_SIZES[size],
-        color && BTN_COLORS[color], active && 'btn-active', className,
+        "btn btn-square",
+        BTN_VARIANTS[variant],
+        BTN_SIZES[size],
+        color && BTN_COLORS[color],
+        active && "btn-active",
+        className,
       )}
       title={title}
       aria-label={title}
@@ -194,19 +240,17 @@ type RowProps = {
   className?: string;
 };
 
-function Row(
-  { 
-    label, 
-    className, 
-    children, 
-    as: Tag = 'label' 
-  }: RowProps & { 
-    children: ReactNode; 
-    as?: 'label' | 'div' 
-  }
-) {
+function Row({
+  label,
+  className,
+  children,
+  as: Tag = "label",
+}: RowProps & {
+  children: ReactNode;
+  as?: "label" | "div";
+}) {
   return (
-    <Tag className={join('flex items-center justify-between gap-2', className)}>
+    <Tag className={join("flex items-center justify-between gap-2", className)}>
       <span>{label}</span>
       {children}
     </Tag>
@@ -214,26 +258,46 @@ function Row(
 }
 
 const TOGGLE_SIZES: Record<Size, string> = {
-  xs: 'toggle-xs', sm: 'toggle-sm', md: 'toggle-md', lg: 'toggle-lg',
+  xs: "toggle-xs",
+  sm: "toggle-sm",
+  md: "toggle-md",
+  lg: "toggle-lg",
 };
 const TOGGLE_COLORS: Record<Color, string> = {
-  primary: 'toggle-primary', secondary: 'toggle-secondary', accent: 'toggle-accent',
-  neutral: 'toggle-neutral', info: 'toggle-info', success: 'toggle-success',
-  warning: 'toggle-warning', error: 'toggle-error',
+  primary: "toggle-primary",
+  secondary: "toggle-secondary",
+  accent: "toggle-accent",
+  neutral: "toggle-neutral",
+  info: "toggle-info",
+  success: "toggle-success",
+  warning: "toggle-warning",
+  error: "toggle-error",
 };
 
-export function Toggle(
-  { label, checked, onChange, size = 'sm', color = 'primary', className, ariaLabel }: RowProps & {
-    checked: boolean; onChange: (v: boolean) => void; size?: Size; color?: Color; ariaLabel?: string;
-  }
-) {
+export function Toggle({
+  label,
+  checked,
+  onChange,
+  size = "sm",
+  color = "primary",
+  className,
+  ariaLabel,
+}: RowProps & {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  size?: Size;
+  color?: Color;
+  ariaLabel?: string;
+}) {
   return (
     <Row label={label} className={className}>
       <input
         type="checkbox"
-        className={join('toggle', TOGGLE_SIZES[size], TOGGLE_COLORS[color])}
+        className={join("toggle", TOGGLE_SIZES[size], TOGGLE_COLORS[color])}
         checked={checked}
-        aria-label={ariaLabel ?? (typeof label === 'string' ? label : undefined)}
+        aria-label={
+          ariaLabel ?? (typeof label === "string" ? label : undefined)
+        }
         onChange={(e) => onChange(e.target.checked)}
       />
     </Row>
@@ -241,25 +305,53 @@ export function Toggle(
 }
 
 const SELECT_SIZES: Record<Size, string> = {
-  xs: 'select-xs', sm: 'select-sm', md: 'select-md', lg: 'select-lg',
+  xs: "select-xs",
+  sm: "select-sm",
+  md: "select-md",
+  lg: "select-lg",
 };
 const SELECT_COLORS: Record<Color, string> = {
-  primary: 'select-primary', secondary: 'select-secondary', accent: 'select-accent',
-  neutral: 'select-neutral', info: 'select-info', success: 'select-success',
-  warning: 'select-warning', error: 'select-error',
+  primary: "select-primary",
+  secondary: "select-secondary",
+  accent: "select-accent",
+  neutral: "select-neutral",
+  info: "select-info",
+  success: "select-success",
+  warning: "select-warning",
+  error: "select-error",
 };
 
-export function Select(
-  { label, value, onChange, children, size = 'xs', color, width = 'w-40', className, ariaLabel }: RowProps & {
-    value: string; onChange: (v: string) => void; children: ReactNode;
-    size?: Size; color?: Color; width?: string; ariaLabel?: string;
-  }
-) {
+export function Select({
+  label,
+  value,
+  onChange,
+  children,
+  size = "xs",
+  color,
+  width = "w-40",
+  className,
+  ariaLabel,
+}: RowProps & {
+  value: string;
+  onChange: (v: string) => void;
+  children: ReactNode;
+  size?: Size;
+  color?: Color;
+  width?: string;
+  ariaLabel?: string;
+}) {
   return (
     <Row label={label} className={className}>
       <select
-        className={join('select', SELECT_SIZES[size], color && SELECT_COLORS[color], width)}
-        aria-label={ariaLabel ?? (typeof label === 'string' ? label : undefined)}
+        className={join(
+          "select",
+          SELECT_SIZES[size],
+          color && SELECT_COLORS[color],
+          width,
+        )}
+        aria-label={
+          ariaLabel ?? (typeof label === "string" ? label : undefined)
+        }
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -270,48 +362,64 @@ export function Select(
 }
 
 const RANGE_SIZES: Record<Size, string> = {
-  xs: 'range-xs', sm: 'range-sm', md: 'range-md', lg: 'range-lg',
+  xs: "range-xs",
+  sm: "range-sm",
+  md: "range-md",
+  lg: "range-lg",
 };
 const RANGE_COLORS: Record<Color, string> = {
-  primary: 'range-primary', secondary: 'range-secondary', accent: 'range-accent',
-  neutral: 'range-neutral', info: 'range-info', success: 'range-success',
-  warning: 'range-warning', error: 'range-error',
+  primary: "range-primary",
+  secondary: "range-secondary",
+  accent: "range-accent",
+  neutral: "range-neutral",
+  info: "range-info",
+  success: "range-success",
+  warning: "range-warning",
+  error: "range-error",
 };
 
 /** A slider, the value shown on its right if `format` is given. */
-export function Range(
-  { 
-    label, 
-    value, 
-    min, 
-    max, 
-    step = 1, 
-    format, 
-    onChange, 
-    size = 'xs', 
-    color, 
-    width = 'w-36', 
-    className, 
-    ariaLabel 
-  }: RowProps & {
-    value: number; 
-    min: number; 
-    max: number; 
-    step?: number;
-    format?: (v: number) => string; 
-    onChange: (v: number) => void;
-    size?: Size; 
-    color?: Color; 
-    width?: string;
-    ariaLabel?: string;
-  }
-) {
+export function Range({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  format,
+  onChange,
+  size = "xs",
+  color,
+  width = "w-36",
+  className,
+  ariaLabel,
+}: RowProps & {
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  format?: (v: number) => string;
+  onChange: (v: number) => void;
+  size?: Size;
+  color?: Color;
+  width?: string;
+  ariaLabel?: string;
+}) {
   return (
     <Row label={label} className={className}>
       <input
-        type="range" min={min} max={max} step={step}
-        className={join('range', RANGE_SIZES[size], color && RANGE_COLORS[color], width)}
-        aria-label={ariaLabel ?? (typeof label === 'string' ? label : undefined)}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        className={join(
+          "range",
+          RANGE_SIZES[size],
+          color && RANGE_COLORS[color],
+          width,
+        )}
+        aria-label={
+          ariaLabel ?? (typeof label === "string" ? label : undefined)
+        }
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
       />
@@ -321,22 +429,43 @@ export function Range(
 }
 
 const INPUT_SIZES: Record<Size, string> = {
-  xs: 'input-xs', sm: 'input-sm', md: 'input-md', lg: 'input-lg',
+  xs: "input-xs",
+  sm: "input-sm",
+  md: "input-md",
+  lg: "input-lg",
 };
 
-export function NumberInput(
-  { label, value, step, digits, unit, onChange, size = 'xs', width = 'w-20', className, ariaLabel }: RowProps & {
-    value: number; step: number; digits: number; unit?: string; onChange: (v: number) => void;
-    size?: Size; width?: string; ariaLabel?: string;
-  }
-) {
+export function NumberInput({
+  label,
+  value,
+  step,
+  digits,
+  unit,
+  onChange,
+  size = "xs",
+  width = "w-20",
+  className,
+  ariaLabel,
+}: RowProps & {
+  value: number;
+  step: number;
+  digits: number;
+  unit?: string;
+  onChange: (v: number) => void;
+  size?: Size;
+  width?: string;
+  ariaLabel?: string;
+}) {
   return (
     <Row label={label} className={className}>
       <span className="flex items-center gap-1">
         <input
-          type="number" step={step}
-          className={join('input', INPUT_SIZES[size], width)}
-          aria-label={ariaLabel ?? (typeof label === 'string' ? label : undefined)}
+          type="number"
+          step={step}
+          className={join("input", INPUT_SIZES[size], width)}
+          aria-label={
+            ariaLabel ?? (typeof label === "string" ? label : undefined)
+          }
           value={value.toFixed(digits)}
           onChange={(e) => onChange(Number(e.target.value))}
         />
@@ -347,22 +476,36 @@ export function NumberInput(
 }
 
 /** One of a few options, as joined buttons; the picked one active, or in `color`. */
-export function Segmented<T extends string | number>(
-  { label, value, options, onChange, size = 'xs', color, className }: RowProps & {
-    value: T; options: readonly (readonly [T, ReactNode])[]; onChange: (v: T) => void;
-    size?: Size; color?: Color;
-  }
-) {
+export function Segmented<T extends string | number>({
+  label,
+  value,
+  options,
+  onChange,
+  size = "xs",
+  color,
+  className,
+}: RowProps & {
+  value: T;
+  options: readonly (readonly [T, ReactNode])[];
+  onChange: (v: T) => void;
+  size?: Size;
+  color?: Color;
+}) {
   return (
     <Row label={label} className={className} as="div">
-      <div className="join" role="group" aria-label={typeof label === 'string' ? label : undefined}>
+      <div
+        className="join"
+        role="group"
+        aria-label={typeof label === "string" ? label : undefined}
+      >
         {options.map(([option, name]) => (
           <button
             key={option}
             type="button"
             className={join(
-              'join-item btn', BTN_SIZES[size],
-              value === option && (color ? BTN_COLORS[color] : 'btn-active'),
+              "join-item btn",
+              BTN_SIZES[size],
+              value === option && (color ? BTN_COLORS[color] : "btn-active"),
             )}
             aria-pressed={value === option}
             onClick={() => onChange(option)}

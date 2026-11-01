@@ -1,8 +1,8 @@
-import { store } from '@/state/store';
-import { linkTitlesOf, rewriteNoteLinks } from '@/lib/mdlink';
-import { writeFile } from '@/workspace/write';
-import { loadDir } from '@/workspace/open';
-import { noteContent } from '@/lib/contentCache';
+import { store } from "@/state/store";
+import { linkTitlesOf, rewriteNoteLinks } from "@/lib/mdlink";
+import { writeFile } from "@/workspace/write";
+import { loadDir } from "@/workspace/open";
+import { noteContent } from "@/lib/contentCache";
 
 const LOAD_TIMEOUT_MS = 5000;
 
@@ -44,19 +44,23 @@ const updateBacklinks = async (noteTitle: string, newTitle?: string) => {
   const notes = store.getState().notes;
   const toTitle = newTitle?.trim();
   // on delete, the links still work if another note has the same title
-  if (!toTitle && notes.values().some((n) => !n.is_dir && n.title === noteTitle)) {
+  if (
+    !toTitle &&
+    notes.values().some((n) => !n.is_dir && n.title === noteTitle)
+  ) {
     return;
   }
 
   // also update the legacy links, e.g. `a_b` for `a b`
   const oldTitles = linkTitlesOf(noteTitle, (t) =>
-    notes.values().some((n) => !n.is_dir && n.title === t)
+    notes.values().some((n) => !n.is_dir && n.title === t),
   );
   const updateNote = store.getState().updateNote;
   for (const note of notes.values()) {
     if (note.is_dir) continue;
     // not loaded: read if it links to the note, as the index tells
-    if (note.parsed && !note.parsed.links.some((t) => oldTitles.includes(t))) continue;
+    if (note.parsed && !note.parsed.links.some((t) => oldTitles.includes(t)))
+      continue;
     const old = note.parsed ? await noteContent(note.id) : note.content;
     if (!old) continue;
     const content = rewriteNoteLinks(old, noteTitle, toTitle, oldTitles);

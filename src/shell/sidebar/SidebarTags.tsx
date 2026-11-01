@@ -1,12 +1,18 @@
-import React, { useCallback, memo, forwardRef, ForwardedRef, HTMLAttributes } from 'react';
-import { List } from 'react-virtualized';
-import { AutoSizer } from 'react-virtualized-auto-sizer';
-import { TbHash as IconHash } from 'react-icons/tb';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { NoteMap, useStore } from '@/state/store';
-import { indexOf } from '@/lib/linkIndex';
-import ErrorBoundary from '@/ui/ErrorBoundary';
-import SidebarItem from './SidebarItem';
+import React, {
+  useCallback,
+  memo,
+  forwardRef,
+  ForwardedRef,
+  HTMLAttributes,
+} from "react";
+import { List } from "react-virtualized";
+import { AutoSizer } from "react-virtualized-auto-sizer";
+import { TbHash as IconHash } from "react-icons/tb";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { NoteMap, useStore } from "@/state/store";
+import { indexOf } from "@/lib/linkIndex";
+import ErrorBoundary from "@/ui/ErrorBoundary";
+import SidebarItem from "./SidebarItem";
 
 export type TagTreeItem = {
   name: string;
@@ -18,9 +24,9 @@ type SidebarTagsProps = {
 };
 
 function SidebarTags(props: SidebarTagsProps) {
-  const { className = '' } = props;
-  
-  const notes = useStore(state => state.notes);
+  const { className = "" } = props;
+
+  const notes = useStore((state) => state.notes);
   const data = computeTags(notes);
 
   return (
@@ -36,28 +42,21 @@ function SidebarTags(props: SidebarTagsProps) {
 
 export default memo(SidebarTags);
 
-
 type TreeProps = {
   data: TagTreeItem[];
   className?: string;
 };
 
 function SidebarTagTree(props: TreeProps) {
-  const { data, className = '' } = props;
+  const { data, className = "" } = props;
   // console.log("tag data", data)
 
   const Row = useCallback(
-    ({ index, style }: {index: number; style: React.CSSProperties}) => {
+    ({ index, style }: { index: number; style: React.CSSProperties }) => {
       const node = data[index];
-      return (
-        <Tag
-          key={`${node.name}-${index}`}
-          node={node}
-          style={style}
-        />
-      );
+      return <Tag key={`${node.name}-${index}`} node={node} style={style} />;
     },
-    [data]
+    [data],
   );
 
   return (
@@ -81,12 +80,11 @@ function SidebarTagTree(props: TreeProps) {
           />
         </div>
       </div>
-  </ErrorBoundary>
+    </ErrorBoundary>
   );
 }
 
-const TagTree =  memo(SidebarTagTree);
-
+const TagTree = memo(SidebarTagTree);
 
 interface TagProps extends HTMLAttributes<HTMLDivElement> {
   node: TagTreeItem;
@@ -95,18 +93,21 @@ interface TagProps extends HTMLAttributes<HTMLDivElement> {
 
 const SidebarTag = (
   props: TagProps,
-  forwardedRef: ForwardedRef<HTMLDivElement>
+  forwardedRef: ForwardedRef<HTMLDivElement>,
 ) => {
-  const { node, isHighlighted, className = '', style, ...otherProps } = props;
+  const { node, isHighlighted, className = "", style, ...otherProps } = props;
   // console.log("node: ", node)
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
-  const onClickTag = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    dispatch({view: 'tag', tag: node.name});
-  }, [dispatch, node]);
-  
+  const onClickTag = useCallback(
+    async (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      dispatch({ view: "tag", tag: node.name });
+    },
+    [dispatch, node],
+  );
+
   return (
     <SidebarItem
       ref={forwardedRef}
@@ -122,13 +123,11 @@ const SidebarTag = (
         style={{ paddingLeft: `16px` }}
         draggable={false}
       >
-        <div
-          className="p-1 rounded-sm hover:bg-base-content/15 active:bg-base-content/25"
-        >
-          <IconHash 
+        <div className="p-1 rounded-sm hover:bg-base-content/15 active:bg-base-content/25">
+          <IconHash
             className="shrink-0 text-base-content/60"
             size={16}
-            color={`${['purple','cyan','green','red','orange','blue','yellow'][node.num % 7]}`}
+            color={`${["purple", "cyan", "green", "red", "orange", "blue", "yellow"][node.num % 7]}`}
           />
         </div>
         <span className="overflow-hidden text-ellipsis whitespace-nowrap">
@@ -142,9 +141,8 @@ const SidebarTag = (
 
 const Tag = memo(forwardRef(SidebarTag));
 
-
 const computeTags = (notes: NoteMap) => {
-  const notesArr = notes.values().filter(n => !n.is_dir);
+  const notesArr = notes.values().filter((n) => !n.is_dir);
   const tagNames: Record<string, number> = {};
   // the tags of each note, from the index: found once per content
   const index = indexOf(notes);
@@ -153,9 +151,9 @@ const computeTags = (notes: NoteMap) => {
       tagNames[tag] = tagNames[tag] ? tagNames[tag] + 1 : 1;
     }
   }
-  const res : TagTreeItem[] = [];
+  const res: TagTreeItem[] = [];
   for (const tag of Object.keys(tagNames)) {
-    res.push({name: tag, num: tagNames[tag]});
+    res.push({ name: tag, num: tagNames[tag] });
   }
 
   return res;

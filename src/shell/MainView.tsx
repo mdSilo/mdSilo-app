@@ -1,29 +1,31 @@
-import { lazy, Suspense, type ComponentType } from 'react';
+import { lazy, Suspense, type ComponentType } from "react";
 import MsEditor from "mdsmirror";
-import { useStore } from '@/state/store';
-import { EDITOR_THEME } from '@/lib/themes';
-import ErrorBoundary from '@/ui/ErrorBoundary';
-import { Spinner } from '@/ui/ui';
-import useNoteTaskSync from '@/issue/useNoteTaskSync';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import useStartupView from '@/state/useStartupView';
-import { useViewsOfBookWindows } from '@/shell/windows';
-import NotePage from '@/writer/MdView';
+import { useStore } from "@/state/store";
+import { EDITOR_THEME } from "@/lib/themes";
+import ErrorBoundary from "@/ui/ErrorBoundary";
+import { Spinner } from "@/ui/ui";
+import useNoteTaskSync from "@/issue/useNoteTaskSync";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import useStartupView from "@/state/useStartupView";
+import { useViewsOfBookWindows } from "@/shell/windows";
+import NotePage from "@/writer/MdView";
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
-const Feed = lazy(() => import('@/feed/FeedView'));
-const Chronicle = lazy(() => import('@/insight/Chronicle'));
-const Issues = lazy(() => import('@/issue/IssuesView'));
-const IssuePage = lazy(() => import('@/issue/IssuesView').then((m) => ({ default: m.IssuePage })));
-const ProjectView = lazy(() => import('@/issue/ProjectView'));
-const Graph = lazy(() => import('@/insight/Graph'));
-const Journals = lazy(() => import('@/insight/Journals'));
-const HashTags = lazy(() => import('@/insight/Hashtags'));
-const Library = lazy(() => import('@/reader/library/LibraryView'));
-const Reader = lazy(() => import('@/reader/components/ReaderView'));
-const Vocabulary = lazy(() => import('@/reader/vocabulary/VocabularyView'));
-const PluginFileView = lazy(() => import('@/plugins/PluginFileView'));
-const PluginView = lazy(() => import('@/plugins/PluginView'));
+const Feed = lazy(() => import("@/feed/FeedView"));
+const Chronicle = lazy(() => import("@/insight/Chronicle"));
+const Issues = lazy(() => import("@/issue/IssuesView"));
+const IssuePage = lazy(() =>
+  import("@/issue/IssuesView").then((m) => ({ default: m.IssuePage })),
+);
+const ProjectView = lazy(() => import("@/issue/ProjectView"));
+const Graph = lazy(() => import("@/insight/Graph"));
+const Journals = lazy(() => import("@/insight/Journals"));
+const HashTags = lazy(() => import("@/insight/Hashtags"));
+const Library = lazy(() => import("@/reader/library/LibraryView"));
+const Reader = lazy(() => import("@/reader/components/ReaderView"));
+const Vocabulary = lazy(() => import("@/reader/vocabulary/VocabularyView"));
+const PluginFileView = lazy(() => import("@/plugins/PluginFileView"));
+const PluginView = lazy(() => import("@/plugins/PluginView"));
 
 /** the view of each view type; any other type is a note */
 const VIEWS: Record<string, ComponentType> = {
@@ -39,7 +41,7 @@ const VIEWS: Record<string, ComponentType> = {
   library: Library,
   book: Reader,
   vocabulary: Vocabulary,
-  'plugin-file': PluginFileView,
+  "plugin-file": PluginFileView,
   plugin: PluginView,
 };
 
@@ -61,7 +63,10 @@ export default function MainView() {
 
 function ViewLoading() {
   return (
-    <div className="flex items-center justify-center w-full h-full" data-testid="view-loading">
+    <div
+      className="flex items-center justify-center w-full h-full"
+      data-testid="view-loading"
+    >
       <Spinner />
     </div>
   );

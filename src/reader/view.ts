@@ -1,10 +1,17 @@
-import { create } from 'zustand';
-import type { BookDoc } from './document';
+import { create } from "zustand";
+import type { BookDoc } from "./document";
 
 /** The `foliate-view` element of foliate-js (packages/foliate-js/view.js). */
 /** The marks drawn over a section: the one at a point of it, with its box there. */
 export type Overlay = {
-  hitTest: (point: { x: number; y: number }) => [string?, Range?, { left: number; top: number; right: number; bottom: number }?];
+  hitTest: (point: {
+    x: number;
+    y: number;
+  }) => [
+    string?,
+    Range?,
+    { left: number; top: number; right: number; bottom: number }?,
+  ];
 };
 
 export interface FoliateRenderer extends HTMLElement {
@@ -29,15 +36,23 @@ export interface FoliateRenderer extends HTMLElement {
   atStart?: boolean;
   atEnd?: boolean;
   /** `select`: the anchor selected in the page once there */
-  scrollToAnchor?: (anchor: Range | number, select?: boolean, smooth?: boolean) => Promise<void>;
+  scrollToAnchor?: (
+    anchor: Range | number,
+    select?: boolean,
+    smooth?: boolean,
+  ) => Promise<void>;
 }
 
-export type SearchMatch = { cfi: string; cfis?: string[]; excerpt: { pre: string; match: string; post: string } };
+export type SearchMatch = {
+  cfi: string;
+  cfis?: string[];
+  excerpt: { pre: string; match: string; post: string };
+};
 export type SearchResult =
   | { index: number; label: string; subitems: SearchMatch[] }
   | { progress: number }
   | SearchMatch
-  | 'done';
+  | "done";
 
 export interface TTSApi {
   doc: Document;
@@ -58,7 +73,10 @@ export interface FoliateView extends HTMLElement {
   tts?: TTSApi | null;
   open: (book: BookDoc) => Promise<void>;
   close: () => void;
-  init: (options: { lastLocation?: string; showTextStart?: boolean }) => Promise<void>;
+  init: (options: {
+    lastLocation?: string;
+    showTextStart?: boolean;
+  }) => Promise<void>;
   goTo: (target: string | number) => Promise<unknown>;
   goToFraction: (fraction: number) => Promise<void>;
   goLeft: () => Promise<void>;
@@ -66,21 +84,43 @@ export interface FoliateView extends HTMLElement {
   prev: (distance?: number) => Promise<void>;
   next: (distance?: number) => Promise<void>;
   getCFI: (index: number, range?: Range) => string;
-  resolveNavigation: (target: string) => { index: number; anchor?: (doc: Document) => Range | Element | null } | undefined;
-  addAnnotation: (annotation: { value: string; [key: string]: unknown }, remove?: boolean) => Promise<unknown>;
+  resolveNavigation: (
+    target: string,
+  ) =>
+    | { index: number; anchor?: (doc: Document) => Range | Element | null }
+    | undefined;
+  addAnnotation: (
+    annotation: { value: string; [key: string]: unknown },
+    remove?: boolean,
+  ) => Promise<unknown>;
   deleteAnnotation: (annotation: { value: string }) => Promise<unknown>;
-  search: (opts: { query: string; index?: number; matchCase?: boolean; matchDiacritics?: boolean; matchWholeWords?: boolean }) => AsyncGenerator<SearchResult>;
+  search: (opts: {
+    query: string;
+    index?: number;
+    matchCase?: boolean;
+    matchDiacritics?: boolean;
+    matchWholeWords?: boolean;
+  }) => AsyncGenerator<SearchResult>;
   clearSearch: () => void;
-  initTTS: (granularity?: 'word' | 'sentence', nodeFilter?: unknown, highlight?: (range: Range) => void) => Promise<void>;
+  initTTS: (
+    granularity?: "word" | "sentence",
+    nodeFilter?: unknown,
+    highlight?: (range: Range) => void,
+  ) => Promise<void>;
   deselect: () => void;
-  history: { back: () => void; forward: () => void; canGoBack: boolean; canGoForward: boolean };
+  history: {
+    back: () => void;
+    forward: () => void;
+    canGoBack: boolean;
+    canGoForward: boolean;
+  };
 }
 
 /** The book read, or the book beside it (parallel reading). */
-export type Pane = 'main' | 'side';
+export type Pane = "main" | "side";
 
 /** The pane last used: the text selected, the keys, the sidebar act on its book. */
-export const usePane = create<{ active: Pane }>(() => ({ active: 'main' }));
+export const usePane = create<{ active: Pane }>(() => ({ active: "main" }));
 export const activePane = () => usePane.getState().active;
 export const setActivePane = (active: Pane) => {
   if (usePane.getState().active !== active) usePane.setState({ active });
@@ -90,8 +130,8 @@ const views: Record<Pane, FoliateView | null> = { main: null, side: null };
 
 /** The view of a book open, for the panels to act on it: of the pane last used by default. */
 export const getView = (pane: Pane = activePane()) => views[pane];
-export const setView = (view: FoliateView | null, pane: Pane = 'main') => {
+export const setView = (view: FoliateView | null, pane: Pane = "main") => {
   views[pane] = view;
   // the book beside closed: back to the book read
-  if (!view && pane === 'side') setActivePane('main');
+  if (!view && pane === "side") setActivePane("main");
 };

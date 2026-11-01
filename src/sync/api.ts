@@ -1,5 +1,5 @@
-import { invoke } from '@tauri-apps/api/core';
-import { isTauri, isWeb } from '@/workspace/util';
+import { invoke } from "@tauri-apps/api/core";
+import { isTauri, isWeb } from "@/workspace/util";
 
 /**
  * Sync of the workspace with a git remote (GitHub, Gitea...) over HTTPS with
@@ -46,8 +46,9 @@ export type SyncReport = {
   conflicts: ConflictReport[];
 };
 
-export const syncInfo = (dir: string) => invoke<SyncInfo>('sync_info', { dir });
+export const syncInfo = (dir: string) => invoke<SyncInfo>("sync_info", { dir });
 
-export const syncSetup = (dir: string, setup: SyncSetup) => invoke<SyncInfo>('sync_setup', { dir, setup });
+export const syncSetup = (dir: string, setup: SyncSetup) =>
+  invoke<SyncInfo>("sync_setup", { dir, setup });
 
-export const syncRun = (dir: string) => invoke<SyncReport>('sync_run', { dir });
+export const syncRun = (dir: string) => invoke<SyncReport>("sync_run", { dir });

@@ -1,11 +1,21 @@
-import type { IconBaseProps, IconType } from 'react-icons';
-import { TbHtml, TbFileZip, TbMarkdown } from 'react-icons/tb';
-import { FaFilePdf } from 'react-icons/fa';
+import type { IconBaseProps, IconType } from "react-icons";
+import { TbHtml, TbFileZip, TbMarkdown } from "react-icons/tb";
+import { FaFilePdf } from "react-icons/fa";
 import { PiFileTxt } from "react-icons/pi";
-import { bookFormatOf, convertibleFormatOf, type BookFormat, type TextFormat } from '../document';
+import {
+  bookFormatOf,
+  convertibleFormatOf,
+  type BookFormat,
+  type TextFormat,
+} from "../document";
 
 /** The official EPUB logo mark, without the wordmark. */
-export function EpubIcon({ size = '1em', color = '#85b916', title, ...props }: IconBaseProps) {
+export function EpubIcon({
+  size = "1em",
+  color = "#85b916",
+  title,
+  ...props
+}: IconBaseProps) {
   return (
     <svg
       fill={color}
@@ -27,7 +37,12 @@ export function EpubIcon({ size = '1em', color = '#85b916', title, ...props }: I
 }
 
 /** An original ebook-file icon used for MOBI and AZW formats. */
-export function MobiIcon({ size = '1em', color, title, ...props }: IconBaseProps) {
+export function MobiIcon({
+  size = "1em",
+  color,
+  title,
+  ...props
+}: IconBaseProps) {
   return (
     <svg
       fill="none"
@@ -50,7 +65,12 @@ export function MobiIcon({ size = '1em', color, title, ...props }: IconBaseProps
 }
 
 /** An original open-book/code icon used for FB2 and FBZ formats. */
-export function FictionBookIcon({ size = '1em', color, title, ...props }: IconBaseProps) {
+export function FictionBookIcon({
+  size = "1em",
+  color,
+  title,
+  ...props
+}: IconBaseProps) {
   return (
     <svg
       fill="none"
@@ -73,7 +93,12 @@ export function FictionBookIcon({ size = '1em', color, title, ...props }: IconBa
 }
 
 /** An original comic-page icon used for CBZ archives. */
-export function CbzIcon({ size = '1em', color, title, ...props }: IconBaseProps) {
+export function CbzIcon({
+  size = "1em",
+  color,
+  title,
+  ...props
+}: IconBaseProps) {
   return (
     <svg
       fill="none"
@@ -97,22 +122,24 @@ export function CbzIcon({ size = '1em', color, title, ...props }: IconBaseProps)
 
 /** The icon of a book format, its color: to tell the books apart in the file tree. */
 const BOOK_ICONS: Record<BookFormat, { icon: IconType; color: string }> = {
-  EPUB: { icon: EpubIcon, color: '#85b916' },
-  PDF: { icon: FaFilePdf, color: '#dc2626' },
-  MOBI: { icon: MobiIcon, color: '#ea580c' },
-  AZW: { icon: MobiIcon, color: '#ea580c' },
-  AZW3: { icon: MobiIcon, color: '#ea580c' },
-  FB2: { icon: FictionBookIcon, color: '#0d9488' },
-  FBZ: { icon: FictionBookIcon, color: '#0d9488' },
-  CBZ: { icon: CbzIcon, color: '#db2777' },
+  EPUB: { icon: EpubIcon, color: "#85b916" },
+  PDF: { icon: FaFilePdf, color: "#dc2626" },
+  MOBI: { icon: MobiIcon, color: "#ea580c" },
+  AZW: { icon: MobiIcon, color: "#ea580c" },
+  AZW3: { icon: MobiIcon, color: "#ea580c" },
+  FB2: { icon: FictionBookIcon, color: "#0d9488" },
+  FBZ: { icon: FictionBookIcon, color: "#0d9488" },
+  CBZ: { icon: CbzIcon, color: "#db2777" },
 };
 
 /** The text files read once converted to a book; Markdown is a note. */
-const TEXT_ICONS: Partial<Record<TextFormat, { icon: IconType; color: string }>> = {
-  TXT: { icon: PiFileTxt, color: '#64748b' },
-  HTML: { icon: TbHtml, color: '#c2410c' },
-  ZIP: { icon: TbFileZip, color: '#a16207' },
-  Markdown: { icon: TbMarkdown, color: '#000000' },
+const TEXT_ICONS: Partial<
+  Record<TextFormat, { icon: IconType; color: string }>
+> = {
+  TXT: { icon: PiFileTxt, color: "#64748b" },
+  HTML: { icon: TbHtml, color: "#c2410c" },
+  ZIP: { icon: TbFileZip, color: "#a16207" },
+  Markdown: { icon: TbMarkdown, color: "#000000" },
 };
 
 /** The icon of a file by its format, if a book (or a text file made a book); else undefined. */
@@ -125,11 +152,24 @@ export function bookIconOf(path: string) {
 }
 
 /** The icon of a book file, by its format. */
-export default function BookIcon(
-  { path, size = 16, className = '' }: { path: string; size?: number; className?: string }
-) {
+export default function BookIcon({
+  path,
+  size = 16,
+  className = "",
+}: {
+  path: string;
+  size?: number;
+  className?: string;
+}) {
   const found = bookIconOf(path);
   if (!found) return null;
   const { icon: Icon, color, label } = found;
-  return <Icon className={`shrink-0 ${className}`} size={size} color={color} aria-label={label} />;
+  return (
+    <Icon
+      className={`shrink-0 ${className}`}
+      size={size}
+      color={color}
+      aria-label={label}
+    />
+  );
 }

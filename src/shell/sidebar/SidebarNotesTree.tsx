@@ -1,9 +1,16 @@
-import React, { useMemo, useCallback, useLayoutEffect, useRef, useState, memo } from 'react';
-import { List } from 'react-virtualized';
-import { AutoSizer } from 'react-virtualized-auto-sizer';
-import { NoteTreeItem } from '@/state/store';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import SidebarNoteLink, { INDENT_PER_LEVEL } from './SidebarNoteLink';
+import React, {
+  useMemo,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  memo,
+} from "react";
+import { List } from "react-virtualized";
+import { AutoSizer } from "react-virtualized-auto-sizer";
+import { NoteTreeItem } from "@/state/store";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import SidebarNoteLink, { INDENT_PER_LEVEL } from "./SidebarNoteLink";
 
 export type NoteTreeRow = {
   node: NoteTreeItem;
@@ -47,7 +54,7 @@ const measureText = (text: string, font: string): number => {
   const cached = byText.get(text);
   if (cached !== undefined) return cached;
   if (measureCtx === undefined) {
-    measureCtx = document.createElement('canvas').getContext('2d');
+    measureCtx = document.createElement("canvas").getContext("2d");
   }
   let width: number;
   if (measureCtx) {
@@ -64,7 +71,7 @@ function SidebarNotesTree(props: Props) {
   const { data, className } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
   // font of the rows, to measure titles
-  const [font, setFont] = useState('');
+  const [font, setFont] = useState("");
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (el) setFont(window.getComputedStyle(el).font);
@@ -72,15 +79,15 @@ function SidebarNotesTree(props: Props) {
 
   const currentView = useCurrentViewContext();
   const params = currentView.state.params;
-  const noteId = params?.noteId || '';
-  
+  const noteId = params?.noteId || "";
+
   const currentNoteId = useMemo(() => {
     const id = noteId;
-    return id && typeof id === 'string' ? id : undefined;
+    return id && typeof id === "string" ? id : undefined;
   }, [noteId]);
 
   const Row = useCallback(
-    ({ index, style }: {index: number; style: React.CSSProperties}) => {
+    ({ index, style }: { index: number; style: React.CSSProperties }) => {
       const { node, depth, isExpanded } = data[index];
       return (
         <SidebarNoteLink
@@ -93,12 +100,15 @@ function SidebarNotesTree(props: Props) {
         />
       );
     },
-    [currentNoteId, data]
+    [currentNoteId, data],
   );
 
   const contentWidth = useMemo(
-    () => treeContentWidth(data, (text) => measureText(text, font || '16px sans-serif')),
-    [data, font]
+    () =>
+      treeContentWidth(data, (text) =>
+        measureText(text, font || "16px sans-serif"),
+      ),
+    [data, font],
   );
 
   return (
@@ -115,9 +125,16 @@ function SidebarNotesTree(props: Props) {
               rowCount={data.length}
               rowHeight={32}
               rowRenderer={Row}
-              style={{ overflowX: innerWidth > width ? 'auto' : 'hidden', overflowY: 'auto' }}
+              style={{
+                overflowX: innerWidth > width ? "auto" : "hidden",
+                overflowY: "auto",
+              }}
               // overflow visible: sticky row buttons must stick to the Grid, the scroller
-              containerStyle={{ width: innerWidth, maxWidth: innerWidth, overflow: 'visible' }}
+              containerStyle={{
+                width: innerWidth,
+                maxWidth: innerWidth,
+                overflow: "visible",
+              }}
             />
           );
         }}

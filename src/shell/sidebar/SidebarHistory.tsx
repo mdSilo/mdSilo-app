@@ -1,16 +1,16 @@
-import React, { memo, useCallback, useEffect, useRef } from 'react';
-import { TbPin as IconPin, TbTrash as IconTrash } from 'react-icons/tb';
-import { useStore } from '@/state/store';
-import { Tooltip } from '@/ui/ui';
-import { listInitDir, startupDir } from '@/workspace/useOpen';
-import { isWeb } from '@/workspace/util';
+import React, { memo, useCallback, useEffect, useRef } from "react";
+import { TbPin as IconPin, TbTrash as IconTrash } from "react-icons/tb";
+import { useStore } from "@/state/store";
+import { Tooltip } from "@/ui/ui";
+import { listInitDir, startupDir } from "@/workspace/useOpen";
+import { isWeb } from "@/workspace/util";
 
 type Props = {
   className?: string;
 };
 
 function SidebarHistory(props: Props) {
-  const { className = '' } = props;
+  const { className = "" } = props;
 
   const history: string[] = useStore((state) => state.recentDir);
   const deleteRecentDir = useStore((state) => state.deleteRecentDir);
@@ -22,7 +22,8 @@ function SidebarHistory(props: Props) {
     async (e: React.MouseEvent<HTMLDivElement, MouseEvent>, dir: string) => {
       e.preventDefault();
       await listInitDir(dir);
-    }, []
+    },
+    [],
   );
 
   const openOnStartup = useStore((state) => state.openOnStartup);
@@ -30,7 +31,7 @@ function SidebarHistory(props: Props) {
   // open the startup folder once: listInitDir updates recentDir, which
   // would otherwise re-run this effect forever while the history is mounted
   const isOpened = useRef(false);
-  useEffect(() => { 
+  useEffect(() => {
     // web: the workspace is opened on startup, see openWebWorkspace
     if (isWeb || showHistory || isOpened.current) return;
     const dir = startupDir({ openOnStartup, recentDir: history, pinnedDir });
@@ -60,7 +61,7 @@ function SidebarHistory(props: Props) {
       )}
       <b className="text-center m-2">Recent History</b>
       {[...history].reverse().map((item, idx) => (
-        <HistoryItem  
+        <HistoryItem
           key={`${item}-${idx}`}
           setPinnedDir={setPinnedDir}
           deleteRecentDir={deleteRecentDir}
@@ -68,8 +69,8 @@ function SidebarHistory(props: Props) {
           dir={item}
         />
       ))}
-      <button 
-        className="p-1 m-4 rounded-sm text-base-content/60 hover:text-error/80" 
+      <button
+        className="p-1 m-4 rounded-sm text-base-content/60 hover:text-error/80"
         onClick={() => setRecentDir([])}
       >
         Clear History
@@ -80,17 +81,19 @@ function SidebarHistory(props: Props) {
 
 export default memo(SidebarHistory);
 
-
 type ItemProps = {
   setPinnedDir: (dir: string) => void;
   deleteRecentDir: (dir: string) => void;
-  openRecentDir: (e: React.MouseEvent<HTMLDivElement, MouseEvent>, dir: string) => Promise<void>;
+  openRecentDir: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    dir: string,
+  ) => Promise<void>;
   dir: string;
-}
+};
 
 function HistoryItem(props: ItemProps) {
-  const {setPinnedDir, deleteRecentDir, openRecentDir, dir} = props;
-  
+  const { setPinnedDir, deleteRecentDir, openRecentDir, dir } = props;
+
   return (
     <div className="flex items-center justify-between p-1 border-t border-base-300">
       <Tooltip content="Pin">
@@ -132,11 +135,11 @@ function HistoryItem(props: ItemProps) {
 
 function subDirPath(dir: string) {
   const parts = dir.split(/[/\\]/);
-  const last1 = parts.pop() || '.';
-  const last2 = parts.pop() || '';
-  const newDir = `~${last2 ? '/' : ''}${last2}/${last1}`;
+  const last1 = parts.pop() || ".";
+  const last2 = parts.pop() || "";
+  const newDir = `~${last2 ? "/" : ""}${last2}/${last1}`;
   const len = newDir.length;
   const start = Math.max(len - 20, 0);
-  const prefix = start > 0 ? '...' : ''
+  const prefix = start > 0 ? "..." : "";
   return prefix + newDir.substring(start);
 }

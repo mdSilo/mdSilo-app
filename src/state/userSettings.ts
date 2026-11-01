@@ -1,40 +1,54 @@
-import { Draft } from 'immer';
-import { DEFAULT_READER_SETTINGS, type ReaderSettings } from '@/reader/settings';
-import { DEFAULT_LIBRARY_SETTINGS, type LibrarySettings } from '@/reader/library/shelf';
-import { isSystemDark, SYSTEM_THEME } from '@/lib/themes';
-import type { CustomFont } from '@/custom/fonts';
-import type { CustomTheme } from '@/custom/themes';
-import type { InstalledPlugin, PluginState } from '@/plugins/registry';
-import { setter, Setter, Store } from './store';
+import { Draft } from "immer";
+import {
+  DEFAULT_READER_SETTINGS,
+  type ReaderSettings,
+} from "@/reader/settings";
+import {
+  DEFAULT_LIBRARY_SETTINGS,
+  type LibrarySettings,
+} from "@/reader/library/shelf";
+import { isSystemDark, SYSTEM_THEME } from "@/lib/themes";
+import type { CustomFont } from "@/custom/fonts";
+import type { CustomTheme } from "@/custom/themes";
+import type { InstalledPlugin, PluginState } from "@/plugins/registry";
+import { setter, Setter, Store } from "./store";
 
 export enum Sort {
-  TitleAscending = 'TITLE_ASCENDING',
-  TitleDescending = 'TITLE_DESCENDING',
-  DateModifiedAscending = 'DATE_MODIFIED_ASCENDING',
-  DateModifiedDescending = 'DATE_MODIFIED_DESCENDING',
-  DateCreatedAscending = 'DATE_CREATED_ASCENDING',
-  DateCreatedDescending = 'DATE_CREATED_DESCENDING',
+  TitleAscending = "TITLE_ASCENDING",
+  TitleDescending = "TITLE_DESCENDING",
+  DateModifiedAscending = "DATE_MODIFIED_ASCENDING",
+  DateModifiedDescending = "DATE_MODIFIED_DESCENDING",
+  DateCreatedAscending = "DATE_CREATED_ASCENDING",
+  DateCreatedDescending = "DATE_CREATED_DESCENDING",
 }
 
-export type SideMenuOrientation = 'auto' | 'vertical' | 'horizontal';
+export type SideMenuOrientation = "auto" | "vertical" | "horizontal";
 
 /** the folder opened on startup */
-export type OpenOnStartup = 'previous' | 'pinned' | 'none';
+export type OpenOnStartup = "previous" | "pinned" | "none";
 
 /** the view shown on startup; explorer: the explorer in the sidebar; book: the book last read */
 export type StartupView =
-  | 'notes' | 'library' | 'book' | 'feed' | 'issues' | 'project' | 'chronicle' | 'graph' | 'journal';
+  | "notes"
+  | "library"
+  | "book"
+  | "feed"
+  | "issues"
+  | "project"
+  | "chronicle"
+  | "graph"
+  | "journal";
 
 export const STARTUP_VIEWS: [StartupView, string][] = [
-  ['notes', 'Explorer'],
-  ['library', 'Library'],
-  ['book', 'Last Book'],
-  ['feed', 'Feed Reader'],
-  ['issues', 'Issues'],
-  ['project', 'Projects'],
-  ['chronicle', 'Chronicle'],
-  ['graph', 'Graph'],
-  ['journal', 'Journals'],
+  ["notes", "Explorer"],
+  ["library", "Library"],
+  ["book", "Last Book"],
+  ["feed", "Feed Reader"],
+  ["issues", "Issues"],
+  ["project", "Projects"],
+  ["chronicle", "Chronicle"],
+  ["graph", "Graph"],
+  ["journal", "Journals"],
 ];
 
 /** automatic sync of the workspace (see sync/), where sync is set up */
@@ -45,19 +59,22 @@ export type SyncSettings = {
   onExit: boolean;
 };
 
-export const DEFAULT_SYNC_SETTINGS: SyncSettings = { interval: 0, onExit: false };
+export const DEFAULT_SYNC_SETTINGS: SyncSettings = {
+  interval: 0,
+  onExit: false,
+};
 
 export const ReadableNameBySort = {
-  [Sort.TitleAscending]: 'Title (A-Z)',
-  [Sort.TitleDescending]: 'Title (Z-A)',
-  [Sort.DateModifiedAscending]: 'Modified (old)',
-  [Sort.DateModifiedDescending]: 'Modified (new)',
-  [Sort.DateCreatedAscending]: 'Created (old)',
-  [Sort.DateCreatedDescending]: 'Created (new)',
+  [Sort.TitleAscending]: "Title (A-Z)",
+  [Sort.TitleDescending]: "Title (Z-A)",
+  [Sort.DateModifiedAscending]: "Modified (old)",
+  [Sort.DateModifiedDescending]: "Modified (new)",
+  [Sort.DateCreatedAscending]: "Created (old)",
+  [Sort.DateCreatedDescending]: "Created (new)",
 } as const;
 
 export type UserSettings = {
-  userId: string,
+  userId: string;
   setUserId: Setter<string>;
   theme: string; // daisyUI theme name, or 'system'
   setTheme: Setter<string>;
@@ -107,11 +124,11 @@ export type UserSettings = {
   /** the book last read in each workspace, by the folder of the workspace */
   lastBooks: Record<string, string>;
   setLastBook: (dir: string, path: string) => void;
-  showHistory: boolean,
+  showHistory: boolean;
   setShowHistory: Setter<boolean>;
   readMode: boolean;
   setReadMode: Setter<boolean>;
-  rawMode: string; // 'raw' | 'wysiwyg' | 'mindmap'; 
+  rawMode: string; // 'raw' | 'wysiwyg' | 'mindmap';
   setRawMode: Setter<string>;
   useAsset: boolean;
   setUseAsset: Setter<boolean>;
@@ -143,56 +160,60 @@ export type UserSettings = {
 export const SIDEBAR_WIDTH = { min: 160, max: 640, default: 256 } as const;
 export const FEED_CHANNEL_WIDTH = { min: 120, max: 480, default: 192 } as const;
 export const FEED_ARTICLE_WIDTH = { min: 200, max: 720, default: 288 } as const;
-export const READER_SIDEBAR_WIDTH = { min: 180, max: 560, default: 288 } as const;
+export const READER_SIDEBAR_WIDTH = {
+  min: 180,
+  max: 560,
+  default: 288,
+} as const;
 
 const userSettingsSlice = (
-  set: (fn: (draft: Draft<Store>) => void) => void
+  set: (fn: (draft: Draft<Store>) => void) => void,
 ) => ({
-  userId: '',
-  setUserId: setter(set, 'userId'),
+  userId: "",
+  setUserId: setter(set, "userId"),
   theme: SYSTEM_THEME,
-  setTheme: setter(set, 'theme'),
+  setTheme: setter(set, "theme"),
   customThemes: [],
-  setCustomThemes: setter(set, 'customThemes'),
+  setCustomThemes: setter(set, "customThemes"),
   workspaceThemes: [],
-  setWorkspaceThemes: setter(set, 'workspaceThemes'),
+  setWorkspaceThemes: setter(set, "workspaceThemes"),
   // as the system theme, not to re-render the editors on start
   darkMode: isSystemDark(),
-  setDarkMode: setter(set, 'darkMode'),
-  font: '',
-  setFont: setter(set, 'font'),
+  setDarkMode: setter(set, "darkMode"),
+  font: "",
+  setFont: setter(set, "font"),
   customFonts: [],
-  setCustomFonts: setter(set, 'customFonts'),
+  setCustomFonts: setter(set, "customFonts"),
   installedPlugins: [],
-  setInstalledPlugins: setter(set, 'installedPlugins'),
+  setInstalledPlugins: setter(set, "installedPlugins"),
   pluginStates: {},
-  setPluginStates: setter(set, 'pluginStates'),
+  setPluginStates: setter(set, "pluginStates"),
   fontSize: 1.1,
-  setFontSize: setter(set, 'fontSize'),
+  setFontSize: setter(set, "fontSize"),
   fontWt: 400,
-  setFontWt: setter(set, 'fontWt'),
+  setFontWt: setter(set, "fontWt"),
   lineHeight: 1.6,
-  setLineHeight: setter(set, 'lineHeight'),
+  setLineHeight: setter(set, "lineHeight"),
   isSidebarOpen: true,
-  setIsSidebarOpen: setter(set, 'isSidebarOpen'),
+  setIsSidebarOpen: setter(set, "isSidebarOpen"),
   isSettingsOpen: false,
-  setIsSettingsOpen: setter(set, 'isSettingsOpen'),
+  setIsSettingsOpen: setter(set, "isSettingsOpen"),
   isAboutOpen: false,
-  setIsAboutOpen: setter(set, 'isAboutOpen'),
+  setIsAboutOpen: setter(set, "isAboutOpen"),
   isPluginsOpen: false,
-  setIsPluginsOpen: setter(set, 'isPluginsOpen'),
+  setIsPluginsOpen: setter(set, "isPluginsOpen"),
   isFindOrCreateModalOpen: false,
-  setIsFindOrCreateModalOpen: setter(set, 'isFindOrCreateModalOpen'),
+  setIsFindOrCreateModalOpen: setter(set, "isFindOrCreateModalOpen"),
   isRTL: false,
-  setIsRTL: setter(set, 'isRTL'),
+  setIsRTL: setter(set, "isRTL"),
   noteSort: Sort.TitleAscending,
-  setNoteSort: setter(set, 'noteSort'),
+  setNoteSort: setter(set, "noteSort"),
   isCheckSpellOn: true,
-  setIsCheckSpellOn: setter(set, 'isCheckSpellOn'),
-  openOnStartup: 'previous' as OpenOnStartup,
-  setOpenOnStartup: setter(set, 'openOnStartup'),
-  startupView: 'notes' as StartupView,
-  setStartupView: setter(set, 'startupView'),
+  setIsCheckSpellOn: setter(set, "isCheckSpellOn"),
+  openOnStartup: "previous" as OpenOnStartup,
+  setOpenOnStartup: setter(set, "openOnStartup"),
+  startupView: "notes" as StartupView,
+  setStartupView: setter(set, "startupView"),
   lastBooks: {},
   setLastBook: (dir: string, path: string) => {
     set((state) => {
@@ -200,15 +221,15 @@ const userSettingsSlice = (
     });
   },
   showHistory: false,
-  setShowHistory:setter(set, 'showHistory'),
+  setShowHistory: setter(set, "showHistory"),
   readMode: false,
-  setReadMode: setter(set, 'readMode'),
-  rawMode: 'wysiwyg',
-  setRawMode: setter(set, 'rawMode'),
+  setReadMode: setter(set, "readMode"),
+  rawMode: "wysiwyg",
+  setRawMode: setter(set, "rawMode"),
   useAsset: true,
-  setUseAsset: setter(set, 'useAsset'),
+  setUseAsset: setter(set, "useAsset"),
   recentDir: [],
-  setRecentDir: setter(set, 'recentDir'),
+  setRecentDir: setter(set, "recentDir"),
   upsertRecentDir: (dir: string) => {
     set((state) => {
       const history = state.recentDir || [];
@@ -230,24 +251,24 @@ const userSettingsSlice = (
       state.recentDir = history;
     });
   },
-  pinnedDir: '',
-  setPinnedDir: setter(set, 'pinnedDir'),
+  pinnedDir: "",
+  setPinnedDir: setter(set, "pinnedDir"),
   sidebarWidth: SIDEBAR_WIDTH.default as number,
-  setSidebarWidth: setter(set, 'sidebarWidth'),
-  sideMenuOrientation: 'auto' as SideMenuOrientation,
-  setSideMenuOrientation: setter(set, 'sideMenuOrientation'),
+  setSidebarWidth: setter(set, "sidebarWidth"),
+  sideMenuOrientation: "auto" as SideMenuOrientation,
+  setSideMenuOrientation: setter(set, "sideMenuOrientation"),
   feedChannelWidth: FEED_CHANNEL_WIDTH.default as number,
-  setFeedChannelWidth: setter(set, 'feedChannelWidth'),
+  setFeedChannelWidth: setter(set, "feedChannelWidth"),
   feedArticleWidth: FEED_ARTICLE_WIDTH.default as number,
-  setFeedArticleWidth: setter(set, 'feedArticleWidth'),
+  setFeedArticleWidth: setter(set, "feedArticleWidth"),
   readerSidebarWidth: READER_SIDEBAR_WIDTH.default as number,
-  setReaderSidebarWidth: setter(set, 'readerSidebarWidth'),
+  setReaderSidebarWidth: setter(set, "readerSidebarWidth"),
   readerSettings: DEFAULT_READER_SETTINGS,
-  setReaderSettings: setter(set, 'readerSettings'),
+  setReaderSettings: setter(set, "readerSettings"),
   librarySettings: DEFAULT_LIBRARY_SETTINGS,
-  setLibrarySettings: setter(set, 'librarySettings'),
+  setLibrarySettings: setter(set, "librarySettings"),
   syncSettings: DEFAULT_SYNC_SETTINGS,
-  setSyncSettings: setter(set, 'syncSettings'),
+  setSyncSettings: setter(set, "syncSettings"),
 });
 
 export default userSettingsSlice;

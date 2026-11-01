@@ -1,21 +1,19 @@
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import Note from '@/writer/Note';
-import { useNoteReloads } from '@/workspace/noteReloads';
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import Note from "@/writer/Note";
+import { useNoteReloads } from "@/workspace/noteReloads";
 
 export default function NotePage() {
   const currentView = useCurrentViewContext();
   const params = currentView.state.params;
-  const noteId = params?.noteId || '';
+  const noteId = params?.noteId || "";
   // mounted again when the note changed on disk, e.g. by a sync
   const reloads = useNoteReloads((s) => s.seq);
   // const hlHash = params?.hash || '';
 
-  if (!noteId || typeof noteId !== 'string') {
+  if (!noteId || typeof noteId !== "string") {
     return (
       <div className="flex flex-col items-center justify-center flex-1 h-screen p-4">
-        <p className="text-2xl text-center">
-          This note does not exists!
-        </p>
+        <p className="text-2xl text-center">This note does not exists!</p>
       </div>
     );
   }

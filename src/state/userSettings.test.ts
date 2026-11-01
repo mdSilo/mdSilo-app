@@ -1,57 +1,57 @@
-import { describe, expect, test } from 'vitest';
-import { store } from './store';
-import { Sort, ReadableNameBySort } from './userSettings';
+import { describe, expect, test } from "vitest";
+import { store } from "./store";
+import { Sort, ReadableNameBySort } from "./userSettings";
 
-describe('user settings slice', () => {
-  test('defaults', () => {
+describe("user settings slice", () => {
+  test("defaults", () => {
     const s = store.getState();
-    expect(s.theme).toBe('system');
+    expect(s.theme).toBe("system");
     expect(s.darkMode).toBe(false); // jsdom: no dark system mode
     expect(s.fontSize).toBe(1.1);
     expect(s.fontWt).toBe(400);
     expect(s.lineHeight).toBe(1.6);
     expect(s.noteSort).toBe(Sort.TitleAscending);
-    expect(s.rawMode).toBe('wysiwyg');
+    expect(s.rawMode).toBe("wysiwyg");
     expect(s.recentDir).toEqual([]);
-    expect(s.pinnedDir).toBe('');
+    expect(s.pinnedDir).toBe("");
     expect(s.useAsset).toBe(true);
-    expect(s.sideMenuOrientation).toBe('auto');
+    expect(s.sideMenuOrientation).toBe("auto");
   });
 
   test.each([
-    ['setTheme', 'theme', 'nord'],
-    ['setDarkMode', 'darkMode', false],
-    ['setFont', 'font', 'Sniglet'],
-    ['setFontSize', 'fontSize', 1.4],
-    ['setNoteSort', 'noteSort', Sort.DateCreatedDescending],
-    ['setRawMode', 'rawMode', 'raw'],
-    ['setPinnedDir', 'pinnedDir', '/pinned'],
-    ['setSideMenuOrientation', 'sideMenuOrientation', 'horizontal'],
-    ['setIsRTL', 'isRTL', true],
-    ['setReadMode', 'readMode', true],
-  ] as const)('%s updates %s', (setterName, key, value) => {
+    ["setTheme", "theme", "nord"],
+    ["setDarkMode", "darkMode", false],
+    ["setFont", "font", "Sniglet"],
+    ["setFontSize", "fontSize", 1.4],
+    ["setNoteSort", "noteSort", Sort.DateCreatedDescending],
+    ["setRawMode", "rawMode", "raw"],
+    ["setPinnedDir", "pinnedDir", "/pinned"],
+    ["setSideMenuOrientation", "sideMenuOrientation", "horizontal"],
+    ["setIsRTL", "isRTL", true],
+    ["setReadMode", "readMode", true],
+  ] as const)("%s updates %s", (setterName, key, value) => {
     (store.getState()[setterName] as (v: unknown) => void)(value);
     expect(store.getState()[key]).toBe(value);
   });
 
-  test('upsertRecentDir moves existing dirs to the end', () => {
+  test("upsertRecentDir moves existing dirs to the end", () => {
     const { upsertRecentDir } = store.getState();
-    upsertRecentDir('/a');
-    upsertRecentDir('/b');
-    upsertRecentDir('/a');
-    expect(store.getState().recentDir).toEqual(['/b', '/a']);
+    upsertRecentDir("/a");
+    upsertRecentDir("/b");
+    upsertRecentDir("/a");
+    expect(store.getState().recentDir).toEqual(["/b", "/a"]);
   });
 
-  test('deleteRecentDir removes a dir if present', () => {
+  test("deleteRecentDir removes a dir if present", () => {
     const { upsertRecentDir, deleteRecentDir } = store.getState();
-    upsertRecentDir('/a');
-    upsertRecentDir('/b');
-    deleteRecentDir('/a');
-    deleteRecentDir('/missing');
-    expect(store.getState().recentDir).toEqual(['/b']);
+    upsertRecentDir("/a");
+    upsertRecentDir("/b");
+    deleteRecentDir("/a");
+    deleteRecentDir("/missing");
+    expect(store.getState().recentDir).toEqual(["/b"]);
   });
 
-  test('every sort option has a readable name', () => {
+  test("every sort option has a readable name", () => {
     for (const sort of Object.values(Sort)) {
       expect(ReadableNameBySort[sort]).toEqual(expect.any(String));
     }

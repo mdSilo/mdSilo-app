@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { BaseModal } from '@/ui/BaseModal';
-import { renameFile, joinPaths, getParentDir } from '@/workspace/util';
-import { flushSave } from '@/workspace/pendingSaves';
+import { useState } from "react";
+import { BaseModal } from "@/ui/BaseModal";
+import { renameFile, joinPaths, getParentDir } from "@/workspace/util";
+import { flushSave } from "@/workspace/pendingSaves";
 
 type Props = {
   dirPath: string;
@@ -11,10 +11,14 @@ type Props = {
 
 export default function DirRenameModal(props: Props) {
   const { dirPath, isOpen, handleClose } = props;
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
 
   return (
-    <BaseModal title="Rename the folder" isOpen={isOpen} handleClose={handleClose}>
+    <BaseModal
+      title="Rename the folder"
+      isOpen={isOpen}
+      handleClose={handleClose}
+    >
       <div className="flex flex-col justify-center px-6">
         <p className="text-sm text-center">{dirPath}</p>
         <div className={`flex flex-col flex-1 overflow-y-auto`}>
@@ -27,8 +31,8 @@ export default function DirRenameModal(props: Props) {
             autoFocus
           />
         </div>
-        <button 
-          className="mt-4 font-bold pop-btn" 
+        <button
+          className="mt-4 font-bold pop-btn"
           onClick={async (e) => {
             e.preventDefault();
             const parentDir = await getParentDir(dirPath);

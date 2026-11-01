@@ -1,7 +1,7 @@
-import { invoke } from '@tauri-apps/api/core';
-import { joinPath } from '@/workspace/util';
-import { dataRoot, localRoot } from '@/workspace/layout';
-import type { ArticleType, ChannelType } from '@/types/model';
+import { invoke } from "@tauri-apps/api/core";
+import { joinPath } from "@/workspace/util";
+import { dataRoot, localRoot } from "@/workspace/layout";
+import type { ArticleType, ChannelType } from "@/types/model";
 
 /**
  * The feed subscriptions and the starred articles are kept in the app's
@@ -10,8 +10,8 @@ import type { ArticleType, ChannelType } from '@/types/model';
  * back from it: a three-way merge with the state last synced on this device
  * (`.mdsilo/local/feeds.base.json`), so removals carry over too.
  */
-export const FEEDS_FILE = 'feeds.json';
-export const FEEDS_BASE_FILE = 'feeds.base.json';
+export const FEEDS_FILE = "feeds.json";
+export const FEEDS_BASE_FILE = "feeds.base.json";
 export const FEEDS_VERSION = 1;
 export const SYNC_DELAY_MS = 1000;
 
@@ -70,27 +70,38 @@ export function mergeByKey<T>(
     items.push(item);
     add.push(item);
   }
-  const sorted = items.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+  const sorted = items.sort((a, b) =>
+    key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0,
+  );
   return { items: sorted, add, remove };
 }
 
-export const toSyncChannel = (c: ChannelType): SyncChannel => ({ link: c.link, title: c.title, ty: c.ty });
+export const toSyncChannel = (c: ChannelType): SyncChannel => ({
+  link: c.link,
+  title: c.title,
+  ty: c.ty,
+});
 
 export const toSyncArticle = (a: ArticleType): SyncArticle => ({
   url: a.url,
   title: a.title,
   feed_link: a.feed_link,
-  audio_url: a.audio_url ?? '',
-  description: a.description ?? '',
-  published: a.published ? String(a.published) : '',
-  author: a.author ?? '',
-  image: a.image ?? '',
+  audio_url: a.audio_url ?? "",
+  description: a.description ?? "",
+  published: a.published ? String(a.published) : "",
+  author: a.author ?? "",
+  image: a.image ?? "",
 });
 
 /** The feeds file as written: sorted, so it only changes with the feeds. */
-export function feedsFile(channels: SyncChannel[], starred: SyncArticle[]): FeedsFile {
-  const byLink = (a: SyncChannel, b: SyncChannel) => (a.link < b.link ? -1 : a.link > b.link ? 1 : 0);
-  const byUrl = (a: SyncArticle, b: SyncArticle) => (a.url < b.url ? -1 : a.url > b.url ? 1 : 0);
+export function feedsFile(
+  channels: SyncChannel[],
+  starred: SyncArticle[],
+): FeedsFile {
+  const byLink = (a: SyncChannel, b: SyncChannel) =>
+    a.link < b.link ? -1 : a.link > b.link ? 1 : 0;
+  const byUrl = (a: SyncArticle, b: SyncArticle) =>
+    a.url < b.url ? -1 : a.url > b.url ? 1 : 0;
   return {
     version: FEEDS_VERSION,
     channels: [...channels].sort(byLink),
@@ -98,14 +109,20 @@ export function feedsFile(channels: SyncChannel[], starred: SyncArticle[]): Feed
   };
 }
 
-export function parseFeedsFile(text: string | undefined): FeedsFile | undefined {
+export function parseFeedsFile(
+  text: string | undefined,
+): FeedsFile | undefined {
   if (!text?.trim()) return undefined;
   try {
     const raw = JSON.parse(text) as Partial<FeedsFile>;
     return {
       version: raw.version ?? FEEDS_VERSION,
-      channels: Array.isArray(raw.channels) ? raw.channels.filter((c) => c?.link) : [],
-      starred: Array.isArray(raw.starred) ? raw.starred.filter((a) => a?.url) : [],
+      channels: Array.isArray(raw.channels)
+        ? raw.channels.filter((c) => c?.link)
+        : [],
+      starred: Array.isArray(raw.starred)
+        ? raw.starred.filter((a) => a?.url)
+        : [],
     };
   } catch (e) {
     console.error(`${FEEDS_FILE} is not valid JSON`, e);
@@ -115,16 +132,16 @@ export function parseFeedsFile(text: string | undefined): FeedsFile | undefined 
 
 const readText = async (path: string) => {
   try {
-    return await invoke<string>('read_file', { filePath: path });
+    return await invoke<string>("read_file", { filePath: path });
   } catch {
-    return '';
+    return "";
   }
 };
 
 const writeJson = async (path: string, data: FeedsFile) => {
   const text = `${JSON.stringify(data, null, 2)}\n`;
   if ((await readText(path)) === text) return;
-  await invoke('write_file', { filePath: path, text });
+  await invoke("write_file", { filePath: path, text });
 };
 
 let running: Promise<void> | undefined;
@@ -168,47 +185,65 @@ async function doSync() {
   const basePath = joinPath(local, FEEDS_BASE_FILE);
   try {
     const [channels, starred] = await Promise.all([
-      invoke<ChannelType[]>('get_channels'),
-      invoke<ArticleType[]>('get_articles', { feedLink: null, readStatus: null, starStatus: 1 }),
+      invoke<ChannelType[]>("get_channels"),
+      invoke<ArticleType[]>("get_articles", {
+        feedLink: null,
+        readStatus: null,
+        starStatus: 1,
+      }),
     ]);
     const theirs = parseFeedsFile(await readText(filePath));
     const base = parseFeedsFile(await readText(basePath));
 
     const chs = mergeByKey(
-      base?.channels, theirs?.channels, (channels ?? []).map(toSyncChannel), (c) => c.link,
+      base?.channels,
+      theirs?.channels,
+      (channels ?? []).map(toSyncChannel),
+      (c) => c.link,
     );
     const stars = mergeByKey(
-      base?.starred, theirs?.starred, (starred ?? []).map(toSyncArticle), (a) => a.url,
+      base?.starred,
+      theirs?.starred,
+      (starred ?? []).map(toSyncArticle),
+      (a) => a.url,
     );
 
     // apply here; a channel failing to load (offline) is tried again next time
     const failed = new Set<string>();
     for (const channel of chs.add) {
-      const added = await invoke<number>('add_channel', {
-        url: channel.link, ty: channel.ty || 'rss', title: channel.title || null,
+      const added = await invoke<number>("add_channel", {
+        url: channel.link,
+        ty: channel.ty || "rss",
+        title: channel.title || null,
       }).catch(() => 0);
       if (!added) failed.add(channel.link);
     }
     for (const channel of chs.remove) {
-      await invoke('delete_channel', { link: channel.link });
+      await invoke("delete_channel", { link: channel.link });
     }
     if (stars.add.length > 0) {
-      await invoke('add_starred_articles', {
-        articles: stars.add.map((a) => ({ ...a, content: '' })),
+      await invoke("add_starred_articles", {
+        articles: stars.add.map((a) => ({ ...a, content: "" })),
       });
     }
     for (const article of stars.remove) {
-      await invoke('update_article_star_status', { url: article.url, status: 0 });
+      await invoke("update_article_star_status", {
+        url: article.url,
+        status: 0,
+      });
     }
 
     const merged = feedsFile(chs.items, stars.items);
     await writeJson(filePath, merged);
     // what is here now: a failed channel is not, so it is added next time
-    const synced = feedsFile(chs.items.filter((c) => !failed.has(c.link)), stars.items);
-    await invoke('create_dir_recursive', { dirPath: local });
+    const synced = feedsFile(
+      chs.items.filter((c) => !failed.has(c.link)),
+      stars.items,
+    );
+    await invoke("create_dir_recursive", { dirPath: local });
     await writeJson(basePath, synced);
   } catch (e) {
-    console.error('Failed to sync the feeds', e);
+    console.error("Failed to sync the feeds", e);
   }
 }
 

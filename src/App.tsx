@@ -1,33 +1,37 @@
-import { invoke } from '@tauri-apps/api/core';
-import { useMemo, useEffect } from 'react';
-import '@/styles/styles.css';
-import 'tippy.js/dist/tippy.css';
-import { ProvideCurrentView } from '@/state/useCurrentView';
-import useHotkeys from '@/lib/hooks/useHotkeys';
-import useTheme from '@/lib/hooks/useTheme';
-import { useCustomFonts } from '@/custom/fonts';
-import { useCustomThemes } from '@/custom/themes';
-import { usePlugins } from '@/plugins/registry';
-import { PluginsModal } from '@/plugins/PluginManager';
-import { PluginAnswerModal } from '@/plugins/PluginAnswer';
-import { useStore, onStoreHydrated, SidebarTab } from '@/state/store';
-import { shareSettings } from '@/state/windowSync';
-import { isWeb } from '@/workspace/util';
-import { openWebWorkspace } from '@/workspace/useOpen';
-import FindOrCreateModal from '@/writer/NoteNewModal';
-import SideMenu from '@/shell/SideMenu';
-import { routeMain } from '@/shell/windows';
-import { useAutoSync } from '@/sync/autoSync';
-import PublishModal from '@/publish/PublishModal';
-import Sidebar from '@/shell/sidebar/Sidebar';
-import Player from '@/player/Player';
-import MainView from '@/shell/MainView';
-import SettingsModal from '@/shell/settings/SettingsModal';
-import AboutModal from '@/shell/settings/AboutModal';
+import { invoke } from "@tauri-apps/api/core";
+import { useMemo, useEffect } from "react";
+import "@/styles/styles.css";
+import "tippy.js/dist/tippy.css";
+import { ProvideCurrentView } from "@/state/useCurrentView";
+import useHotkeys from "@/lib/hooks/useHotkeys";
+import useTheme from "@/lib/hooks/useTheme";
+import { useCustomFonts } from "@/custom/fonts";
+import { useCustomThemes } from "@/custom/themes";
+import { usePlugins } from "@/plugins/registry";
+import { PluginsModal } from "@/plugins/PluginManager";
+import { PluginAnswerModal } from "@/plugins/PluginAnswer";
+import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
+import { shareSettings } from "@/state/windowSync";
+import { isWeb } from "@/workspace/util";
+import { openWebWorkspace } from "@/workspace/useOpen";
+import FindOrCreateModal from "@/writer/NoteNewModal";
+import SideMenu from "@/shell/SideMenu";
+import { routeMain } from "@/shell/windows";
+import { useAutoSync } from "@/sync/autoSync";
+import PublishModal from "@/publish/PublishModal";
+import Sidebar from "@/shell/sidebar/Sidebar";
+import Player from "@/player/Player";
+import MainView from "@/shell/MainView";
+import SettingsModal from "@/shell/settings/SettingsModal";
+import AboutModal from "@/shell/settings/AboutModal";
 
 const App = () => {
-  const isFindOrCreateModalOpen= useStore((state) => state.isFindOrCreateModalOpen);
-  const setIsFindOrCreateModalOpen = useStore((state) => state.setIsFindOrCreateModalOpen);
+  const isFindOrCreateModalOpen = useStore(
+    (state) => state.isFindOrCreateModalOpen,
+  );
+  const setIsFindOrCreateModalOpen = useStore(
+    (state) => state.setIsFindOrCreateModalOpen,
+  );
 
   useTheme();
   useCustomFonts();
@@ -40,40 +44,42 @@ const App = () => {
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   const isSettingsOpen = useStore((state) => state.isSettingsOpen);
   const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
-  const isAboutOpen = useStore((state) => state.isAboutOpen); 
+  const isAboutOpen = useStore((state) => state.isAboutOpen);
 
   const hotkeys = useMemo(
     () => [
       {
-        hotkey: 'mod+n',
+        hotkey: "mod+n",
         callback: () => setIsFindOrCreateModalOpen((isOpen) => !isOpen),
       },
       {
-        hotkey: 'alt+x',
+        hotkey: "alt+x",
         callback: () => setIsSidebarOpen((isOpen) => !isOpen),
       },
       {
-        hotkey: 'mod+s',
-        callback: () => { /* TODO: for saving */ },
+        hotkey: "mod+s",
+        callback: () => {
+          /* TODO: for saving */
+        },
       },
       {
-        hotkey: 'mod+shift+d',
+        hotkey: "mod+shift+d",
         callback: () => setSidebarTab(SidebarTab.Silo),
       },
       {
-        hotkey: 'mod+shift+f',
+        hotkey: "mod+shift+f",
         callback: () => setSidebarTab(SidebarTab.Search),
       },
       {
-        hotkey: 'mod+shift+h',
+        hotkey: "mod+shift+h",
         callback: () => setSidebarTab(SidebarTab.Hashtag),
       },
       {
-        hotkey: 'mod+shift+p',
+        hotkey: "mod+shift+p",
         callback: () => setSidebarTab(SidebarTab.Playlist),
       },
     ],
-    [setIsFindOrCreateModalOpen, setIsSidebarOpen, setSidebarTab]
+    [setIsFindOrCreateModalOpen, setIsSidebarOpen, setSidebarTab],
   );
   useHotkeys(hotkeys);
 
@@ -83,7 +89,7 @@ const App = () => {
     if (!isWeb) return;
     const open = () => {
       void openWebWorkspace().catch((error) => {
-        console.error('Failed to open workspace:', error);
+        console.error("Failed to open workspace:", error);
       });
     };
     return onStoreHydrated(open);
@@ -96,22 +102,23 @@ const App = () => {
   useEffect(() => shareSettings(), []);
 
   useEffect(() => {
-    void invoke('close_splashscreen').catch((error) => {
-      console.error('Failed to close splashscreen:', error);
+    void invoke("close_splashscreen").catch((error) => {
+      console.error("Failed to close splashscreen:", error);
     });
   }, []);
-
 
   return (
     <ProvideCurrentView route={routeMain}>
       <div id="app-container" className="h-screen flex flex-col">
-        <div className={`flex w-full h-full bg-base-100 ${
-          sideMenuOrientation === 'horizontal'
-            ? 'flex-col'
-            : sideMenuOrientation === 'vertical'
-              ? 'flex-row'
-              : 'flex-col md:flex-row'
-        }`}>
+        <div
+          className={`flex w-full h-full bg-base-100 ${
+            sideMenuOrientation === "horizontal"
+              ? "flex-col"
+              : sideMenuOrientation === "vertical"
+                ? "flex-row"
+                : "flex-col md:flex-row"
+          }`}
+        >
           <SideMenu />
           {/* min-w-0: shrink to the window, not to the widest content */}
           <div className="relative flex flex-1 min-h-0 min-w-0">
@@ -125,20 +132,20 @@ const App = () => {
             <FindOrCreateModal setIsOpen={setIsFindOrCreateModalOpen} />
           ) : null}
           <PublishModal />
-          <SettingsModal 
+          <SettingsModal
             isOpen={isSettingsOpen}
-            handleClose={() => setIsSettingsOpen(false)} 
+            handleClose={() => setIsSettingsOpen(false)}
           />
-          <AboutModal 
+          <AboutModal
             isOpen={isAboutOpen}
-            handleClose={() => setIsAboutOpen(false)} 
+            handleClose={() => setIsAboutOpen(false)}
           />
           <PluginsModal />
           <PluginAnswerModal />
         </div>
       </div>
     </ProvideCurrentView>
-  )
-}
+  );
+};
 
 export default App;

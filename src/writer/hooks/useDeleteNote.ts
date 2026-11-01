@@ -1,16 +1,16 @@
-import { useCallback } from 'react';
-import { useCurrentViewContext } from '@/state/useCurrentView';
-import { store } from '@/state/store';
-import updateBacklinks from '@/writer/backlinks/updateBacklinks';
-import { deleteFile } from '@/workspace/write';
-import { cancelSave } from '@/workspace/pendingSaves';
+import { useCallback } from "react";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import { store } from "@/state/store";
+import updateBacklinks from "@/writer/backlinks/updateBacklinks";
+import { deleteFile } from "@/workspace/write";
+import { cancelSave } from "@/workspace/pendingSaves";
 
 export default function useDeleteNote(noteId: string, noteTitle: string) {
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
 
   const onDeleteClick = useCallback(async () => {
-    dispatch({view: 'default'});
+    dispatch({ view: "default" });
     doDeleteNote(noteId, noteTitle);
   }, [dispatch, noteId, noteTitle]);
 
@@ -25,5 +25,5 @@ export async function doDeleteNote(noteId: string, noteTitle: string) {
   // delete backlinks
   await updateBacklinks(noteTitle, undefined);
   // delete in disk,
-  await deleteFile(noteId); 
+  await deleteFile(noteId);
 }

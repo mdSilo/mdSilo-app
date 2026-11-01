@@ -1,7 +1,7 @@
-import { isNoteHref } from '@/lib/mdlink';
-import type { NoteMap } from '@/state/store';
-import { indexOf } from '@/lib/linkIndex';
-import type { Issue } from './types';
+import { isNoteHref } from "@/lib/mdlink";
+import type { NoteMap } from "@/state/store";
+import { indexOf } from "@/lib/linkIndex";
+import type { Issue } from "./types";
 
 // [[title]] or [[title|alias]]
 const WIKI_REGEX = /\[\[([^[|\]\n]+)(?:\|[^[\]\n]*)?\]\]/g;
@@ -10,11 +10,11 @@ const MD_LINK_REGEX = /\[([^\]\n]*)\]\(([^)\s]+)\)/g;
 // issue:12, as in [@12](issue:12)
 const ISSUE_LINK_REGEX = /\(issue:(\d+)\)/g;
 
-export const ISSUE_HREF_PREFIX = 'issue:';
+export const ISSUE_HREF_PREFIX = "issue:";
 
 export const issueHref = (num: number) => `${ISSUE_HREF_PREFIX}${num}`;
 
-export { issueLabel } from '@/lib/parseNote';
+export { issueLabel } from "@/lib/parseNote";
 
 /** The number of a ref to an issue, `@12` (or `#12`, as written before). */
 export function parseIssueLabel(text: string): number | undefined {
@@ -65,7 +65,7 @@ export function linkedIssueNumbers(text: string): Set<number> {
 /** All markdown texts of an issue: body and comments. */
 export const issueTexts = (issue: Issue) => [
   issue.body,
-  ...issue.timeline.map((t) => (t.kind === 'comment' ? t.body : '')),
+  ...issue.timeline.map((t) => (t.kind === "comment" ? t.body : "")),
 ];
 
 export type IssueRef = { issue: Issue; explicit: boolean; mentioned: boolean };
@@ -74,12 +74,18 @@ export type IssueRef = { issue: Issue; explicit: boolean; mentioned: boolean };
  * Issues referencing a note: either the note path is in `issue.notes`
  * or the issue body/comments link the note title.
  */
-export function computeIssueRefs(issues: Issue[], noteId: string, title: string): IssueRef[] {
+export function computeIssueRefs(
+  issues: Issue[],
+  noteId: string,
+  title: string,
+): IssueRef[] {
   const out: IssueRef[] = [];
   const noteTitle = title.trim();
   for (const issue of issues) {
     const explicit = !!noteId && issue.notes.includes(noteId);
-    const mentioned = !!noteTitle && issueTexts(issue).some((t) => linkedNoteTitles(t).has(noteTitle));
+    const mentioned =
+      !!noteTitle &&
+      issueTexts(issue).some((t) => linkedNoteTitles(t).has(noteTitle));
     if (explicit || mentioned) {
       out.push({ issue, explicit, mentioned });
     }
@@ -90,18 +96,29 @@ export function computeIssueRefs(issues: Issue[], noteId: string, title: string)
 /** Notes whose content links the issue via `issue:N`. */
 export function computeNoteMentions(notes: NoteMap, num: number) {
   const index = indexOf(notes);
-  return notes.values()
+  return notes
+    .values()
     .filter((n) => !n.is_dir && n.content && index.issues(n.id).has(num))
     .map((n) => ({ id: n.id, title: n.title }));
 }
 
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** Rewrite links to a renamed note title within a markdown text. */
-export function renameTitleInText(text: string, oldTitle: string, newTitle: string) {
+export function renameTitleInText(
+  text: string,
+  oldTitle: string,
+  newTitle: string,
+) {
   if (!oldTitle || oldTitle === newTitle) return text;
   const old = escapeRegExp(oldTitle);
   return text
-    .replace(new RegExp(`\\[\\[\\s*${old}\\s*(\\|[^[\\]\\n]*)?\\]\\]`, 'g'), (_m, alias) => `[[${newTitle}${alias ?? ''}]]`)
-    .replace(new RegExp(`\\]\\(${escapeRegExp(encodeURI(oldTitle))}\\)`, 'g'), () => `](${encodeURI(newTitle)})`);
+    .replace(
+      new RegExp(`\\[\\[\\s*${old}\\s*(\\|[^[\\]\\n]*)?\\]\\]`, "g"),
+      (_m, alias) => `[[${newTitle}${alias ?? ""}]]`,
+    )
+    .replace(
+      new RegExp(`\\]\\(${escapeRegExp(encodeURI(oldTitle))}\\)`, "g"),
+      () => `](${encodeURI(newTitle)})`,
+    );
 }

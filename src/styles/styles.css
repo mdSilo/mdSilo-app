@@ -1,4 +1,4 @@
-@import 'tailwindcss' source(none);
+@import "tailwindcss" source(none);
 @source '../../src';
 @source '../../public';
 
@@ -14,7 +14,7 @@
 }
 
 @plugin 'daisyui/theme' {
-  name: 'mdsilo-light';
+  name: "mdsilo-light";
   default: true;
   color-scheme: light;
   --color-base-100: oklch(100% 0 0);
@@ -48,7 +48,7 @@
 }
 
 @plugin 'daisyui/theme' {
-  name: 'mdsilo-dark';
+  name: "mdsilo-dark";
   prefersdark: true;
   color-scheme: dark;
   --color-base-100: oklch(20.5% 0 0);
@@ -113,7 +113,8 @@
   --spacing-screen-10: 10vh;
   --spacing-screen-80: 80vh;
 
-  --shadow-popover: rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
+  --shadow-popover:
+    rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
 
   --animate-bounce-x: bounce-x 1s infinite;
   @keyframes bounce-x {
@@ -152,20 +153,38 @@
     color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
   }
   button:not(:disabled),
-  [role='button']:not(:disabled) {
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
 
   /* @tailwindcss/forms: theme colors instead of white and gray */
   :root
     :is(
-      [type='text'], input:where(:not([type])), [type='email'], [type='url'], [type='password'],
-      [type='number'], [type='date'], [type='datetime-local'], [type='month'], [type='search'],
-      [type='tel'], [type='time'], [type='week'], [multiple], textarea, select,
-      [type='checkbox'], [type='radio']
+      [type="text"],
+      input:where(:not([type])),
+      [type="email"],
+      [type="url"],
+      [type="password"],
+      [type="number"],
+      [type="date"],
+      [type="datetime-local"],
+      [type="month"],
+      [type="search"],
+      [type="tel"],
+      [type="time"],
+      [type="week"],
+      [multiple],
+      textarea,
+      select,
+      [type="checkbox"],
+      [type="radio"]
     ) {
     background-color: var(--color-base-100);
-    border-color: color-mix(in oklab, var(--color-base-content) 35%, transparent);
+    border-color: color-mix(
+      in oklab,
+      var(--color-base-content) 35%,
+      transparent
+    );
     --tw-ring-color: var(--color-primary);
   }
   /* its vertical padding and line height clip the text of daisyUI sized fields (select-xs is 1.5rem tall) */
@@ -173,10 +192,10 @@
     padding-block: 0;
     line-height: normal;
   }
-  :root :is([type='checkbox'], [type='radio']) {
+  :root :is([type="checkbox"], [type="radio"]) {
     color: var(--color-primary);
   }
-  :root :is([type='checkbox'], [type='radio']):checked {
+  :root :is([type="checkbox"], [type="radio"]):checked {
     background-color: currentColor;
   }
 }
@@ -312,7 +331,12 @@
 }
 
 *:hover {
-  scrollbar-color: color-mix(in oklab, var(--color-base-content) 35%, transparent) transparent;
+  scrollbar-color: color-mix(
+      in oklab,
+      var(--color-base-content) 35%,
+      transparent
+    )
+    transparent;
 }
 
 ::-webkit-scrollbar {
@@ -330,11 +354,19 @@
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background-color: color-mix(in oklab, var(--color-base-content) 35%, transparent);
+  background-color: color-mix(
+    in oklab,
+    var(--color-base-content) 35%,
+    transparent
+  );
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
+  background-color: color-mix(
+    in oklab,
+    var(--color-base-content) 55%,
+    transparent
+  );
 }
 
 /* a table of a book, zoomed: see reader/media/MediaViewer.tsx */

@@ -1,6 +1,6 @@
-import { memo, useMemo, CSSProperties, forwardRef, ForwardedRef } from 'react';
-import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
-import { FlattenedTreeNode } from './Tree';
+import { memo, useMemo, CSSProperties, forwardRef, ForwardedRef } from "react";
+import { TbCaretRight as IconCaretRight } from "react-icons/tb";
+import { FlattenedTreeNode } from "./Tree";
 
 type Props = {
   node: FlattenedTreeNode;
@@ -8,12 +8,15 @@ type Props = {
   style?: CSSProperties;
 };
 
-const TreeNodeElement = (props: Props, forwardedRef: ForwardedRef<HTMLDivElement>) => {
+const TreeNodeElement = (
+  props: Props,
+  forwardedRef: ForwardedRef<HTMLDivElement>,
+) => {
   const { node, onClick, style } = props;
 
   const leftPadding = useMemo(() => {
-    let padding = node.toIndent 
-      ? node.depth * 16 
+    let padding = node.toIndent
+      ? node.depth * 16
       : Math.max(node.depth - 1, 0) * 16;
     if (!node.showArrow) {
       padding += 4;
@@ -25,7 +28,7 @@ const TreeNodeElement = (props: Props, forwardedRef: ForwardedRef<HTMLDivElement
     <div
       ref={forwardedRef}
       className={`flex items-center select-none ${
-        node.showArrow ? 'hover:cursor-pointer' : ''
+        node.showArrow ? "hover:cursor-pointer" : ""
       }`}
       style={{ paddingLeft: `${leftPadding}px`, ...style }}
       onClick={node.showArrow ? () => onClick(node) : undefined}
@@ -33,7 +36,7 @@ const TreeNodeElement = (props: Props, forwardedRef: ForwardedRef<HTMLDivElement
       {node.showArrow ? (
         <IconCaretRight
           className={`shrink-0 mr-1 text-base-content/60 transform transition-transform ${
-            !node.collapsed ? 'rotate-90' : ''
+            !node.collapsed ? "rotate-90" : ""
           }`}
           size={16}
           fill="currentColor"

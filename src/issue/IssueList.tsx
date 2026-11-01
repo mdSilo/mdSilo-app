@@ -1,9 +1,9 @@
-import { TbMessage as IconComment, TbFlag as IconFlag } from 'react-icons/tb';
-import { commentCount } from './issueOps';
-import { StateIcon, TimeAgo } from './common';
-import LabelChip from './LabelChip';
-import type { Issue, IssueData, Label } from './types';
-import { issueLabel } from './refs';
+import { TbMessage as IconComment, TbFlag as IconFlag } from "react-icons/tb";
+import { commentCount } from "./issueOps";
+import { StateIcon, TimeAgo } from "./common";
+import LabelChip from "./LabelChip";
+import type { Issue, IssueData, Label } from "./types";
+import { issueLabel } from "./refs";
 
 type Props = {
   issues: Issue[];
@@ -14,9 +14,20 @@ type Props = {
   empty?: string;
 };
 
-export default function IssueList({ issues, data, onOpen, onClickLabel, onClickMilestone, empty }: Props) {
+export default function IssueList({
+  issues,
+  data,
+  onOpen,
+  onClickLabel,
+  onClickMilestone,
+  empty,
+}: Props) {
   if (issues.length === 0) {
-    return <p className="p-8 text-center text-base-content/60">{empty ?? 'No results.'}</p>;
+    return (
+      <p className="p-8 text-center text-base-content/60">
+        {empty ?? "No results."}
+      </p>
+    );
   }
   const labelOf = new Map(data.labels.map((l) => [l.id, l]));
   return (
@@ -30,7 +41,9 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
             className="flex items-start gap-2 px-4 py-2 border-b border-base-300 hover:bg-base-content/5"
             data-testid="issue-row"
           >
-            <span className="mt-1"><StateIcon state={issue.state} /></span>
+            <span className="mt-1">
+              <StateIcon state={issue.state} />
+            </span>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-1">
                 <button
@@ -43,14 +56,27 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
                 {issue.labels.map((id) => {
                   const label = labelOf.get(id);
                   return label ? (
-                    <LabelChip key={id} label={label} onClick={onClickLabel ? () => onClickLabel(label) : undefined} />
+                    <LabelChip
+                      key={id}
+                      label={label}
+                      onClick={
+                        onClickLabel ? () => onClickLabel(label) : undefined
+                      }
+                    />
                   ) : null;
                 })}
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs text-base-content/60">
                 <span>
-                  {issueLabel(issue.number)} {issue.state === 'open' ? 'opened' : 'closed'}{' '}
-                  <TimeAgo iso={issue.state === 'closed' && issue.closedAt ? issue.closedAt : issue.createdAt} />
+                  {issueLabel(issue.number)}{" "}
+                  {issue.state === "open" ? "opened" : "closed"}{" "}
+                  <TimeAgo
+                    iso={
+                      issue.state === "closed" && issue.closedAt
+                        ? issue.closedAt
+                        : issue.createdAt
+                    }
+                  />
                 </span>
                 {milestone ? (
                   <button
@@ -58,15 +84,22 @@ export default function IssueList({ issues, data, onOpen, onClickLabel, onClickM
                     className="flex items-center gap-1 hover:text-primary/75"
                     onClick={() => onClickMilestone?.(milestone.title)}
                   >
-                    <IconFlag size={12} />{milestone.title}
+                    <IconFlag size={12} />
+                    {milestone.title}
                   </button>
                 ) : null}
-                <span>updated <TimeAgo iso={issue.updatedAt} /></span>
+                <span>
+                  updated <TimeAgo iso={issue.updatedAt} />
+                </span>
               </div>
             </div>
             {comments > 0 ? (
-              <span className="flex items-center gap-1 text-sm text-base-content/60" title={`${comments} comments`}>
-                <IconComment size={16} />{comments}
+              <span
+                className="flex items-center gap-1 text-sm text-base-content/60"
+                title={`${comments} comments`}
+              >
+                <IconComment size={16} />
+                {comments}
               </span>
             ) : null}
           </li>

@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 /**
  * The player of the app, shown or hidden by its button in the side menu:
@@ -20,7 +20,7 @@ export const usePlayer = create<PlayerStore>((set) => ({
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
 }));
 
-export type PlayerSource = 'podcast' | 'tts';
+export type PlayerSource = "podcast" | "tts";
 
 const pausers = new Map<PlayerSource, () => void>();
 

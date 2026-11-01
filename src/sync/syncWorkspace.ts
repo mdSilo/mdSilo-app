@@ -1,13 +1,13 @@
-import { create } from 'zustand';
-import { invoke } from '@tauri-apps/api/core';
-import { store } from '@/state/store';
-import { useIssueStore } from '@/issue/issueStore';
-import { flushSave } from '@/workspace/pendingSaves';
-import { openFilePaths } from '@/workspace/open';
-import { joinPath } from '@/workspace/util';
-import { DATA_DIR } from '@/workspace/layout';
-import { reloadOpenNote } from '@/workspace/noteReloads';
-import { syncRun, type SyncReport } from './api';
+import { create } from "zustand";
+import { invoke } from "@tauri-apps/api/core";
+import { store } from "@/state/store";
+import { useIssueStore } from "@/issue/issueStore";
+import { flushSave } from "@/workspace/pendingSaves";
+import { openFilePaths } from "@/workspace/open";
+import { joinPath } from "@/workspace/util";
+import { DATA_DIR } from "@/workspace/layout";
+import { reloadOpenNote } from "@/workspace/noteReloads";
+import { syncRun, type SyncReport } from "./api";
 
 type SyncState = {
   syncing: boolean;
@@ -58,22 +58,26 @@ async function runSync(ws: string): Promise<SyncReport | undefined> {
 export async function applyPulled(ws: string, pulled: string[]) {
   if (pulled.length === 0) return;
   const data = `${DATA_DIR}/`;
-  if (pulled.some((p) => p.startsWith(`${data}issues/`) || p === 'issues.json')) {
+  if (
+    pulled.some((p) => p.startsWith(`${data}issues/`) || p === "issues.json")
+  ) {
     await useIssueStore.getState().load(ws, true);
   }
   if (pulled.includes(`${data}books.json`)) {
-    const { readLibrary } = await import('@/reader/library/library');
+    const { readLibrary } = await import("@/reader/library/library");
     await readLibrary(ws);
   }
   if (pulled.includes(`${data}feeds.json`)) {
-    const { syncFeeds } = await import('@/feed/feedSync');
+    const { syncFeeds } = await import("@/feed/feedSync");
     await syncFeeds();
   }
 
-  const notes = pulled.filter((p) => p.toLowerCase().endsWith('.md') && !p.startsWith('.')).map((p) => joinPath(ws, p));
+  const notes = pulled
+    .filter((p) => p.toLowerCase().endsWith(".md") && !p.startsWith("."))
+    .map((p) => joinPath(ws, p));
   const present: string[] = [];
   for (const path of notes) {
-    if (await invoke<boolean>('file_exist', { filePath: path })) {
+    if (await invoke<boolean>("file_exist", { filePath: path })) {
       present.push(path);
     } else {
       store.getState().deleteNote(path);

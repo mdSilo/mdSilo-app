@@ -1,19 +1,40 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 import {
-  CollisionDetection, DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, MouseSensor,
-  PointerSensor, TouchSensor, closestCenter, closestCorners, pointerWithin, rectIntersection, useSensor, useSensors,
-} from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { createPortal } from 'react-dom';
-import { TbPlus as IconPlus } from 'react-icons/tb';
-import { PromptModal } from '@/ui/Dialogs';
-import { useIssueStore } from '../issueStore';
+  CollisionDetection,
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  MouseSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  closestCorners,
+  pointerWithin,
+  rectIntersection,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import {
-  addStatus, deleteStatus, getIssue, moveProjectItem, moveStatus, updateStatus,
-} from '../issueOps';
-import type { Issue, IssueData, Project } from '../types';
-import ProjectColumn, { columnDndId } from './ProjectColumn';
-import ProjectCard from './ProjectCard';
+  SortableContext,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { createPortal } from "react-dom";
+import { TbPlus as IconPlus } from "react-icons/tb";
+import { PromptModal } from "@/ui/Dialogs";
+import { useIssueStore } from "../issueStore";
+import {
+  addStatus,
+  deleteStatus,
+  getIssue,
+  moveProjectItem,
+  moveStatus,
+  updateStatus,
+} from "../issueOps";
+import type { Issue, IssueData, Project } from "../types";
+import ProjectColumn, { columnDndId } from "./ProjectColumn";
+import ProjectCard from "./ProjectCard";
 
 type Props = {
   project: Project;
@@ -40,15 +61,22 @@ export function boardColumns(project: Project, data: IssueData) {
  * (arrayMove semantics within a column). Over a column: at its end.
  */
 export function dropTarget(
-  project: Project, active: number, over: { type?: string; issue?: number; status?: string }
+  project: Project,
+  active: number,
+  over: { type?: string; issue?: number; status?: string },
 ): { status: string; order: number } | undefined {
   if (!over.status) return undefined;
-  const column = project.items.filter((it) => it.status === over.status).sort((a, b) => a.order - b.order);
-  if (over.type === 'Card' && over.issue !== undefined) {
+  const column = project.items
+    .filter((it) => it.status === over.status)
+    .sort((a, b) => a.order - b.order);
+  if (over.type === "Card" && over.issue !== undefined) {
     const idx = column.findIndex((it) => it.issue === over.issue);
     return { status: over.status, order: idx < 0 ? column.length : idx };
   }
-  return { status: over.status, order: column.filter((it) => it.issue !== active).length };
+  return {
+    status: over.status,
+    order: column.filter((it) => it.issue !== active).length,
+  };
 }
 
 type DragData = { type?: string; issue?: number; status?: string } | undefined;
@@ -59,70 +87,103 @@ type DragData = { type?: string; issue?: number; status?: string } | undefined;
  * would favor the cards of the source column over a tall or empty column.
  */
 export const boardCollision: CollisionDetection = (args) => {
-  if ((args.active.data.current as DragData)?.type !== 'Card') return closestCorners(args);
+  if ((args.active.data.current as DragData)?.type !== "Card")
+    return closestCorners(args);
   const isColumn = (id: string | number) =>
-    (args.droppableContainers.find((c) => c.id === id)?.data.current as DragData)?.type === 'Column';
+    (
+      args.droppableContainers.find((c) => c.id === id)?.data
+        .current as DragData
+    )?.type === "Column";
   const within = pointerWithin(args).filter((c) => isColumn(c.id));
-  const [hit] = within.length ? within : rectIntersection(args).filter((c) => isColumn(c.id));
+  const [hit] = within.length
+    ? within
+    : rectIntersection(args).filter((c) => isColumn(c.id));
   if (!hit) return [];
-  const status = (args.droppableContainers.find((c) => c.id === hit.id)?.data.current as DragData)?.status;
+  const status = (
+    args.droppableContainers.find((c) => c.id === hit.id)?.data
+      .current as DragData
+  )?.status;
   const cards = args.droppableContainers.filter((c) => {
     const d = c.data.current as DragData;
-    return d?.type === 'Card' && d.status === status;
+    return d?.type === "Card" && d.status === status;
   });
   // below the last card: the column's end
-  const bottom = Math.max(...cards.map((c) => args.droppableRects.get(c.id)?.bottom ?? -Infinity));
-  if (!cards.length || (args.pointerCoordinates && args.pointerCoordinates.y > bottom)) return [hit];
+  const bottom = Math.max(
+    ...cards.map((c) => args.droppableRects.get(c.id)?.bottom ?? -Infinity),
+  );
+  if (
+    !cards.length ||
+    (args.pointerCoordinates && args.pointerCoordinates.y > bottom)
+  )
+    return [hit];
   return closestCenter({ ...args, droppableContainers: cards });
 };
 
 /** The op a drop results in: reorder columns, or move a card. */
 export function dragEndOp(project: Project, a: DragData, o: DragData) {
   if (!a || !o) return undefined;
-  if (a.type === 'Column' && a.status) {
+  if (a.type === "Column" && a.status) {
     const from = a.status;
     const to = project.statuses.findIndex((s) => s.id === o.status);
     if (to < 0 || o.status === from) return undefined;
     return (d: IssueData) => moveStatus(d, project.id, from, to);
   }
-  if (a.type === 'Card' && a.issue !== undefined) {
+  if (a.type === "Card" && a.issue !== undefined) {
     const num = a.issue;
-    if (o.type === 'Card' && o.issue === num) return undefined;
+    if (o.type === "Card" && o.issue === num) return undefined;
     const target = dropTarget(project, num, o);
     if (!target) return undefined;
-    return (d: IssueData) => moveProjectItem(d, project.id, num, target.status, target.order);
+    return (d: IssueData) =>
+      moveProjectItem(d, project.id, num, target.status, target.order);
   }
   return undefined;
 }
 
-export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props) {
+export default function ProjectBoard({
+  project,
+  data,
+  onOpen,
+  onAddItem,
+}: Props) {
   const apply = useIssueStore((s) => s.apply);
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [activeColumn, setActiveColumn] = useState<string | null>(null);
   const [overColumn, setOverColumn] = useState<string | null>(null);
   const [addingColumn, setAddingColumn] = useState(false);
   const columns = useMemo(() => boardColumns(project, data), [project, data]);
-  const columnIds = useMemo(() => project.statuses.map((s) => columnDndId(s.id)), [project.statuses]);
+  const columnIds = useMemo(
+    () => project.statuses.map((s) => columnDndId(s.id)),
+    [project.statuses],
+  );
   const candidates = useMemo(
-    () => data.issues.filter((i) => !project.items.some((it) => it.issue === i.number)),
-    [data.issues, project.items]
+    () =>
+      data.issues.filter(
+        (i) => !project.items.some((it) => it.issue === i.number),
+      ),
+    [data.issues, project.items],
   );
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-    useSensor(PointerSensor, { activationConstraint: { distance: 10 } })
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
   );
 
   const onDragStart = (e: DragStartEvent) => {
     const d = e.active.data.current;
-    if (d?.type === 'Card') setActiveCard(d.issue);
-    if (d?.type === 'Column') setActiveColumn(d.status);
+    if (d?.type === "Card") setActiveCard(d.issue);
+    if (d?.type === "Column") setActiveColumn(d.status);
   };
 
   const onDragOver = (e: DragOverEvent) => {
     const d = e.active.data.current as DragData;
-    setOverColumn(d?.type === 'Card' ? (e.over?.data.current as DragData)?.status ?? null : null);
+    setOverColumn(
+      d?.type === "Card"
+        ? ((e.over?.data.current as DragData)?.status ?? null)
+        : null,
+    );
   };
 
   const onDragEnd = (e: DragEndEvent) => {
@@ -133,20 +194,31 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
     if (op) apply(op);
   };
 
-  const overlayIssue = activeCard !== null ? getIssue(data, activeCard) : undefined;
+  const overlayIssue =
+    activeCard !== null ? getIssue(data, activeCard) : undefined;
   const overlayColumn = columns.find((c) => c.status.id === activeColumn);
 
   return (
-    <div className="flex h-full gap-3 p-4 overflow-x-auto" data-testid="project-board">
+    <div
+      className="flex h-full gap-3 p-4 overflow-x-auto"
+      data-testid="project-board"
+    >
       <DndContext
         sensors={sensors}
         collisionDetection={boardCollision}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
-        onDragCancel={() => { setActiveCard(null); setActiveColumn(null); setOverColumn(null); }}
+        onDragCancel={() => {
+          setActiveCard(null);
+          setActiveColumn(null);
+          setOverColumn(null);
+        }}
       >
-        <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+        <SortableContext
+          items={columnIds}
+          strategy={horizontalListSortingStrategy}
+        >
           {columns.map(({ status, issues }) => (
             <ProjectColumn
               key={status.id}
@@ -155,9 +227,19 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
               data={data}
               candidates={candidates}
               onOpen={onOpen}
-              onRename={(name) => apply((d) => updateStatus(d, project.id, status.id, { name }))}
-              onToggleCloses={() => apply((d) => updateStatus(d, project.id, status.id, { closes: !status.closes }))}
-              onDelete={() => apply((d) => deleteStatus(d, project.id, status.id))}
+              onRename={(name) =>
+                apply((d) => updateStatus(d, project.id, status.id, { name }))
+              }
+              onToggleCloses={() =>
+                apply((d) =>
+                  updateStatus(d, project.id, status.id, {
+                    closes: !status.closes,
+                  }),
+                )
+              }
+              onDelete={() =>
+                apply((d) => deleteStatus(d, project.id, status.id))
+              }
               onAddItem={(text) => onAddItem(status.id, text)}
               dropping={overColumn === status.id}
             />
@@ -183,7 +265,9 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
         />
         {createPortal(
           <DragOverlay>
-            {overlayIssue ? <ProjectCard issue={overlayIssue} data={data} status="" overlay /> : null}
+            {overlayIssue ? (
+              <ProjectCard issue={overlayIssue} data={data} status="" overlay />
+            ) : null}
             {overlayColumn ? (
               <ProjectColumn
                 status={overlayColumn.status}
@@ -199,7 +283,7 @@ export default function ProjectBoard({ project, data, onOpen, onAddItem }: Props
               />
             ) : null}
           </DragOverlay>,
-          document.body
+          document.body,
         )}
       </DndContext>
     </div>

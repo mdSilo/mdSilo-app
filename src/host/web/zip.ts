@@ -16,10 +16,14 @@ export interface ZipEntry {
 }
 
 /** Raw deflate, as in a zip file; undefined where the browser has no CompressionStream. */
-export async function deflateRaw(data: Uint8Array): Promise<Uint8Array | undefined> {
-  if (typeof CompressionStream === 'undefined') return undefined;
+export async function deflateRaw(
+  data: Uint8Array,
+): Promise<Uint8Array | undefined> {
+  if (typeof CompressionStream === "undefined") return undefined;
   try {
-    const stream = new Response(data as BodyInit).body!.pipeThrough(new CompressionStream('deflate-raw'));
+    const stream = new Response(data as BodyInit).body!.pipeThrough(
+      new CompressionStream("deflate-raw"),
+    );
     return new Uint8Array(await new Response(stream).arrayBuffer());
   } catch {
     return undefined;
@@ -38,20 +42,24 @@ export function crc32(data: Uint8Array): number {
     }
   }
   let crc = 0xffffffff;
-  for (let i = 0; i < data.length; i++) crc = crcTable[(crc ^ data[i]) & 0xff] ^ (crc >>> 8);
+  for (let i = 0; i < data.length; i++)
+    crc = crcTable[(crc ^ data[i]) & 0xff] ^ (crc >>> 8);
   return (crc ^ 0xffffffff) >>> 0;
 }
 
 function dosDateTime(ms: number): [number, number] {
   const d = new Date(ms);
   const year = Math.max(1980, d.getFullYear());
-  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | Math.floor(d.getSeconds() / 2);
+  const time =
+    (d.getHours() << 11) |
+    (d.getMinutes() << 5) |
+    Math.floor(d.getSeconds() / 2);
   const date = ((year - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
   return [time, date];
 }
 
 export function createZip(entries: ZipEntry[]): Blob {
-  if (entries.length > 0xffff) throw new Error('Too many files for a zip file');
+  if (entries.length > 0xffff) throw new Error("Too many files for a zip file");
   const encoder = new TextEncoder();
   const parts: Uint8Array[] = [];
   const central: Uint8Array[] = [];
@@ -61,10 +69,13 @@ export function createZip(entries: ZipEntry[]): Blob {
     const name = encoder.encode(entry.name);
     const data = entry.data ?? new Uint8Array(0);
     // deflated if smaller
-    const deflated = entry.deflated && entry.deflated.length < data.length ? entry.deflated : undefined;
+    const deflated =
+      entry.deflated && entry.deflated.length < data.length
+        ? entry.deflated
+        : undefined;
     const stored = deflated ?? data;
     const method = deflated ? 8 : 0;
-    const isDir = entry.name.endsWith('/');
+    const isDir = entry.name.endsWith("/");
     const crc = crc32(data);
     const [time, date] = dosDateTime(entry.modified ?? Date.now());
 
@@ -109,5 +120,8 @@ export function createZip(entries: ZipEntry[]): Blob {
   end.setUint32(12, cdSize, true);
   end.setUint32(16, offset, true);
 
-  return new Blob([...parts, ...central, new Uint8Array(end.buffer)] as BlobPart[], { type: 'application/zip' });
+  return new Blob(
+    [...parts, ...central, new Uint8Array(end.buffer)] as BlobPart[],
+    { type: "application/zip" },
+  );
 }

@@ -1,47 +1,60 @@
-import { describe, expect, test, vi } from 'vitest';
-import type { ReactNode } from 'react';
-import { renderHook, act } from '@testing-library/react';
-import { ProvideCurrentMd, useCurrentMdContext } from '@/writer/useCurrentMd';
-import { ProvideCurrentView, useCurrentViewContext } from './useCurrentView';
+import { describe, expect, test, vi } from "vitest";
+import type { ReactNode } from "react";
+import { renderHook, act } from "@testing-library/react";
+import { ProvideCurrentMd, useCurrentMdContext } from "@/writer/useCurrentMd";
+import { ProvideCurrentView, useCurrentViewContext } from "./useCurrentView";
 
-describe('useCurrentViewContext', () => {
-  test('throws outside the provider', () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    expect(() => renderHook(() => useCurrentViewContext())).toThrow(/within a provider/);
+describe("useCurrentViewContext", () => {
+  test("throws outside the provider", () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    expect(() => renderHook(() => useCurrentViewContext())).toThrow(
+      /within a provider/,
+    );
     vi.restoreAllMocks();
   });
 
-  test('a route shows some views elsewhere', () => {
-    const route = vi.fn((action: { view: string }) => action.view === 'graph');
+  test("a route shows some views elsewhere", () => {
+    const route = vi.fn((action: { view: string }) => action.view === "graph");
     const { result } = renderHook(() => useCurrentViewContext(), {
-      wrapper: ({ children }: { children: ReactNode }) => <ProvideCurrentView route={route}>{children}</ProvideCurrentView>,
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <ProvideCurrentView route={route}>{children}</ProvideCurrentView>
+      ),
     });
-    act(() => result.current.dispatch({ view: 'graph' }));
-    expect(result.current.state.view).toBe('default');
-    act(() => result.current.dispatch({ view: 'feed' }));
-    expect(result.current.state.view).toBe('feed');
+    act(() => result.current.dispatch({ view: "graph" }));
+    expect(result.current.state.view).toBe("default");
+    act(() => result.current.dispatch({ view: "feed" }));
+    expect(result.current.state.view).toBe("feed");
     expect(route).toHaveBeenCalledTimes(2);
   });
 
-  test('provides state and dispatch', () => {
+  test("provides state and dispatch", () => {
     const { result } = renderHook(() => useCurrentViewContext(), {
-      wrapper: ({ children }: { children: ReactNode }) => <ProvideCurrentView>{children}</ProvideCurrentView>,
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <ProvideCurrentView>{children}</ProvideCurrentView>
+      ),
     });
-    expect(result.current.state).toEqual({ view: 'default' });
-    act(() => result.current.dispatch({ view: 'graph' }));
-    expect(result.current.state.view).toBe('graph');
+    expect(result.current.state).toEqual({ view: "default" });
+    act(() => result.current.dispatch({ view: "graph" }));
+    expect(result.current.state.view).toBe("graph");
   });
 });
 
-describe('useCurrentMdContext', () => {
-  test('throws outside the provider', () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    expect(() => renderHook(() => useCurrentMdContext())).toThrow(/within a provider/);
+describe("useCurrentMdContext", () => {
+  test("throws outside the provider", () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    expect(() => renderHook(() => useCurrentMdContext())).toThrow(
+      /within a provider/,
+    );
     vi.restoreAllMocks();
   });
 
-  test('returns the provided value', () => {
-    const value = { ty: 'md', id: '/a.md', state: { view: 'md' }, dispatch: vi.fn() };
+  test("returns the provided value", () => {
+    const value = {
+      ty: "md",
+      id: "/a.md",
+      state: { view: "md" },
+      dispatch: vi.fn(),
+    };
     const { result } = renderHook(() => useCurrentMdContext(), {
       wrapper: ({ children }: { children: ReactNode }) => (
         <ProvideCurrentMd value={value}>{children}</ProvideCurrentMd>

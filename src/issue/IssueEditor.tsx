@@ -1,9 +1,9 @@
-import { MouseEvent, useRef, useState } from 'react';
-import MsEditor, { embeds } from 'mdsmirror';
-import { EDITOR_THEME } from '@/lib/themes';
-import { useStore } from '@/state/store';
-import useLinkHandlers from '@/writer/hooks/useLinkHandlers';
-import { useWritingRoot } from '@/workspace/useWorkspace';
+import { MouseEvent, useRef, useState } from "react";
+import MsEditor, { embeds } from "mdsmirror";
+import { EDITOR_THEME } from "@/lib/themes";
+import { useStore } from "@/state/store";
+import useLinkHandlers from "@/writer/hooks/useLinkHandlers";
+import { useWritingRoot } from "@/workspace/useWorkspace";
 
 type Props = {
   /** initial markdown; remount (change `key`) to reset */
@@ -25,7 +25,14 @@ type Props = {
  * editor still places the cursor for editing.
  */
 export default function IssueEditor(props: Props) {
-  const { defaultValue, onChange, readOnly = false, placeholder, autoFocus, className = '' } = props;
+  const {
+    defaultValue,
+    onChange,
+    readOnly = false,
+    placeholder,
+    autoFocus,
+    className = "",
+  } = props;
   // the editor resets its doc whenever `value` changes, so keep the first value
   const [initial] = useState(defaultValue);
   const darkMode = useStore((state) => state.darkMode);
@@ -37,14 +44,19 @@ export default function IssueEditor(props: Props) {
 
   const onMouseDown = () => {
     const active = document.activeElement;
-    wasFocused.current = !!active && active !== document.body && !!ref.current?.contains(active);
+    wasFocused.current =
+      !!active && active !== document.body && !!ref.current?.contains(active);
   };
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
-    const link = (e.target as HTMLElement).closest?.('a');
+    const link = (e.target as HTMLElement).closest?.("a");
     if (!link || !ref.current?.contains(link)) return;
-    if (link.closest('.component-attachment') || link.classList.contains('ProseMirror-widget')) return;
-    const href = link.getAttribute('href');
-    if (!href || href.startsWith('#')) return;
+    if (
+      link.closest(".component-attachment") ||
+      link.classList.contains("ProseMirror-widget")
+    )
+      return;
+    const href = link.getAttribute("href");
+    if (!href || href.startsWith("#")) return;
     if (readOnly || !wasFocused.current || e.ctrlKey || e.metaKey) {
       e.preventDefault();
       e.stopPropagation();
@@ -71,7 +83,7 @@ export default function IssueEditor(props: Props) {
         onSearchItem={onSearchItem}
         onOpenLink={onOpenLink}
         embeds={embeds}
-        disables={['sub']}
+        disables={["sub"]}
         rootPath={notesRoot}
       />
     </div>

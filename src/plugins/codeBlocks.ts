@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
-import type { CodeRenderer } from 'mdsmirror';
-import { store, useStore } from '@/state/store';
-import { sanitizePluginPicture } from '@/lib/sanitize';
-import { askPlugin } from './background';
-import { enabledPlugins, type InstalledPlugin } from './registry';
+import { useMemo } from "react";
+import type { CodeRenderer } from "mdsmirror";
+import { store, useStore } from "@/state/store";
+import { sanitizePluginPicture } from "@/lib/sanitize";
+import { askPlugin } from "./background";
+import { enabledPlugins, type InstalledPlugin } from "./registry";
 
 /**
  * Code blocks drawn by plugins, ```plantuml: the main page of the plugin, in
@@ -26,11 +26,22 @@ export function codeBlockPlugins(
 }
 
 /** The code block drawn by its plugin, sanitized; throws if none draws it, or it fails. */
-export async function renderCode(lang: string, code: string, dark = store.getState().darkMode): Promise<string> {
+export async function renderCode(
+  lang: string,
+  code: string,
+  dark = store.getState().darkMode,
+): Promise<string> {
   const plugin = codeBlockPlugins().get(lang.toLowerCase());
   if (!plugin) throw new Error(`No plugin draws ${lang}`);
-  const result = await askPlugin(plugin, 'code.render', { lang: lang.toLowerCase(), code, dark });
-  if (typeof result !== 'string') throw new Error(`${plugin.manifest?.name ?? plugin.id} drew no SVG or HTML`);
+  const result = await askPlugin(plugin, "code.render", {
+    lang: lang.toLowerCase(),
+    code,
+    dark,
+  });
+  if (typeof result !== "string")
+    throw new Error(
+      `${plugin.manifest?.name ?? plugin.id} drew no SVG or HTML`,
+    );
   return sanitizePluginPicture(result);
 }
 
@@ -38,13 +49,18 @@ export async function renderCode(lang: string, code: string, dark = store.getSta
  * The renderers of the languages the enabled plugins draw, for the editor,
  * and a key to make a new editor when they change (it reads them on creation).
  */
-export function useCodeRenderers(): { codeRenderers: Record<string, CodeRenderer>; key: string } {
+export function useCodeRenderers(): {
+  codeRenderers: Record<string, CodeRenderer>;
+  key: string;
+} {
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
-  const languages = [...codeBlockPlugins(installedPlugins, pluginStates).keys()].sort().join(',');
+  const languages = [...codeBlockPlugins(installedPlugins, pluginStates).keys()]
+    .sort()
+    .join(",");
   return useMemo(() => {
     const codeRenderers: Record<string, CodeRenderer> = {};
-    for (const lang of languages ? languages.split(',') : []) {
+    for (const lang of languages ? languages.split(",") : []) {
       codeRenderers[lang] = (code, dark) => renderCode(lang, code, dark);
     }
     return { codeRenderers, key: languages };

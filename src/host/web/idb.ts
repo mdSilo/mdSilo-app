@@ -3,41 +3,42 @@
  * NOTE: web/public/fs-sw.js reads the `files` store as well, keep in sync.
  */
 
-export const DB_NAME = 'mdsilo';
+export const DB_NAME = "mdsilo";
 export const DB_VERSION = 1;
 
-export const FILES = 'files'; // virtual file system, keyPath: path
-export const KV = 'kv'; // key-value storage, like set_data/get_data
-export const CHANNELS = 'channels'; // feed channels, keyPath: link
-export const ARTICLES = 'articles'; // feed articles, keyPath: url
+export const FILES = "files"; // virtual file system, keyPath: path
+export const KV = "kv"; // key-value storage, like set_data/get_data
+export const CHANNELS = "channels"; // feed channels, keyPath: link
+export const ARTICLES = "articles"; // feed articles, keyPath: url
 
-export type StoreName = typeof FILES | typeof KV | typeof CHANNELS | typeof ARTICLES;
+export type StoreName =
+  typeof FILES | typeof KV | typeof CHANNELS | typeof ARTICLES;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 export function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
-    if (typeof indexedDB === 'undefined') {
-      reject(new Error('IndexedDB is not supported in this browser'));
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("IndexedDB is not supported in this browser"));
       return;
     }
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(FILES)) {
-        const files = db.createObjectStore(FILES, { keyPath: 'path' });
-        files.createIndex('parent', 'parent', { unique: false });
+        const files = db.createObjectStore(FILES, { keyPath: "path" });
+        files.createIndex("parent", "parent", { unique: false });
       }
       if (!db.objectStoreNames.contains(KV)) {
         db.createObjectStore(KV);
       }
       if (!db.objectStoreNames.contains(CHANNELS)) {
-        db.createObjectStore(CHANNELS, { keyPath: 'link' });
+        db.createObjectStore(CHANNELS, { keyPath: "link" });
       }
       if (!db.objectStoreNames.contains(ARTICLES)) {
-        const articles = db.createObjectStore(ARTICLES, { keyPath: 'url' });
-        articles.createIndex('feed_link', 'feed_link', { unique: false });
+        const articles = db.createObjectStore(ARTICLES, { keyPath: "url" });
+        articles.createIndex("feed_link", "feed_link", { unique: false });
       }
     };
     req.onsuccess = () => {
@@ -85,15 +86,20 @@ export async function tx<T>(
   const done = new Promise<void>((resolve, reject) => {
     t.oncomplete = () => resolve();
     t.onerror = () => reject(t.error);
-    t.onabort = () => reject(t.error ?? new Error('Transaction aborted'));
+    t.onabort = () => reject(t.error ?? new Error("Transaction aborted"));
   });
   const result = await fn(t);
   await done;
   return result;
 }
 
-export async function get<T>(store: StoreName, key: IDBValidKey): Promise<T | undefined> {
-  return tx(store, 'readonly', (t) => reqToPromise<T | undefined>(t.objectStore(store).get(key)));
+export async function get<T>(
+  store: StoreName,
+  key: IDBValidKey,
+): Promise<T | undefined> {
+  return tx(store, "readonly", (t) =>
+    reqToPromise<T | undefined>(t.objectStore(store).get(key)),
+  );
 }
 
 export async function getAll<T>(
@@ -101,17 +107,28 @@ export async function getAll<T>(
   query?: IDBKeyRange | IDBValidKey,
   index?: string,
 ): Promise<T[]> {
-  return tx(store, 'readonly', (t) => {
+  return tx(store, "readonly", (t) => {
     const s = t.objectStore(store);
     const src = index ? s.index(index) : s;
     return reqToPromise<T[]>(src.getAll(query));
   });
 }
 
-export async function put<T>(store: StoreName, value: T, key?: IDBValidKey): Promise<void> {
-  await tx(store, 'readwrite', (t) => reqToPromise(t.objectStore(store).put(value, key)));
+export async function put<T>(
+  store: StoreName,
+  value: T,
+  key?: IDBValidKey,
+): Promise<void> {
+  await tx(store, "readwrite", (t) =>
+    reqToPromise(t.objectStore(store).put(value, key)),
+  );
 }
 
-export async function del(store: StoreName, key: IDBValidKey | IDBKeyRange): Promise<void> {
-  await tx(store, 'readwrite', (t) => reqToPromise(t.objectStore(store).delete(key)));
+export async function del(
+  store: StoreName,
+  key: IDBValidKey | IDBKeyRange,
+): Promise<void> {
+  await tx(store, "readwrite", (t) =>
+    reqToPromise(t.objectStore(store).delete(key)),
+  );
 }

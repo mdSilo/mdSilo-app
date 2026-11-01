@@ -1,13 +1,19 @@
-import { useEffect } from 'react';
-import { useStore } from '@/state/store';
-import { baseLanguage, targetLanguage, translatorOf } from '../lookup/lookup';
-import { storeOf } from '../readerStore';
-import { withDefaults } from '../settings';
-import type { FoliateView, Pane } from '../view';
+import { useEffect } from "react";
+import { useStore } from "@/state/store";
+import { baseLanguage, targetLanguage, translatorOf } from "../lookup/lookup";
+import { storeOf } from "../readerStore";
+import { withDefaults } from "../settings";
+import type { FoliateView, Pane } from "../view";
 import {
-  blocksAround, blocksOf, removeTranslations, scopeOf, showTranslation, 
-  sourceTextOf, translationsOf, TRANSLATION_CLASS,
-} from './translation';
+  blocksAround,
+  blocksOf,
+  removeTranslations,
+  scopeOf,
+  showTranslation,
+  sourceTextOf,
+  translationsOf,
+  TRANSLATION_CLASS,
+} from "./translation";
 
 /** translations asked at once, at most: not to be blocked by the service */
 const CONCURRENT = 3;
@@ -48,12 +54,13 @@ export function useBookTranslation(view: FoliateView | null, pane: Pane) {
         const block = queue.shift()!;
         const key = sourceTextOf(block);
         active++;
-        translator.translate(key, lang)
+        translator
+          .translate(key, lang)
           .then((result) => {
             kept.set(scope, key, result.text);
             if (!cancelled && block.isConnected) show(block, key, result.text);
           })
-          .catch((e: unknown) => console.warn('Failed to translate', e))
+          .catch((e: unknown) => console.warn("Failed to translate", e))
           .finally(() => {
             active--;
             pending.delete(block);
@@ -65,7 +72,11 @@ export function useBookTranslation(view: FoliateView | null, pane: Pane) {
       const doc = range?.startContainer.ownerDocument;
       if (!doc || cancelled) return;
       for (const block of blocksAround(blocksOf(doc.body), range)) {
-        if (pending.has(block) || block.querySelector(`:scope > .${TRANSLATION_CLASS}`)) continue;
+        if (
+          pending.has(block) ||
+          block.querySelector(`:scope > .${TRANSLATION_CLASS}`)
+        )
+          continue;
         const key = sourceTextOf(block);
         if (!key) continue;
         const text = kept.get(scope, key);
@@ -77,14 +88,16 @@ export function useBookTranslation(view: FoliateView | null, pane: Pane) {
       }
       drain();
     };
-    const onRelocate = (e: Event) => translateAround((e as CustomEvent).detail?.range);
+    const onRelocate = (e: Event) =>
+      translateAround((e as CustomEvent).detail?.range);
 
-    view.addEventListener('relocate', onRelocate);
+    view.addEventListener("relocate", onRelocate);
     void kept.load().then(() => translateAround(view.lastLocation?.range));
     return () => {
       cancelled = true;
-      view.removeEventListener('relocate', onRelocate);
-      for (const { doc } of view.renderer.getContents()) removeTranslations(doc);
+      view.removeEventListener("relocate", onRelocate);
+      for (const { doc } of view.renderer.getContents())
+        removeTranslations(doc);
       void kept.flush();
     };
   }, [on, view, ws, hash, translator, lang, only]);

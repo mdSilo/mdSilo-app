@@ -1,30 +1,57 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import type { ReactNode } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { NoteMap } from '@/lib/noteMap';
-import { store } from '@/state/store';
-import { ProvideCurrentView, useCurrentViewContext } from '@/state/useCurrentView';
-import type { ViewAction } from '@/state/viewReducer';
-import { getStrDate } from '@/lib/helper';
-import { MD_LINK_REGEX, WIKI_LINK_REGEX } from '@/lib/mdlink';
-import { makeFileMeta, makeNote, mockInvoke, mockLayout, waitForView } from '@/testUtils';
-import MainView from '@/shell/MainView';
-import type { BookEntry } from '@/reader/library/library';
-import type { Issue } from '@/issue/types';
-import HeatMap from './HeatMap';
-import Chronicle from './Chronicle';
-import Journals from './Journals';
-import Graph from './Graph';
-import { buildGraphData, edgePoint, HASHTAG_REGEX, truncateText } from './ForceGraph';
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { NoteMap } from "@/lib/noteMap";
+import { store } from "@/state/store";
+import {
+  ProvideCurrentView,
+  useCurrentViewContext,
+} from "@/state/useCurrentView";
+import type { ViewAction } from "@/state/viewReducer";
+import { getStrDate } from "@/lib/helper";
+import { MD_LINK_REGEX, WIKI_LINK_REGEX } from "@/lib/mdlink";
+import {
+  makeFileMeta,
+  makeNote,
+  mockInvoke,
+  mockLayout,
+  waitForView,
+} from "@/testUtils";
+import MainView from "@/shell/MainView";
+import type { BookEntry } from "@/reader/library/library";
+import type { Issue } from "@/issue/types";
+import HeatMap from "./HeatMap";
+import Chronicle from "./Chronicle";
+import Journals from "./Journals";
+import Graph from "./Graph";
+import {
+  buildGraphData,
+  edgePoint,
+  HASHTAG_REGEX,
+  truncateText,
+} from "./ForceGraph";
 
 const Controls = ({ children }: { children: ReactNode }) => {
   const { state, dispatch } = useCurrentViewContext();
   return (
     <>
       <p data-testid="view">{JSON.stringify(state)}</p>
-      <button data-testid="go" onClick={(e) => dispatch(JSON.parse((e.target as HTMLElement).dataset.action as string))} />
+      <button
+        data-testid="go"
+        onClick={(e) =>
+          dispatch(
+            JSON.parse((e.target as HTMLElement).dataset.action as string),
+          )
+        }
+      />
       {children}
     </>
   );
@@ -35,175 +62,271 @@ const renderView = (ui: JSX.Element) =>
       <div id="app-container">
         <Controls>{ui}</Controls>
       </div>
-    </ProvideCurrentView>
+    </ProvideCurrentView>,
   );
 const go = async (action: ViewAction) => {
-  const btn = screen.getByTestId('go');
+  const btn = screen.getByTestId("go");
   btn.dataset.action = JSON.stringify(action);
   await act(async () => {
     fireEvent.click(btn);
   });
   await waitForView();
 };
-const viewState = () => JSON.parse(screen.getByTestId('view').textContent as string);
+const viewState = () =>
+  JSON.parse(screen.getByTestId("view").textContent as string);
 
 const today = () => getStrDate(new Date().toString());
 
-describe('graph regexes', () => {
-  test('MD_LINK_REGEX captures label and href', () => {
-    const m = [...'a [x](y) b [z](https://w)'.matchAll(MD_LINK_REGEX)];
-    expect(m.map((x) => [x[2], x[3]])).toEqual([['x', 'y'], ['z', 'https://w']]);
+describe("graph regexes", () => {
+  test("MD_LINK_REGEX captures label and href", () => {
+    const m = [..."a [x](y) b [z](https://w)".matchAll(MD_LINK_REGEX)];
+    expect(m.map((x) => [x[2], x[3]])).toEqual([
+      ["x", "y"],
+      ["z", "https://w"],
+    ]);
   });
 
-  test('WIKI_LINK_REGEX captures the title, one link at a time', () => {
-    const m = [...'see [[My Note]] and [[b|alias]].'.matchAll(WIKI_LINK_REGEX)];
-    expect(m.map((x) => [x[1], x[2]])).toEqual([['My Note', undefined], ['b', 'alias']]);
+  test("WIKI_LINK_REGEX captures the title, one link at a time", () => {
+    const m = [..."see [[My Note]] and [[b|alias]].".matchAll(WIKI_LINK_REGEX)];
+    expect(m.map((x) => [x[1], x[2]])).toEqual([
+      ["My Note", undefined],
+      ["b", "alias"],
+    ]);
   });
 
-  test('HASHTAG_REGEX needs surrounding whitespace', () => {
-    expect([...'a #tag# b'.matchAll(HASHTAG_REGEX)].map((x) => x[1])).toEqual(['tag']);
-    expect([...'a#tag# b'.matchAll(HASHTAG_REGEX)]).toHaveLength(0);
+  test("HASHTAG_REGEX needs surrounding whitespace", () => {
+    expect([..."a #tag# b".matchAll(HASHTAG_REGEX)].map((x) => x[1])).toEqual([
+      "tag",
+    ]);
+    expect([..."a#tag# b".matchAll(HASHTAG_REGEX)]).toHaveLength(0);
   });
 
-  test('HASHTAG_REGEX finds several tags on one line, including adjacent ones', () => {
-    const tags = [...'x #one# y #two words# #three# z'.matchAll(HASHTAG_REGEX)].map((x) => x[1]);
-    expect(tags).toEqual(['one', 'two words', 'three']);
-    expect([...'a #not\nclosed# b'.matchAll(HASHTAG_REGEX)]).toHaveLength(0);
+  test("HASHTAG_REGEX finds several tags on one line, including adjacent ones", () => {
+    const tags = [
+      ..."x #one# y #two words# #three# z".matchAll(HASHTAG_REGEX),
+    ].map((x) => x[1]);
+    expect(tags).toEqual(["one", "two words", "three"]);
+    expect([..."a #not\nclosed# b".matchAll(HASHTAG_REGEX)]).toHaveLength(0);
   });
 });
 
-describe('MainView', () => {
+describe("MainView", () => {
   beforeEach(() => {
-    mockInvoke(invoke, { get_channels: [], get_unread_num: {}, get_articles: [] });
+    mockInvoke(invoke, {
+      get_channels: [],
+      get_unread_num: {},
+      get_articles: [],
+    });
   });
 
-  test('shows the welcome page by default', () => {
+  test("shows the welcome page by default", () => {
     renderView(<MainView />);
-    expect(screen.getByText('Hello, welcome to mdSilo.')).toBeInTheDocument();
+    expect(screen.getByText("Hello, welcome to mdSilo.")).toBeInTheDocument();
   });
 
   test.each([
-    [{ view: 'chronicle' }, 'Journals'],
-    [{ view: 'issues', tab: 'tasks' }, 'Open a folder to track issues.'],
-    [{ view: 'journal' }, null],
-    [{ view: 'tag', tag: 'idea' }, '#idea'],
-    [{ view: 'md', params: { noteId: '' } }, 'This note does not exists!'],
-    [{ view: 'md', params: { noteId: '/x.md' } }, 'The note does not exist: /x.md'],
-  ] as [ViewAction, string | null][])('routes %j', async (action, text) => {
+    [{ view: "chronicle" }, "Journals"],
+    [{ view: "issues", tab: "tasks" }, "Open a folder to track issues."],
+    [{ view: "journal" }, null],
+    [{ view: "tag", tag: "idea" }, "#idea"],
+    [{ view: "md", params: { noteId: "" } }, "This note does not exists!"],
+    [
+      { view: "md", params: { noteId: "/x.md" } },
+      "The note does not exist: /x.md",
+    ],
+  ] as [ViewAction, string | null][])("routes %j", async (action, text) => {
     renderView(<MainView />);
     await go(action);
-    expect(screen.queryByText('Hello, welcome to mdSilo.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Hello, welcome to mdSilo."),
+    ).not.toBeInTheDocument();
     if (text) expect(screen.getByText(text)).toBeInTheDocument();
   });
 
-  test('routes feed, projects and graph', async () => {
+  test("routes feed, projects and graph", async () => {
     renderView(<MainView />);
-    await go({ view: 'feed' });
-    expect(screen.getByText('Starred')).toBeInTheDocument();
-    await go({ view: 'graph' });
-    expect(screen.getByTestId('graph-canvas')).toBeInTheDocument();
-    await go({ view: 'project' });
-    expect(screen.getByText('Open a folder to use projects.')).toBeInTheDocument();
+    await go({ view: "feed" });
+    expect(screen.getByText("Starred")).toBeInTheDocument();
+    await go({ view: "graph" });
+    expect(screen.getByTestId("graph-canvas")).toBeInTheDocument();
+    await go({ view: "project" });
+    expect(
+      screen.getByText("Open a folder to use projects."),
+    ).toBeInTheDocument();
   });
 });
 
-describe('HeatMap', () => {
-  test('renders a year of cells and colours activity', () => {
+describe("HeatMap", () => {
+  test("renders a year of cells and colours activity", () => {
     const now = new Date().toISOString();
-    const notes = Array.from({ length: 6 }, (_, i) => makeNote({ id: `/n/${i}.md`, created_at: now, updated_at: now }));
-    const { container } = render(<HeatMap noteList={notes} onClickCell={vi.fn()} />);
-    expect(container.querySelectorAll('g.cursor-pointer > rect')).toHaveLength(53 * 7);
+    const notes = Array.from({ length: 6 }, (_, i) =>
+      makeNote({ id: `/n/${i}.md`, created_at: now, updated_at: now }),
+    );
+    const { container } = render(
+      <HeatMap noteList={notes} onClickCell={vi.fn()} />,
+    );
+    expect(container.querySelectorAll("g.cursor-pointer > rect")).toHaveLength(
+      53 * 7,
+    );
     // 6 created + 6 updated today => 12 activities
-    expect(container.querySelectorAll('rect.fill-primary')).toHaveLength(1);
+    expect(container.querySelectorAll("rect.fill-primary")).toHaveLength(1);
     expect(screen.getByText(/Activity: 12/)).toBeInTheDocument();
-    expect(store.getState().activities[today()]).toEqual({ activityNum: 12, createNum: 6, updateNum: 6 });
+    expect(store.getState().activities[today()]).toEqual({
+      activityNum: 12,
+      createNum: 6,
+      updateNum: 6,
+    });
   });
 
-  test('counts the time read: a quarter of an hour, one activity', () => {
+  test("counts the time read: a quarter of an hour, one activity", () => {
     const { container } = render(
-      <HeatMap noteList={[]} reading={{ [today()]: 46 * 60 }} onClickCell={vi.fn()} />
+      <HeatMap
+        noteList={[]}
+        reading={{ [today()]: 46 * 60 }}
+        onClickCell={vi.fn()}
+      />,
     );
     // 4 units, an hour: the color of reading
-    expect(container.querySelectorAll('rect.fill-secondary\\/60')).toHaveLength(1);
+    expect(container.querySelectorAll("rect.fill-secondary\\/60")).toHaveLength(
+      1,
+    );
     expect(container.querySelector('[data-testid="hm-split"]')).toBeNull();
-    expect(screen.getByText(/Activity: 4\s+Created: 0\s+Updated: 0\s+Read: 46 min/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Activity: 4\s+Created: 0\s+Updated: 0\s+Read: 46 min/),
+    ).toBeInTheDocument();
   });
 
-  test('counts writing, reading or both', async () => {
+  test("counts writing, reading or both", async () => {
     const now = new Date().toISOString();
-    const notes = Array.from({ length: 6 }, (_, i) => makeNote({ id: `/n/${i}.md`, created_at: now, updated_at: now }));
-    render(<HeatMap noteList={notes} reading={{ [today()]: 46 * 60 }} onClickCell={vi.fn()} />);
+    const notes = Array.from({ length: 6 }, (_, i) =>
+      makeNote({ id: `/n/${i}.md`, created_at: now, updated_at: now }),
+    );
+    render(
+      <HeatMap
+        noteList={notes}
+        reading={{ [today()]: 46 * 60 }}
+        onClickCell={vi.fn()}
+      />,
+    );
     expect(screen.getByText(/Activity: 16/)).toBeInTheDocument();
     // both: split, written above the slash, read below
-    const split = () => document.querySelectorAll('[data-testid="hm-split"] polygon');
+    const split = () =>
+      document.querySelectorAll('[data-testid="hm-split"] polygon');
     expect(split()).toHaveLength(1);
-    expect(split()[0]).toHaveClass('fill-secondary/60');
-    expect(document.querySelectorAll('rect.fill-primary')).toHaveLength(1);
-    await userEvent.click(screen.getByRole('tab', { name: 'Writing' }));
+    expect(split()[0]).toHaveClass("fill-secondary/60");
+    expect(document.querySelectorAll("rect.fill-primary")).toHaveLength(1);
+    await userEvent.click(screen.getByRole("tab", { name: "Writing" }));
     expect(screen.getByText(/Activity: 12/)).toBeInTheDocument();
     expect(split()).toHaveLength(0);
-    expect(document.querySelectorAll('rect.fill-primary')).toHaveLength(1);
-    await userEvent.click(screen.getByRole('tab', { name: 'Reading' }));
+    expect(document.querySelectorAll("rect.fill-primary")).toHaveLength(1);
+    await userEvent.click(screen.getByRole("tab", { name: "Reading" }));
     expect(screen.getByText(/Activity: 4\s/)).toBeInTheDocument();
-    expect(document.querySelectorAll('rect.fill-secondary\\/60')).toHaveLength(1);
+    expect(document.querySelectorAll("rect.fill-secondary\\/60")).toHaveLength(
+      1,
+    );
   });
 
-  test('merges stored activities and reports clicked dates', async () => {
-    store.getState().setActivities({ [today()]: { activityNum: 7, createNum: 3, updateNum: 4 } });
+  test("merges stored activities and reports clicked dates", async () => {
+    store
+      .getState()
+      .setActivities({
+        [today()]: { activityNum: 7, createNum: 3, updateNum: 4 },
+      });
     const onClickCell = vi.fn();
-    const { container } = render(<HeatMap noteList={[]} onClickCell={onClickCell} />);
-    expect(container.querySelectorAll('rect.fill-primary\\/60')).toHaveLength(1);
-    const todayRect = container.querySelector('rect.fill-primary\\/60') as SVGRectElement;
+    const { container } = render(
+      <HeatMap noteList={[]} onClickCell={onClickCell} />,
+    );
+    expect(container.querySelectorAll("rect.fill-primary\\/60")).toHaveLength(
+      1,
+    );
+    const todayRect = container.querySelector(
+      "rect.fill-primary\\/60",
+    ) as SVGRectElement;
     await userEvent.click(todayRect);
     expect(onClickCell).toHaveBeenCalledWith(today());
   });
 
-  test('saves new activities once, out of render', () => {
+  test("saves new activities once, out of render", () => {
     const now = new Date().toISOString();
-    const notes = [makeNote({ id: '/n/a.md', created_at: now, updated_at: now })];
+    const notes = [
+      makeNote({ id: "/n/a.md", created_at: now, updated_at: now }),
+    ];
     let saves = 0;
     const unsubscribe = store.subscribe((state, prev) => {
       if (state.activities !== prev.activities) saves += 1;
     });
-    const { rerender } = render(<HeatMap noteList={notes} onClickCell={vi.fn()} />);
+    const { rerender } = render(
+      <HeatMap noteList={notes} onClickCell={vi.fn()} />,
+    );
     rerender(<HeatMap noteList={[...notes]} onClickCell={vi.fn()} />);
     unsubscribe();
     // saved once; the same counts again change nothing
     expect(saves).toBe(1);
-    expect(store.getState().activities[today()]).toEqual({ activityNum: 2, createNum: 1, updateNum: 1 });
+    expect(store.getState().activities[today()]).toEqual({
+      activityNum: 2,
+      createNum: 1,
+      updateNum: 1,
+    });
   });
 
-  test('labels twelve months', () => {
-    const { container } = render(<HeatMap noteList={[]} onClickCell={vi.fn()} />);
-    const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const months = Array.from(container.querySelectorAll('text')).map((t) => t.textContent).filter((t) => names.includes(t as string));
+  test("labels twelve months", () => {
+    const { container } = render(
+      <HeatMap noteList={[]} onClickCell={vi.fn()} />,
+    );
+    const names = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const months = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent)
+      .filter((t) => names.includes(t as string));
     expect(new Set(months).size).toBe(12);
   });
 });
 
-describe('Chronicle', () => {
-  test('lists recently updated notes by date', () => {
+describe("Chronicle", () => {
+  test("lists recently updated notes by date", () => {
     store.getState().setIsLoaded(true);
-    const a = makeNote({ id: '/n/a.md', title: 'Alpha', updated_at: '2022-03-05T12:00:00' });
-    const daily = makeNote({ id: '/n/2022-03-05.md', title: '2022-03-05', is_daily: true, updated_at: '2022-03-05T12:00:00' });
+    const a = makeNote({
+      id: "/n/a.md",
+      title: "Alpha",
+      updated_at: "2022-03-05T12:00:00",
+    });
+    const daily = makeNote({
+      id: "/n/2022-03-05.md",
+      title: "2022-03-05",
+      is_daily: true,
+      updated_at: "2022-03-05T12:00:00",
+    });
     store.getState().setNotes(NoteMap.from({ [a.id]: a, [daily.id]: daily }));
     renderView(<Chronicle />);
-    expect(screen.getByText('2022-3-5')).toBeInTheDocument();
-    expect(screen.getByText('Alpha')).toBeInTheDocument();
-    expect(screen.queryByText('2022-03-05')).not.toBeInTheDocument();
+    expect(screen.getByText("2022-3-5")).toBeInTheDocument();
+    expect(screen.getByText("Alpha")).toBeInTheDocument();
+    expect(screen.queryByText("2022-03-05")).not.toBeInTheDocument();
   });
 
-  test('opens the journal view', async () => {
+  test("opens the journal view", async () => {
     renderView(<Chronicle />);
-    await userEvent.click(screen.getByText('Journals'));
-    expect(viewState().view).toBe('journal');
+    await userEvent.click(screen.getByText("Journals"));
+    expect(viewState().view).toBe("journal");
   });
 
-  test('creates today\'s daily note when missing', async () => {
-    store.getState().setInitDir('/root');
+  test("creates today's daily note when missing", async () => {
+    store.getState().setInitDir("/root");
     store.getState().setIsLoaded(true);
     mockInvoke(invoke, {
-      join_paths: ({ root, parts }: Record<string, unknown>) => [root, ...(parts as string[])].join('/'),
+      join_paths: ({ root, parts }: Record<string, unknown>) =>
+        [root, ...(parts as string[])].join("/"),
       file_exist: false,
     });
     renderView(<Chronicle />);
@@ -211,146 +334,265 @@ describe('Chronicle', () => {
       fireEvent.click(screen.getByText(`Today : ${today()}`));
     });
     const id = `/root/daily/${today()}.md`;
-    await waitFor(() => expect(viewState()).toEqual({ view: 'md', params: { noteId: id } }));
-    expect(store.getState().notes.get(id)).toMatchObject({ title: today(), is_daily: true });
-    expect(store.getState().noteTree['/root'].map((i) => i.id)).toEqual(['/root/daily']);
+    await waitFor(() =>
+      expect(viewState()).toEqual({ view: "md", params: { noteId: id } }),
+    );
+    expect(store.getState().notes.get(id)).toMatchObject({
+      title: today(),
+      is_daily: true,
+    });
+    expect(store.getState().noteTree["/root"].map((i) => i.id)).toEqual([
+      "/root/daily",
+    ]);
     expect(store.getState().currentNote[id]).toBeDefined();
   });
 
-  test('opens an existing daily note', async () => {
-    store.getState().setInitDir('/root');
+  test("opens an existing daily note", async () => {
+    store.getState().setInitDir("/root");
     store.getState().setIsLoaded(true);
     mockInvoke(invoke, {
-      join_paths: ({ root, parts }: Record<string, unknown>) => [root, ...(parts as string[])].join('/'),
+      join_paths: ({ root, parts }: Record<string, unknown>) =>
+        [root, ...(parts as string[])].join("/"),
       file_exist: true,
       get_file_meta: ({ filePath }: Record<string, unknown>) =>
-        makeFileMeta({ file_path: filePath as string, file_name: `${today()}.md` }),
-      get_parent_dir: ({ path }: Record<string, unknown>) => (path as string).substring(0, (path as string).lastIndexOf('/')),
-      get_basename: ({ filePath }: Record<string, unknown>) => [(filePath as string).split('/').pop(), false],
+        makeFileMeta({
+          file_path: filePath as string,
+          file_name: `${today()}.md`,
+        }),
+      get_parent_dir: ({ path }: Record<string, unknown>) =>
+        (path as string).substring(0, (path as string).lastIndexOf("/")),
+      get_basename: ({ filePath }: Record<string, unknown>) => [
+        (filePath as string).split("/").pop(),
+        false,
+      ],
     });
     renderView(<Chronicle />);
     await act(async () => {
       fireEvent.click(screen.getByText(`Today : ${today()}`));
     });
-    await waitFor(() => expect(viewState().view).toBe('md'));
-    expect(store.getState().notes.get(`/root/daily/${today()}.md`)?.content).toBe('');
+    await waitFor(() => expect(viewState().view).toBe("md"));
+    expect(
+      store.getState().notes.get(`/root/daily/${today()}.md`)?.content,
+    ).toBe("");
   });
 
-  test('loads the init dir when not loaded', async () => {
-    store.getState().setInitDir('/root');
+  test("loads the init dir when not loaded", async () => {
+    store.getState().setInitDir("/root");
     await act(async () => {
       renderView(<Chronicle />);
     });
-    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/root' });
+    expect(invoke).toHaveBeenCalledWith("index_open", { dir: "/root" });
   });
 });
 
-describe('Journals', () => {
-  test('lists daily notes newest first and opens them', async () => {
-    const d1 = makeNote({ id: '/d/2022-01-01.md', title: '2022-01-01', content: 'first day' });
-    const d2 = makeNote({ id: '/d/2022-02-01.md', title: '2022-02-01', content: 'second day' });
-    const other = makeNote({ id: '/d/other.md', title: 'other' });
-    store.getState().setNotes(NoteMap.from({ [d1.id]: d1, [d2.id]: d2, [other.id]: other }));
-    store.getState().setInitDir('/d');
+describe("Journals", () => {
+  test("lists daily notes newest first and opens them", async () => {
+    const d1 = makeNote({
+      id: "/d/2022-01-01.md",
+      title: "2022-01-01",
+      content: "first day",
+    });
+    const d2 = makeNote({
+      id: "/d/2022-02-01.md",
+      title: "2022-02-01",
+      content: "second day",
+    });
+    const other = makeNote({ id: "/d/other.md", title: "other" });
+    store
+      .getState()
+      .setNotes(NoteMap.from({ [d1.id]: d1, [d2.id]: d2, [other.id]: other }));
+    store.getState().setInitDir("/d");
     store.getState().setIsLoaded(true);
     mockInvoke(invoke, { file_exist: false });
     renderView(<Journals />);
     const titles = screen.getAllByText(/^2022-/).map((e) => e.textContent);
-    expect(titles).toEqual(['2022-02-01', '2022-01-01']);
-    expect(screen.getByText('first day')).toBeInTheDocument();
-    expect(screen.queryByText('other')).not.toBeInTheDocument();
-    expect(screen.getByPlaceholderText('new or find')).toBeInTheDocument();
-    await userEvent.click(screen.getByText('2022-01-01'));
+    expect(titles).toEqual(["2022-02-01", "2022-01-01"]);
+    expect(screen.getByText("first day")).toBeInTheDocument();
+    expect(screen.queryByText("other")).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText("new or find")).toBeInTheDocument();
+    await userEvent.click(screen.getByText("2022-01-01"));
     await waitFor(() => expect(viewState().params?.noteId).toBe(d1.id));
   });
 });
 
-describe('Graph / ForceGraph', () => {
-  type Ctx = Record<string, ReturnType<typeof vi.fn>> & { canvas: HTMLCanvasElement };
+describe("Graph / ForceGraph", () => {
+  type Ctx = Record<string, ReturnType<typeof vi.fn>> & {
+    canvas: HTMLCanvasElement;
+  };
   let ctx: Ctx;
 
   beforeEach(() => {
     mockLayout();
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
-      if (!ctx || ctx.canvas !== this) {
-        ctx = new Proxy({ canvas: this } as Ctx, {
-          get(target, prop: string) {
-            if (prop in target) return target[prop];
-            target[prop] = prop === 'measureText' ? vi.fn((t: string) => ({ width: t.length * 6 })) : vi.fn();
-            return target[prop];
-          },
-          set(target, prop: string, value) {
-            target[prop] = value;
-            return true;
-          },
-        });
-      }
-      return ctx as unknown as CanvasRenderingContext2D;
-    });
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      function (this: HTMLCanvasElement) {
+        if (!ctx || ctx.canvas !== this) {
+          ctx = new Proxy({ canvas: this } as Ctx, {
+            get(target, prop: string) {
+              if (prop in target) return target[prop];
+              target[prop] =
+                prop === "measureText"
+                  ? vi.fn((t: string) => ({ width: t.length * 6 }))
+                  : vi.fn();
+              return target[prop];
+            },
+            set(target, prop: string, value) {
+              target[prop] = value;
+              return true;
+            },
+          });
+        }
+        return ctx as unknown as CanvasRenderingContext2D;
+      },
+    );
   });
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   const seed = () => {
-    const a = makeNote({ id: '/n/a.md', title: 'Alpha', content: 'to [[Beta]] and [b](Beta) #topic# end' });
-    const b = makeNote({ id: '/n/b.md', title: 'Beta', content: 'plain' });
-    const pic = makeNote({ id: '/n/pic.png', title: 'pic.png' });
-    store.getState().setNotes(NoteMap.from({ [a.id]: a, [b.id]: b, [pic.id]: pic }));
+    const a = makeNote({
+      id: "/n/a.md",
+      title: "Alpha",
+      content: "to [[Beta]] and [b](Beta) #topic# end",
+    });
+    const b = makeNote({ id: "/n/b.md", title: "Beta", content: "plain" });
+    const pic = makeNote({ id: "/n/pic.png", title: "pic.png" });
+    store
+      .getState()
+      .setNotes(NoteMap.from({ [a.id]: a, [b.id]: b, [pic.id]: pic }));
     store.getState().setIsLoaded(true);
   };
 
-  const drawnText = () => new Set((ctx.fillText?.mock.calls ?? []).map((c) => c[0]));
+  const drawnText = () =>
+    new Set((ctx.fillText?.mock.calls ?? []).map((c) => c[0]));
 
-  test('books: linked by id or title, and to their annotations', () => {
-    const id = '0123456789abcdef0123456789abcdef';
-    const book = { hash: id, file: 'reading/Dune.epub', title: 'Dune', author: 'Frank Herbert' } as BookEntry;
-    const a = makeNote({ id: '/ws/writing/a.md', title: 'A', content: `see [here](book:${id}#epubcfi(%2F6)) and {{Dune}}` });
-    const b = makeNote({ id: '/ws/writing/b.md', title: 'B', content: '{{Unknown}}' });
-    const notes = makeNote({ id: '/ws/reading/Dune.epub.md', title: 'Dune.epub', content: '# Dune' });
-    const data = buildGraphData(NoteMap.from({ [a.id]: a, [b.id]: b, [notes.id]: notes }), { [id]: book }, '/ws');
-    expect(data.nodes.filter((n) => n.ty === 'book').map((n) => n.name)).toEqual(['Dune']);
-    const toBook = (ty: string) => data.links.filter((l) => l.ty === ty).map((l) => l.source);
-    expect(toBook('book')).toEqual([a.id]);
-    expect(toBook('annotation')).toEqual([notes.id]);
+  test("books: linked by id or title, and to their annotations", () => {
+    const id = "0123456789abcdef0123456789abcdef";
+    const book = {
+      hash: id,
+      file: "reading/Dune.epub",
+      title: "Dune",
+      author: "Frank Herbert",
+    } as BookEntry;
+    const a = makeNote({
+      id: "/ws/writing/a.md",
+      title: "A",
+      content: `see [here](book:${id}#epubcfi(%2F6)) and {{Dune}}`,
+    });
+    const b = makeNote({
+      id: "/ws/writing/b.md",
+      title: "B",
+      content: "{{Unknown}}",
+    });
+    const notes = makeNote({
+      id: "/ws/reading/Dune.epub.md",
+      title: "Dune.epub",
+      content: "# Dune",
+    });
+    const data = buildGraphData(
+      NoteMap.from({ [a.id]: a, [b.id]: b, [notes.id]: notes }),
+      { [id]: book },
+      "/ws",
+    );
+    expect(
+      data.nodes.filter((n) => n.ty === "book").map((n) => n.name),
+    ).toEqual(["Dune"]);
+    const toBook = (ty: string) =>
+      data.links.filter((l) => l.ty === ty).map((l) => l.source);
+    expect(toBook("book")).toEqual([a.id]);
+    expect(toBook("annotation")).toEqual([notes.id]);
   });
 
-  test('issues: linked from notes, linking notes and books', () => {
-    const id = '0123456789abcdef0123456789abcdef';
-    const book = { hash: id, file: 'reading/Dune.epub', title: 'Dune', author: '' } as BookEntry;
-    const a = makeNote({ id: '/ws/a.md', title: 'A', content: 'fixes [#1](issue:1) and [#9](issue:9)' });
-    const b = makeNote({ id: '/ws/b.md', title: 'B', content: 'plain' });
-    const c = makeNote({ id: '/ws/c.md', title: 'C', content: 'plain' });
+  test("issues: linked from notes, linking notes and books", () => {
+    const id = "0123456789abcdef0123456789abcdef";
+    const book = {
+      hash: id,
+      file: "reading/Dune.epub",
+      title: "Dune",
+      author: "",
+    } as BookEntry;
+    const a = makeNote({
+      id: "/ws/a.md",
+      title: "A",
+      content: "fixes [#1](issue:1) and [#9](issue:9)",
+    });
+    const b = makeNote({ id: "/ws/b.md", title: "B", content: "plain" });
+    const c = makeNote({ id: "/ws/c.md", title: "C", content: "plain" });
     const issue = (number: number, body: string, extra: Partial<Issue> = {}) =>
-      ({ number, title: `T${number}`, body, state: 'open', notes: [], timeline: [], ...extra }) as unknown as Issue;
+      ({
+        number,
+        title: `T${number}`,
+        body,
+        state: "open",
+        notes: [],
+        timeline: [],
+        ...extra,
+      }) as unknown as Issue;
     const issues = [
-      issue(1, 'see [[B]]', { notes: ['/ws/c.md'] }),
-      issue(2, '{{Dune}}', { state: 'closed' }),
-      issue(3, 'nothing linked'),
+      issue(1, "see [[B]]", { notes: ["/ws/c.md"] }),
+      issue(2, "{{Dune}}", { state: "closed" }),
+      issue(3, "nothing linked"),
     ];
-    const data = buildGraphData(NoteMap.from({ [a.id]: a, [b.id]: b, [c.id]: c }), { [id]: book }, '/ws', issues);
-    const issueNodes = data.nodes.filter((n) => n.ty === 'issue');
+    const data = buildGraphData(
+      NoteMap.from({ [a.id]: a, [b.id]: b, [c.id]: c }),
+      { [id]: book },
+      "/ws",
+      issues,
+    );
+    const issueNodes = data.nodes.filter((n) => n.ty === "issue");
     // #9 does not exist, #3 links nothing
-    expect(issueNodes.map((n) => [n.name, Boolean(n.closed)])).toEqual([['@1 T1', false], ['@2 T2', true]]);
-    const issueLinks = data.links.filter((l) => l.ty === 'issue').map((l) => `${l.source}>${l.target}`);
-    expect(issueLinks.sort()).toEqual([`issue:1>${a.id}`, `issue:1>${b.id}`, `issue:1>${c.id}`, `issue:2>book:${id}`]);
+    expect(issueNodes.map((n) => [n.name, Boolean(n.closed)])).toEqual([
+      ["@1 T1", false],
+      ["@2 T2", true],
+    ]);
+    const issueLinks = data.links
+      .filter((l) => l.ty === "issue")
+      .map((l) => `${l.source}>${l.target}`);
+    expect(issueLinks.sort()).toEqual([
+      `issue:1>${a.id}`,
+      `issue:1>${b.id}`,
+      `issue:1>${c.id}`,
+      `issue:2>book:${id}`,
+    ]);
     // the book linked by an issue only: a node too
-    expect(data.nodes.filter((n) => n.ty === 'book').map((n) => n.name)).toEqual(['Dune']);
+    expect(
+      data.nodes.filter((n) => n.ty === "book").map((n) => n.name),
+    ).toEqual(["Dune"]);
   });
 
-  test('labels in one line, cut', () => {
-    const context = { measureText: (t: string) => ({ width: t.length * 2 }) } as unknown as CanvasRenderingContext2D;
-    expect(truncateText(context, 'short', 50)).toBe('short');
-    const cut = truncateText(context, 'a title much too long to be shown whole', 50);
-    expect(cut.endsWith('…')).toBe(true);
+  test("labels in one line, cut", () => {
+    const context = {
+      measureText: (t: string) => ({ width: t.length * 2 }),
+    } as unknown as CanvasRenderingContext2D;
+    expect(truncateText(context, "short", 50)).toBe("short");
+    const cut = truncateText(
+      context,
+      "a title much too long to be shown whole",
+      50,
+    );
+    expect(cut.endsWith("…")).toBe(true);
     expect(cut.length * 2).toBeLessThanOrEqual(50);
   });
 
-  test('lines end on the edge of the nodes', () => {
-    const note = { id: 'n', name: 'n', ty: 'link' as const, radius: 4, x: 0, y: 0 };
+  test("lines end on the edge of the nodes", () => {
+    const note = {
+      id: "n",
+      name: "n",
+      ty: "link" as const,
+      radius: 4,
+      x: 0,
+      y: 0,
+    };
     expect(edgePoint(note, 10, 0)).toEqual({ x: 4, y: 0 });
     // a book, a square 7.2 wide: its side, or its corner
-    const book = { id: 'b', name: 'b', ty: 'book' as const, radius: 4, x: 0, y: 0 };
+    const book = {
+      id: "b",
+      name: "b",
+      ty: "book" as const,
+      radius: 4,
+      x: 0,
+      y: 0,
+    };
     expect(edgePoint(book, 10, 0).x).toBeCloseTo(3.6);
     expect(edgePoint(book, 0, -10).y).toBeCloseTo(-3.6);
     const corner = edgePoint(book, 10, 10);
@@ -358,42 +600,44 @@ describe('Graph / ForceGraph', () => {
     expect(corner.y).toBeCloseTo(3.6);
   });
 
-  test('draws note and tag nodes with links', async () => {
+  test("draws note and tag nodes with links", async () => {
     seed();
     renderView(<Graph />);
-    await waitFor(() => expect(drawnText()).toEqual(new Set(['Alpha', 'Beta', '#topic'])));
+    await waitFor(() =>
+      expect(drawnText()).toEqual(new Set(["Alpha", "Beta", "#topic"])),
+    );
     expect(ctx.arc).toHaveBeenCalled();
     expect(ctx.lineTo).toHaveBeenCalled();
   });
 
-  test('clicking a note node opens it', async () => {
-    const a = makeNote({ id: '/n/a.md', title: 'Alpha' });
+  test("clicking a note node opens it", async () => {
+    const a = makeNote({ id: "/n/a.md", title: "Alpha" });
     store.getState().setNotes(NoteMap.from({ [a.id]: a }));
     store.getState().setIsLoaded(true);
     mockInvoke(invoke, {
       file_exist: true,
-      get_file_meta: makeFileMeta({ file_path: '/n/a.md', file_name: 'a.md' }),
-      get_parent_dir: '/n',
+      get_file_meta: makeFileMeta({ file_path: "/n/a.md", file_name: "a.md" }),
+      get_parent_dir: "/n",
     });
     renderView(<Graph />);
     await waitFor(() => expect(ctx.arc).toHaveBeenCalled());
     // wait for the single node to settle at the centre
     await new Promise((r) => setTimeout(r, 300));
     const [x, y] = ctx.arc.mock.calls.at(-1) as number[];
-    const canvas = screen.getByTestId('graph-canvas');
+    const canvas = screen.getByTestId("graph-canvas");
     fireEvent.mouseMove(canvas, { clientX: x, clientY: y });
-    expect(canvas.style.cursor).toBe('pointer');
+    expect(canvas.style.cursor).toBe("pointer");
     fireEvent.click(canvas, { clientX: x, clientY: y });
-    await waitFor(() => expect(viewState().params?.noteId).toBe('/n/a.md'));
+    await waitFor(() => expect(viewState().params?.noteId).toBe("/n/a.md"));
     fireEvent.mouseMove(canvas, { clientX: x + 500, clientY: y + 500 });
-    expect(canvas.style.cursor).toBe('default');
+    expect(canvas.style.cursor).toBe("default");
   });
 
-  test('loads the init dir when not loaded', async () => {
-    store.getState().setInitDir('/root');
+  test("loads the init dir when not loaded", async () => {
+    store.getState().setInitDir("/root");
     await act(async () => {
       renderView(<Graph />);
     });
-    expect(invoke).toHaveBeenCalledWith('index_open', { dir: '/root' });
+    expect(invoke).toHaveBeenCalledWith("index_open", { dir: "/root" });
   });
 });

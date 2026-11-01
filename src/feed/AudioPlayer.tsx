@@ -1,10 +1,16 @@
-import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react';
-import { TbPlaylist as IconPlaylist } from 'react-icons/tb';
-import { SidebarTab, store } from '@/state/store';
-import { PodType } from '@/types/model';
-import { computePlaylist } from '@/feed/Playlist';
-import { onPauseRequest, playing } from '@/player/playerStore';
-import MediaControls, { formatTime } from '@/player/MediaControls';
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  type ReactNode,
+} from "react";
+import { TbPlaylist as IconPlaylist } from "react-icons/tb";
+import { SidebarTab, store } from "@/state/store";
+import { PodType } from "@/types/model";
+import { computePlaylist } from "@/feed/Playlist";
+import { onPauseRequest, playing } from "@/player/playerStore";
+import MediaControls, { formatTime } from "@/player/MediaControls";
 
 type Props = {
   currentPod: PodType | null;
@@ -15,7 +21,7 @@ type Props = {
 
 /** The podcast of the player: its audio, played by the controls of the player. */
 export default function AudioPlayer(props: Props) {
-  const { currentPod, title, className = '' } = props;
+  const { currentPod, title, className = "" } = props;
   const [playlist, setPlaylist] = useState<PodType[]>([]);
   const [currentTrack, setCurrentTrack] = useState(currentPod);
   const [paused, setPaused] = useState(true);
@@ -25,7 +31,10 @@ export default function AudioPlayer(props: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // one at a time with a book read aloud
-  useEffect(() => onPauseRequest('podcast', () => audioRef.current?.pause()), []);
+  useEffect(
+    () => onPauseRequest("podcast", () => audioRef.current?.pause()),
+    [],
+  );
 
   useEffect(() => {
     const fetchPlaylist = async () => {
@@ -35,14 +44,19 @@ export default function AudioPlayer(props: Props) {
     fetchPlaylist();
   }, [currentPod]);
 
-  const playTrack = useCallback((step: 1 | -1) => {
-    const index = playlist.findIndex((item) => item.url === currentTrack?.url);
-    const track = index < 0 ? undefined : playlist[index + step];
-    if (track) {
-      setCurrentTrack(track);
-      store.getState().setCurrentPod(track);
-    }
-  }, [playlist, currentTrack]);
+  const playTrack = useCallback(
+    (step: 1 | -1) => {
+      const index = playlist.findIndex(
+        (item) => item.url === currentTrack?.url,
+      );
+      const track = index < 0 ? undefined : playlist[index + step];
+      if (track) {
+        setCurrentTrack(track);
+        store.getState().setCurrentPod(track);
+      }
+    },
+    [playlist, currentTrack],
+  );
   const playNextTrack = useCallback(() => playTrack(1), [playTrack]);
 
   const TriggerPlaylist = () => {
@@ -51,7 +65,7 @@ export default function AudioPlayer(props: Props) {
   };
 
   if (!currentTrack) {
-    return (<div className='mx-1 text-sm'>no player</div>);
+    return <div className="mx-1 text-sm">no player</div>;
   }
 
   const index = playlist.findIndex((item) => item.url === currentTrack.url);
@@ -61,11 +75,15 @@ export default function AudioPlayer(props: Props) {
         ref={audioRef}
         autoPlay
         src={currentTrack.url}
-        onPlay={() => { setPaused(false); playing('podcast'); }}
+        onPlay={() => {
+          setPaused(false);
+          playing("podcast");
+        }}
         onPause={() => setPaused(true)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => { 
-          setDuration(e.currentTarget.duration); e.currentTarget.playbackRate = rate; 
+        onLoadedMetadata={(e) => {
+          setDuration(e.currentTarget.duration);
+          e.currentTarget.playbackRate = rate;
         }}
         onDurationChange={(e) => setDuration(e.currentTarget.duration)}
         onEnded={playNextTrack}
@@ -78,14 +96,18 @@ export default function AudioPlayer(props: Props) {
         onPlay={() => void audioRef.current?.play()}
         onPause={() => audioRef.current?.pause()}
         onPrev={index > 0 ? () => playTrack(-1) : undefined}
-        onNext={index >= 0 && index < playlist.length - 1 ? () => playTrack(1) : undefined}
+        onNext={
+          index >= 0 && index < playlist.length - 1
+            ? () => playTrack(1)
+            : undefined
+        }
         prevTitle="Previous episode"
         nextTitle="Next episode"
         progress={{
           value: time,
           max: Number.isFinite(duration) ? duration : 0,
           label: `${formatTime(time)} / ${formatTime(duration)}`,
-          title: 'Position',
+          title: "Position",
           onSeek: (value) => {
             if (audioRef.current) audioRef.current.currentTime = value;
             setTime(value);
@@ -101,9 +123,9 @@ export default function AudioPlayer(props: Props) {
           store.getState().setCurrentPod(null);
         }}
       >
-        <button 
-          className="btn btn-ghost btn-xs btn-circle" 
-          title="Playlist" 
+        <button
+          className="btn btn-ghost btn-xs btn-circle"
+          title="Playlist"
           onClick={TriggerPlaylist}
         >
           <IconPlaylist />

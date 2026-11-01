@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { create } from 'zustand';
-import { store, useStore } from '@/state/store';
-import { onAnnounce } from '@/state/windowSync';
-import type { BookEntry } from './library';
+import { useEffect } from "react";
+import { create } from "zustand";
+import { store, useStore } from "@/state/store";
+import { onAnnounce } from "@/state/windowSync";
+import type { BookEntry } from "./library";
 
 type BooksState = {
   /** the workspace of the books */
@@ -22,8 +22,9 @@ export function setLibraryBooks(ws: string, books: Record<string, BookEntry>) {
 }
 
 // written in another window: read again
-onAnnounce('library', (ws) => {
-  if (useBooks.getState().ws === ws) void import('./library').then((l) => l.readLibrary(ws));
+onAnnounce("library", (ws) => {
+  if (useBooks.getState().ws === ws)
+    void import("./library").then((l) => l.readLibrary(ws));
 });
 
 let loading: Promise<unknown> | undefined;
@@ -33,7 +34,9 @@ export async function loadBooks(): Promise<Record<string, BookEntry>> {
   const ws = store.getState().initDir;
   if (!ws) return {};
   if (useBooks.getState().ws !== ws) {
-    loading ??= import('./library').then((l) => l.readLibrary(ws)).finally(() => (loading = undefined));
+    loading ??= import("./library")
+      .then((l) => l.readLibrary(ws))
+      .finally(() => (loading = undefined));
     await loading;
   }
   return useBooks.getState().ws === ws ? useBooks.getState().books : {};

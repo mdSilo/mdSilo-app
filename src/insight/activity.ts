@@ -1,5 +1,5 @@
-import { getStrDate } from '@/lib/helper';
-import type { Note } from '@/types/model';
+import { getStrDate } from "@/lib/helper";
+import type { Note } from "@/types/model";
 
 export type ActivityData = {
   activityNum: number;
@@ -13,7 +13,8 @@ export type ActivityRecord = Record<string, ActivityData>;
 /** Notes created and updated per day, in one pass. */
 export function countNoteActivities(notes: readonly Note[]): ActivityRecord {
   const record: ActivityRecord = {};
-  const dayOf = (day: string) => (record[day] ??= { activityNum: 0, createNum: 0, updateNum: 0 });
+  const dayOf = (day: string) =>
+    (record[day] ??= { activityNum: 0, createNum: 0, updateNum: 0 });
   for (const note of notes) {
     const created = dayOf(getStrDate(note.created_at));
     created.createNum += 1;
@@ -30,7 +31,10 @@ export function countNoteActivities(notes: readonly Note[]): ActivityRecord {
  * drop (a note updated again later), the stored record keeps the most seen.
  * Returns `stored` itself when nothing is raised.
  */
-export function mergeActivities(stored: ActivityRecord, counted: ActivityRecord): ActivityRecord {
+export function mergeActivities(
+  stored: ActivityRecord,
+  counted: ActivityRecord,
+): ActivityRecord {
   let merged: ActivityRecord | undefined;
   for (const [day, count] of Object.entries(counted)) {
     const old = stored[day];

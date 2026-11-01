@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 /**
  * Notes changed on disk under the editor, e.g. by a sync: bumped when the
@@ -6,4 +6,5 @@ import { create } from 'zustand';
  */
 export const useNoteReloads = create<{ seq: number }>(() => ({ seq: 0 }));
 
-export const reloadOpenNote = () => useNoteReloads.setState((s) => ({ seq: s.seq + 1 }));
+export const reloadOpenNote = () =>
+  useNoteReloads.setState((s) => ({ seq: s.seq + 1 }));

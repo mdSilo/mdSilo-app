@@ -1,7 +1,7 @@
-import { memo, useEffect, useRef, useState } from 'react';
-import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
-import type { TOCItem } from '../document';
-import { getView } from '../view';
+import { memo, useEffect, useRef, useState } from "react";
+import { TbCaretRight as IconCaretRight } from "react-icons/tb";
+import type { TOCItem } from "../document";
+import { getView } from "../view";
 
 type Props = {
   toc: TOCItem[];
@@ -27,23 +27,39 @@ function TocView({ toc, current }: Props) {
   // the chapter read, in view
   useEffect(() => {
     const el = listRef.current?.querySelector('[aria-current="true"]');
-    el?.scrollIntoView?.({ block: 'nearest' });
+    el?.scrollIntoView?.({ block: "nearest" });
   }, [current]);
 
   if (toc.length === 0) {
-    return <p className="p-4 text-sm text-base-content/60">No table of contents</p>;
+    return (
+      <p className="p-4 text-sm text-base-content/60">No table of contents</p>
+    );
   }
   return (
     <ul ref={listRef} className="py-2 text-sm" data-testid="reader-toc">
       {toc.map((item, i) => (
-        <TocItem key={`${item.href}-${i}`} item={item} depth={0} current={current} path={path} />
+        <TocItem
+          key={`${item.href}-${i}`}
+          item={item}
+          depth={0}
+          current={current}
+          path={path}
+        />
       ))}
     </ul>
   );
 }
 
-function TocItem({ item, depth, current, path }: {
-  item: TOCItem; depth: number; current?: string; path?: TOCItem[];
+function TocItem({
+  item,
+  depth,
+  current,
+  path,
+}: {
+  item: TOCItem;
+  depth: number;
+  current?: string;
+  path?: TOCItem[];
 }) {
   const onPath = Boolean(path?.includes(item));
   const [open, setOpen] = useState(onPath);
@@ -58,17 +74,20 @@ function TocItem({ item, depth, current, path }: {
   return (
     <li>
       <div
-        className={`flex items-center pr-2 hover:bg-base-content/10 ${isCurrent ? 'bg-primary/10 text-primary font-semibold' : ''}`}
+        className={`flex items-center pr-2 hover:bg-base-content/10 ${isCurrent ? "bg-primary/10 text-primary font-semibold" : ""}`}
         style={{ paddingLeft: `${depth * 12 + 4}px` }}
-        aria-current={isCurrent ? 'true' : undefined}
+        aria-current={isCurrent ? "true" : undefined}
       >
         {hasChildren ? (
           <button
             className="p-1 rounded-sm hover:bg-base-content/15"
             onClick={() => setOpen(!open)}
-            aria-label={open ? 'Collapse' : 'Expand'}
+            aria-label={open ? "Collapse" : "Expand"}
           >
-            <IconCaretRight size={14} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
+            <IconCaretRight
+              size={14}
+              className={`transition-transform ${open ? "rotate-90" : ""}`}
+            />
           </button>
         ) : (
           <span className="w-[22px]" />
@@ -78,13 +97,19 @@ function TocItem({ item, depth, current, path }: {
           title={item.label}
           onClick={() => void getView()?.goTo(item.href)}
         >
-          {item.label?.trim() || '-'}
+          {item.label?.trim() || "-"}
         </button>
       </div>
       {hasChildren && open ? (
         <ul>
           {item.subitems!.map((sub, i) => (
-            <TocItem key={`${sub.href}-${i}`} item={sub} depth={depth + 1} current={current} path={path} />
+            <TocItem
+              key={`${sub.href}-${i}`}
+              item={sub}
+              depth={depth + 1}
+              current={current}
+              path={path}
+            />
           ))}
         </ul>
       ) : null}

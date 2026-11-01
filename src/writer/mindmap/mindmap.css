@@ -6,14 +6,14 @@ svg#mindmap {
 .markmap-node {
   cursor: pointer;
 }
-  
+
 .markmap-node-circle {
   fill: #fff;
   stroke-width: 1.5px;
 }
 
 .markmap-node-text {
-  fill:  #000;
+  fill: #000;
   font: 10px sans-serif;
 }
 

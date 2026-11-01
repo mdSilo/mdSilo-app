@@ -1,5 +1,5 @@
-import { memo, useEffect, useRef } from 'react';
-import { useStore } from '@/state/store';
+import { memo, useEffect, useRef } from "react";
+import { useStore } from "@/state/store";
 
 type Props = {
   initialTitle: string;
@@ -9,12 +9,7 @@ type Props = {
 };
 
 function Title(props: Props) {
-  const { 
-    initialTitle, 
-    onChange, 
-    className = '', 
-    isDaily = false,
-  } = props;
+  const { initialTitle, onChange, className = "", isDaily = false } = props;
   const titleRef = useRef<HTMLDivElement | null>(null);
 
   const isCheckSpellOn = useStore((state) => state.isCheckSpellOn);
@@ -24,7 +19,7 @@ function Title(props: Props) {
     if (!titleRef.current) {
       return;
     }
-    const title = titleRef.current.textContent ?? '';
+    const title = titleRef.current.textContent ?? "";
     onChange(title);
   };
 
@@ -43,16 +38,16 @@ function Title(props: Props) {
       role="textbox"
       onKeyPress={(event) => {
         // Disallow newlines in the title field
-        if (event.key === 'Enter') {
+        if (event.key === "Enter") {
           event.preventDefault();
         }
       }}
       onPaste={(event) => {
         // Remove styling and newlines from the text
         event.preventDefault();
-        let text = event.clipboardData.getData('text/plain');
-        text = text.replace(/\r?\n|\r/g, ' ');
-        document.execCommand('insertText', false, text);
+        let text = event.clipboardData.getData("text/plain");
+        text = text.replace(/\r?\n|\r/g, " ");
+        document.execCommand("insertText", false, text);
       }}
       onBlur={emitChange}
       contentEditable={!(readMode || isDaily)}

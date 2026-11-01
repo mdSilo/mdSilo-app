@@ -1,32 +1,48 @@
-import { parseNote } from './parseNote';
+import { parseNote } from "./parseNote";
 
 // the same cases as src-tauri/src/index/parse.rs: both find the same
-describe('parseNote', () => {
-  test('links to notes', () => {
-    const content = '[[A]] and [[B|alias]], [c](C%20d) [img](!x) ![pic](p.png) [w](https://x.org) '
-      + '[#1](issue:1) [q](book:0123#x) \\[[not]] [e](<E f>) [[[x]](y)';
-    expect(parseNote(content).links).toEqual(['A', 'B', 'C d', '!x', 'E f', 'x']);
+describe("parseNote", () => {
+  test("links to notes", () => {
+    const content =
+      "[[A]] and [[B|alias]], [c](C%20d) [img](!x) ![pic](p.png) [w](https://x.org) " +
+      "[#1](issue:1) [q](book:0123#x) \\[[not]] [e](<E f>) [[[x]](y)";
+    expect(parseNote(content).links).toEqual([
+      "A",
+      "B",
+      "C d",
+      "!x",
+      "E f",
+      "x",
+    ]);
   });
 
-  test('not in code', () => {
-    const content = '`[[a]]` [[b]]\n```\n[[c]]\n```\n``x [[d]] x`` [[e]]\n~~~\n[[f]]';
-    expect(parseNote(content).links).toEqual(['b', 'e']);
+  test("not in code", () => {
+    const content =
+      "`[[a]]` [[b]]\n```\n[[c]]\n```\n``x [[d]] x`` [[e]]\n~~~\n[[f]]";
+    expect(parseNote(content).links).toEqual(["b", "e"]);
   });
 
-  test('tags, issues, tasks', () => {
-    const parsed = parseNote('x #one# #two words# #a#b# end\n[i](issue:12) [j](issue:3) [k](issue:12)');
-    expect(parsed.tags).toEqual(['one', 'two words']);
+  test("tags, issues, tasks", () => {
+    const parsed = parseNote(
+      "x #one# #two words# #a#b# end\n[i](issue:12) [j](issue:3) [k](issue:12)",
+    );
+    expect(parsed.tags).toEqual(["one", "two words"]);
     expect(parsed.issues).toEqual([3, 12]);
     expect(parsed.has_tasks).toBe(false);
-    expect(parseNote('- [ ] buy milk').has_tasks).toBe(true);
-    expect(parseNote('call #TODO# now').has_tasks).toBe(true);
+    expect(parseNote("- [ ] buy milk").has_tasks).toBe(true);
+    expect(parseNote("call #TODO# now").has_tasks).toBe(true);
   });
 
-  test('books', () => {
-    const id = '0123456789ABCDEF0123456789abcdef';
-    const content = `[q](book:${id}#epubcfi(%2F6)) {{Dune}} [d](book:Dune%20Messiah) \\{{no}} \`{{code}}\` `
-      + `{{ Dune | alias }} [again](book:${id})`;
-    expect(parseNote(content).books).toEqual(['0123456789abcdef0123456789abcdef', 'Dune', 'Dune Messiah']);
-    expect(parseNote('[a](bookish) {x}').books).toEqual([]);
+  test("books", () => {
+    const id = "0123456789ABCDEF0123456789abcdef";
+    const content =
+      `[q](book:${id}#epubcfi(%2F6)) {{Dune}} [d](book:Dune%20Messiah) \\{{no}} \`{{code}}\` ` +
+      `{{ Dune | alias }} [again](book:${id})`;
+    expect(parseNote(content).books).toEqual([
+      "0123456789abcdef0123456789abcdef",
+      "Dune",
+      "Dune Messiah",
+    ]);
+    expect(parseNote("[a](bookish) {x}").books).toEqual([]);
   });
 });

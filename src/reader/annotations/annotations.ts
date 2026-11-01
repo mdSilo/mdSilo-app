@@ -21,10 +21,16 @@
  * quote, until the next annotation.
  */
 
-export type BookNoteType = 'annotation' | 'bookmark';
-export type HighlightStyle = 'highlight' | 'underline' | 'squiggly';
-export type HighlightColor = 'yellow' | 'red' | 'green' | 'blue' | 'violet';
-export const HIGHLIGHT_COLORS: HighlightColor[] = ['yellow', 'red', 'green', 'blue', 'violet'];
+export type BookNoteType = "annotation" | "bookmark";
+export type HighlightStyle = "highlight" | "underline" | "squiggly";
+export type HighlightColor = "yellow" | "red" | "green" | "blue" | "violet";
+export const HIGHLIGHT_COLORS: HighlightColor[] = [
+  "yellow",
+  "red",
+  "green",
+  "blue",
+  "violet",
+];
 
 export type BookNote = {
   id: string;
@@ -60,8 +66,8 @@ export function sectionOf(cfi: string): number {
   return match ? Number(match[1]) / 2 - 1 : -1;
 }
 
-const BOOK_MARK = 'mdsilo:book';
-const NOTE_MARK = 'mdsilo:note';
+const BOOK_MARK = "mdsilo:book";
+const NOTE_MARK = "mdsilo:note";
 const MARKER_REGEX = /^<!--\s*(mdsilo:book|mdsilo:note)\s+(\{.*\})\s*-->\s*$/;
 
 /** The name of the annotations file of a book file. */
@@ -69,49 +75,61 @@ export const annotationsPathOf = (bookPath: string) => `${bookPath}.md`;
 
 /** The path of the book of an annotations file, if it is one by its name. */
 export const bookPathOfAnnotations = (mdPath: string) =>
-  /\.(epub|pdf|mobi|azw3?|cbz|fb2|fbz)\.md$/i.test(mdPath) ? mdPath.slice(0, -3) : undefined;
+  /\.(epub|pdf|mobi|azw3?|cbz|fb2|fbz)\.md$/i.test(mdPath)
+    ? mdPath.slice(0, -3)
+    : undefined;
 
 /** A comment can not contain `-->`: escape it in the JSON. */
-const toJson = (data: unknown) => JSON.stringify(data).replace(/-->/g, '--\\u003e');
+const toJson = (data: unknown) =>
+  JSON.stringify(data).replace(/-->/g, "--\\u003e");
 
 /** the link back to the place of a quote, at its end */
-const BACK = '↗ in book';
+const BACK = "↗ in book";
 // also a bare ↗, as first written
 const BACK_LINK = /\s*\[↗(?: in book)?\]\(book:\S*\)\s*$/;
 
 const quote = (text: string, href?: string) => {
-  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
   if (href && lines.length) lines[lines.length - 1] += ` [${BACK}](${href})`;
-  return lines.map((line) => `> ${line}`).join('\n');
+  return lines.map((line) => `> ${line}`).join("\n");
 };
 
 const unquote = (lines: string[]) =>
-  lines.map((line) => line.replace(/^>\s?/, '').replace(BACK_LINK, '')).join('\n').trim();
+  lines
+    .map((line) => line.replace(/^>\s?/, "").replace(BACK_LINK, ""))
+    .join("\n")
+    .trim();
 
 /** The markdown of the annotations of a book. */
 export function serializeAnnotations(doc: AnnotationsDoc): string {
   const out: string[] = [];
   const { header } = doc;
   if (header) {
-    out.push(`<!-- ${BOOK_MARK} ${toJson(header)} -->`, '');
+    out.push(`<!-- ${BOOK_MARK} ${toJson(header)} -->`, "");
     if (header.title) {
-      out.push(`# ${header.title}`, '');
-      if (header.author) out.push(`*${header.author}*`, '');
+      out.push(`# ${header.title}`, "");
+      if (header.author) out.push(`*${header.author}*`, "");
     }
   }
   let chapter: string | undefined;
   for (const note of doc.notes) {
     if (note.chapter && note.chapter !== chapter) {
-      out.push(`## ${note.chapter}`, '');
+      out.push(`## ${note.chapter}`, "");
     }
     chapter = note.chapter ?? chapter;
     const { text, note: body, ...data } = note;
     out.push(`<!-- ${NOTE_MARK} ${toJson(data)} -->`);
-    if (text?.trim()) out.push(quote(text, header?.hash ? bookHref(header.hash, note.cfi) : undefined));
-    out.push('');
-    if (body.trim()) out.push(body.trim(), '');
+    if (text?.trim())
+      out.push(
+        quote(text, header?.hash ? bookHref(header.hash, note.cfi) : undefined),
+      );
+    out.push("");
+    if (body.trim()) out.push(body.trim(), "");
   }
-  return `${out.join('\n').trimEnd()}\n`;
+  return `${out.join("\n").trimEnd()}\n`;
 }
 
 /**
@@ -120,7 +138,8 @@ export function serializeAnnotations(doc: AnnotationsDoc): string {
  */
 export function parseAnnotations(markdown: string): AnnotationsDoc {
   const doc: AnnotationsDoc = { notes: [] };
-  let current: { data: Omit<BookNote, 'text' | 'note'>; lines: string[] } | undefined;
+  let current:
+    { data: Omit<BookNote, "text" | "note">; lines: string[] } | undefined;
 
   const finish = (next?: { chapter?: string }) => {
     if (!current) return;
@@ -137,13 +156,17 @@ export function parseAnnotations(markdown: string): AnnotationsDoc {
     let start = 0;
     while (start < lines.length && !lines[start].trim()) start++;
     const quoted: string[] = [];
-    while (start < lines.length && lines[start].startsWith('>')) {
+    while (start < lines.length && lines[start].startsWith(">")) {
       quoted.push(lines[start]);
       start++;
     }
     const text = unquote(quoted);
-    const note = lines.slice(start).join('\n').trim();
-    doc.notes.push({ ...current.data, ...(text ? { text } : {}), note } as BookNote);
+    const note = lines.slice(start).join("\n").trim();
+    doc.notes.push({
+      ...current.data,
+      ...(text ? { text } : {}),
+      note,
+    } as BookNote);
     current = undefined;
   };
 
@@ -162,9 +185,9 @@ export function parseAnnotations(markdown: string): AnnotationsDoc {
         doc.header = data as BookHeader;
         continue;
       }
-      if (typeof data.id === 'string' && typeof data.cfi === 'string') {
+      if (typeof data.id === "string" && typeof data.cfi === "string") {
         finish(data as { chapter?: string });
-        current = { data: data as Omit<BookNote, 'text' | 'note'>, lines: [] };
+        current = { data: data as Omit<BookNote, "text" | "note">, lines: [] };
         continue;
       }
     }
@@ -180,7 +203,10 @@ const cfiKey = (cfi: string) => cfi;
  * Sort the notes in the order of the book, by their CFIs, with the compare
  * of foliate-js; the notes of a chapter are written together.
  */
-export function sortNotes(notes: BookNote[], compare: (a: string, b: string) => number): BookNote[] {
+export function sortNotes(
+  notes: BookNote[],
+  compare: (a: string, b: string) => number,
+): BookNote[] {
   return [...notes].sort((a, b) => {
     try {
       return compare(cfiKey(a.cfi), cfiKey(b.cfi));
@@ -191,14 +217,17 @@ export function sortNotes(notes: BookNote[], compare: (a: string, b: string) => 
 }
 
 /** The note of an annotation to show: without its links to issues, shown apart. */
-export const noteText = (note: string) => note.replace(/\s*\[[@#]\d+\]\(issue:\d+\)/g, '').trim();
+export const noteText = (note: string) =>
+  note.replace(/\s*\[[@#]\d+\]\(issue:\d+\)/g, "").trim();
 
 /** A link to a place of a book, `book:<hash>#<cfi>`, to put in notes. */
 export const bookHref = (hash: string, cfi?: string) =>
-  `book:${hash}${cfi ? `#${encodeURIComponent(cfi)}` : ''}`;
+  `book:${hash}${cfi ? `#${encodeURIComponent(cfi)}` : ""}`;
 
 /** The book and the place of a `book:` link. */
-export function parseBookHref(href: string): { hash: string; cfi?: string } | undefined {
+export function parseBookHref(
+  href: string,
+): { hash: string; cfi?: string } | undefined {
   const match = href.match(/^book:([0-9a-f]{32})(?:#(.+))?$/i);
   if (!match) return undefined;
   let cfi: string | undefined;

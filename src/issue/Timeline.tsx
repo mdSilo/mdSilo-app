@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
-  TbCircleDot as IconOpened, TbCircleCheck as IconClosed, TbRefresh as IconReopened, TbTag as IconTag,
-  TbFlag as IconFlag, TbPencil as IconPencil, TbLayoutBoardSplit as IconStatus, TbTrash as IconTrash, TbCheckbox as IconTask,
+  TbCircleDot as IconOpened,
+  TbCircleCheck as IconClosed,
+  TbRefresh as IconReopened,
+  TbTag as IconTag,
+  TbFlag as IconFlag,
+  TbPencil as IconPencil,
+  TbLayoutBoardSplit as IconStatus,
+  TbTrash as IconTrash,
+  TbCheckbox as IconTask,
   TbCalendar as IconCalendar,
-} from 'react-icons/tb';
-import { ConfirmModal } from '@/ui/Dialogs';
-import { useIssueStore } from './issueStore';
-import { deleteComment, editComment } from './issueOps';
-import { TimeAgo, btnClass, primaryBtnClass } from './common';
-import IssueEditor from './IssueEditor';
-import type { CommentItem, EventItem, Issue, IssueEventKind } from './types';
+} from "react-icons/tb";
+import { ConfirmModal } from "@/ui/Dialogs";
+import { useIssueStore } from "./issueStore";
+import { deleteComment, editComment } from "./issueOps";
+import { TimeAgo, btnClass, primaryBtnClass } from "./common";
+import IssueEditor from "./IssueEditor";
+import type { CommentItem, EventItem, Issue, IssueEventKind } from "./types";
 
 const EVENT_ICONS: Record<IssueEventKind, typeof IconOpened> = {
   opened: IconOpened,
@@ -26,35 +33,53 @@ const EVENT_ICONS: Record<IssueEventKind, typeof IconOpened> = {
 };
 
 export function eventText(e: EventItem) {
-  const d = e.detail ?? '';
+  const d = e.detail ?? "";
   switch (e.event) {
-    case 'opened': return 'opened this issue';
-    case 'closed': return 'closed this issue';
-    case 'reopened': return 'reopened this issue';
-    case 'labeled': return `added the ${d} label`;
-    case 'unlabeled': return `removed the ${d} label`;
-    case 'milestoned': return `added this to the ${d} milestone`;
-    case 'demilestoned': return `removed this from the ${d} milestone`;
-    case 'renamed': return `changed the title ${d}`;
-    case 'status': return `moved this to ${d}`;
-    case 'task': return `synced with its note task: ${d}`;
-    case 'due': return d ? `set the due date to ${d}` : 'removed the due date';
-    default: return d;
+    case "opened":
+      return "opened this issue";
+    case "closed":
+      return "closed this issue";
+    case "reopened":
+      return "reopened this issue";
+    case "labeled":
+      return `added the ${d} label`;
+    case "unlabeled":
+      return `removed the ${d} label`;
+    case "milestoned":
+      return `added this to the ${d} milestone`;
+    case "demilestoned":
+      return `removed this from the ${d} milestone`;
+    case "renamed":
+      return `changed the title ${d}`;
+    case "status":
+      return `moved this to ${d}`;
+    case "task":
+      return `synced with its note task: ${d}`;
+    case "due":
+      return d ? `set the due date to ${d}` : "removed the due date";
+    default:
+      return d;
   }
 }
 
 function EventRow({ item }: { item: EventItem }) {
   const Icon = EVENT_ICONS[item.event] ?? IconOpened;
-  const color = item.event === 'closed' 
-    ? 'text-secondary' 
-    : item.event === 'opened' || item.event === 'reopened' 
-      ? 'text-success' 
-      : 'text-base-content/60';
+  const color =
+    item.event === "closed"
+      ? "text-secondary"
+      : item.event === "opened" || item.event === "reopened"
+        ? "text-success"
+        : "text-base-content/60";
   return (
-    <li className="flex items-center gap-2 py-2 pl-4 text-sm text-base-content/70" data-testid="timeline-event">
+    <li
+      className="flex items-center gap-2 py-2 pl-4 text-sm text-base-content/70"
+      data-testid="timeline-event"
+    >
       <Icon size={16} className={color} />
       <span>{eventText(item)}</span>
-      <span className="text-xs text-base-content/50"><TimeAgo iso={item.createdAt} /></span>
+      <span className="text-xs text-base-content/50">
+        <TimeAgo iso={item.createdAt} />
+      </span>
     </li>
   );
 }
@@ -67,15 +92,28 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <li className="my-3 border border-base-300 rounded-sm" data-testid="timeline-comment">
+    <li
+      className="my-3 border border-base-300 rounded-sm"
+      data-testid="timeline-comment"
+    >
       <div className="flex items-center justify-between px-3 py-1 text-xs text-base-content/60 bg-base-200">
         <span>
           commented <TimeAgo iso={item.createdAt} />
-          {item.updatedAt ? <span title={item.updatedAt}> · edited</span> : null}
+          {item.updatedAt ? (
+            <span title={item.updatedAt}> · edited</span>
+          ) : null}
         </span>
         {editing ? null : (
           <span className="flex gap-2">
-            <button type="button" aria-label="Edit comment" className="hover:text-primary/75" onClick={() => { setDraft(item.body); setEditing(true); }}>
+            <button
+              type="button"
+              aria-label="Edit comment"
+              className="hover:text-primary/75"
+              onClick={() => {
+                setDraft(item.body);
+                setEditing(true);
+              }}
+            >
               <IconPencil size={14} />
             </button>
             <button
@@ -91,7 +129,9 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
               confirmLabel="Confirm delete"
               danger
               isOpen={confirmDelete}
-              onConfirm={() => apply((d) => deleteComment(d, issue.number, item.id))}
+              onConfirm={() =>
+                apply((d) => deleteComment(d, issue.number, item.id))
+              }
               handleClose={() => setConfirmDelete(false)}
             />
           </span>
@@ -100,9 +140,20 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
       <div className="px-3 py-2">
         {editing ? (
           <>
-            <IssueEditor key={`edit-${item.id}-${version}`} defaultValue={item.body} onChange={setDraft} autoFocus />
+            <IssueEditor
+              key={`edit-${item.id}-${version}`}
+              defaultValue={item.body}
+              onChange={setDraft}
+              autoFocus
+            />
             <div className="flex justify-end gap-2 mt-2">
-              <button type="button" className={btnClass} onClick={() => setEditing(false)}>Cancel</button>
+              <button
+                type="button"
+                className={btnClass}
+                onClick={() => setEditing(false)}
+              >
+                Cancel
+              </button>
               <button
                 type="button"
                 className={primaryBtnClass}
@@ -118,7 +169,11 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
             </div>
           </>
         ) : (
-          <IssueEditor key={`view-${item.id}-${version}`} defaultValue={item.body} readOnly />
+          <IssueEditor
+            key={`view-${item.id}-${version}`}
+            defaultValue={item.body}
+            readOnly
+          />
         )}
       </div>
     </li>
@@ -128,11 +183,13 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
 export default function Timeline({ issue }: { issue: Issue }) {
   return (
     <ol className="border-l-2 border-base-300 ml-2">
-      {issue.timeline.map((item) => (
-        item.kind === 'comment'
-          ? <CommentRow key={item.id} issue={issue} item={item} />
-          : <EventRow key={item.id} item={item} />
-      ))}
+      {issue.timeline.map((item) =>
+        item.kind === "comment" ? (
+          <CommentRow key={item.id} issue={issue} item={item} />
+        ) : (
+          <EventRow key={item.id} item={item} />
+        ),
+      )}
     </ol>
   );
 }

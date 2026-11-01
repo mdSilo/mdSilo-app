@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { BaseModal } from '@/ui/BaseModal';
+import { useEffect, useState } from "react";
+import { BaseModal } from "@/ui/BaseModal";
 
 type ConfirmProps = {
   title: string;
@@ -13,19 +13,36 @@ type ConfirmProps = {
 
 /** In-app stand-in for `window.confirm`. */
 export function ConfirmModal(props: ConfirmProps) {
-  const { title, message, confirmLabel = 'Confirm', danger = false, isOpen, onConfirm, handleClose } = props;
+  const {
+    title,
+    message,
+    confirmLabel = "Confirm",
+    danger = false,
+    isOpen,
+    onConfirm,
+    handleClose,
+  } = props;
   return (
     <BaseModal title={title} isOpen={isOpen} handleClose={handleClose}>
       <div className="flex flex-col justify-center px-6">
-        {message ? <p className="text-sm text-center text-base-content/70">{message}</p> : null}
+        {message ? (
+          <p className="text-sm text-center text-base-content/70">{message}</p>
+        ) : null}
         <button
           type="button"
-          className={`mt-4 font-bold pop-btn ${danger ? 'text-error' : ''}`}
-          onClick={() => { onConfirm(); handleClose(); }}
+          className={`mt-4 font-bold pop-btn ${danger ? "text-error" : ""}`}
+          onClick={() => {
+            onConfirm();
+            handleClose();
+          }}
         >
           {confirmLabel}
         </button>
-        <button type="button" className="mt-2 font-bold pop-btn" onClick={handleClose}>
+        <button
+          type="button"
+          className="mt-2 font-bold pop-btn"
+          onClick={handleClose}
+        >
           Cancel
         </button>
       </div>
@@ -46,9 +63,19 @@ type PromptProps = {
 
 /** In-app stand-in for `window.prompt`. */
 export function PromptModal(props: PromptProps) {
-  const { title, label, initial = '', submitLabel = 'Save', isOpen, onSubmit, handleClose } = props;
+  const {
+    title,
+    label,
+    initial = "",
+    submitLabel = "Save",
+    isOpen,
+    onSubmit,
+    handleClose,
+  } = props;
   const [value, setValue] = useState(initial);
-  useEffect(() => { if (isOpen) setValue(initial); }, [isOpen, initial]);
+  useEffect(() => {
+    if (isOpen) setValue(initial);
+  }, [isOpen, initial]);
 
   const submit = () => {
     if (!value.trim()) return;
@@ -60,7 +87,10 @@ export function PromptModal(props: PromptProps) {
     <BaseModal title={title} isOpen={isOpen} handleClose={handleClose}>
       <form
         className="flex flex-col justify-center px-6"
-        onSubmit={(e) => { e.preventDefault(); submit(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
       >
         <input
           aria-label={label}
@@ -70,10 +100,18 @@ export function PromptModal(props: PromptProps) {
           onFocus={(e) => e.target.select()}
           onChange={(e) => setValue(e.target.value)}
         />
-        <button type="submit" className="mt-4 font-bold pop-btn" disabled={!value.trim()}>
+        <button
+          type="submit"
+          className="mt-4 font-bold pop-btn"
+          disabled={!value.trim()}
+        >
           {submitLabel}
         </button>
-        <button type="button" className="mt-2 font-bold pop-btn" onClick={handleClose}>
+        <button
+          type="button"
+          className="mt-2 font-bold pop-btn"
+          onClick={handleClose}
+        >
           Cancel
         </button>
       </form>

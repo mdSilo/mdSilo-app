@@ -1,11 +1,16 @@
-import { TbFolder as IconFolder, TbHash as IconHash, TbPlaylist as IconPlaylist, TbSearch as IconSearch } from 'react-icons/tb';
-import { Tooltip } from '@/ui/ui';
-import { SidebarTab as SidebarTabType, useStore } from '@/state/store';
-import SidebarPlaylist from '@/feed/Playlist';
-import SidebarNotes from './SidebarNotes';
-import SidebarSearch from './SidebarSearch';
-import SidebarTab from './SidebarTab';
-import SidebarTags from './SidebarTags';
+import {
+  TbFolder as IconFolder,
+  TbHash as IconHash,
+  TbPlaylist as IconPlaylist,
+  TbSearch as IconSearch,
+} from "react-icons/tb";
+import { Tooltip } from "@/ui/ui";
+import { SidebarTab as SidebarTabType, useStore } from "@/state/store";
+import SidebarPlaylist from "@/feed/Playlist";
+import SidebarNotes from "./SidebarNotes";
+import SidebarSearch from "./SidebarSearch";
+import SidebarTab from "./SidebarTab";
+import SidebarTags from "./SidebarTags";
 
 type Props = {
   className?: string;

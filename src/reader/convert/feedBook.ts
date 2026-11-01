@@ -1,8 +1,14 @@
-import { md5 } from 'js-md5';
-import { buildEpub, escapeXml, hrefOf, type EpubChapter, type EpubResource } from './epub';
-import { bodyOfHtml, cleanHtml } from './html';
-import { guessLanguage } from './text';
-import { readZip } from '.';
+import { md5 } from "js-md5";
+import {
+  buildEpub,
+  escapeXml,
+  hrefOf,
+  type EpubChapter,
+  type EpubResource,
+} from "./epub";
+import { bodyOfHtml, cleanHtml } from "./html";
+import { guessLanguage } from "./text";
+import { readZip } from ".";
 
 /**
  * A book of feed articles: the articles of a channel, or the
@@ -30,9 +36,9 @@ import { readZip } from '.';
  */
 
 /** In the book, next to content.opf: what is in it. */
-export const FEED_DATA = 'mdsilo-feed.json';
-const ROOT = 'OEBPS/';
-const DIR = 'articles';
+export const FEED_DATA = "mdsilo-feed.json";
+const ROOT = "OEBPS/";
+const DIR = "articles";
 const FEED_DATA_VERSION = 1;
 
 export type FeedBookArticle = {
@@ -77,16 +83,23 @@ export type FeedArticleInput = {
 };
 
 /** A feed book read: what is in it, and its files (paths in OEBPS/). */
-export type FeedBookFiles = { data: FeedBookData; files: Map<string, Uint8Array> };
+export type FeedBookFiles = {
+  data: FeedBookData;
+  files: Map<string, Uint8Array>;
+};
 
 /** The id of an article in the book, of its URL: a name of XML (a letter first). */
 export const articleIdOf = (url: string) => `a${md5(url.trim()).slice(0, 16)}`;
 
 /** The id of the spine item in a CFI, if any: `[a1b2…]` of `/6/14[a1b2…]!`. */
-export const spineIdOf = (cfi: string) => cfi.match(/^epubcfi\(\/6\/\d+\[([^\]]+)\]/)?.[1];
+export const spineIdOf = (cfi: string) =>
+  cfi.match(/^epubcfi\(\/6\/\d+\[([^\]]+)\]/)?.[1];
 
 /** The article of the book a CFI is in: by the id in it, else by its place in the spine. */
-export function articleOfCfi(data: FeedBookData, cfi: string): FeedBookArticle | undefined {
+export function articleOfCfi(
+  data: FeedBookData,
+  cfi: string,
+): FeedBookArticle | undefined {
   const id = spineIdOf(cfi);
   if (id) return data.articles.find((a) => a.id === id);
   const match = cfi.match(/^epubcfi\(\/6\/(\d+)/);
@@ -94,7 +107,9 @@ export function articleOfCfi(data: FeedBookData, cfi: string): FeedBookArticle |
 }
 
 /** The feed book in an EPUB file; undefined if it is not one. */
-export async function readFeedBook(epub: Uint8Array): Promise<FeedBookFiles | undefined> {
+export async function readFeedBook(
+  epub: Uint8Array,
+): Promise<FeedBookFiles | undefined> {
   const files = new Map<string, Uint8Array>();
   for (const f of await readZip(epub)) {
     if (f.name.startsWith(ROOT)) files.set(f.name.slice(ROOT.length), f.data);
@@ -103,22 +118,30 @@ export async function readFeedBook(epub: Uint8Array): Promise<FeedBookFiles | un
   if (!json) return undefined;
   try {
     const data = JSON.parse(new TextDecoder().decode(json)) as FeedBookData;
-    if (!Array.isArray(data.articles) || typeof data.uid !== 'string') return undefined;
+    if (!Array.isArray(data.articles) || typeof data.uid !== "string")
+      return undefined;
     return { data, files };
   } catch {
     return undefined;
   }
 }
 
-const latin1 = (d: Uint8Array, from: number, to: number) => new TextDecoder('latin1').decode(d.subarray(from, to));
+const latin1 = (d: Uint8Array, from: number, to: number) =>
+  new TextDecoder("latin1").decode(d.subarray(from, to));
 
 const IMAGE_TYPES: [(d: Uint8Array) => boolean, string][] = [
-  [(d) => d[0] === 0x89 && d[1] === 0x50 && d[2] === 0x4e && d[3] === 0x47, 'png'],
-  [(d) => d[0] === 0xff && d[1] === 0xd8 && d[2] === 0xff, 'jpg'],
-  [(d) => d[0] === 0x47 && d[1] === 0x49 && d[2] === 0x46, 'gif'],
-  [(d) => latin1(d, 8, 12) === 'WEBP', 'webp'],
-  [(d) => /^ftypavi[fs]/.test(latin1(d, 4, 12)), 'avif'],
-  [(d) => /<svg[\s>]/i.test(new TextDecoder().decode(d.subarray(0, 1024))), 'svg'],
+  [
+    (d) => d[0] === 0x89 && d[1] === 0x50 && d[2] === 0x4e && d[3] === 0x47,
+    "png",
+  ],
+  [(d) => d[0] === 0xff && d[1] === 0xd8 && d[2] === 0xff, "jpg"],
+  [(d) => d[0] === 0x47 && d[1] === 0x49 && d[2] === 0x46, "gif"],
+  [(d) => latin1(d, 8, 12) === "WEBP", "webp"],
+  [(d) => /^ftypavi[fs]/.test(latin1(d, 4, 12)), "avif"],
+  [
+    (d) => /<svg[\s>]/i.test(new TextDecoder().decode(d.subarray(0, 1024))),
+    "svg",
+  ],
 ];
 
 /** The extension of an image by its bytes; undefined if not an image (e.g. a page of an error). */
@@ -139,7 +162,9 @@ const absolute = (value: string, base: string) => {
 
 const isoDate = (value?: string) => {
   const date = value ? new Date(value) : undefined;
-  return date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 10) : undefined;
+  return date && !Number.isNaN(date.getTime())
+    ? date.toISOString().slice(0, 10)
+    : undefined;
 };
 
 const hostOf = (url: string) => {
@@ -160,32 +185,46 @@ async function articlePage(
   fetchImage?: (url: string) => Promise<Uint8Array | undefined>,
 ): Promise<{ body: string; resources: EpubResource[] }> {
   const doc = cleanHtml(article.html);
-  for (const el of Array.from(doc.querySelectorAll('noscript, picture > source, iframe, script'))) el.remove();
-  for (const el of Array.from(doc.body.querySelectorAll('*'))) {
-    for (const attr of ['style', 'class', 'srcset', 'sizes', 'loading', 'decoding']) el.removeAttribute(attr);
+  for (const el of Array.from(
+    doc.querySelectorAll("noscript, picture > source, iframe, script"),
+  ))
+    el.remove();
+  for (const el of Array.from(doc.body.querySelectorAll("*"))) {
+    for (const attr of [
+      "style",
+      "class",
+      "srcset",
+      "sizes",
+      "loading",
+      "decoding",
+    ])
+      el.removeAttribute(attr);
   }
-  for (const a of Array.from(doc.querySelectorAll('a[href]'))) {
-    const href = a.getAttribute('href')!;
-    if (href.startsWith('#')) continue;
+  for (const a of Array.from(doc.querySelectorAll("a[href]"))) {
+    const href = a.getAttribute("href")!;
+    if (href.startsWith("#")) continue;
     const url = absolute(href, article.base);
-    if (url) a.setAttribute('href', url);
-    else a.removeAttribute('href');
+    if (url) a.setAttribute("href", url);
+    else a.removeAttribute("href");
   }
   const resources: EpubResource[] = [];
   const inBook = new Map<string, string | undefined>();
-  for (const img of Array.from(doc.querySelectorAll('img'))) {
-    const width = img.getAttribute('width');
-    const height = img.getAttribute('height');
+  for (const img of Array.from(doc.querySelectorAll("img"))) {
+    const width = img.getAttribute("width");
+    const height = img.getAttribute("height");
     // a tracking pixel
-    if (width === '0' || width === '1' || height === '0' || height === '1') {
+    if (width === "0" || width === "1" || height === "0" || height === "1") {
       img.remove();
       continue;
     }
     // lazy loaded, the real one in data-*
-    const raw = ['data-src', 'data-original', 'data-lazy-src', 'src'].map((a) => img.getAttribute(a)).find(Boolean);
-    for (const attr of Array.from(img.attributes)) if (attr.name.startsWith('data-')) img.removeAttribute(attr.name);
-    if (raw?.startsWith('data:image/')) {
-      img.setAttribute('src', raw);
+    const raw = ["data-src", "data-original", "data-lazy-src", "src"]
+      .map((a) => img.getAttribute(a))
+      .find(Boolean);
+    for (const attr of Array.from(img.attributes))
+      if (attr.name.startsWith("data-")) img.removeAttribute(attr.name);
+    if (raw?.startsWith("data:image/")) {
+      img.setAttribute("src", raw);
       continue;
     }
     const url = raw ? absolute(raw, article.base) : undefined;
@@ -200,30 +239,32 @@ async function articlePage(
       inBook.set(url, at);
     }
     if (at) {
-      img.setAttribute('src', at.slice(DIR.length + 1));
+      img.setAttribute("src", at.slice(DIR.length + 1));
       continue;
     }
     // not in the book: a link to it, by its text if any
-    const alt = img.getAttribute('alt')?.trim();
+    const alt = img.getAttribute("alt")?.trim();
     if (url && alt) {
-      const a = doc.createElement('a');
-      a.setAttribute('href', url);
+      const a = doc.createElement("a");
+      a.setAttribute("href", url);
       a.textContent = `[${alt}]`;
       img.replaceWith(a);
     } else {
       img.remove();
     }
   }
-  const meta = [article.author, isoDate(article.published), article.source].filter(Boolean).map((s) => escapeXml(s!));
+  const meta = [article.author, isoDate(article.published), article.source]
+    .filter(Boolean)
+    .map((s) => escapeXml(s!));
   const link = `<a href="${escapeXml(article.url)}">${escapeXml(hostOf(article.url))}</a>`;
   const body = [
     `<h1>${escapeXml(article.title || article.url)}</h1>`,
-    `<p class="feed-meta">${[...meta, link].join(' · ')}</p>`,
+    `<p class="feed-meta">${[...meta, link].join(" · ")}</p>`,
     `<div class="feed-content">${bodyOfHtml(doc)}</div>`,
     article.partial
       ? `<p class="feed-partial">An excerpt, as the feed gives it. The full article: ${link}</p>`
-      : '',
-  ].join('\n');
+      : "",
+  ].join("\n");
   return { body, resources };
 }
 
@@ -262,7 +303,9 @@ export type FeedBookResult = {
  * in it as they are (see above).
  * @throws if a page of the book is missing: it can't be kept as it was
  */
-export async function makeFeedBook(options: FeedBookOptions): Promise<FeedBookResult> {
+export async function makeFeedBook(
+  options: FeedBookOptions,
+): Promise<FeedBookResult> {
   const { existing, fetchImage, canRefresh } = options;
   const now = (options.now ?? new Date()).toISOString();
   const old = existing?.data;
@@ -279,10 +322,18 @@ export async function makeFeedBook(options: FeedBookOptions): Promise<FeedBookRe
     const url = input.url.trim();
     const known = byUrl.get(url);
     if (known) {
-      if (known.partial && !input.partial && !pages.has(known.id) && canRefresh?.(known.id)) {
+      if (
+        known.partial &&
+        !input.partial &&
+        !pages.has(known.id) &&
+        canRefresh?.(known.id)
+      ) {
         const page = await articlePage(input, known.id, fetchImage);
         pages.set(known.id, page);
-        Object.assign(known, { partial: undefined, resources: page.resources.map((r) => r.path) });
+        Object.assign(known, {
+          partial: undefined,
+          resources: page.resources.map((r) => r.path),
+        });
         refreshed.push(known.id);
       }
       continue;
@@ -296,7 +347,9 @@ export async function makeFeedBook(options: FeedBookOptions): Promise<FeedBookRe
       url,
       title: input.title || url,
       file: `${DIR}/${id}.xhtml`,
-      ...(page.resources.length ? { resources: page.resources.map((r) => r.path) } : {}),
+      ...(page.resources.length
+        ? { resources: page.resources.map((r) => r.path) }
+        : {}),
       addedAt: now,
       ...(input.partial ? { partial: true } : {}),
     };
@@ -307,21 +360,38 @@ export async function makeFeedBook(options: FeedBookOptions): Promise<FeedBookRe
     added.push(id);
   }
 
-  const language = old?.language
-    || guessLanguage(options.articles.map((a) => a.title).join('\n') + Array.from(pages.values()).map((p) => p.body).join('\n'));
+  const language =
+    old?.language ||
+    guessLanguage(
+      options.articles.map((a) => a.title).join("\n") +
+        Array.from(pages.values())
+          .map((p) => p.body)
+          .join("\n"),
+    );
   const decoder = new TextDecoder();
   const chapters: EpubChapter[] = articles.map((a) => {
     const made = pages.get(a.id);
-    if (made) return { id: a.id, path: a.file, title: a.title, body: made.body };
+    if (made)
+      return { id: a.id, path: a.file, title: a.title, body: made.body };
     const page = files.get(a.file);
-    if (!page) throw new Error(`The page of "${a.title}" is not in the book: ${a.file}`);
-    return { id: a.id, path: a.file, title: a.title, body: '', xhtml: decoder.decode(page) };
+    if (!page)
+      throw new Error(`The page of "${a.title}" is not in the book: ${a.file}`);
+    return {
+      id: a.id,
+      path: a.file,
+      title: a.title,
+      body: "",
+      xhtml: decoder.decode(page),
+    };
   });
-  const resources: EpubResource[] = articles.flatMap((a) => pages.get(a.id)?.resources
-    ?? (a.resources ?? []).flatMap((path) => {
-      const data = files.get(path);
-      return data ? [{ path, data }] : [];
-    }));
+  const resources: EpubResource[] = articles.flatMap(
+    (a) =>
+      pages.get(a.id)?.resources ??
+      (a.resources ?? []).flatMap((path) => {
+        const data = files.get(path);
+        return data ? [{ path, data }] : [];
+      }),
+  );
 
   const data: FeedBookData = {
     version: FEED_DATA_VERSION,
@@ -340,7 +410,12 @@ export async function makeFeedBook(options: FeedBookOptions): Promise<FeedBookRe
     css: FEED_CSS,
     identifier: data.uid,
     modified: `${now.slice(0, 19)}Z`,
-    files: [{ path: FEED_DATA, data: new TextEncoder().encode(`${JSON.stringify(data, null, 2)}\n`) }],
+    files: [
+      {
+        path: FEED_DATA,
+        data: new TextEncoder().encode(`${JSON.stringify(data, null, 2)}\n`),
+      },
+    ],
   });
   return { epub, data, added, refreshed };
 }
