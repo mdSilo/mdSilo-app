@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef, useState } from "react";
-import { Menu } from "@headlessui/react";
+import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import {
   TbCornerDownRight as IconCornerDownRight,
   TbDots as IconDots,
@@ -43,17 +43,17 @@ const SidebarNoteLinkDropdown = (props: NoteProps) => {
       <Menu>
         {({ open }) => (
           <>
-            <Menu.Button
+            <MenuButton
               ref={containerRef}
               className={`rounded-sm hover:bg-base-content/15 active:bg-base-content/25 ${className}`}
             >
               <span className="flex items-center justify-center w-8 h-8">
                 <IconDots className="text-base-content/70" />
               </span>
-            </Menu.Button>
+            </MenuButton>
             {open && (
               <Portal>
-                <Menu.Items
+                <MenuItems
                   ref={setPopperElement}
                   className="z-20 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                   static
@@ -65,7 +65,7 @@ const SidebarNoteLinkDropdown = (props: NoteProps) => {
                     <span>Move to</span>
                   </DropdownItem>
                   <NoteMetadata noteId={noteId} />
-                </Menu.Items>
+                </MenuItems>
               </Portal>
             )}
           </>
@@ -127,7 +127,7 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
       <Menu>
         {({ open }) => (
           <>
-            <Menu.Button
+            <MenuButton
               ref={containerRef}
               className={`rounded-sm hover:bg-base-content/15 ${className}`}
             >
@@ -140,10 +140,10 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
                   <IconDotsDiagonal className="text-base-content/70" />
                 </span>
               )}
-            </Menu.Button>
+            </MenuButton>
             {open && (
               <Portal>
-                <Menu.Items
+                <MenuItems
                   ref={setPopperElement}
                   className="z-20 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                   static
@@ -170,7 +170,7 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
                       </DropdownItem>
                     </>
                   )}
-                </Menu.Items>
+                </MenuItems>
               </Portal>
             )}
           </>

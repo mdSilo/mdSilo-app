@@ -6,7 +6,7 @@ import {
   useCallback,
 } from "react";
 import { usePopper } from "react-popper";
-import { Menu } from "@headlessui/react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Placement } from "@popperjs/core";
 import Portal from "./Portal";
 import { Tooltip } from "./ui";
@@ -49,7 +49,7 @@ export default function Dropdown(props: Props) {
     <Menu>
       {({ open }) => (
         <>
-          <Menu.Button
+          <MenuButton
             data-testid="dropdown-button"
             ref={referenceElementRef}
             className={buttonClassName}
@@ -63,10 +63,10 @@ export default function Dropdown(props: Props) {
             >
               <span>{buttonChildren}</span>
             </Tooltip>
-          </Menu.Button>
+          </MenuButton>
           {open && (
             <Portal>
-              <Menu.Items
+              <MenuItems
                 ref={setPopperElement}
                 className={`z-20 w-52 overflow-hidden text-sm bg-base-200 rounded-sm shadow-popover focus:outline-hidden ${itemsClassName}`}
                 static
@@ -74,7 +74,7 @@ export default function Dropdown(props: Props) {
                 {...attributes.popper}
               >
                 {children}
-              </Menu.Items>
+              </MenuItems>
             </Portal>
           )}
         </>
@@ -118,7 +118,7 @@ export function DropdownItem(props: DropdownItemProps) {
   );
 
   return (
-    <Menu.Item>
+    <MenuItem>
       {({ focus }) =>
         props.as === "a" || props.as === "link" ? (
           <a
@@ -135,6 +135,6 @@ export function DropdownItem(props: DropdownItemProps) {
           </button>
         )
       }
-    </Menu.Item>
+    </MenuItem>
   );
 }

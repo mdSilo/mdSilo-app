@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { Menu } from "@headlessui/react";
+import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import {
   TbDots as IconDots,
   TbFile as IconFile,
@@ -114,16 +114,16 @@ export default function NoteHeader({
         <Menu>
           {({ open }) => (
             <>
-              <Menu.Button ref={menuButtonRef} className={buttonClassName}>
+              <MenuButton ref={menuButtonRef} className={buttonClassName}>
                 <Tooltip content="Options (Delete...)">
                   <span className="flex items-center justify-center w-8 h-8">
                     <IconDots size={18} className={iconClass} />
                   </span>
                 </Tooltip>
-              </Menu.Button>
+              </MenuButton>
               {open && (
                 <Portal>
-                  <Menu.Items
+                  <MenuItems
                     ref={setPopperElement}
                     className="z-10 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                     static
@@ -152,7 +152,7 @@ export default function NoteHeader({
                       <span>Export PNG</span>
                     </DropdownItem>
                     <NoteMetadata noteId={currentNote.id} />
-                  </Menu.Items>
+                  </MenuItems>
                 </Portal>
               )}
             </>

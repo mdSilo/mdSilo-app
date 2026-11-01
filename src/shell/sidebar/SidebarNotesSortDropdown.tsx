@@ -1,5 +1,5 @@
 import { useRef, useState, memo } from "react";
-import { Menu } from "@headlessui/react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
   TbSortDescending as IconSortDescending,
   TbCheck as IconCheck,
@@ -27,7 +27,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
     <Menu>
       {({ open }) => (
         <>
-          <Menu.Button
+          <MenuButton
             className="rounded-sm hover:bg-base-content/10 active:bg-base-content/15"
             ref={buttonRef}
           >
@@ -39,10 +39,10 @@ const SidebarNotesSortDropdown = (props: Props) => {
                 />
               </span>
             </Tooltip>
-          </Menu.Button>
+          </MenuButton>
           {open && (
             <Portal>
-              <Menu.Items
+              <MenuItems
                 className="z-20 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                 static
                 ref={setPopperElement}
@@ -54,7 +54,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
                   const showDivider =
                     (index + 1) % 2 === 0 && index !== arr.length - 1;
                   return (
-                    <Menu.Item key={sort}>
+                    <MenuItem key={sort}>
                       {({ focus }) => (
                         <button
                           className={`flex w-full items-center px-4 py-2 text-left text-base-content text-sm ${
@@ -75,10 +75,10 @@ const SidebarNotesSortDropdown = (props: Props) => {
                           ) : null}
                         </button>
                       )}
-                    </Menu.Item>
+                    </MenuItem>
                   );
                 })}
-              </Menu.Items>
+              </MenuItems>
             </Portal>
           )}
         </>

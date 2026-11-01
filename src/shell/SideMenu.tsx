@@ -38,7 +38,7 @@ import {
   TbPlayerPlay,
 } from "react-icons/tb";
 import { MdFolderOpen } from "react-icons/md";
-import { Menu } from "@headlessui/react";
+import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { usePopper } from "react-popper";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import useHotkeys from "@/lib/hooks/useHotkeys";
@@ -693,16 +693,16 @@ const FileButton = () => {
     <Menu>
       {({ open }) => (
         <>
-          <Menu.Button ref={btnRef} className="hover:bg-base-content/10">
+          <MenuButton ref={btnRef} className="hover:bg-base-content/10">
             <Tooltip content="File Menu" placement={tooltipPlacement}>
               <span className={btnClass}>
                 <MdFolderOpen size={22} className={btnIconClass} />
               </span>
             </Tooltip>
-          </Menu.Button>
+          </MenuButton>
           {open && (
             <Portal>
-              <Menu.Items
+              <MenuItems
                 ref={setPopperElement}
                 className="z-20 w-42 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
                 static
@@ -710,7 +710,7 @@ const FileButton = () => {
                 {...attributes.popper}
               >
                 <FileDrop />
-              </Menu.Items>
+              </MenuItems>
             </Portal>
           )}
         </>
