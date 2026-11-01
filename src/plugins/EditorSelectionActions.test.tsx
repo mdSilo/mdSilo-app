@@ -5,7 +5,8 @@ import { store } from '@/state/store';
 import { askPlugin } from './background';
 import { parseManifest } from './manifest';
 import { enablePlugin, type InstalledPlugin } from './registry';
-import { SelectionResultModal, useEditorSelectionActions } from './EditorSelectionActions';
+import { useEditorSelectionActions } from './EditorSelectionActions';
+import { PluginAnswerModal } from './PluginAnswer';
 
 vi.mock('./background', () => ({ askPlugin: vi.fn() }));
 vi.mock('copy-to-clipboard', () => ({ default: vi.fn() }));
@@ -49,7 +50,7 @@ describe('useEditorSelectionActions', () => {
     enablePlugin(plugin);
     vi.mocked(askPlugin).mockResolvedValue({ html: '<p>A <b>word</b></p>' });
     const [action] = actions().current;
-    render(<SelectionResultModal />);
+    render(<PluginAnswerModal />);
     let answer: Promise<unknown> = Promise.resolve();
     await act(async () => { answer = action.run('word'); });
     expect(await screen.findByText('word')).toBeInTheDocument();
@@ -62,7 +63,7 @@ describe('useEditorSelectionActions', () => {
     enablePlugin(plugin);
     vi.mocked(askPlugin).mockResolvedValue('plain answer');
     const [action] = actions().current;
-    render(<SelectionResultModal />);
+    render(<PluginAnswerModal />);
     let answer: Promise<unknown> = Promise.resolve();
     await act(async () => { answer = action.run('word'); });
     await userEvent.click(await screen.findByRole('button', { name: 'Copy' }));

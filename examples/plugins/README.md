@@ -11,7 +11,7 @@ Two samples here:
 - `tag-index/`: a view of the notes by tag; open it from the Plugins button of the side menu.
 - `text-stats/`: a "Count words" button on the text selected, in the reader and the editor.
 - `bars/`: draws ```` ```bars ```` code blocks (`label: number` lines) as a bar chart, in the editor
-  and in the published site.
+  and in the published site; its command "How to write bars" is in the Plugins menu.
 
 ## manifest.json
 
@@ -39,6 +39,8 @@ Two samples here:
 - `contributes.codeBlocks`: `["plantuml"]`, the languages of the code blocks it draws (see below).
 - `contributes.selectionActions`: `[{ "id": "explain", "title": "Explain", "where": ["reader"] }]`,
   buttons on the text selected (see below); `where` is `reader`, `editor` or both (default).
+- `contributes.commands`: `[{ "id": "today", "title": "Stats of today" }]`, in the Plugins menu of
+  the side menu (see below).
 - `mode`: `sandboxed` (default). `trusted` plugins are not supported yet.
 
 ## The page
@@ -108,5 +110,17 @@ In the reader, the answer shows in a popup by the text, with a button to keep it
 highlight. In the editor, it shows in a dialog, to insert after the text or copy; or the plugin
 changes the text itself by answering `{ replace: '…' }` (in place of the text selected) or
 `{ insert: '…' }` (after it), in the editor only.
+
+## Commands
+
+A command of `commands` asks the main page, in the same hidden frame:
+
+```js
+// { mdsilo: 1, request, method: 'command.run', params: { command } }
+// answer nothing, text, or { html } to show in a dialog (sanitized)
+parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }, '*');
+```
+
+The hidden frame has `app.info` and `app.style` only: commands can't read notes yet.
 
 See `csv-viewer/index.html` for a small client.

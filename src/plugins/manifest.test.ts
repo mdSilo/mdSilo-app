@@ -12,7 +12,7 @@ describe('parseManifest', () => {
       mode: 'sandboxed',
       permissions: [],
       main: 'index.html',
-      contributes: { viewers: [], views: [], codeBlocks: [], selectionActions: [] },
+      contributes: { viewers: [], views: [], codeBlocks: [], selectionActions: [], commands: [] },
     });
   });
 
@@ -78,6 +78,13 @@ describe('parseManifest', () => {
       .toThrow('"contributes.selectionActions[0].where" should be "reader" or "editor"');
   });
 
+  it('reads the commands', () => {
+    expect(parseManifest({ ...minimal, contributes: { commands: [{ id: 'today', title: 'Stats of today' }] } }).contributes.commands)
+      .toEqual([{ id: 'today', title: 'Stats of today' }]);
+    expect(() => parseManifest({ ...minimal, contributes: { commands: [{ id: 'A', title: 'x' }] } }))
+      .toThrow('contributes.commands[0].id');
+  });
+
   it('says which contribution is wrong', () => {
     expect(() => parseManifest({ ...minimal, contributes: { viewers: [{ extensions: [], title: 'x' }] } }))
       .toThrow('"contributes.viewers[0].extensions" should not be empty');
@@ -114,6 +121,7 @@ describe('the sample plugins', () => {
     expect(parseManifest(tags).contributes.views[0].id).toBe('tags');
     const bars = readFileSync('examples/plugins/bars/manifest.json', 'utf8');
     expect(parseManifest(bars).contributes.codeBlocks).toEqual(['bars']);
+    expect(parseManifest(bars).contributes.commands[0].id).toBe('help');
     const stats = readFileSync('examples/plugins/text-stats/manifest.json', 'utf8');
     expect(parseManifest(stats).contributes.selectionActions[0].id).toBe('count');
   });

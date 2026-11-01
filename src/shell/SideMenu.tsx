@@ -5,7 +5,7 @@ import {
   TbMenu2, TbDna, TbCalendar, TbFeather, TbFolderPlus, TbFileText, TbDeviceFloppy, TbClearAll,
   TbFileImport, TbRss, TbSettings, TbLayoutKanban, TbCircleDot, TbBrowser,
   TbPizza, TbInfoCircle, TbHeadphones, TbCurrentLocation, TbDatabaseExport, TbBook, TbBooks, TbEraser, TbWorldUpload,
-  TbPuzzle,
+  TbPuzzle, TbPlayerPlay,
 } from 'react-icons/tb';
 import { MdFolderOpen } from "react-icons/md";
 import { Menu } from '@headlessui/react';
@@ -27,6 +27,7 @@ import { isPublishAvailable, usePublishUi } from '@/publish/publish';
 import { usePlayer } from '@/player/playerStore';
 import { useTTS } from '@/reader/tts/tts';
 import { pluginViews } from '@/plugins/registry';
+import { pluginCommands, runCommand } from '@/plugins/commands';
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>('auto');
 
@@ -423,6 +424,7 @@ const PluginsButton = ({ viewTy, hasWorkspace, onDispatch }: {
   const pluginStates = useStore((state) => state.pluginStates);
   const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
   const views = hasWorkspace ? pluginViews(installedPlugins, pluginStates) : [];
+  const commands = pluginCommands(installedPlugins, pluginStates);
 
   return (
     <MenuItem isHighlighted={viewTy === 'plugin'}>
@@ -443,7 +445,21 @@ const PluginsButton = ({ viewTy, hasWorkspace, onDispatch }: {
             <span className="ml-auto pl-2 text-xs truncate text-base-content/60">{plugin.manifest?.name}</span>
           </DropdownItem>
         ))}
-        <DropdownItem className={views.length ? 'border-t border-base-300' : ''} onClick={() => setIsPluginsOpen(true)}>
+        {commands.map((found, i) => (
+          <DropdownItem
+            key={`${found.plugin.id}:${found.command.id}`}
+            className={i === 0 && views.length ? 'border-t border-base-300' : ''}
+            onClick={() => void runCommand(found)}
+          >
+            <TbPlayerPlay size={18} className="mr-1 shrink-0" />
+            <span className="truncate">{found.command.title}</span>
+            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">{found.plugin.manifest?.name}</span>
+          </DropdownItem>
+        ))}
+        <DropdownItem
+          className={views.length || commands.length ? 'border-t border-base-300' : ''}
+          onClick={() => setIsPluginsOpen(true)}
+        >
           <TbSettings size={18} className="mr-1" />
           <span>Manage Plugins</span>
         </DropdownItem>

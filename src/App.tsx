@@ -9,6 +9,7 @@ import { useCustomFonts } from '@/custom/fonts';
 import { useCustomThemes } from '@/custom/themes';
 import { usePlugins } from '@/plugins/registry';
 import { PluginsModal } from '@/plugins/PluginManager';
+import { PluginAnswerModal } from '@/plugins/PluginAnswer';
 import { useStore, onStoreHydrated, SidebarTab } from '@/state/store';
 import { shareSettings } from '@/state/windowSync';
 import { isWeb } from '@/workspace/util';
@@ -133,6 +134,7 @@ const App = () => {
             handleClose={() => setIsAboutOpen(false)} 
           />
           <PluginsModal />
+          <PluginAnswerModal />
         </div>
       </div>
     </ProvideCurrentView>

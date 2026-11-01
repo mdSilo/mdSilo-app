@@ -37,6 +37,9 @@ export type SelectionPlace = 'reader' | 'editor';
 /** A button on the text selected, in the reader, the editor, or both */
 export type SelectionAction = { id: string; title: string; where: SelectionPlace[] };
 
+/** A command, run from the Plugins menu of the side menu */
+export type CommandContribution = { id: string; title: string };
+
 export type Contributes = {
   viewers: ViewerContribution[];
   views: ViewContribution[];
@@ -44,6 +47,8 @@ export type Contributes = {
   codeBlocks: string[];
   /** buttons on the text selected, answered by its main page */
   selectionActions: SelectionAction[];
+  /** commands, run by its main page */
+  commands: CommandContribution[];
 };
 
 export type PluginManifest = {
@@ -99,7 +104,7 @@ const extension = (value: unknown, field: string): string => {
 };
 
 function parseContributes(value: unknown): Contributes {
-  if (value === undefined) return { viewers: [], views: [], codeBlocks: [], selectionActions: [] };
+  if (value === undefined) return { viewers: [], views: [], codeBlocks: [], selectionActions: [], commands: [] };
   if (!isObject(value)) throw new Error('"contributes" should be an object');
   const viewers = list(value.viewers, 'contributes.viewers').map((viewer, i) => {
     const field = `contributes.viewers[${i}]`;
@@ -138,7 +143,14 @@ function parseContributes(value: unknown): Contributes {
     }
     return { id, title: text(action.title, `${field}.title`), where: [...new Set(where)] as SelectionPlace[] };
   });
-  return { viewers, views, codeBlocks: [...new Set(codeBlocks)], selectionActions };
+  const commands = list(value.commands, 'contributes.commands').map((command, i) => {
+    const field = `contributes.commands[${i}]`;
+    if (!isObject(command)) throw new Error(`"${field}" should be an object`);
+    const id = text(command.id, `${field}.id`);
+    if (!ID.test(id)) throw new Error(`"${field}.id" should be lowercase letters, digits, . _ -`);
+    return { id, title: text(command.title, `${field}.title`) };
+  });
+  return { viewers, views, codeBlocks: [...new Set(codeBlocks)], selectionActions, commands };
 }
 
 /**

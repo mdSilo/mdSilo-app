@@ -39,6 +39,12 @@ function render(code, dark) {
 window.addEventListener('message', (event) => {
   const msg = event.data;
   if (event.source !== parent || !msg || msg.mdsilo !== 1 || msg.request === undefined) return;
+  if (msg.method === 'command.run' && msg.params.command === 'help') {
+    const html = '<p>Write a code block of the language <code>bars</code>, one bar per line:</p>'
+      + '<pre>```bars\nApples: 3\nPears: 5\n```</pre><p>It shows as a bar chart, in the editor and the site.</p>';
+    parent.postMessage({ mdsilo: 1, reply: msg.request, result: { html } }, '*');
+    return;
+  }
   if (msg.method !== 'code.render') {
     parent.postMessage({ mdsilo: 1, reply: msg.request, error: `Unknown method: ${msg.method}` }, '*');
     return;

@@ -4,7 +4,7 @@ import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
 import MsEditor, { Attach, embeds } from "mdsmirror";
 import { useCodeRenderers } from '@/plugins/codeBlocks';
-import { SelectionResultModal, useEditorSelectionActions } from '@/plugins/EditorSelectionActions';
+import { useEditorSelectionActions } from '@/plugins/EditorSelectionActions';
 import { EDITOR_THEME } from '@/lib/themes';
 import Title from '@/writer/Title';
 import Toc, { Heading } from '@/writer/Toc';
@@ -425,7 +425,6 @@ function Note(props: Props) {
                   />
                 )}
                 </Suspense>
-                <SelectionResultModal />
               </div>
               <button
                 className="inline-flex items-center p-1 mt-2 group"
