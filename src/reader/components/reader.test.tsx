@@ -871,7 +871,7 @@ describe("library", () => {
   test("a book put in a group, the group opened, renamed, ungrouped", async () => {
     renderMain();
     await go({ view: "library" });
-    fireEvent.click(await screen.findByLabelText("Book details"));
+    fireEvent.click(await screen.findByLabelText(/Book details/));
     fireEvent.click(await screen.findByLabelText("Group and status"));
     fireEvent.change(screen.getByLabelText("Group"), {
       target: { value: "Fiction / Short" },
@@ -1101,7 +1101,7 @@ describe("library", () => {
     await go({ view: "library" });
     await bookItem("Tiny Book");
     fireEvent.click(
-      screen.getByTitle("Import the books of a folder and its sub folders"),
+      screen.getByTitle("Import from folder"),
     );
     expect(screen.getByRole("button", { name: "Import" })).toBeDisabled();
     await act(async () => {
@@ -1129,7 +1129,7 @@ describe("library", () => {
 
     // the choices of the last time
     fireEvent.click(
-      screen.getByTitle("Import the books of a folder and its sub folders"),
+      screen.getByTitle("Import from folder"),
     );
     expect(screen.getByText("/downloads/books")).toBeInTheDocument();
     expect(screen.getByLabelText("Minimum file size (KB)")).toHaveValue(0);
@@ -1176,7 +1176,7 @@ describe("library", () => {
   test("the metadata of a book edited, kept when the book is opened", async () => {
     renderMain();
     await go({ view: "library" });
-    fireEvent.click(await screen.findByLabelText("Book details"));
+    fireEvent.click(await screen.findByLabelText(/Book details/));
     expect(
       (
         await within(await screen.findByTestId("book-details")).findAllByText(
@@ -1226,7 +1226,7 @@ describe("library", () => {
     await invoke("write_file", { filePath: `${BOOK}.md`, text: "# Tiny Book" });
     renderMain();
     await go({ view: "library" });
-    fireEvent.click(await screen.findByLabelText("Book details"));
+    fireEvent.click(await screen.findByLabelText(/Book details/));
     fireEvent.click(await screen.findByLabelText("Delete"));
     fireEvent.click(screen.getByLabelText(/Delete its notes too/));
     await act(async () => {

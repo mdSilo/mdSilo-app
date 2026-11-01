@@ -314,9 +314,9 @@ const OpenButton = () => {
 
   return (
     <MenuItem isHighlighted={isSidebarOpen}>
-      <Tooltip content="Toggle Explorer (Alt+X)" placement={tooltipPlacement}>
+      <Tooltip content="Explorer (Alt+X)" placement={tooltipPlacement}>
         <button
-          aria-label="Toggle Explorer"
+          aria-label="Explorer"
           className={btnClass}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >

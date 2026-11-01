@@ -445,7 +445,7 @@ export default function Library() {
             className="btn btn-sm btn-ghost"
             onClick={() => setFolderDialog(true)}
             disabled={busy}
-            title="Import the books of a folder and its sub folders"
+            title="Import from folder"
           >
             <TbFolderPlus size={18} />
           </button>

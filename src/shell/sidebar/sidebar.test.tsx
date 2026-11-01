@@ -910,7 +910,7 @@ describe("SideMenu", () => {
     // logo, toggle, feed, new, issues, projects, chronicle, graph, file
     expect(btns).toHaveLength(9);
     await userEvent.click(
-      screen.getByRole("button", { name: "Toggle Explorer" }),
+      screen.getByRole("button", { name: "Explorer" }),
     );
     expect(store.getState().isSidebarOpen).toBe(false);
     await userEvent.click(btns[2]);
