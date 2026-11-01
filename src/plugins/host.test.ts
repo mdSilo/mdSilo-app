@@ -1,5 +1,5 @@
 import { store } from '@/state/store';
-import { createHost, type PluginMethods } from './host';
+import { CALL_TIMEOUT, createHost, type PluginMethods } from './host';
 import { parseManifest } from './manifest';
 import { enablePlugin, type InstalledPlugin } from './registry';
 
@@ -117,5 +117,42 @@ describe('createHost', () => {
     send({ mdsilo: 1, id: 1, method: 'echo' });
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(posted).not.toHaveBeenCalled();
+  });
+});
+
+describe('asking the plugin', () => {
+  it('gets the answer of the plugin', async () => {
+    const host = createHost(plugin, frame);
+    const answered = host.call('code.render', { code: 'a' });
+    expect(posted).toHaveBeenCalledWith({ mdsilo: 1, request: 1, method: 'code.render', params: { code: 'a' } }, '*');
+    send({ mdsilo: 1, reply: 1, result: '<svg/>' });
+    expect(await answered).toBe('<svg/>');
+    host.dispose();
+  });
+
+  it('gets the error of the plugin', async () => {
+    const host = createHost(plugin, frame);
+    const answered = host.call('code.render');
+    send({ mdsilo: 1, reply: 1, error: 'Bad code' });
+    await expect(answered).rejects.toThrow('Bad code');
+    host.dispose();
+  });
+
+  it('takes no answer from another page', async () => {
+    vi.useFakeTimers();
+    const host = createHost(plugin, frame);
+    const answered = host.call('code.render');
+    send({ mdsilo: 1, reply: 1, result: 'fake' }, other.contentWindow);
+    vi.advanceTimersByTime(CALL_TIMEOUT);
+    await expect(answered).rejects.toThrow('CSV did not answer code.render');
+    host.dispose();
+    vi.useRealTimers();
+  });
+
+  it('stops waiting when disposed', async () => {
+    const host = createHost(plugin, frame);
+    const answered = host.call('code.render');
+    host.dispose();
+    await expect(answered).rejects.toThrow('The plugin is closed');
   });
 });

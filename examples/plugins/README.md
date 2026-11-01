@@ -32,6 +32,7 @@ Two samples here:
 - `contributes.viewers`: the plugin opens files of these extensions (not notes or books).
 - `contributes.views`: `[{ "id": "stats", "title": "Reading Stats", "page": "stats.html" }]`, views of the
   whole workspace, in the Plugins menu of the side menu; `page` is the main page by default.
+- `contributes.codeBlocks`: `["plantuml"]`, the languages of the code blocks it draws (see below).
 - `mode`: `sandboxed` (default). `trusted` plugins are not supported yet.
 
 ## The page
@@ -72,5 +73,19 @@ knows can be read or written, not other files:
 |---|---|
 | `style` | the theme or the font changed; data as `app.style` |
 | `file.changed` | the file was changed by another app or a sync (not by the plugin) |
+
+## Drawing code blocks
+
+A plugin with `contributes.codeBlocks` has its main page loaded in a hidden frame, and is asked to
+draw each code block of its languages:
+
+```js
+// from the app: { mdsilo: 1, request: 7, method: 'code.render', params: { lang, code, dark } }
+// answer with SVG or HTML; scripts, <style> and forms are removed
+parent.postMessage({ mdsilo: 1, reply: 7, result: '<svg>…</svg>' }, '*');
+// or: parent.postMessage({ mdsilo: 1, reply: 7, error: 'Bad syntax' }, '*');
+```
+
+The app waits 15 seconds for an answer.
 
 See `csv-viewer/index.html` for a small client.

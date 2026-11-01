@@ -12,7 +12,7 @@ describe('parseManifest', () => {
       mode: 'sandboxed',
       permissions: [],
       main: 'index.html',
-      contributes: { viewers: [], views: [] },
+      contributes: { viewers: [], views: [], codeBlocks: [] },
     });
   });
 
@@ -56,6 +56,13 @@ describe('parseManifest', () => {
     });
     expect(contributes.viewers).toEqual([{ extensions: ['csv', 'tsv'], title: 'Table' }]);
     expect(contributes.views).toEqual([{ id: 'stats', title: 'Reading stats', icon: 'chart', page: 'stats.html' }]);
+  });
+
+  it('reads the languages of the code blocks it draws', () => {
+    expect(parseManifest({ ...minimal, contributes: { codeBlocks: ['PlantUML', 'abc', 'abc'] } }).contributes.codeBlocks)
+      .toEqual(['plantuml', 'abc']);
+    expect(() => parseManifest({ ...minimal, contributes: { codeBlocks: ['a b'] } }))
+      .toThrow('"contributes.codeBlocks[0]" should be a language name');
   });
 
   it('says which contribution is wrong', () => {

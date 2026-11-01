@@ -35,6 +35,8 @@ export type ViewContribution = { id: string; title: string; icon?: string; page?
 export type Contributes = {
   viewers: ViewerContribution[];
   views: ViewContribution[];
+  /** the languages of the code blocks it draws, ```lang, by its main page */
+  codeBlocks: string[];
 };
 
 export type PluginManifest = {
@@ -90,7 +92,7 @@ const extension = (value: unknown, field: string): string => {
 };
 
 function parseContributes(value: unknown): Contributes {
-  if (value === undefined) return { viewers: [], views: [] };
+  if (value === undefined) return { viewers: [], views: [], codeBlocks: [] };
   if (!isObject(value)) throw new Error('"contributes" should be an object');
   const viewers = list(value.viewers, 'contributes.viewers').map((viewer, i) => {
     const field = `contributes.viewers[${i}]`;
@@ -112,7 +114,13 @@ function parseContributes(value: unknown): Contributes {
       page: view.page === undefined ? undefined : innerPath(view.page, `${field}.page`),
     };
   });
-  return { viewers, views };
+  const codeBlocks = list(value.codeBlocks, 'contributes.codeBlocks').map((lang, i) => {
+    const field = `contributes.codeBlocks[${i}]`;
+    const name = text(lang, field).toLowerCase();
+    if (!/^[a-z0-9_+-]+$/.test(name)) throw new Error(`"${field}" should be a language name, like plantuml`);
+    return name;
+  });
+  return { viewers, views, codeBlocks: [...new Set(codeBlocks)] };
 }
 
 /**
