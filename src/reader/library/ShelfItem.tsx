@@ -219,11 +219,8 @@ function BookItem({
       {mode === "list" && book.status ? (
         <span className="badge badge-ghost badge-xs">{book.status}</span>
       ) : null}
-      {mode === "list" ? (
-        <span className="badge badge-ghost badge-xs">{book.format}</span>
-      ) : null}
       <SyncButton books={[book]} onSync={onSync} />
-      <ShelfButton title="Book details" onClick={() => onDetails(book)}>
+      <ShelfButton title={`Book details - ${book.format}`} onClick={() => onDetails(book)}>
         <BookIcon path={book.path} size={14} />
       </ShelfButton>
     </div>

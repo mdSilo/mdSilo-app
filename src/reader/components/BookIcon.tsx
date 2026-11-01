@@ -121,6 +121,7 @@ export function CbzIcon({
 }
 
 /** The icon of a book format, its color: to tell the books apart in the file tree. */
+// FIXME: hard-coded color
 const BOOK_ICONS: Record<BookFormat, { icon: IconType; color: string }> = {
   EPUB: { icon: EpubIcon, color: "#85b916" },
   PDF: { icon: FaFilePdf, color: "#dc2626" },
