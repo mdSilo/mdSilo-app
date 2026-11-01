@@ -85,7 +85,7 @@ Also allow a "system font" entry (family name only, no file), since many users j
 Installed per device (`<appData>/custom/plugins/`) by default; can be put in `.mdsilo/plugins/` to sync. **A plugin that arrives through sync is never enabled automatically**: the enabled set + granted permissions live in device-only settings, and the user enables it on each device after seeing its permissions. Themes/fonts in `contributes` let a plugin ship them declaratively (no code).
 
 ### Runtime, sandboxed (default)
-- Tauri: register a URI scheme (`register_uri_scheme_protocol("mdsplugin")`) in `src-tauri` that serves `mdsplugin://<id>/<path>` from the plugin dir with its own strict CSP (no `ipc:`; `connect-src` only if `net` granted). Add `mdsplugin:` to `frame-src` in `tauri.conf.json` CSP.
+- Tauri: register a URI scheme (`register_uri_scheme_protocol("mdsplugin")`) in `src-tauri` that serves `mdsplugin://<id>/<path>` from the plugin dir with its own strict CSP (no `ipc:`; `connect-src` is the plugin scheme, plus `https: wss:` only if `net` granted; `Access-Control-Allow-Origin: *` so the opaque-origin iframe can `fetch` its own files, e.g. `.wasm`, and load module scripts). Add `mdsplugin:` to `frame-src` in `tauri.conf.json` CSP.
 - Host: `<iframe sandbox="allow-scripts" src="mdsplugin://…">` (opaque origin, no Tauri IPC). `src/plugins/host.ts` speaks a small JSON-RPC over `postMessage`, checks each call against granted permissions, and pushes theme vars + font list so plugins can match the app look.
 - A tiny `@mdsilo/plugin-api` (types + client, in `packages/plugin-api`) for authors.
 - Web build: same iframe with a blob/srcdoc document; defer until desktop works.

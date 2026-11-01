@@ -46,8 +46,10 @@ Two samples here:
 ## The page
 
 The page runs in a sandboxed iframe (`allow-scripts` only, no dialogs) with a strict CSP: scripts,
-styles, images and fonts come from the plugin folder (inline is allowed). It talks to the app by
-messages:
+styles, images and fonts come from the plugin folder (inline is allowed). The page can `fetch` files
+of its folder, and run WebAssembly: `WebAssembly.instantiateStreaming(fetch('app.wasm'))`. A bundled
+app (React with Vite, say) works too, `type="module"` scripts included: build it with relative paths
+(`base: './'`) into the plugin folder. It talks to the app by messages:
 
 ```js
 // call: answered with { mdsilo: 1, id, result } or { mdsilo: 1, id, error }

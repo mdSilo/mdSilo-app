@@ -30,10 +30,15 @@ fn has_net(id: &str) -> bool {
 }
 
 /// The CSP of the files of a plugin. The iframe is sandboxed, its origin is
-/// opaque, so the scheme is named in place of 'self'.
+/// opaque, so the scheme is named in place of 'self'. `connect-src` names it
+/// too, for `fetch('app.wasm')` and the like.
 pub fn plugin_csp(net: bool) -> String {
   let own = "mdsplugin: http://mdsplugin.localhost";
-  let connect = if net { "https: wss:" } else { "'none'" };
+  let connect = if net {
+    format!("{own} https: wss:")
+  } else {
+    own.to_string()
+  };
   format!(
     "default-src 'none'; script-src {own} 'unsafe-inline' 'wasm-unsafe-eval'; \
      style-src {own} 'unsafe-inline'; img-src {own} data: blob:; font-src {own} data:; \
@@ -124,8 +129,11 @@ pub fn serve(base: &Path, uri_path: &str, net: bool) -> Response<Vec<u8>> {
   let Ok(body) = fs::read(&file) else {
     return status(StatusCode::NOT_FOUND);
   };
+  // The opaque origin of the iframe makes its own `fetch` and module scripts
+  // cross-origin; the files are the plugin's code, not secrets.
   Response::builder()
     .header(header::CONTENT_TYPE, content_type(&path))
+    .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
     .header(header::CONTENT_SECURITY_POLICY, plugin_csp(net))
     .header(header::X_CONTENT_TYPE_OPTIONS, "nosniff")
     .header(header::CACHE_CONTROL, "no-cache")
@@ -175,9 +183,11 @@ mod tests {
 
   #[test]
   fn names_the_network_only_when_granted() {
-    assert!(plugin_csp(false).contains("connect-src 'none'"));
-    assert!(plugin_csp(true).contains("connect-src https: wss:"));
+    let own = "mdsplugin: http://mdsplugin.localhost";
+    assert!(plugin_csp(false).contains(&format!("connect-src {own};")));
+    assert!(plugin_csp(true).contains(&format!("connect-src {own} https: wss:")));
     assert!(plugin_csp(true).contains("default-src 'none'"));
+    assert!(plugin_csp(false).contains("'wasm-unsafe-eval'"));
   }
 
   #[test]
@@ -203,13 +213,19 @@ mod tests {
       page.headers()[header::CONTENT_SECURITY_POLICY]
         .to_str()
         .unwrap()
-        .contains("connect-src 'none'")
+        .contains("connect-src mdsplugin:")
     );
+    assert_eq!(page.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN], "*");
 
     let script = serve(&base, "/csv/js/app.js", true);
     assert_eq!(
       script.headers()[header::CONTENT_TYPE],
       "text/javascript; charset=utf-8"
+    );
+    fs::write(base.join("csv/add.wasm"), b"\0asm").unwrap();
+    assert_eq!(
+      serve(&base, "/csv/add.wasm", false).headers()[header::CONTENT_TYPE],
+      "application/wasm"
     );
 
     assert_eq!(
