@@ -104,7 +104,6 @@ async function downloadFile(filePath: string, blob: number[] | Uint8Array): Prom
 export const commands: Record<string, Command> = {
   close_splashscreen: () => undefined,
   msg_dialog: ({ title, msg }) => showMessage(title, msg),
-  web_window: ({ url }) => openUrl(url),
   // feed
   fetch_feed: ({ url }) => feed.fetchFeed(url),
   add_channel: ({ url, ty, title }) => feed.addChannel(url, ty, title ?? null),

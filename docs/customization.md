@@ -137,3 +137,64 @@ Install from folder / .zip, list (mode, permissions, where stored), enable/disab
 - Fonts: import a TTF, pick it in editor and reader (EPUB + a CJK book), restart app → still loaded; toggle to workspace → appears in `.mdsilo/fonts/`.
 - Themes: after 2a, switch through all built-in themes in headless Chrome (web build) and screenshot editor, CodeMirror, Graph, reader `auto` page — no leftover fixed colors. Create a theme, edit live, export/import, sync it to a second workspace clone.
 - Plugins: sample CSV viewer (sandboxed) — open a .csv, edit, save; confirm the iframe can't call `invoke` (devtools check). Sample view plugin listing notes; sample code-block renderer in editor and in a published site. Trusted sample: confirmation shown, hook applied. Synced plugin on a second clone stays disabled until enabled.
+
+
+## not done
+
+Here is everything not done, from the plan in `docs/customization.md` and the roadmap entries. 
+
+**Not tried in the real app (all of C1–C5)**
+- Importing a font, the theme editor, and the plugin pieces: the `mdsplugin://` scheme and its CSP, the sandboxed iframe, the hidden background frames, and all four samples (csv-viewer, tag-index, bars, text-stats).
+- Checking every built-in theme in a browser, with screenshots of the editor, CodeMirror, Graph and the reader's `auto` page.
+
+**Shared storage**
+- A shared `src/custom/store.ts` with `moveTo(item, 'device' | 'workspace')`.
+
+No, we haven't built it. There is no `src/custom/store.ts`, and the "move between device and workspace" idea is only partly there.
+
+- **Themes:** done, but inside [themes.ts](src/custom/themes.ts) itself. Each theme has `where: 'workspace' | 'device'`. They are saved to `.mdsilo/themes.json` or to the device settings, and the Sync with workspace toggle moves a theme between the two. The workspace copy wins if both exist.
+- **Fonts:** device only. The files are in IndexedDB and the list is in the device settings. There is no Sync with workspace toggle and no `.mdsilo/fonts/`. I noted this as not done in the C1 roadmap entry.
+- **Plugins:** device only (`<data>/mdsilo/custom/plugins/`). There is no `.mdsilo/plugins/` and no toggle. Enabled state and granted permissions are meant to stay on the device anyway. I listed this as not done in the C3 entry.
+
+So each kind has its own code (or none), and no shared module ties them together. A shared `moveTo(item, 'device' | 'workspace')` would mainly add fonts and plugins to the workspace. Themes would then use it instead of their own logic.
+
+**C1 Fonts**
+- Listing installed system fonts from Rust, using `font-kit` (today you type the name).
+- A separate font setting for code in the editor.
+- A fallback font for CJK text in the reader.
+- Sync with workspace: `.mdsilo/fonts/` and `fonts.json`, plus the toggle.
+- The web build: a manual check, and a free-text family name.
+
+**C2 Themes**
+- A contrast warning for content-on-color pairs.
+- Sliders for radius and border (the values are kept, there's no UI).
+- Re-reading `.mdsilo/themes.json` when git sync changes it. Today it is read only when the workspace opens.
+
+**C3 Plugin core**
+- Install from a `.zip`.
+- Sync with workspace: `.mdsilo/plugins/`, plus the toggle. A synced plugin must stay disabled until you enable it on each device.
+- Reading binary files in file viewers (text only now).
+- "Open with…" when several plugins match an extension (the first one wins now).
+- Dev mode that reloads a plugin when its files change.
+- A tiny @mdsilo/plugin-api (types + client, in packages/plugin-api) for authors.
+- Plugins in the web build (X).
+- Trusted mode: running in-process, with a warning and a separate list in the manager. It is also the base for the Obsidian layer and for any change to editor nodes or the reader layout. Trusted plugins can't be enabled yet.
+
+**C4 Views**
+- A plugin view as a startup view (`STARTUP_VIEWS`).
+- `notes.search` for full-text search.
+- Creating new notes with `notes.write`.
+- Graph data beyond `notes.backlinks`.
+- A `view.info`-style way for views to be told about changes (note edited, files changed).
+
+**C5 Enhancers**
+- Commands only show an answer. The background page has no notes, books or issues methods.
+- Hotkeys for commands, or a command palette.
+- Plugin code blocks in the editor, and plugin selection actions: both are tested, but I haven't seen them run in the real app.
+- Plugin code blocks are drawn only in the light theme on published sites.
+
+**Later**
+- The Obsidian compatibility layer (needs trusted mode first).
+
+**Housekeeping**
+- The flaky `reader.test.tsx` vocabulary test fails now and then and isn't related to plugins.

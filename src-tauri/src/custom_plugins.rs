@@ -1,7 +1,6 @@
 //! The plugins installed on this device, one folder each under
 //! `<data>/mdsilo/custom/plugins/<id>`. The manifest is checked by the
 //! frontend (src/plugins/manifest.ts); here only the folders are handled.
-//! Not to mix up with plugins.rs, the scripts injected into the app.
 
 use crate::storage::data_dir;
 use serde::Serialize;

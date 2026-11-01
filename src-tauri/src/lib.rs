@@ -15,7 +15,6 @@ mod input_method;
 mod models;
 mod paths;
 mod plugin_scheme;
-mod plugins;
 mod publish;
 mod schema;
 mod storage;
@@ -56,7 +55,6 @@ pub fn run() {
     .expect("Error on migrating");
 
   tauri::Builder::default()
-    .plugin(plugins::inject_plugin())
     .plugin(tauri_plugin_dialog::init())
     .register_uri_scheme_protocol(plugin_scheme::SCHEME, |_ctx, request| {
       plugin_scheme::handle(&request)
@@ -65,7 +63,6 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
       window::msg_dialog,
-      window::web_window,
       feed::fetch_feed,
       feed::add_channel,
       feed::import_channels,
@@ -137,7 +134,7 @@ pub fn run() {
       tts::tts_configure,
       tts::tts_clear_cache,
     ])
-    // the main window gone, the app quits, other windows (web_window) too
+    // the main window gone, the app quits, other windows too
     .on_window_event(|window, event| {
       if window.label() == tray::MAIN_WIN
         && matches!(event, tauri::WindowEvent::Destroyed)
