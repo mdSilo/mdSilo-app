@@ -9,7 +9,7 @@ Users want to make mdSilo their own: add their own fonts for reading and writing
 - No plugin system. Views are a static `VIEWS` map in `src/shell/MainView.tsx`; `ViewAction` union in `src/state/viewReducer.ts`. Tauri CSP `script-src 'self' 'wasm-unsafe-eval'`.
 
 Decisions (confirmed):
-- **Storage, default mixed:** themes in the workspace (`.mdsilo/themes/`, synced); fonts and plugins per device (app data). Each item can be moved to the other place by the user ("Sync with workspace" toggle).
+- **Storage, default mixed:** themes in the workspace (`.mdsilo/themes.json`, synced); fonts and plugins per device (app data). Each item can be moved to the other place by the user ("Sync with workspace" toggle).
 - **Plugins, tiered:** sandboxed iframe by default; a `trusted` mode (explicit confirmation) loads in-process for deep editor/reader hooks.
 
 Order: Fonts → Themes (de-hardcode first) → Plugin core + viewers → views → enhancers → (later) Obsidian shim. Each phase is its own branch, reviewed before commit (per commit policy); `docs/roadmap.md` updated at each milestone.
@@ -21,7 +21,7 @@ Order: Fonts → Themes (de-hardcode first) → Plugin core + viewers → views 
 One small module handles "device vs workspace" for all three kinds:
 
 - Device: `<appData>/custom/{fonts,plugins}/…` (Tauri `appDataDir`); index kept in user settings (`src/state/userSettings.ts`, persisted, bump persist version + migration).
-- Workspace: `.mdsilo/themes/<id>.json`, `.mdsilo/fonts/<file>` + `.mdsilo/fonts.json`, `.mdsilo/plugins/<id>/`. Reuse `WorkspaceFs` / existing write helpers in `src/workspace/write.ts` (atomic writes, watcher skips own writes).
+- Workspace: `.mdsilo/themes.json` (all themes of the workspace in one file), `.mdsilo/fonts/<file>` + `.mdsilo/fonts.json`, `.mdsilo/plugins/<id>/`. Reuse `WorkspaceFs` / existing write helpers in `src/workspace/write.ts` (atomic writes, watcher skips own writes).
 - `moveTo(item, 'device' | 'workspace')` copies + updates the index. Merge rule when both exist: workspace wins for themes, device wins for plugins (never auto-enable code that arrived through sync — see Plugins).
 - Web build: device storage = IndexedDB (fonts as blobs); workspace storage via the web `WorkspaceFs`.
 
@@ -66,7 +66,7 @@ Also allow a "system font" entry (family name only, no file), since many users j
 - **Model** (`src/custom/themes.ts`): `{ id, name, dark: boolean, vars: Record<string,string> }` — the same variables as a daisyUI theme (colors, `--radius-*`, `--size-*`, `--border`, `--depth`, `--noise`).
 - **Applying:** daisyUI 5 themes are just CSS variables under `[data-theme=…]`, so no Tailwind rebuild is needed: inject one `<style id="custom-themes">` with `[data-theme="user-<id>"]{color-scheme:…; --color-…}` per theme. `THEMES` becomes built-ins + custom (a store selector); `resolveTheme` and `useTheme` handle `user-*` ids and the `dark` flag (drives `darkMode`, mdsmirror `dark`, `.dark` class).
 - **Editor UI** (Settings → Themes → New/Edit): start from any theme (copy its computed vars), color pickers for the ~20 color tokens with pairs shown together (primary/primary-content…), radius/border sliders, live preview (apply to the app while editing, revert on cancel), contrast warning for content-on-color pairs. Import/export: paste the CSS block from the daisyUI theme generator (`--color-x: value;` lines) or JSON.
-- **Storage:** `.mdsilo/themes/<id>.json` by default (synced); toggle to keep on device only.
+- **Storage:** `.mdsilo/themes.json` by default (synced); toggle to keep on device only (user settings `customThemes`).
 
 **Tests:** css generation, import parser, `resolveTheme` with custom themes, theme switch flows (`settings.test.tsx`).
 

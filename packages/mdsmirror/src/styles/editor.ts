@@ -325,7 +325,7 @@ export const StyledEditor = styled("div")<{
   }
 
   .hashtag-node {
-    color: #08c;
+    color: ${(props) => props.theme.hashtag};
   }
 
   .placeholder:before {
@@ -2368,7 +2368,7 @@ export const StyledEditor = styled("div")<{
 
   .math-node .math-src {
     display: none;
-    color: rgb(132, 33, 162);
+    color: ${(props) => props.theme.codeFunction};
     tab-size: 4;
   }
 
@@ -2394,7 +2394,7 @@ export const StyledEditor = styled("div")<{
 
   math-inline .math-src::after, math-inline .math-src::before {
     content: "$";
-    color: #b0b0b0;
+    color: ${(props) => props.theme.placeholder};
   }
 
   /* -- Block Math ---------------------------------------- */
@@ -2403,7 +2403,7 @@ export const StyledEditor = styled("div")<{
 
   math-display .math-render { display: block; }
 
-  math-display.ProseMirror-selectednode .math-src { background-color: #eee; }
+  math-display.ProseMirror-selectednode .math-src { background-color: ${(props) => props.theme.codeBackground}; }
 
   math-display .math-src .ProseMirror {
     width: 100%;
@@ -2413,7 +2413,7 @@ export const StyledEditor = styled("div")<{
   math-display .math-src::after, math-display .math-src::before {
     content: "$$";
     text-align: left;
-    color: #b0b0b0;
+    color: ${(props) => props.theme.placeholder};
   }
 
   math-display .katex-display { margin: 0; }
@@ -2426,11 +2426,11 @@ export const StyledEditor = styled("div")<{
 
   /* -- Selection Plugin ---------------------------------- */
 
-  p::selection, p > *::selection { background-color: #c0c0c0; }
+  p::selection, p > *::selection { background-color: ${(props) => props.theme.textHighlight}; }
   .katex-html *::selection { background-color: none !important; }
 
   .math-node.math-select .math-render {
-    background-color: #c0c0c0ff;
+    background-color: ${(props) => props.theme.textHighlight};
   }
   math-inline.math-select .math-render {
     padding-top: 2px;

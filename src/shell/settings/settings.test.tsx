@@ -129,3 +129,26 @@ describe('AboutModal', () => {
     expect(invoke).toHaveBeenCalledWith('open_url', { url: 'https://github.com/mdSilo/mdSilo-app/releases' });
   });
 });
+
+describe('custom themes', () => {
+  test('makes a theme on this device and applies it', async () => {
+    store.setState({ customThemes: [], workspaceThemes: [], initDir: undefined, theme: 'system' });
+    const user = userEvent.setup();
+    render(<SettingsModal isOpen handleClose={vi.fn()} />);
+    await user.click(await screen.findByRole('button', { name: 'New Theme' }));
+    const name = screen.getByLabelText('Theme Name');
+    await user.clear(name);
+    await user.type(name, 'Ocean');
+    expect(screen.getByLabelText('Theme Preview').dataset.theme).toBe('user-draft');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    const [saved] = store.getState().customThemes;
+    expect(saved).toMatchObject({ name: 'Ocean', where: 'device' });
+    expect(store.getState().theme).toBe(`user-${saved.id}`);
+    expect(screen.getByRole('option', { name: 'Ocean' })).toBeInTheDocument();
+    // edit, then delete it
+    await user.click(screen.getByRole('button', { name: 'Edit Theme' }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(store.getState().customThemes).toEqual([]));
+    expect(store.getState().theme).toBe('system');
+  });
+});

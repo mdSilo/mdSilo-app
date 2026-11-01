@@ -46,7 +46,7 @@ export function eventText(e: EventItem) {
 function EventRow({ item }: { item: EventItem }) {
   const Icon = EVENT_ICONS[item.event] ?? IconOpened;
   const color = item.event === 'closed' 
-    ? 'text-purple-600' 
+    ? 'text-secondary' 
     : item.event === 'opened' || item.event === 'reopened' 
       ? 'text-success' 
       : 'text-base-content/60';

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { store, useStore } from '@/state/store';
 import { DARK_QUERY, isSystemDark, resolveTheme } from '@/lib/themes';
+import { allCustomThemes, themeInfoOf } from '@/custom/themes';
 
 /**
  * Apply the theme setting on <html>: daisyUI `data-theme` and the `dark`
@@ -9,6 +10,8 @@ import { DARK_QUERY, isSystemDark, resolveTheme } from '@/lib/themes';
  */
 export default function useTheme() {
   const theme = useStore((state) => state.theme);
+  const customThemes = useStore((state) => state.customThemes);
+  const workspaceThemes = useStore((state) => state.workspaceThemes);
   const [systemDark, setSystemDark] = useState(isSystemDark);
 
   useEffect(() => {
@@ -20,10 +23,11 @@ export default function useTheme() {
   }, []);
 
   useEffect(() => {
-    const { name, dark } = resolveTheme(theme, systemDark);
+    const custom = allCustomThemes({ customThemes, workspaceThemes }).map(themeInfoOf);
+    const { name, dark } = resolveTheme(theme, systemDark, custom);
     const root = document.documentElement;
     root.dataset.theme = name;
     root.classList.toggle('dark', dark);
     if (store.getState().darkMode !== dark) store.getState().setDarkMode(dark);
-  }, [theme, systemDark]);
+  }, [theme, systemDark, customThemes, workspaceThemes]);
 }

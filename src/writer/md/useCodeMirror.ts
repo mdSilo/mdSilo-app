@@ -3,7 +3,7 @@ import { basicSetup } from 'codemirror';
 import { Annotation, EditorState, Extension, StateEffect } from '@codemirror/state';
 import { indentWithTab } from '@codemirror/commands';
 import { EditorView, keymap, ViewUpdate, placeholder } from '@codemirror/view';
-import { oneDark } from './darkTheme';
+import { oneDark, oneLight } from './darkTheme';
 import { ReactCodeMirrorProps } from './ReactCodeMirror';
 
 // stable default: a new array would reconfigure the editor on every render
@@ -47,16 +47,6 @@ export function useCodeMirror(props: UseCodeMirror) {
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
 
-  const defaultLightThemeOption = EditorView.theme(
-    {
-      '&': {
-        backgroundColor: 'var(--color-base-100)',
-      },
-    },
-    {
-      dark: false,
-    },
-  );
   const defaultThemeOption = EditorView.theme({
     '&': {
       height,
@@ -93,7 +83,7 @@ export function useCodeMirror(props: UseCodeMirror) {
   }
   switch (theme) {
     case 'light':
-      getExtensions.push(defaultLightThemeOption);
+      getExtensions.push(oneLight);
       break;
     case 'dark':
       getExtensions.push(oneDark);
