@@ -12,7 +12,7 @@ describe('parseManifest', () => {
       mode: 'sandboxed',
       permissions: [],
       main: 'index.html',
-      contributes: { viewers: [], views: [], codeBlocks: [] },
+      contributes: { viewers: [], views: [], codeBlocks: [], selectionActions: [] },
     });
   });
 
@@ -65,6 +65,19 @@ describe('parseManifest', () => {
       .toThrow('"contributes.codeBlocks[0]" should be a language name');
   });
 
+  it('reads the actions on the text selected, in both places by default', () => {
+    const { selectionActions } = parseManifest({
+      ...minimal,
+      contributes: { selectionActions: [{ id: 'explain', title: 'Explain' }, { id: 'cite', title: 'Cite', where: ['editor'] }] },
+    }).contributes;
+    expect(selectionActions).toEqual([
+      { id: 'explain', title: 'Explain', where: ['reader', 'editor'] },
+      { id: 'cite', title: 'Cite', where: ['editor'] },
+    ]);
+    expect(() => parseManifest({ ...minimal, contributes: { selectionActions: [{ id: 'x', title: 'X', where: ['web'] }] } }))
+      .toThrow('"contributes.selectionActions[0].where" should be "reader" or "editor"');
+  });
+
   it('says which contribution is wrong', () => {
     expect(() => parseManifest({ ...minimal, contributes: { viewers: [{ extensions: [], title: 'x' }] } }))
       .toThrow('"contributes.viewers[0].extensions" should not be empty');
@@ -101,5 +114,7 @@ describe('the sample plugins', () => {
     expect(parseManifest(tags).contributes.views[0].id).toBe('tags');
     const bars = readFileSync('examples/plugins/bars/manifest.json', 'utf8');
     expect(parseManifest(bars).contributes.codeBlocks).toEqual(['bars']);
+    const stats = readFileSync('examples/plugins/text-stats/manifest.json', 'utf8');
+    expect(parseManifest(stats).contributes.selectionActions[0].id).toBe('count');
   });
 });

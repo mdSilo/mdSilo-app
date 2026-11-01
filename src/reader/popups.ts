@@ -17,6 +17,9 @@ export type Footnote = { box: Box; size: { width: number; height: number } };
 
 export type LookupKind = 'dictionary' | 'wikipedia' | 'translate';
 
+/** An action of a plugin on the text selected, by plugin and action id */
+export type PluginActionTarget = { plugin: string; action: string; title: string; selection: TextSelection };
+
 export type AnnotationTarget = {
   id: string;
   box: Box;
@@ -37,6 +40,8 @@ type Popups = {
   annotation?: AnnotationTarget;
   /** the text selected looked up */
   lookup?: { kind: LookupKind; selection: TextSelection };
+  /** the text selected given to an action of a plugin */
+  pluginAction?: PluginActionTarget;
   /** a footnote shown, at its link, of the size of the note (rendered by FoliateViewer) */
   footnote?: Footnote;
   /** the range of the selection or the annotation changed by a handle: no popup meanwhile */
@@ -45,11 +50,14 @@ type Popups = {
   setAnnotation: (annotation?: AnnotationTarget) => void;
   setLookup: (lookup?: { kind: LookupKind; selection: TextSelection }) => void;
   setFootnote: (footnote?: Footnote) => void;
+  setPluginAction: (pluginAction?: PluginActionTarget) => void;
   setAdjusting: (adjusting: boolean) => void;
   clear: () => void;
 };
 
-const NONE = { selection: undefined, annotation: undefined, lookup: undefined, footnote: undefined, adjusting: false };
+const NONE = {
+  selection: undefined, annotation: undefined, lookup: undefined, pluginAction: undefined, footnote: undefined, adjusting: false,
+};
 
 /** The popups over the book: one at a time. */
 export const usePopups = create<Popups>((set) => ({
@@ -57,6 +65,7 @@ export const usePopups = create<Popups>((set) => ({
   setAnnotation: (annotation) => set({ ...NONE, annotation }),
   setLookup: (lookup) => set({ ...NONE, lookup }),
   setFootnote: (footnote) => set({ ...NONE, footnote }),
+  setPluginAction: (pluginAction) => set({ ...NONE, pluginAction }),
   setAdjusting: (adjusting) => set({ adjusting }),
   clear: () => set(NONE),
 }));

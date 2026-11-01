@@ -32,11 +32,18 @@ export type ViewerContribution = { extensions: string[]; title: string };
 /** A view of the whole workspace, in the side menu; its page is `page`, or the main page */
 export type ViewContribution = { id: string; title: string; icon?: string; page?: string };
 
+export type SelectionPlace = 'reader' | 'editor';
+
+/** A button on the text selected, in the reader, the editor, or both */
+export type SelectionAction = { id: string; title: string; where: SelectionPlace[] };
+
 export type Contributes = {
   viewers: ViewerContribution[];
   views: ViewContribution[];
   /** the languages of the code blocks it draws, ```lang, by its main page */
   codeBlocks: string[];
+  /** buttons on the text selected, answered by its main page */
+  selectionActions: SelectionAction[];
 };
 
 export type PluginManifest = {
@@ -92,7 +99,7 @@ const extension = (value: unknown, field: string): string => {
 };
 
 function parseContributes(value: unknown): Contributes {
-  if (value === undefined) return { viewers: [], views: [], codeBlocks: [] };
+  if (value === undefined) return { viewers: [], views: [], codeBlocks: [], selectionActions: [] };
   if (!isObject(value)) throw new Error('"contributes" should be an object');
   const viewers = list(value.viewers, 'contributes.viewers').map((viewer, i) => {
     const field = `contributes.viewers[${i}]`;
@@ -120,7 +127,18 @@ function parseContributes(value: unknown): Contributes {
     if (!/^[a-z0-9_+-]+$/.test(name)) throw new Error(`"${field}" should be a language name, like plantuml`);
     return name;
   });
-  return { viewers, views, codeBlocks: [...new Set(codeBlocks)] };
+  const selectionActions = list(value.selectionActions, 'contributes.selectionActions').map((action, i) => {
+    const field = `contributes.selectionActions[${i}]`;
+    if (!isObject(action)) throw new Error(`"${field}" should be an object`);
+    const id = text(action.id, `${field}.id`);
+    if (!ID.test(id)) throw new Error(`"${field}.id" should be lowercase letters, digits, . _ -`);
+    const where = action.where === undefined ? ['reader', 'editor'] : list(action.where, `${field}.where`);
+    for (const place of where) {
+      if (place !== 'reader' && place !== 'editor') throw new Error(`"${field}.where" should be "reader" or "editor"`);
+    }
+    return { id, title: text(action.title, `${field}.title`), where: [...new Set(where)] as SelectionPlace[] };
+  });
+  return { viewers, views, codeBlocks: [...new Set(codeBlocks)], selectionActions };
 }
 
 /**

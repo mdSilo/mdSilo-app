@@ -8,6 +8,7 @@ Two samples here:
 
 - `csv-viewer/`: install it, enable it, then click a `.csv` file in the explorer.
 - `tag-index/`: a view of the notes by tag; open it from the Plugins button of the side menu.
+- `text-stats/`: a "Count words" button on the text selected in the reader.
 - `bars/`: draws ```` ```bars ```` code blocks (`label: number` lines) as a bar chart, in the editor
   and in the published site.
 
@@ -35,6 +36,8 @@ Two samples here:
 - `contributes.views`: `[{ "id": "stats", "title": "Reading Stats", "page": "stats.html" }]`, views of the
   whole workspace, in the Plugins menu of the side menu; `page` is the main page by default.
 - `contributes.codeBlocks`: `["plantuml"]`, the languages of the code blocks it draws (see below).
+- `contributes.selectionActions`: `[{ "id": "explain", "title": "Explain", "where": ["reader"] }]`,
+  buttons on the text selected (see below); `where` is `reader`, `editor` or both (default).
 - `mode`: `sandboxed` (default). `trusted` plugins are not supported yet.
 
 ## The page
@@ -89,5 +92,18 @@ parent.postMessage({ mdsilo: 1, reply: 7, result: '<svg>…</svg>' }, '*');
 ```
 
 The app waits 15 seconds for an answer.
+
+## Actions on the text selected
+
+The button of a `selectionActions` entry asks the main page, in the same hidden frame:
+
+```js
+// { mdsilo: 1, request, method: 'selection.action', params: { action, text, where, lang } }
+// answer text, or { html } to show (sanitized: no scripts, styles or forms)
+parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }, '*');
+```
+
+In the reader, the answer shows in a popup by the text, with a button to keep it as the note of a
+highlight.
 
 See `csv-viewer/index.html` for a small client.
