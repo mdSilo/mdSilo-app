@@ -36,7 +36,7 @@ function Title(props: Props) {
       ref={titleRef}
       className={`title text-3xl md:text-4xl font-semibold border-none focus:outline-hidden p-0 leading-tight cursor-text ${className}`}
       role="textbox"
-      onKeyPress={(event) => {
+      onKeyDown={(event) => {
         // Disallow newlines in the title field
         if (event.key === "Enter") {
           event.preventDefault();
@@ -47,7 +47,27 @@ function Title(props: Props) {
         event.preventDefault();
         let text = event.clipboardData.getData("text/plain");
         text = text.replace(/\r?\n|\r/g, " ");
-        document.execCommand("insertText", false, text);
+        // document.execCommand("insertText", false, text);
+
+        const selection = event.currentTarget.ownerDocument.getSelection();
+        if (
+          !selection ||
+          selection.rangeCount === 0 ||
+          !event.currentTarget.contains(
+            selection.getRangeAt(0).commonAncestorContainer,
+          )
+        ) {
+          return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const textNode = event.currentTarget.ownerDocument.createTextNode(text);
+        range.deleteContents();
+        range.insertNode(textNode);
+        range.setStartAfter(textNode);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
       }}
       onBlur={emitChange}
       contentEditable={!(readMode || isDaily)}

@@ -127,29 +127,26 @@ describe("Title", () => {
   });
 
   test("pastes plain text without newlines", () => {
-    const execCommand = vi.fn();
-    Object.defineProperty(document, "execCommand", {
-      configurable: true,
-      value: execCommand,
-    });
     render(<Title initialTitle="x" onChange={vi.fn()} />);
-    const notPrevented = fireEvent.paste(screen.getByRole("textbox"), {
+    const box = screen.getByRole("textbox");
+    const range = document.createRange();
+    range.selectNodeContents(box);
+    const selection = document.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    const notPrevented = fireEvent.paste(box, {
       clipboardData: { getData: () => "line one\r\nline two\nthree" },
     });
     expect(notPrevented).toBe(false);
-    expect(execCommand).toHaveBeenCalledWith(
-      "insertText",
-      false,
-      "line one line two three",
-    );
+    expect(box).toHaveTextContent("line one line two three");
   });
 
   test("blocks Enter", () => {
     render(<Title initialTitle="x" onChange={vi.fn()} />);
-    const notPrevented = fireEvent.keyPress(screen.getByRole("textbox"), {
+    const notPrevented = fireEvent.keyDown(screen.getByRole("textbox"), {
       key: "Enter",
       code: "Enter",
-      charCode: 13,
     });
     expect(notPrevented).toBe(false);
   });

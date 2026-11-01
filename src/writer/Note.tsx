@@ -214,7 +214,7 @@ function Note(props: Props) {
   );
 
   setWindowTitle(
-    `/ ${title} - mdSilo`,
+    `${title} - mdSilo`,
     useStore((state) => state.isLoading),
   );
   // update locally
