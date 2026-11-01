@@ -58,7 +58,7 @@ function PluginActionPopup({ rootRef }: { rootRef: RefObject<HTMLDivElement | nu
           // sanitized in plugins/selection.ts
           <div dangerouslySetInnerHTML={{ __html: result.html }} />
         ) : (
-          <p className="whitespace-pre-wrap">{result.text}</p>
+          <p className="whitespace-pre-wrap">{textOf(result)}</p>
         )}
       </div>
       {result && textOf(result) ? (

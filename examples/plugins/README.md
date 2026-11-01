@@ -8,7 +8,7 @@ Two samples here:
 
 - `csv-viewer/`: install it, enable it, then click a `.csv` file in the explorer.
 - `tag-index/`: a view of the notes by tag; open it from the Plugins button of the side menu.
-- `text-stats/`: a "Count words" button on the text selected in the reader.
+- `text-stats/`: a "Count words" button on the text selected, in the reader and the editor.
 - `bars/`: draws ```` ```bars ```` code blocks (`label: number` lines) as a bar chart, in the editor
   and in the published site.
 
@@ -104,6 +104,8 @@ parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }
 ```
 
 In the reader, the answer shows in a popup by the text, with a button to keep it as the note of a
-highlight.
+highlight. In the editor, it shows in a dialog, to insert after the text or copy; or the plugin
+changes the text itself by answering `{ replace: '…' }` (in place of the text selected) or
+`{ insert: '…' }` (after it), in the editor only.
 
 See `csv-viewer/index.html` for a small client.

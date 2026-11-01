@@ -48,9 +48,14 @@ describe('runSelectionAction', () => {
     expect(textOf(result)).toBe('A word');
   });
 
-  it('takes { text } too, and nothing else', async () => {
+  it('takes { text } too, { replace } and { insert } in the editor only, and nothing else', async () => {
     vi.mocked(askPlugin).mockResolvedValue({ text: 'plain' });
     expect(await runSelectionAction(explain(), 'w', 'reader')).toEqual({ text: 'plain' });
+    vi.mocked(askPlugin).mockResolvedValue({ replace: 'x' });
+    await expect(runSelectionAction(explain(), 'w', 'reader')).rejects.toThrow('AI gave no text');
+    expect(await runSelectionAction(explain(), 'w', 'editor')).toEqual({ replace: 'x' });
+    vi.mocked(askPlugin).mockResolvedValue({ insert: 'y' });
+    expect(await runSelectionAction(explain(), 'w', 'editor')).toEqual({ insert: 'y' });
     vi.mocked(askPlugin).mockResolvedValue(42);
     await expect(runSelectionAction(explain(), 'w', 'reader')).rejects.toThrow('AI gave no text');
   });

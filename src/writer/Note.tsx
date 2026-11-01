@@ -4,6 +4,7 @@ import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from 'react-icons/tb';
 import MsEditor, { Attach, embeds } from "mdsmirror";
 import { useCodeRenderers } from '@/plugins/codeBlocks';
+import { SelectionResultModal, useEditorSelectionActions } from '@/plugins/EditorSelectionActions';
 import { EDITOR_THEME } from '@/lib/themes';
 import Title from '@/writer/Title';
 import Toc, { Heading } from '@/writer/Toc';
@@ -58,6 +59,8 @@ function Note(props: Props) {
   const editorInstance = useRef<MsEditor>(null);
   // code blocks drawn by plugins, ```plantuml
   const { codeRenderers, key: codeRenderersKey } = useCodeRenderers();
+  // buttons of plugins on the text selected
+  const selectionActions = useEditorSelectionActions();
   const getHeading = useCallback(() => {
     setHeadings(editorInstance.current?.getHeadings() ?? []);
   }, []);
@@ -411,6 +414,7 @@ function Note(props: Props) {
                     onClickAttachment={onClickAttachment}
                     onSaveDiagram={onSaveDiagram}
                     codeRenderers={codeRenderers}
+                    selectionActions={selectionActions}
                     onCopyHash={onCopyHash}
                     embeds={embeds}
                     disables={['sub']}
@@ -421,6 +425,7 @@ function Note(props: Props) {
                   />
                 )}
                 </Suspense>
+                <SelectionResultModal />
               </div>
               <button
                 className="inline-flex items-center p-1 mt-2 group"

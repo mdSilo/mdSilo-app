@@ -4,6 +4,7 @@ import { NodeSelection, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { CellSelection } from "prosemirror-tables";
 import * as React from "react";
+import { TbPuzzle } from "react-icons/tb";
 import createAndInsertLink from "../core/commands/createAndInsertLink";
 import { CommandFactory } from "../core/Extension";
 import { getColumnIndex, getRowIndex } from "../core/queries/table";
@@ -28,6 +29,18 @@ import ToolbarMenu from "./ToolbarMenu";
 // the items the toolbar does itself, not commands of the editor
 const TOOLBAR_ACTIONS = ["search", "copy", "issue"];
 
+/** What an action on the text selected does to it: put text in its place, or after it */
+export type SelectionActionResult = { replace?: string; insert?: string };
+
+/** A button on the text selected, given by the app, e.g. of a plugin */
+export type SelectionAction = {
+  id: string;
+  title: string;
+  run: (text: string) => Promise<SelectionActionResult | undefined | void>;
+};
+
+const actionName = (id: string) => `action:${id}`;
+
 type Props = {
   dictionary: typeof baseDictionary;
   rtl: boolean;
@@ -44,6 +57,7 @@ type Props = {
   ) => Promise<{ title: string; href: string } | undefined>;
   onOpenLink?: (href: string) => void;
   onShowToast?: (msg: string, code: string) => void;
+  selectionActions?: SelectionAction[];
   view: EditorView;
 };
 
@@ -204,12 +218,38 @@ export default class SelectionToolbar extends React.Component<Props> {
     );
   };
 
+  /** Runs the action on the text, then puts its answer where the text is now. */
+  handleSelectionAction = async (action: SelectionAction, text: string) => {
+    const { view, onShowToast } = this.props;
+    let result: SelectionActionResult | undefined | void;
+    try {
+      result = await action.run(text);
+    } catch (e) {
+      onShowToast?.(
+        `${action.title}: ${(e as Error)?.message ?? e}`,
+        ToastType.Error
+      );
+      return;
+    }
+    if (!result) return;
+    const { state, dispatch } = view;
+    const { from, to } = state.selection;
+    // the text selected changed meanwhile: nothing to replace
+    if (state.doc.textBetween(from, to) !== text) return;
+    if (typeof result.replace === "string") {
+      dispatch(state.tr.insertText(result.replace, from, to));
+    } else if (typeof result.insert === "string") {
+      dispatch(state.tr.insertText(` ${result.insert}`, to));
+    }
+  };
+
   render() {
     const {
       dictionary,
       onCreateLink,
       onSearchSelectText,
       onCreateIssue,
+      selectionActions,
       isTemplate,
       rtl,
       ...rest
@@ -260,6 +300,16 @@ export default class SelectionToolbar extends React.Component<Props> {
         dictionary,
         !!onCreateIssue
       );
+      if (selectionActions?.length) {
+        items.push(
+          { name: "separator" },
+          ...selectionActions.map((action) => ({
+            name: actionName(action.id),
+            tooltip: action.title,
+            icon: TbPuzzle,
+          }))
+        );
+      }
       isTextSelection = true;
     }
 
@@ -268,7 +318,10 @@ export default class SelectionToolbar extends React.Component<Props> {
       if (item.name === "separator") {
         return true;
       }
-      if (item.name && TOOLBAR_ACTIONS.includes(item.name)) {
+      if (
+        item.name &&
+        (TOOLBAR_ACTIONS.includes(item.name) || item.name.startsWith("action:"))
+      ) {
         return true;
       }
       if (item.name && !this.props.commands[item.name]) {
@@ -291,7 +344,7 @@ export default class SelectionToolbar extends React.Component<Props> {
       return null;
     }
 
-    const actions = {
+    const actions: Record<string, () => void> = {
       search: () => onSearchSelectText?.(selectionText),
       copy: () => {
         // the blocks apart, as copied from the page
@@ -302,6 +355,10 @@ export default class SelectionToolbar extends React.Component<Props> {
       },
       issue: () => void this.handleCreateIssue(selectionText),
     };
+    for (const action of selectionActions ?? []) {
+      actions[actionName(action.id)] = () =>
+        void this.handleSelectionAction(action, selectionText);
+    }
 
     return (
       <FloatingToolbar
