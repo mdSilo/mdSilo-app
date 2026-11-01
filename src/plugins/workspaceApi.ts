@@ -2,10 +2,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
 import type { ViewAction } from '@/state/viewReducer';
 import { indexOf } from '@/lib/linkIndex';
+import { linkTitlesOf } from '@/lib/mdlink';
 import { noteContent } from '@/lib/contentCache';
 import { openFilePath } from '@/workspace/open';
 import { fromWorkspacePath, isAbsolutePath, toWorkspacePath } from '@/workspace/util';
 import { isBookFile } from '@/reader/document';
+import { loadBooks } from '@/reader/library/books';
+import { useIssueStore } from '@/issue/issueStore';
 import type { PluginMethods } from './host';
 
 /**
@@ -84,6 +87,82 @@ export async function writeNote(params: unknown) {
   return true;
 }
 
+/** The notes linking to the note at the path, by any title a link to it may have */
+export function backlinks(params: unknown): string[] {
+  const dir = workspace();
+  const note = noteAt(params);
+  const index = indexOf(store.getState().notes);
+  const linking = index.linking(linkTitlesOf(note.title, (t) => index.hasTitle(t)));
+  linking.delete(note.id);
+  return [...linking].map((id) => toWorkspacePath(dir, id));
+}
+
+export type BookInfo = {
+  /** the book file, relative to the workspace */
+  path: string;
+  title: string;
+  author: string;
+  format: string;
+  added: string;
+  group?: string;
+  status?: string;
+  language?: string[];
+  subjects?: string[];
+};
+
+export async function listBooks(): Promise<BookInfo[]> {
+  workspace();
+  const books = await loadBooks();
+  return Object.values(books).map((book) => ({
+    path: book.file,
+    title: book.title,
+    author: book.author,
+    format: book.format,
+    added: book.addedAt,
+    group: book.group,
+    status: book.status,
+    language: book.language,
+    subjects: book.subjects,
+  }));
+}
+
+export type IssueInfo = {
+  number: number;
+  title: string;
+  body: string;
+  state: 'open' | 'closed';
+  /** the names of its labels */
+  labels: string[];
+  milestone?: string;
+  due?: string;
+  created: string;
+  updated: string;
+  closed?: string;
+  /** the notes linked, relative to the workspace */
+  notes: string[];
+};
+
+export async function listIssues(): Promise<IssueInfo[]> {
+  const dir = workspace();
+  await useIssueStore.getState().load(dir);
+  const { issues, labels, milestones } = useIssueStore.getState().data;
+  const labelName = new Map(labels.map((l) => [l.id, l.name]));
+  const milestoneTitle = new Map(milestones.map((m) => [m.id, m.title]));
+  return issues.map((issue) => ({
+    number: issue.number,
+    title: issue.title,
+    body: issue.body,
+    state: issue.state,
+    labels: issue.labels.map((id) => labelName.get(id) ?? id),
+    milestone: issue.milestone ? milestoneTitle.get(issue.milestone) : undefined,
+    due: issue.dueOn,
+    created: issue.createdAt,
+    updated: issue.updatedAt,
+    closed: issue.closedAt,
+    notes: issue.notes.map((path) => toWorkspacePath(dir, path)),
+  }));
+}
+
 /**
  * Opens a note, a book or an issue in the app, leaving the view of the
  * plugin: `{ note: path }`, `{ book: path }` or `{ issue: number }`.
@@ -115,5 +194,8 @@ export const workspaceMethods = (dispatch: (action: ViewAction) => void): Plugin
   'notes.list': { permission: 'notes:read', handler: listNotes },
   'notes.read': { permission: 'notes:read', handler: readNote },
   'notes.write': { permission: 'notes:write', handler: writeNote },
+  'notes.backlinks': { permission: 'notes:read', handler: backlinks },
+  'books.list': { permission: 'books:read', handler: listBooks },
+  'issues.list': { permission: 'issues:read', handler: listIssues },
   'app.open': { handler: (params) => openInApp(params, dispatch) },
 });

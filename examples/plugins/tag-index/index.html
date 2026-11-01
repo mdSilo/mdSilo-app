@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Tag Index</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 16px 24px; font: 14px/1.5 var(--font, system-ui, sans-serif);
+    background: var(--color-base-100, #fff); color: var(--color-base-content, #222);
+  }
+  h1 { font-size: 20px; margin: 0 0 12px; }
+  input {
+    font: inherit; width: 100%; max-width: 360px; box-sizing: border-box; padding: 4px 8px; margin-bottom: 12px;
+    border: 1px solid var(--color-base-300, #ccc); border-radius: var(--radius-field, 4px);
+    background: var(--color-base-100, #fff); color: inherit;
+  }
+  h2 { font-size: 15px; margin: 16px 0 4px; color: var(--color-primary, #36c); }
+  h2 small { color: var(--color-base-content, #222); opacity: .6; font-weight: normal; }
+  ul { margin: 0; padding-left: 20px; }
+  a { color: inherit; cursor: pointer; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .count { opacity: .6; font-size: 12px; margin-left: 6px; }
+  .error { color: var(--color-error, #c00); }
+</style>
+</head>
+<body>
+<h1>Tag Index</h1>
+<input id="filter" placeholder="Filter tags" aria-label="Filter tags">
+<div id="list">Loading…</div>
+<script>
+// A sandboxed mdSilo plugin talks to the app by messages, see examples/plugins/README.md
+let seq = 0;
+const waiting = new Map();
+function call(method, params) {
+  const id = ++seq;
+  parent.postMessage({ mdsilo: 1, id, method, params }, '*');
+  return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
+}
+window.addEventListener('message', (event) => {
+  const msg = event.data;
+  if (event.source !== parent || !msg || msg.mdsilo !== 1) return;
+  if (msg.event === 'style') return applyStyle(msg.data);
+  const pending = waiting.get(msg.id);
+  if (!pending) return;
+  waiting.delete(msg.id);
+  if ('error' in msg) pending.reject(new Error(msg.error));
+  else pending.resolve(msg.result);
+});
+
+function applyStyle(style) {
+  const root = document.documentElement.style;
+  for (const [key, value] of Object.entries(style.vars)) root.setProperty(key, value);
+  root.setProperty('--font', style.font || 'system-ui, sans-serif');
+  root.colorScheme = style.dark ? 'dark' : 'light';
+}
+
+const list = document.getElementById('list');
+let byTag = new Map();
+let linked = new Map();
+
+function render() {
+  const filter = document.getElementById('filter').value.trim().toLowerCase();
+  const tags = [...byTag.keys()].filter((t) => t.toLowerCase().includes(filter)).sort((a, b) => a.localeCompare(b));
+  list.replaceChildren();
+  if (!tags.length) list.textContent = byTag.size ? 'No tag matches.' : 'No tags in your notes yet.';
+  for (const tag of tags) {
+    const notes = byTag.get(tag);
+    const h2 = document.createElement('h2');
+    h2.textContent = `#${tag} `;
+    const small = document.createElement('small');
+    small.textContent = `${notes.length} notes`;
+    h2.append(small);
+    const ul = document.createElement('ul');
+    for (const note of notes) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.textContent = note.title;
+      a.title = note.path;
+      a.addEventListener('click', () => call('app.open', { note: note.path }));
+      li.append(a);
+      const count = linked.get(note.title) ?? 0;
+      if (count) {
+        const span = document.createElement('span');
+        span.className = 'count';
+        span.textContent = `← ${count}`;
+        li.append(span);
+      }
+      ul.append(li);
+    }
+    list.append(h2, ul);
+  }
+}
+
+async function load() {
+  try {
+    const notes = await call('notes.list');
+    byTag = new Map();
+    linked = new Map();
+    for (const note of notes) {
+      for (const tag of note.tags) byTag.set(tag, [...(byTag.get(tag) ?? []), note]);
+      for (const title of new Set(note.links)) linked.set(title, (linked.get(title) ?? 0) + 1);
+    }
+    for (const notes of byTag.values()) notes.sort((a, b) => a.title.localeCompare(b.title));
+    render();
+  } catch (e) {
+    list.innerHTML = '';
+    const p = document.createElement('p');
+    p.className = 'error';
+    p.textContent = e.message;
+    list.append(p);
+  }
+}
+
+document.getElementById('filter').addEventListener('input', render);
+call('app.style').then(applyStyle).catch(() => {});
+load();
+</script>
+</body>
+</html>

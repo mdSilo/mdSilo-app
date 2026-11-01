@@ -90,5 +90,7 @@ describe('the sample plugins', () => {
     const { readFileSync } = await import('node:fs');
     const text = readFileSync('examples/plugins/csv-viewer/manifest.json', 'utf8');
     expect(parseManifest(text).contributes.viewers[0].extensions).toEqual(['csv', 'tsv']);
+    const tags = readFileSync('examples/plugins/tag-index/manifest.json', 'utf8');
+    expect(parseManifest(tags).contributes.views[0].id).toBe('tags');
   });
 });

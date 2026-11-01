@@ -4,7 +4,10 @@ A plugin is a folder with a `manifest.json` and a page (`index.html` by default)
 Settings → Plugins → Install from Folder, then enable it and choose what it may do. Plugins are
 kept on each device: a plugin is never enabled by a sync.
 
-Try `csv-viewer/` here: install it, enable it, then click a `.csv` file in the explorer.
+Two samples here:
+
+- `csv-viewer/`: install it, enable it, then click a `.csv` file in the explorer.
+- `tag-index/`: a view of the notes by tag; open it from the Plugins button of the side menu.
 
 ## manifest.json
 
@@ -27,6 +30,8 @@ Try `csv-viewer/` here: install it, enable it, then click a `.csv` file in the e
 - `permissions`: `file:read`, `file:write` (the file the plugin opens), `notes:read`, `notes:write`,
   `books:read`, `issues:read`, `net` (`https:` and `wss:` from the page). The user can grant fewer.
 - `contributes.viewers`: the plugin opens files of these extensions (not notes or books).
+- `contributes.views`: `[{ "id": "stats", "title": "Reading Stats", "page": "stats.html" }]`, views of the
+  whole workspace, in the Plugins menu of the side menu; `page` is the main page by default.
 - `mode`: `sandboxed` (default). `trusted` plugins are not supported yet.
 
 ## The page
@@ -48,6 +53,20 @@ parent.postMessage({ mdsilo: 1, id: 1, method: 'file.read' }, '*');
 | `file.info` | | `{ name, ext }` of the file opened |
 | `file.read` | `file:read` | the text of the file |
 | `file.write` `{ text }` | `file:write` | `true` |
+
+Views (not file viewers) also have, with paths relative to the workspace; only the notes the app
+knows can be read or written, not other files:
+
+| Method | Permission | Gives |
+|---|---|---|
+| `view.info` | | `{ id }` of the view shown |
+| `notes.list` `{ folder?, tag? }` | `notes:read` | `[{ path, title, created, updated, tags, links }]` |
+| `notes.read` `{ path }` | `notes:read` | the text of the note |
+| `notes.write` `{ path, text }` | `notes:write` | `true`; the note must exist |
+| `notes.backlinks` `{ path }` | `notes:read` | the paths of the notes linking to it |
+| `books.list` | `books:read` | `[{ path, title, author, format, added, group, status, language, subjects }]` |
+| `issues.list` | `issues:read` | `[{ number, title, body, state, labels, milestone, due, created, updated, closed, notes }]` |
+| `app.open` `{ note }`, `{ book }` or `{ issue }` | | opens it in the app |
 
 | Event | When |
 |---|---|

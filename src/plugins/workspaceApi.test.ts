@@ -1,7 +1,13 @@
 import { invoke } from '@tauri-apps/api/core';
 import { store } from '@/state/store';
 import { makeFileMeta, makeNote, mockInvoke } from '@/testUtils';
-import { listNotes, openInApp, readNote, workspaceMethods, writeNote } from './workspaceApi';
+import { useBooks } from '@/reader/library/books';
+import { useIssueStore } from '@/issue/issueStore';
+import { defaultIssueData } from '@/issue/issueOps';
+import type { BookEntry } from '@/reader/library/library';
+import {
+  backlinks, listBooks, listIssues, listNotes, openInApp, readNote, workspaceMethods, writeNote,
+} from './workspaceApi';
 
 beforeEach(() => {
   store.getState().setInitDir('/ws');
@@ -65,6 +71,9 @@ describe('notes', () => {
     expect(methods['notes.list'].permission).toBe('notes:read');
     expect(methods['notes.read'].permission).toBe('notes:read');
     expect(methods['notes.write'].permission).toBe('notes:write');
+    expect(methods['notes.backlinks'].permission).toBe('notes:read');
+    expect(methods['books.list'].permission).toBe('books:read');
+    expect(methods['issues.list'].permission).toBe('issues:read');
     expect(methods['app.open'].permission).toBeUndefined();
   });
 });
@@ -93,5 +102,42 @@ describe('openInApp', () => {
     await expect(openInApp({ issue: -1 }, dispatch)).rejects.toThrow('app.open wants');
     await expect(openInApp({ url: 'https://x' }, dispatch)).rejects.toThrow('app.open wants');
     expect(dispatch).not.toHaveBeenCalled();
+  });
+});
+
+describe('backlinks, books, issues', () => {
+  it('gives the notes linking to a note', () => {
+    expect(backlinks({ path: 'writing/sub/b.md' })).toEqual(['writing/a.md']);
+    expect(backlinks({ path: 'writing/a.md' })).toEqual([]);
+    expect(() => backlinks({ path: 'none.md' })).toThrow('No note at');
+  });
+
+  it('lists the books of the library', async () => {
+    const book: BookEntry = {
+      hash: 'h1', file: 'reading/Dune.epub', title: 'Dune', author: 'Frank Herbert', format: 'EPUB',
+      addedAt: '2026-01-01', group: 'Fiction', status: 'Doing', fileHash: 'x', cover: 'custom',
+    };
+    useBooks.setState({ ws: '/ws', books: { h1: book } });
+    expect(await listBooks()).toEqual([{
+      path: 'reading/Dune.epub', title: 'Dune', author: 'Frank Herbert', format: 'EPUB', added: '2026-01-01',
+      group: 'Fiction', status: 'Doing', language: undefined, subjects: undefined,
+    }]);
+  });
+
+  it('lists the issues, with the names of labels and milestones', async () => {
+    const data = {
+      ...defaultIssueData(),
+      labels: [{ id: 'l1', name: 'bug', color: 'red' }],
+      milestones: [{ id: 'm1', title: 'v1', state: 'open' as const }],
+      issues: [{
+        number: 3, title: 'Fix', body: 'see [[a]]', state: 'open' as const, labels: ['l1'], milestone: 'm1',
+        notes: ['/ws/writing/a.md'], timeline: [], createdAt: '2026-01-01', updatedAt: '2026-01-02', dueOn: '2026-02-01',
+      }],
+    };
+    useIssueStore.setState({ data, dir: '/ws', isLoaded: true });
+    expect(await listIssues()).toEqual([{
+      number: 3, title: 'Fix', body: 'see [[a]]', state: 'open', labels: ['bug'], milestone: 'v1', due: '2026-02-01',
+      created: '2026-01-01', updated: '2026-01-02', closed: undefined, notes: ['writing/a.md'],
+    }]);
   });
 });
