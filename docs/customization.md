@@ -169,17 +169,19 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 - Sliders for `--radius-box`, `--radius-field`, `--radius-selector` (0–2rem) and `--border` (0–3px); the preview has a field, a checkbox and a toggle to show them.
 
 **C3 Plugin core**
-- Reading binary files in file viewers (text only now).
 - "Open with…" when several plugins match an extension (the first one wins now).
-- Dev mode that reloads a plugin when its files change.
 - Plugins in the web build (X).
 
 **C4 Views**
 - A plugin view as a startup view (`STARTUP_VIEWS`).
-- `notes.search` for full-text search.
-- Creating new notes with `notes.write`.
-- Graph data beyond `notes.backlinks`.
-- A `view.info`-style way for views to be told about changes (note edited, files changed).
+
+**C3/C4 — done (branch `customization-2`, M6)**
+- File viewers read and write bytes: `file.readBytes` (a `Uint8Array`), `file.writeBytes { data }`; `file.changed` compares as the plugin read the file.
+- Dev mode: Manage Plugins → *Develop…* installs from a folder and keeps `devSource` in the plugin's state (this device); Rust `watch_plugin_dev` watches the folder, installs again once the writes pause (300 ms) and emits `plugin-dev`; the app lists the plugins again, which reloads trusted plugins and hidden frames, and the frames get a new key (`?v=`).
+- `notes.search { query, limit? }`: the full-text search of the app (index, then the blocks), `[{ path, title, snippets }]`.
+- `notes.write { path, text, create: true }` makes a new Markdown note (folders as needed; not over a file the app doesn't know, not in a hidden folder).
+- `notes.graph`: `{ nodes, links, unresolved }`, links between notes resolved by title as the Graph does.
+- Views are told `notes.changed { paths }` (edited in the app too, made, renamed, deleted; once the changes pause) and `files.changed { paths, event }` (the watcher).
 
 **C5 Enhancers**
 - Commands only show an answer. The background page has no notes, books or issues methods.

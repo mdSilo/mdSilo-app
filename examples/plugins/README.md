@@ -12,8 +12,9 @@ To develop a plugin, use **Develop…** instead of Install from Folder: the fold
 its files change (once the writes pause) the plugin is installed again and reloaded: its open pages
 and hidden frames load again, a trusted plugin is imported again. It is marked *Dev*; **Stop Dev**
 keeps it installed as it is. Development is on this device only (keeping it in the workspace
-stops it). If it can't be installed again (e.g. a broken `manifest.json`), the error is shown
-under it and the last version installed keeps running.
+stops it). If it can't be installed again (e.g. `manifest.json` is gone for a moment), the error
+is shown under it and the last version installed keeps running; a `manifest.json` that can't be
+read is installed, and shown as the error of the plugin.
 
 Samples here:
 
