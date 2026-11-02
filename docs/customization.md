@@ -164,9 +164,9 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 **C1 Fonts — done (branch `customization-2`, M3)**
 - Installed fonts listed from Rust with `fontdb` (`system_fonts`, pure Rust, no C library; on Linux it reads the fontconfig settings itself; listed once and kept): a *System* group in every font list (id `system:<family>`), and suggestions for "add by name" in Settings → Fonts. A chosen font that is no longer installed stays selectable.
 
-**C2 Themes**
-- A contrast warning for content-on-color pairs.
-- Sliders for radius and border (the values are kept, there's no UI).
+**C2 Themes — done (branch `customization-2`, M5)**
+- A contrast warning: `lowContrast(vars)` checks each pair of `CONTRAST_PAIRS` (base-100/200/300 with base-content, each color with its `-content`) against WCAG AA (4.5:1); the theme editor lists the pairs below it.
+- Sliders for `--radius-box`, `--radius-field`, `--radius-selector` (0–2rem) and `--border` (0–3px); the preview has a field, a checkbox and a toggle to show them.
 
 **C3 Plugin core**
 - Reading binary files in file viewers (text only now).
