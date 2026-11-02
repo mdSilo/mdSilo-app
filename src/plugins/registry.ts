@@ -10,6 +10,7 @@ import {
   MANIFEST_FILE,
   parseManifest,
   supportsApp,
+  type NoteModeContribution,
   type Permission,
   type PluginManifest,
   type ViewContribution,
@@ -265,6 +266,27 @@ export const pluginViews = (
     (plugin.manifest?.contributes.views ?? []).map((view) => ({
       plugin,
       view,
+    })),
+  );
+
+/** The note mode of a plugin, as the `rawMode` setting keeps it */
+export const noteModeName = (pluginId: string, modeId: string) =>
+  `plugin:${pluginId}:${modeId}`;
+
+/** The note modes of the enabled plugins, for the note header */
+export const pluginNoteModes = (
+  plugins = store.getState().installedPlugins,
+  states = store.getState().pluginStates,
+): {
+  plugin: InstalledPlugin;
+  mode: NoteModeContribution;
+  name: string;
+}[] =>
+  enabledPlugins(plugins, states).flatMap((plugin) =>
+    (plugin.manifest?.contributes.noteModes ?? []).map((mode) => ({
+      plugin,
+      mode,
+      name: noteModeName(plugin.id, mode.id),
     })),
   );
 

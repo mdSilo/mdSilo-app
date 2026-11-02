@@ -23,6 +23,8 @@ import { SAVE_DELAY_MS } from "@/workspace/pendingSaves";
 import * as issueOps from "@/issue/issueOps";
 import { issueStore, resetIssueStore } from "@/issue/issueStore";
 import { makeFileMeta, makeNote, mockInvoke } from "@/testUtils";
+import { parseManifest } from "@/plugins/manifest";
+import type { InstalledPlugin } from "@/plugins/registry";
 import Note from "./Note";
 
 // The real editor is exercised elsewhere; here we capture the props Note wires into it.
@@ -179,6 +181,52 @@ describe("Note", () => {
     expect(screen.queryByTestId("ms-editor")).not.toBeInTheDocument();
     act(() => store.getState().setRawMode("mindmap"));
     expect(await screen.findByTestId("mindmap")).toHaveTextContent("My Note");
+  });
+
+  const cards: InstalledPlugin = {
+    id: "cards",
+    dir: "/data/cards",
+    where: "device",
+    hash: "",
+    manifest: parseManifest({
+      id: "cards",
+      name: "Cards",
+      version: "1.0.0",
+      contributes: { noteModes: [{ id: "cards", title: "Cards" }] },
+    }),
+  };
+
+  test("switches to the note mode of a plugin", async () => {
+    store.setState({
+      installedPlugins: [cards],
+      pluginStates: { cards: { enabled: true, granted: [] } },
+    });
+    try {
+      setup();
+      // the header offers it; switching as the header does, without reloading the file
+      expect(screen.getByRole("button", { name: "Cards" })).toBeInTheDocument();
+      act(() => store.getState().setRawMode("plugin:cards:cards"));
+      expect(await screen.findByTestId("plugin-note-mode")).toBeInTheDocument();
+      expect(screen.queryByTestId("ms-editor")).not.toBeInTheDocument();
+    } finally {
+      store.setState({ installedPlugins: [], pluginStates: {} });
+      store.getState().setRawMode("wysiwyg");
+    }
+  });
+
+  test("shows the editor for the mode of a plugin not enabled", async () => {
+    store.setState({ installedPlugins: [cards], pluginStates: {} });
+    store.getState().setRawMode("plugin:cards:cards");
+    try {
+      setup();
+      expect(await screen.findByTestId("ms-editor")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Cards" })).toBeNull();
+      // kept, for when it is enabled again
+      expect(store.getState().rawMode).toBe("plugin:cards:cards");
+    } finally {
+      store.setState({ installedPlugins: [] });
+      store.getState().setRawMode("wysiwyg");
+    }
   });
 
   test("writes content changes to disk once the typing pauses", async () => {

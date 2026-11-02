@@ -130,7 +130,7 @@ export type UserSettings = {
   setShowHistory: Setter<boolean>;
   readMode: boolean;
   setReadMode: Setter<boolean>;
-  rawMode: string; // 'raw' | 'wysiwyg' | 'mindmap';
+  rawMode: string; // 'raw' | 'wysiwyg' | 'mindmap' | 'plugin:<id>:<mode>', see plugins/registry;
   setRawMode: Setter<string>;
   useAsset: boolean;
   setUseAsset: Setter<boolean>;

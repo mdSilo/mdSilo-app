@@ -8,11 +8,13 @@ what it may do. A plugin is kept on this device, or, with *Sync with workspace*,
 each device: a plugin is never enabled by a sync, and a plugin of the workspace changed by a sync
 stops until it is enabled again.
 
-Two samples here:
+Samples here:
 
 - `csv-viewer/`: install it, enable it, then click a `.csv` file in the explorer.
 - `tag-index/`: a view of the notes by tag; open it from the Plugins button of the side menu.
 - `text-stats/`: a "Count words" button on the text selected, in the reader and the editor.
+- `outline/`: a note mode, the headings of the note open as an outline to rename them; switch to
+  it with its button by WYSIWYG, Markdown and MindMap above the note.
 - `bars/`: draws ```` ```bars ```` code blocks (`label: number` lines) as a bar chart, in the editor
   and in the published site; its command "How to write bars" is in the Plugins menu.
 
@@ -44,6 +46,9 @@ Two samples here:
   buttons on the text selected (see below); `where` is `reader`, `editor` or both (default).
 - `contributes.commands`: `[{ "id": "today", "title": "Stats of today" }]`, in the Plugins menu of
   the side menu (see below).
+- `contributes.noteModes`: `[{ "id": "cards", "title": "Cards", "page": "cards.html" }]`, modes of
+  the note open, beside WYSIWYG, Markdown and MindMap; its page shows in place of the editor (see
+  below). `page` is the main page by default.
 - `mode`: `sandboxed` (default). `trusted` plugins are not supported yet.
 
 ## The page
@@ -82,10 +87,19 @@ knows can be read or written, not other files:
 | `issues.list` | `issues:read` | `[{ number, title, body, state, labels, milestone, due, created, updated, closed, notes }]` |
 | `app.open` `{ note }`, `{ book }` or `{ issue }` | | opens it in the app |
 
+Note modes have, for the note open only:
+
+| Method | Permission | Gives |
+|---|---|---|
+| `note.info` | | `{ title, readOnly }`: `readOnly` in the read mode of the app |
+| `note.read` | `notes:read` | the text of the note |
+| `note.write` `{ text }` | `notes:write` | `true`; saved as the editor saves, once the writes pause |
+
 | Event | When |
 |---|---|
 | `style` | the theme or the font changed; data as `app.style` |
 | `file.changed` | the file was changed by another app or a sync (not by the plugin) |
+| `note.changed` | the note was changed by another app or a sync (not by the plugin); read it again |
 
 ## Drawing code blocks
 

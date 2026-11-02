@@ -14,6 +14,7 @@ import { TbCaretRight as IconCaretRight } from "react-icons/tb";
 import MsEditor, { Attach, embeds } from "mdsmirror";
 import { useCodeRenderers } from "@/plugins/codeBlocks";
 import { useEditorSelectionActions } from "@/plugins/EditorSelectionActions";
+import PluginNoteMode, { usePluginNoteModes } from "@/plugins/PluginNoteMode";
 import { EDITOR_THEME } from "@/lib/themes";
 import Title from "@/writer/Title";
 import Toc, { Heading } from "@/writer/Toc";
@@ -105,7 +106,14 @@ function Note(props: Props) {
   const fontSize = useStore((state) => state.fontSize);
   const fontWt = useStore((state) => state.fontWt);
   const lineHt = useStore((state) => state.lineHeight);
-  const rawMode = useStore((state) => state.rawMode);
+  const chosenMode = useStore((state) => state.rawMode);
+  // a mode of a plugin, if it is still there and enabled; WYSIWYG otherwise
+  const pluginModes = usePluginNoteModes();
+  const pluginMode = chosenMode.startsWith("plugin:")
+    ? pluginModes.find((m) => m.name === chosenMode)
+    : undefined;
+  const rawMode =
+    chosenMode.startsWith("plugin:") && !pluginMode ? "wysiwyg" : chosenMode;
   const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
   const useAsset = useStore((state) => state.useAsset);
@@ -446,7 +454,17 @@ function Note(props: Props) {
                 spellCheck={isCheckSpellOn}
               >
                 <Suspense fallback={<Spinner className="mx-auto" />}>
-                  {rawMode === "raw" ? (
+                  {pluginMode ? (
+                    <PluginNoteMode
+                      plugin={pluginMode.plugin}
+                      mode={pluginMode.mode}
+                      noteId={noteId}
+                      title={title}
+                      content={mdContent}
+                      readOnly={readMode}
+                      onChange={onMarkdownChange}
+                    />
+                  ) : rawMode === "raw" ? (
                     <RawMarkdown
                       key={`raw-${noteId}`}
                       initialContent={mdContent}

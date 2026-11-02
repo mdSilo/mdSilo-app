@@ -1,0 +1,12 @@
+{
+  "id": "outline",
+  "name": "Outline",
+  "version": "0.1.0",
+  "minAppVersion": "0.8.0",
+  "author": "mdSilo",
+  "description": "A note mode: the headings of the note as an outline, to rename them in place.",
+  "permissions": ["notes:read", "notes:write"],
+  "contributes": {
+    "noteModes": [{ "id": "outline", "title": "Outline" }]
+  }
+}

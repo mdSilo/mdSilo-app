@@ -52,6 +52,12 @@ export type SelectionAction = {
 /** A command, run from the Plugins menu of the side menu */
 export type CommandContribution = { id: string; title: string };
 
+/**
+ * A mode of the note open, beside WYSIWYG, Markdown and MindMap: its page
+ * (`page`, or the main page) shows in place of the editor.
+ */
+export type NoteModeContribution = { id: string; title: string; page?: string };
+
 export type Contributes = {
   viewers: ViewerContribution[];
   views: ViewContribution[];
@@ -61,6 +67,8 @@ export type Contributes = {
   selectionActions: SelectionAction[];
   /** commands, run by its main page */
   commands: CommandContribution[];
+  /** modes of the note open */
+  noteModes: NoteModeContribution[];
 };
 
 export type PluginManifest = {
@@ -129,6 +137,7 @@ function parseContributes(value: unknown): Contributes {
       codeBlocks: [],
       selectionActions: [],
       commands: [],
+      noteModes: [],
     };
   if (!isObject(value)) throw new Error('"contributes" should be an object');
   const viewers = list(value.viewers, "contributes.viewers").map(
@@ -207,12 +216,32 @@ function parseContributes(value: unknown): Contributes {
       return { id, title: text(command.title, `${field}.title`) };
     },
   );
+  const noteModes = list(value.noteModes, "contributes.noteModes").map(
+    (mode, i) => {
+      const field = `contributes.noteModes[${i}]`;
+      if (!isObject(mode)) throw new Error(`"${field}" should be an object`);
+      const id = text(mode.id, `${field}.id`);
+      if (!ID.test(id))
+        throw new Error(
+          `"${field}.id" should be lowercase letters, digits, . _ -`,
+        );
+      return {
+        id,
+        title: text(mode.title, `${field}.title`),
+        page:
+          mode.page === undefined
+            ? undefined
+            : innerPath(mode.page, `${field}.page`),
+      };
+    },
+  );
   return {
     viewers,
     views,
     codeBlocks: [...new Set(codeBlocks)],
     selectionActions,
     commands,
+    noteModes,
   };
 }
 
