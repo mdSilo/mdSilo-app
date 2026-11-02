@@ -1,12 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useRef } from "react";
-import { useStore } from "@/state/store";
+import { store, useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
-import { normalizeSlash } from "@/workspace/util";
+import { normalizeSlash, toWorkspacePath } from "@/workspace/util";
 import { getFileExt } from "@/workspace/process";
 import { readBytes, writeBytes } from "@/reader/library/library";
 import type { PluginHost, PluginMethods } from "./host";
 import PluginFrame from "./PluginFrame";
+import { contributesOf } from "./registry";
+import { useTrustedVersion } from "./trusted";
 import { listenChanges } from "./changes";
 
 const nameOf = (path: string) => path.split(/[/\\]/).pop() ?? path;
@@ -37,10 +39,15 @@ export function fileMethods(
 ): PluginMethods {
   return {
     "file.info": {
-      handler: () => ({
-        name: nameOf(path),
-        ext: getFileExt(nameOf(path)).toLowerCase(),
-      }),
+      handler: () => {
+        const dir = store.getState().initDir;
+        const rel = dir ? toWorkspacePath(dir, path) : path;
+        return {
+          name: nameOf(path),
+          ext: getFileExt(nameOf(path)).toLowerCase(),
+          ...(rel !== path ? { path: rel } : {}),
+        };
+      },
     },
     "file.read": {
       permission: "file:read",
@@ -126,6 +133,12 @@ export default function PluginFileView() {
   const host = useRef<PluginHost | null>(null);
   const methods = useMemo(() => fileMethods(filePath, text), [filePath]);
   useFileChanged(filePath, host, text);
+  // viewers added as a trusted plugin runs too
+  useTrustedVersion();
+  const ext = getFileExt(nameOf(filePath)).toLowerCase();
+  const page =
+    plugin &&
+    contributesOf(plugin).viewers.find((v) => v.extensions.includes(ext))?.page;
 
   if (!plugin) {
     return (
@@ -146,6 +159,7 @@ export default function PluginFileView() {
         <PluginFrame
           key={filePath}
           plugin={plugin}
+          page={page}
           methods={methods}
           onHost={(h) => {
             host.current = h;

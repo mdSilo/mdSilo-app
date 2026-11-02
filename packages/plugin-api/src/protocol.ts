@@ -95,7 +95,8 @@ export type Methods = {
   >;
   "app.style": Method<void, PluginStyle>;
   // file viewers: the file opened only
-  "file.info": Method<void, { name: string; ext: string }>;
+  /** `path` relative to the workspace, if the file is in it */
+  "file.info": Method<void, { name: string; ext: string; path?: string }>;
   "file.read": Method<void, string, "file:read">;
   "file.write": Method<{ text: string }, true, "file:write">;
   /** the file as bytes, for a file not of text (an image, a database…) */

@@ -8,11 +8,13 @@ import {
   contributesOf,
   disablePlugin,
   enablePlugin,
+  viewersOf,
   type InstalledPlugin,
 } from "../registry";
 import { askPlugin } from "../background";
 import { pluginCommands } from "../commands";
 import PluginFrame from "../PluginFrame";
+import { fileMethods } from "../PluginFileView";
 import {
   setModuleLoader,
   syncTrusted,
@@ -23,6 +25,8 @@ import { installDomHelpers } from "./dom";
 import type { App, CommonJs } from ".";
 import { frontMatterOf, withFrontMatter } from ".";
 
+/** the view of a CSV file opened, as the plugin made it */
+let csvView: import(".").TextFileView;
 /** the app of the plugin running, as it got it */
 let app: App;
 /** what `require("obsidian")` gave it */
@@ -61,7 +65,17 @@ const plugin: InstalledPlugin = {
 /** main.js of an Obsidian plugin, as esbuild makes it: CommonJS */
 const mainJs: CommonJs = (module, _exports, require) => {
   obsidian = require("obsidian") as typeof obsidian;
-  const { Plugin, PluginSettingTab, Setting, ItemView, Notice } = obsidian;
+  const { Plugin, PluginSettingTab, Setting, ItemView, Notice, TextFileView } =
+    obsidian;
+  class CsvView extends TextFileView {
+    getViewType() {
+      return "csv-view";
+    }
+    setViewData(data: string) {
+      super.setViewData(data, true);
+      this.contentEl.textContent = `rows: ${data.split("\n").length}`;
+    }
+  }
   class HelloView extends ItemView {
     getViewType() {
       return "hello-view";
@@ -109,6 +123,8 @@ const mainJs: CommonJs = (module, _exports, require) => {
         asEl(el).createEl("script", { text: "alert(1)" });
       });
       this.registerView("hello-view", (leaf) => new HelloView(leaf));
+      this.registerView("csv-view", (leaf) => (csvView = new CsvView(leaf)));
+      this.registerExtensions(["csv"], "csv-view");
       this.addSettingTab(new Tab(this.app, this));
     }
   }
@@ -307,4 +323,27 @@ it("gives moment, and the YAML helpers", async () => {
   expect((obsidian.parseYaml as (t: string) => unknown)("a: [1]")).toEqual({
     a: [1],
   });
+});
+
+it("opens the files of its extensions in its views", async () => {
+  await start();
+  disk["/ws/data.csv"] = "a,b\n1,2";
+  expect(viewersOf("/ws/data.csv").map((v) => v.viewer)).toEqual([
+    { extensions: ["csv"], title: "Hello", page: "csv-view" },
+  ]);
+  render(
+    <PluginFrame
+      plugin={plugin}
+      page="csv-view"
+      methods={fileMethods("/ws/data.csv", { current: null })}
+    />,
+  );
+  expect(await screen.findByText("rows: 2")).toBeInTheDocument();
+  expect(csvView.file).toMatchObject({ path: "data.csv", extension: "csv" });
+  csvView.data = "a,b\n1,2\n3,4";
+  await csvView.save();
+  expect(disk["/ws/data.csv"]).toBe("a,b\n1,2\n3,4");
+  // a view of the workspace is not given a file
+  render(<PluginFrame plugin={plugin} page="hello-view" />);
+  expect(await screen.findByText("Hello view")).toBeInTheDocument();
 });

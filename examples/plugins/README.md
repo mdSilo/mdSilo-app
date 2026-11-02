@@ -48,7 +48,8 @@ Samples here:
 - `id`: lowercase letters, digits, `.`, `_`, `-`; it is the name of the installed folder.
 - `permissions`: `file:read`, `file:write` (the file the plugin opens), `notes:read`, `notes:write`,
   `books:read`, `issues:read`, `net` (`https:` and `wss:` from the page). The user can grant fewer.
-- `contributes.viewers`: the plugin opens files of these extensions (not notes or books).
+- `contributes.viewers`: `[{ "extensions": ["csv"], "title": "Table", "page": "table.html" }]`, the
+  plugin opens files of these extensions (not notes or books); `page` is the main page by default.
 - `contributes.views`: `[{ "id": "stats", "title": "Reading Stats", "page": "stats.html" }]`, views of the
   whole workspace, in the Plugins menu of the side menu; `page` is the main page by default.
 - `contributes.codeBlocks`: `["plantuml"]`, the languages of the code blocks it draws (see below).
@@ -81,7 +82,7 @@ parent.postMessage({ mdsilo: 1, id: 1, method: 'file.read' }, '*');
 |---|---|---|
 | `app.info` | | `{ id, version, permissions }` |
 | `app.style` | | `{ theme, dark, vars, font }`: the daisyUI variables of the theme and the editor font |
-| `file.info` | | `{ name, ext }` of the file opened |
+| `file.info` | | `{ name, ext, path }` of the file opened; `path` relative to the workspace, if in it |
 | `file.read` | `file:read` | the text of the file |
 | `file.write` `{ text }` | `file:write` | `true` |
 | `file.readBytes` | `file:read` | the file as a `Uint8Array` (images, databases, any file not of text) |
@@ -205,6 +206,8 @@ marked "Obsidian (partial)". `main.js` is served as a module (the app runs no `e
   check for changes by a sync), `addCommand` (`callback`, `checkCallback`) and `addRibbonIcon` (both
   in the Plugins menu), `registerMarkdownCodeBlockProcessor` (in the editor and published sites),
   `registerView` + `ItemView` (views in the Plugins menu, `workspace.getLeaf().setViewState`),
+  `registerExtensions` + `FileView`/`TextFileView` (the files of those extensions open in the view;
+  `vault.read`/`modify`, `readBinary`/`modifyBinary` for that file; reloaded when it changes),
   `addSettingTab` + `PluginSettingTab` + `Setting` (text, text area, toggle, slider, dropdown,
   button), `register*` cleanups.
 - `app.vault` (the notes: `getMarkdownFiles`, `read`, `modify`, `process`, `append`, `create`
@@ -216,6 +219,6 @@ marked "Obsidian (partial)". `main.js` is served as a module (the app runs no `e
 
 Not there: anything of Obsidian's editor (`editorCallback`, `registerEditorExtension`,
 `MarkdownView` internals; mdSilo's editor is ProseMirror, not CodeMirror), its layout of leaves and
-splits, `registerExtensions`, and its internals. So small plugins (code
+splits, and its internals. So small plugins (code
 block renderers, commands, simple views and settings) run; big ones (Dataview, Excalidraw, Kanban,
 Templater) don't.

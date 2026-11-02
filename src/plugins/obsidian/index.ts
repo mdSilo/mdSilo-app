@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import moment from "moment";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import type { NoteInfo, TrustedApi } from "@mdsilo/plugin-api";
+import type { NoteInfo, PageClient, TrustedApi } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
 import { noteContent } from "@/lib/contentCache";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -147,6 +147,15 @@ const fileOf = (vault: Vault, note: NoteInfo): TFile => {
   return file;
 };
 
+/** The file a viewer opened, read and written by the methods of its page */
+const viewerFiles = new WeakMap<TAbstractFile, PageClient>();
+
+const toBuffer = (bytes: Uint8Array) =>
+  bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+
 /** The notes of the workspace, as Obsidian's vault: paths relative to it */
 export class Vault extends Source {
   /** the notes, read on load and on changes, for the calls that are not async */
@@ -188,13 +197,31 @@ export class Vault extends Source {
     return this.getAbstractFileByPath(path);
   }
   read(file: TFile) {
+    const page = viewerFiles.get(file);
+    if (page) return page.call("file.read");
     return this.api.call("notes.read", { path: file.path });
+  }
+  /** the bytes of a file opened by a viewer of the plugin, only */
+  async readBinary(file: TFile): Promise<ArrayBuffer> {
+    const page = viewerFiles.get(file);
+    if (!page)
+      throw new Error(`Only the file opened can be read: ${file.path}`);
+    return toBuffer(await page.call("file.readBytes"));
+  }
+  async modifyBinary(file: TFile, data: ArrayBuffer) {
+    const page = viewerFiles.get(file);
+    if (!page)
+      throw new Error(`Only the file opened can be written: ${file.path}`);
+    await page.call("file.writeBytes", { data: new Uint8Array(data) });
+    this.trigger("modify", file);
   }
   cachedRead(file: TFile) {
     return this.read(file);
   }
   async modify(file: TFile, text: string) {
-    await this.api.call("notes.write", { path: file.path, text });
+    const page = viewerFiles.get(file);
+    if (page) await page.call("file.write", { text });
+    else await this.api.call("notes.write", { path: file.path, text });
     this.trigger("modify", file);
   }
   async process(file: TFile, fn: (text: string) => string) {
@@ -444,6 +471,10 @@ type Registry = {
   commands: Map<string, Command>;
   codeBlocks: Map<string, CodeBlockProcessor>;
   views: Map<string, (leaf: WorkspaceLeaf) => ItemView>;
+  /** the view types that open files, see registerExtensions */
+  extensions: Set<string>;
+  /** to take a view out of the Plugins menu, by type */
+  menuViews: Map<string, () => void>;
   settings?: PluginSettingTab;
 };
 
@@ -459,6 +490,8 @@ export class Plugin extends Component {
       commands: new Map(),
       codeBlocks: new Map(),
       views: new Map(),
+      extensions: new Set(),
+      menuViews: new Map(),
     });
   }
   private get registry() {
@@ -524,18 +557,30 @@ export class Plugin extends Component {
     const title = type
       .replace(/[-_]+/g, " ")
       .replace(/^\w/, (c) => c.toUpperCase());
+    // in the Plugins menu, unless it opens files (registerExtensions, before or after)
+    if (!this.registry.extensions.has(type)) {
+      const off = this.api.contribute("views", { id: type, title, page: type });
+      this.registry.menuViews.set(type, off);
+      this.register(off);
+    }
     this.register(
-      this.api.contribute("views", { id: type, title, page: type }),
-    );
-    this.register(
-      this.api.page(type, (el) => {
+      this.api.page(type, (el, page) => {
         const leaf = new WorkspaceLeaf(this.app, this.manifest.id);
         const view = creator(leaf);
         leaf.view = view;
         el.append(view.containerEl);
         view.load();
-        void view.onOpen();
+        let closeFile: (() => void) | undefined;
+        void view.onOpen().then(async () => {
+          // a viewer of a file, not a view of the workspace
+          if (view instanceof FileView && this.registry.extensions.has(type))
+            closeFile = await openViewerFile(view, page).catch((e) => {
+              view.contentEl.textContent = String(e);
+              return undefined;
+            });
+        });
         return () => {
+          closeFile?.();
           void view.onClose();
           view.unload();
           view.containerEl.remove();
@@ -543,9 +588,18 @@ export class Plugin extends Component {
       }),
     );
   }
-  registerExtensions(extensions: string[]) {
-    console.warn(
-      `${this.manifest.id}: opening .${extensions.join(", .")} files is not supported`,
+  /** opens the files of the extensions in the view registered as `type` */
+  registerExtensions(extensions: string[], type: string) {
+    const exts = extensions.map((e) => e.toLowerCase().replace(/^\./, ""));
+    this.registry.extensions.add(type);
+    this.registry.menuViews.get(type)?.();
+    this.registry.menuViews.delete(type);
+    this.register(
+      this.api.contribute("viewers", {
+        extensions: exts,
+        title: this.manifest.name,
+        page: type,
+      }),
     );
   }
   registerEditorExtension() {
@@ -607,7 +661,69 @@ export class ItemView extends Component {
 }
 
 export class MarkdownView extends ItemView {}
-export class FileView extends ItemView {}
+
+/** A view of a file: of the extensions the plugin registered, opened by the app */
+export class FileView extends ItemView {
+  file: TFile | null = null;
+  allowNoFile = false;
+  async onLoadFile(_file: TFile) {}
+  async onUnloadFile(_file: TFile) {}
+  canAcceptExtension(_extension: string) {
+    return false;
+  }
+}
+
+/** A view of a text file: its text given, saved when asked (2 s after) */
+export class TextFileView extends FileView {
+  data = "";
+  requestSave = debounce(() => void this.save(), 2000, true);
+  getViewData() {
+    return this.data;
+  }
+  setViewData(data: string, _clear: boolean) {
+    this.data = data;
+  }
+  clear() {}
+  async save() {
+    if (this.file) await this.app.vault.modify(this.file, this.getViewData());
+  }
+  async onLoadFile(file: TFile) {
+    this.data = await this.app.vault.read(file);
+    this.setViewData(this.data, true);
+  }
+  async onUnloadFile(_file: TFile) {
+    this.requestSave.cancel();
+  }
+}
+
+/**
+ * Opens the file of a viewer in a view: as a TFile read and written by the
+ * methods of the page (file.info, file.read…); again when it is changed.
+ */
+async function openViewerFile(view: FileView, page: PageClient) {
+  const info = await page.call("file.info");
+  const file = new TFile();
+  Object.assign(file, {
+    vault: view.app.vault,
+    path: info.path ?? info.name,
+    name: info.name,
+    basename: info.name.replace(/\.[^.]+$/, ""),
+    extension: info.ext,
+  });
+  viewerFiles.set(file, page);
+  view.file = file;
+  await view.onLoadFile(file);
+  const off = page.on("file.changed", () => {
+    if (view instanceof TextFileView) {
+      view.requestSave.cancel();
+      void view.onLoadFile(file);
+    } else void view.onUnloadFile(file).then(() => view.onLoadFile(file));
+  });
+  return () => {
+    off();
+    void view.onUnloadFile(file);
+  };
+}
 
 export class PluginSettingTab {
   containerEl: HTMLElement = createEl("div");
@@ -1028,6 +1144,7 @@ const obsidianModule = {
   FileManager,
   FileView,
   ItemView,
+  TextFileView,
   MarkdownRenderer,
   MarkdownView,
   Modal,

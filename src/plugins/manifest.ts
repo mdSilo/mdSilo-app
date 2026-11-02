@@ -102,7 +102,13 @@ function parseContributes(value: unknown): Contributes {
       );
       if (!extensions.length)
         throw new Error(`"${field}.extensions" should not be empty`);
-      return { extensions, title: text(viewer.title, `${field}.title`) };
+      return {
+        extensions,
+        title: text(viewer.title, `${field}.title`),
+        ...(viewer.page === undefined
+          ? {}
+          : { page: innerPath(viewer.page, `${field}.page`) }),
+      };
     },
   );
   const views = list(value.views, "contributes.views").map((view, i) => {

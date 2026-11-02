@@ -18,8 +18,12 @@ export type Permission = (typeof PERMISSIONS)[number];
 
 export type PluginMode = "sandboxed" | "trusted";
 
-/** Opens files of these extensions, in place of the editor or the reader */
-export type ViewerContribution = { extensions: string[]; title: string };
+/** Opens files of these extensions, in place of the editor or the reader; its page is `page`, or the main page */
+export type ViewerContribution = {
+  extensions: string[];
+  title: string;
+  page?: string;
+};
 
 /** A view of the whole workspace, in the side menu; its page is `page`, or the main page */
 export type ViewContribution = {
