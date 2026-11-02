@@ -34,7 +34,7 @@ Open a book and the page fills the window. The bars appear when you move the mou
 - **A book in its own window** (desktop): in the Library's view menu, *Open books in* → *A new window*; or *Read in a new window* in a book's details. The window has the reader only: notes, issues and the Library open in the main window. Opening the book again brings its window to the front.
 - **Bottom bar**: back and forward in your reading history, previous and next chapter, a progress slider, and the time left in the book.
 - **Contents and notes** (the side panel): the table of contents, your annotations, the in-book search, and the **Links** tab.
-- **Font and layout**: font, size, spacing, margins, page colour (follow the app, white, sepia, grey, dark), paging or scrolling, animation, which header and footer to show, image options and code highlighting.
+- **Font and layout**: font, a font for CJK text (used for the characters the font has not, or where the book sets no font), size, spacing, margins, page colour (follow the app, white, sepia, grey, dark), paging or scrolling, animation, which header and footer to show, image options and code highlighting.
 - Click an **image** or a **table** in the page to zoom it. Footnotes open in a small popup instead of jumping away.
 - Your place and the time you spend are saved per book. They feed the heat map in [[8 Insight|Insight]].
 

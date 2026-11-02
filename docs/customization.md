@@ -154,9 +154,11 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 - A git sync that changes `themes.json`, `fonts.json`, `fonts/` or `plugins/` reloads them (themes used to be read only on opening the workspace).
 
 **C1 Fonts**
-- A separate font setting for code in the editor.
-- A fallback font for CJK text in the reader.
 - The web build: a manual check, and a free-text family name.
+
+**C1 Fonts — done (branch `customization-2`, M4)**
+- A font for code in the editor (`codeFont`: mdsmirror's `fontFamilyMono`, and the text of the Markdown mode).
+- A font for CJK text in the reader (`cjkFont`): after the font chosen (for a generic stack, between its Latin and CJK fonts); with the font of the book, set on the body, where the book sets no font.
 
 **C1 Fonts — done (branch `customization-2`, M3)**
 - Installed fonts listed from Rust with `fontdb` (`system_fonts`, pure Rust, no C library; on Linux it reads the fontconfig settings itself; listed once and kept): a *System* group in every font list (id `system:<family>`), and suggestions for "add by name" in Settings → Fonts. A chosen font that is no longer installed stays selectable.
