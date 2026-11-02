@@ -248,4 +248,42 @@ describe("custom themes", () => {
     await waitFor(() => expect(store.getState().customThemes).toEqual([]));
     expect(store.getState().theme).toBe("system");
   });
+
+  test("warns of content hard to read, and sets radius and border", async () => {
+    store.setState({
+      customThemes: [],
+      workspaceThemes: [],
+      initDir: undefined,
+      theme: "system",
+      themeEditing: "new",
+    });
+    const user = userEvent.setup();
+    render(<ThemeEditorModal />);
+    fireEvent.change(screen.getByLabelText("primary"), {
+      target: { value: "#ffff00" },
+    });
+    fireEvent.change(screen.getByLabelText("primary-content"), {
+      target: { value: "#ffffff" },
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "primary-content on primary",
+    );
+    fireEvent.change(screen.getByLabelText("primary-content"), {
+      target: { value: "#000000" },
+    });
+    expect(screen.queryByText(/primary-content on primary/)).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Radius of boxes"), {
+      target: { value: "1.5" },
+    });
+    fireEvent.change(screen.getByLabelText("Border"), {
+      target: { value: "2" },
+    });
+    expect(screen.getByText("1.5rem")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(store.getState().customThemes[0].vars).toMatchObject({
+      "--radius-box": "1.5rem",
+      "--border": "2px",
+    });
+  });
 });

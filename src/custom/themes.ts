@@ -146,6 +146,48 @@ export function toHex(color: string): string {
   }
 }
 
+/** A color and the color drawn on it, `[background, content]` */
+export const CONTRAST_PAIRS: [string, string][] = [
+  ["base-100", "base-content"],
+  ["base-200", "base-content"],
+  ["base-300", "base-content"],
+  ...THEME_COLORS.filter(
+    (c) => !c.startsWith("base") && !c.endsWith("-content"),
+  ).map((c): [string, string] => [c, `${c}-content`]),
+];
+
+/** WCAG AA for normal text */
+export const MIN_CONTRAST = 4.5;
+
+const luminance = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+/** The WCAG contrast ratio of two CSS colors, 1 to 21; null if one can't be read. */
+export function contrastRatio(a: string, b: string): number | null {
+  const [x, y] = [toHex(a), toHex(b)];
+  if (!x || !y) return null;
+  const [hi, lo] = [luminance(x), luminance(y)].sort((m, n) => n - m);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** The pairs of a theme whose content is hard to read on its color. */
+export function lowContrast(
+  vars: Record<string, string>,
+): { bg: string; fg: string; ratio: number }[] {
+  return CONTRAST_PAIRS.flatMap(([bg, fg]) => {
+    const ratio = contrastRatio(
+      vars[`--color-${bg}`] ?? "",
+      vars[`--color-${fg}`] ?? "",
+    );
+    return ratio !== null && ratio < MIN_CONTRAST ? [{ bg, fg, ratio }] : [];
+  });
+}
+
 /** Themes of the workspace win over those of this device with the same id. */
 export const themes = defineKind<CustomTheme>({
   paths: [THEME_FILE],

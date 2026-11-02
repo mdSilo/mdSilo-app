@@ -6,6 +6,8 @@ import {
   allCustomThemes,
   applyThemeCss,
   deleteTheme,
+  lowContrast,
+  MIN_CONTRAST,
   parseThemeCss,
   saveTheme,
   THEME_COLORS,
@@ -16,13 +18,45 @@ import {
   type CustomTheme,
 } from "@/custom/themes";
 import { dataRoot } from "@/workspace/layout";
-import { Toggle } from "@/ui/ui";
+import { Range, Toggle } from "@/ui/ui";
 
 type Props = {
   /** the theme to edit, or undefined for a new one */
   theme?: CustomTheme;
   onDone: () => void;
 };
+
+/** The sizes with a slider: the radii in rem, the border in px */
+const SLIDERS: {
+  key: string;
+  label: string;
+  max: number;
+  step: number;
+  unit: string;
+}[] = [
+  {
+    key: "--radius-box",
+    label: "Radius of boxes",
+    max: 2,
+    step: 0.125,
+    unit: "rem",
+  },
+  {
+    key: "--radius-field",
+    label: "Radius of fields",
+    max: 2,
+    step: 0.125,
+    unit: "rem",
+  },
+  {
+    key: "--radius-selector",
+    label: "Radius of selectors",
+    max: 2,
+    step: 0.125,
+    unit: "rem",
+  },
+  { key: "--border", label: "Border", max: 3, step: 0.5, unit: "px" },
+];
 
 /** A new theme from the theme applied now. */
 function newTheme(): CustomTheme {
@@ -60,6 +94,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
 
   const setVar = (key: string, value: string) =>
     setDraft((d) => ({ ...d, vars: { ...d.vars, [key]: value } }));
+  const lowPairs = lowContrast(draft.vars);
 
   const startFrom = (name: string) => {
     const info = THEMES.find((t) => t.name === name);
@@ -153,6 +188,34 @@ export default function ThemeEditor({ theme, onDone }: Props) {
           );
         })}
       </div>
+      {lowPairs.length ? (
+        <div
+          role="status"
+          className="flex flex-col gap-0.5 p-2 text-xs rounded-box bg-warning/15"
+        >
+          <span>Hard to read (below {MIN_CONTRAST}:1):</span>
+          {lowPairs.map(({ bg, fg, ratio }) => (
+            <span key={bg}>
+              {fg} on {bg}: {ratio.toFixed(1)}:1
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-1">
+        {SLIDERS.map(({ key, label, max, step, unit }) => (
+          <Range
+            key={key}
+            label={label}
+            min={0}
+            max={max}
+            step={step}
+            value={parseFloat(draft.vars[key] ?? "") || 0}
+            format={(v) => `${v}${unit}`}
+            onChange={(v) => setVar(key, `${v}${unit}`)}
+          />
+        ))}
+      </div>
 
       <div
         data-theme={themeName(preview)}
@@ -182,6 +245,25 @@ export default function ThemeEditor({ theme, onDone }: Props) {
           <span className="badge badge-success badge-sm">success</span>
           <span className="badge badge-warning badge-sm">warning</span>
           <span className="badge badge-error badge-sm">error</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            className="flex-1 input input-xs"
+            placeholder="A field"
+            aria-label="Preview Field"
+          />
+          <input
+            type="checkbox"
+            className="checkbox checkbox-xs checkbox-primary"
+            aria-label="Preview Checkbox"
+            defaultChecked
+          />
+          <input
+            type="checkbox"
+            className="toggle toggle-xs toggle-primary"
+            aria-label="Preview Toggle"
+            defaultChecked
+          />
         </div>
       </div>
 
