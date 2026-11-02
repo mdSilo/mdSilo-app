@@ -62,7 +62,7 @@ import {
 } from "./folderImport";
 import BookDetails from "./BookDetails";
 import GroupDialog from "./GroupDialog";
-import Shelf, { VIRTUAL_FROM } from "./Shelf";
+import Shelf, { VIRTUAL_FROM } from "./ShelfView";
 import ShelfItemView from "./ShelfItem";
 import ViewMenu, { useLibrarySettings } from "./ViewMenu";
 import { DeleteDialog, MoveDialog } from "./SelectionDialogs";

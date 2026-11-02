@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { VirtuosoGridMockContext, VirtuosoMockContext } from "react-virtuoso";
-import Shelf, { VIRTUAL_FROM } from "./Shelf";
+import Shelf, { VIRTUAL_FROM } from "./ShelfView";
 import type { ShelfBook, ShelfItem } from "./shelf";
 
 const books = (n: number): ShelfBook[] =>
