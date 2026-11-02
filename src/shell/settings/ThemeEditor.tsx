@@ -36,23 +36,23 @@ const SLIDERS: {
 }[] = [
   {
     key: "--radius-box",
-    label: "Radius of boxes",
+    label: "Box Radius",
     max: 2,
-    step: 0.125,
+    step: 0.1,
     unit: "rem",
   },
   {
     key: "--radius-field",
-    label: "Radius of fields",
+    label: "Field Radius",
     max: 2,
-    step: 0.125,
+    step: 0.1,
     unit: "rem",
   },
   {
     key: "--radius-selector",
-    label: "Radius of selectors",
+    label: "Selector Radius",
     max: 2,
-    step: 0.125,
+    step: 0.1,
     unit: "rem",
   },
   { key: "--border", label: "Border", max: 3, step: 0.5, unit: "px" },
@@ -138,7 +138,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-3" data-testid="theme-editor">
+    <div className="flex flex-col gap-2" data-testid="theme-editor">
       <div className="flex items-center gap-2">
         <input
           className="flex-1 input input-xs"
@@ -168,7 +168,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
         onChange={(dark) => setDraft((d) => ({ ...d, dark }))}
       />
 
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1">
         {THEME_COLORS.map((color) => {
           const key = `--color-${color}`;
           return (
@@ -202,7 +202,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 p-1">
         {SLIDERS.map(({ key, label, max, step, unit }) => (
           <Range
             key={key}
@@ -219,14 +219,14 @@ export default function ThemeEditor({ theme, onDone }: Props) {
 
       <div
         data-theme={themeName(preview)}
-        className="flex flex-col gap-2 p-3 border rounded-box bg-base-100 text-base-content"
+        className="flex flex-col gap-1 p-1 border rounded bg-base-100 text-base-content"
         aria-label="Theme Preview"
       >
-        <div className="flex gap-2 p-2 rounded-box bg-base-200">
+        <div className="flex justify-center items-center gap-2 p-2 rounded-box bg-base-200">
           <span className="text-sm">Text on base</span>
           <span className="text-sm text-base-content/60">muted</span>
         </div>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap justify-center items-center gap-1">
           <button type="button" className="btn btn-xs btn-primary">
             Primary
           </button>
@@ -240,7 +240,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
             Neutral
           </button>
         </div>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap justify-center items-center gap-1">
           <span className="badge badge-info badge-sm">info</span>
           <span className="badge badge-success badge-sm">success</span>
           <span className="badge badge-warning badge-sm">warning</span>

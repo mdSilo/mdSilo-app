@@ -273,7 +273,7 @@ describe("custom themes", () => {
     });
     expect(screen.queryByText(/primary-content on primary/)).toBeNull();
 
-    fireEvent.change(screen.getByLabelText("Radius of boxes"), {
+    fireEvent.change(screen.getByLabelText("Box Radius"), {
       target: { value: "1.5" },
     });
     fireEvent.change(screen.getByLabelText("Border"), {

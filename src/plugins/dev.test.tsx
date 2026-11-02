@@ -50,7 +50,7 @@ describe("plugins in development", () => {
       list_plugins: [folder],
     });
     render(<PluginManager />);
-    await userEvent.click(screen.getByRole("button", { name: "Develop…" }));
+    await userEvent.click(screen.getByRole("button", { name: "Develop" }));
     const row = within(await screen.findByTestId("plugin-clock"));
     expect(await row.findByText("Dev")).toBeInTheDocument();
     expect(store.getState().pluginStates.clock).toEqual({

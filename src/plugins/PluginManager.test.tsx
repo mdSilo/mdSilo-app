@@ -228,7 +228,7 @@ describe("PluginManager", () => {
     mockInvoke(invoke, { read_file: '{"id":"Bad"}' });
     render(<PluginManager />);
     await userEvent.click(
-      screen.getByRole("button", { name: "Install from Folder" }),
+      screen.getByRole("button", { name: "Install Folder" }),
     );
     expect(await screen.findByText(/"id" should be/)).toBeInTheDocument();
     expect(invoke).not.toHaveBeenCalledWith(
@@ -259,7 +259,7 @@ describe("PluginManager", () => {
       ],
     });
     await userEvent.click(
-      screen.getByRole("button", { name: "Install from Folder" }),
+      screen.getByRole("button", { name: "Install Folder" }),
     );
     expect(await screen.findByText("Clock")).toBeInTheDocument();
     expect(invoke).toHaveBeenCalledWith("install_plugin", {
@@ -282,7 +282,7 @@ describe("PluginManager", () => {
     });
     render(<PluginManager />);
     await userEvent.click(
-      screen.getByRole("button", { name: "Install from .zip" }),
+      screen.getByRole("button", { name: "Install .zip" }),
     );
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("forget_unpacked"));
     expect(invoke).toHaveBeenCalledWith("unpack_plugin", {
@@ -303,7 +303,7 @@ describe("PluginManager", () => {
     });
     render(<PluginManager />);
     await userEvent.click(
-      screen.getByRole("button", { name: "Install from .zip" }),
+      screen.getByRole("button", { name: "Install .zip" }),
     );
     expect(await screen.findByText(/No manifest.json/)).toBeInTheDocument();
     expect(invoke).toHaveBeenCalledWith("forget_unpacked");

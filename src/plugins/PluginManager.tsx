@@ -114,9 +114,8 @@ export default function PluginManager() {
   }
 
   return (
-    <div className="flex flex-col gap-2" data-testid="plugin-manager">
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex-1">Plugins</span>
+    <div className="flex flex-col gap-1" data-testid="plugin-manager">
+      <div className="flex items-center justify-center gap-1">
         <button
           type="button"
           className="btn btn-ghost btn-xs"
@@ -130,14 +129,14 @@ export default function PluginManager() {
           className="btn btn-xs"
           onClick={() => void onInstall()}
         >
-          Install from Folder
+          Install Folder
         </button>
         <button
           type="button"
           className="btn btn-xs"
           onClick={() => void onInstallZip()}
         >
-          Install from .zip
+          Install .zip
         </button>
         <button
           type="button"
@@ -145,7 +144,7 @@ export default function PluginManager() {
           title="Install a plugin from its folder, and again each time its files change"
           onClick={() => void onDevelop()}
         >
-          Develop…
+          Develop
         </button>
       </div>
       {error ? <p className="text-xs text-error">{error}</p> : null}

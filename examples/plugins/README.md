@@ -1,14 +1,14 @@
 # mdSilo plugins
 
 A plugin is a folder with a `manifest.json` and a page (`index.html` by default). Install it from the
-Plugins button of the side menu → Manage Plugins → Install from Folder (or Install from .zip: a
+Plugins button of the side menu → Manage Plugins → Install Folder (or Install .zip: a
 .zip of the folder, or of what is in it), then enable it and choose
 what it may do. A plugin is kept on this device, or, with *Sync with workspace*, in
 `.mdsilo/plugins/<id>/` and synced. Whether it is enabled, and with which permissions, stays on
 each device: a plugin is never enabled by a sync, and a plugin of the workspace changed by a sync
 stops until it is enabled again.
 
-To develop a plugin, use **Develop…** instead of Install from Folder: the folder is watched, and when
+To develop a plugin, use **Develop** instead of Install Folder: the folder is watched, and when
 its files change (once the writes pause) the plugin is installed again and reloaded: its open pages
 and hidden frames load again, a trusted plugin is imported again. It is marked *Dev*; **Stop Dev**
 keeps it installed as it is. Development is on this device only (keeping it in the workspace
