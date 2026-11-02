@@ -158,6 +158,7 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 
 **C1 Fonts — done (branch `customization-2`, M4)**
 - A font for code in the editor (`codeFont`: mdsmirror's `fontFamilyMono`, and the text of the Markdown mode).
+- A font for CJK text in the editor (`cjkFont`), for the text, the code and the Markdown mode; with the default font, before the generic family of mdsmirror's stack.
 - A font for CJK text in the reader (`cjkFont`): after the font chosen (for a generic stack, between its Latin and CJK fonts); with the font of the book, set on the body, where the book sets no font.
 
 **C1 Fonts — done (branch `customization-2`, M3)**

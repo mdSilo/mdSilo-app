@@ -23,6 +23,7 @@ describe("user settings slice", () => {
     ["setDarkMode", "darkMode", false],
     ["setFont", "font", "Sniglet"],
     ["setCodeFont", "codeFont", "monospace"],
+    ["setCjkFont", "cjkFont", "system:LXGW WenKai"],
     ["setFontSize", "fontSize", 1.4],
     ["setNoteSort", "noteSort", Sort.DateCreatedDescending],
     ["setRawMode", "rawMode", "raw"],

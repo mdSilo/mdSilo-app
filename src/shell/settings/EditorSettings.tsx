@@ -8,6 +8,8 @@ export default function EditorSettings() {
   const setFont = useStore((state) => state.setFont);
   const codeFont = useStore((state) => state.codeFont);
   const setCodeFont = useStore((state) => state.setCodeFont);
+  const cjkFont = useStore((state) => state.cjkFont);
+  const setCjkFont = useStore((state) => state.setCjkFont);
   const fontSize = useStore((state) => state.fontSize);
   const setFontSize = useStore((state) => state.setFontSize);
   const lineHeight = useStore((state) => state.lineHeight);
@@ -39,6 +41,13 @@ export default function EditorSettings() {
         value={codeFont}
         onChange={setCodeFont}
         defaultOption={["", "Default"]}
+      />
+      <FontSelect
+        label="CJK Font"
+        ariaLabel="Editor CJK Font Family"
+        value={cjkFont}
+        onChange={setCjkFont}
+        defaultOption={["", "None"]}
       />
       <NumberInput
         label="Font Size"

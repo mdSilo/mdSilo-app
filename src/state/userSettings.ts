@@ -88,6 +88,8 @@ export type UserSettings = {
   setFont: Setter<string>;
   codeFont: string; // a font id for code in the editor, '' for the default monospace
   setCodeFont: Setter<string>;
+  cjkFont: string; // a font id for CJK text in the editor, '' for none
+  setCjkFont: Setter<string>;
   customFonts: CustomFont[]; // the fonts added by the user, kept on this device, see custom/fonts
   setCustomFonts: Setter<CustomFont[]>;
   workspaceFonts: CustomFont[]; // fonts of the workspace, not persisted
@@ -194,6 +196,8 @@ const userSettingsSlice = (
   setFont: setter(set, "font"),
   codeFont: "",
   setCodeFont: setter(set, "codeFont"),
+  cjkFont: "",
+  setCjkFont: setter(set, "cjkFont"),
   customFonts: [],
   setCustomFonts: setter(set, "customFonts"),
   workspaceFonts: [],

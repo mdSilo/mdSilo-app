@@ -11,7 +11,12 @@ import React, {
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from "react-icons/tb";
-import MsEditor, { Attach, embeds, type Extension } from "mdsmirror";
+import MsEditor, {
+  Attach,
+  embeds,
+  theme as baseTheme,
+  type Extension,
+} from "mdsmirror";
 import { useCodeRenderers } from "@/plugins/codeBlocks";
 import { useEditorSelectionActions } from "@/plugins/EditorSelectionActions";
 import PluginNoteMode, { usePluginNoteModes } from "@/plugins/PluginNoteMode";
@@ -62,7 +67,7 @@ import {
 } from "@/workspace/util";
 import { getFileExt } from "@/workspace/process";
 import { useWritingRoot } from "@/workspace/useWorkspace";
-import { fontFamilyOf, useFonts } from "@/custom/fonts";
+import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
 import NoteHeader from "./NoteHeader";
 import Backlinks from "./backlinks/Backlinks";
 import IssueRefs from "./IssueRefs";
@@ -116,6 +121,7 @@ function Note(props: Props) {
   const darkMode = useStore((state) => state.darkMode);
   const font = useStore((state) => state.font);
   const codeFont = useStore((state) => state.codeFont);
+  const cjkFont = useStore((state) => state.cjkFont);
   const customFonts = useFonts();
   const fontSize = useStore((state) => state.fontSize);
   const fontWt = useStore((state) => state.fontWt);
@@ -409,9 +415,21 @@ function Note(props: Props) {
 
   const customTheme = {
     ...EDITOR_THEME,
-    fontFamily: fontFamilyOf(font, customFonts),
-    ...(codeFont
-      ? { fontFamilyMono: fontFamilyOf(codeFont, customFonts) }
+    fontFamily: fontFamilyWithCjk(
+      font,
+      cjkFont,
+      customFonts,
+      baseTheme.fontFamily,
+    ),
+    ...(codeFont || cjkFont
+      ? {
+          fontFamilyMono: fontFamilyWithCjk(
+            codeFont,
+            cjkFont,
+            customFonts,
+            baseTheme.fontFamilyMono,
+          ),
+        }
       : null),
     fontScale: [fontSize / 1.1, lineHt / 1.6, fontWt / 400],
   };
@@ -488,7 +506,12 @@ function Note(props: Props) {
                       onChange={onMarkdownChange}
                       dark={darkMode}
                       readMode={readMode}
-                      fontFamily={fontFamilyOf(codeFont, customFonts)}
+                      fontFamily={fontFamilyWithCjk(
+                        codeFont,
+                        cjkFont,
+                        customFonts,
+                        "monospace", // as CodeMirror
+                      )}
                       className={"text-xl"}
                     />
                   ) : rawMode === "mindmap" ? (

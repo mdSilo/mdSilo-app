@@ -97,21 +97,29 @@ export function fontFamilyOf(
 /**
  * The CSS `font-family` of a font with a font for CJK text: the CJK font
  * after the Latin ones, so it shows the characters the others don't have.
+ * `fallback` is the family of the default font (`''`) of the view, if any.
  * '' for neither.
  */
 export function fontFamilyWithCjk(
   id: string,
   cjkId: string,
   customFonts: CustomFont[] = [],
+  fallback = "",
 ): string {
-  const family = fontFamilyOf(id, customFonts);
+  const family = fontFamilyOf(id, customFonts) || fallback;
   const cjk = fontFamilyOf(cjkId, customFonts);
   if (!cjk || !family) return family || cjk;
   if (id in STACKS) {
     const [latin, rest] = STACKS[id as keyof typeof STACKS];
     return `${latin}, ${cjk}, ${rest}`;
   }
-  return `${family}, ${cjk}`;
+  // before a generic family at the end: it always matches
+  const generic = family.match(
+    /(?:^|,)\s*(serif|sans-serif|monospace|system-ui)\s*$/,
+  );
+  if (!generic) return `${family}, ${cjk}`;
+  const before = family.slice(0, generic.index);
+  return `${before ? `${before}, ` : ""}${cjk}, ${generic[1]}`;
 }
 
 /** A family name from a font file name: `Noto_Serif-Regular.ttf` -> `Noto Serif` */

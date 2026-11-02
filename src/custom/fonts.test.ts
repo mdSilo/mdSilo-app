@@ -111,6 +111,23 @@ describe("a font for CJK text", () => {
     expect(fontFamilyWithCjk("book", "")).toBe("");
   });
 
+  it("goes before the generic family of the default font of a view", () => {
+    expect(fontFamilyWithCjk("", "system:X", [], "'Ubuntu', sans-serif")).toBe(
+      "'Ubuntu', 'X', sans-serif",
+    );
+    expect(fontFamilyWithCjk("", "system:X", [], "monospace")).toBe(
+      "'X', monospace",
+    );
+    expect(fontFamilyWithCjk("", "system:X", [], "'A', 'B'")).toBe(
+      "'A', 'B', 'X'",
+    );
+    expect(fontFamilyWithCjk("", "", [], "monospace")).toBe("monospace");
+    // a font chosen but gone: the default font of the view
+    expect(fontFamilyWithCjk("custom:gone", "system:X", [], "serif")).toBe(
+      "'X', serif",
+    );
+  });
+
   it("is set where the book sets no font, when the font is of the book", () => {
     const css = bookStyles(
       { ...DEFAULT_READER_SETTINGS, cjkFont: "custom:a1" },
