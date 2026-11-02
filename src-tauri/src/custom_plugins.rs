@@ -250,6 +250,104 @@ pub async fn remove_plugin(
   remove_in(&base_of(workspace.as_deref())?, &id)
 }
 
+/// The most files and bytes a plugin .zip may unpack to
+const ZIP_MAX_FILES: usize = 5_000;
+const ZIP_MAX_BYTES: u64 = 256 * 1024 * 1024;
+
+/// Unpacks a .zip into `to`; names out of it (`..`, absolute) and links are
+/// left out, and it stops past the limits above.
+fn unpack_zip(zip: &Path, to: &Path) -> Result<(), String> {
+  use std::io::Read;
+  let file = fs::File::open(zip).map_err(|e| e.to_string())?;
+  let mut archive = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
+  if archive.len() > ZIP_MAX_FILES {
+    return Err("Too many files in the .zip".to_string());
+  }
+  let mut total = 0u64;
+  for i in 0..archive.len() {
+    let mut entry = archive.by_index(i).map_err(|e| e.to_string())?;
+    let Some(name) = entry.enclosed_name() else {
+      continue;
+    };
+    if entry.is_symlink() {
+      continue;
+    }
+    let target = to.join(name);
+    if entry.is_dir() {
+      fs::create_dir_all(&target).map_err(|e| e.to_string())?;
+      continue;
+    }
+    if let Some(parent) = target.parent() {
+      fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let mut out = fs::File::create(&target).map_err(|e| e.to_string())?;
+    // counted as written, not as the .zip says
+    let left = ZIP_MAX_BYTES - total;
+    let written = std::io::copy(&mut (&mut entry).take(left + 1), &mut out)
+      .map_err(|e| e.to_string())?;
+    total += written;
+    if total > ZIP_MAX_BYTES {
+      return Err("The .zip is too big for a plugin".to_string());
+    }
+  }
+  Ok(())
+}
+
+/// The folder of the plugin in what a .zip unpacked to: the root, or its
+/// only folder (a .zip of the plugin folder itself)
+fn plugin_root(dir: &Path) -> Option<PathBuf> {
+  if dir.join(MANIFEST).is_file() {
+    return Some(dir.to_path_buf());
+  }
+  let entries: Vec<_> = fs::read_dir(dir)
+    .ok()?
+    .flatten()
+    .filter(|e| !e.file_name().to_string_lossy().starts_with("__MACOSX"))
+    .collect();
+  match entries.as_slice() {
+    [only] if only.file_type().is_ok_and(|t| t.is_dir()) => {
+      let inner = only.path();
+      inner.join(MANIFEST).is_file().then_some(inner)
+    }
+    _ => None,
+  }
+}
+
+fn unpacked_dir() -> Result<PathBuf, String> {
+  data_dir()
+    .map(|dir| dir.join("custom").join("unpacked"))
+    .ok_or_else(|| "No data folder".to_string())
+}
+
+/// Unpacks a plugin .zip, to install from the folder given; then
+/// `forget_unpacked` removes it.
+#[tauri::command]
+pub async fn unpack_plugin(zip: String) -> Result<String, String> {
+  let base = unpacked_dir()?;
+  let _ = fs::remove_dir_all(&base);
+  let dir = base.join("plugin");
+  fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+  let unpacked = unpack_zip(Path::new(&zip), &dir).and_then(|()| {
+    plugin_root(&dir).ok_or_else(|| format!("No {MANIFEST} in the .zip"))
+  });
+  match unpacked {
+    Ok(root) => Ok(root.display().to_string()),
+    Err(e) => {
+      let _ = fs::remove_dir_all(&base);
+      Err(e)
+    }
+  }
+}
+
+#[tauri::command]
+pub async fn forget_unpacked() -> Result<(), String> {
+  let base = unpacked_dir()?;
+  if base.exists() {
+    fs::remove_dir_all(base).map_err(|e| e.to_string())?;
+  }
+  Ok(())
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -325,6 +423,63 @@ mod tests {
     install_in(&base, &root.join("src"), "x").unwrap();
     assert!(install_in(&base, &base.join("x"), "x").is_err());
     assert!(base.join("x/index.html").exists());
+    let _ = fs::remove_dir_all(root);
+  }
+
+  fn zip_of(path: &Path, files: &[(&str, &str)]) {
+    use std::io::Write;
+    let mut zip = zip::ZipWriter::new(fs::File::create(path).unwrap());
+    let options = zip::write::SimpleFileOptions::default()
+      .compression_method(zip::CompressionMethod::Deflated);
+    for (name, text) in files {
+      zip.start_file(*name, options).unwrap();
+      zip.write_all(text.as_bytes()).unwrap();
+    }
+    zip.finish().unwrap();
+  }
+
+  #[test]
+  fn unpacks_a_zip_of_a_plugin() {
+    let root = temp("zip");
+    let at_root = root.join("a.zip");
+    zip_of(&at_root, &[(MANIFEST, "{}"), ("js/app.js", "1")]);
+    let out = root.join("a");
+    unpack_zip(&at_root, &out).unwrap();
+    assert_eq!(plugin_root(&out), Some(out.clone()));
+    assert_eq!(fs::read_to_string(out.join("js/app.js")).unwrap(), "1");
+
+    // a .zip of the folder, as made by the file manager of macOS too
+    let folder = root.join("b.zip");
+    zip_of(
+      &folder,
+      &[("csv/manifest.json", "{}"), ("__MACOSX/csv/._x", "")],
+    );
+    let out = root.join("b");
+    unpack_zip(&folder, &out).unwrap();
+    assert_eq!(plugin_root(&out), Some(out.join("csv")));
+
+    let none = root.join("c.zip");
+    zip_of(&none, &[("a/manifest.json", "{}"), ("b/x", "")]);
+    let out = root.join("c");
+    unpack_zip(&none, &out).unwrap();
+    assert_eq!(plugin_root(&out), None);
+    let _ = fs::remove_dir_all(root);
+  }
+
+  #[test]
+  fn unpacks_nothing_out_of_the_folder() {
+    let root = temp("zipslip");
+    let evil = root.join("evil.zip");
+    zip_of(
+      &evil,
+      &[("../out.txt", "no"), ("/abs.txt", "no"), (MANIFEST, "{}")],
+    );
+    let out = root.join("in");
+    unpack_zip(&evil, &out).unwrap();
+    assert!(!root.join("out.txt").exists());
+    assert!(out.join(MANIFEST).exists());
+    assert_eq!(fs::read_dir(&out).unwrap().count(), 1);
+    assert!(unpack_zip(&root.join("none.zip"), &out).is_err());
     let _ = fs::remove_dir_all(root);
   }
 

@@ -39,6 +39,8 @@ regex = "1"
 percent-encoding = "2.3.2"
 tantivy = "0.27.0"
 tantivy-jieba = "0.21.0"
+# plugins installed from a .zip, see custom_plugins.rs
+zip = { version = "4.6.1", default-features = false, features = ["deflate"] }
 # walk dir
 ignore = "0.4.34"
 ## rss reader

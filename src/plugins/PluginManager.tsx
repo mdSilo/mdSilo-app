@@ -11,6 +11,7 @@ import {
   enablePlugin,
   grantedPermissions,
   installPlugin,
+  installPluginZip,
   isChanged,
   isEnabled,
   loadPlugins,
@@ -56,6 +57,21 @@ export default function PluginManager() {
     }
   };
 
+  const onInstallZip = async () => {
+    setError("");
+    const zip = await open({
+      title: "Install Plugin from .zip",
+      multiple: false,
+      filters: [{ name: "Plugin", extensions: ["zip"] }],
+    });
+    if (typeof zip !== "string") return;
+    try {
+      await installPluginZip(zip);
+    } catch (e) {
+      setError(errorText(e));
+    }
+  };
+
   const onReload = () => {
     setError("");
     loadPlugins().catch((e) => setError(errorText(e)));
@@ -91,6 +107,13 @@ export default function PluginManager() {
           onClick={() => void onInstall()}
         >
           Install from Folder
+        </button>
+        <button
+          type="button"
+          className="btn btn-xs"
+          onClick={() => void onInstallZip()}
+        >
+          Install from .zip
         </button>
       </div>
       {error ? <p className="text-xs text-error">{error}</p> : null}

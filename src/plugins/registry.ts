@@ -122,6 +122,16 @@ export async function installPlugin(srcDir: string): Promise<PluginManifest> {
   return manifest;
 }
 
+/** Installs, or updates, the plugin in a .zip: of its folder, or of what is in it. */
+export async function installPluginZip(zip: string): Promise<PluginManifest> {
+  const dir = await invoke<string>("unpack_plugin", { zip });
+  try {
+    return await installPlugin(dir);
+  } finally {
+    await invoke("forget_unpacked").catch(() => undefined);
+  }
+}
+
 const workspaceArg = (where: Where) =>
   where === "workspace" ? workspaceData() : null;
 

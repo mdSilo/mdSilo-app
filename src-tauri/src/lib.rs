@@ -99,6 +99,8 @@ pub fn run() {
       custom_plugins::list_plugins,
       custom_plugins::install_plugin,
       custom_plugins::remove_plugin,
+      custom_plugins::unpack_plugin,
+      custom_plugins::forget_unpacked,
       plugin_scheme::set_plugin_net,
       files::listen_dir,
       files::open_url,

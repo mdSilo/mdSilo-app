@@ -229,6 +229,47 @@ describe("PluginManager", () => {
     });
   });
 
+  it("installs from a .zip, and removes what it unpacked", async () => {
+    vi.mocked(open).mockResolvedValueOnce("/dl/clock.zip");
+    mockInvoke(invoke, {
+      unpack_plugin: "/data/unpacked/plugin/clock",
+      read_file: ({ filePath }: Record<string, unknown>) =>
+        filePath === "/data/unpacked/plugin/clock/manifest.json"
+          ? JSON.stringify({ id: "clock", name: "Clock", version: "1.0.0" })
+          : "",
+      install_plugin: "/data/clock",
+      list_plugins: [],
+      forget_unpacked: undefined,
+    });
+    render(<PluginManager />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Install from .zip" }),
+    );
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("forget_unpacked"));
+    expect(invoke).toHaveBeenCalledWith("unpack_plugin", {
+      zip: "/dl/clock.zip",
+    });
+    expect(invoke).toHaveBeenCalledWith("install_plugin", {
+      src: "/data/unpacked/plugin/clock",
+      id: "clock",
+    });
+  });
+
+  it("says why a .zip can not be installed, and cleans up", async () => {
+    vi.mocked(open).mockResolvedValueOnce("/dl/x.zip");
+    mockInvoke(invoke, {
+      unpack_plugin: "/data/unpacked/plugin",
+      read_file: "",
+      forget_unpacked: undefined,
+    });
+    render(<PluginManager />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Install from .zip" }),
+    );
+    expect(await screen.findByText(/No manifest.json/)).toBeInTheDocument();
+    expect(invoke).toHaveBeenCalledWith("forget_unpacked");
+  });
+
   it("uninstalls after asking", async () => {
     store.setState({
       pluginStates: { csv: { enabled: true, granted: ["file:read"] } },
