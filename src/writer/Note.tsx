@@ -11,10 +11,15 @@ import React, {
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from "react-icons/tb";
-import MsEditor, { Attach, embeds } from "mdsmirror";
+import MsEditor, { Attach, embeds, type Extension } from "mdsmirror";
 import { useCodeRenderers } from "@/plugins/codeBlocks";
 import { useEditorSelectionActions } from "@/plugins/EditorSelectionActions";
 import PluginNoteMode, { usePluginNoteModes } from "@/plugins/PluginNoteMode";
+import {
+  trustedExtensions,
+  trustedExtensionsKey,
+  useTrustedVersion,
+} from "@/plugins/trusted";
 import { EDITOR_THEME } from "@/lib/themes";
 import Title from "@/writer/Title";
 import Toc, { Heading } from "@/writer/Toc";
@@ -88,6 +93,14 @@ function Note(props: Props) {
   const { codeRenderers, key: codeRenderersKey } = useCodeRenderers();
   // buttons of plugins on the text selected
   const selectionActions = useEditorSelectionActions();
+  // read when the editor is made: a new one when trusted plugins change them
+  useTrustedVersion();
+  const extensionsKey = trustedExtensionsKey();
+  const extensions = useMemo(
+    () => trustedExtensions() as Extension[],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [extensionsKey],
+  );
   const getHeading = useCallback(() => {
     setHeadings(editorInstance.current?.getHeadings() ?? []);
   }, []);
@@ -482,7 +495,7 @@ function Note(props: Props) {
                     />
                   ) : (
                     <MsEditor
-                      key={`wys-${noteId}-${codeRenderersKey}`}
+                      key={`wys-${noteId}-${codeRenderersKey}-${extensionsKey}`}
                       ref={editorInstance}
                       value={mdContent}
                       dark={darkMode}
@@ -509,6 +522,7 @@ function Note(props: Props) {
                       selectionActions={selectionActions}
                       onCopyHash={onCopyHash}
                       embeds={embeds}
+                      extensions={extensions}
                       disables={["sub"]}
                       rootPath={notesRoot}
                       docPath={noteDir}

@@ -10,6 +10,7 @@ import { useCustomThemes } from "@/custom/themes";
 import { usePlugins } from "@/plugins/registry";
 import { PluginsModal } from "@/plugins/PluginManager";
 import { PluginAnswerModal } from "@/plugins/PluginAnswer";
+import { TrustedPlugins } from "@/plugins/trusted";
 import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
 import { shareSettings } from "@/state/windowSync";
 import { isWeb } from "@/workspace/util";
@@ -142,6 +143,7 @@ const App = () => {
           />
           <PluginsModal />
           <PluginAnswerModal />
+          <TrustedPlugins />
         </div>
       </div>
     </ProvideCurrentView>

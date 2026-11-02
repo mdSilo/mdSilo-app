@@ -15,6 +15,8 @@ Samples here:
 - `text-stats/`: a "Count words" button on the text selected, in the reader and the editor.
 - `outline/`: a note mode, the headings of the note open as an outline to rename them; switch to
   it with its button by WYSIWYG, Markdown and MindMap above the note.
+- `book-indent/`: a **trusted** plugin (see below): indents the paragraphs of books, and a view
+  of the words of each note.
 - `bars/`: draws ```` ```bars ```` code blocks (`label: number` lines) as a bar chart, in the editor
   and in the published site; its command "How to write bars" is in the Plugins menu.
 
@@ -49,7 +51,8 @@ Samples here:
 - `contributes.noteModes`: `[{ "id": "cards", "title": "Cards", "page": "cards.html" }]`, modes of
   the note open, beside WYSIWYG, Markdown and MindMap; its page shows in place of the editor (see
   below). `page` is the main page by default.
-- `mode`: `sandboxed` (default). `trusted` plugins are not supported yet.
+- `mode`: `sandboxed` (default), or `trusted` (see the end). For a trusted plugin `main` is its ES
+  module, `main.js` by default, and `permissions` are not asked: it has them all.
 
 ## The page
 
@@ -144,3 +147,29 @@ parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }
 The hidden frame has `app.info` and `app.style` only: commands can't read notes yet.
 
 See `csv-viewer/index.html` for a small client.
+
+## Trusted plugins
+
+`"mode": "trusted"` runs the plugin in the app itself, not in a sandbox. It can do anything the
+app can: read and write any file, reach the internet, change the app. Use it only for what a
+sandboxed plugin can't do; the user is warned before enabling it, and trusted plugins are listed
+apart in Manage Plugins.
+
+`main` is an ES module that exports `activate(api)` (or a default function), and may export
+`deactivate()`. `api` (`TrustedApi` of `@mdsilo/plugin-api`) has:
+
+- `api.call(method, params)`: the methods of the tables above for views (`notes.*`, `books.list`,
+  `issues.list`, `app.open`, `app.info`, `app.style`), no permission asked.
+- `api.handle(request, handler)`: answers `code.render`, `selection.action`, `command.run`, as the
+  main page of a sandboxed plugin does; declare them in `contributes` as well.
+- `api.page(name, mount)`: draws a page of the plugin into the app, in place of a frame: the
+  `page` of a view or a note mode, or `main` (a viewer, or one with no `page`). `mount(element,
+  page)` gets the element and `page.call` / `page.on` with the methods and events of that place
+  (`file.read`, `note.write`, `note.changed`…); it may give a function to run when it closes.
+- `api.editor.addExtension(ext)`: an extension of the editor, made from `api.editor.Extension`
+  (mdsmirror): nodes, marks, ProseMirror plugins, input rules. The editor is made again with it.
+- `api.reader.addStyles(css)`: CSS for the pages of the books, after the styles of the app.
+- `api.onUnload(fn)`: run when the plugin is disabled, uninstalled, or installed again.
+
+Each of `handle`, `page`, `addExtension`, `addStyles` gives a function to take it back. All of them
+are taken back when the plugin unloads.

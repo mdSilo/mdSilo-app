@@ -206,6 +206,11 @@ describe("parseManifest", () => {
   });
 });
 
+it("takes main.js as the module of a trusted plugin", () => {
+  expect(parseManifest({ ...minimal, mode: "trusted" }).main).toBe("main.js");
+  expect(parseManifest(minimal).main).toBe("index.html");
+});
+
 describe("versions", () => {
   it("compares by numbers", () => {
     expect(compareVersions("0.10.0", "0.9.1")).toBe(1);
@@ -252,5 +257,10 @@ describe("the sample plugins", () => {
       "utf8",
     );
     expect(parseManifest(outline).contributes.noteModes[0].id).toBe("outline");
+    const indent = parseManifest(
+      readFileSync("examples/plugins/book-indent/manifest.json", "utf8"),
+    );
+    expect(indent.mode).toBe("trusted");
+    expect(indent.main).toBe("main.js");
   });
 });

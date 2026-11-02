@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { BookInfo, IssueInfo, NoteInfo } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
 import type { ViewAction } from "@/state/viewReducer";
 import { indexOf } from "@/lib/linkIndex";
@@ -13,7 +14,6 @@ import {
 import { isBookFile } from "@/reader/document";
 import { loadBooks } from "@/reader/library/books";
 import { useIssueStore } from "@/issue/issueStore";
-import type { BookInfo, IssueInfo, NoteInfo } from "@mdsilo/plugin-api";
 import type { PluginMethods } from "./host";
 
 // What a view of a plugin can see of the workspace (the types are of

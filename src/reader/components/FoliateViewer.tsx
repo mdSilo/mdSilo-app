@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { openUrl } from "@/workspace/open";
 import { allFonts, useFonts, useFontsVersion } from "@/custom/fonts";
+import { trustedReaderCss, useTrustedVersion } from "@/plugins/trusted";
 import { store, useStore } from "@/state/store";
 import {
   DEFAULT_READER_SETTINGS,
@@ -311,6 +312,8 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
   const theme = useStore((state) => state.theme);
   const customFonts = useFonts();
   const fontsVersion = useFontsVersion();
+  // the styles trusted plugins add to the books
+  const trustedVersion = useTrustedVersion();
   const notes = bookStore((state) => state.notes);
   const fixed = book.rendition?.layout === "pre-paginated";
   // a fixed layout: its pages from right to left or from left to right, as chosen;
@@ -939,7 +942,7 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
           themeColors(store.getState().darkMode, current.pageTheme),
           textMode,
           allFonts(store.getState()),
-        ),
+        ) + trustedReaderCss(),
       );
       setView(view, pane);
       setOpened(view);
@@ -1020,6 +1023,7 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
   }, [initialCfi, bookStore]);
 
   // the settings and theme
+  const look = lookKey(settings);
   useEffect(() => {
     const view = viewRef.current;
     if (!view?.renderer) return;
@@ -1030,10 +1034,10 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
         themeColors(darkMode, settings.pageTheme),
         textMode,
         customFonts,
-      ),
+      ) + trustedReaderCss(),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lookKey(settings), darkMode, theme, vertical, customFonts, fontsVersion]);
+  }, [look, darkMode, theme, vertical, customFonts, fontsVersion, trustedVersion]);
 
   // the code blocks of the sections shown; the sections loaded later, on load
   useEffect(() => {

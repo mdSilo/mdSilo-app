@@ -236,8 +236,13 @@ export function parseManifest(json: unknown): PluginManifest {
     description: optionalText(value.description, "description"),
     mode,
     permissions: [...new Set(permissions)],
+    // a page in a frame, or the module of a trusted plugin
     main:
-      value.main === undefined ? "index.html" : innerPath(value.main, "main"),
+      value.main === undefined
+        ? mode === "trusted"
+          ? "main.js"
+          : "index.html"
+        : innerPath(value.main, "main"),
     contributes: parseContributes(value.contributes),
   };
 }

@@ -19,6 +19,7 @@ import {
   uninstallPlugin,
   type InstalledPlugin,
 } from "./registry";
+import { trustedError, useTrustedVersion } from "./trusted";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -41,6 +42,9 @@ export function PluginsModal() {
 export default function PluginManager() {
   const plugins = useStore((state) => state.installedPlugins);
   const [error, setError] = useState("");
+  const isTrusted = (p: InstalledPlugin) => p.manifest?.mode === "trusted";
+  const sandboxed = plugins.filter((p) => !isTrusted(p));
+  const trusted = plugins.filter(isTrusted);
 
   const onInstall = async () => {
     setError("");
@@ -118,11 +122,29 @@ export default function PluginManager() {
       </div>
       {error ? <p className="text-xs text-error">{error}</p> : null}
       {plugins.length > 0 ? (
-        <ul className="flex flex-col gap-2">
-          {plugins.map((plugin) => (
-            <PluginItem key={plugin.id} plugin={plugin} onError={setError} />
-          ))}
-        </ul>
+        <>
+          <ul className="flex flex-col gap-2">
+            {sandboxed.map((plugin) => (
+              <PluginItem key={plugin.id} plugin={plugin} onError={setError} />
+            ))}
+          </ul>
+          {trusted.length > 0 ? (
+            <section className="flex flex-col gap-2">
+              <h3 className="text-sm font-semibold text-warning">
+                Trusted: run in the app, with full access
+              </h3>
+              <ul className="flex flex-col gap-2">
+                {trusted.map((plugin) => (
+                  <PluginItem
+                    key={plugin.id}
+                    plugin={plugin}
+                    onError={setError}
+                  />
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </>
       ) : (
         <p className="text-xs text-base-content/60">
           No plugin yet. A plugin is a folder with a manifest.json, it runs in a
@@ -154,10 +176,18 @@ function PluginItem({
   const [choosing, setChoosing] = useState<Permission[] | null>(null);
   const trusted = manifest?.mode === "trusted";
   const name = manifest?.name ?? plugin.id;
+  useTrustedVersion();
+  const loadError = trusted && enabled ? trustedError(plugin.id) : undefined;
 
-  const onToggle = () => {
+  const onToggle = async () => {
     if (enabled) disablePlugin(plugin.id);
-    else if (asked.length > 0)
+    else if (trusted) {
+      const ok = await ask(
+        `${name} is a trusted plugin: it runs in the app itself, not in a sandbox, with full access to your files, your notes and the internet, and it can change how the app works. Enable it only if you trust ${manifest?.author ?? "its author"}.`,
+        { title: "Enable Trusted Plugin", kind: "warning" },
+      );
+      if (ok) enablePlugin(plugin);
+    } else if (asked.length > 0)
       setChoosing(
         pluginStates[plugin.id]?.granted.filter((p) => asked.includes(p)) ??
           asked,
@@ -209,8 +239,8 @@ function PluginItem({
           className="toggle toggle-sm toggle-primary"
           aria-label={`Enable ${name}`}
           checked={enabled || choosing !== null}
-          disabled={Boolean(plugin.error) || trusted}
-          onChange={onToggle}
+          disabled={Boolean(plugin.error)}
+          onChange={() => void onToggle()}
         />
         <span className="flex-1 truncate">
           {name}
@@ -261,11 +291,11 @@ function PluginItem({
       </label>
       {trusted && !plugin.error ? (
         <p className="text-xs text-warning">
-          Trusted plugins run with full access to your files; they can not be
-          enabled yet.
+          Runs in the app with full access to your files.
         </p>
       ) : null}
-      {shown && asked.length > 0 ? (
+      {loadError ? <p className="text-xs text-error">{loadError}</p> : null}
+      {!trusted && shown && asked.length > 0 ? (
         <fieldset className="flex flex-col gap-1">
           <legend className="text-xs text-base-content/70">
             {choosing ? `${name} asks to:` : "Allowed to:"}

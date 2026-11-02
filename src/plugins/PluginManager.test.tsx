@@ -160,28 +160,67 @@ describe("PluginManager", () => {
     });
   });
 
-  it("can not enable a plugin with an error, nor a trusted one", () => {
+  it("can not enable a plugin with an error", () => {
     store.setState({
       installedPlugins: [
         installed(
           { id: "old", name: "Old", version: "1.0.0" },
           "Needs mdSilo 9.0.0 or later",
         ),
-        installed({
-          id: "deep",
-          name: "Deep",
-          version: "1.0.0",
-          mode: "trusted",
-        }),
       ],
     });
     render(<PluginManager />);
     expect(screen.getByLabelText("Enable Old")).toBeDisabled();
     expect(screen.getByText("Needs mdSilo 9.0.0 or later")).toBeInTheDocument();
-    expect(screen.getByLabelText("Enable Deep")).toBeDisabled();
-    expect(
-      item("deep").getByText(/full access to your files/),
-    ).toBeInTheDocument();
+  });
+
+  describe("a trusted plugin", () => {
+    beforeEach(() => {
+      store.setState({
+        installedPlugins: [
+          installed(csvManifest),
+          installed({
+            id: "deep",
+            name: "Deep",
+            version: "1.0.0",
+            author: "Ann",
+            mode: "trusted",
+            permissions: ["notes:read"],
+          }),
+        ],
+      });
+    });
+
+    it("is listed apart, with full access", () => {
+      render(<PluginManager />);
+      expect(
+        screen.getByText("Trusted: run in the app, with full access"),
+      ).toBeInTheDocument();
+      expect(
+        item("deep").getByText(/full access to your files/),
+      ).toBeInTheDocument();
+    });
+
+    it("is enabled after a warning, with no permission to choose", async () => {
+      vi.mocked(ask).mockResolvedValueOnce(true);
+      render(<PluginManager />);
+      await userEvent.click(screen.getByLabelText("Enable Deep"));
+      await waitFor(() =>
+        expect(store.getState().pluginStates.deep?.enabled).toBe(true),
+      );
+      expect(vi.mocked(ask).mock.calls[0][0]).toMatch(
+        /not in a sandbox.*trust Ann/,
+      );
+      expect(item("deep").queryByText("Deep asks to:")).toBeNull();
+    });
+
+    it("stays disabled when the warning is declined", async () => {
+      vi.mocked(ask).mockResolvedValueOnce(false);
+      render(<PluginManager />);
+      await userEvent.click(screen.getByLabelText("Enable Deep"));
+      await waitFor(() => expect(ask).toHaveBeenCalled());
+      expect(store.getState().pluginStates.deep).toBeUndefined();
+    });
   });
 
   it("installs from a folder, and says what is wrong", async () => {

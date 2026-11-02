@@ -1,6 +1,7 @@
 import { store } from "@/state/store";
 import { createHost, type PluginHost } from "./host";
 import { enabledPlugins, pluginUrl, type InstalledPlugin } from "./registry";
+import { askTrusted } from "./trusted";
 
 /**
  * The main page of a plugin running in the background, in a hidden sandboxed
@@ -69,6 +70,9 @@ export async function askPlugin(
   method: string,
   params?: unknown,
 ): Promise<unknown> {
+  // in the app itself, no frame
+  if (plugin.manifest?.mode === "trusted")
+    return askTrusted(plugin, method, params);
   const { host, ready } = backgroundOf(plugin);
   await ready;
   return host.call(method, params);

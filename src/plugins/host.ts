@@ -1,7 +1,7 @@
+import { PROTOCOL, type PluginStyle } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
 import { themeVarsOf } from "@/custom/themes";
 import { allFonts, fontFamilyOf } from "@/custom/fonts";
-import { PROTOCOL, type PluginStyle } from "@mdsilo/plugin-api";
 import type { Permission } from "./manifest";
 import { grantedPermissions, type InstalledPlugin } from "./registry";
 
@@ -45,7 +45,7 @@ export function appStyle(): PluginStyle {
 }
 
 /** Methods every plugin has, whatever it is granted. */
-const BASE_METHODS = (plugin: InstalledPlugin): PluginMethods => ({
+export const baseMethods = (plugin: InstalledPlugin): PluginMethods => ({
   "app.info": {
     handler: () => ({
       id: plugin.id,
@@ -101,7 +101,7 @@ export function createHost(
   frame: HTMLIFrameElement,
   methods: () => PluginMethods = () => ({}),
 ): PluginHost {
-  const base = BASE_METHODS(plugin);
+  const base = baseMethods(plugin);
   // the origin of a sandboxed page is opaque, so no target origin can be named
   const post = (message: object) =>
     frame.contentWindow?.postMessage({ mdsilo: PROTOCOL, ...message }, "*");
