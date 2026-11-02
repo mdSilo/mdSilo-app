@@ -10,6 +10,7 @@ import {
   MANIFEST_FILE,
   parseManifest,
   supportsApp,
+  type Contributes,
   type NoteModeContribution,
   type Permission,
   type PluginManifest,
@@ -242,6 +243,45 @@ export const enabledPlugins = (
   states = store.getState().pluginStates,
 ) => plugins.filter((plugin) => isEnabled(plugin, states));
 
+// what trusted plugins contribute as they run (src/plugins/trusted.ts), by plugin id
+const runtimeContributes = new Map<string, Partial<Contributes>>();
+
+/** Sets what a trusted plugin contributes as it runs; none when it unloads. */
+export function setRuntimeContributes(
+  id: string,
+  contributes: Partial<Contributes> | undefined,
+) {
+  if (contributes) runtimeContributes.set(id, contributes);
+  else runtimeContributes.delete(id);
+}
+
+const NO_CONTRIBUTES: Contributes = {
+  viewers: [],
+  views: [],
+  codeBlocks: [],
+  selectionActions: [],
+  commands: [],
+  noteModes: [],
+};
+
+/** What a plugin contributes: its manifest, and what it adds as it runs (trusted only). */
+export function contributesOf(plugin: InstalledPlugin): Contributes {
+  const declared = plugin.manifest?.contributes ?? NO_CONTRIBUTES;
+  const added = runtimeContributes.get(plugin.id);
+  if (!added) return declared;
+  return {
+    viewers: [...declared.viewers, ...(added.viewers ?? [])],
+    views: [...declared.views, ...(added.views ?? [])],
+    codeBlocks: [...new Set([...declared.codeBlocks, ...(added.codeBlocks ?? [])])],
+    selectionActions: [
+      ...declared.selectionActions,
+      ...(added.selectionActions ?? []),
+    ],
+    commands: [...declared.commands, ...(added.commands ?? [])],
+    noteModes: [...declared.noteModes, ...(added.noteModes ?? [])],
+  };
+}
+
 /** The enabled plugins that open files with the extension of `path`. */
 export function viewersOf(
   path: string,
@@ -251,7 +291,7 @@ export function viewersOf(
   const ext = getFileExt(path.split(/[/\\]/).pop() ?? "").toLowerCase();
   if (!ext) return [];
   return enabledPlugins(plugins, states).flatMap((plugin) =>
-    (plugin.manifest?.contributes.viewers ?? [])
+    contributesOf(plugin).viewers
       .filter((viewer) => viewer.extensions.includes(ext))
       .map((viewer) => ({ plugin, viewer })),
   );
@@ -263,7 +303,7 @@ export const pluginViews = (
   states = store.getState().pluginStates,
 ): { plugin: InstalledPlugin; view: ViewContribution }[] =>
   enabledPlugins(plugins, states).flatMap((plugin) =>
-    (plugin.manifest?.contributes.views ?? []).map((view) => ({
+    contributesOf(plugin).views.map((view) => ({
       plugin,
       view,
     })),
@@ -283,7 +323,7 @@ export const pluginNoteModes = (
   name: string;
 }[] =>
   enabledPlugins(plugins, states).flatMap((plugin) =>
-    (plugin.manifest?.contributes.noteModes ?? []).map((mode) => ({
+    contributesOf(plugin).noteModes.map((mode) => ({
       plugin,
       mode,
       name: noteModeName(plugin.id, mode.id),

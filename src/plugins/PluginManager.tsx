@@ -19,7 +19,8 @@ import {
   uninstallPlugin,
   type InstalledPlugin,
 } from "./registry";
-import { trustedError, useTrustedVersion } from "./trusted";
+import { trustedError, trustedPage, useTrustedVersion } from "./trusted";
+import PluginFrame from "./PluginFrame";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -178,6 +179,10 @@ function PluginItem({
   const name = manifest?.name ?? plugin.id;
   useTrustedVersion();
   const loadError = trusted && enabled ? trustedError(plugin.id) : undefined;
+  // a page of settings, as a trusted plugin (or an Obsidian one) may have
+  const hasSettings =
+    trusted && enabled && Boolean(trustedPage(plugin, "settings"));
+  const [showSettings, setShowSettings] = useState(false);
 
   const onToggle = async () => {
     if (enabled) disablePlugin(plugin.id);
@@ -247,7 +252,25 @@ function PluginItem({
           <span className="ml-2 text-xs text-base-content/60">
             {manifest?.version}
           </span>
+          {manifest?.compat === "obsidian" ? (
+            <span
+              className="ml-2 badge badge-xs badge-outline"
+              title="An Obsidian plugin, run by a partial compatibility layer: simple plugins work, those using Obsidian's editor or layout don't"
+            >
+              Obsidian (partial)
+            </span>
+          ) : null}
         </span>
+        {hasSettings ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-xs"
+            aria-expanded={showSettings}
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            Settings
+          </button>
+        ) : null}
         <button
           type="button"
           className="btn btn-ghost btn-xs"
@@ -295,6 +318,14 @@ function PluginItem({
         </p>
       ) : null}
       {loadError ? <p className="text-xs text-error">{loadError}</p> : null}
+      {hasSettings && showSettings ? (
+        <div
+          className="max-h-96 overflow-auto rounded-box border border-base-300 p-2"
+          data-testid={`plugin-settings-${plugin.id}`}
+        >
+          <PluginFrame plugin={plugin} page="settings" />
+        </div>
+      ) : null}
       {!trusted && shown && asked.length > 0 ? (
         <fieldset className="flex flex-col gap-1">
           <legend className="text-xs text-base-content/70">

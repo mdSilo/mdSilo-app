@@ -114,10 +114,27 @@ fn status(code: StatusCode) -> Response<Vec<u8>> {
     .unwrap_or_default()
 }
 
+/// `__cjs/<file>.js`: a CommonJS script of the plugin (an Obsidian plugin's
+/// main.js) as an ES module, to import it without eval: its default export
+/// runs the script with `module`, `exports` and `require`.
+const CJS: &str = "__cjs/";
+
+fn as_module(script: &[u8]) -> Vec<u8> {
+  let mut body = b"export default function (module, exports, require) {\n".to_vec();
+  body.extend_from_slice(script);
+  body.extend_from_slice(b"\n}\n");
+  body
+}
+
 /// The file at `path` of the plugin `id` in `base`; links out of its folder are not followed.
 pub fn serve(base: &Path, uri_path: &str, net: bool) -> Response<Vec<u8>> {
   let Some((id, path)) = split_path(uri_path) else {
     return status(StatusCode::BAD_REQUEST);
+  };
+  let (path, cjs) = match path.strip_prefix(CJS) {
+    Some(inner) if inner.ends_with(".js") => (inner.to_string(), true),
+    Some(_) => return status(StatusCode::NOT_FOUND),
+    None => (path, false),
   };
   let Ok(root) = base.join(&id).canonicalize() else {
     return status(StatusCode::NOT_FOUND);
@@ -129,6 +146,7 @@ pub fn serve(base: &Path, uri_path: &str, net: bool) -> Response<Vec<u8>> {
   let Ok(body) = fs::read(&file) else {
     return status(StatusCode::NOT_FOUND);
   };
+  let body = if cjs { as_module(&body) } else { body };
   // The opaque origin of the iframe makes its own `fetch` and module scripts
   // cross-origin; the files are the plugin's code, not secrets.
   Response::builder()
@@ -246,6 +264,27 @@ mod tests {
     assert_eq!(
       serve(&base, "/other/index.html", false).status(),
       StatusCode::NOT_FOUND
+    );
+
+    // a CommonJS script, as a module
+    fs::write(base.join("csv/main.js"), "module.exports = 1;").unwrap();
+    let cjs = serve(&base, "/csv/__cjs/main.js", false);
+    assert_eq!(cjs.status(), StatusCode::OK);
+    assert_eq!(
+      cjs.body(),
+      b"export default function (module, exports, require) {\nmodule.exports = 1;\n}\n"
+    );
+    assert_eq!(
+      cjs.headers()[header::CONTENT_TYPE],
+      "text/javascript; charset=utf-8"
+    );
+    assert_eq!(
+      serve(&base, "/csv/__cjs/index.html", false).status(),
+      StatusCode::NOT_FOUND
+    );
+    assert_eq!(
+      serve(&base, "/csv/__cjs/../../secret.txt", false).status(),
+      StatusCode::BAD_REQUEST
     );
 
     #[cfg(unix)]

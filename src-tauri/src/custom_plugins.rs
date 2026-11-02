@@ -86,10 +86,14 @@ fn files_of(dir: &Path, prefix: &str, files: &mut Vec<(String, PathBuf)>) {
   }
 }
 
-/// The MD5 of the paths and contents of the files of a folder
+/// The settings an Obsidian plugin saves itself (`saveData`), not its code
+const DATA_FILE: &str = "data.json";
+
+/// The MD5 of the paths and contents of the files of a folder, but its settings
 pub(crate) fn hash_dir(dir: &Path) -> String {
   let mut files = Vec::new();
   files_of(dir, "", &mut files);
+  files.retain(|(path, _)| path != DATA_FILE);
   files.sort();
   let mut hasher = Md5::new();
   for (path, file) in files {
@@ -518,7 +522,11 @@ mod tests {
     assert_ne!(first, edited);
     // a file renamed is a change too
     fs::rename(dir.join("assets/app.js"), dir.join("assets/other.js")).unwrap();
-    assert_ne!(edited, hash_dir(&dir));
+    let renamed = hash_dir(&dir);
+    assert_ne!(edited, renamed);
+    // its own settings are not a change of its code
+    fs::write(dir.join(DATA_FILE), "{}").unwrap();
+    assert_eq!(renamed, hash_dir(&dir));
     let _ = fs::remove_dir_all(root);
   }
 

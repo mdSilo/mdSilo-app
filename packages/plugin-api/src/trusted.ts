@@ -1,3 +1,4 @@
+import type { Contributes } from "./manifest";
 import type {
   EventName,
   Events,
@@ -64,6 +65,15 @@ export type TrustedApi = Caller & {
    * `main` for a viewer and for those without a `page`
    */
   page(name: string, mount: MountPage): () => void;
+  /**
+   * adds what the manifest could have declared, as the plugin runs: a
+   * command, a code block language, a view, a note mode…; their requests
+   * and pages are answered by `handle` and `page` as for the declared ones
+   */
+  contribute<K extends keyof Contributes>(
+    kind: K,
+    item: Contributes[K][number],
+  ): () => void;
   editor: {
     /** the base class of the extensions of the editor (mdsmirror) */
     Extension: new (options?: Record<string, unknown>) => object;

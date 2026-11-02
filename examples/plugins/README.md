@@ -171,5 +171,34 @@ apart in Manage Plugins.
 - `api.reader.addStyles(css)`: CSS for the pages of the books, after the styles of the app.
 - `api.onUnload(fn)`: run when the plugin is disabled, uninstalled, or installed again.
 
-Each of `handle`, `page`, `addExtension`, `addStyles` gives a function to take it back. All of them
-are taken back when the plugin unloads.
+- `api.contribute(kind, item)`: adds, as the plugin runs, what its manifest could have declared:
+  `api.contribute("commands", { id, title })`, `("codeBlocks", "lang")`, `("views", { id, title,
+  page })`… answered by `handle` and `page` as the declared ones.
+
+Each of `handle`, `page`, `contribute`, `addExtension`, `addStyles` gives a function to take it
+back. All of them are taken back when the plugin unloads. A trusted plugin may also have a page
+named `settings`: Manage Plugins shows it under a Settings button.
+
+## Obsidian plugins (partial)
+
+A folder of an Obsidian plugin (`manifest.json`, `main.js`, maybe `styles.css`) installs as it is:
+its manifest is known by `isDesktopOnly`, and it runs as a trusted plugin (with the same warning),
+marked "Obsidian (partial)". `main.js` is served as a module (the app runs no `eval`), and
+`require("obsidian")` gets a layer over the API of mdSilo (`src/plugins/obsidian`):
+
+- `Plugin`: `onload`/`onunload`, `loadData`/`saveData` (`data.json` in its folder, left out of the
+  check for changes by a sync), `addCommand` (`callback`, `checkCallback`) and `addRibbonIcon` (both
+  in the Plugins menu), `registerMarkdownCodeBlockProcessor` (in the editor and published sites),
+  `registerView` + `ItemView` (views in the Plugins menu, `workspace.getLeaf().setViewState`),
+  `addSettingTab` + `PluginSettingTab` + `Setting` (text, text area, toggle, slider, dropdown,
+  button), `register*` cleanups.
+- `app.vault` (the notes: `getMarkdownFiles`, `read`, `modify`, `process`, `adapter`),
+  `app.metadataCache` (tags and links), `app.workspace` (`getActiveFile`, `file-open`,
+  `onLayoutReady`, `openLinkText`), `Notice`, `Modal`, `MarkdownRenderer`, `requestUrl`,
+  `normalizePath`, `debounce`, `Platform`, and the DOM helpers (`createEl`, `createDiv`, `empty`…).
+
+Not there: anything of Obsidian's editor (`editorCallback`, `registerEditorExtension`,
+`MarkdownView` internals; mdSilo's editor is ProseMirror, not CodeMirror), its layout of leaves and
+splits, `registerExtensions`, `vault.create`, `moment`, and its internals. So small plugins (code
+block renderers, commands, simple views and settings) run; big ones (Dataview, Excalidraw, Kanban,
+Templater) don't.

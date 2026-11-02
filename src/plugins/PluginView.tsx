@@ -4,6 +4,8 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import type { PluginMethods } from "./host";
 import { workspaceMethods } from "./workspaceApi";
 import PluginFrame from "./PluginFrame";
+import { contributesOf } from "./registry";
+import { useTrustedVersion } from "./trusted";
 
 /** A view of the workspace made by a plugin, opened from the side menu. */
 export default function PluginView() {
@@ -12,7 +14,9 @@ export default function PluginView() {
   const plugin = useStore((s) =>
     s.installedPlugins.find((p) => p.id === pluginId),
   );
-  const view = plugin?.manifest?.contributes.views.find(
+  // views added as a trusted plugin runs too
+  useTrustedVersion();
+  const view = plugin && contributesOf(plugin).views.find(
     (v) => v.id === pluginViewId,
   );
   const methods: PluginMethods = useMemo(

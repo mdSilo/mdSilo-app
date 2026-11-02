@@ -205,6 +205,7 @@ function parseContributes(value: unknown): Contributes {
 export function parseManifest(json: unknown): PluginManifest {
   const value = typeof json === "string" ? (JSON.parse(json) as unknown) : json;
   if (!isObject(value)) throw new Error("The manifest should be an object");
+  if (isObsidianManifest(value)) return parseObsidianManifest(value);
 
   const id = text(value.id, "id");
   if (!ID.test(id))
@@ -244,6 +245,34 @@ export function parseManifest(json: unknown): PluginManifest {
           : "index.html"
         : innerPath(value.main, "main"),
     contributes: parseContributes(value.contributes),
+  };
+}
+
+/**
+ * A manifest of an Obsidian plugin: it says `isDesktopOnly`, which ours
+ * never do, and no `mode`. Its main.js is CommonJS, run by the layer of
+ * src/plugins/obsidian.
+ */
+const isObsidianManifest = (value: Record<string, unknown>) =>
+  "isDesktopOnly" in value && value.mode === undefined;
+
+function parseObsidianManifest(value: Record<string, unknown>): PluginManifest {
+  const id = text(value.id, "id");
+  if (!ID.test(id))
+    throw new Error('"id" should be lowercase letters, digits, . _ -');
+  return {
+    id,
+    name: text(value.name, "name"),
+    version: text(value.version, "version"),
+    // the version of Obsidian it wants, not of mdSilo
+    minAppVersion: undefined,
+    author: optionalText(value.author, "author"),
+    description: optionalText(value.description, "description"),
+    mode: "trusted",
+    compat: "obsidian",
+    permissions: [],
+    main: "main.js",
+    contributes: parseContributes(undefined),
   };
 }
 

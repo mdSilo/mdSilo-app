@@ -3,7 +3,11 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { askPlugin } from "./background";
 import type { CommandContribution } from "./manifest";
 import { showAnswer } from "./PluginAnswer";
-import { enabledPlugins, type InstalledPlugin } from "./registry";
+import {
+  contributesOf,
+  enabledPlugins,
+  type InstalledPlugin,
+} from "./registry";
 
 /**
  * Commands of plugins, in the Plugins menu of the side menu: the main page of
@@ -21,7 +25,7 @@ export const pluginCommands = (
   states = store.getState().pluginStates,
 ): PluginCommand[] =>
   enabledPlugins(plugins, states).flatMap((plugin) =>
-    (plugin.manifest?.contributes.commands ?? []).map((command) => ({
+    contributesOf(plugin).commands.map((command) => ({
       plugin,
       command,
     })),

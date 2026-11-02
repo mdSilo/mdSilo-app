@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useStore } from "@/state/store";
 import type { PluginHost, PluginMethods } from "./host";
 import PluginFrame from "./PluginFrame";
+import { useTrustedVersion } from "./trusted";
 import { pluginNoteModes, type InstalledPlugin } from "./registry";
 import type { NoteModeContribution } from "./manifest";
 
@@ -9,9 +10,12 @@ import type { NoteModeContribution } from "./manifest";
 export function usePluginNoteModes() {
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
+  // and what trusted plugins add as they run
+  const trustedVersion = useTrustedVersion();
   return useMemo(
     () => pluginNoteModes(installedPlugins, pluginStates),
-    [installedPlugins, pluginStates],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [installedPlugins, pluginStates, trustedVersion],
   );
 }
 

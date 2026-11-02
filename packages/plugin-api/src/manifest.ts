@@ -68,6 +68,8 @@ export type PluginManifest = {
   author?: string;
   description?: string;
   mode: PluginMode;
+  /** a plugin made for another app, run by a compatibility layer: trusted */
+  compat?: "obsidian";
   permissions: Permission[];
   /** the page of the plugin (sandboxed), or its module (trusted), relative to its folder */
   main: string;
@@ -77,7 +79,7 @@ export type PluginManifest = {
 /** A manifest as written: what has a default can be left out. */
 export type ManifestJson = Omit<
   PluginManifest,
-  "mode" | "permissions" | "main" | "contributes"
+  "mode" | "compat" | "permissions" | "main" | "contributes"
 > & {
   mode?: PluginMode;
   permissions?: Permission[];

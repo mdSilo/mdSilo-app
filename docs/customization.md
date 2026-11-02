@@ -164,13 +164,10 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 - Sliders for radius and border (the values are kept, there's no UI).
 
 **C3 Plugin core**
-- Install from a `.zip`.
 - Reading binary files in file viewers (text only now).
 - "Open with…" when several plugins match an extension (the first one wins now).
 - Dev mode that reloads a plugin when its files change.
-- A tiny @mdsilo/plugin-api (types + client, in packages/plugin-api) for authors.
 - Plugins in the web build (X).
-- Trusted mode: running in-process, with a warning and a separate list in the manager. It is also the base for the Obsidian layer and for any change to editor nodes or the reader layout. Trusted plugins can't be enabled yet.
 
 **C4 Views**
 - A plugin view as a startup view (`STARTUP_VIEWS`).
@@ -184,18 +181,17 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 - Hotkeys for commands, or a command palette.
 - Plugin code blocks in the editor, and plugin selection actions: both are tested, but I haven't seen them run in the real app.
 - Plugin code blocks are drawn only in the light theme on published sites.
-- note mode plugin, such as adding another view mode with read or write or both permission besides wysiwyg, raw, mindmap.
 
-**What it would take to add real note modes**
-- A new `contributes.noteModes: [{ id, title }]`, listed in the mode switch of the note header.
-- When the mode is chosen, `Note.tsx` shows the plugin's sandboxed frame in the place of the editor, the way file viewers already do.
-- A small set of methods for the open note: `note.read` and `note.write` (with the existing `notes:read` and `notes:write` permissions), and a `note.changed` event when it changes elsewhere. The content would be passed on every edit, the way the raw editor does.
-- Switching to another mode must not lose unsaved changes, so the frame would write through the same save path as the other modes.
+**Plugins — done (branch `customization-2`, M2)**
+- Install from a `.zip` (`unpack_plugin`: names out of the folder and links left out, 5000 files / 256 MB at most; manifest at the root or in its only folder).
+- Note modes: `contributes.noteModes`, a button each in the note header, the page in place of the editor with `note.info/read/write` and `note.changed`; sample `outline`.
+- `packages/plugin-api` (`@mdsilo/plugin-api`, MIT): manifest and protocol types (the app uses them too), `createClient`, `applyStyle`/`followStyle`, `TrustedApi`; builds `dist/mdsilo-plugin.js` for plain pages.
+- Trusted mode: `main.js` imported in-process after a warning, listed apart; pages drawn into the app in place of frames; `handle`, `page`, `contribute`, `editor.addExtension` (mdsmirror), `reader.addStyles`, `onUnload`; app CSP `script-src` allows the plugin scheme. Sample `book-indent`.
+- Obsidian layer (`src/plugins/obsidian`): Obsidian manifests run as trusted, `compat: "obsidian"`; `main.js` served as a module by the scheme (`__cjs/`), the `obsidian` module mapped onto ours (see examples/plugins/README.md for what is in and out).
 
-That is a small step on top of the file viewer and the views already built. 
-
-**Later**
-- The Obsidian compatibility layer (needs trusted mode first).
+**Plugins — still open**
+- Obsidian: `registerExtensions` (viewers), editor callbacks and extensions, `vault.create`, `moment`, front matter in `getFileCache`; a curated list of known-working plugins.
+- Trusted and Obsidian plugins are tested in jsdom only, not in the desktop app (module import over the plugin scheme, CSP).
 
 **Housekeeping**
 - The flaky `reader.test.tsx` vocabulary test fails now and then and isn't related to plugins.

@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { Extension } from "mdsmirror";
 import type {
+  Contributes,
   MountPage,
   PageClient,
   TrustedApi,
@@ -11,7 +12,13 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import type { ViewAction } from "@/state/viewReducer";
 import { baseMethods, type PluginHost, type PluginMethods } from "./host";
 import { workspaceMethods } from "./workspaceApi";
-import { enabledPlugins, pluginUrl, type InstalledPlugin } from "./registry";
+import type { CommonJs } from "./obsidian";
+import {
+  enabledPlugins,
+  pluginUrl,
+  setRuntimeContributes,
+  type InstalledPlugin,
+} from "./registry";
 
 /**
  * Trusted plugins: the module of the plugin (its `main`) runs in the app,
@@ -28,6 +35,8 @@ type Loaded = {
   pages: Map<string, MountPage>;
   extensions: Set<object>;
   styles: Set<string>;
+  /** what it added as it runs, see registry/contributesOf */
+  contributes: Partial<Contributes>;
   unloads: (() => void)[];
   deactivate?: () => void | Promise<void>;
   error?: string;
@@ -65,6 +74,9 @@ export function setModuleLoader(fn: typeof importModule) {
 let dispatch: (action: ViewAction) => void = () => {
   throw new Error("The app is not ready");
 };
+
+/** Shows a view of the app, for the layers of trusted plugins (src/plugins/obsidian) */
+export const dispatchView = (action: ViewAction) => dispatch(action);
 
 const isTrusted = (plugin: InstalledPlugin) =>
   plugin.manifest?.mode === "trusted";
@@ -114,7 +126,18 @@ function load(plugin: InstalledPlugin): Loaded {
     pages: new Map(),
     extensions: new Set(),
     styles: new Set(),
+    contributes: {},
     unloads: [],
+  };
+  const setContributes = <K extends keyof Contributes>(
+    kind: K,
+    items: Contributes[K],
+  ) => {
+    entry.contributes = { ...entry.contributes, [kind]: items };
+    // only while it is the one loaded
+    if (loaded.get(plugin.id) === entry)
+      setRuntimeContributes(plugin.id, entry.contributes);
+    changed();
   };
   const manifest = plugin.manifest!;
   const api: TrustedApi = {
@@ -140,14 +163,30 @@ function load(plugin: InstalledPlugin): Loaded {
       addExtension: adder(entry.extensions, extensionsChanged),
     },
     reader: { addStyles: adder(entry.styles) },
+    contribute: (kind, item) => {
+      type Item = typeof item;
+      const items = () => (entry.contributes[kind] ?? []) as Item[];
+      setContributes(kind, [...items(), item] as Contributes[typeof kind]);
+      return () =>
+        setContributes(
+          kind,
+          items().filter((i) => i !== item) as Contributes[typeof kind],
+        );
+    },
     onUnload: (fn) => entry.unloads.push(fn),
   };
   loads += 1;
-  entry.ready = importModule(
-    `${pluginUrl(plugin.id, manifest.main)}?v=${loads}`,
-  )
+  // an Obsidian plugin: its CommonJS main.js, as a module (plugin_scheme.rs)
+  const obsidian = manifest.compat === "obsidian";
+  const main = obsidian ? "__cjs/main.js" : manifest.main;
+  entry.ready = importModule(`${pluginUrl(plugin.id, main)}?v=${loads}`)
     .then(async (mod) => {
-      const activate = mod.activate ?? mod.default;
+      const activate = obsidian
+        ? (await import("./obsidian")).obsidianActivate(
+            mod.default as unknown as CommonJs,
+            plugin,
+          )
+        : (mod.activate ?? mod.default);
       if (typeof activate !== "function")
         throw new Error("The module has no activate function");
       entry.deactivate = mod.deactivate;
@@ -165,6 +204,7 @@ function unload(id: string) {
   const entry = loaded.get(id);
   if (!entry) return;
   loaded.delete(id);
+  setRuntimeContributes(id, undefined);
   if (entry.extensions.size > 0) extensionsChanged();
   for (const fn of entry.unloads) {
     try {
