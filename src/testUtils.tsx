@@ -94,10 +94,10 @@ export function leaveTauri() {
 }
 
 /**
- * Give elements a size so virtualized lists (react-virtualized-auto-sizer,
- * react-virtual) render their rows in jsdom. Absolutely positioned elements
- * are treated as 32px rows, everything else as a 300x1000 container.
- * Restore with vi.restoreAllMocks().
+ * Give elements a size so virtualized lists (react-virtuoso) render their
+ * rows in jsdom. Rows (`data-index`, or absolutely positioned) are treated
+ * as 32px, everything else as a 300x1000 container; every element as laid
+ * out (an offsetParent). Restore with vi.restoreAllMocks().
  */
 export function mockLayout() {
   vi.spyOn(globalThis, "ResizeObserver").mockImplementation(
@@ -128,8 +128,17 @@ export function mockLayout() {
       disconnect() {}
     },
   );
+  // the viewport of react-virtuoso, absolutely positioned, a container
   const size = (el: HTMLElement) =>
-    el.style.position === "absolute" ? 32 : 1000;
+    el.dataset.viewportType === undefined &&
+    (el.style.position === "absolute" || el.dataset.index !== undefined)
+      ? 32
+      : 1000;
+  vi.spyOn(HTMLElement.prototype, "offsetParent", "get").mockImplementation(
+    function (this: HTMLElement) {
+      return this.parentElement ?? document.body;
+    },
+  );
   vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(
     function (this: HTMLElement) {
       return size(this);

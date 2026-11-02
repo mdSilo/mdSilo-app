@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { createRef, useState } from "react";
+import { createRef, useState, type ReactNode } from "react";
+import { VirtuosoMockContext } from "react-virtuoso";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { invoke } from "@tauri-apps/api/core";
@@ -391,27 +392,17 @@ describe("TreeNodeElement", () => {
 });
 
 describe("VirtualTree", () => {
-  // react-virtual sizes the parent via getBoundingClientRect and rows via offsetHeight
-  beforeEach(() => {
-    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
-      width: 300,
-      height: 1000,
-      top: 0,
-      left: 0,
-      bottom: 1000,
-      right: 300,
-      x: 0,
-      y: 0,
-      toJSON: () => ({}),
-    });
-    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(20);
-  });
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  // no layout in jsdom: the sizes given to react-virtuoso
+  const sized = (ui: ReactNode) => (
+    <VirtuosoMockContext.Provider
+      value={{ viewportHeight: 1000, itemHeight: 20 }}
+    >
+      {ui}
+    </VirtuosoMockContext.Provider>
+  );
 
   test("renders rows and toggles nodes", () => {
-    render(<VirtualTree data={treeData} className="h-64" />);
+    render(sized(<VirtualTree data={treeData} className="h-64" />));
     expect(screen.getByText("Root")).toBeInTheDocument();
     expect(screen.getByText("Leaf")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Root"));
@@ -421,7 +412,7 @@ describe("VirtualTree", () => {
   });
 
   test("collapseAll starts collapsed", () => {
-    render(<VirtualTree data={treeData} collapseAll />);
+    render(sized(<VirtualTree data={treeData} collapseAll />));
     expect(screen.getByText("Root")).toBeInTheDocument();
     expect(screen.queryByText("Child")).not.toBeInTheDocument();
   });

@@ -369,6 +369,43 @@
   );
 }
 
+/* overlay scrollbars (ui/OverlayScroll.tsx), as the native ones */
+.os-theme-mdsilo {
+  --os-size: 10px;
+  --os-padding-perpendicular: 2px;
+  --os-padding-axis: 2px;
+  --os-track-border-radius: 9999px;
+  --os-handle-border-radius: 9999px;
+  --os-handle-min-size: 32px;
+  --os-handle-perpendicular-size: 60%;
+  --os-handle-perpendicular-size-hover: 100%;
+  --os-handle-perpendicular-size-active: 100%;
+  --os-handle-interactive-area-offset: 4px;
+  --os-handle-bg: color-mix(
+    in oklab,
+    var(--color-base-content) 35%,
+    transparent
+  );
+  --os-handle-bg-hover: color-mix(
+    in oklab,
+    var(--color-base-content) 55%,
+    transparent
+  );
+  --os-handle-bg-active: color-mix(
+    in oklab,
+    var(--color-base-content) 65%,
+    transparent
+  );
+}
+
+/*
+  The covers drawn with a cheaper filter while the shelf scrolls: WebKitGTK
+  spends a third of a frame on the smooth one (see useScrolling).
+*/
+[data-scrolling] img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
 /* a table of a book, zoomed: see reader/media/MediaViewer.tsx */
 .media-table table {
   border-collapse: collapse;

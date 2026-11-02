@@ -532,8 +532,11 @@ describe("SidebarSearch", () => {
     );
     expect(store.getState().sidebarSearchQuery).toBe("fruit");
     expect(await screen.findByText("apple")).toBeInTheDocument();
+    // the rows below the first drawn once measured
+    await waitFor(() =>
+      expect(document.querySelectorAll("mark").length).toBeGreaterThan(0),
+    );
     const marks = document.querySelectorAll("mark");
-    expect(marks.length).toBeGreaterThan(0);
     await userEvent.click(marks[0].closest("button") as HTMLElement);
     await waitFor(() =>
       expect(viewState().params).toEqual({ noteId: "/n/a.md", hash: "0-" }),
@@ -603,7 +606,7 @@ describe("SidebarSearch", () => {
     expect(invoke).not.toHaveBeenCalledWith("read_file", {
       filePath: "/n/b.md",
     });
-    expect(screen.getByText("📖 A Book")).toBeInTheDocument();
+    expect(await screen.findByText("📖 A Book")).toBeInTheDocument();
   });
 
   test("matchSort orders by refIndex with undefined first", () => {
@@ -793,12 +796,7 @@ describe("Sidebar resize", () => {
 });
 
 describe("SidebarNotesTree horizontal scroll", () => {
-  const grid = () =>
-    document.querySelector(".ReactVirtualized__Grid") as HTMLElement;
-  const inner = () =>
-    document.querySelector(
-      ".ReactVirtualized__Grid__innerScrollContainer",
-    ) as HTMLElement;
+  const list = () => screen.getByTestId("notes-tree-list");
 
   test("fits short rows without horizontal scroll", async () => {
     renderWithView(
@@ -811,9 +809,15 @@ describe("SidebarNotesTree horizontal scroll", () => {
         />,
       ),
     );
-    await waitFor(() => expect(grid()).toBeInTheDocument());
-    expect(grid().style.overflowX).toBe("hidden");
-    expect(inner().style.width).toBe("300px");
+    await waitFor(() => expect(list()).toBeInTheDocument());
+    // jsdom has no canvas: titles are estimated at 8px per char
+    const expected = treeContentWidth(
+      [{ node: treeItem("/x", "a"), depth: 0, isExpanded: false }],
+      (text) => text.length * 8,
+    );
+    expect(expected).toBeLessThan(300);
+    expect(list().style.width).toBe(`${expected}px`);
+    expect(list().style.minWidth).toBe("100%");
   });
 
   test("scrolls horizontally when deep rows overflow", async () => {
@@ -833,15 +837,15 @@ describe("SidebarNotesTree horizontal scroll", () => {
         />,
       ),
     );
-    await waitFor(() => expect(grid()).toBeInTheDocument());
-    expect(grid().style.overflowX).toBe("auto");
+    await waitFor(() => expect(list()).toBeInTheDocument());
     // jsdom has no canvas: titles are estimated at 8px per char
     const expected = treeContentWidth(
       [{ node: treeItem("/x", title), depth: 10, isExpanded: false }],
       (text) => text.length * 8,
     );
     expect(expected).toBeGreaterThan(300);
-    expect(inner().style.width).toBe(`${expected}px`);
+    expect(list().style.width).toBe(`${expected}px`);
+    expect(list().style.minWidth).toBe("100%");
   });
 
   test("content width grows with depth and title", () => {
@@ -909,9 +913,7 @@ describe("SideMenu", () => {
     ) as HTMLElement[];
     // logo, toggle, feed, new, issues, projects, chronicle, graph, file
     expect(btns).toHaveLength(9);
-    await userEvent.click(
-      screen.getByRole("button", { name: "Explorer" }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Explorer" }));
     expect(store.getState().isSidebarOpen).toBe(false);
     await userEvent.click(btns[2]);
     expect(viewState().view).toBe("feed");

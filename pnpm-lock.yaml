@@ -155,6 +155,12 @@ importers:
       minisearch:
         specifier: ^7.2.0
         version: 7.2.0
+      overlayscrollbars:
+        specifier: ^2.17.0
+        version: 2.17.0
+      overlayscrollbars-react:
+        specifier: ^0.5.7
+        version: 0.5.7(overlayscrollbars@2.17.0)(react@19.3.1)
       prosemirror-utils:
         specifier: ^1.2.2
         version: 1.2.2(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)
@@ -173,15 +179,9 @@ importers:
       react-popper:
         specifier: ^2.3.0
         version: 2.3.0(@popperjs/core@2.11.8)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      react-virtual:
-        specifier: ^2.10.4
-        version: 2.10.4(react@19.3.1)
-      react-virtualized:
-        specifier: ^10.0.0
-        version: 10.0.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      react-virtualized-auto-sizer:
-        specifier: ^2.0.4
-        version: 2.0.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react-virtuoso:
+        specifier: ^4.18.20
+        version: 4.18.20(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       styled-components:
         specifier: 6.6.0
         version: 6.6.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1800,9 +1800,6 @@ packages:
 
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
-
-  '@reach/observe-rect@1.2.0':
-    resolution: {integrity: sha512-Ba7HmkFgfQxZqqaeIWWkNK0rEhpxVQHIoVyW1YDSkGsGIXzcaW4deC8B0pZrNSSyLTdIk7y+5olKt5+g0GmFIQ==}
 
   '@react-aria/focus@3.22.1':
     resolution: {integrity: sha512-CPxtkyrBi/HYY5P3lE/57sQ6qfa0lN8E55TOm89H0kNGv0lKt+/0zP7lWERzBjRr5IxBVrQX4gFEowBN52LPaA==}
@@ -3491,10 +3488,6 @@ packages:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
     engines: {node: '>=12'}
 
-  clsx@1.1.1:
-    resolution: {integrity: sha512-6/bPho624p3S2pMyvP5kKBPXnI3ufHLObBFCfgx+LkeR5lg2XYy2hqZqUf45ypD8COn2bhgGJSUE+l5dhNBieA==}
-    engines: {node: '>=6'}
-
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
@@ -3944,9 +3937,6 @@ packages:
 
   dom-converter@0.2.0:
     resolution: {integrity: sha512-gd3ypIPfOMr9h5jIKq8E3sHOTCjeirnl0WK5ZdS1AW0Odt0b1PaWaHdJ4Qk4klv+YB9aJBS7mESXjFoDQPu6DA==}
-
-  dom-helpers@5.2.1:
-    resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
 
   dom-serializer@0.2.2:
     resolution: {integrity: sha512-2/xPb3ORsQ42nHYiSunXkDjPLBaEj/xTwUO4B7XCZQTRk7EBtTOPaygh10YAAh2OI1Qrp6NWfpAhzswj0ydt9g==}
@@ -5703,6 +5693,15 @@ packages:
     resolution: {integrity: sha512-B5JU3cabzk8c67mRRd3ECmROafjYMXbuzlwtqdM8IbS8ktlTix8aFGb2bAGKrSRIlnfKwovGUUr72JUPyOb6kQ==}
     engines: {node: '>=0.10.0'}
 
+  overlayscrollbars-react@0.5.7:
+    resolution: {integrity: sha512-pjWnZNmVkv4J0k/YzdazWJpBuu1mTTKR6K0pzjqK9BfHkB53hREqBGV8LONH23G5ulGXeXBLgD91HjcQuvq2WA==}
+    peerDependencies:
+      overlayscrollbars: ^2.0.0
+      react: 19.3.1
+
+  overlayscrollbars@2.17.0:
+    resolution: {integrity: sha512-tyFSxFVJ2FcTTiEkwMthAb+Ogs8vgpW31Sy5z2TL1Q6Kw7579zrcd4xDm38lmdD934LjiTHyrzR90KMDrbCXoA==}
+
   own-keys@1.0.2:
     resolution: {integrity: sha512-19YVAg7T+WTrxggPukVq7DjTv6+PJ867TmhCvBsYwmbFCsZd344rq2Ld1p0wo8f8Qrrhgp82c6FJRqdXWtSEhg==}
     engines: {node: '>= 0.4'}
@@ -6073,19 +6072,8 @@ packages:
     peerDependencies:
       react: 19.3.1
 
-  react-virtual@2.10.4:
-    resolution: {integrity: sha512-Ir6+oPQZTVHfa6+JL9M7cvMILstFZH/H3jqeYeKI4MSUX+rIruVwFC6nGVXw9wqAw8L0Kg2KvfXxI85OvYQdpQ==}
-    peerDependencies:
-      react: 19.3.1
-
-  react-virtualized-auto-sizer@2.0.4:
-    resolution: {integrity: sha512-OgkJ2qCvm7ahHpkiHwHyRz9n1nSLr+U1Tz1xewtXF++KKwLt5X7tcuQA8dmsL2RPpEhB3Uz8jtSNSZ86Mx/lEQ==}
-    peerDependencies:
-      react: 19.3.1
-      react-dom: 19.3.1
-
-  react-virtualized@10.0.0:
-    resolution: {integrity: sha512-7cVmH8UBlmMsJ9AhdkPxUHirUYoFPuYqz0c/4JgMkc7YK4UHNIFj4ZXoXCGiO44n9zHtAVkALZCU5ym6r4fA1A==}
+  react-virtuoso@4.18.20:
+    resolution: {integrity: sha512-2G/Hdi/QHRtJtzSZOkAwJFdUzBmhNIQCAmw6gLGUZTGbjVL6+TOBIFJOCnpm6xgWGBfrrMiZV5rJNkQ9gEgAdQ==}
     peerDependencies:
       react: 19.3.1
       react-dom: 19.3.1
@@ -8502,8 +8490,6 @@ snapshots:
 
   '@popperjs/core@2.11.8': {}
 
-  '@reach/observe-rect@1.2.0': {}
-
   '@react-aria/focus@3.22.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@swc/helpers': 0.5.23
@@ -10246,8 +10232,6 @@ snapshots:
       strip-ansi: 6.0.1
       wrap-ansi: 7.0.0
 
-  clsx@1.1.1: {}
-
   clsx@2.1.1: {}
 
   co@4.6.0: {}
@@ -10699,11 +10683,6 @@ snapshots:
   dom-converter@0.2.0:
     dependencies:
       utila: 0.4.0
-
-  dom-helpers@5.2.1:
-    dependencies:
-      '@babel/runtime': 7.29.10
-      csstype: 3.2.3
 
   dom-serializer@0.2.2:
     dependencies:
@@ -12855,6 +12834,13 @@ snapshots:
 
   os-homedir@1.0.2: {}
 
+  overlayscrollbars-react@0.5.7(overlayscrollbars@2.17.0)(react@19.3.1):
+    dependencies:
+      overlayscrollbars: 2.17.0
+      react: 19.3.1
+
+  overlayscrollbars@2.17.0: {}
+
   own-keys@1.0.2:
     dependencies:
       call-bound: 1.0.4
@@ -13311,20 +13297,8 @@ snapshots:
       react: 19.3.1
       use-sync-external-store: 1.7.0(react@19.3.1)
 
-  react-virtual@2.10.4(react@19.3.1):
+  react-virtuoso@4.18.20(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
-      '@reach/observe-rect': 1.2.0
-      react: 19.3.1
-
-  react-virtualized-auto-sizer@2.0.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
-    dependencies:
-      react: 19.3.1
-      react-dom: 19.3.1(react@19.3.1)
-
-  react-virtualized@10.0.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
-    dependencies:
-      clsx: 1.1.1
-      dom-helpers: 5.2.1
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
 

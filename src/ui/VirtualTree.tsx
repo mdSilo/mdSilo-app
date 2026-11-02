@@ -1,5 +1,6 @@
-import { useState, useMemo, useCallback, memo, useRef } from "react";
-import { useVirtual } from "react-virtual";
+import { useState, useMemo, useCallback, memo } from "react";
+import { Virtuoso } from "react-virtuoso";
+import OverlayScroll, { useScroller } from "./OverlayScroll";
 import { FlattenedTreeNode, TreeNode as TreeNodeType } from "./Tree";
 import TreeNodeElement from "./TreeNodeElement";
 
@@ -56,41 +57,19 @@ function VirtualTree(props: Props) {
     return result;
   }, [data, flattenNode]);
 
-  const parentRef = useRef<HTMLDivElement | null>(null);
-  const rowVirtualizer = useVirtual({
-    size: flattenedData.length,
-    parentRef,
-  });
+  const [scroller, scrollerRef] = useScroller();
 
   return (
-    <div ref={parentRef} className={className}>
-      <div
-        style={{
-          height: `${rowVirtualizer.totalSize}px`,
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        {rowVirtualizer.virtualItems.map((virtualRow, index) => {
-          const node = flattenedData[virtualRow.index];
-          return (
-            <TreeNodeElement
-              key={`${node.id}-${index}`}
-              ref={virtualRow.measureRef}
-              node={node}
-              onClick={onNodeClick}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            />
-          );
-        })}
-      </div>
-    </div>
+    <OverlayScroll scroller={scroller} className={className}>
+      <Virtuoso
+        scrollerRef={scrollerRef}
+        data={flattenedData}
+        computeItemKey={(index, node) => `${node.id}-${index}`}
+        itemContent={(_, node) => (
+          <TreeNodeElement node={node} onClick={onNodeClick} />
+        )}
+      />
+    </OverlayScroll>
   );
 }
 

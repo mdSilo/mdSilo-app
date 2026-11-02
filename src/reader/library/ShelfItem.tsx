@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useRef,
@@ -25,7 +26,7 @@ import {
   type ShelfItem,
   type ViewMode,
 } from "./shelf";
-import BookCover from "./BookCover";
+import BookCover, { EDGE } from "./BookCover";
 
 /** The ids of the items to drag and drop: `book:<hash>`, `group:<key>`. */
 export const dndIdOf = (item: ShelfItem) =>
@@ -56,7 +57,7 @@ const share = (books: ShelfBook[], test: (b: ShelfBook) => boolean) => {
  * another book or a group to group them. While selecting, a click selects
  * the book, or all the books of the group.
  */
-export default function ShelfItemView(props: Props) {
+export default memo(function ShelfItemView(props: Props) {
   const { item, mode, onOpen, selecting = false, selected, onSelect } = props;
   const id = dndIdOf(item);
   const drag = useDraggable({ id, disabled: isGroup(item) || selecting });
@@ -115,14 +116,36 @@ export default function ShelfItemView(props: Props) {
           onSelect={onSelect}
         />
       ) : null}
-      {isGroup(item) ? (
-        <GroupItem group={item} {...props} />
-      ) : (
-        <BookItem book={item} {...props} />
-      )}
+      <ShelfItemContent
+        item={item}
+        mode={mode}
+        covers={props.covers}
+        onDetails={props.onDetails}
+        onSync={props.onSync}
+      />
     </div>
   );
-}
+});
+
+type ContentProps = Pick<
+  Props,
+  "item" | "mode" | "covers" | "onDetails" | "onSync"
+>;
+
+/**
+ * What a book or a group shows: not drawn again as an item is dragged, or
+ * as another one is (the drag and drop hooks are above it).
+ */
+export const ShelfItemContent = memo(function ShelfItemContent({
+  item,
+  ...props
+}: ContentProps) {
+  return isGroup(item) ? (
+    <GroupItem group={item} {...props} />
+  ) : (
+    <BookItem book={item} {...props} />
+  );
+});
 
 /**
  * The books selected: all, some (of a group), none. Checked, all of them
@@ -204,7 +227,7 @@ function BookItem({
   covers,
   onDetails,
   onSync,
-}: Props & { book: ShelfBook }) {
+}: Omit<ContentProps, "item"> & { book: ShelfBook }) {
   const percent = Math.round((book.state?.fraction ?? 0) * 100);
   const seconds = totalSeconds(book.state?.time);
   const series = formatSeries(book);
@@ -220,7 +243,10 @@ function BookItem({
         <span className="badge badge-ghost badge-xs">{book.status}</span>
       ) : null}
       <SyncButton books={[book]} onSync={onSync} />
-      <ShelfButton title={`Book details - ${book.format}`} onClick={() => onDetails(book)}>
+      <ShelfButton
+        title={`Book details - ${book.format}`}
+        onClick={() => onDetails(book)}
+      >
         <BookIcon path={book.path} size={14} />
       </ShelfButton>
     </div>
@@ -242,13 +268,16 @@ function BookItem({
       >
         {cover}
         <div className="text-xs font-semibold truncate">{book.title}</div>
+        {/* the same height read or not: the rows of the grid alike */}
         {book.state?.fraction ? (
           <progress
             className="w-full h-1 progress progress-primary"
             value={percent}
             max={100}
           />
-        ) : null}
+        ) : (
+          <div className="h-1" />
+        )}
         {footer}
       </div>
     );
@@ -283,7 +312,7 @@ function GroupItem({
   mode,
   covers,
   onSync,
-}: Props & { group: ShelfGroup }) {
+}: Omit<ContentProps, "item"> & { group: ShelfGroup }) {
   const count = (
     <div className="flex items-center gap-1 text-xs text-base-content/60">
       <span className="flex-1">{`${group.books.length} book${group.books.length === 1 ? "" : "s"}`}</span>
@@ -293,7 +322,9 @@ function GroupItem({
   if (mode === "grid") {
     return (
       <div className="flex flex-col gap-1">
-        <div className="grid grid-cols-2 grid-rows-2 gap-1 p-1.5 rounded-sm shadow-sm aspect-28/41 bg-base-200">
+        <div
+          className={`grid grid-cols-2 grid-rows-2 gap-1 p-1.5 rounded-sm aspect-28/41 bg-base-200 ${EDGE}`}
+        >
           {group.books.slice(0, 4).map((book) => (
             <BookCover
               key={book.hash}
@@ -304,6 +335,7 @@ function GroupItem({
           ))}
         </div>
         <div className="text-xs font-semibold truncate">{group.name}</div>
+        <div className="h-1" />
         {count}
       </div>
     );

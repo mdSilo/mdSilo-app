@@ -13,6 +13,10 @@ import {
   type BookEntry,
 } from "./library";
 
+// the books opened for a cover they have not: not again in this session,
+// opening one is slow (parsed whole, on the main thread)
+const coverless = new Set<string>();
+
 /**
  * The covers of the books: chosen, or cached; the missing ones made one book
  * at a time, the books here only. On the way, the metadata of the books
@@ -43,14 +47,23 @@ export function useCovers(
       });
     };
     (async () => {
-      const todo: ShelfBook[] = [];
-      for (const book of books) {
-        const url = await coverUrl(ws, book).catch(() => undefined);
-        if (cancelled) return;
-        show(book.hash, url);
-        if (book.here && (!book.metaRead || (!url && !book.cover)))
-          todo.push(book);
-      }
+      // all at once: the shelf drawn once, not once a book
+      const found = await Promise.all(
+        books.map((book) => coverUrl(ws, book).catch(() => undefined)),
+      );
+      found.forEach((url) => url && urls.push(url));
+      if (cancelled) return;
+      setCovers(
+        Object.fromEntries(
+          books.flatMap((book, i) => (found[i] ? [[book.hash, found[i]]] : [])),
+        ),
+      );
+      const todo = books.filter(
+        (book, i) =>
+          book.here &&
+          (!book.metaRead ||
+            (!found[i] && !book.cover && !coverless.has(`${ws}:${book.hash}`))),
+      );
       for (const book of todo) {
         if (cancelled) return;
         try {
@@ -71,8 +84,10 @@ export function useCovers(
             if (!cancelled) onMetaRef.current(book.hash, patch);
           }
           if (made) show(book.hash, await coverUrl(ws, book.hash));
+          else if (!book.cover) coverless.add(`${ws}:${book.hash}`);
         } catch {
           // no cover, no metadata of a book failing to open
+          coverless.add(`${ws}:${book.hash}`);
         }
       }
     })();
@@ -83,6 +98,31 @@ export function useCovers(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ws, key, version]);
   return covers;
+}
+
+/**
+ * `data-scrolling` on the element as it scrolls, removed once it stops: the
+ * covers drawn with a cheaper filter meanwhile (styles.css).
+ */
+export function useScrolling(el: HTMLElement | null) {
+  useEffect(() => {
+    if (!el) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      if (!timer) el.dataset.scrolling = "";
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = undefined;
+        delete el.dataset.scrolling;
+      }, 150);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      clearTimeout(timer);
+      el.removeEventListener("scroll", onScroll);
+      delete el.dataset.scrolling;
+    };
+  }, [el]);
 }
 
 /** A book file dropped in: by its path (desktop), or its data (web). */

@@ -38,6 +38,7 @@ import { store, useStore } from "@/state/store";
 import { READER_SIDEBAR_WIDTH } from "@/state/userSettings";
 import { isMobile } from "@/lib/helper";
 import { selectionActionsIn } from "@/plugins/selection";
+import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { annotationsPathOf } from "../annotations/annotations";
 import { useActiveStore, useReaderStore, useSideStore } from "../readerStore";
 import { bookmarkAt, copyLink, toggleBookmark } from "../actions";
@@ -165,6 +166,8 @@ export function Reader({
   // a press outside the menu closes it, e.g. on the bars above the backdrop;
   // the backdrop closes it on its click, not to let that click reach the book
   const menuRef = useRef<HTMLDivElement>(null);
+  // the panel of the tabs, scrolled: a long table of contents drawn in part in it
+  const [panelScroller, panelScrollerRef] = useScroller();
   useEffect(() => {
     if (!menu) return;
     const onPointerDown = (e: PointerEvent) => {
@@ -187,7 +190,11 @@ export function Reader({
       label: "Table of Contents",
       icon: <FaList size={18} />,
       render: () => (
-        <TocView toc={panelBook?.toc ?? []} current={panelLocation?.tocHref} />
+        <TocView
+          toc={panelBook?.toc ?? []}
+          current={panelLocation?.tocHref}
+          scroller={panelScroller}
+        />
       ),
     },
     {
@@ -315,9 +322,11 @@ export function Reader({
                 ))}
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              {activeTab.render()}
-            </div>
+            <OverlayScroll scroller={panelScroller} className="flex-1 min-h-0">
+              <div ref={panelScrollerRef} className="h-full overflow-y-auto">
+                {activeTab.render()}
+              </div>
+            </OverlayScroll>
             <ResizeHandle
               width={sidebarCol.width}
               bounds={READER_SIDEBAR_WIDTH}

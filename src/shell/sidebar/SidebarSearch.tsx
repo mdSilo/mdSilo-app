@@ -136,10 +136,7 @@ export function SearchTree(props: SearchTreeProps) {
   return (
     <>
       {!keyword || searching || searchResultsData.length > 0 ? (
-        <VirtualTree
-          className="flex-1 px-1 overflow-y-auto"
-          data={searchResultsData}
-        />
+        <VirtualTree className="flex-1 min-h-0 px-1" data={searchResultsData} />
       ) : (
         <p className="px-4 text-base-content/70">No results found.</p>
       )}

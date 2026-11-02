@@ -1,13 +1,13 @@
-import React, {
+import {
   useMemo,
-  useCallback,
   useLayoutEffect,
   useRef,
   useState,
   memo,
+  forwardRef,
 } from "react";
-import { List } from "react-virtualized";
-import { AutoSizer } from "react-virtualized-auto-sizer";
+import { Virtuoso, type ListProps } from "react-virtuoso";
+import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { NoteTreeItem } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import SidebarNoteLink, { INDENT_PER_LEVEL } from "./SidebarNoteLink";
@@ -22,6 +22,8 @@ type Props = {
   data: NoteTreeRow[];
   className?: string;
 };
+
+const ROW_HEIGHT = 32;
 
 // row layout, see SidebarNoteLink: indent per level, then icon, title, dropdown
 const ROW_CHROME = 8 + 28 + 8 + 32 + 8; // base pad + icon + right pad + dropdown + slack
@@ -70,6 +72,7 @@ const measureText = (text: string, font: string): number => {
 function SidebarNotesTree(props: Props) {
   const { data, className } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scroller, scrollerRef] = useScroller();
   // font of the rows, to measure titles
   const [font, setFont] = useState("");
   useLayoutEffect(() => {
@@ -86,23 +89,6 @@ function SidebarNotesTree(props: Props) {
     return id && typeof id === "string" ? id : undefined;
   }, [noteId]);
 
-  const Row = useCallback(
-    ({ index, style }: { index: number; style: React.CSSProperties }) => {
-      const { node, depth, isExpanded } = data[index];
-      return (
-        <SidebarNoteLink
-          key={`${node.id}-${index}`}
-          node={node}
-          depth={depth}
-          isExpanded={isExpanded}
-          isHighlighted={node.id === currentNoteId}
-          style={style}
-        />
-      );
-    },
-    [currentNoteId, data],
-  );
-
   const contentWidth = useMemo(
     () =>
       treeContentWidth(data, (text) =>
@@ -113,34 +99,46 @@ function SidebarNotesTree(props: Props) {
 
   return (
     <div ref={containerRef} className={className}>
-      <AutoSizer
-        box="border-box"
-        renderProp={({ width, height }) => {
-          if (width === undefined || height === undefined) return null;
-          const innerWidth = Math.max(width, contentWidth);
-          return (
-            <List
-              width={width}
-              height={height}
-              rowCount={data.length}
-              rowHeight={32}
-              rowRenderer={Row}
-              style={{
-                overflowX: innerWidth > width ? "auto" : "hidden",
-                overflowY: "auto",
-              }}
-              // overflow visible: sticky row buttons must stick to the Grid, the scroller
-              containerStyle={{
-                width: innerWidth,
-                maxWidth: innerWidth,
-                overflow: "visible",
-              }}
+      <OverlayScroll scroller={scroller} className="h-full">
+        <Virtuoso
+          scrollerRef={scrollerRef}
+          data={data}
+          fixedItemHeight={ROW_HEIGHT}
+          context={{ contentWidth }}
+          components={{ List: TreeList }}
+          computeItemKey={(index, row) => `${row.node.id}-${index}`}
+          itemContent={(_, { node, depth, isExpanded }) => (
+            <SidebarNoteLink
+              node={node}
+              depth={depth}
+              isExpanded={isExpanded}
+              isHighlighted={node.id === currentNoteId}
+              style={{ height: ROW_HEIGHT }}
             />
-          );
-        }}
-      />
+          )}
+        />
+      </OverlayScroll>
     </div>
   );
 }
+
+/**
+ * The rows, as wide as the widest: the list scrolls horizontally when they
+ * overflow the sidebar. Overflow visible: the sticky row buttons stick to
+ * the scroller.
+ */
+const TreeList = forwardRef<
+  HTMLDivElement,
+  ListProps & { context: { contentWidth: number } }
+>(function TreeList({ context, style, ...props }, ref) {
+  return (
+    <div
+      ref={ref}
+      {...props}
+      data-testid="notes-tree-list"
+      style={{ ...style, width: context.contentWidth, minWidth: "100%" }}
+    />
+  );
+});
 
 export default memo(SidebarNotesTree);

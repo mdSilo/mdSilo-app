@@ -8,9 +8,9 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { List } from "react-virtualized";
-import { AutoSizer } from "react-virtualized-auto-sizer";
+import { Virtuoso } from "react-virtuoso";
 import { TbHeadphones as IconHeadphones } from "react-icons/tb";
+import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { useStore } from "@/state/store";
 import { Sort } from "@/state/userSettings";
 import { ciStringCompare, dateCompare } from "@/lib/helper";
@@ -57,6 +57,8 @@ function SidebarPlaylist(props: SidebarPlaylistProps) {
 
 export default memo(SidebarPlaylist);
 
+const ROW_HEIGHT = 32;
+
 type TreeProps = {
   data: PodTreeItem[];
   currentPod: PodTreeItem | null;
@@ -66,6 +68,7 @@ type TreeProps = {
 function Playlist(props: TreeProps) {
   const { data, currentPod, className = "" } = props;
   const [podSort, setPodSort] = useState(Sort.DateCreatedDescending);
+  const [scroller, scrollerRef] = useScroller();
   // sort a copy: sorting `data` in place keeps the same reference and the
   // memoized row renderer would never re-render the list
   const sortedData = useMemo(() => {
@@ -88,21 +91,6 @@ function Playlist(props: TreeProps) {
         })
       : data;
   }, [data, podSort]);
-
-  const Row = useCallback(
-    ({ index, style }: { index: number; style: React.CSSProperties }) => {
-      const node = sortedData[index];
-      return (
-        <PlayItem
-          key={`${node.title}-${index}`}
-          node={node}
-          isHighlighted={node.url === currentPod?.url}
-          style={style}
-        />
-      );
-    },
-    [sortedData, currentPod],
-  );
 
   return (
     <ErrorBoundary>
@@ -157,23 +145,21 @@ function Playlist(props: TreeProps) {
             </button>
           </Tooltip>
         </div>
-        <div className={className}>
-          <AutoSizer
-            box="border-box"
-            renderProp={({ width, height }) => {
-              if (width === undefined || height === undefined) return null;
-              return (
-                <List
-                  width={width}
-                  height={height}
-                  rowCount={data.length}
-                  rowHeight={32}
-                  rowRenderer={Row}
-                />
-              );
-            }}
+        <OverlayScroll scroller={scroller} className="flex-1 min-h-0">
+          <Virtuoso
+            scrollerRef={scrollerRef}
+            data={sortedData}
+            fixedItemHeight={ROW_HEIGHT}
+            computeItemKey={(index, node) => `${node.title}-${index}`}
+            itemContent={(_, node) => (
+              <PlayItem
+                node={node}
+                isHighlighted={node.url === currentPod?.url}
+                style={{ height: ROW_HEIGHT }}
+              />
+            )}
           />
-        </div>
+        </OverlayScroll>
       </div>
     </ErrorBoundary>
   );

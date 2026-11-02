@@ -32,6 +32,7 @@ import {
   TbX,
 } from "react-icons/tb";
 import ErrorBoundary from "@/ui/ErrorBoundary";
+import OverlayScroll from "@/ui/OverlayScroll";
 import { IconButton, Spinner } from "@/ui/ui";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { readBook } from "@/shell/windows";
@@ -61,11 +62,17 @@ import {
 } from "./folderImport";
 import BookDetails from "./BookDetails";
 import GroupDialog from "./GroupDialog";
+import Shelf, { VIRTUAL_FROM } from "./Shelf";
 import ShelfItemView from "./ShelfItem";
 import ViewMenu, { useLibrarySettings } from "./ViewMenu";
 import { DeleteDialog, MoveDialog } from "./SelectionDialogs";
 import ImportFolderDialog from "./ImportFolderDialog";
-import { useBookDrop, useCovers, type DroppedBook } from "./hooks";
+import {
+  useBookDrop,
+  useCovers,
+  useScrolling,
+  type DroppedBook,
+} from "./hooks";
 import {
   bookHashOf,
   bookIdOf,
@@ -121,6 +128,13 @@ export default function Library() {
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [bulk, setBulk] = useState<"move" | "delete" | undefined>();
   const pageRef = useRef<HTMLDivElement>(null);
+  // the page, scrolled: the shelf drawn in part in it, if long
+  const [scroller, setScroller] = useState<HTMLDivElement | null>(null);
+  const setPage = useCallback((el: HTMLDivElement | null) => {
+    pageRef.current = el;
+    setScroller(el);
+  }, []);
+  useScrolling(scroller);
 
   const covers = useCovers(initDir, rows, version, (hash, patch) => {
     setRows((list) =>
@@ -338,12 +352,15 @@ export default function Library() {
     await load();
   };
 
-  const select = (hashes: string[], on: boolean) =>
-    setSelected((old) => {
-      const next = new Set(old);
-      hashes.forEach((h) => (on ? next.add(h) : next.delete(h)));
-      return next;
-    });
+  const select = useCallback(
+    (hashes: string[], on: boolean) =>
+      setSelected((old) => {
+        const next = new Set(old);
+        hashes.forEach((h) => (on ? next.add(h) : next.delete(h)));
+        return next;
+      }),
+    [],
+  );
   const stopSelecting = () => {
     setSelecting(false);
     setSelected(new Set());
@@ -358,11 +375,14 @@ export default function Library() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selecting, details, editGroup, bulk]);
 
-  const sync = async (hashes: string[], synced: boolean) => {
-    if (!initDir || hashes.length === 0) return;
-    await setBooksSynced(initDir, hashes, synced);
-    await load();
-  };
+  const sync = useCallback(
+    async (hashes: string[], synced: boolean) => {
+      if (!initDir || hashes.length === 0) return;
+      await setBooksSynced(initDir, hashes, synced);
+      await load();
+    },
+    [initDir, load],
+  );
 
   const onOpen = (item: ShelfItem) => {
     if (selecting && !isGroup(item))
@@ -372,6 +392,47 @@ export default function Library() {
       readBook(dispatch, item.path, settings.openIn === "window");
     else setDetails(item.hash);
   };
+
+  // the same handlers each time: the items on the shelf not drawn again
+  const onOpenRef = useRef(onOpen);
+  onOpenRef.current = onOpen;
+  const openItem = useCallback(
+    (item: ShelfItem) => onOpenRef.current(item),
+    [],
+  );
+  const showDetails = useCallback(
+    (book: ShelfBook) => setDetails(book.hash),
+    [],
+  );
+  const syncItem = useCallback(
+    (hashes: string[], synced: boolean) => void sync(hashes, synced),
+    [sync],
+  );
+  const renderItem = useCallback(
+    (item: ShelfItem) => (
+      <ShelfItemView
+        item={item}
+        mode={mode}
+        covers={covers}
+        onOpen={openItem}
+        onDetails={showDetails}
+        onSync={syncItem}
+        selecting={selecting}
+        selected={selected}
+        onSelect={select}
+      />
+    ),
+    [
+      mode,
+      covers,
+      openItem,
+      showDetails,
+      syncItem,
+      selecting,
+      selected,
+      select,
+    ],
+  );
 
   if (layout !== "workspace") {
     return (
@@ -394,251 +455,240 @@ export default function Library() {
 
   return (
     <ErrorBoundary>
-      <div
-        ref={pageRef}
-        className={`relative flex flex-col w-full h-full overflow-y-auto bg-base-100 ${draggingFiles ? "ring-4 ring-inset ring-primary/60" : ""}`}
-        data-testid="library"
-      >
-        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 p-4 bg-base-100">
-          <h1 className="text-xl font-semibold me-2">Library</h1>
-          <label className="relative flex items-center flex-1 min-w-40 max-w-md">
-            <TbSearch
-              size={14}
-              className="absolute z-10 left-3 pointer-events-none text-base-content/50"
-            />
-            <input
-              className="w-full rounded-full input input-sm ps-8 pe-8"
-              placeholder={
-                count > 1 ? `Search in ${count} books` : "Search books"
-              }
-              aria-label="Search books"
-              value={query}
-              spellCheck={false}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            {query ? (
-              <button
-                className="absolute right-2 text-base-content/50"
-                aria-label="Clear the search"
-                onClick={() => setQuery("")}
-              >
-                <TbX size={14} />
-              </button>
-            ) : null}
-          </label>
-          <ViewMenu onGroupBy={chooseGroupBy} />
-          <button
-            className={`btn btn-sm btn-ghost ${selecting ? "btn-active" : ""}`}
-            onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
-            title="Select Books"
-          >
-            <TbChecks size={18} />
-          </button>
-          <button
-            className="btn btn-sm btn-ghost"
-            onClick={() => dispatch({ view: "vocabulary" })}
-            title="Vocabulary"
-          >
-            <TbVocabulary size={18} />
-          </button>
-          <button
-            className="btn btn-sm btn-ghost"
-            onClick={() => setFolderDialog(true)}
-            disabled={busy}
-            title="Import from folder"
-          >
-            <TbFolderPlus size={18} />
-          </button>
-          <button
-            className="btn btn-sm btn-primary"
-            onClick={onAdd}
-            disabled={busy}
-          >
-            <TbBookUpload size={18} /> Add books
-          </button>
-        </div>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={pointerWithin}
-          onDragEnd={(e) => void onDragEnd(e)}
+      <OverlayScroll scroller={scroller} className="w-full h-full">
+        <div
+          ref={setPage}
+          className={`relative flex flex-col w-full h-full overflow-y-auto bg-base-100 ${draggingFiles ? "ring-4 ring-inset ring-primary/60" : ""}`}
+          data-testid="library"
         >
-          {opened ? (
-            groupBy === "group" ? (
-              <nav
-                className="flex flex-wrap items-center gap-1 px-6 pb-2"
-                aria-label="Groups"
-              >
-                <Crumb path="" label="All" onOpen={setOpened} />
-                {breadcrumbs(opened).map((crumb, i, all) => (
-                  <Fragment key={crumb.path}>
-                    <TbChevronRight
-                      size={16}
-                      className="text-base-content/50"
-                    />
-                    {i === all.length - 1 ? (
-                      <span className="px-2 py-1 font-medium truncate">
-                        {crumb.name}
-                      </span>
-                    ) : (
-                      <Crumb
-                        path={crumb.path}
-                        label={crumb.name}
-                        onOpen={setOpened}
+          <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 p-4 bg-base-100">
+            <h1 className="text-xl font-semibold me-2">Library</h1>
+            <label className="relative flex items-center flex-1 min-w-40 max-w-md">
+              <TbSearch
+                size={14}
+                className="absolute z-10 left-3 pointer-events-none text-base-content/50"
+              />
+              <input
+                className="w-full rounded-full input input-sm ps-8 pe-8"
+                placeholder={
+                  count > 1 ? `Search in ${count} books` : "Search books"
+                }
+                aria-label="Search books"
+                value={query}
+                spellCheck={false}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {query ? (
+                <button
+                  className="absolute right-2 text-base-content/50"
+                  aria-label="Clear the search"
+                  onClick={() => setQuery("")}
+                >
+                  <TbX size={14} />
+                </button>
+              ) : null}
+            </label>
+            <ViewMenu onGroupBy={chooseGroupBy} />
+            <button
+              className={`btn btn-sm btn-ghost ${selecting ? "btn-active" : ""}`}
+              onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+              title="Select Books"
+            >
+              <TbChecks size={18} />
+            </button>
+            <button
+              className="btn btn-sm btn-ghost"
+              onClick={() => dispatch({ view: "vocabulary" })}
+              title="Vocabulary"
+            >
+              <TbVocabulary size={18} />
+            </button>
+            <button
+              className="btn btn-sm btn-ghost"
+              onClick={() => setFolderDialog(true)}
+              disabled={busy}
+              title="Import from folder"
+            >
+              <TbFolderPlus size={18} />
+            </button>
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={onAdd}
+              disabled={busy}
+            >
+              <TbBookUpload size={18} /> Add books
+            </button>
+          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={pointerWithin}
+            onDragEnd={(e) => void onDragEnd(e)}
+          >
+            {opened ? (
+              groupBy === "group" ? (
+                <nav
+                  className="flex flex-wrap items-center gap-1 px-6 pb-2"
+                  aria-label="Groups"
+                >
+                  <Crumb path="" label="All" onOpen={setOpened} />
+                  {breadcrumbs(opened).map((crumb, i, all) => (
+                    <Fragment key={crumb.path}>
+                      <TbChevronRight
+                        size={16}
+                        className="text-base-content/50"
                       />
-                    )}
-                  </Fragment>
-                ))}
-                <IconButton
-                  size="xs"
-                  title="Rename the group"
-                  onClick={() => setEditGroup(true)}
-                >
-                  <TbPencil size={16} />
-                </IconButton>
-              </nav>
-            ) : (
-              <div className="flex items-center gap-2 px-6 pb-2">
-                <IconButton
-                  title="Back to the library"
-                  onClick={() => setOpened("")}
-                >
-                  <TbArrowLeft size={18} />
-                </IconButton>
-                <span className="text-sm text-base-content/60">
-                  {GROUP_LABELS[groupBy]}:
-                </span>
-                <span className="font-medium truncate">{opened}</span>
-              </div>
-            )
-          ) : null}
-          {selecting ? (
-            <div
-              role="toolbar"
-              aria-label="Selected books"
-              className="flex flex-wrap items-center gap-2 px-3 py-1.5 mx-6 mb-2 text-sm rounded-md bg-base-200"
-            >
-              <span className="me-auto">
-                {chosen.length} selected
-                {chosen.length
-                  ? ` · ${chosen.filter((b) => b.synced).length} file${chosen.filter((b) => b.synced).length === 1 ? "" : "s"} synced`
-                  : ""}
-              </span>
-              <button
-                className="btn btn-xs btn-ghost"
-                onClick={() =>
-                  select(
-                    shownHashes,
-                    !shownHashes.every((h) => selected.has(h)),
-                  )
-                }
-              >
-                {shownHashes.length && shownHashes.every((h) => selected.has(h))
-                  ? "Unselect all"
-                  : "Select all"}
-              </button>
-              <button
-                className="btn btn-xs btn-ghost"
-                disabled={chosen.length === 0}
-                title="Sync the files of the books selected with the workspace (git)"
-                onClick={() =>
-                  void sync(
-                    chosen.map((b) => b.hash),
-                    true,
-                  )
-                }
-              >
-                <TbCloud size={14} /> Sync files
-              </button>
-              <button
-                className="btn btn-xs btn-ghost"
-                disabled={chosen.length === 0}
-                title="Only the notes and progress of the books selected synced"
-                onClick={() =>
-                  void sync(
-                    chosen.map((b) => b.hash),
-                    false,
-                  )
-                }
-              >
-                <TbCloudOff size={14} /> Stop syncing
-              </button>
-              <button
-                className="btn btn-xs btn-ghost"
-                disabled={chosen.length === 0}
-                title="Put the books selected in a group, or in none"
-                onClick={() => setBulk("move")}
-              >
-                <TbFolderShare size={14} /> Move to group
-              </button>
-              <button
-                className="btn btn-xs btn-ghost text-error"
-                disabled={chosen.length === 0}
-                title="Delete the books selected"
-                onClick={() => setBulk("delete")}
-              >
-                <TbTrash size={14} /> Delete
-              </button>
-              <button className="btn btn-xs btn-ghost" onClick={stopSelecting}>
-                Done
-              </button>
-            </div>
-          ) : null}
-          {message.text ? (
-            <div
-              role="status"
-              className={`flex items-center gap-2 px-3 py-2 mx-6 mb-2 text-sm rounded-md ${message.warn ? "bg-warning/15" : "bg-base-200"}`}
-            >
-              <span className="flex-1">{message.text}</span>
-              <button aria-label="Close" onClick={() => setMessage("")}>
-                <TbX size={14} />
-              </button>
-            </div>
-          ) : null}
-          <div className="px-4 pb-6">
-            {!rows ? (
-              <Spinner className="mx-auto" />
-            ) : items.length === 0 ? (
-              <p className="px-2 text-base-content/60">
-                {rows.length === 0
-                  ? "No books yet. Add EPUB, PDF, MOBI, AZW3, FB2 or CBZ files, drop them here, or put them in the reading folder."
-                  : "No books found."}
-              </p>
-            ) : (
+                      {i === all.length - 1 ? (
+                        <span className="px-2 py-1 font-medium truncate">
+                          {crumb.name}
+                        </span>
+                      ) : (
+                        <Crumb
+                          path={crumb.path}
+                          label={crumb.name}
+                          onOpen={setOpened}
+                        />
+                      )}
+                    </Fragment>
+                  ))}
+                  <IconButton
+                    size="xs"
+                    title="Rename the group"
+                    onClick={() => setEditGroup(true)}
+                  >
+                    <TbPencil size={16} />
+                  </IconButton>
+                </nav>
+              ) : (
+                <div className="flex items-center gap-2 px-6 pb-2">
+                  <IconButton
+                    title="Back to the library"
+                    onClick={() => setOpened("")}
+                  >
+                    <TbArrowLeft size={18} />
+                  </IconButton>
+                  <span className="text-sm text-base-content/60">
+                    {GROUP_LABELS[groupBy]}:
+                  </span>
+                  <span className="font-medium truncate">{opened}</span>
+                </div>
+              )
+            ) : null}
+            {selecting ? (
               <div
-                className={
-                  mode === "grid"
-                    ? "grid gap-1 grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))]"
-                    : "flex flex-col"
-                }
-                role="list"
-                aria-label="Bookshelf"
+                role="toolbar"
+                aria-label="Selected books"
+                className="flex flex-wrap items-center gap-2 px-3 py-1.5 mx-6 mb-2 text-sm rounded-md bg-base-200"
               >
-                {items.map((item) => (
-                  <ShelfItemView
-                    key={isGroup(item) ? `group:${item.key}` : item.hash}
-                    item={item}
-                    mode={mode}
-                    covers={covers}
-                    onOpen={onOpen}
-                    onDetails={(book) => setDetails(book.hash)}
-                    onSync={(hashes, synced) => void sync(hashes, synced)}
-                    selecting={selecting}
-                    selected={selected}
-                    onSelect={select}
-                  />
-                ))}
+                <span className="me-auto">
+                  {chosen.length} selected
+                  {chosen.length
+                    ? ` · ${chosen.filter((b) => b.synced).length} file${chosen.filter((b) => b.synced).length === 1 ? "" : "s"} synced`
+                    : ""}
+                </span>
+                <button
+                  className="btn btn-xs btn-ghost"
+                  onClick={() =>
+                    select(
+                      shownHashes,
+                      !shownHashes.every((h) => selected.has(h)),
+                    )
+                  }
+                >
+                  {shownHashes.length &&
+                  shownHashes.every((h) => selected.has(h))
+                    ? "Unselect all"
+                    : "Select all"}
+                </button>
+                <button
+                  className="btn btn-xs btn-ghost"
+                  disabled={chosen.length === 0}
+                  title="Sync the files of the books selected with the workspace (git)"
+                  onClick={() =>
+                    void sync(
+                      chosen.map((b) => b.hash),
+                      true,
+                    )
+                  }
+                >
+                  <TbCloud size={14} /> Sync files
+                </button>
+                <button
+                  className="btn btn-xs btn-ghost"
+                  disabled={chosen.length === 0}
+                  title="Only the notes and progress of the books selected synced"
+                  onClick={() =>
+                    void sync(
+                      chosen.map((b) => b.hash),
+                      false,
+                    )
+                  }
+                >
+                  <TbCloudOff size={14} /> Stop syncing
+                </button>
+                <button
+                  className="btn btn-xs btn-ghost"
+                  disabled={chosen.length === 0}
+                  title="Put the books selected in a group, or in none"
+                  onClick={() => setBulk("move")}
+                >
+                  <TbFolderShare size={14} /> Move to group
+                </button>
+                <button
+                  className="btn btn-xs btn-ghost text-error"
+                  disabled={chosen.length === 0}
+                  title="Delete the books selected"
+                  onClick={() => setBulk("delete")}
+                >
+                  <TbTrash size={14} /> Delete
+                </button>
+                <button
+                  className="btn btn-xs btn-ghost"
+                  onClick={stopSelecting}
+                >
+                  Done
+                </button>
               </div>
-            )}
-          </div>
-        </DndContext>
-        {draggingFiles ? (
-          <div className="fixed inset-x-0 bottom-6 z-20 mx-auto w-fit px-4 py-2 rounded-full shadow-lg bg-primary text-primary-content pointer-events-none">
-            Drop the books to add them
-            {groupBy === "group" && opened ? ` to ${opened}` : ""}
-          </div>
-        ) : null}
-        {busy ? <Spinner className="fixed bottom-6 right-6" /> : null}
-      </div>
+            ) : null}
+            {message.text ? (
+              <div
+                role="status"
+                className={`flex items-center gap-2 px-3 py-2 mx-6 mb-2 text-sm rounded-md ${message.warn ? "bg-warning/15" : "bg-base-200"}`}
+              >
+                <span className="flex-1">{message.text}</span>
+                <button aria-label="Close" onClick={() => setMessage("")}>
+                  <TbX size={14} />
+                </button>
+              </div>
+            ) : null}
+            <div className="px-4 pb-6">
+              {!rows ? (
+                <Spinner className="mx-auto" />
+              ) : items.length === 0 ? (
+                <p className="px-2 text-base-content/60">
+                  {rows.length === 0
+                    ? "No books yet. Add EPUB, PDF, MOBI, AZW3, FB2 or CBZ files, drop them here, or put them in the reading folder."
+                    : "No books found."}
+                </p>
+              ) : (
+                <Shelf
+                  items={items}
+                  virtual={rows.length >= VIRTUAL_FROM}
+                  mode={mode}
+                  scroller={scroller}
+                  renderItem={renderItem}
+                />
+              )}
+            </div>
+          </DndContext>
+          {draggingFiles ? (
+            <div className="fixed inset-x-0 bottom-6 z-20 mx-auto w-fit px-4 py-2 rounded-full shadow-lg bg-primary text-primary-content pointer-events-none">
+              Drop the books to add them
+              {groupBy === "group" && opened ? ` to ${opened}` : ""}
+            </div>
+          ) : null}
+          {busy ? <Spinner className="fixed bottom-6 right-6" /> : null}
+        </div>
+      </OverlayScroll>
       {detailsBook && initDir ? (
         <BookDetails
           ws={initDir}

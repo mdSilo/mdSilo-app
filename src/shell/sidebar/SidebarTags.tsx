@@ -5,9 +5,9 @@ import React, {
   ForwardedRef,
   HTMLAttributes,
 } from "react";
-import { List } from "react-virtualized";
-import { AutoSizer } from "react-virtualized-auto-sizer";
+import { Virtuoso } from "react-virtuoso";
 import { TbHash as IconHash } from "react-icons/tb";
+import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { NoteMap, useStore } from "@/state/store";
 import { indexOf } from "@/lib/linkIndex";
@@ -42,6 +42,8 @@ function SidebarTags(props: SidebarTagsProps) {
 
 export default memo(SidebarTags);
 
+const ROW_HEIGHT = 32;
+
 type TreeProps = {
   data: TagTreeItem[];
   className?: string;
@@ -49,36 +51,23 @@ type TreeProps = {
 
 function SidebarTagTree(props: TreeProps) {
   const { data, className = "" } = props;
+  const [scroller, scrollerRef] = useScroller();
   // console.log("tag data", data)
-
-  const Row = useCallback(
-    ({ index, style }: { index: number; style: React.CSSProperties }) => {
-      const node = data[index];
-      return <Tag key={`${node.name}-${index}`} node={node} style={style} />;
-    },
-    [data],
-  );
 
   return (
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
-        <div className={className}>
-          <AutoSizer
-            box="border-box"
-            renderProp={({ width, height }) => {
-              if (width === undefined || height === undefined) return null;
-              return (
-                <List
-                  width={width}
-                  height={height}
-                  rowCount={data.length}
-                  rowHeight={32}
-                  rowRenderer={Row}
-                />
-              );
-            }}
+        <OverlayScroll scroller={scroller} className="flex-1 min-h-0">
+          <Virtuoso
+            scrollerRef={scrollerRef}
+            data={data}
+            fixedItemHeight={ROW_HEIGHT}
+            computeItemKey={(index, node) => `${node.name}-${index}`}
+            itemContent={(_, node) => (
+              <Tag node={node} style={{ height: ROW_HEIGHT }} />
+            )}
           />
-        </div>
+        </OverlayScroll>
       </div>
     </ErrorBoundary>
   );
