@@ -11,6 +11,7 @@ import {
   familyOfFile,
   fontFaceCss,
   fontFamilyOf,
+  fontFamilyWithCjk,
   fonts,
   importFont,
   removeFont,
@@ -88,6 +89,49 @@ it("sets the font of a book to a font added", () => {
     customFonts,
   );
   expect(css).toContain("font-family: 'Wen Kai';");
+});
+
+describe("a font for CJK text", () => {
+  const customFonts = [
+    { id: "a1", family: "Wen Kai", fileName: "", where: "device" as const },
+  ];
+
+  it("goes after a font, before the CJK fonts of a generic stack", () => {
+    expect(fontFamilyWithCjk("Sniglet", "custom:a1", customFonts)).toBe(
+      "'Sniglet', 'Wen Kai'",
+    );
+    expect(fontFamilyWithCjk("serif", "system:LXGW WenKai")).toBe(
+      "'Literata', 'Georgia', 'Noto Serif', 'LXGW WenKai', 'Songti SC', 'Noto Serif CJK SC', serif",
+    );
+    expect(
+      fontFamilyWithCjk("monospace", "system:X").endsWith("'X', monospace"),
+    ).toBe(true);
+    expect(fontFamilyWithCjk("Sniglet", "")).toBe("'Sniglet'");
+    expect(fontFamilyWithCjk("book", "system:X")).toBe("'X'");
+    expect(fontFamilyWithCjk("book", "")).toBe("");
+  });
+
+  it("is set where the book sets no font, when the font is of the book", () => {
+    const css = bookStyles(
+      { ...DEFAULT_READER_SETTINGS, cjkFont: "custom:a1" },
+      themeColors(false),
+      "auto",
+      customFonts,
+    );
+    expect(css).toContain("font-family: 'Wen Kai';");
+    expect(css).not.toContain("font-family: inherit !important");
+  });
+
+  it("follows a font chosen, on all the text", () => {
+    const css = bookStyles(
+      { ...DEFAULT_READER_SETTINGS, font: "Sniglet", cjkFont: "custom:a1" },
+      themeColors(false),
+      "auto",
+      customFonts,
+    );
+    expect(css).toContain("font-family: 'Sniglet', 'Wen Kai';");
+    expect(css).toContain("font-family: inherit !important");
+  });
 });
 
 describe("in the workspace", () => {

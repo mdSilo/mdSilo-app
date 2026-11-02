@@ -1,4 +1,9 @@
-import { fontFaceCss, fontFamilyOf, type CustomFont } from "@/custom/fonts";
+import {
+  fontFaceCss,
+  fontFamilyOf,
+  fontFamilyWithCjk,
+  type CustomFont,
+} from "@/custom/fonts";
 import type { PageTheme, ReaderSettings, WritingMode } from "./settings";
 import { ttsStyles } from "./tts/tts";
 import { codeStyles } from "./highlight";
@@ -54,17 +59,21 @@ export function bookStyles(
     fontSize,
     lineHeight,
     font,
+    cjkFont,
     justify,
     hyphenate,
     invertImages,
     imageCaptions,
     codeHighlight,
   } = settings;
-  const family = fontFamilyOf(font, customFonts);
+  // a font chosen is set on all the text; a CJK font alone, where the book sets none
+  const forced = fontFamilyOf(font, customFonts) !== "";
+  const family = fontFamilyWithCjk(font, cjkFont, customFonts);
   const { bg, fg, primary, dark } = colors;
   return `
     @namespace epub "http://www.idpf.org/2007/ops";
     ${fontFaceCss(font, customFonts)}
+    ${cjkFont !== font ? fontFaceCss(cjkFont, customFonts) : ""}
     html {
       color-scheme: ${dark ? "dark" : "light"};
       --theme-bg-color: ${bg};
@@ -91,7 +100,7 @@ export function bookStyles(
       padding: unset;
       margin: unset;
     }
-    ${family ? `body *:not(pre, code, kbd, pre *, code *, kbd *) { font-family: inherit !important; }` : ""}
+    ${forced ? `body *:not(pre, code, kbd, pre *, code *, kbd *) { font-family: inherit !important; }` : ""}
     p, li, blockquote, dd {
       line-height: ${lineHeight};
     }

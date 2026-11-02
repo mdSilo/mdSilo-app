@@ -19,6 +19,8 @@ export type ReaderSettings = {
   lineHeight: number;
   /** the font of the text: `book` as the book says, or a font id, see custom/fonts */
   font: string;
+  /** the font for CJK text the font has not, '' for none; a font id */
+  cjkFont: string;
   justify: boolean;
   hyphenate: boolean;
   /** page by page, or one long scroll */
@@ -90,6 +92,7 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   fontSize: 18,
   lineHeight: 1.6,
   font: "book",
+  cjkFont: "",
   justify: true,
   hyphenate: true,
   flow: "paginated",

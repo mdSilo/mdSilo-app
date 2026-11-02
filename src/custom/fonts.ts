@@ -40,9 +40,24 @@ export const FONT_DIR = "fonts";
 
 export type FontOption = { id: string; name: string };
 
-export const SERIF = `'Literata', 'Georgia', 'Noto Serif', 'Songti SC', 'Noto Serif CJK SC', serif`;
-export const SANS = `'Inter', 'Helvetica Neue', 'Noto Sans', 'PingFang SC', 'Noto Sans CJK SC', sans-serif`;
-export const MONO = `'RobotoMono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace`;
+// the generic stacks, the Latin fonts first: a CJK font chosen goes between
+const STACKS = {
+  serif: [
+    `'Literata', 'Georgia', 'Noto Serif'`,
+    `'Songti SC', 'Noto Serif CJK SC', serif`,
+  ],
+  "sans-serif": [
+    `'Inter', 'Helvetica Neue', 'Noto Sans'`,
+    `'PingFang SC', 'Noto Sans CJK SC', sans-serif`,
+  ],
+  monospace: [
+    `'RobotoMono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo`,
+    `monospace`,
+  ],
+};
+export const SERIF = STACKS.serif.join(", ");
+export const SANS = STACKS["sans-serif"].join(", ");
+export const MONO = STACKS.monospace.join(", ");
 
 export const GENERIC_FONTS: FontOption[] = [
   { id: "serif", name: "Serif" },
@@ -77,6 +92,26 @@ export function fontFamilyOf(
     return font ? quote(font.family) : "";
   }
   return quote(id);
+}
+
+/**
+ * The CSS `font-family` of a font with a font for CJK text: the CJK font
+ * after the Latin ones, so it shows the characters the others don't have.
+ * '' for neither.
+ */
+export function fontFamilyWithCjk(
+  id: string,
+  cjkId: string,
+  customFonts: CustomFont[] = [],
+): string {
+  const family = fontFamilyOf(id, customFonts);
+  const cjk = fontFamilyOf(cjkId, customFonts);
+  if (!cjk || !family) return family || cjk;
+  if (id in STACKS) {
+    const [latin, rest] = STACKS[id as keyof typeof STACKS];
+    return `${latin}, ${cjk}, ${rest}`;
+  }
+  return `${family}, ${cjk}`;
 }
 
 /** A family name from a font file name: `Noto_Serif-Regular.ttf` -> `Noto Serif` */
