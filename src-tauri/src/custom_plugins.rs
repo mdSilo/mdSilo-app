@@ -481,8 +481,15 @@ mod tests {
     let out = root.join("in");
     unpack_zip(&evil, &out).unwrap();
     assert!(!root.join("out.txt").exists());
+    assert!(!Path::new("/abs.txt").exists());
     assert!(out.join(MANIFEST).exists());
-    assert_eq!(fs::read_dir(&out).unwrap().count(), 1);
+    // `..` left out; an absolute name is put inside the folder
+    let mut names: Vec<_> = fs::read_dir(&out)
+      .unwrap()
+      .map(|e| e.unwrap().file_name().into_string().unwrap())
+      .collect();
+    names.sort();
+    assert_eq!(names, ["abs.txt", MANIFEST]);
     assert!(unpack_zip(&root.join("none.zip"), &out).is_err());
     let _ = fs::remove_dir_all(root);
   }

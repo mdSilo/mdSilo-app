@@ -10,7 +10,6 @@
     "core:window:allow-set-focus",
     "core:window:allow-unminimize",
     "core:webview:allow-create-webview-window",
-    "dialog:default",
-    "updater:default"
+    "dialog:default"
   ]
 }

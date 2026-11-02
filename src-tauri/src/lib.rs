@@ -60,6 +60,7 @@ pub fn run() {
     .register_uri_scheme_protocol(plugin_scheme::SCHEME, |_ctx, request| {
       plugin_scheme::handle(&request)
     })
+    // the updater, see Cargo.toml to bring it back
     // .plugin(tauri_plugin_updater::Builder::new().build())
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
