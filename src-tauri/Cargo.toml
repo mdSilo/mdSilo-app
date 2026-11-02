@@ -23,7 +23,14 @@ serde_json = "1.0.154"
 serde = { version = "1.0.229", features = ["derive"] }
 tauri = { version = "2.12.5", features = ["tray-icon", "protocol-asset"] }
 tauri-plugin-dialog = "2.8.4"
-tauri-plugin-updater = "2.13.1"
+# the updater, not used yet (see lib.rs). To bring it back: uncomment this,
+# the `.plugin(...)` line in lib.rs, add "updater:default" to the permissions
+# of capabilities/default.json, set "createUpdaterArtifacts": true in
+# tauri.conf.json (bundle) and add to its "plugins":
+#   "updater": { "active": false, "dialog": false,
+#     "endpoints": ["https://mdSilo.github.io/mdSilo-app/install.json"],
+#     "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVBRkUxMUMwNTU0QjcyM0MKUldROGNrdFZ3QkgrNm1xWFpmb3FpK3ExV1NWWjk0TFRmSm42UHVqQk9PZmdYa0JhZlpsRzFHZm8K" }
+# tauri-plugin-updater = "2.13.1"
 dirs = "7.0.0"
 trash = "5.2.2"
 notify = "8.2.1"
@@ -39,6 +46,11 @@ regex = "1"
 percent-encoding = "2.3.2"
 tantivy = "0.27.0"
 tantivy-jieba = "0.21.0"
+# the fonts installed, by family, see system_fonts.rs; pure Rust, it reads
+# the fontconfig settings itself on Linux
+fontdb = "0.24.0"
+# plugins installed from a .zip, see custom_plugins.rs
+zip = { version = "9.2.2", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 # walk dir
 ignore = "0.4.34"
 ## rss reader

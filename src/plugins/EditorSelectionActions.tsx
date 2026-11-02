@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { SelectionAction } from "mdsmirror";
 import { useStore } from "@/state/store";
+import { useTrustedVersion } from "./trusted";
 import { runSelectionAction, selectionActionsIn } from "./selection";
 import { showAnswer } from "./PluginAnswer";
 
@@ -12,6 +13,8 @@ import { showAnswer } from "./PluginAnswer";
 export function useEditorSelectionActions(): SelectionAction[] {
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
+  // and what trusted plugins add as they run
+  const trustedVersion = useTrustedVersion();
   return useMemo(
     () =>
       selectionActionsIn("editor", installedPlugins, pluginStates).map(
@@ -26,6 +29,7 @@ export function useEditorSelectionActions(): SelectionAction[] {
           },
         }),
       ),
-    [installedPlugins, pluginStates],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [installedPlugins, pluginStates, trustedVersion],
   );
 }

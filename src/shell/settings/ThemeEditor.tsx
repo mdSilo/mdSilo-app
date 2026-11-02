@@ -6,6 +6,8 @@ import {
   allCustomThemes,
   applyThemeCss,
   deleteTheme,
+  lowContrast,
+  MIN_CONTRAST,
   parseThemeCss,
   saveTheme,
   THEME_COLORS,
@@ -16,13 +18,45 @@ import {
   type CustomTheme,
 } from "@/custom/themes";
 import { dataRoot } from "@/workspace/layout";
-import { Toggle } from "@/ui/ui";
+import { Range, Toggle } from "@/ui/ui";
 
 type Props = {
   /** the theme to edit, or undefined for a new one */
   theme?: CustomTheme;
   onDone: () => void;
 };
+
+/** The sizes with a slider: the radii in rem, the border in px */
+const SLIDERS: {
+  key: string;
+  label: string;
+  max: number;
+  step: number;
+  unit: string;
+}[] = [
+  {
+    key: "--radius-box",
+    label: "Box Radius",
+    max: 2,
+    step: 0.1,
+    unit: "rem",
+  },
+  {
+    key: "--radius-field",
+    label: "Field Radius",
+    max: 2,
+    step: 0.1,
+    unit: "rem",
+  },
+  {
+    key: "--radius-selector",
+    label: "Selector Radius",
+    max: 2,
+    step: 0.1,
+    unit: "rem",
+  },
+  { key: "--border", label: "Border", max: 3, step: 0.5, unit: "px" },
+];
 
 /** A new theme from the theme applied now. */
 function newTheme(): CustomTheme {
@@ -60,6 +94,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
 
   const setVar = (key: string, value: string) =>
     setDraft((d) => ({ ...d, vars: { ...d.vars, [key]: value } }));
+  const lowPairs = lowContrast(draft.vars);
 
   const startFrom = (name: string) => {
     const info = THEMES.find((t) => t.name === name);
@@ -103,7 +138,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-3" data-testid="theme-editor">
+    <div className="flex flex-col gap-2" data-testid="theme-editor">
       <div className="flex items-center gap-2">
         <input
           className="flex-1 input input-xs"
@@ -133,7 +168,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
         onChange={(dark) => setDraft((d) => ({ ...d, dark }))}
       />
 
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1">
         {THEME_COLORS.map((color) => {
           const key = `--color-${color}`;
           return (
@@ -153,17 +188,45 @@ export default function ThemeEditor({ theme, onDone }: Props) {
           );
         })}
       </div>
+      {lowPairs.length ? (
+        <div
+          role="status"
+          className="flex flex-col gap-0.5 p-2 text-xs rounded-box bg-warning/15"
+        >
+          <span>Hard to read (below {MIN_CONTRAST}:1):</span>
+          {lowPairs.map(({ bg, fg, ratio }) => (
+            <span key={bg}>
+              {fg} on {bg}: {ratio.toFixed(1)}:1
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-1 p-1">
+        {SLIDERS.map(({ key, label, max, step, unit }) => (
+          <Range
+            key={key}
+            label={label}
+            min={0}
+            max={max}
+            step={step}
+            value={parseFloat(draft.vars[key] ?? "") || 0}
+            format={(v) => `${v}${unit}`}
+            onChange={(v) => setVar(key, `${v}${unit}`)}
+          />
+        ))}
+      </div>
 
       <div
         data-theme={themeName(preview)}
-        className="flex flex-col gap-2 p-3 border rounded-box bg-base-100 text-base-content"
+        className="flex flex-col gap-1 p-1 border rounded bg-base-100 text-base-content"
         aria-label="Theme Preview"
       >
-        <div className="flex gap-2 p-2 rounded-box bg-base-200">
+        <div className="flex justify-center items-center gap-2 p-2 rounded-box bg-base-200">
           <span className="text-sm">Text on base</span>
           <span className="text-sm text-base-content/60">muted</span>
         </div>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap justify-center items-center gap-1">
           <button type="button" className="btn btn-xs btn-primary">
             Primary
           </button>
@@ -177,11 +240,30 @@ export default function ThemeEditor({ theme, onDone }: Props) {
             Neutral
           </button>
         </div>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap justify-center items-center gap-1">
           <span className="badge badge-info badge-sm">info</span>
           <span className="badge badge-success badge-sm">success</span>
           <span className="badge badge-warning badge-sm">warning</span>
           <span className="badge badge-error badge-sm">error</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            className="flex-1 input input-xs"
+            placeholder="A field"
+            aria-label="Preview Field"
+          />
+          <input
+            type="checkbox"
+            className="checkbox checkbox-xs checkbox-primary"
+            aria-label="Preview Checkbox"
+            defaultChecked
+          />
+          <input
+            type="checkbox"
+            className="toggle toggle-xs toggle-primary"
+            aria-label="Preview Toggle"
+            defaultChecked
+          />
         </div>
       </div>
 

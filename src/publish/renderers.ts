@@ -44,12 +44,15 @@ export const siteRenderers: Renderers = {
   smiles: (code) => renderSmiles(code),
 };
 
-/** The code blocks the enabled plugins draw, in the light theme as the site */
-export const pluginSiteRenderers = (): Renderers =>
+/**
+ * The code blocks the enabled plugins draw, in the light theme; with `dark`,
+ * in the dark theme: the site shows them as the color scheme of the reader.
+ */
+export const pluginSiteRenderers = (dark = false): Renderers =>
   Object.fromEntries(
     [...codeBlockPlugins().keys()].map((lang) => [
       lang,
-      (code: string) => renderCode(lang, code, false),
+      (code: string) => renderCode(lang, code, dark),
     ]),
   );
 

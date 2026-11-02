@@ -1,6 +1,7 @@
+import { PROTOCOL, type PluginStyle } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
 import { themeVarsOf } from "@/custom/themes";
-import { fontFamilyOf } from "@/custom/fonts";
+import { allFonts, fontFamilyOf } from "@/custom/fonts";
 import type { Permission } from "./manifest";
 import { grantedPermissions, type InstalledPlugin } from "./registry";
 
@@ -13,7 +14,8 @@ import { grantedPermissions, type InstalledPlugin } from "./registry";
  * plugin with `{ mdsilo: 1, request, method, params }`, the plugin answers
  * `{ mdsilo: 1, reply: request, result }` or `{ …, error }`.
  */
-export const PROTOCOL = 1;
+export { PROTOCOL };
+export type { PluginStyle };
 
 export type PluginCall = {
   mdsilo: typeof PROTOCOL;
@@ -30,27 +32,20 @@ export type PluginMethod = {
 
 export type PluginMethods = Record<string, PluginMethod>;
 
-/** The look of the app, for a plugin to match it */
-export type PluginStyle = {
-  theme: string;
-  dark: boolean;
-  vars: Record<string, string>;
-  font: string;
-};
-
 export function appStyle(): PluginStyle {
-  const { darkMode, font, customFonts } = store.getState();
+  const state = store.getState();
+  const { darkMode, font } = state;
   const theme = document.documentElement.dataset.theme ?? "";
   return {
     theme,
     dark: darkMode,
     vars: themeVarsOf(theme),
-    font: fontFamilyOf(font, customFonts),
+    font: fontFamilyOf(font, allFonts(state)),
   };
 }
 
 /** Methods every plugin has, whatever it is granted. */
-const BASE_METHODS = (plugin: InstalledPlugin): PluginMethods => ({
+export const baseMethods = (plugin: InstalledPlugin): PluginMethods => ({
   "app.info": {
     handler: () => ({
       id: plugin.id,
@@ -106,7 +101,7 @@ export function createHost(
   frame: HTMLIFrameElement,
   methods: () => PluginMethods = () => ({}),
 ): PluginHost {
-  const base = BASE_METHODS(plugin);
+  const base = baseMethods(plugin);
   // the origin of a sandboxed page is opaque, so no target origin can be named
   const post = (message: object) =>
     frame.contentWindow?.postMessage({ mdsilo: PROTOCOL, ...message }, "*");

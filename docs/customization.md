@@ -40,7 +40,7 @@ Also allow a "system font" entry (family name only, no file), since many users j
 **Global settings UI:** new "Fonts" section in `SettingsModal.tsx`: import .ttf/.otf/.woff/.woff2 (use `openFileDilog` in `src/workspace/open.ts`), family name (default from file name), preview line, remove, "Sync with workspace" toggle.
 
 **One font list for reader and editor** (`useFontOptions()` in `src/custom/fonts.ts`, and one `<FontSelect>` component in `src/ui/`):
-- Groups: *Generic* (Serif, Sans-serif, Monospace — the stacks now in `reader/styles.ts` move here), *Bundled* (Sniglet, RobotoMono, IBMPlexSerif…), *System* (installed fonts by name; Tauri: list via a small Rust command using `font-kit`, web: free-text family), *Custom* (imported files). The reader adds one extra entry, *As the book says*.
+- Groups: *Generic* (Serif, Sans-serif, Monospace — the stacks now in `reader/styles.ts` move here), *Bundled* (Sniglet, RobotoMono, IBMPlexSerif…), *System* (installed fonts by name; Tauri: list via a small Rust command using `fontdb`, pure Rust (`font-kit` was planned, left out: it links fontconfig and freetype), web: free-text family), *Custom* (imported files). The reader adds one extra entry, *As the book says*.
 - A font value is a single string id (`generic:serif`, `bundled:Sniglet`, `system:Noto Serif`, `custom:<id>`) resolved by one `fontFamilyOf(id)` → CSS `font-family` stack; old values (`''`, `'Sniglet'`, `'serif'`…) are migrated.
 - Settings that use it: editor font + new editor code font (mdsmirror `fontFamilyMono`); reader body font + optional CJK/fallback font (readup/Readest does this — check its code and port what fits).
 
@@ -118,7 +118,7 @@ Not easy in full; a partial shim is doable later. Recommendation: design our own
 - Practical aim: run a curated list of known-working Obsidian plugins, marked "compat (partial)" in the plugin manager. The `obsidian` API typings are MIT, so the shim can follow them.
 
 ### Plugin manager (Settings → Plugins)
-Install from folder / .zip, list (mode, permissions, where stored), enable/disable, grant permissions, reload (dev mode: reload on file change), uninstall, "Sync with workspace" toggle. A plugin registry/marketplace is out of scope for now.
+Install folder / .zip, list (mode, permissions, where stored), enable/disable, grant permissions, reload (dev mode: reload on file change), uninstall, "Sync with workspace" toggle. A plugin registry/marketplace is out of scope for now.
 
 ---
 
@@ -139,71 +139,76 @@ Install from folder / .zip, list (mode, permissions, where stored), enable/disab
 - Plugins: sample CSV viewer (sandboxed) — open a .csv, edit, save; confirm the iframe can't call `invoke` (devtools check). Sample view plugin listing notes; sample code-block renderer in editor and in a published site. Trusted sample: confirmation shown, hook applied. Synced plugin on a second clone stays disabled until enabled.
 
 
-## not done
+## done later
 
-Here is everything not done, from the plan in `docs/customization.md` and the roadmap entries. 
+Here is everything done in second stage, from the plan in `docs/customization.md` and the roadmap entries. 
 
-**Not tried in the real app (all of C1–C5)**
-- Importing a font, the theme editor, and the plugin pieces: the `mdsplugin://` scheme and its CSP, the sandboxed iframe, the hidden background frames, and all four samples (csv-viewer, tag-index, bars, text-stats).
-- Checking every built-in theme in a browser, with screenshots of the editor, CodeMirror, Graph and the reader's `auto` page.
+**Shared storage** — done (branch `customization-2`, M1)
+- `src/custom/store.ts`: a `Kind` per kind of item (themes, fonts, plugins) says how its items are listed, saved, copied and removed in each place; `keep`, `moveTo(kind, item, 'device' | 'workspace')`, `drop` and `merged` are shared. Themes and fonts: workspace wins; plugins: device wins (merged in Rust, which also serves each plugin from the folder it was listed in).
+- Fonts: `.mdsilo/fonts.json` + `.mdsilo/fonts/<file>`, a per-font "Sync with workspace" checkbox in Settings → Fonts. File names from the synced list are reduced to plain names.
+- Plugins: `.mdsilo/plugins/<id>/`, a "Sync with workspace" checkbox in Manage Plugins. A synced plugin is never enabled by the sync; a workspace plugin carries a hash of its files, saved when enabled on this device: when a sync changes the files, it stops until enabled again.
+- A git sync that changes `themes.json`, `fonts.json`, `fonts/` or `plugins/` reloads them (themes used to be read only on opening the workspace).
 
-**Shared storage**
-- A shared `src/custom/store.ts` with `moveTo(item, 'device' | 'workspace')`.
 
-No, we haven't built it. There is no `src/custom/store.ts`, and the "move between device and workspace" idea is only partly there.
 
-- **Themes:** done, but inside [themes.ts](src/custom/themes.ts) itself. Each theme has `where: 'workspace' | 'device'`. They are saved to `.mdsilo/themes.json` or to the device settings, and the Sync with workspace toggle moves a theme between the two. The workspace copy wins if both exist.
-- **Fonts:** device only. The files are in IndexedDB and the list is in the device settings. There is no Sync with workspace toggle and no `.mdsilo/fonts/`. I noted this as not done in the C1 roadmap entry.
-- **Plugins:** device only (`<data>/mdsilo/custom/plugins/`). There is no `.mdsilo/plugins/` and no toggle. Enabled state and granted permissions are meant to stay on the device anyway. I listed this as not done in the C3 entry.
+**C1 Fonts — done (branch `customization-2`, M4)**
+- A font for code in the editor (`codeFont`: mdsmirror's `fontFamilyMono`, and the text of the Markdown mode).
+- A font for CJK text in the editor (`cjkFont`), for the text, the code and the Markdown mode; with the default font, before the generic family of mdsmirror's stack.
+- A font for CJK text in the reader (`cjkFont`): after the font chosen (for a generic stack, between its Latin and CJK fonts); with the font of the book, set on the body, where the book sets no font.
 
-So each kind has its own code (or none), and no shared module ties them together. A shared `moveTo(item, 'device' | 'workspace')` would mainly add fonts and plugins to the workspace. Themes would then use it instead of their own logic.
+**C1 Fonts — done (branch `customization-2`, M3)**
+- Installed fonts listed from Rust with `fontdb` (`system_fonts`, pure Rust, no C library; on Linux it reads the fontconfig settings itself; listed once and kept): a *System* group in every font list (id `system:<family>`), and suggestions for "add by name" in Settings → Fonts. A chosen font that is no longer installed stays selectable.
 
-**C1 Fonts**
-- Listing installed system fonts from Rust, using `font-kit` (today you type the name).
-- A separate font setting for code in the editor.
-- A fallback font for CJK text in the reader.
-- Sync with workspace: `.mdsilo/fonts/` and `fonts.json`, plus the toggle.
-- The web build: a manual check, and a free-text family name.
-
-**C2 Themes**
-- A contrast warning for content-on-color pairs.
-- Sliders for radius and border (the values are kept, there's no UI).
-- Re-reading `.mdsilo/themes.json` when git sync changes it. Today it is read only when the workspace opens.
-
-**C3 Plugin core**
-- Install from a `.zip`.
-- Sync with workspace: `.mdsilo/plugins/`, plus the toggle. A synced plugin must stay disabled until you enable it on each device.
-- Reading binary files in file viewers (text only now).
-- "Open with…" when several plugins match an extension (the first one wins now).
-- Dev mode that reloads a plugin when its files change.
-- A tiny @mdsilo/plugin-api (types + client, in packages/plugin-api) for authors.
-- Plugins in the web build (X).
-- Trusted mode: running in-process, with a warning and a separate list in the manager. It is also the base for the Obsidian layer and for any change to editor nodes or the reader layout. Trusted plugins can't be enabled yet.
+**C2 Themes — done (branch `customization-2`, M5)**
+- A contrast warning: `lowContrast(vars)` checks each pair of `CONTRAST_PAIRS` (base-100/200/300 with base-content, each color with its `-content`) against WCAG AA (4.5:1); the theme editor lists the pairs below it.
+- Sliders for `--radius-box`, `--radius-field`, `--radius-selector` (0–2rem) and `--border` (0–3px); the preview has a field, a checkbox and a toggle to show them.
 
 **C4 Views**
 - A plugin view as a startup view (`STARTUP_VIEWS`).
-- `notes.search` for full-text search.
-- Creating new notes with `notes.write`.
-- Graph data beyond `notes.backlinks`.
-- A `view.info`-style way for views to be told about changes (note edited, files changed).
+
+**C3/C4 — done (branch `customization-2`, M6)**
+- File viewers read and write bytes: `file.readBytes` (a `Uint8Array`), `file.writeBytes { data }`; `file.changed` compares as the plugin read the file.
+- Dev mode: Manage Plugins → *Develop* installs from a folder and keeps `devSource` in the plugin's state (this device); Rust `watch_plugin_dev` watches the folder, installs again once the writes pause (300 ms) and emits `plugin-dev`; the app lists the plugins again, which reloads trusted plugins and hidden frames, and the frames get a new key (`?v=`).
+- `notes.search { query, limit? }`: the full-text search of the app (index, then the blocks), `[{ path, title, snippets }]`.
+- `notes.write { path, text, create: true }` makes a new Markdown note (folders as needed; not over a file the app doesn't know, not in a hidden folder).
+- `notes.graph`: `{ nodes, links, unresolved }`, links between notes resolved by title as the Graph does.
+- Views are told `notes.changed { paths }` (edited in the app too, made, renamed, deleted; once the changes pause) and `files.changed { paths, event }` (the watcher).
+
+**C5 Enhancers**
+- ~~Plugin code blocks are drawn only in the light theme on published sites.~~ Done (M7): drawn light and dark (`buildSite(input, renderers, darkRenderers)`, `<figure class="diagram … themed">` with a `.light` and a `.dark` part, shown by `prefers-color-scheme`).
+
+**Plugins — done (branch `customization-2`, M2)**
+- Install from a `.zip` (`unpack_plugin`: names out of the folder and links left out, 5000 files / 256 MB at most; manifest at the root or in its only folder).
+- Note modes: `contributes.noteModes`, a button each in the note header, the page in place of the editor with `note.info/read/write` and `note.changed`; sample `outline`.
+- `packages/plugin-api` (`@mdsilo/plugin-api`, MIT): manifest and protocol types (the app uses them too), `createClient`, `applyStyle`/`followStyle`, `TrustedApi`; builds `dist/mdsilo-plugin.js` for plain pages.
+- Trusted mode: `main.js` imported in-process after a warning, listed apart; pages drawn into the app in place of frames; `handle`, `page`, `contribute`, `editor.addExtension` (mdsmirror), `reader.addStyles`, `onUnload`; app CSP `script-src` allows the plugin scheme. Sample `book-indent`.
+- Obsidian layer (`src/plugins/obsidian`): Obsidian manifests run as trusted, `compat: "obsidian"`; `main.js` served as a module by the scheme (`__cjs/`), the `obsidian` module mapped onto ours (see examples/plugins/README.md for what is in and out).
+
+**Plugins — done (branch `customization-2`, M7)**
+- Obsidian: `vault.create`, front matter (`yaml`) in `getFileCache`, `fileManager.processFrontMatter`, `moment`; `registerExtensions` + `FileView`/`TextFileView` as viewers; `editorCallback`/`editorCheckCallback` over an `Editor` (CodeMirror of the Markdown mode, or the note's text); `registerEditorExtension` in the Markdown mode (`@codemirror/*` from the app); `Menu`, `MarkdownRenderChild`, suggestions accepted as no-ops; canvases of code blocks taken as images. Known plugins listed in examples/plugins/README.md, read from their code, not run. 
+
+
+## not done
+
+**C1 Fonts**
+- The web build: a manual check, and a free-text family name. 
+
+**C3 Plugin core**
+- "Open with…" when several plugins match an extension (the first one wins now).
+- Plugins in the web build (X).
 
 **C5 Enhancers**
 - Commands only show an answer. The background page has no notes, books or issues methods.
 - Hotkeys for commands, or a command palette.
 - Plugin code blocks in the editor, and plugin selection actions: both are tested, but I haven't seen them run in the real app.
-- Plugin code blocks are drawn only in the light theme on published sites.
-- note mode plugin, such as adding another view mode with read or write or both permission besides wysiwyg, raw, mindmap.
 
-**What it would take to add real note modes**
-- A new `contributes.noteModes: [{ id, title }]`, listed in the mode switch of the note header.
-- When the mode is chosen, `Note.tsx` shows the plugin's sandboxed frame in the place of the editor, the way file viewers already do.
-- A small set of methods for the open note: `note.read` and `note.write` (with the existing `notes:read` and `notes:write` permissions), and a `note.changed` event when it changes elsewhere. The content would be passed on every edit, the way the raw editor does.
-- Switching to another mode must not lose unsaved changes, so the frame would write through the same save path as the other modes.
+**Not tried in the real app (all of C1–C5)**
+- Importing a font, the theme editor, and the plugin pieces: the `mdsplugin://` scheme and its CSP, the sandboxed iframe, the hidden background frames, and all four samples (csv-viewer, tag-index, bars, text-stats).
+- Checking every built-in theme in a browser, with screenshots of the editor, CodeMirror, Graph and the reader's `auto` page.
 
-That is a small step on top of the file viewer and the views already built. 
-
-**Later**
-- The Obsidian compatibility layer (needs trusted mode first).
+**Plugins — still open**
+- Obsidian plugins tried in the desktop app (the list above is from reading their code; running downloaded plugins was not allowed here).
+- Trusted and Obsidian plugins are tested in jsdom only, not in the desktop app (module import over the plugin scheme, CSP).
 
 **Housekeeping**
 - The flaky `reader.test.tsx` vocabulary test fails now and then and isn't related to plugins.

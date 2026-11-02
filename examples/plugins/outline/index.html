@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Outline</title>
+<style>
+  body { margin: 0; padding: 8px 4px; font: 16px system-ui, sans-serif; background: var(--color-base-100); color: var(--color-base-content); }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+  .level { width: 2.5em; font-size: 12px; opacity: 0.5; text-align: right; }
+  input { flex: 1; font: inherit; padding: 2px 6px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: inherit; }
+  input:hover, input:focus { border-color: var(--color-base-300); outline: none; }
+  input:read-only { cursor: default; }
+  p { opacity: 0.6; }
+</style>
+</head>
+<body>
+<ul id="outline"></ul>
+<script>
+// A note mode, see examples/plugins/README.md: note.read, note.write, note.changed
+let seq = 0;
+const waiting = new Map();
+function call(method, params) {
+  const id = ++seq;
+  parent.postMessage({ mdsilo: 1, id, method, params }, '*');
+  return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
+}
+
+let text = '';
+let readOnly = false;
+
+// the lines of headings, out of code fences
+function headings(md) {
+  const found = [];
+  let fence = false;
+  md.split('\n').forEach((line, index) => {
+    if (/^\s*(```|~~~)/.test(line)) fence = !fence;
+    const m = !fence && line.match(/^(#{1,6})\s+(.*?)\s*#*\s*$/);
+    if (m) found.push({ index, level: m[1].length, title: m[2] });
+  });
+  return found;
+}
+
+function show() {
+  const list = document.getElementById('outline');
+  list.replaceChildren();
+  const found = headings(text);
+  if (!found.length) {
+    list.innerHTML = '<p>No headings in this note.</p>';
+    return;
+  }
+  for (const h of found) {
+    const li = document.createElement('li');
+    li.style.paddingLeft = `${(h.level - 1) * 1.25}em`;
+    const level = document.createElement('span');
+    level.className = 'level';
+    level.textContent = `H${h.level}`;
+    const input = document.createElement('input');
+    input.value = h.title;
+    input.readOnly = readOnly;
+    input.addEventListener('change', () => rename(h, input.value));
+    li.append(level, input);
+    list.append(li);
+  }
+}
+
+async function rename(h, title) {
+  const lines = text.split('\n');
+  lines[h.index] = `${'#'.repeat(h.level)} ${title.trim()}`;
+  text = lines.join('\n');
+  await call('note.write', { text });
+  show();
+}
+
+async function load() {
+  readOnly = (await call('note.info')).readOnly;
+  text = await call('note.read');
+  show();
+}
+
+function applyStyle(style) {
+  for (const [key, value] of Object.entries(style.vars)) document.body.style.setProperty(key, value);
+  document.body.style.fontFamily = style.font || '';
+}
+
+window.addEventListener('message', (event) => {
+  const msg = event.data;
+  if (event.source !== parent || !msg || msg.mdsilo !== 1) return;
+  if (msg.id !== undefined && waiting.has(msg.id)) {
+    const { resolve, reject } = waiting.get(msg.id);
+    waiting.delete(msg.id);
+    if (msg.error !== undefined) reject(new Error(msg.error));
+    else resolve(msg.result);
+  } else if (msg.event === 'note.changed') load();
+  else if (msg.event === 'style') applyStyle(msg.data);
+});
+
+call('app.style').then(applyStyle);
+load().catch((e) => {
+  document.getElementById('outline').innerHTML = '';
+  const p = document.createElement('p');
+  p.textContent = e.message;
+  document.body.append(p);
+});
+</script>
+</body>
+</html>

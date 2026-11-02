@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useStore } from "@/state/store";
 import {
   STARTUP_VIEWS,
@@ -6,13 +5,11 @@ import {
   type SideMenuOrientation,
   type StartupView,
 } from "@/state/userSettings";
-import { SYSTEM_THEME, THEMES } from "@/lib/themes";
 import { Select } from "@/ui/ui";
-import { allCustomThemes } from "@/custom/themes";
 import { BaseModal } from "@/ui/BaseModal";
 import { isTauri } from "@/workspace/util";
-import ThemeEditor from "./ThemeEditor";
-import FontsSetting from "./FontsSetting";
+import { allCustomThemes } from "@/custom/themes";
+import { ThemeSelect } from "./ThemeEditorModal";
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
   value === "auto" || value === "vertical" || value === "horizontal";
@@ -35,14 +32,19 @@ type Props = {
 export default function SettingsModal({ isOpen, handleClose }: Props) {
   const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
 
+  const setThemeEditing = useStore((state) => state.setThemeEditing);
   const theme = useStore((state) => state.theme);
-  const setTheme = useStore((state) => state.setTheme);
   const customThemes = useStore((state) => state.customThemes);
   const workspaceThemes = useStore((state) => state.workspaceThemes);
-  const userThemes = allCustomThemes({ customThemes, workspaceThemes });
-  const current = userThemes.find((t) => `user-${t.id}` === theme);
-  // the theme edited: a theme made by the user, or 'new'
-  const [editing, setEditing] = useState<string | null>(null);
+  const current = allCustomThemes({ customThemes, workspaceThemes }).find(
+    (t) => `user-${t.id}` === theme,
+  );
+  // the editor of a theme, in a dialog of its own in place of this one
+  const editTheme = (id: string) => {
+    handleClose();
+    setThemeEditing(id);
+  };
+  const setIsFontsOpen = useStore((state) => state.setIsFontsOpen);
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
   const setSideMenuOrientation = useStore(
     (state) => state.setSideMenuOrientation,
@@ -55,49 +57,25 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   return (
     <BaseModal title="Settings" isOpen={isOpen} handleClose={handleClose}>
       <div className="flex flex-col flex-1 gap-3 p-3 text-sm bg-base-200">
-        <Select label="Theme" value={theme} onChange={setTheme}>
-          <option value={SYSTEM_THEME}>Follow System</option>
-          {THEMES.map((t) => (
-            <option key={t.name} value={t.name}>
-              {t.label}
-            </option>
-          ))}
-          {userThemes.length > 0 ? (
-            <optgroup label="My Themes">
-              {userThemes.map((t) => (
-                <option key={t.id} value={`user-${t.id}`}>
-                  {t.name}
-                </option>
-              ))}
-            </optgroup>
-          ) : null}
-        </Select>
-        {editing ? (
-          <ThemeEditor
-            key={editing}
-            theme={userThemes.find((t) => t.id === editing)}
-            onDone={() => setEditing(null)}
-          />
-        ) : (
-          <div className="flex justify-end gap-2">
-            {current ? (
-              <button
-                type="button"
-                className="btn btn-xs"
-                onClick={() => setEditing(current.id)}
-              >
-                Edit Theme
-              </button>
-            ) : null}
+        <ThemeSelect />
+        <div className="flex justify-end gap-2">
+          {current ? (
             <button
               type="button"
               className="btn btn-xs"
-              onClick={() => setEditing("new")}
+              onClick={() => editTheme(current.id)}
             >
-              New Theme
+              Edit Theme
             </button>
-          </div>
-        )}
+          ) : null}
+          <button
+            type="button"
+            className="btn btn-xs"
+            onClick={() => editTheme("new")}
+          >
+            New Theme
+          </button>
+        </div>
         <Select
           label="Side Menu Orientation"
           value={sideMenuOrientation}
@@ -133,27 +111,49 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             </option>
           ))}
         </Select>
-        <FontsSetting />
+        <SettingsLink
+          label="Fonts"
+          action="Manage Fonts"
+          onClick={() => {
+            handleClose();
+            setIsFontsOpen(true);
+          }}
+        />
         {isTauri ? (
-          <div className="flex items-center justify-between">
-            <span>Plugins</span>
-            <button
-              type="button"
-              className="btn btn-xs"
-              onClick={() => {
-                handleClose();
-                setIsPluginsOpen(true);
-              }}
-            >
-              Manage Plugins
-            </button>
-          </div>
+          <SettingsLink
+            label="Plugins"
+            action="Manage Plugins"
+            onClick={() => {
+              handleClose();
+              setIsPluginsOpen(true);
+            }}
+          />
         ) : null}
         <p className="mt-2 text-xs text-center text-base-content/70">
           The editor, the reader and the feed reader have their own settings, in
-          their views; the fonts added here show in their font lists.
+          their views; the fonts added in Fonts show in their font lists.
         </p>
       </div>
     </BaseModal>
+  );
+}
+
+/** A row of the settings that opens a dialog of its own */
+function SettingsLink({
+  label,
+  action,
+  onClick,
+}: {
+  label: string;
+  action: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span>{label}</span>
+      <button type="button" className="btn btn-xs" onClick={onClick}>
+        {action}
+      </button>
+    </div>
   );
 }

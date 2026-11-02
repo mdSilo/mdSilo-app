@@ -14,7 +14,7 @@ The buttons at the top left of a note switch the mode:
 | **Markdown** | Edit the source with syntax highlighting (CodeMirror). Good for fine control and pasting. |
 | **MindMap** | Turn the headings and lists of the note into a mind map, and edit it as a tree. |
 
-Switching is lossless: it is the same file. The gear next to the modes opens **Editor Settings**: font, size, line height, weight, right-to-left, spell check and the attachment folder.
+Switching is lossless: it is the same file. The gear next to the modes opens **Editor Settings**: font, the font for code (also the text of the Markdown mode), a font for CJK text (for the characters the other fonts have not), size, line height, weight, right-to-left, spell check and the attachment folder.
 
 ## Slash commands
 

@@ -18,6 +18,7 @@ describe("parseManifest", () => {
         codeBlocks: [],
         selectionActions: [],
         commands: [],
+        noteModes: [],
       },
     });
   });
@@ -151,6 +152,32 @@ describe("parseManifest", () => {
     ).toThrow("contributes.commands[0].id");
   });
 
+  it("reads the note modes", () => {
+    expect(
+      parseManifest({
+        ...minimal,
+        contributes: {
+          noteModes: [
+            { id: "outline", title: "Outline" },
+            { id: "cards", title: "Cards", page: "./cards.html" },
+          ],
+        },
+      }).contributes.noteModes,
+    ).toEqual([
+      { id: "outline", title: "Outline", page: undefined },
+      { id: "cards", title: "Cards", page: "cards.html" },
+    ]);
+    expect(() =>
+      parseManifest({
+        ...minimal,
+        contributes: { noteModes: [{ id: "a", title: "x", page: "/x.html" }] },
+      }),
+    ).toThrow("contributes.noteModes[0].page");
+    expect(() =>
+      parseManifest({ ...minimal, contributes: { noteModes: [{ id: "a" }] } }),
+    ).toThrow("contributes.noteModes[0].title");
+  });
+
   it("says which contribution is wrong", () => {
     expect(() =>
       parseManifest({
@@ -177,6 +204,11 @@ describe("parseManifest", () => {
       }),
     ).toThrow("contributes.views[0].page");
   });
+});
+
+it("takes main.js as the module of a trusted plugin", () => {
+  expect(parseManifest({ ...minimal, mode: "trusted" }).main).toBe("main.js");
+  expect(parseManifest(minimal).main).toBe("index.html");
 });
 
 describe("versions", () => {
@@ -220,5 +252,15 @@ describe("the sample plugins", () => {
     expect(parseManifest(stats).contributes.selectionActions[0].id).toBe(
       "count",
     );
+    const outline = readFileSync(
+      "examples/plugins/outline/manifest.json",
+      "utf8",
+    );
+    expect(parseManifest(outline).contributes.noteModes[0].id).toBe("outline");
+    const indent = parseManifest(
+      readFileSync("examples/plugins/book-indent/manifest.json", "utf8"),
+    );
+    expect(indent.mode).toBe("trusted");
+    expect(indent.main).toBe("main.js");
   });
 });

@@ -29,6 +29,8 @@ const installed = (
 ): InstalledPlugin => ({
   id: manifest.id as string,
   dir: `/data/${manifest.id}`,
+  where: "device",
+  hash: "",
   manifest: parseManifest(manifest),
   error,
 });
@@ -43,6 +45,60 @@ beforeEach(() => {
 });
 
 describe("PluginManager", () => {
+  it("keeps a plugin in the workspace when synced", async () => {
+    store.setState({ initDir: "/ws", layout: "workspace" });
+    mockInvoke(invoke, {
+      install_plugin: () => "/ws/.mdsilo/plugins/csv",
+      remove_plugin: () => undefined,
+      list_plugins: () => [
+        {
+          id: "csv",
+          dir: "/ws/.mdsilo/plugins/csv",
+          manifest: JSON.stringify(csvManifest),
+          where: "workspace",
+          hash: "h1",
+        },
+      ],
+    });
+    render(<PluginManager />);
+    await userEvent.click(item("csv").getByLabelText(/Sync with workspace/));
+    await waitFor(() =>
+      expect(item("csv").getByLabelText(/Sync with workspace/)).toBeChecked(),
+    );
+    expect(invoke).toHaveBeenCalledWith("install_plugin", {
+      src: "/data/csv",
+      id: "csv",
+      workspace: "/ws/.mdsilo",
+    });
+    expect(invoke).toHaveBeenCalledWith("remove_plugin", {
+      id: "csv",
+      workspace: null,
+    });
+    expect(
+      item("csv").getByText("(other devices get it disabled)"),
+    ).toBeInTheDocument();
+  });
+
+  it("can not sync without a workspace", () => {
+    store.setState({ initDir: "" });
+    render(<PluginManager />);
+    expect(item("csv").getByLabelText(/Sync with workspace/)).toBeDisabled();
+  });
+
+  it("says when a sync changed a plugin enabled", () => {
+    store.setState({
+      installedPlugins: [
+        { ...installed(csvManifest), where: "workspace", hash: "h2" },
+      ],
+      pluginStates: { csv: { enabled: true, granted: [], hash: "h1" } },
+    });
+    render(<PluginManager />);
+    expect(
+      item("csv").getByText(/Changed in the workspace since you enabled it/),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Enable CSV Viewer")).not.toBeChecked();
+  });
+
   it("lists the plugins, what they open", () => {
     render(<PluginManager />);
     expect(item("csv").getByText("CSV Viewer")).toBeInTheDocument();
@@ -104,28 +160,67 @@ describe("PluginManager", () => {
     });
   });
 
-  it("can not enable a plugin with an error, nor a trusted one", () => {
+  it("can not enable a plugin with an error", () => {
     store.setState({
       installedPlugins: [
         installed(
           { id: "old", name: "Old", version: "1.0.0" },
           "Needs mdSilo 9.0.0 or later",
         ),
-        installed({
-          id: "deep",
-          name: "Deep",
-          version: "1.0.0",
-          mode: "trusted",
-        }),
       ],
     });
     render(<PluginManager />);
     expect(screen.getByLabelText("Enable Old")).toBeDisabled();
     expect(screen.getByText("Needs mdSilo 9.0.0 or later")).toBeInTheDocument();
-    expect(screen.getByLabelText("Enable Deep")).toBeDisabled();
-    expect(
-      item("deep").getByText(/full access to your files/),
-    ).toBeInTheDocument();
+  });
+
+  describe("a trusted plugin", () => {
+    beforeEach(() => {
+      store.setState({
+        installedPlugins: [
+          installed(csvManifest),
+          installed({
+            id: "deep",
+            name: "Deep",
+            version: "1.0.0",
+            author: "Ann",
+            mode: "trusted",
+            permissions: ["notes:read"],
+          }),
+        ],
+      });
+    });
+
+    it("is listed apart, with full access", () => {
+      render(<PluginManager />);
+      expect(
+        screen.getByText("Trusted: run in the app, with full access"),
+      ).toBeInTheDocument();
+      expect(
+        item("deep").getByText(/full access to your files/),
+      ).toBeInTheDocument();
+    });
+
+    it("is enabled after a warning, with no permission to choose", async () => {
+      vi.mocked(ask).mockResolvedValueOnce(true);
+      render(<PluginManager />);
+      await userEvent.click(screen.getByLabelText("Enable Deep"));
+      await waitFor(() =>
+        expect(store.getState().pluginStates.deep?.enabled).toBe(true),
+      );
+      expect(vi.mocked(ask).mock.calls[0][0]).toMatch(
+        /not in a sandbox.*trust Ann/,
+      );
+      expect(item("deep").queryByText("Deep asks to:")).toBeNull();
+    });
+
+    it("stays disabled when the warning is declined", async () => {
+      vi.mocked(ask).mockResolvedValueOnce(false);
+      render(<PluginManager />);
+      await userEvent.click(screen.getByLabelText("Enable Deep"));
+      await waitFor(() => expect(ask).toHaveBeenCalled());
+      expect(store.getState().pluginStates.deep).toBeUndefined();
+    });
   });
 
   it("installs from a folder, and says what is wrong", async () => {
@@ -133,7 +228,7 @@ describe("PluginManager", () => {
     mockInvoke(invoke, { read_file: '{"id":"Bad"}' });
     render(<PluginManager />);
     await userEvent.click(
-      screen.getByRole("button", { name: "Install from Folder" }),
+      screen.getByRole("button", { name: "Install Folder" }),
     );
     expect(await screen.findByText(/"id" should be/)).toBeInTheDocument();
     expect(invoke).not.toHaveBeenCalledWith(
@@ -153,6 +248,8 @@ describe("PluginManager", () => {
         {
           id: "clock",
           dir: "/data/clock",
+          where: "device",
+          hash: "",
           manifest: JSON.stringify({
             id: "clock",
             name: "Clock",
@@ -162,13 +259,54 @@ describe("PluginManager", () => {
       ],
     });
     await userEvent.click(
-      screen.getByRole("button", { name: "Install from Folder" }),
+      screen.getByRole("button", { name: "Install Folder" }),
     );
     expect(await screen.findByText("Clock")).toBeInTheDocument();
     expect(invoke).toHaveBeenCalledWith("install_plugin", {
       src: "/src/clock",
       id: "clock",
     });
+  });
+
+  it("installs from a .zip, and removes what it unpacked", async () => {
+    vi.mocked(open).mockResolvedValueOnce("/dl/clock.zip");
+    mockInvoke(invoke, {
+      unpack_plugin: "/data/unpacked/plugin/clock",
+      read_file: ({ filePath }: Record<string, unknown>) =>
+        filePath === "/data/unpacked/plugin/clock/manifest.json"
+          ? JSON.stringify({ id: "clock", name: "Clock", version: "1.0.0" })
+          : "",
+      install_plugin: "/data/clock",
+      list_plugins: [],
+      forget_unpacked: undefined,
+    });
+    render(<PluginManager />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Install .zip" }),
+    );
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("forget_unpacked"));
+    expect(invoke).toHaveBeenCalledWith("unpack_plugin", {
+      zip: "/dl/clock.zip",
+    });
+    expect(invoke).toHaveBeenCalledWith("install_plugin", {
+      src: "/data/unpacked/plugin/clock",
+      id: "clock",
+    });
+  });
+
+  it("says why a .zip can not be installed, and cleans up", async () => {
+    vi.mocked(open).mockResolvedValueOnce("/dl/x.zip");
+    mockInvoke(invoke, {
+      unpack_plugin: "/data/unpacked/plugin",
+      read_file: "",
+      forget_unpacked: undefined,
+    });
+    render(<PluginManager />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Install .zip" }),
+    );
+    expect(await screen.findByText(/No manifest.json/)).toBeInTheDocument();
+    expect(invoke).toHaveBeenCalledWith("forget_unpacked");
   });
 
   it("uninstalls after asking", async () => {
@@ -183,7 +321,10 @@ describe("PluginManager", () => {
     vi.mocked(ask).mockResolvedValueOnce(true);
     await userEvent.click(screen.getByLabelText("Uninstall CSV Viewer"));
     await waitFor(() => expect(screen.queryByText("CSV Viewer")).toBeNull());
-    expect(invoke).toHaveBeenCalledWith("remove_plugin", { id: "csv" });
+    expect(invoke).toHaveBeenCalledWith("remove_plugin", {
+      id: "csv",
+      workspace: null,
+    });
     expect(store.getState().pluginStates).toEqual({});
   });
 

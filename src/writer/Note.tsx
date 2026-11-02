@@ -11,9 +11,20 @@ import React, {
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from "react-icons/tb";
-import MsEditor, { Attach, embeds } from "mdsmirror";
+import MsEditor, {
+  Attach,
+  embeds,
+  theme as baseTheme,
+  type Extension,
+} from "mdsmirror";
 import { useCodeRenderers } from "@/plugins/codeBlocks";
 import { useEditorSelectionActions } from "@/plugins/EditorSelectionActions";
+import PluginNoteMode, { usePluginNoteModes } from "@/plugins/PluginNoteMode";
+import {
+  trustedExtensions,
+  trustedExtensionsKey,
+  useTrustedVersion,
+} from "@/plugins/trusted";
 import { EDITOR_THEME } from "@/lib/themes";
 import Title from "@/writer/Title";
 import Toc, { Heading } from "@/writer/Toc";
@@ -56,7 +67,7 @@ import {
 } from "@/workspace/util";
 import { getFileExt } from "@/workspace/process";
 import { useWritingRoot } from "@/workspace/useWorkspace";
-import { fontFamilyOf } from "@/custom/fonts";
+import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
 import NoteHeader from "./NoteHeader";
 import Backlinks from "./backlinks/Backlinks";
 import IssueRefs from "./IssueRefs";
@@ -87,6 +98,14 @@ function Note(props: Props) {
   const { codeRenderers, key: codeRenderersKey } = useCodeRenderers();
   // buttons of plugins on the text selected
   const selectionActions = useEditorSelectionActions();
+  // read when the editor is made: a new one when trusted plugins change them
+  useTrustedVersion();
+  const extensionsKey = trustedExtensionsKey();
+  const extensions = useMemo(
+    () => trustedExtensions() as Extension[],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [extensionsKey],
+  );
   const getHeading = useCallback(() => {
     setHeadings(editorInstance.current?.getHeadings() ?? []);
   }, []);
@@ -101,11 +120,20 @@ function Note(props: Props) {
 
   const darkMode = useStore((state) => state.darkMode);
   const font = useStore((state) => state.font);
-  const customFonts = useStore((state) => state.customFonts);
+  const codeFont = useStore((state) => state.codeFont);
+  const cjkFont = useStore((state) => state.cjkFont);
+  const customFonts = useFonts();
   const fontSize = useStore((state) => state.fontSize);
   const fontWt = useStore((state) => state.fontWt);
   const lineHt = useStore((state) => state.lineHeight);
-  const rawMode = useStore((state) => state.rawMode);
+  const chosenMode = useStore((state) => state.rawMode);
+  // a mode of a plugin, if it is still there and enabled; WYSIWYG otherwise
+  const pluginModes = usePluginNoteModes();
+  const pluginMode = chosenMode.startsWith("plugin:")
+    ? pluginModes.find((m) => m.name === chosenMode)
+    : undefined;
+  const rawMode =
+    chosenMode.startsWith("plugin:") && !pluginMode ? "wysiwyg" : chosenMode;
   const readMode = useStore((state) => state.readMode);
   const isRTL = useStore((state) => state.isRTL);
   const useAsset = useStore((state) => state.useAsset);
@@ -387,7 +415,22 @@ function Note(props: Props) {
 
   const customTheme = {
     ...EDITOR_THEME,
-    fontFamily: fontFamilyOf(font, customFonts),
+    fontFamily: fontFamilyWithCjk(
+      font,
+      cjkFont,
+      customFonts,
+      baseTheme.fontFamily,
+    ),
+    ...(codeFont || cjkFont
+      ? {
+          fontFamilyMono: fontFamilyWithCjk(
+            codeFont,
+            cjkFont,
+            customFonts,
+            baseTheme.fontFamilyMono,
+          ),
+        }
+      : null),
     fontScale: [fontSize / 1.1, lineHt / 1.6, fontWt / 400],
   };
 
@@ -446,13 +489,29 @@ function Note(props: Props) {
                 spellCheck={isCheckSpellOn}
               >
                 <Suspense fallback={<Spinner className="mx-auto" />}>
-                  {rawMode === "raw" ? (
+                  {pluginMode ? (
+                    <PluginNoteMode
+                      plugin={pluginMode.plugin}
+                      mode={pluginMode.mode}
+                      noteId={noteId}
+                      title={title}
+                      content={mdContent}
+                      readOnly={readMode}
+                      onChange={onMarkdownChange}
+                    />
+                  ) : rawMode === "raw" ? (
                     <RawMarkdown
                       key={`raw-${noteId}`}
                       initialContent={mdContent}
                       onChange={onMarkdownChange}
                       dark={darkMode}
                       readMode={readMode}
+                      fontFamily={fontFamilyWithCjk(
+                        codeFont,
+                        cjkFont,
+                        customFonts,
+                        "monospace", // as CodeMirror
+                      )}
                       className={"text-xl"}
                     />
                   ) : rawMode === "mindmap" ? (
@@ -464,7 +523,7 @@ function Note(props: Props) {
                     />
                   ) : (
                     <MsEditor
-                      key={`wys-${noteId}-${codeRenderersKey}`}
+                      key={`wys-${noteId}-${codeRenderersKey}-${extensionsKey}`}
                       ref={editorInstance}
                       value={mdContent}
                       dark={darkMode}
@@ -491,6 +550,7 @@ function Note(props: Props) {
                       selectionActions={selectionActions}
                       onCopyHash={onCopyHash}
                       embeds={embeds}
+                      extensions={extensions}
                       disables={["sub"]}
                       rootPath={notesRoot}
                       docPath={noteDir}

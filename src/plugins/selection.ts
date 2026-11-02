@@ -2,7 +2,11 @@ import { store } from "@/state/store";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { askPlugin } from "./background";
 import type { SelectionAction, SelectionPlace } from "./manifest";
-import { enabledPlugins, type InstalledPlugin } from "./registry";
+import {
+  contributesOf,
+  enabledPlugins,
+  type InstalledPlugin,
+} from "./registry";
 
 /**
  * Actions of plugins on the text selected, in the reader or the editor: the
@@ -28,8 +32,8 @@ export const selectionActionsIn = (
   states = store.getState().pluginStates,
 ): PluginSelectionAction[] =>
   enabledPlugins(plugins, states).flatMap((plugin) =>
-    (plugin.manifest?.contributes.selectionActions ?? [])
-      .filter((action) => action.where.includes(where))
+    contributesOf(plugin)
+      .selectionActions.filter((action) => action.where.includes(where))
       .map((action) => ({ plugin, action })),
   );
 

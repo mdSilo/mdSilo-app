@@ -7,6 +7,24 @@ import {
   type PluginMethods,
 } from "./host";
 import { isEnabled, pluginUrl, type InstalledPlugin } from "./registry";
+import {
+  mountTrustedPage,
+  trustedError,
+  trustedPage,
+  useTrustedVersion,
+} from "./trusted";
+
+/**
+ * A number for each plugin as listed: listed again (installed again, as in
+ * development), its pages are loaded again, not from the cache.
+ */
+const loads = new WeakMap<InstalledPlugin, number>();
+let lastLoad = 0;
+const loadOf = (plugin: InstalledPlugin) => {
+  let n = loads.get(plugin);
+  if (n === undefined) loads.set(plugin, (n = ++lastLoad));
+  return n;
+};
 
 type Props = {
   plugin: InstalledPlugin;
@@ -34,6 +52,7 @@ export default function PluginFrame({
   const pluginStates = useStore((state) => state.pluginStates);
   const font = useStore((state) => state.font);
   const enabled = isEnabled(plugin, pluginStates);
+  const trusted = plugin.manifest?.mode === "trusted";
   // the latest, without a new host on each render
   const methodsRef = useRef(methods);
   methodsRef.current = methods;
@@ -43,7 +62,7 @@ export default function PluginFrame({
 
   useEffect(() => {
     const frame = frameRef.current;
-    if (!frame || !enabled) return;
+    if (!frame || !enabled || trusted) return;
     const host = createHost(plugin, frame, () => methodsRef.current ?? {});
     hostRef.current = host;
     onHostRef.current?.(host);
@@ -59,7 +78,7 @@ export default function PluginFrame({
       hostRef.current = null;
       onHostRef.current?.(null);
     };
-  }, [plugin, enabled]);
+  }, [plugin, enabled, trusted]);
 
   useEffect(() => {
     hostRef.current?.emit("style", appStyle());
@@ -72,15 +91,87 @@ export default function PluginFrame({
       </div>
     );
   }
+  if (trusted) {
+    return (
+      <TrustedPage
+        plugin={plugin}
+        page={page ?? "main"}
+        methods={methodsRef}
+        onHost={onHostRef}
+        className={className}
+      />
+    );
+  }
   const main = page ?? plugin.manifest?.main ?? "index.html";
+  const load = loadOf(plugin);
   return (
     <iframe
+      key={load}
       ref={frameRef}
       title={plugin.manifest?.name ?? plugin.id}
-      src={pluginUrl(plugin.id, main)}
+      src={`${pluginUrl(plugin.id, main)}?v=${load}`}
       sandbox="allow-scripts"
       referrerPolicy="no-referrer"
       className={`h-full w-full border-0 bg-base-100 ${className}`}
     />
+  );
+}
+
+/** A page of a trusted plugin: drawn by its module into an element, no frame. */
+function TrustedPage({
+  plugin,
+  page,
+  methods,
+  onHost,
+  className,
+}: {
+  plugin: InstalledPlugin;
+  page: string;
+  methods: { current: PluginMethods | undefined };
+  onHost: { current: ((host: PluginHost | null) => void) | undefined };
+  className: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  // the module draws its pages once it is loaded
+  useTrustedVersion();
+  const mount = trustedPage(plugin, page);
+  const error = trustedError(plugin.id);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || !mount) return;
+    const host = mountTrustedPage(
+      plugin,
+      mount,
+      element,
+      () => methods.current ?? {},
+    );
+    const tell = onHost.current;
+    tell?.(host);
+    const observer = new MutationObserver(() => host.emit("style", appStyle()));
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme", "class"],
+    });
+    return () => {
+      observer.disconnect();
+      host.dispose();
+      tell?.(null);
+      element.replaceChildren();
+    };
+  }, [plugin, mount, methods, onHost]);
+
+  return (
+    <div className={`h-full w-full overflow-auto ${className}`}>
+      {error ? (
+        <p className="p-4 text-sm text-error">{error}</p>
+      ) : !mount ? (
+        <p className="p-4 text-sm text-base-content/70">
+          {plugin.manifest?.name ?? plugin.id} has no page {page}.
+        </p>
+      ) : null}
+      {/* the module's own, React leaves it alone */}
+      <div ref={ref} className="h-full w-full" data-testid="trusted-page" />
+    </div>
   );
 }

@@ -19,6 +19,7 @@ mod publish;
 mod schema;
 mod storage;
 mod sync;
+mod system_fonts;
 mod tests;
 mod tray;
 mod tts;
@@ -59,6 +60,7 @@ pub fn run() {
     .register_uri_scheme_protocol(plugin_scheme::SCHEME, |_ctx, request| {
       plugin_scheme::handle(&request)
     })
+    // the updater, see Cargo.toml to bring it back
     // .plugin(tauri_plugin_updater::Builder::new().build())
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
@@ -99,7 +101,12 @@ pub fn run() {
       custom_plugins::list_plugins,
       custom_plugins::install_plugin,
       custom_plugins::remove_plugin,
+      custom_plugins::unpack_plugin,
+      custom_plugins::forget_unpacked,
+      custom_plugins::watch_plugin_dev,
+      custom_plugins::unwatch_plugin_dev,
       plugin_scheme::set_plugin_net,
+      system_fonts::system_fonts,
       files::listen_dir,
       files::open_url,
       files::open_link,

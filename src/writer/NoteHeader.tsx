@@ -6,6 +6,7 @@ import {
   TbFileText as IconFileText,
   TbMarkdown as IconMarkdown,
   TbPhoto as IconPhoto,
+  TbPuzzle as IconPuzzle,
   TbSettings as IconSettings,
   TbTournament as IconTournament,
   TbTrash as IconTrash,
@@ -21,6 +22,7 @@ import { DropdownItem } from "@/ui/Dropdown";
 import NoteMetadata from "@/writer/NoteMetadata";
 import NoteDelModal from "@/writer/NoteDelModal";
 import EditorSettings from "@/shell/settings/EditorSettings";
+import { usePluginNoteModes } from "@/plugins/PluginNoteMode";
 
 export default function NoteHeader({
   setShowBacklink,
@@ -40,6 +42,7 @@ export default function NoteHeader({
 
   const rawMode = useStore((state) => state.rawMode);
   const setRawMode = useStore((state) => state.setRawMode);
+  const pluginModes = usePluginNoteModes();
   const setRaw = useCallback(
     async (mode: string) => {
       await openFilePath(currentNote.id, true);
@@ -84,6 +87,22 @@ export default function NoteHeader({
             />
           </button>
         </Tooltip>
+        {pluginModes.map(({ plugin, mode, name }) => (
+          <Tooltip
+            key={name}
+            content={`${mode.title} (${plugin.manifest?.name ?? plugin.id})`}
+          >
+            <button
+              className={switchClass}
+              aria-label={mode.title}
+              onClick={() => setRaw(name)}
+            >
+              <IconPuzzle
+                className={rawMode === name ? "text-success" : iconClass}
+              />
+            </button>
+          </Tooltip>
+        ))}
       </div>
       <div className="flex items-center">
         <div className="relative">

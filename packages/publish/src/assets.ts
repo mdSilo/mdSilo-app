@@ -95,6 +95,12 @@ a.label:hover { text-decoration: none; filter: brightness(1.1); }
 .card .meta { margin: 4px 0 0; font-size: 12px; }
 .diagram { margin: 16px 0; padding: 12px; overflow-x: auto; text-align: center; background: #ffffff; border-radius: 8px; border: 1px solid var(--line); }
 .diagram svg { max-width: 100%; height: auto; }
+.diagram.themed .dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  .diagram.themed { background: var(--code); }
+  .diagram.themed .light { display: none; }
+  .diagram.themed .dark { display: block; }
+}
 .diagram.smiles { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; }
 .diagram.smiles svg { height: auto !important; }
 math[display="block"] { margin: 12px 0; padding: 4px 0; overflow-x: auto; overflow-y: hidden; }

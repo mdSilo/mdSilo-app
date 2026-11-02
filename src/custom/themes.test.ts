@@ -3,7 +3,9 @@ import { store } from "@/state/store";
 import { resolveTheme } from "@/lib/themes";
 import {
   allCustomThemes,
+  contrastRatio,
   deleteTheme,
+  lowContrast,
   parseThemeCss,
   saveTheme,
   themeCss,
@@ -119,4 +121,27 @@ it("lists the themes of the workspace first, without the same theme twice", () =
   expect(
     allCustomThemes({ workspaceThemes: [ws], customThemes: [theme(), other] }),
   ).toEqual([ws, other]);
+});
+
+it("measures the contrast of two colors", () => {
+  expect(contrastRatio("#000000", "#ffffff")).toBeCloseTo(21);
+  expect(contrastRatio("#FFFFFF", "#000000")).toBeCloseTo(21);
+  expect(contrastRatio("#777777", "#777777")).toBeCloseTo(1);
+  expect(contrastRatio("#000000", "")).toBeNull();
+});
+
+it("finds the content hard to read on its color", () => {
+  const low = lowContrast({
+    "--color-base-100": "#ffffff",
+    "--color-base-200": "#f0f0f0",
+    "--color-base-content": "#1f2937",
+    "--color-primary": "#2563eb",
+    "--color-primary-content": "#ffffff",
+    "--color-warning": "#facc15",
+    "--color-warning-content": "#ffffff",
+  });
+  expect(low).toEqual([
+    { bg: "warning", fg: "warning-content", ratio: expect.any(Number) },
+  ]);
+  expect(low[0].ratio).toBeLessThan(2);
 });

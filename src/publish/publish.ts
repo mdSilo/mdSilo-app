@@ -22,7 +22,7 @@ import { isTauri, isWeb, joinPath } from "@/workspace/util";
 import { useIssueStore } from "@/issue/issueStore";
 import { annotationsPathOf } from "@/reader/annotations/annotations";
 import { loadBooks } from "@/reader/library/books";
-import { allSiteRenderers } from "./renderers";
+import { allSiteRenderers, pluginSiteRenderers } from "./renderers";
 
 /**
  * The static site of the workspace, built by packages/publish: written to a
@@ -212,8 +212,13 @@ export async function buildSiteTo(
   options: PublishOptions,
   target = siteDirOf(ws),
   renderers: Renderers = allSiteRenderers(),
+  darkRenderers: Renderers = pluginSiteRenderers(true),
 ): Promise<Built> {
-  const files = await buildSite(await gatherSite(ws, options), renderers);
+  const files = await buildSite(
+    await gatherSite(ws, options),
+    renderers,
+    darkRenderers,
+  );
   const clear = target === siteDirOf(ws);
   const written = await invoke<{ files: number; missing: string[] }>(
     "publish_write",

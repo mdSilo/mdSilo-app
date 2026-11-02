@@ -5,6 +5,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
 import { BaseModal } from "@/ui/BaseModal";
 import SettingsModal from "./SettingsModal";
+import ThemeEditorModal from "./ThemeEditorModal";
+import FontsModal from "./FontsModal";
 import EditorSettings from "./EditorSettings";
 import AboutModal from "./AboutModal";
 
@@ -182,16 +184,53 @@ describe("AboutModal", () => {
 });
 
 describe("custom themes", () => {
+  test("the theme editor and the fonts have dialogs of their own, opened from the settings", async () => {
+    store.setState({
+      themeEditing: null,
+      isFontsOpen: false,
+      customThemes: [],
+      workspaceThemes: [],
+      theme: "system",
+    });
+    const user = userEvent.setup();
+    const close = vi.fn();
+    render(<SettingsModal isOpen handleClose={close} />);
+    // the theme is chosen in the settings; New Theme opens its editor at once
+    expect(screen.getByLabelText("Theme")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit Theme" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "New Theme" }));
+    expect(close).toHaveBeenCalled();
+    expect(store.getState().themeEditing).toBe("new");
+    await user.click(screen.getByRole("button", { name: "Manage Fonts" }));
+    expect(store.getState().isFontsOpen).toBe(true);
+    store.setState({ themeEditing: null, isFontsOpen: false });
+  });
+
+  test("the fonts dialog scrolls inside, under its title", async () => {
+    store.setState({ isFontsOpen: true });
+    render(<FontsModal />);
+    const fonts = await screen.findByTestId("fonts-setting");
+    expect(fonts.closest(".overflow-y-auto")).toHaveClass(
+      "max-h-[calc(100vh-8rem)]",
+    );
+    store.setState({ isFontsOpen: false });
+  });
+
   test("makes a theme on this device and applies it", async () => {
     store.setState({
       customThemes: [],
       workspaceThemes: [],
       initDir: undefined,
       theme: "system",
+      themeEditing: "new",
     });
     const user = userEvent.setup();
-    render(<SettingsModal isOpen handleClose={vi.fn()} />);
-    await user.click(await screen.findByRole("button", { name: "New Theme" }));
+    render(
+      <>
+        <SettingsModal isOpen handleClose={vi.fn()} />
+        <ThemeEditorModal />
+      </>,
+    );
     const name = screen.getByLabelText("Theme Name");
     await user.clear(name);
     await user.type(name, "Ocean");
@@ -208,5 +247,43 @@ describe("custom themes", () => {
     await user.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() => expect(store.getState().customThemes).toEqual([]));
     expect(store.getState().theme).toBe("system");
+  });
+
+  test("warns of content hard to read, and sets radius and border", async () => {
+    store.setState({
+      customThemes: [],
+      workspaceThemes: [],
+      initDir: undefined,
+      theme: "system",
+      themeEditing: "new",
+    });
+    const user = userEvent.setup();
+    render(<ThemeEditorModal />);
+    fireEvent.change(screen.getByLabelText("primary"), {
+      target: { value: "#ffff00" },
+    });
+    fireEvent.change(screen.getByLabelText("primary-content"), {
+      target: { value: "#ffffff" },
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "primary-content on primary",
+    );
+    fireEvent.change(screen.getByLabelText("primary-content"), {
+      target: { value: "#000000" },
+    });
+    expect(screen.queryByText(/primary-content on primary/)).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Box Radius"), {
+      target: { value: "1.5" },
+    });
+    fireEvent.change(screen.getByLabelText("Border"), {
+      target: { value: "2" },
+    });
+    expect(screen.getByText("1.5rem")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(store.getState().customThemes[0].vars).toMatchObject({
+      "--radius-box": "1.5rem",
+      "--border": "2px",
+    });
   });
 });

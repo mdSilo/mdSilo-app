@@ -253,6 +253,12 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             onChange={(font) => update({ font })}
             defaultOption={["book", "Of the book"]}
           />
+          <FontSelect
+            label="CJK font"
+            value={settings.cjkFont}
+            onChange={(cjkFont) => update({ cjkFont })}
+            defaultOption={["", "None"]}
+          />
           {hasBook ? (
             <Select
               label="Writing Mode"

@@ -63,6 +63,7 @@ import { usePlayer } from "@/player/playerStore";
 import { useTTS } from "@/reader/tts/tts";
 import { pluginViews } from "@/plugins/registry";
 import { pluginCommands, runCommand } from "@/plugins/commands";
+import { useTrustedVersion } from "@/plugins/trusted";
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>("auto");
 
@@ -515,6 +516,8 @@ const PluginsButton = ({
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
   const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
+  // and what trusted plugins add as they run
+  useTrustedVersion();
   const views = hasWorkspace ? pluginViews(installedPlugins, pluginStates) : [];
   const commands = pluginCommands(installedPlugins, pluginStates);
 

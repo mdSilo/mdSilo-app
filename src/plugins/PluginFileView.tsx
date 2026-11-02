@@ -1,29 +1,53 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useRef } from "react";
-import { useStore } from "@/state/store";
+import { store, useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
-import { isTauri, normalizeSlash } from "@/workspace/util";
+import { normalizeSlash, toWorkspacePath } from "@/workspace/util";
 import { getFileExt } from "@/workspace/process";
+import { readBytes, writeBytes } from "@/reader/library/library";
 import type { PluginHost, PluginMethods } from "./host";
 import PluginFrame from "./PluginFrame";
+import { contributesOf } from "./registry";
+import { useTrustedVersion } from "./trusted";
+import { listenChanges } from "./changes";
 
 const nameOf = (path: string) => path.split(/[/\\]/).pop() ?? path;
 
+/** The content of a file last read or written: text, or bytes */
+type Content = string | Uint8Array;
+
+const sameContent = (a: Content, b: Content) =>
+  typeof a === "string" || typeof b === "string"
+    ? a === b
+    : a.length === b.length && a.every((x, i) => x === b[i]);
+
+const bytesOf = (data: unknown) =>
+  data instanceof Uint8Array
+    ? data
+    : data instanceof ArrayBuffer
+      ? new Uint8Array(data)
+      : null;
+
 /**
  * The methods of a plugin that opens a file: only that file, read and
- * written as text. `text` is the content last read or written, not to tell
- * the plugin of its own writes.
+ * written as text or as bytes. `text` is the content last read or written,
+ * not to tell the plugin of its own writes.
  */
 export function fileMethods(
   path: string,
-  text: { current: string | null },
+  text: { current: Content | null },
 ): PluginMethods {
   return {
     "file.info": {
-      handler: () => ({
-        name: nameOf(path),
-        ext: getFileExt(nameOf(path)).toLowerCase(),
-      }),
+      handler: () => {
+        const dir = store.getState().initDir;
+        const rel = dir ? toWorkspacePath(dir, path) : path;
+        return {
+          name: nameOf(path),
+          ext: getFileExt(nameOf(path)).toLowerCase(),
+          ...(rel !== path ? { path: rel } : {}),
+        };
+      },
     },
     "file.read": {
       permission: "file:read",
@@ -48,50 +72,54 @@ export function fileMethods(
         return true;
       },
     },
+    "file.readBytes": {
+      permission: "file:read",
+      handler: async () => {
+        const data = await readBytes(path);
+        text.current = data;
+        return data;
+      },
+    },
+    "file.writeBytes": {
+      permission: "file:write",
+      handler: async (params) => {
+        const data = bytesOf((params as { data?: unknown } | undefined)?.data);
+        if (!data)
+          throw new Error("file.writeBytes wants { data: Uint8Array }");
+        if (!(await writeBytes(path, data)))
+          throw new Error(`Could not write ${nameOf(path)}`);
+        text.current = data;
+        return true;
+      },
+    },
   };
 }
-
-type Changes = { paths: string[]; event: string };
 
 /** Tells the plugin when the file is changed by another app, or by git. */
 function useFileChanged(
   path: string,
   host: { current: PluginHost | null },
-  text: { current: string | null },
+  text: { current: Content | null },
 ) {
-  useEffect(() => {
-    if (!isTauri) return;
-    let unlisten: (() => void) | undefined;
-    let gone = false;
-    import("@tauri-apps/api/window")
-      .then(({ getCurrentWindow }) =>
-        getCurrentWindow().listen<Changes>("changes", async ({ payload }) => {
-          if (payload.event === "remove" || payload.event === "renameFrom")
-            return;
-          if (
-            !payload.paths.some(
-              (p) => normalizeSlash(p) === normalizeSlash(path),
-            )
-          )
-            return;
-          const content = await invoke<string>("read_file", { filePath: path });
-          if (content === text.current) return;
+  useEffect(
+    () =>
+      listenChanges(async ({ paths, event }) => {
+        if (event === "remove" || event === "renameFrom") return;
+        if (!paths.some((p) => normalizeSlash(p) === normalizeSlash(path)))
+          return;
+        // read as the plugin read it: bytes are not text
+        if (text.current !== null) {
+          const content =
+            typeof text.current === "string"
+              ? await invoke<string>("read_file", { filePath: path })
+              : await readBytes(path);
+          if (sameContent(text.current, content)) return;
           text.current = content;
-          host.current?.emit("file.changed");
-        }),
-      )
-      .then((fn) => {
-        if (gone) fn();
-        else unlisten = fn;
-      })
-      .catch((e) =>
-        console.error("Error on watching the file of a plugin:", e),
-      );
-    return () => {
-      gone = true;
-      unlisten?.();
-    };
-  }, [path, host, text]);
+        }
+        host.current?.emit("file.changed");
+      }),
+    [path, host, text],
+  );
 }
 
 /** A file opened by the plugin that views files of its kind. */
@@ -101,10 +129,16 @@ export default function PluginFileView() {
   const plugin = useStore((s) =>
     s.installedPlugins.find((p) => p.id === pluginId),
   );
-  const text = useRef<string | null>(null);
+  const text = useRef<Content | null>(null);
   const host = useRef<PluginHost | null>(null);
   const methods = useMemo(() => fileMethods(filePath, text), [filePath]);
   useFileChanged(filePath, host, text);
+  // viewers added as a trusted plugin runs too
+  useTrustedVersion();
+  const ext = getFileExt(nameOf(filePath)).toLowerCase();
+  const page =
+    plugin &&
+    contributesOf(plugin).viewers.find((v) => v.extensions.includes(ext))?.page;
 
   if (!plugin) {
     return (
@@ -125,6 +159,7 @@ export default function PluginFileView() {
         <PluginFrame
           key={filePath}
           plugin={plugin}
+          page={page}
           methods={methods}
           onHost={(h) => {
             host.current = h;

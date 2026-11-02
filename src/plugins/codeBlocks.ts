@@ -3,7 +3,12 @@ import type { CodeRenderer } from "mdsmirror";
 import { store, useStore } from "@/state/store";
 import { sanitizePluginPicture } from "@/lib/sanitize";
 import { askPlugin } from "./background";
-import { enabledPlugins, type InstalledPlugin } from "./registry";
+import { useTrustedVersion } from "./trusted";
+import {
+  contributesOf,
+  enabledPlugins,
+  type InstalledPlugin,
+} from "./registry";
 
 /**
  * Code blocks drawn by plugins, ```plantuml: the main page of the plugin, in
@@ -18,7 +23,7 @@ export function codeBlockPlugins(
 ): Map<string, InstalledPlugin> {
   const byLang = new Map<string, InstalledPlugin>();
   for (const plugin of enabledPlugins(plugins, states)) {
-    for (const lang of plugin.manifest?.contributes.codeBlocks ?? []) {
+    for (const lang of contributesOf(plugin).codeBlocks) {
       if (!byLang.has(lang)) byLang.set(lang, plugin);
     }
   }
@@ -55,6 +60,8 @@ export function useCodeRenderers(): {
 } {
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
+  // and the languages trusted plugins add as they run
+  useTrustedVersion();
   const languages = [...codeBlockPlugins(installedPlugins, pluginStates).keys()]
     .sort()
     .join(",");

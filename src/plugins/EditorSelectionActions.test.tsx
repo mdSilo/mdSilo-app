@@ -14,6 +14,8 @@ vi.mock("copy-to-clipboard", () => ({ default: vi.fn() }));
 const plugin: InstalledPlugin = {
   id: "ai",
   dir: "/data/ai",
+  where: "device",
+  hash: "",
   manifest: parseManifest({
     id: "ai",
     name: "AI",

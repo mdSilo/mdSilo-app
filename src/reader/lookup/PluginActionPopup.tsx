@@ -1,6 +1,7 @@
 import { memo, useEffect, useState, type RefObject } from "react";
 import { TbNote, TbX } from "react-icons/tb";
 import { useStore } from "@/state/store";
+import { useTrustedVersion } from "@/plugins/trusted";
 import { Spinner } from "@/ui/ui";
 import {
   runSelectionAction,
@@ -24,6 +25,7 @@ function PluginActionPopup({
   const target = usePopups((state) => state.pluginAction);
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
+  useTrustedVersion();
   const found =
     target &&
     selectionActionsIn("reader", installedPlugins, pluginStates).find(

@@ -32,6 +32,7 @@
     "@headlessui/react": "^2.2.10",
     "@lezer/highlight": "^1.2.5",
     "@lezer/markdown": "^1.8.1",
+    "@mdsilo/plugin-api": "workspace:*",
     "@mozilla/readability": "^0.6.0",
     "@popperjs/core": "^2.11.8",
     "@react-spring/web": "^10.1.2",
@@ -64,6 +65,7 @@
     "mdsmirror": "workspace:*",
     "mermaid": "12.2.0",
     "minisearch": "^7.2.0",
+    "moment": "2.30.1",
     "overlayscrollbars": "^2.17.0",
     "overlayscrollbars-react": "^0.5.7",
     "prosemirror-utils": "^1.2.2",
@@ -76,6 +78,7 @@
     "styled-components": "^6.6.0",
     "tailwindcss": "^4.3.3",
     "tippy.js": "^6.3.7",
+    "yaml": "2.9.1",
     "zustand": "^5.0.16"
   },
   "devDependencies": {

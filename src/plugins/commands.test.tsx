@@ -18,6 +18,8 @@ vi.mock("@/workspace/util", async (importOriginal) => ({
 const plugin: InstalledPlugin = {
   id: "clock",
   dir: "/data/clock",
+  where: "device",
+  hash: "",
   manifest: parseManifest({
     id: "clock",
     name: "Clock",

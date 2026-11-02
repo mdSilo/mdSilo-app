@@ -64,14 +64,22 @@ export function publishedIssues(issues: SiteIssue[], options: PublishOptions): S
   return labels.size ? issues.filter((i) => i.labels.some((l) => labels.has(l.name.toLowerCase()))) : issues;
 }
 
-/** Draw the diagrams; one failing shows its code. */
-async function drawDiagrams(rendered: Rendered[], renderers: Renderers) {
+/**
+ * Draw the diagrams; one failing shows its code. A language with a dark
+ * renderer too is drawn twice, shown as the color scheme of the reader.
+ */
+async function drawDiagrams(rendered: Rendered[], renderers: Renderers, darkRenderers: Renderers) {
   for (const r of rendered) {
     for (const d of r.diagrams) {
       const draw = renderers[d.lang];
-      let html = `<pre><code class="language-${escapeHtml(d.lang)}">${escapeHtml(d.code)}</code></pre>`;
+      const drawDark = darkRenderers[d.lang];
+      const lang = escapeHtml(d.lang);
+      let html = `<pre><code class="language-${lang}">${escapeHtml(d.code)}</code></pre>`;
       try {
-        if (draw) html = `<figure class="diagram ${escapeHtml(d.lang)}">${await draw(d.code)}</figure>`;
+        if (draw && drawDark) {
+          const [light, dark] = await Promise.all([draw(d.code), drawDark(d.code)]);
+          html = `<figure class="diagram ${lang} themed"><div class="light">${light}</div><div class="dark">${dark}</div></figure>`;
+        } else if (draw) html = `<figure class="diagram ${lang}">${await draw(d.code)}</figure>`;
       } catch {
         // the code, as without the option
       }
@@ -85,7 +93,11 @@ async function drawDiagrams(rendered: Rendered[], renderers: Renderers) {
  * blocks (if on in the options), and those of other languages, drawn by `renderers`,
  * where a browser is.
  */
-export async function buildSite(input: SiteInput, renderers: Renderers = {}): Promise<SiteFile[]> {
+export async function buildSite(
+  input: SiteInput,
+  renderers: Renderers = {},
+  darkRenderers: Renderers = {},
+): Promise<SiteFile[]> {
   const { options } = input;
   const paths = new PathSet();
   for (const reserved of ['index', 'graph', 'search', 'books/index', 'issues/index', 'issues/milestones', 'issues/projects', 'tags/index']) {
@@ -208,7 +220,7 @@ export async function buildSite(input: SiteInput, renderers: Renderers = {}): Pr
       page.comments = comments;
     }
   }
-  await drawDiagrams(rendered, renderers);
+  await drawDiagrams(rendered, renderers, darkRenderers);
   // the comments in the timeline, drawn
   for (const page of pageOfIssue.values()) {
     page.timeline = (page.issue?.timeline ?? []).map((item, i): TimelineEntry =>

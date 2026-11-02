@@ -7,6 +7,8 @@ import PluginFrame from "./PluginFrame";
 const plugin: InstalledPlugin = {
   id: "csv",
   dir: "/data/csv",
+  where: "device",
+  hash: "",
   manifest: parseManifest({
     id: "csv",
     name: "CSV",

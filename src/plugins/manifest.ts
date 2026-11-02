@@ -4,17 +4,28 @@
  * what its permissions, granted by the user, allow. See docs/customization.md.
  */
 
-export const PERMISSIONS = [
-  "file:read",
-  "file:write",
-  "notes:read",
-  "notes:write",
-  "books:read",
-  "issues:read",
-  "net",
-] as const;
+import {
+  PERMISSIONS,
+  type Permission,
+  type PluginManifest,
+  type Contributes,
+  type SelectionPlace,
+} from "@mdsilo/plugin-api";
 
-export type Permission = (typeof PERMISSIONS)[number];
+// the types are of @mdsilo/plugin-api, for the app and the authors of plugins alike
+export { PERMISSIONS };
+export type {
+  CommandContribution,
+  Contributes,
+  NoteModeContribution,
+  Permission,
+  PluginManifest,
+  PluginMode,
+  SelectionAction,
+  SelectionPlace,
+  ViewContribution,
+  ViewerContribution,
+} from "@mdsilo/plugin-api";
 
 /** What a permission lets a plugin do, to show the user */
 export const PERMISSION_LABELS: Record<Permission, string> = {
@@ -25,56 +36,6 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "books:read": "Read your library",
   "issues:read": "Read your issues",
   net: "Reach the internet",
-};
-
-export type PluginMode = "sandboxed" | "trusted";
-
-/** Opens files of these extensions, in place of the editor or the reader */
-export type ViewerContribution = { extensions: string[]; title: string };
-
-/** A view of the whole workspace, in the side menu; its page is `page`, or the main page */
-export type ViewContribution = {
-  id: string;
-  title: string;
-  icon?: string;
-  page?: string;
-};
-
-export type SelectionPlace = "reader" | "editor";
-
-/** A button on the text selected, in the reader, the editor, or both */
-export type SelectionAction = {
-  id: string;
-  title: string;
-  where: SelectionPlace[];
-};
-
-/** A command, run from the Plugins menu of the side menu */
-export type CommandContribution = { id: string; title: string };
-
-export type Contributes = {
-  viewers: ViewerContribution[];
-  views: ViewContribution[];
-  /** the languages of the code blocks it draws, ```lang, by its main page */
-  codeBlocks: string[];
-  /** buttons on the text selected, answered by its main page */
-  selectionActions: SelectionAction[];
-  /** commands, run by its main page */
-  commands: CommandContribution[];
-};
-
-export type PluginManifest = {
-  id: string;
-  name: string;
-  version: string;
-  minAppVersion?: string;
-  author?: string;
-  description?: string;
-  mode: PluginMode;
-  permissions: Permission[];
-  /** the page of the plugin, relative to its folder */
-  main: string;
-  contributes: Contributes;
 };
 
 export const MANIFEST_FILE = "manifest.json";
@@ -129,6 +90,7 @@ function parseContributes(value: unknown): Contributes {
       codeBlocks: [],
       selectionActions: [],
       commands: [],
+      noteModes: [],
     };
   if (!isObject(value)) throw new Error('"contributes" should be an object');
   const viewers = list(value.viewers, "contributes.viewers").map(
@@ -140,7 +102,13 @@ function parseContributes(value: unknown): Contributes {
       );
       if (!extensions.length)
         throw new Error(`"${field}.extensions" should not be empty`);
-      return { extensions, title: text(viewer.title, `${field}.title`) };
+      return {
+        extensions,
+        title: text(viewer.title, `${field}.title`),
+        ...(viewer.page === undefined
+          ? {}
+          : { page: innerPath(viewer.page, `${field}.page`) }),
+      };
     },
   );
   const views = list(value.views, "contributes.views").map((view, i) => {
@@ -207,12 +175,32 @@ function parseContributes(value: unknown): Contributes {
       return { id, title: text(command.title, `${field}.title`) };
     },
   );
+  const noteModes = list(value.noteModes, "contributes.noteModes").map(
+    (mode, i) => {
+      const field = `contributes.noteModes[${i}]`;
+      if (!isObject(mode)) throw new Error(`"${field}" should be an object`);
+      const id = text(mode.id, `${field}.id`);
+      if (!ID.test(id))
+        throw new Error(
+          `"${field}.id" should be lowercase letters, digits, . _ -`,
+        );
+      return {
+        id,
+        title: text(mode.title, `${field}.title`),
+        page:
+          mode.page === undefined
+            ? undefined
+            : innerPath(mode.page, `${field}.page`),
+      };
+    },
+  );
   return {
     viewers,
     views,
     codeBlocks: [...new Set(codeBlocks)],
     selectionActions,
     commands,
+    noteModes,
   };
 }
 
@@ -223,6 +211,7 @@ function parseContributes(value: unknown): Contributes {
 export function parseManifest(json: unknown): PluginManifest {
   const value = typeof json === "string" ? (JSON.parse(json) as unknown) : json;
   if (!isObject(value)) throw new Error("The manifest should be an object");
+  if (isObsidianManifest(value)) return parseObsidianManifest(value);
 
   const id = text(value.id, "id");
   if (!ID.test(id))
@@ -254,9 +243,42 @@ export function parseManifest(json: unknown): PluginManifest {
     description: optionalText(value.description, "description"),
     mode,
     permissions: [...new Set(permissions)],
+    // a page in a frame, or the module of a trusted plugin
     main:
-      value.main === undefined ? "index.html" : innerPath(value.main, "main"),
+      value.main === undefined
+        ? mode === "trusted"
+          ? "main.js"
+          : "index.html"
+        : innerPath(value.main, "main"),
     contributes: parseContributes(value.contributes),
+  };
+}
+
+/**
+ * A manifest of an Obsidian plugin: it says `isDesktopOnly`, which ours
+ * never do, and no `mode`. Its main.js is CommonJS, run by the layer of
+ * src/plugins/obsidian.
+ */
+const isObsidianManifest = (value: Record<string, unknown>) =>
+  "isDesktopOnly" in value && value.mode === undefined;
+
+function parseObsidianManifest(value: Record<string, unknown>): PluginManifest {
+  const id = text(value.id, "id");
+  if (!ID.test(id))
+    throw new Error('"id" should be lowercase letters, digits, . _ -');
+  return {
+    id,
+    name: text(value.name, "name"),
+    version: text(value.version, "version"),
+    // the version of Obsidian it wants, not of mdSilo
+    minAppVersion: undefined,
+    author: optionalText(value.author, "author"),
+    description: optionalText(value.description, "description"),
+    mode: "trusted",
+    compat: "obsidian",
+    permissions: [],
+    main: "main.js",
+    contributes: parseContributes(undefined),
   };
 }
 

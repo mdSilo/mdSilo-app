@@ -6,8 +6,10 @@ import {
   enablePlugin,
   grantedPermissions,
   installPlugin,
+  isChanged,
   isEnabled,
   loadPlugins,
+  movePlugin,
   netPlugins,
   pluginUrl,
   readPlugin,
@@ -23,23 +25,53 @@ const manifest = (more: Record<string, unknown> = {}) =>
     ...more,
   });
 
+type Folder = {
+  id: string;
+  dir: string;
+  manifest: string;
+  where?: "device" | "workspace";
+  hash?: string;
+};
+
 /** a plugin folder on disk, as list_plugins gives it */
-let folders: { id: string; dir: string; manifest: string }[] = [];
+let folders: Folder[] = [];
 
 beforeEach(() => {
   folders = [];
-  store.setState({ installedPlugins: [], pluginStates: {} });
+  store.setState({
+    installedPlugins: [],
+    pluginStates: {},
+    initDir: "/ws",
+    layout: "workspace",
+  });
   vi.mocked(invoke).mockImplementation(async (cmd, args) => {
-    const a = args as Record<string, string>;
+    const a = args as Record<string, string | null>;
+    const where = a.workspace ? "workspace" : "device";
     if (cmd === "list_plugins") return folders;
     if (cmd === "read_file")
       return a.filePath === "/src/csv/manifest.json" ? manifest() : "";
     if (cmd === "install_plugin") {
-      folders = [{ id: a.id, dir: `/data/${a.id}`, manifest: manifest() }];
-      return `/data/${a.id}`;
+      const id = a.id ?? "";
+      const dir =
+        where === "workspace" ? `/ws/.mdsilo/plugins/${id}` : `/data/${id}`;
+      folders = [
+        ...folders.filter(
+          (f) => !(f.id === id && (f.where ?? "device") === where),
+        ),
+        {
+          id,
+          dir,
+          manifest: manifest(),
+          where,
+          hash: where === "workspace" ? "h1" : "",
+        },
+      ];
+      return dir;
     }
     if (cmd === "remove_plugin") {
-      folders = folders.filter((f) => f.id !== a.id);
+      folders = folders.filter(
+        (f) => !(f.id === a.id && (f.where ?? "device") === where),
+      );
       return;
     }
     throw new Error(`unexpected ${cmd}`);
@@ -100,7 +132,7 @@ describe("installing", () => {
   it("forgets the plugin when uninstalled", async () => {
     await installPlugin("/src/csv");
     enablePlugin(store.getState().installedPlugins[0]);
-    await uninstallPlugin("csv");
+    await uninstallPlugin(store.getState().installedPlugins[0]);
     expect(store.getState().installedPlugins).toEqual([]);
     expect(store.getState().pluginStates).toEqual({});
   });
@@ -149,6 +181,90 @@ describe("enabling", () => {
     await loadPlugins();
     expect(isEnabled(plugin())).toBe(false);
     expect(() => enablePlugin(plugin())).toThrow("No manifest.json");
+  });
+});
+
+describe("in the workspace", () => {
+  const plugin = () => store.getState().installedPlugins[0];
+
+  it("lists the plugins of the workspace opened", async () => {
+    await loadPlugins();
+    expect(invoke).toHaveBeenCalledWith("list_plugins", {
+      workspace: "/ws/.mdsilo",
+    });
+    store.setState({ initDir: "" });
+    await loadPlugins();
+    expect(invoke).toHaveBeenCalledWith("list_plugins", { workspace: null });
+  });
+
+  it("is not enabled when it came with the workspace", async () => {
+    folders = [
+      {
+        id: "csv",
+        dir: "/ws/.mdsilo/plugins/csv",
+        manifest: manifest(),
+        where: "workspace",
+        hash: "h1",
+      },
+    ];
+    await loadPlugins();
+    expect(plugin().where).toBe("workspace");
+    expect(isEnabled(plugin())).toBe(false);
+    enablePlugin(plugin());
+    expect(isEnabled(plugin())).toBe(true);
+    expect(store.getState().pluginStates.csv.hash).toBe("h1");
+  });
+
+  it("stops when a sync changed it, until enabled again", async () => {
+    folders = [
+      {
+        id: "csv",
+        dir: "/ws/.mdsilo/plugins/csv",
+        manifest: manifest(),
+        where: "workspace",
+        hash: "h1",
+      },
+    ];
+    await loadPlugins();
+    enablePlugin(plugin());
+    folders = [{ ...folders[0], hash: "h2" }];
+    await loadPlugins();
+    expect(isChanged(plugin())).toBe(true);
+    expect(isEnabled(plugin())).toBe(false);
+    enablePlugin(plugin());
+    expect(isEnabled(plugin())).toBe(true);
+  });
+
+  it("moves to the workspace and back, enabled as it was", async () => {
+    await installPlugin("/src/csv");
+    enablePlugin(plugin());
+    await movePlugin(plugin(), "workspace");
+    expect(invoke).toHaveBeenCalledWith("install_plugin", {
+      src: "/data/csv",
+      id: "csv",
+      workspace: "/ws/.mdsilo",
+    });
+    expect(invoke).toHaveBeenCalledWith("remove_plugin", {
+      id: "csv",
+      workspace: null,
+    });
+    expect(store.getState().installedPlugins).toHaveLength(1);
+    expect(plugin().where).toBe("workspace");
+    expect(isEnabled(plugin())).toBe(true);
+
+    await movePlugin(plugin(), "device");
+    expect(plugin().where).toBe("device");
+    expect(plugin().dir).toBe("/data/csv");
+    expect(isEnabled(plugin())).toBe(true);
+  });
+
+  it("can not move to the workspace without one", async () => {
+    await installPlugin("/src/csv");
+    store.setState({ initDir: "" });
+    await expect(movePlugin(plugin(), "workspace")).rejects.toThrow(
+      "No workspace",
+    );
+    expect(plugin().where).toBe("device");
   });
 });
 
