@@ -57,7 +57,8 @@ The page runs in a sandboxed iframe (`allow-scripts` only, no dialogs) with a st
 styles, images and fonts come from the plugin folder (inline is allowed). The page can `fetch` files
 of its folder, and run WebAssembly: `WebAssembly.instantiateStreaming(fetch('app.wasm'))`. A bundled
 app (React with Vite, say) works too, `type="module"` scripts included: build it with relative paths
-(`base: './'`) into the plugin folder. It talks to the app by messages:
+(`base: './'`) into the plugin folder. It talks to the app by messages; `packages/plugin-api` (`@mdsilo/plugin-api`) has their types and a
+small client (`createClient`, `app.call`, `app.on`, `app.handle`), see its README:
 
 ```js
 // call: answered with { mdsilo: 1, id, result } or { mdsilo: 1, id, error }

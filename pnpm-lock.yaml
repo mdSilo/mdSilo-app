@@ -59,6 +59,9 @@ importers:
       '@lezer/markdown':
         specifier: ^1.8.1
         version: 1.8.1
+      '@mdsilo/plugin-api':
+        specifier: workspace:*
+        version: link:packages/plugin-api
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
@@ -499,6 +502,8 @@ importers:
       vitest:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(jsdom@29.1.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
+
+  packages/plugin-api: {}
 
   packages/publish:
     dependencies:

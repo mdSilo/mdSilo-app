@@ -4,17 +4,28 @@
  * what its permissions, granted by the user, allow. See docs/customization.md.
  */
 
-export const PERMISSIONS = [
-  "file:read",
-  "file:write",
-  "notes:read",
-  "notes:write",
-  "books:read",
-  "issues:read",
-  "net",
-] as const;
+import {
+  PERMISSIONS,
+  type Permission,
+  type PluginManifest,
+  type Contributes,
+  type SelectionPlace,
+} from "@mdsilo/plugin-api";
 
-export type Permission = (typeof PERMISSIONS)[number];
+// the types are of @mdsilo/plugin-api, for the app and the authors of plugins alike
+export { PERMISSIONS };
+export type {
+  CommandContribution,
+  Contributes,
+  NoteModeContribution,
+  Permission,
+  PluginManifest,
+  PluginMode,
+  SelectionAction,
+  SelectionPlace,
+  ViewContribution,
+  ViewerContribution,
+} from "@mdsilo/plugin-api";
 
 /** What a permission lets a plugin do, to show the user */
 export const PERMISSION_LABELS: Record<Permission, string> = {
@@ -25,64 +36,6 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "books:read": "Read your library",
   "issues:read": "Read your issues",
   net: "Reach the internet",
-};
-
-export type PluginMode = "sandboxed" | "trusted";
-
-/** Opens files of these extensions, in place of the editor or the reader */
-export type ViewerContribution = { extensions: string[]; title: string };
-
-/** A view of the whole workspace, in the side menu; its page is `page`, or the main page */
-export type ViewContribution = {
-  id: string;
-  title: string;
-  icon?: string;
-  page?: string;
-};
-
-export type SelectionPlace = "reader" | "editor";
-
-/** A button on the text selected, in the reader, the editor, or both */
-export type SelectionAction = {
-  id: string;
-  title: string;
-  where: SelectionPlace[];
-};
-
-/** A command, run from the Plugins menu of the side menu */
-export type CommandContribution = { id: string; title: string };
-
-/**
- * A mode of the note open, beside WYSIWYG, Markdown and MindMap: its page
- * (`page`, or the main page) shows in place of the editor.
- */
-export type NoteModeContribution = { id: string; title: string; page?: string };
-
-export type Contributes = {
-  viewers: ViewerContribution[];
-  views: ViewContribution[];
-  /** the languages of the code blocks it draws, ```lang, by its main page */
-  codeBlocks: string[];
-  /** buttons on the text selected, answered by its main page */
-  selectionActions: SelectionAction[];
-  /** commands, run by its main page */
-  commands: CommandContribution[];
-  /** modes of the note open */
-  noteModes: NoteModeContribution[];
-};
-
-export type PluginManifest = {
-  id: string;
-  name: string;
-  version: string;
-  minAppVersion?: string;
-  author?: string;
-  description?: string;
-  mode: PluginMode;
-  permissions: Permission[];
-  /** the page of the plugin, relative to its folder */
-  main: string;
-  contributes: Contributes;
 };
 
 export const MANIFEST_FILE = "manifest.json";

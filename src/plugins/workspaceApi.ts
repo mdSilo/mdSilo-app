@@ -13,22 +13,13 @@ import {
 import { isBookFile } from "@/reader/document";
 import { loadBooks } from "@/reader/library/books";
 import { useIssueStore } from "@/issue/issueStore";
+import type { BookInfo, IssueInfo, NoteInfo } from "@mdsilo/plugin-api";
 import type { PluginMethods } from "./host";
 
-/**
- * What a view of a plugin can see of the workspace. Paths are relative to
- * the workspace, and only the notes the app knows can be read or written:
- * not the data of the app (`.mdsilo/`), nor any other file.
- */
-export type NoteInfo = {
-  path: string;
-  title: string;
-  created: string;
-  updated: string;
-  tags: string[];
-  /** the titles of the notes it links to */
-  links: string[];
-};
+// What a view of a plugin can see of the workspace (the types are of
+// @mdsilo/plugin-api). Paths are relative to the workspace, and only the
+// notes the app knows can be read or written: not the data of the app
+// (`.mdsilo/`), nor any other file.
 
 const workspace = () => {
   const dir = store.getState().initDir;
@@ -115,19 +106,6 @@ export function backlinks(params: unknown): string[] {
   return [...linking].map((id) => toWorkspacePath(dir, id));
 }
 
-export type BookInfo = {
-  /** the book file, relative to the workspace */
-  path: string;
-  title: string;
-  author: string;
-  format: string;
-  added: string;
-  group?: string;
-  status?: string;
-  language?: string[];
-  subjects?: string[];
-};
-
 export async function listBooks(): Promise<BookInfo[]> {
   workspace();
   const books = await loadBooks();
@@ -143,22 +121,6 @@ export async function listBooks(): Promise<BookInfo[]> {
     subjects: book.subjects,
   }));
 }
-
-export type IssueInfo = {
-  number: number;
-  title: string;
-  body: string;
-  state: "open" | "closed";
-  /** the names of its labels */
-  labels: string[];
-  milestone?: string;
-  due?: string;
-  created: string;
-  updated: string;
-  closed?: string;
-  /** the notes linked, relative to the workspace */
-  notes: string[];
-};
 
 export async function listIssues(): Promise<IssueInfo[]> {
   const dir = workspace();

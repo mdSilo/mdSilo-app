@@ -1,6 +1,7 @@
 import { store } from "@/state/store";
 import { themeVarsOf } from "@/custom/themes";
 import { allFonts, fontFamilyOf } from "@/custom/fonts";
+import { PROTOCOL, type PluginStyle } from "@mdsilo/plugin-api";
 import type { Permission } from "./manifest";
 import { grantedPermissions, type InstalledPlugin } from "./registry";
 
@@ -13,7 +14,8 @@ import { grantedPermissions, type InstalledPlugin } from "./registry";
  * plugin with `{ mdsilo: 1, request, method, params }`, the plugin answers
  * `{ mdsilo: 1, reply: request, result }` or `{ …, error }`.
  */
-export const PROTOCOL = 1;
+export { PROTOCOL };
+export type { PluginStyle };
 
 export type PluginCall = {
   mdsilo: typeof PROTOCOL;
@@ -29,14 +31,6 @@ export type PluginMethod = {
 };
 
 export type PluginMethods = Record<string, PluginMethod>;
-
-/** The look of the app, for a plugin to match it */
-export type PluginStyle = {
-  theme: string;
-  dark: boolean;
-  vars: Record<string, string>;
-  font: string;
-};
 
 export function appStyle(): PluginStyle {
   const state = store.getState();
