@@ -49,7 +49,7 @@ The tasks list is the **Tasks** tab of Issues (`Ctrl/Cmd + Shift + T`).
 
 The sidebar has four tabs:
 
-- **Silo** (`Ctrl/Cmd + Shift + D`): the file tree. Use the `…` menu of an item to create, rename, move and delete. Sort the tree with the sort button.
+- **Silo** (`Ctrl/Cmd + Shift + D`): the file tree. Use the `…` menu of an item to create, rename, move and delete; drag an item onto a folder (or onto the empty space of the tree, for the opened folder) to move it there. Sort the tree with the sort button.
 - **Search** (`Ctrl/Cmd + Shift + F`): full-text search over notes, annotations and the text of your books. See [[Reference]].
 - **Hashtag** (`Ctrl/Cmd + Shift + H`): every `#tag#` in the workspace, click one to list its notes. See [[4 Linking|Linking]].
 - **Playlist** (`Ctrl/Cmd + Shift + P`): the episodes of your podcast channels.

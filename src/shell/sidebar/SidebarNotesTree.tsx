@@ -6,11 +6,33 @@ import {
   memo,
   forwardRef,
 } from "react";
+import { createPortal } from "react-dom";
 import { Virtuoso, type ListProps } from "react-virtuoso";
+import {
+  CollisionDetection,
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  MouseSensor,
+  TouchSensor,
+  pointerWithin,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
-import { NoteTreeItem } from "@/state/store";
+import { NoteTreeItem, store, useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
-import SidebarNoteLink, { INDENT_PER_LEVEL } from "./SidebarNoteLink";
+import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
+import { listDir } from "@/workspace/open";
+import { normalizeSlash } from "@/workspace/util";
+import SidebarNoteLink, {
+  INDENT_PER_LEVEL,
+  TreeDndData,
+} from "./SidebarNoteLink";
+import { canMoveTo, moveIntoDir } from "./treeMove";
 
 export type NoteTreeRow = {
   node: NoteTreeItem;
@@ -69,6 +91,41 @@ const measureText = (text: string, font: string): number => {
   return width;
 };
 
+// the space around the rows: drop to move into the opened dir
+const ROOT_DROP_ID = "__notes-tree-root__";
+
+// a row over the root: the root holds the rows
+const treeCollision: CollisionDetection = (args) => {
+  const hits = pointerWithin(args);
+  const rows = hits.filter((hit) => hit.id !== ROOT_DROP_ID);
+  return rows.length > 0 ? rows : hits;
+};
+
+/**
+ * Move the dragged item into the dir dropped on, then show it there: expand
+ * the dir, and keep the moved note open.
+ */
+const dropToMove = async (
+  node: NoteTreeItem,
+  tarDir: string,
+  openNote: (id: string) => Promise<unknown>,
+) => {
+  const srcPath = normalizeSlash(node.id);
+  const currentNoteId = normalizeSlash(store.getState().currentNoteId || "");
+  const tarPath = await moveIntoDir(srcPath, tarDir);
+  if (!tarPath) return;
+  const { currentDir, noteTree, toggleExpandedDir } = store.getState();
+  if (tarDir !== normalizeSlash(currentDir || "/")) {
+    if (!noteTree[tarDir]) await listDir(tarDir, false);
+    toggleExpandedDir(tarDir, true);
+  }
+  if (currentNoteId === srcPath) {
+    await openNote(tarPath);
+  } else if (currentNoteId.startsWith(`${srcPath}/`)) {
+    await openNote(tarPath + currentNoteId.slice(srcPath.length));
+  }
+};
+
 function SidebarNotesTree(props: Props) {
   const { data, className } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -89,6 +146,38 @@ function SidebarNotesTree(props: Props) {
     return id && typeof id === "string" ? id : undefined;
   }, [noteId]);
 
+  const currentDir = useStore((state) => state.currentDir);
+  const { onClick: openNote } = useOnNoteLinkClick();
+  const [dragged, setDragged] = useState<NoteTreeItem | null>(null);
+  // the dir to move the dragged item into, if it can
+  const [dropDir, setDropDir] = useState<string | null>(null);
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
+  );
+
+  const onDragStart = (e: DragStartEvent) => {
+    const d = e.active.data.current as TreeDndData | undefined;
+    setDragged(d?.node ?? null);
+  };
+  const onDragOver = (e: DragOverEvent) => {
+    const d = e.over?.data.current as TreeDndData | undefined;
+    setDropDir(d && canMoveTo(String(e.active.id), d.dir) ? d.dir : null);
+  };
+  const onDragEnd = (e: DragEndEvent) => {
+    setDragged(null);
+    setDropDir(null);
+    const node = (e.active.data.current as TreeDndData | undefined)?.node;
+    const d = e.over?.data.current as TreeDndData | undefined;
+    if (node && d) void dropToMove(node, d.dir, openNote);
+  };
+  const onDragCancel = () => {
+    setDragged(null);
+    setDropDir(null);
+  };
+
   const contentWidth = useMemo(
     () =>
       treeContentWidth(data, (text) =>
@@ -98,29 +187,90 @@ function SidebarNotesTree(props: Props) {
   );
 
   return (
-    <div ref={containerRef} className={className}>
-      <OverlayScroll scroller={scroller} className="h-full">
-        <Virtuoso
-          scrollerRef={scrollerRef}
-          data={data}
-          fixedItemHeight={ROW_HEIGHT}
-          context={{ contentWidth }}
-          components={{ List: TreeList }}
-          computeItemKey={(index, row) => `${row.node.id}-${index}`}
-          itemContent={(_, { node, depth, isExpanded }) => (
-            <SidebarNoteLink
-              node={node}
-              depth={depth}
-              isExpanded={isExpanded}
-              isHighlighted={node.id === currentNoteId}
-              style={{ height: ROW_HEIGHT }}
-            />
-          )}
-        />
-      </OverlayScroll>
-    </div>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={treeCollision}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+      onDragCancel={onDragCancel}
+    >
+      <TreeRoot
+        ref={containerRef}
+        dir={currentDir}
+        isDropTarget={
+          dropDir !== null && dropDir === normalizeSlash(currentDir || "/")
+        }
+        className={className}
+      >
+        <OverlayScroll scroller={scroller} className="h-full">
+          <Virtuoso
+            scrollerRef={scrollerRef}
+            data={data}
+            fixedItemHeight={ROW_HEIGHT}
+            context={{ contentWidth }}
+            components={{ List: TreeList }}
+            computeItemKey={(index, row) => `${row.node.id}-${index}`}
+            itemContent={(_, { node, depth, isExpanded }) => (
+              <SidebarNoteLink
+                node={node}
+                depth={depth}
+                isExpanded={isExpanded}
+                isHighlighted={node.id === currentNoteId}
+                isDropTarget={
+                  node.is_dir &&
+                  dropDir !== null &&
+                  normalizeSlash(node.id) === dropDir
+                }
+                style={{ height: ROW_HEIGHT }}
+              />
+            )}
+          />
+        </OverlayScroll>
+      </TreeRoot>
+      {createPortal(
+        <DragOverlay dropAnimation={null}>
+          {dragged ? (
+            <div className="px-2 py-1 text-sm rounded-sm shadow-popover bg-base-200 text-base-content w-max max-w-64 overflow-hidden text-ellipsis whitespace-nowrap">
+              {dragged.title}
+            </div>
+          ) : null}
+        </DragOverlay>,
+        document.body,
+      )}
+    </DndContext>
   );
 }
+
+/** The tree, to drop on to move into the opened dir. */
+const TreeRoot = forwardRef<
+  HTMLDivElement,
+  {
+    dir: string | undefined;
+    isDropTarget: boolean;
+    className?: string;
+    children: React.ReactNode;
+  }
+>(function TreeRoot({ dir, isDropTarget, className = "", children }, ref) {
+  const { setNodeRef } = useDroppable({
+    id: ROOT_DROP_ID,
+    data: { dir: normalizeSlash(dir || "/") } satisfies TreeDndData,
+    disabled: !dir,
+  });
+  const setRef = (el: HTMLDivElement | null) => {
+    setNodeRef(el);
+    if (typeof ref === "function") ref(el);
+    else if (ref) ref.current = el;
+  };
+  return (
+    <div
+      ref={setRef}
+      className={`${className} ${isDropTarget ? "ring-2 ring-inset ring-primary" : ""}`}
+    >
+      {children}
+    </div>
+  );
+});
 
 /**
  * The rows, as wide as the widest: the list scrolls horizontally when they

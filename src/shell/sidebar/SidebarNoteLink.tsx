@@ -5,6 +5,7 @@ import {
   memo,
   useCallback,
 } from "react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { TbCaretRight, TbMarkdown, TbNote, TbPhoto } from "react-icons/tb";
 import { NoteTreeItem, store, useStore } from "@/state/store";
 import { isMobile } from "@/lib/helper";
@@ -22,6 +23,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { viewersOf } from "@/plugins/registry";
 import SidebarItem from "./SidebarItem";
 import { SidebarDirDropdown, SidebarNoteDropdown } from "./SidebarDropdown";
+import { parentOf } from "./treeMove";
 
 // indent of each nesting level in the tree
 export const INDENT_PER_LEVEL = 16;
@@ -31,7 +33,12 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   isHighlighted?: boolean;
   depth?: number;
   isExpanded?: boolean;
+  /** the dir of the row, where the dragged item would be moved to */
+  isDropTarget?: boolean;
 }
+
+/** Data of a row to drag and drop: the dropped item moves into dir. */
+export type TreeDndData = { node?: NoteTreeItem; dir: string };
 
 const SidebarNoteLink = (
   props: Props,
@@ -42,6 +49,7 @@ const SidebarNoteLink = (
     isHighlighted,
     depth = 0,
     isExpanded = false,
+    isDropTarget = false,
     className = "",
     style,
     ...otherProps
@@ -68,6 +76,32 @@ const SidebarNoteLink = (
     if (id === joinPath(state.initDir, WRITING_DIR)) return "Writing";
     return "";
   });
+  // drag to move it, drop on a dir or a file of the dir to move into the dir
+  const {
+    setNodeRef: setDragRef,
+    listeners: dragListeners,
+    isDragging,
+  } = useDraggable({
+    id: node.id,
+    data: { node, dir: parentOf(node.id) } satisfies TreeDndData,
+    // the workspace roots stay
+    disabled: Boolean(rootLabel),
+  });
+  const { setNodeRef: setDropRef } = useDroppable({
+    id: node.id,
+    data: {
+      dir: isDir ? normalizeSlash(node.id) : parentOf(node.id),
+    } satisfies TreeDndData,
+  });
+  const setRowRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      setDropRef(el);
+      if (typeof forwardedRef === "function") forwardedRef(el);
+      else if (forwardedRef) forwardedRef.current = el;
+    },
+    [setDropRef, forwardedRef],
+  );
+
   const onClickFile = useCallback(
     async (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -117,13 +151,15 @@ const SidebarNoteLink = (
 
   return (
     <SidebarItem
-      ref={forwardedRef}
-      className={`relative flex items-center justify-between overflow-x-visible! group focus:outline-hidden ${className}`}
+      ref={setRowRef}
+      className={`relative flex items-center justify-between overflow-x-visible! group focus:outline-hidden ${isDropTarget ? "ring-2 ring-inset ring-primary" : ""} ${isDragging ? "opacity-50" : ""} ${className}`}
       isHighlighted={isHighlighted}
       style={style}
       {...otherProps}
     >
       <div
+        ref={setDragRef}
+        {...dragListeners}
         role="button"
         className="flex items-center flex-1 px-2 py-1 overflow-hidden select-none text-ellipsis whitespace-nowrap"
         onClick={onClickFile}
