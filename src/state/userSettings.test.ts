@@ -22,6 +22,7 @@ describe("user settings slice", () => {
     ["setTheme", "theme", "nord"],
     ["setDarkMode", "darkMode", false],
     ["setFont", "font", "Sniglet"],
+    ["setCodeFont", "codeFont", "monospace"],
     ["setFontSize", "fontSize", 1.4],
     ["setNoteSort", "noteSort", Sort.DateCreatedDescending],
     ["setRawMode", "rawMode", "raw"],

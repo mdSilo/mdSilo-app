@@ -86,6 +86,8 @@ export type UserSettings = {
   setDarkMode: Setter<boolean>;
   font: string; // a font id, see custom/fonts
   setFont: Setter<string>;
+  codeFont: string; // a font id for code in the editor, '' for the default monospace
+  setCodeFont: Setter<string>;
   customFonts: CustomFont[]; // the fonts added by the user, kept on this device, see custom/fonts
   setCustomFonts: Setter<CustomFont[]>;
   workspaceFonts: CustomFont[]; // fonts of the workspace, not persisted
@@ -190,6 +192,8 @@ const userSettingsSlice = (
   setDarkMode: setter(set, "darkMode"),
   font: "",
   setFont: setter(set, "font"),
+  codeFont: "",
+  setCodeFont: setter(set, "codeFont"),
   customFonts: [],
   setCustomFonts: setter(set, "customFonts"),
   workspaceFonts: [],

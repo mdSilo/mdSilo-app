@@ -6,6 +6,8 @@ import FontSelect from "@/ui/FontSelect";
 export default function EditorSettings() {
   const font = useStore((state) => state.font);
   const setFont = useStore((state) => state.setFont);
+  const codeFont = useStore((state) => state.codeFont);
+  const setCodeFont = useStore((state) => state.setCodeFont);
   const fontSize = useStore((state) => state.fontSize);
   const setFontSize = useStore((state) => state.setFontSize);
   const lineHeight = useStore((state) => state.lineHeight);
@@ -29,6 +31,13 @@ export default function EditorSettings() {
         ariaLabel="Editor Font Family"
         value={font}
         onChange={setFont}
+        defaultOption={["", "Default"]}
+      />
+      <FontSelect
+        label="Code Font"
+        ariaLabel="Editor Code Font Family"
+        value={codeFont}
+        onChange={setCodeFont}
         defaultOption={["", "Default"]}
       />
       <NumberInput

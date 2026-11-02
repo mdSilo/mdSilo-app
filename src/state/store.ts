@@ -164,6 +164,7 @@ type PersistedState = Pick<
   | "theme"
   | "customThemes"
   | "darkMode"
+  | "codeFont"
   | "font"
   | "customFonts"
   | "pluginStates"
@@ -386,6 +387,7 @@ export const store = createStore<Store>()(
         customThemes: state.customThemes,
         darkMode: state.darkMode,
         font: state.font,
+        codeFont: state.codeFont,
         customFonts: state.customFonts,
         pluginStates: state.pluginStates,
         fontSize: state.fontSize,

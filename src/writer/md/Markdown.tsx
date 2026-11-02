@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { json } from "@codemirror/lang-json";
 import { languages } from "@codemirror/language-data";
+import { EditorView } from "@codemirror/view";
 import CodeMirror from "./ReactCodeMirror";
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
   onFocus?: () => void;
   dark: boolean;
   readMode?: boolean;
+  /** the CSS font-family of the text, '' for the default monospace */
+  fontFamily?: string;
   className?: string;
 };
 
@@ -22,6 +25,7 @@ function Markdown(props: Props) {
     onFocus,
     dark,
     readMode = false,
+    fontFamily = "",
     className = "",
   } = props;
 
@@ -29,11 +33,15 @@ function Markdown(props: Props) {
 
   // keep the same extensions across renders: new ones reconfigure the editor
   const extensions = useMemo(
-    () =>
+    () => [
       lang === "markdown"
-        ? [markdown({ base: markdownLanguage, codeLanguages: languages })]
-        : [json()],
-    [lang],
+        ? markdown({ base: markdownLanguage, codeLanguages: languages })
+        : json(),
+      ...(fontFamily
+        ? [EditorView.theme({ ".cm-scroller": { fontFamily } })]
+        : []),
+    ],
+    [lang, fontFamily],
   );
 
   const onValueChange = (value: string, _viewUpdate: unknown) => {

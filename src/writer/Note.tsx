@@ -115,6 +115,7 @@ function Note(props: Props) {
 
   const darkMode = useStore((state) => state.darkMode);
   const font = useStore((state) => state.font);
+  const codeFont = useStore((state) => state.codeFont);
   const customFonts = useFonts();
   const fontSize = useStore((state) => state.fontSize);
   const fontWt = useStore((state) => state.fontWt);
@@ -409,6 +410,9 @@ function Note(props: Props) {
   const customTheme = {
     ...EDITOR_THEME,
     fontFamily: fontFamilyOf(font, customFonts),
+    ...(codeFont
+      ? { fontFamilyMono: fontFamilyOf(codeFont, customFonts) }
+      : null),
     fontScale: [fontSize / 1.1, lineHt / 1.6, fontWt / 400],
   };
 
@@ -484,6 +488,7 @@ function Note(props: Props) {
                       onChange={onMarkdownChange}
                       dark={darkMode}
                       readMode={readMode}
+                      fontFamily={fontFamilyOf(codeFont, customFonts)}
                       className={"text-xl"}
                     />
                   ) : rawMode === "mindmap" ? (
