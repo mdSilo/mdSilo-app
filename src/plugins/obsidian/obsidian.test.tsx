@@ -20,7 +20,13 @@ import {
   trustedPage,
 } from "../trusted";
 import { installDomHelpers } from "./dom";
-import type { CommonJs } from ".";
+import type { App, CommonJs } from ".";
+import { frontMatterOf, withFrontMatter } from ".";
+
+/** the app of the plugin running, as it got it */
+let app: App;
+/** what `require("obsidian")` gave it */
+let obsidian: typeof import(".") & Record<string, unknown>;
 
 /** An element with the helpers of Obsidian (dom.ts), as its typings have them */
 type El = HTMLElement & {
@@ -54,8 +60,8 @@ const plugin: InstalledPlugin = {
 
 /** main.js of an Obsidian plugin, as esbuild makes it: CommonJS */
 const mainJs: CommonJs = (module, _exports, require) => {
-  const { Plugin, PluginSettingTab, Setting, ItemView, Notice } =
-    require("obsidian") as typeof import(".");
+  obsidian = require("obsidian") as typeof obsidian;
+  const { Plugin, PluginSettingTab, Setting, ItemView, Notice } = obsidian;
   class HelloView extends ItemView {
     getViewType() {
       return "hello-view";
@@ -83,6 +89,7 @@ const mainJs: CommonJs = (module, _exports, require) => {
   class HelloPlugin extends Plugin {
     settings = { greeting: "Hello" };
     async onload() {
+      app = this.app;
       this.settings = {
         ...this.settings,
         ...((await this.loadData()) as object),
@@ -128,6 +135,11 @@ beforeEach(() => {
       disk[filePath as string] = text as string;
       return true;
     },
+    file_exist: ({ filePath }: Record<string, unknown>) =>
+      (filePath as string) in disk,
+    create_dir_recursive: true,
+    get_dirpath: ({ path }: Record<string, unknown>) =>
+      String(path).replace(/\/[^/]*$/, ""),
   });
   setModuleLoader(async (url) => {
     imported.push(url);
@@ -234,4 +246,65 @@ it("gives elements the DOM helpers of Obsidian", () => {
   expect(el.childNodes).toHaveLength(0);
   el.setText("t");
   expect(el.textContent).toBe("t");
+});
+
+it("creates notes in the vault, not over one there", async () => {
+  await start();
+  const created = vi.fn();
+  app.vault.on("create", created);
+  const file = await app.vault.create("new/b.md", "# B");
+  expect(file).toMatchObject({ path: "new/b.md", basename: "b" });
+  expect(disk["/ws/new/b.md"]).toBe("# B");
+  expect(app.vault.getMarkdownFiles().map((f) => f.path)).toContain("new/b.md");
+  expect(created).toHaveBeenCalledWith(file);
+  await expect(app.vault.create("a.md", "x")).rejects.toThrow(
+    "File already exists.",
+  );
+  await app.vault.append(file, "\nmore");
+  expect(disk["/ws/new/b.md"]).toBe("# B\nmore");
+});
+
+it("reads and sets the front matter of notes", async () => {
+  await start();
+  store.getState().updateNote({
+    id: "/ws/a.md",
+    content: "---\ntags: [x, y]\ndraft: true\n---\n# A",
+  });
+  const file = app.vault.getAbstractFileByPath("a.md")!;
+  expect(app.metadataCache.getFileCache(file)?.frontmatter).toEqual({
+    tags: ["x", "y"],
+    draft: true,
+  });
+  disk["/ws/a.md"] = store.getState().notes.get("/ws/a.md")!.content;
+  await app.fileManager.processFrontMatter(file, (fm) => {
+    fm.draft = false;
+    fm.title = "A";
+  });
+  expect(
+    frontMatterOf(store.getState().notes.get("/ws/a.md")!.content),
+  ).toEqual({
+    tags: ["x", "y"],
+    draft: false,
+    title: "A",
+  });
+});
+
+it("parses front matter as YAML, and writes it", () => {
+  expect(frontMatterOf("# no")).toBeUndefined();
+  expect(frontMatterOf("---\n: [broken\n---\nx")).toBeUndefined();
+  expect(frontMatterOf("---\n---\nx")).toBeUndefined();
+  expect(withFrontMatter("# A", { a: 1 })).toBe("---\na: 1\n---\n# A");
+  expect(withFrontMatter("---\na: 1\n---\n# A", {})).toBe("# A");
+});
+
+it("gives moment, and the YAML helpers", async () => {
+  await start();
+  const moment = obsidian.moment as unknown as (d: string) => {
+    format: (f: string) => string;
+  };
+  expect(moment("2026-11-02").format("YYYY/MM/DD")).toBe("2026/11/02");
+  expect((window as unknown as { moment: unknown }).moment).toBe(moment);
+  expect((obsidian.parseYaml as (t: string) => unknown)("a: [1]")).toEqual({
+    a: [1],
+  });
 });

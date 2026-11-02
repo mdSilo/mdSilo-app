@@ -207,13 +207,15 @@ marked "Obsidian (partial)". `main.js` is served as a module (the app runs no `e
   `registerView` + `ItemView` (views in the Plugins menu, `workspace.getLeaf().setViewState`),
   `addSettingTab` + `PluginSettingTab` + `Setting` (text, text area, toggle, slider, dropdown,
   button), `register*` cleanups.
-- `app.vault` (the notes: `getMarkdownFiles`, `read`, `modify`, `process`, `adapter`),
-  `app.metadataCache` (tags and links), `app.workspace` (`getActiveFile`, `file-open`,
-  `onLayoutReady`, `openLinkText`), `Notice`, `Modal`, `MarkdownRenderer`, `requestUrl`,
-  `normalizePath`, `debounce`, `Platform`, and the DOM helpers (`createEl`, `createDiv`, `empty`…).
+- `app.vault` (the notes: `getMarkdownFiles`, `read`, `modify`, `process`, `append`, `create`
+  (Markdown notes), `createFolder`, `adapter`), `app.metadataCache` (tags, links and front matter,
+  `resolvedLinks`), `app.fileManager.processFrontMatter`, `app.workspace` (`getActiveFile`,
+  `file-open`, `onLayoutReady`, `openLinkText`), `Notice`, `Modal`, `MarkdownRenderer`,
+  `requestUrl`, `normalizePath`, `debounce`, `moment` (also `window.moment`), `parseYaml`,
+  `stringifyYaml`, `Platform`, and the DOM helpers (`createEl`, `createDiv`, `empty`…).
 
 Not there: anything of Obsidian's editor (`editorCallback`, `registerEditorExtension`,
 `MarkdownView` internals; mdSilo's editor is ProseMirror, not CodeMirror), its layout of leaves and
-splits, `registerExtensions`, `vault.create`, `moment`, and its internals. So small plugins (code
+splits, `registerExtensions`, and its internals. So small plugins (code
 block renderers, commands, simple views and settings) run; big ones (Dataview, Excalidraw, Kanban,
 Templater) don't.

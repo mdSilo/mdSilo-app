@@ -1,8 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
+import moment from "moment";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import type { NoteInfo, TrustedApi } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
+import { noteContent } from "@/lib/contentCache";
 import { sanitizeHtml } from "@/lib/sanitize";
-import { joinPath, toWorkspacePath } from "@/workspace/util";
+import { fromWorkspacePath, joinPath, toWorkspacePath } from "@/workspace/util";
 import { dispatchView } from "../trusted";
 import type { InstalledPlugin } from "../registry";
 import { pluginUrl } from "../registry";
@@ -199,8 +202,71 @@ export class Vault extends Source {
     await this.modify(file, text);
     return text;
   }
-  create(): Promise<TFile> {
-    return Promise.reject(new Error("Creating files is not supported yet"));
+  /** a new note: Markdown only, not over a file there */
+  async create(path: string, data: string): Promise<TFile> {
+    const at = normalizePath(path);
+    if (this.getAbstractFileByPath(at)) throw new Error("File already exists.");
+    await this.api.call("notes.write", { path: at, text: data, create: true });
+    await this.refresh();
+    const file = this.getAbstractFileByPath(at);
+    if (!file) throw new Error(`Could not create ${at}`);
+    this.trigger("create", file);
+    return file;
+  }
+  async createFolder(path: string) {
+    await invoke("create_dir_recursive", {
+      dirPath: joinPath(store.getState().initDir ?? "", normalizePath(path)),
+    });
+  }
+  async append(file: TFile, text: string) {
+    await this.modify(file, (await this.read(file)) + text);
+  }
+}
+
+const FRONT_MATTER = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n?---[ \t]*(?:\r?\n|$)/;
+
+/** The front matter of a note, as YAML; undefined without one, or broken */
+export function frontMatterOf(
+  text: string,
+): Record<string, unknown> | undefined {
+  const m = text.match(FRONT_MATTER);
+  if (!m) return undefined;
+  try {
+    const data = parseYaml(m[1]) as unknown;
+    return data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The text with its front matter set to `data`: added, replaced, or taken out if empty */
+export function withFrontMatter(
+  text: string,
+  data: Record<string, unknown>,
+): string {
+  const body = text.replace(FRONT_MATTER, "");
+  if (!Object.keys(data).length) return body;
+  return `---\n${stringifyYaml(data)}---\n${body}`;
+}
+
+/** Obsidian's file manager: the front matter of notes */
+export class FileManager {
+  constructor(private app: App) {}
+  async processFrontMatter(
+    file: TFile,
+    fn: (frontmatter: Record<string, unknown>) => void,
+  ) {
+    const text = await this.app.vault.read(file);
+    const data = frontMatterOf(text) ?? {};
+    fn(data);
+    await this.app.vault.modify(file, withFrontMatter(text, data));
+  }
+  getNewFileParent() {
+    const folder = new TFolder();
+    folder.vault = this.app.vault;
+    return folder;
   }
 }
 
@@ -210,17 +276,51 @@ type CachedMetadata = {
   frontmatter?: Record<string, unknown>;
 };
 
-/** Tags and links of the notes, from the index of the app */
+/**
+ * Tags and links of the notes, from the index of the app; their front
+ * matter, of the content loaded (a note not loaded yet is loaded, then
+ * `changed` is triggered).
+ */
 export class MetadataCache extends Source {
+  /** the front matter of a note by its content, not to parse it again */
+  private parsed = new Map<
+    string,
+    { text: string; data?: Record<string, unknown> }
+  >();
+  private loading = new Set<string>();
   constructor(private vault: Vault) {
     super();
+  }
+  private frontMatter(file: TFile) {
+    const dir = store.getState().initDir ?? "";
+    const id = fromWorkspacePath(dir, file.path);
+    const text = store.getState().notes.get(id)?.content ?? "";
+    if (!text.trim()) {
+      if (!this.loading.has(id)) {
+        this.loading.add(id);
+        void noteContent(id)
+          .then((loaded) => {
+            if (loaded.trim()) this.trigger("changed", file, loaded);
+          })
+          .catch(() => undefined)
+          .finally(() => this.loading.delete(id));
+      }
+      return undefined;
+    }
+    const cached = this.parsed.get(id);
+    if (cached?.text === text) return cached.data;
+    const data = frontMatterOf(text);
+    this.parsed.set(id, { text, data });
+    return data;
   }
   getFileCache(file: TFile): CachedMetadata | null {
     const note = this.vault.notes.find((n) => n.path === file.path);
     if (!note) return null;
+    const frontmatter = this.frontMatter(file);
     return {
       tags: note.tags.map((tag) => ({ tag: `#${tag}` })),
       links: note.links.map((link) => ({ link, displayText: link })),
+      ...(frontmatter ? { frontmatter } : {}),
     };
   }
   getCache(path: string) {
@@ -303,6 +403,7 @@ export class App {
   vault: Vault;
   metadataCache: MetadataCache;
   workspace: Workspace;
+  fileManager: FileManager;
   constructor(
     public api: TrustedApi,
     plugin: string,
@@ -310,6 +411,7 @@ export class App {
     this.vault = new Vault(api);
     this.metadataCache = new MetadataCache(this.vault);
     this.workspace = new Workspace(this, plugin);
+    this.fileManager = new FileManager(this);
   }
 }
 
@@ -923,6 +1025,7 @@ const obsidianModule = {
   Component,
   DropdownComponent,
   Events,
+  FileManager,
   FileView,
   ItemView,
   MarkdownRenderer,
@@ -945,7 +1048,10 @@ const obsidianModule = {
   WorkspaceLeaf,
   addIcon,
   debounce,
+  moment,
   normalizePath,
+  parseYaml: (text: string) => parseYaml(text) as unknown,
+  stringifyYaml: (data: unknown) => stringifyYaml(data),
   request,
   requestUrl,
   setIcon,
@@ -965,6 +1071,9 @@ export type CommonJs = (
 export function obsidianActivate(run: CommonJs, plugin: InstalledPlugin) {
   return async (api: TrustedApi) => {
     installDomHelpers();
+    // a global in Obsidian, used by plugins without importing it
+    const global = window as unknown as { moment?: typeof moment };
+    global.moment ??= moment;
     const module = { exports: {} as unknown };
     run(module, module.exports, (name) => {
       if (name === "obsidian") return obsidianModule;
