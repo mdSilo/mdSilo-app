@@ -3,6 +3,7 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { json } from "@codemirror/lang-json";
 import { languages } from "@codemirror/language-data";
 import { EditorView } from "@codemirror/view";
+import { cmTracker, useCmExtensions } from "@/plugins/cmEditor";
 import CodeMirror from "./ReactCodeMirror";
 
 type Props = {
@@ -31,17 +32,23 @@ function Markdown(props: Props) {
 
   //const readMode = useStore((state) => state.readMode);
 
+  // of trusted plugins, as Obsidian's editor extensions
+  const pluginExtensions = useCmExtensions();
   // keep the same extensions across renders: new ones reconfigure the editor
   const extensions = useMemo(
     () => [
       lang === "markdown"
-        ? markdown({ base: markdownLanguage, codeLanguages: languages })
+        ? [
+            markdown({ base: markdownLanguage, codeLanguages: languages }),
+            cmTracker,
+            ...pluginExtensions,
+          ]
         : json(),
       ...(fontFamily
         ? [EditorView.theme({ ".cm-scroller": { fontFamily } })]
         : []),
     ],
-    [lang, fontFamily],
+    [lang, fontFamily, pluginExtensions],
   );
 
   const onValueChange = (value: string, _viewUpdate: unknown) => {

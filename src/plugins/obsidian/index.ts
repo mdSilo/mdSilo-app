@@ -2,14 +2,22 @@ import { invoke } from "@tauri-apps/api/core";
 import moment from "moment";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import type { NoteInfo, PageClient, TrustedApi } from "@mdsilo/plugin-api";
+import * as cmState from "@codemirror/state";
+import * as cmView from "@codemirror/view";
+import * as cmLanguage from "@codemirror/language";
+import * as cmCommands from "@codemirror/commands";
+import * as lezerHighlight from "@lezer/highlight";
 import { store } from "@/state/store";
 import { noteContent } from "@/lib/contentCache";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { fromWorkspacePath, joinPath, toWorkspacePath } from "@/workspace/util";
+import { reloadOpenNote } from "@/workspace/noteReloads";
 import { dispatchView } from "../trusted";
 import type { InstalledPlugin } from "../registry";
 import { pluginUrl } from "../registry";
+import { activeCmView, addCmExtension } from "../cmEditor";
 import { createEl, installDomHelpers } from "./dom";
+import { CmEditor, Editor, TextEditor } from "./editor";
 
 /**
  * A partial layer for Obsidian plugins (docs/customization.md): their
@@ -399,6 +407,14 @@ export class Workspace extends Source {
   onLayoutReady(fn: Callback) {
     queueMicrotask(() => fn());
   }
+  /** the note open, as a MarkdownView with its editor */
+  getActiveViewOfType<T>(type: new (...args: never[]) => T): T | null {
+    if (type !== (MarkdownView as unknown)) return null;
+    return (noteEditor(this.app, this.plugin)?.view as T | undefined) ?? null;
+  }
+  get activeEditor() {
+    return noteEditor(this.app, this.plugin)?.view ?? null;
+  }
   getActiveFile(): TFile | null {
     const { currentNoteId, initDir } = store.getState();
     if (!currentNoteId || !initDir) return null;
@@ -456,8 +472,12 @@ type Command = {
   name: string;
   callback?: () => unknown;
   checkCallback?: (checking: boolean) => boolean | void;
-  editorCallback?: unknown;
-  editorCheckCallback?: unknown;
+  editorCallback?: (editor: Editor, view: MarkdownView) => unknown;
+  editorCheckCallback?: (
+    checking: boolean,
+    editor: Editor,
+    view: MarkdownView,
+  ) => boolean | void;
 };
 
 type CodeBlockProcessor = (
@@ -502,12 +522,6 @@ export class Plugin extends Component {
   }
   addCommand(command: Command) {
     const id = command.id.replace(/^.*:/, "");
-    if (!command.callback && !command.checkCallback) {
-      console.warn(
-        `${this.manifest.id}: the command ${id} needs the editor of Obsidian, left out`,
-      );
-      return command;
-    }
     this.registry.commands.set(id, command);
     this.register(this.api.contribute("commands", { id, title: command.name }));
     return command;
@@ -602,10 +616,9 @@ export class Plugin extends Component {
       }),
     );
   }
-  registerEditorExtension() {
-    console.warn(
-      `${this.manifest.id}: extensions of Obsidian's editor are not supported`,
-    );
+  /** a CodeMirror extension: in the Markdown mode of notes */
+  registerEditorExtension(extension: cmState.Extension) {
+    this.register(addCmExtension(extension));
   }
   async loadData(): Promise<unknown> {
     try {
@@ -660,7 +673,43 @@ export class ItemView extends Component {
   async onClose() {}
 }
 
-export class MarkdownView extends ItemView {}
+/** The note open, with its editor, as Obsidian's view of a note */
+export class MarkdownView extends ItemView {
+  file: TFile | null = null;
+  editor!: Editor;
+  getViewType() {
+    return "markdown";
+  }
+  getMode() {
+    return "source";
+  }
+  getViewData() {
+    return this.editor?.getValue() ?? "";
+  }
+}
+
+/**
+ * The editor of the note open: of the Markdown mode if it shows, or its
+ * text (saved by `save`, the open note shown again).
+ */
+function noteEditor(app: App, plugin: string) {
+  const file = app.workspace.getActiveFile();
+  if (!file) return null;
+  const { notes, currentNoteId } = store.getState();
+  const cm = activeCmView();
+  const editor = cm
+    ? new CmEditor(cm)
+    : new TextEditor(
+        notes.get(currentNoteId ?? "")?.content ?? "",
+        async (text) => {
+          await app.vault.modify(file, text);
+          reloadOpenNote();
+        },
+      );
+  const view = new MarkdownView(new WorkspaceLeaf(app, plugin));
+  Object.assign(view, { file, editor });
+  return { editor, view };
+}
 
 /** A view of a file: of the extensions the plugin registered, opened by the app */
 export class FileView extends ItemView {
@@ -1142,6 +1191,7 @@ const obsidianModule = {
   DropdownComponent,
   Events,
   FileManager,
+  Editor,
   FileView,
   ItemView,
   TextFileView,
@@ -1174,6 +1224,15 @@ const obsidianModule = {
   setIcon,
 };
 
+/** The modules an Obsidian plugin gets from the app, as from Obsidian */
+const SHARED_MODULES: Record<string, unknown> = {
+  "@codemirror/state": cmState,
+  "@codemirror/view": cmView,
+  "@codemirror/language": cmLanguage,
+  "@codemirror/commands": cmCommands,
+  "@lezer/highlight": lezerHighlight,
+};
+
 export type CommonJs = (
   module: { exports: unknown },
   exports: unknown,
@@ -1194,6 +1253,9 @@ export function obsidianActivate(run: CommonJs, plugin: InstalledPlugin) {
     const module = { exports: {} as unknown };
     run(module, module.exports, (name) => {
       if (name === "obsidian") return obsidianModule;
+      // the editor's, external in the builds of Obsidian plugins: the app's
+      const shared = SHARED_MODULES[name];
+      if (shared) return shared;
       throw new Error(`${plugin.id} needs ${name}, which mdSilo does not have`);
     });
     const exported = module.exports as { default?: unknown };
@@ -1220,7 +1282,15 @@ export function obsidianActivate(run: CommonJs, plugin: InstalledPlugin) {
     api.handle("command.run", async ({ command }) => {
       const found = registry.commands.get(command);
       if (!found) throw new Error(`Unknown command: ${command}`);
-      if (found.checkCallback) found.checkCallback(false);
+      if (found.editorCheckCallback || found.editorCallback) {
+        const open = noteEditor(app, plugin.id);
+        if (!open) throw new Error("Open a note to run this command");
+        const { editor, view } = open;
+        if (found.editorCheckCallback)
+          found.editorCheckCallback(false, editor, view);
+        else await found.editorCallback?.(editor, view);
+        if (editor instanceof TextEditor) await editor.save();
+      } else if (found.checkCallback) found.checkCallback(false);
       else await found.callback?.();
     });
     api.handle("code.render", async ({ lang, code }) => {

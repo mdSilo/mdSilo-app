@@ -114,10 +114,16 @@ const mainJs: CommonJs = (module, _exports, require) => {
         callback: () => new Notice(`${this.settings.greeting}!`),
       });
       this.addCommand({
-        id: "in-editor",
-        name: "Needs the editor",
-        editorCallback: () => undefined,
+        id: "shout",
+        name: "Shout the selection",
+        editorCallback: (editor) =>
+          editor.replaceSelection(editor.getSelection().toUpperCase()),
       });
+      this.registerEditorExtension(
+        (
+          require("@codemirror/view") as typeof import("@codemirror/view")
+        ).EditorView.editable.of(true),
+      );
       this.registerMarkdownCodeBlockProcessor("hello", (source, el) => {
         asEl(el).createEl("b", { text: source.toUpperCase() });
         asEl(el).createEl("script", { text: "alert(1)" });
@@ -189,10 +195,11 @@ it("reads the manifest of an Obsidian plugin as trusted, its main.js as CommonJS
   expect(trustedError("hello")).toBeUndefined();
 });
 
-it("adds its commands to the Plugins menu, those of the editor left out", async () => {
+it("adds its commands to the Plugins menu", async () => {
   await start();
   expect(pluginCommands().map((c) => c.command)).toEqual([
     { id: "say-hello", title: "Say hello" },
+    { id: "shout", title: "Shout the selection" },
   ]);
   // with the settings it loaded
   await act(() => askPlugin(plugin, "command.run", { command: "say-hello" }));
@@ -346,4 +353,36 @@ it("opens the files of its extensions in its views", async () => {
   // a view of the workspace is not given a file
   render(<PluginFrame plugin={plugin} page="hello-view" />);
   expect(await screen.findByText("Hello view")).toBeInTheDocument();
+});
+
+it("runs the commands of the editor on the note open, as WYSIWYG its text", async () => {
+  await start();
+  store.setState({ currentNoteId: "/ws/a.md" });
+  store.getState().updateNote({ id: "/ws/a.md", content: "say hi" });
+  const p = document.createElement("p");
+  p.textContent = "hi";
+  document.body.append(p);
+  const range = document.createRange();
+  range.selectNodeContents(p);
+  getSelection()!.removeAllRanges();
+  getSelection()!.addRange(range);
+  await askPlugin(plugin, "command.run", { command: "shout" });
+  expect(disk["/ws/a.md"]).toBe("say HI");
+  p.remove();
+  store.setState({ currentNoteId: "" });
+  await expect(
+    askPlugin(plugin, "command.run", { command: "shout" }),
+  ).rejects.toThrow("Open a note");
+});
+
+it("adds its editor extensions to the Markdown mode, with the app's CodeMirror", async () => {
+  const { useCmExtensions } = await import("../cmEditor");
+  const { renderHook } = await import("@testing-library/react");
+  const { result } = renderHook(() => useCmExtensions());
+  expect(result.current).toHaveLength(0);
+  await start();
+  await waitFor(() => expect(result.current).toHaveLength(1));
+  disablePlugin("hello");
+  syncTrusted();
+  await waitFor(() => expect(result.current).toHaveLength(0));
 });

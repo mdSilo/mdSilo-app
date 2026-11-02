@@ -203,8 +203,11 @@ marked "Obsidian (partial)". `main.js` is served as a module (the app runs no `e
 `require("obsidian")` gets a layer over the API of mdSilo (`src/plugins/obsidian`):
 
 - `Plugin`: `onload`/`onunload`, `loadData`/`saveData` (`data.json` in its folder, left out of the
-  check for changes by a sync), `addCommand` (`callback`, `checkCallback`) and `addRibbonIcon` (both
-  in the Plugins menu), `registerMarkdownCodeBlockProcessor` (in the editor and published sites),
+  check for changes by a sync), `addCommand` (`callback`, `checkCallback`, and `editorCallback`,
+  `editorCheckCallback` on the note open) and `addRibbonIcon` (both in the Plugins menu),
+  `registerEditorExtension` (CodeMirror extensions, in the Markdown mode of notes;
+  `require("@codemirror/state" | "view" | "language" | "commands")` and `@lezer/highlight` give the
+  app's own), `registerMarkdownCodeBlockProcessor` (in the editor and published sites),
   `registerView` + `ItemView` (views in the Plugins menu, `workspace.getLeaf().setViewState`),
   `registerExtensions` + `FileView`/`TextFileView` (the files of those extensions open in the view;
   `vault.read`/`modify`, `readBinary`/`modifyBinary` for that file; reloaded when it changes),
@@ -213,12 +216,16 @@ marked "Obsidian (partial)". `main.js` is served as a module (the app runs no `e
 - `app.vault` (the notes: `getMarkdownFiles`, `read`, `modify`, `process`, `append`, `create`
   (Markdown notes), `createFolder`, `adapter`), `app.metadataCache` (tags, links and front matter,
   `resolvedLinks`), `app.fileManager.processFrontMatter`, `app.workspace` (`getActiveFile`,
-  `file-open`, `onLayoutReady`, `openLinkText`), `Notice`, `Modal`, `MarkdownRenderer`,
+  `file-open`, `onLayoutReady`, `openLinkText`, `getActiveViewOfType(MarkdownView)`,
+  `activeEditor`), an `Editor` (`getValue`/`setValue`, lines, `getCursor`, `getSelection`,
+  `replaceSelection`, `replaceRange`, `offsetToPos`…): over the CodeMirror of the Markdown mode, or,
+  as WYSIWYG, over the text of the note (the selection found in it; saved after the command, the
+  note shown again), `Notice`, `Modal`, `MarkdownRenderer`,
   `requestUrl`, `normalizePath`, `debounce`, `moment` (also `window.moment`), `parseYaml`,
   `stringifyYaml`, `Platform`, and the DOM helpers (`createEl`, `createDiv`, `empty`…).
 
-Not there: anything of Obsidian's editor (`editorCallback`, `registerEditorExtension`,
-`MarkdownView` internals; mdSilo's editor is ProseMirror, not CodeMirror), its layout of leaves and
-splits, and its internals. So small plugins (code
+Not there: the WYSIWYG editor for editor extensions (it is ProseMirror, not CodeMirror; they run in
+the Markdown mode only), `MarkdownView` internals, its layout of leaves and splits, and its
+internals. So small plugins (code
 block renderers, commands, simple views and settings) run; big ones (Dataview, Excalidraw, Kanban,
 Templater) don't.
