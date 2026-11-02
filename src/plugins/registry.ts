@@ -44,6 +44,8 @@ export type PluginState = {
   granted: Permission[];
   /** the files of a plugin of the workspace when it was enabled */
   hash?: string;
+  /** in development: the folder it is installed from again when its files change, see plugins/dev */
+  devSource?: string;
 };
 
 type PluginFolder = {
@@ -173,6 +175,29 @@ export async function movePlugin(plugin: InstalledPlugin, to: Where) {
     .installedPlugins.find((p) => p.id === plugin.id && p.where === to);
   if (state?.enabled && moved)
     setState(plugin.id, { ...state, hash: moved.hash });
+  // developed on this device only: installed again there
+  if (to === "workspace" && state?.devSource) stopDeveloping(plugin.id);
+}
+
+/**
+ * Installs the plugin in a folder to develop it: installed again (on this
+ * device) each time its files change, and reloaded, see plugins/dev.
+ */
+export async function developPlugin(srcDir: string): Promise<PluginManifest> {
+  const manifest = await installPlugin(srcDir);
+  const state = store.getState().pluginStates[manifest.id];
+  setState(manifest.id, {
+    ...(state ?? { enabled: false, granted: [] }),
+    devSource: srcDir,
+  });
+  return manifest;
+}
+
+export function stopDeveloping(id: string) {
+  const state = store.getState().pluginStates[id];
+  if (!state?.devSource) return;
+  const { devSource: _source, ...rest } = state;
+  setState(id, rest);
 }
 
 /** Removes the plugin from where it is: this device, or the workspace (for all devices). */
@@ -200,10 +225,12 @@ export function enablePlugin(
   if (!plugin.manifest || plugin.error)
     throw new Error(plugin.error ?? "Not a plugin");
   const asked = plugin.manifest.permissions;
+  const devSource = store.getState().pluginStates[plugin.id]?.devSource;
   setState(plugin.id, {
     enabled: true,
     granted: granted.filter((p) => asked.includes(p)),
     ...(plugin.where === "workspace" ? { hash: plugin.hash } : {}),
+    ...(devSource ? { devSource } : {}),
   });
 }
 

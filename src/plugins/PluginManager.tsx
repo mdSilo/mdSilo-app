@@ -7,6 +7,7 @@ import { isTauri } from "@/workspace/util";
 import { dataRoot } from "@/workspace/layout";
 import { PERMISSION_LABELS, type Permission } from "./manifest";
 import {
+  developPlugin,
   disablePlugin,
   enablePlugin,
   grantedPermissions,
@@ -16,11 +17,13 @@ import {
   isEnabled,
   loadPlugins,
   movePlugin,
+  stopDeveloping,
   uninstallPlugin,
   type InstalledPlugin,
 } from "./registry";
 import { trustedError, trustedPage, useTrustedVersion } from "./trusted";
 import PluginFrame from "./PluginFrame";
+import { devError } from "./dev";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -58,6 +61,21 @@ export default function PluginManager() {
     if (typeof dir !== "string") return;
     try {
       await installPlugin(dir);
+    } catch (e) {
+      setError(errorText(e));
+    }
+  };
+
+  const onDevelop = async () => {
+    setError("");
+    const dir = await open({
+      title: "Develop Plugin from Folder",
+      directory: true,
+      multiple: false,
+    });
+    if (typeof dir !== "string") return;
+    try {
+      await developPlugin(dir);
     } catch (e) {
       setError(errorText(e));
     }
@@ -120,6 +138,14 @@ export default function PluginManager() {
           onClick={() => void onInstallZip()}
         >
           Install from .zip
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-xs"
+          title="Install a plugin from its folder, and again each time its files change"
+          onClick={() => void onDevelop()}
+        >
+          Develop…
         </button>
       </div>
       {error ? <p className="text-xs text-error">{error}</p> : null}
@@ -230,6 +256,9 @@ function PluginItem({
       .finally(() => setMoving(false));
   };
 
+  const devSource = pluginStates[plugin.id]?.devSource;
+  const reloadError = devSource ? devError(plugin.id) : undefined;
+
   const viewers =
     manifest?.contributes.viewers.flatMap((v) => v.extensions) ?? [];
   const shown = choosing ?? (enabled ? granted : null);
@@ -261,7 +290,25 @@ function PluginItem({
               Obsidian (partial)
             </span>
           ) : null}
+          {devSource ? (
+            <span
+              className="ml-2 badge badge-xs badge-info"
+              title={`Installed again from ${devSource} when its files change`}
+            >
+              Dev
+            </span>
+          ) : null}
         </span>
+        {devSource ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-xs"
+            aria-label={`Stop developing ${name}`}
+            onClick={() => stopDeveloping(plugin.id)}
+          >
+            Stop Dev
+          </button>
+        ) : null}
         {hasSettings ? (
           <button
             type="button"
@@ -292,6 +339,7 @@ function PluginItem({
       {plugin.error ? (
         <p className="text-xs text-error">{plugin.error}</p>
       ) : null}
+      {reloadError ? <p className="text-xs text-error">{reloadError}</p> : null}
       {changed && !plugin.error ? (
         <p className="text-xs text-warning">
           Changed in the workspace since you enabled it; enable it again to run

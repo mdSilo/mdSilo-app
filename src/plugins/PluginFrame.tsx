@@ -14,6 +14,18 @@ import {
   useTrustedVersion,
 } from "./trusted";
 
+/**
+ * A number for each plugin as listed: listed again (installed again, as in
+ * development), its pages are loaded again, not from the cache.
+ */
+const loads = new WeakMap<InstalledPlugin, number>();
+let lastLoad = 0;
+const loadOf = (plugin: InstalledPlugin) => {
+  let n = loads.get(plugin);
+  if (n === undefined) loads.set(plugin, (n = ++lastLoad));
+  return n;
+};
+
 type Props = {
   plugin: InstalledPlugin;
   /** the page, in the folder of the plugin; its main page by default */
@@ -91,11 +103,13 @@ export default function PluginFrame({
     );
   }
   const main = page ?? plugin.manifest?.main ?? "index.html";
+  const load = loadOf(plugin);
   return (
     <iframe
+      key={load}
       ref={frameRef}
       title={plugin.manifest?.name ?? plugin.id}
-      src={pluginUrl(plugin.id, main)}
+      src={`${pluginUrl(plugin.id, main)}?v=${load}`}
       sandbox="allow-scripts"
       referrerPolicy="no-referrer"
       className={`h-full w-full border-0 bg-base-100 ${className}`}

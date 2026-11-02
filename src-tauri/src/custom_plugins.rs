@@ -11,7 +11,9 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{LazyLock, Mutex};
+use std::sync::{LazyLock, Mutex, mpsc};
+use std::time::Duration;
+use tauri::{AppHandle, Emitter};
 
 pub const MANIFEST: &str = "manifest.json";
 
@@ -252,6 +254,102 @@ pub async fn remove_plugin(
   workspace: Option<String>,
 ) -> Result<(), String> {
   remove_in(&base_of(workspace.as_deref())?, &id)
+}
+
+/// Plugins in development: the watcher of the folder each is installed from
+static DEV_WATCHERS: LazyLock<Mutex<HashMap<String, notify::RecommendedWatcher>>> =
+  LazyLock::new(|| Mutex::new(HashMap::new()));
+
+/// How long the files of a plugin in development must stay still before it
+/// is installed again: an editor or a build writes several files in a row
+const DEV_QUIET: Duration = Duration::from_millis(300);
+
+#[derive(Serialize, Clone)]
+struct DevReload {
+  id: String,
+  /// why it could not be installed again, empty if it was
+  error: String,
+}
+
+/// Calls `again` once the events sent to `rx` pause for `quiet`, until the
+/// sender is dropped (then not for the events left).
+fn on_quiet(rx: mpsc::Receiver<()>, quiet: Duration, again: impl Fn()) {
+  while rx.recv().is_ok() {
+    loop {
+      match rx.recv_timeout(quiet) {
+        Ok(()) => continue,
+        Err(mpsc::RecvTimeoutError::Timeout) => break,
+        // not watched any more
+        Err(mpsc::RecvTimeoutError::Disconnected) => return,
+      }
+    }
+    again();
+  }
+}
+
+/// Watches the folder `src` the plugin `id` (of this device) was installed
+/// from: when its files change, installs it again and emits `plugin-dev`
+/// `{ id, error }` for the app to reload it. Watching again replaces the
+/// watcher of the plugin.
+#[tauri::command]
+pub async fn watch_plugin_dev(
+  id: String,
+  src: String,
+  app: AppHandle,
+) -> Result<(), String> {
+  use notify::{Config, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+  if !is_valid_id(&id) {
+    return Err(format!("Not a plugin id: {id}"));
+  }
+  if !Path::new(&src).join(MANIFEST).is_file() {
+    return Err(format!("No {MANIFEST} in {src}"));
+  }
+  let (tx, rx) = mpsc::channel();
+  let mut watcher = RecommendedWatcher::new(
+    move |res: notify::Result<notify::Event>| {
+      if let Ok(event) = res
+        && matches!(
+          event.kind,
+          EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)
+        )
+      {
+        let _ = tx.send(());
+      }
+    },
+    Config::default(),
+  )
+  .map_err(|e| e.to_string())?;
+  watcher
+    .watch(Path::new(&src), RecursiveMode::Recursive)
+    .map_err(|e| e.to_string())?;
+  let (plugin, folder) = (id.clone(), PathBuf::from(&src));
+  std::thread::spawn(move || {
+    on_quiet(rx, DEV_QUIET, || {
+      let error = plugins_dir()
+        .and_then(|base| install_in(&base, &folder, &plugin))
+        .err()
+        .unwrap_or_default();
+      let _ = app.emit(
+        "plugin-dev",
+        DevReload {
+          id: plugin.clone(),
+          error,
+        },
+      );
+    });
+  });
+  // the old watcher dropped: its thread ends
+  DEV_WATCHERS
+    .lock()
+    .map_err(|e| e.to_string())?
+    .insert(id, watcher);
+  Ok(())
+}
+
+#[tauri::command]
+pub async fn unwatch_plugin_dev(id: String) -> Result<(), String> {
+  DEV_WATCHERS.lock().map_err(|e| e.to_string())?.remove(&id);
+  Ok(())
 }
 
 /// The most files and bytes a plugin .zip may unpack to
@@ -535,6 +633,27 @@ mod tests {
     fs::write(dir.join(DATA_FILE), "{}").unwrap();
     assert_eq!(renamed, hash_dir(&dir));
     let _ = fs::remove_dir_all(root);
+  }
+
+  #[test]
+  fn installs_again_once_the_changes_pause() {
+    let (tx, rx) = mpsc::channel();
+    let count = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let seen = count.clone();
+    let worker = std::thread::spawn(move || {
+      on_quiet(rx, Duration::from_millis(50), || {
+        seen.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+      })
+    });
+    for _ in 0..5 {
+      tx.send(()).unwrap();
+    }
+    std::thread::sleep(Duration::from_millis(200));
+    tx.send(()).unwrap();
+    std::thread::sleep(Duration::from_millis(200));
+    drop(tx);
+    worker.join().unwrap();
+    assert_eq!(count.load(std::sync::atomic::Ordering::SeqCst), 2);
   }
 
   #[test]

@@ -103,6 +103,8 @@ pub fn run() {
       custom_plugins::remove_plugin,
       custom_plugins::unpack_plugin,
       custom_plugins::forget_unpacked,
+      custom_plugins::watch_plugin_dev,
+      custom_plugins::unwatch_plugin_dev,
       plugin_scheme::set_plugin_net,
       system_fonts::system_fonts,
       files::listen_dir,

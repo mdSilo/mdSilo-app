@@ -11,6 +11,7 @@ import { usePlugins } from "@/plugins/registry";
 import { PluginsModal } from "@/plugins/PluginManager";
 import { PluginAnswerModal } from "@/plugins/PluginAnswer";
 import { TrustedPlugins } from "@/plugins/trusted";
+import { PluginDev } from "@/plugins/dev";
 import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
 import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
@@ -148,6 +149,7 @@ const App = () => {
           <FontsModal />
           <PluginAnswerModal />
           <TrustedPlugins />
+          <PluginDev />
         </div>
       </div>
     </ProvideCurrentView>
