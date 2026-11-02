@@ -131,7 +131,8 @@ parent.postMessage({ mdsilo: 1, reply: 7, result: '<svg>…</svg>' }, '*');
 // or: parent.postMessage({ mdsilo: 1, reply: 7, error: 'Bad syntax' }, '*');
 ```
 
-The app waits 15 seconds for an answer.
+The app waits 15 seconds for an answer. For a published site each block is asked twice, with
+`dark: false` and `dark: true`; the site shows the one of the reader's color scheme.
 
 ## Actions on the text selected
 

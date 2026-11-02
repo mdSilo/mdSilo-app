@@ -187,7 +187,7 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 - Commands only show an answer. The background page has no notes, books or issues methods.
 - Hotkeys for commands, or a command palette.
 - Plugin code blocks in the editor, and plugin selection actions: both are tested, but I haven't seen them run in the real app.
-- Plugin code blocks are drawn only in the light theme on published sites.
+- ~~Plugin code blocks are drawn only in the light theme on published sites.~~ Done (M7): drawn light and dark (`buildSite(input, renderers, darkRenderers)`, `<figure class="diagram … themed">` with a `.light` and a `.dark` part, shown by `prefers-color-scheme`).
 
 **Plugins — done (branch `customization-2`, M2)**
 - Install from a `.zip` (`unpack_plugin`: names out of the folder and links left out, 5000 files / 256 MB at most; manifest at the root or in its only folder).

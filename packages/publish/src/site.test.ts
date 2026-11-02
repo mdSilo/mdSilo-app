@@ -246,6 +246,19 @@ describe('math and diagrams', () => {
     expect(html).toContain('<figure class="diagram plantuml"><svg data-code="A -> B"></svg></figure>');
     expect(html).toContain('<code class="language-abc">X:1');
   });
+
+  test('a language with a dark renderer too drawn twice, shown as the color scheme', async () => {
+    const md = '```bars\na: 1\n```';
+    const renderers = { bars: async () => '<svg fill="black"></svg>' };
+    const dark = { bars: async () => '<svg fill="white"></svg>' };
+    const html = text(await buildSite(input(page(md)), renderers, dark), 'notes/Blog/M.html');
+    expect(html).toContain(
+      '<figure class="diagram bars themed"><div class="light"><svg fill="black"></svg></div><div class="dark"><svg fill="white"></svg></div></figure>',
+    );
+    const failing = { bars: async () => { throw new Error('no'); } };
+    const code = text(await buildSite(input(page(md)), renderers, failing), 'notes/Blog/M.html');
+    expect(code).toContain('<code class="language-bars">a: 1');
+  });
 });
 
 describe('the issues', () => {
