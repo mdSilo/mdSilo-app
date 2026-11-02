@@ -25,15 +25,13 @@ const WS = "/ws";
 
 const addNote = (path: string, content: string) => {
   const id = `${WS}/${path}`;
-  store
-    .getState()
-    .upsertNote(
-      makeNote({
-        id,
-        title: path.split("/").pop()!.replace(/\.md$/, ""),
-        content,
-      }),
-    );
+  store.getState().upsertNote(
+    makeNote({
+      id,
+      title: path.split("/").pop()!.replace(/\.md$/, ""),
+      content,
+    }),
+  );
 };
 
 beforeEach(() => {
@@ -208,6 +206,52 @@ describe("the site of the workspace", () => {
         items: [{ issue: 1, status: "s1", order: 0 }],
       },
     ]);
+  });
+
+  test("the notes not loaded read whole only if they may be published", async () => {
+    const files: Record<string, string> = {
+      "writing/Blog/Lazy.md": "in a folder ticked",
+      "writing/Out.md": "---\npublish: true\n---\nout, but published",
+      "writing/Other.md": "---\ntags: x\n---\nnot published",
+    };
+    const parsed = { links: [], tags: [], issues: [], has_tasks: false };
+    for (const path of Object.keys(files)) {
+      store.getState().upsertNote(
+        makeNote({
+          id: `${WS}/${path}`,
+          title: path.split("/").pop()!.replace(/\.md$/, ""),
+          content: "",
+          parsed,
+        }),
+      );
+    }
+    const contentOf = (path: string) => files[path.slice(WS.length + 1)];
+    mockInvoke(invoke, {
+      read_file: ({ filePath }: Record<string, unknown>) =>
+        contentOf(String(filePath)) ?? "",
+      read_front_matters: ({ paths }: Record<string, unknown>) =>
+        (paths as string[]).map(
+          (p) => /^---\n[^]*?\n---\n/.exec(contentOf(p))?.[0] ?? "",
+        ),
+    });
+    const site = await gatherSite(WS, {
+      ...DEFAULT_OPTIONS,
+      folders: ["writing/Blog"],
+    });
+    const content = (path: string) =>
+      site.notes.find((n) => n.path === path)?.content;
+    expect(content("writing/Blog/Lazy.md")).toBe("in a folder ticked");
+    expect(content("writing/Out.md")).toBe(files["writing/Out.md"]);
+    // its front matter only: not read whole
+    expect(content("writing/Other.md")).toBe("---\ntags: x\n---\n");
+    expect(invoke).toHaveBeenCalledWith("read_front_matters", {
+      paths: [`${WS}/writing/Out.md`, `${WS}/writing/Other.md`],
+    });
+    const read = vi
+      .mocked(invoke)
+      .mock.calls.filter((c) => c[0] === "read_file")
+      .map((c) => (c[1] as { filePath: string }).filePath);
+    expect(read).not.toContain(`${WS}/writing/Other.md`);
   });
 
   test("built into the site dir, emptied; exported over a folder; pushed", async () => {

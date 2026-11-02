@@ -3,6 +3,7 @@ import { create } from "zustand";
 import {
   buildSite,
   DEFAULT_OPTIONS,
+  frontMatter,
   type PublishOptions,
   type Renderers,
   type SiteBook,
@@ -23,6 +24,11 @@ import { useIssueStore } from "@/issue/issueStore";
 import { annotationsPathOf } from "@/reader/annotations/annotations";
 import { loadBooks } from "@/reader/library/books";
 import { allSiteRenderers, pluginSiteRenderers } from "./renderers";
+import {
+  cachedRenderers,
+  readRenderCache,
+  writeRenderCache,
+} from "./renderCache";
 
 /**
  * The static site of the workspace, built by packages/publish: written to a
@@ -90,6 +96,54 @@ export function noteFolders(
   return [...folders].sort((a, b) => a.localeCompare(b));
 }
 
+/**
+ * The notes of the site. The ones not loaded (see Note.parsed) read whole
+ * only if they may be published: in a folder ticked, the annotations of a
+ * book, or `publish: true` in their front matter, read alone in Rust. The
+ * others keep their front matter as content, all the site reads of them.
+ */
+async function readSiteNotes(
+  ws: string,
+  mdNotes: Note[],
+  options: PublishOptions,
+  annotations: Set<string>,
+): Promise<SiteNote[]> {
+  const folders = options.folders
+    .map((f) => f.replace(/\/+$/, ""))
+    .filter(Boolean);
+  const wanted = (path: string) =>
+    annotations.has(path) || folders.some((f) => path.startsWith(`${f}/`));
+  const found = mdNotes.flatMap((note) => {
+    const path = relativeTo(ws, note.id);
+    return path ? [{ note, path }] : [];
+  });
+  const unsure = found
+    .filter(({ note, path }) => note.parsed && !wanted(path))
+    .map(({ note }) => note.id);
+  const heads =
+    (unsure.length &&
+      (await invoke<string[] | undefined>("read_front_matters", {
+        paths: unsure,
+      }))) ||
+    [];
+  const headOf = new Map(unsure.map((id, i) => [id, heads[i] ?? ""]));
+  const flagged = (head: string) =>
+    ["true", "yes"].includes(frontMatter(head).publish?.toLowerCase() ?? "");
+  const toRead = found
+    .map(({ note }) => note)
+    .filter((n) => !headOf.has(n.id) || flagged(headOf.get(n.id) ?? ""));
+  const contents = new Map(
+    (await withContents(toRead)).map((n) => [n.id, n.content]),
+  );
+  return found.map(({ note, path }) => ({
+    path,
+    title: note.title,
+    content: contents.get(note.id) ?? headOf.get(note.id) ?? "",
+    created: note.created_at,
+    updated: note.updated_at,
+  }));
+}
+
 /** What the site is made of, read from the workspace. */
 export async function gatherSite(
   ws: string,
@@ -101,23 +155,18 @@ export async function gatherSite(
     .getState()
     .notes.values()
     .filter((n) => !n.is_dir && checkFileIsMd(n.id));
-  const notes: SiteNote[] = [];
-  for (const note of await withContents(mdNotes)) {
-    const path = relativeTo(ws, note.id);
-    if (!path) continue;
-    notes.push({
-      path,
-      title: note.title,
-      content: note.content,
-      created: note.created_at,
-      updated: note.updated_at,
-    });
-  }
+  const entries = options.books ? Object.values(await loadBooks()) : [];
+  const notes = await readSiteNotes(
+    ws,
+    mdNotes,
+    options,
+    new Set(entries.map((e) => annotationsPathOf(e.file))),
+  );
 
   const books: SiteBook[] = [];
   if (options.books) {
     const paths = new Set(notes.map((n) => n.path));
-    for (const entry of Object.values(await loadBooks())) {
+    for (const entry of entries) {
       const annotations = annotationsPathOf(entry.file);
       books.push({
         id: entry.hash,
@@ -214,10 +263,15 @@ export async function buildSiteTo(
   renderers: Renderers = allSiteRenderers(),
   darkRenderers: Renderers = pluginSiteRenderers(true),
 ): Promise<Built> {
+  // the diagrams drawn before, not drawn again
+  const cache = await readRenderCache(ws);
   const files = await buildSite(
     await gatherSite(ws, options),
-    renderers,
-    darkRenderers,
+    cachedRenderers(renderers, cache, "light"),
+    cachedRenderers(darkRenderers, cache, "dark"),
+  );
+  await writeRenderCache(ws, cache).catch((e) =>
+    console.warn("Failed to keep the diagrams drawn", e),
   );
   const clear = target === siteDirOf(ws);
   const written = await invoke<{ files: number; missing: string[] }>(

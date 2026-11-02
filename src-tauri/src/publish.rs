@@ -143,9 +143,95 @@ pub async fn publish_push(dir: String, site: String) -> Result<Pushed> {
   .await
 }
 
+/// The most of a front matter read: a longer one is taken as none.
+const MAX_FRONT_MATTER: usize = 64 * 1024;
+
+/// The front matter of a file, `---` ... `---` at its start as frontMatter
+/// of packages/publish reads it, with its lines; "" if none. Only it read,
+/// not the rest of the file.
+fn front_matter_of(path: &Path) -> String {
+  use std::io::{BufRead, BufReader};
+  let Ok(file) = fs::File::open(path) else {
+    return String::new();
+  };
+  let mut reader = BufReader::new(file);
+  let mut out = Vec::new();
+  let mut line = Vec::new();
+  for i in 0.. {
+    line.clear();
+    match reader.read_until(b'\n', &mut line) {
+      Ok(0) | Err(_) => return String::new(),
+      Ok(_) => {}
+    }
+    out.extend_from_slice(&line);
+    let text = line.strip_suffix(b"\n").unwrap_or(&line);
+    let text = text.strip_suffix(b"\r").unwrap_or(text);
+    if i == 0 {
+      // `---` and a line break, nothing else
+      if text != b"---" || !line.ends_with(b"\n") {
+        return String::new();
+      }
+    } else if i >= 2
+      && text.starts_with(b"---")
+      && text[3..].iter().all(|b| *b == b' ' || *b == b'\t')
+    {
+      // closed: not by the line right after the opening one
+      return String::from_utf8_lossy(&out).into_owned();
+    }
+    if out.len() > MAX_FRONT_MATTER {
+      return String::new();
+    }
+  }
+  String::new()
+}
+
+/// The front matter of each file, "" if none: to know if a note is published
+/// without reading it whole.
+#[tauri::command]
+pub async fn read_front_matters(paths: Vec<String>) -> Vec<String> {
+  tauri::async_runtime::spawn_blocking(move || {
+    paths
+      .iter()
+      .map(|p| front_matter_of(Path::new(p)))
+      .collect()
+  })
+  .await
+  .unwrap_or_default()
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn reads_front_matter_only() {
+    let dir = temp("front-matter");
+    let cases = [
+      (
+        "---\npublish: true\n---\n# Body",
+        "---\npublish: true\n---\n",
+      ),
+      ("---\r\na: 1\r\n---  \r\nbody", "---\r\na: 1\r\n---  \r\n"),
+      // closed at the end of the file
+      ("---\na: 1\n---", "---\na: 1\n---"),
+      // not closed by the line right after
+      ("---\n---\na: 1\n---\nbody", "---\n---\na: 1\n---\n"),
+      ("---\n\n---\nbody", "---\n\n---\n"),
+      ("# No front matter\n---\n", ""),
+      ("--- \na: 1\n---\n", ""),
+      ("---\nnot closed\n", ""),
+    ];
+    for (i, (content, want)) in cases.iter().enumerate() {
+      let path = dir.join(format!("{i}.md"));
+      fs::write(&path, content).unwrap();
+      assert_eq!(front_matter_of(&path), *want, "case {i}");
+    }
+    assert_eq!(front_matter_of(&dir.join("missing.md")), "");
+    let long = format!("---\n{}\n---\n", "a: 1\n".repeat(MAX_FRONT_MATTER / 5 + 1));
+    fs::write(dir.join("long.md"), long).unwrap();
+    assert_eq!(front_matter_of(&dir.join("long.md")), "");
+    let _ = fs::remove_dir_all(&dir);
+  }
   use crate::sync::{SyncSetup, setup_in};
 
   fn temp(name: &str) -> PathBuf {

@@ -136,6 +136,7 @@ pub fn run() {
       sync::sync_run,
       publish::publish_write,
       publish::publish_push,
+      publish::read_front_matters,
       tts::tts_engines,
       tts::tts_voices,
       tts::tts_speak,

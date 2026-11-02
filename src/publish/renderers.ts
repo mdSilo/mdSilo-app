@@ -1,13 +1,15 @@
 import type { Renderers } from "mdsilo-publish";
 import { renderSmiles } from "mdsmirror";
+import { md5 } from "js-md5";
 import { codeBlockPlugins, renderCode } from "@/plugins/codeBlocks";
 
 /**
  * The diagrams of the site drawn here, where a browser is, as SVG: the site
  * loads no library. As the editor draws them (see mdsmirror's Diagram.ts),
- * in the light theme, charts without animation.
+ * in the light theme, charts without animation. The ids in a mermaid SVG
+ * (its styles are scoped by them) of its code: the same in each build, the
+ * ones kept from a build before (see renderCache.ts) not taken again.
  */
-let seq = 0;
 
 export const siteRenderers: Renderers = {
   mermaid: async (code) => {
@@ -20,7 +22,8 @@ export const siteRenderers: Renderers = {
       fontFamily: "system-ui, sans-serif",
       theme: "default",
     });
-    const { svg } = await mermaid.render(`site-mermaid-${(seq += 1)}`, code);
+    const id = `site-mermaid-${md5(code).slice(0, 12)}`;
+    const { svg } = await mermaid.render(id, code);
     return svg;
   },
   echarts: async (code) => {
