@@ -87,8 +87,10 @@ knows can be read or written, not other files:
 | `view.info` | | `{ id }` of the view shown |
 | `notes.list` `{ folder?, tag? }` | `notes:read` | `[{ path, title, created, updated, tags, links }]` |
 | `notes.read` `{ path }` | `notes:read` | the text of the note |
-| `notes.write` `{ path, text }` | `notes:write` | `true`; the note must exist |
+| `notes.write` `{ path, text, create? }` | `notes:write` | `true`; the note must exist, or with `create: true` a new Markdown note is made (folders as needed; not over a file the app doesn't know, not in a hidden folder) |
 | `notes.backlinks` `{ path }` | `notes:read` | the paths of the notes linking to it |
+| `notes.search` `{ query, limit? }` | `notes:read` | `[{ path, title, snippets }]`: the full-text search of the app, the blocks with the words (up to 5 a note); `limit` 50 by default, 300 at most |
+| `notes.graph` | `notes:read` | `{ nodes: [{ path, title, tags }], links: [{ from, to }], unresolved: [{ from, title }] }`: the links between notes, resolved by title as the Graph does |
 | `books.list` | `books:read` | `[{ path, title, author, format, added, group, status, language, subjects }]` |
 | `issues.list` | `issues:read` | `[{ number, title, body, state, labels, milestone, due, created, updated, closed, notes }]` |
 | `app.open` `{ note }`, `{ book }` or `{ issue }` | | opens it in the app |

@@ -62,6 +62,24 @@ export type IssueInfo = {
   notes: string[];
 };
 
+/** A note found by `notes.search` */
+export type NoteHit = {
+  /** relative to the workspace */
+  path: string;
+  title: string;
+  /** the blocks of the note with the words, up to 5 */
+  snippets: string[];
+};
+
+/** The notes and the links between them (`notes.graph`), paths relative to the workspace */
+export type NoteGraph = {
+  nodes: { path: string; title: string; tags: string[] }[];
+  /** a note links to another, once per pair and direction */
+  links: { from: string; to: string }[];
+  /** links to a title no note has */
+  unresolved: { from: string; title: string }[];
+};
+
 type Method<P, R, Perm extends Permission | undefined = undefined> = {
   params: P;
   result: R;
@@ -91,8 +109,19 @@ export type Methods = {
     "notes:read"
   >;
   "notes.read": Method<{ path: string }, string, "notes:read">;
-  "notes.write": Method<{ path: string; text: string }, true, "notes:write">;
+  /** with `create`, a new note if there is none at the path */
+  "notes.write": Method<
+    { path: string; text: string; create?: boolean },
+    true,
+    "notes:write"
+  >;
   "notes.backlinks": Method<{ path: string }, string[], "notes:read">;
+  "notes.search": Method<
+    { query: string; limit?: number },
+    NoteHit[],
+    "notes:read"
+  >;
+  "notes.graph": Method<void, NoteGraph, "notes:read">;
   "books.list": Method<void, BookInfo[], "books:read">;
   "issues.list": Method<void, IssueInfo[], "issues:read">;
   "app.open": Method<

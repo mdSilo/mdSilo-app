@@ -1,18 +1,27 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { BookInfo, IssueInfo, NoteInfo } from "@mdsilo/plugin-api";
+import type {
+  BookInfo,
+  IssueInfo,
+  NoteGraph,
+  NoteInfo,
+  NoteHit,
+} from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
 import type { ViewAction } from "@/state/viewReducer";
 import { indexOf } from "@/lib/linkIndex";
-import { linkTitlesOf } from "@/lib/mdlink";
+import { linkTitlesOf, noteTitleMap } from "@/lib/mdlink";
 import { noteContent } from "@/lib/contentCache";
+import { searchContent } from "@/lib/hooks/useNoteSearch";
 import { openFilePath } from "@/workspace/open";
 import {
+  createDirRecursive,
   fromWorkspacePath,
+  getDirPath,
   isAbsolutePath,
   toWorkspacePath,
 } from "@/workspace/util";
-import { checkFileIsMd } from "@/workspace/process";
-import type { Note } from "@/types/model";
+import { checkFileIsMd, rmFileNameExt } from "@/workspace/process";
+import { defaultNote, type Note } from "@/types/model";
 import { isBookFile } from "@/reader/document";
 import { loadBooks } from "@/reader/library/books";
 import { useIssueStore } from "@/issue/issueStore";
@@ -89,19 +98,112 @@ export function listNotes(params: unknown): NoteInfo[] {
 export const readNote = async (params: unknown) =>
   noteContent(noteAt(params).id);
 
+/**
+ * A new note at the path: a Markdown file not there yet, not in a hidden
+ * folder (`.mdsilo/`, `.git/`), the folders made as needed.
+ */
+async function newNoteAt(path: unknown): Promise<Note> {
+  const dir = workspace();
+  const id = pathIn(dir, path);
+  const rel = toWorkspacePath(dir, id);
+  if (!checkFileIsMd(id)) throw new Error(`Not a Markdown file: ${rel}`);
+  if (rel.split("/").some((part) => part.startsWith(".")))
+    throw new Error(`Not in a hidden folder: ${rel}`);
+  if (
+    store.getState().notes.has(id) ||
+    (await invoke<boolean>("file_exist", { filePath: id }))
+  )
+    throw new Error(`Not a note, or not known to the app: ${rel}`);
+  const parent = await getDirPath(id);
+  if (!(await createDirRecursive(parent)))
+    throw new Error(`Could not make the folder of ${rel}`);
+  const now = new Date().toISOString();
+  const note: Note = {
+    ...defaultNote,
+    id,
+    title: rmFileNameExt(id.split("/").pop() ?? id),
+    file_path: id,
+    created_at: now,
+    updated_at: now,
+  };
+  return note;
+}
+
+/** Writes a note; a new one with `{ create: true }`. */
 export async function writeNote(params: unknown) {
-  const note = noteAt(params);
-  const { text } = asObject(params);
+  const { text, create } = asObject(params);
   if (typeof text !== "string")
     throw new Error("notes.write wants { path, text }");
+  const known = store
+    .getState()
+    .notes.get(pathIn(workspace(), asObject(params).path));
+  const isNew = create === true && !known;
+  const note = isNew ? await newNoteAt(asObject(params).path) : noteAt(params);
   const done = await invoke<boolean>("write_file", {
     filePath: note.file_path,
     text,
   });
   if (!done)
     throw new Error(`Could not write ${toWorkspacePath(workspace(), note.id)}`);
-  store.getState().updateNote({ id: note.id, content: text });
+  if (isNew) {
+    store.getState().upsertNote({ ...note, content: text });
+    store.getState().upsertTree(await getDirPath(note.id), [note]);
+  } else store.getState().updateNote({ id: note.id, content: text });
   return true;
+}
+
+/** The notes with the words, by the full-text search of the app */
+export async function searchNotes(params: unknown): Promise<NoteHit[]> {
+  const dir = workspace();
+  const { query, limit } = asObject(params);
+  if (typeof query !== "string")
+    throw new Error("notes.search wants { query }");
+  const max =
+    typeof limit === "number" && limit > 0 ? Math.min(limit, 300) : 50;
+  const { notes } = await searchContent(
+    store.getState().notes,
+    query,
+    "content",
+  );
+  return notes.slice(0, max).map(({ item, matches }) => ({
+    path: toWorkspacePath(dir, item.id),
+    title: item.title,
+    snippets: [...new Set((matches ?? []).map((m) => m.value ?? ""))]
+      .filter(Boolean)
+      .slice(0, 5),
+  }));
+}
+
+/** The notes and the links between them, by title as the graph of the app */
+export function noteGraph(): NoteGraph {
+  const dir = workspace();
+  const { notes } = store.getState();
+  const index = indexOf(notes);
+  const mds = notes.values().filter(isNote);
+  const idByTitle = new Map<string, string>();
+  for (const note of mds)
+    if (!idByTitle.has(note.title)) idByTitle.set(note.title, note.id);
+  const titleOf = noteTitleMap(idByTitle.keys());
+  const graph: NoteGraph = { nodes: [], links: [], unresolved: [] };
+  for (const note of mds) {
+    const from = toWorkspacePath(dir, note.id);
+    graph.nodes.push({
+      path: from,
+      title: note.title,
+      tags: index.tags(note.id),
+    });
+    const seen = new Set<string>();
+    for (const link of index.rawLinks(note.id)) {
+      const title = titleOf.get(link);
+      const id = title !== undefined ? idByTitle.get(title) : undefined;
+      if (!id) graph.unresolved.push({ from, title: link });
+      else if (id !== note.id && !seen.has(id)) {
+        seen.add(id);
+        graph.links.push({ from, to: toWorkspacePath(dir, id) });
+      }
+    }
+  }
+  return graph;
 }
 
 /** The notes linking to the note at the path, by any title a link to it may have */
@@ -192,6 +294,8 @@ export const workspaceMethods = (
   "notes.read": { permission: "notes:read", handler: readNote },
   "notes.write": { permission: "notes:write", handler: writeNote },
   "notes.backlinks": { permission: "notes:read", handler: backlinks },
+  "notes.search": { permission: "notes:read", handler: searchNotes },
+  "notes.graph": { permission: "notes:read", handler: noteGraph },
   "books.list": { permission: "books:read", handler: listBooks },
   "issues.list": { permission: "issues:read", handler: listIssues },
   "app.open": { handler: (params) => openInApp(params, dispatch) },

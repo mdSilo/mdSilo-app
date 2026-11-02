@@ -10,25 +10,25 @@ import {
   listBooks,
   listIssues,
   listNotes,
+  noteGraph,
   openInApp,
   readNote,
+  searchNotes,
   workspaceMethods,
   writeNote,
 } from "./workspaceApi";
 
 beforeEach(() => {
   store.getState().setInitDir("/ws");
-  store
-    .getState()
-    .upsertNotes([
-      makeNote({
-        id: "/ws/writing/a.md",
-        title: "a",
-        content: "see [[b]] #fruit# ",
-      }),
-      makeNote({ id: "/ws/writing/sub/b.md", title: "b", content: "b text" }),
-      makeNote({ id: "/ws/writing/sub", title: "sub", is_dir: true }),
-    ]);
+  store.getState().upsertNotes([
+    makeNote({
+      id: "/ws/writing/a.md",
+      title: "a",
+      content: "see [[b]] #fruit# ",
+    }),
+    makeNote({ id: "/ws/writing/sub/b.md", title: "b", content: "b text" }),
+    makeNote({ id: "/ws/writing/sub", title: "sub", is_dir: true }),
+  ]);
 });
 
 describe("notes", () => {
@@ -52,10 +52,12 @@ describe("notes", () => {
   });
 
   it("leaves out the other files of the tree: no PDF read as text", async () => {
-    store.getState().upsertNotes([
-      makeNote({ id: "/ws/reading/book.pdf", title: "book" }),
-      makeNote({ id: "/ws/writing/img/cat.png", title: "cat" }),
-    ]);
+    store
+      .getState()
+      .upsertNotes([
+        makeNote({ id: "/ws/reading/book.pdf", title: "book" }),
+        makeNote({ id: "/ws/writing/img/cat.png", title: "cat" }),
+      ]);
     expect(listNotes(undefined).map((n) => n.path)).toEqual([
       "writing/a.md",
       "writing/sub/b.md",
@@ -120,6 +122,97 @@ describe("notes", () => {
     );
   });
 
+  it("makes a new note with create, the folders as needed", async () => {
+    mockInvoke(invoke, {
+      write_file: true,
+      file_exist: ({ filePath }: Record<string, unknown>) =>
+        filePath === "/ws/writing/on-disk.md",
+      create_dir_recursive: true,
+      get_dirpath: ({ path }: Record<string, unknown>) =>
+        String(path).replace(/\/[^/]*$/, ""),
+    });
+    expect(
+      await writeNote({ path: "writing/new/c.md", text: "hi", create: true }),
+    ).toBe(true);
+    expect(invoke).toHaveBeenCalledWith("create_dir_recursive", {
+      dirPath: "/ws/writing/new",
+    });
+    expect(store.getState().notes.get("/ws/writing/new/c.md")).toMatchObject({
+      title: "c",
+      content: "hi",
+    });
+    expect(listNotes(undefined).map((n) => n.path)).toContain(
+      "writing/new/c.md",
+    );
+    // a note there: written as it is
+    expect(
+      await writeNote({ path: "writing/a.md", text: "x", create: true }),
+    ).toBe(true);
+    await expect(
+      writeNote({ path: "writing/on-disk.md", text: "x", create: true }),
+    ).rejects.toThrow("not known to the app");
+    await expect(
+      writeNote({ path: "writing/c.pdf", text: "x", create: true }),
+    ).rejects.toThrow("Not a Markdown file");
+    await expect(
+      writeNote({ path: ".mdsilo/x.md", text: "x", create: true }),
+    ).rejects.toThrow("Not in a hidden folder");
+    await expect(
+      writeNote({ path: "../x.md", text: "x", create: true }),
+    ).rejects.toThrow("Not a path in the workspace");
+    store
+      .getState()
+      .upsertNotes([makeNote({ id: "/ws/img.png", title: "img" })]);
+    await expect(
+      writeNote({ path: "img.png", text: "x", create: true }),
+    ).rejects.toThrow("No note at");
+  });
+
+  it("searches the text of the notes", async () => {
+    mockInvoke(invoke, {
+      index_search: [
+        {
+          id: "1",
+          path: "/ws/writing/sub/b.md",
+          kind: "note",
+          title: "b",
+          label: "",
+          snippet: "",
+        },
+      ],
+    });
+    const hits = await searchNotes({ query: "text" });
+    expect(hits).toEqual([
+      { path: "writing/sub/b.md", title: "b", snippets: ["b text"] },
+    ]);
+    expect(await searchNotes({ query: "text", limit: 0 })).toHaveLength(1);
+    await expect(searchNotes({})).rejects.toThrow("{ query }");
+  });
+
+  it("gives the graph of the notes", () => {
+    store
+      .getState()
+      .upsertNotes([
+        makeNote({
+          id: "/ws/c.md",
+          title: "c",
+          content: "[[a]] [[a]] [[nowhere]] [[c]]",
+        }),
+      ]);
+    expect(noteGraph()).toEqual({
+      nodes: [
+        { path: "writing/a.md", title: "a", tags: ["fruit"] },
+        { path: "writing/sub/b.md", title: "b", tags: [] },
+        { path: "c.md", title: "c", tags: [] },
+      ],
+      links: [
+        { from: "writing/a.md", to: "writing/sub/b.md" },
+        { from: "c.md", to: "writing/a.md" },
+      ],
+      unresolved: [{ from: "c.md", title: "nowhere" }],
+    });
+  });
+
   it("says when the note can not be written", async () => {
     mockInvoke(invoke, { write_file: false });
     await expect(
@@ -141,6 +234,8 @@ describe("notes", () => {
     expect(methods["notes.read"].permission).toBe("notes:read");
     expect(methods["notes.write"].permission).toBe("notes:write");
     expect(methods["notes.backlinks"].permission).toBe("notes:read");
+    expect(methods["notes.search"].permission).toBe("notes:read");
+    expect(methods["notes.graph"].permission).toBe("notes:read");
     expect(methods["books.list"].permission).toBe("books:read");
     expect(methods["issues.list"].permission).toBe("issues:read");
     expect(methods["app.open"].permission).toBeUndefined();
