@@ -19,6 +19,7 @@ mod publish;
 mod schema;
 mod storage;
 mod sync;
+mod system_fonts;
 mod tests;
 mod tray;
 mod tts;
@@ -102,6 +103,7 @@ pub fn run() {
       custom_plugins::unpack_plugin,
       custom_plugins::forget_unpacked,
       plugin_scheme::set_plugin_net,
+      system_fonts::system_fonts,
       files::listen_dir,
       files::open_url,
       files::open_link,

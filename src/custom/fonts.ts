@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { store, useStore } from "@/state/store";
-import { joinPath } from "@/workspace/util";
+import { isTauri, joinPath } from "@/workspace/util";
 import { dataRoot } from "@/workspace/layout";
 import {
   defineKind,
@@ -20,6 +20,8 @@ import {
  * - `''` the default of the view (`book` in the reader: as the book says)
  * - `serif`, `sans-serif`, `monospace`: generic stacks
  * - a bundled family name, e.g. `Sniglet`
+ * - `system:<family>`: a font installed on the system, listed by the app
+ *   (src-tauri/src/system_fonts.rs; not in the web version)
  * - `custom:<id>`: a font added by the user: a file imported, or a font
  *   installed on the system, by its name. Kept on this device (the file in
  *   IndexedDB) or in the workspace (`.mdsilo/fonts/<file>`, listed in
@@ -69,6 +71,7 @@ export function fontFamilyOf(
   if (id === "serif") return SERIF;
   if (id === "sans-serif") return SANS;
   if (id === "monospace") return MONO;
+  if (id.startsWith("system:")) return quote(id.slice("system:".length));
   if (id.startsWith("custom:")) {
     const font = customFonts.find((f) => `custom:${f.id}` === id);
     return font ? quote(font.family) : "";
@@ -220,6 +223,39 @@ export async function importFont(
   const { customFonts, setCustomFonts } = store.getState();
   setCustomFonts([...customFonts, font]);
   return font;
+}
+
+let systemFonts: Promise<string[]> | undefined;
+
+/**
+ * The font families installed on the system, listed once (none on the
+ * web, where a family is typed by its name).
+ */
+export function listSystemFonts(): Promise<string[]> {
+  if (!isTauri) return Promise.resolve([]);
+  systemFonts ??= invoke<string[]>("system_fonts")
+    .then((list) => (Array.isArray(list) ? list : []))
+    .catch((e) => {
+      console.error("Failed to list the system fonts:", e);
+      systemFonts = undefined;
+      return [];
+    });
+  return systemFonts;
+}
+
+/** The font families installed on the system, in a component: [] until listed. */
+export function useSystemFonts(): string[] {
+  const [families, setFamilies] = useState<string[]>([]);
+  useEffect(() => {
+    let live = true;
+    void listSystemFonts().then((list) => {
+      if (live) setFamilies(list);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  return families;
 }
 
 /** Add a font installed on the system, by its family name. */

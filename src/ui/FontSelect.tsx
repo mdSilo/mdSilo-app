@@ -1,4 +1,9 @@
-import { BUNDLED_FONTS, GENERIC_FONTS, useFonts } from "@/custom/fonts";
+import {
+  BUNDLED_FONTS,
+  GENERIC_FONTS,
+  useFonts,
+  useSystemFonts,
+} from "@/custom/fonts";
 import { Select } from "./ui";
 
 type Props = {
@@ -10,7 +15,7 @@ type Props = {
   defaultOption: [string, string];
 };
 
-/** One font list for the editor and the reader, with the fonts added in Settings. */
+/** One font list for the editor and the reader, with the fonts added in Settings and those of the system. */
 export default function FontSelect({
   label,
   ariaLabel,
@@ -19,6 +24,12 @@ export default function FontSelect({
   defaultOption,
 }: Props) {
   const customFonts = useFonts();
+  const systemFonts = useSystemFonts();
+  // chosen before, the font is shown though it is not listed (yet, or any more)
+  const missing =
+    value.startsWith("system:") && !systemFonts.includes(value.slice(7))
+      ? value.slice(7)
+      : "";
   return (
     <Select
       label={label}
@@ -46,6 +57,16 @@ export default function FontSelect({
           {customFonts.map((f) => (
             <option key={f.id} value={`custom:${f.id}`}>
               {f.family}
+            </option>
+          ))}
+        </optgroup>
+      ) : null}
+      {systemFonts.length > 0 || missing ? (
+        <optgroup label="System">
+          {missing ? <option value={value}>{missing}</option> : null}
+          {systemFonts.map((family) => (
+            <option key={family} value={`system:${family}`}>
+              {family}
             </option>
           ))}
         </optgroup>

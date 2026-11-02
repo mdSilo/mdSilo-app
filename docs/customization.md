@@ -40,7 +40,7 @@ Also allow a "system font" entry (family name only, no file), since many users j
 **Global settings UI:** new "Fonts" section in `SettingsModal.tsx`: import .ttf/.otf/.woff/.woff2 (use `openFileDilog` in `src/workspace/open.ts`), family name (default from file name), preview line, remove, "Sync with workspace" toggle.
 
 **One font list for reader and editor** (`useFontOptions()` in `src/custom/fonts.ts`, and one `<FontSelect>` component in `src/ui/`):
-- Groups: *Generic* (Serif, Sans-serif, Monospace — the stacks now in `reader/styles.ts` move here), *Bundled* (Sniglet, RobotoMono, IBMPlexSerif…), *System* (installed fonts by name; Tauri: list via a small Rust command using `font-kit`, web: free-text family), *Custom* (imported files). The reader adds one extra entry, *As the book says*.
+- Groups: *Generic* (Serif, Sans-serif, Monospace — the stacks now in `reader/styles.ts` move here), *Bundled* (Sniglet, RobotoMono, IBMPlexSerif…), *System* (installed fonts by name; Tauri: list via a small Rust command using `fontdb`, pure Rust (`font-kit` was planned, left out: it links fontconfig and freetype), web: free-text family), *Custom* (imported files). The reader adds one extra entry, *As the book says*.
 - A font value is a single string id (`generic:serif`, `bundled:Sniglet`, `system:Noto Serif`, `custom:<id>`) resolved by one `fontFamilyOf(id)` → CSS `font-family` stack; old values (`''`, `'Sniglet'`, `'serif'`…) are migrated.
 - Settings that use it: editor font + new editor code font (mdsmirror `fontFamilyMono`); reader body font + optional CJK/fallback font (readup/Readest does this — check its code and port what fits).
 
@@ -154,10 +154,12 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 - A git sync that changes `themes.json`, `fonts.json`, `fonts/` or `plugins/` reloads them (themes used to be read only on opening the workspace).
 
 **C1 Fonts**
-- Listing installed system fonts from Rust, using `font-kit` (today you type the name).
 - A separate font setting for code in the editor.
 - A fallback font for CJK text in the reader.
 - The web build: a manual check, and a free-text family name.
+
+**C1 Fonts — done (branch `customization-2`, M3)**
+- Installed fonts listed from Rust with `fontdb` (`system_fonts`, pure Rust, no C library; on Linux it reads the fontconfig settings itself; listed once and kept): a *System* group in every font list (id `system:<family>`), and suggestions for "add by name" in Settings → Fonts. A chosen font that is no longer installed stays selectable.
 
 **C2 Themes**
 - A contrast warning for content-on-color pairs.

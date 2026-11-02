@@ -5,6 +5,7 @@ import { DEFAULT_READER_SETTINGS } from "@/reader/settings";
 import { bookStyles, themeColors } from "@/reader/styles";
 import { moveTo } from "./store";
 import {
+  listSystemFonts,
   addSystemFont,
   allFonts,
   familyOfFile,
@@ -40,6 +41,11 @@ describe("fontFamilyOf", () => {
 
   it("quotes bundled families, also the old editor values", () => {
     expect(fontFamilyOf("Sniglet")).toBe("'Sniglet'");
+  });
+
+  it("quotes the fonts of the system by their family", () => {
+    expect(fontFamilyOf("system:Noto Serif")).toBe("'Noto Serif'");
+    expect(fontFamilyOf("system:It's")).toBe("'Its'");
   });
 
   it("finds the fonts added, without the quotes of their names", () => {
@@ -190,4 +196,9 @@ describe("in the workspace", () => {
     );
     expect(store.getState().customFonts).toEqual([font]);
   });
+});
+
+it("lists no system fonts on the web", async () => {
+  expect(await listSystemFonts()).toEqual([]);
+  expect(invoke).not.toHaveBeenCalledWith("system_fonts");
 });
