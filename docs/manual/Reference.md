@@ -44,7 +44,7 @@
 
 ## Search
 
-The **Search** tab of the sidebar searches the full text of the workspace: notes, the annotations of your books and the text of the books you have opened. Results show where the words are. The index is built in the background and updated as you edit; Chinese and other languages written without spaces are split into words.
+The **Search** tab of the sidebar searches the full text of the workspace: notes, the annotations of your books and the text of your books (in the desktop app, the books of the library without being opened; on the web, the books you have opened; not PDF and comics). Results show where the words are. The index is built in the background and updated as you edit; Chinese and other languages written without spaces are split into words.
 
 ## Settings
 

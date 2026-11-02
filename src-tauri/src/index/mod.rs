@@ -475,6 +475,19 @@ pub async fn index_book(
   .map_err(|e| e.to_string())?
 }
 
+/// Index the text of a book read by ebook/, in the index open.
+pub(crate) fn index_book_sections(
+  hash: &str,
+  title: &str,
+  sections: &[BookSection],
+) -> Result<(), String> {
+  with_index(|index| index.index_book(hash, title, sections))
+}
+
+pub(crate) fn book_is_indexed(hash: &str) -> bool {
+  with_index(|index| Ok(index.book_indexed(hash))).unwrap_or(false)
+}
+
 /// The text of the book is indexed already.
 #[tauri::command]
 pub async fn index_book_indexed(hash: String) -> bool {

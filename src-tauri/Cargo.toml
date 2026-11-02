@@ -51,6 +51,15 @@ tantivy-jieba = "0.21.0"
 fontdb = "0.24.0"
 # plugins installed from a .zip, see custom_plugins.rs
 zip = { version = "9.2.2", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+# the books read for their metadata, cover and text, see ebook/; all pure
+# Rust, quick-xml, html5ever (by dom_query), url and encoding_rs are in the
+# tree already
+quick-xml = { version = "0.42.0", features = ["escape-html"] }
+dom_query = { version = "0.28.0", default-features = false }
+url = "2.5.8"
+encoding_rs = "0.8.41"
+base64 = "0.22.1"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 # walk dir
 ignore = "0.4.34"
 ## rss reader

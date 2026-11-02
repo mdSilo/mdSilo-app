@@ -1,13 +1,23 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { BookDoc, TOCItem } from "./document";
+import { isTauri, isWeb } from "@/workspace/util";
+import { bookFormatOf, type BookDoc, type TOCItem } from "./document";
 
 /**
  * The text of a book in the full-text search of the workspace (see
  * src-tauri/src/index): by sections, found as `book:<id>#<cfi>`. Once per
- * book, in the background, after it is opened. Not the books of pages
- * (PDF, comics): their text is not at hand without rendering them.
+ * book, in the background: on the desktop read from the file in Rust
+ * (src-tauri/src/ebook), as soon as it is in the library; else of the book
+ * opened. Not the books of pages (PDF, comics): their text is not at hand
+ * without rendering them.
  */
 export const MAX_SECTION_TEXT = 200_000;
+
+/** The formats Rust reads (src-tauri/src/ebook), as foliate-js does. */
+const READ_IN_RUST = new Set(["EPUB", "MOBI", "AZW", "AZW3", "FB2", "FBZ"]);
+
+/** The book file is read in Rust: its metadata, cover and text. */
+export const readsInRust = (path: string) =>
+  isTauri && !isWeb && READ_IN_RUST.has(bookFormatOf(path) ?? "");
 
 /** The label of each section, of the table of contents. */
 export function sectionLabels(book: BookDoc): Map<number, string> {
@@ -90,15 +100,29 @@ export const sectionCfi = (book: BookDoc, index: number) =>
 
 let running: Promise<void> | undefined;
 
-/** Index the text of the book, unless it is already; again if `force`, e.g. the book written again. */
+/**
+ * Index the text of the book, unless it is already; again if `force`, e.g.
+ * the book written again. Of its file at `path` if Rust reads it, else of
+ * the book opened, if given.
+ */
 export function indexBookText(
   hash: string,
   title: string,
-  book: BookDoc,
+  book: BookDoc | undefined,
   force = false,
+  path?: string,
 ): Promise<void> {
   const run = async () => {
-    if (book.rendition?.layout === "pre-paginated") return;
+    if (path && readsInRust(path)) {
+      const done = await invoke<boolean>("book_index_text", {
+        filePath: path,
+        hash,
+        title,
+        force,
+      }).catch(() => false);
+      if (done) return;
+    }
+    if (!book || book.rendition?.layout === "pre-paginated") return;
     if (
       !force &&
       (await invoke<boolean>("index_book_indexed", { hash }).catch(() => true))

@@ -1,6 +1,5 @@
-// import { invoke } from '@tauri-apps/api';
+import { invoke } from "@tauri-apps/api/core";
 import type { NoteMap } from "@/state/store";
-import { withContents } from "@/lib/contentCache";
 import { buildNotesJson, joinPaths } from "./util";
 import FileAPI from "./files";
 
@@ -40,13 +39,14 @@ export async function deleteFile(filePath: string) {
  * @param dirPath string
  */
 export async function writeAllFile(dirPath: string, notes: NoteMap) {
-  // save mds, the ones not loaded read (see Note.parsed)
-  const myNotes = await withContents(notes.values().filter((n) => !n.is_dir));
-  for (const note of myNotes) {
-    const fileName = `${note.title}.md`;
-    const notePath = await joinPaths(dirPath, [fileName]);
-    const content = note.content;
-    await writeFile(notePath, content);
+  // save mds: the ones loaded as they are, the others (see Note.parsed)
+  // copied from disk in Rust, not read here
+  for (const note of notes.values()) {
+    if (note.is_dir) continue;
+    const notePath = await joinPaths(dirPath, [`${note.title}.md`]);
+    if (note.parsed)
+      await invoke("copy_file", { srcPath: note.id, toPath: notePath });
+    else await writeFile(notePath, note.content);
   }
   // save json with all notes, data
   const notesJson = buildNotesJson();

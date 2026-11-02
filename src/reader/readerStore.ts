@@ -336,7 +336,13 @@ export function createReaderStore() {
         // for the library; for the search of the workspace
         if (ws && hash) {
           void cacheCover(ws, hash, book);
-          void indexBookText(hash, entry?.title ?? titleOfFile(path), book);
+          void indexBookText(
+            hash,
+            entry?.title ?? titleOfFile(path),
+            book,
+            false,
+            path,
+          );
         }
       } catch (e) {
         if (seq !== openSeq) return;

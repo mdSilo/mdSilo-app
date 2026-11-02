@@ -1,13 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
 import { withContents } from "@/lib/contentCache";
+import { indexOf } from "@/lib/linkIndex";
 import { fromWorkspacePath, toWorkspacePath } from "@/workspace/util";
 import {
   annotationsPathOf,
   parseAnnotations,
   parseBookHref,
 } from "@/reader/annotations/annotations";
-import { indexBookText } from "@/reader/bookIndex";
+import { indexBookText, readsInRust } from "@/reader/bookIndex";
 import { openBook } from "@/reader/document";
 import {
   articleOfCfi,
@@ -114,7 +115,14 @@ async function articlesInUse(
     if (entry.context?.book === hash && entry.context.cfi)
       cfis.push(entry.context.cfi);
   }
-  for (const note of await withContents(store.getState().notes.values())) {
+  // the notes not loaded (see Note.parsed) read only if the index has a
+  // link to the book in them
+  const notes = store.getState().notes;
+  const index = indexOf(notes);
+  const linking = notes
+    .values()
+    .filter((n) => !n.parsed || index.books(n.id).includes(hash));
+  for (const note of await withContents(linking)) {
     for (const href of note.content.match(BOOK_LINK) ?? []) {
       const link = parseBookHref(href);
       if (link?.hash === hash && link.cfi) cfis.push(link.cfi);
@@ -263,13 +271,21 @@ export async function saveFeedBook(
       feed: name,
     });
   }
-  void reindex(hash, name, result.epub);
+  void reindex(hash, name, result.epub, path);
   return { ...report, path, hash };
 }
 
 /** The text of the book in the search again: the new articles found. */
-async function reindex(hash: string, title: string, epub: Uint8Array) {
+async function reindex(
+  hash: string,
+  title: string,
+  epub: Uint8Array,
+  path: string,
+) {
   try {
+    // of the file written, if Rust reads it: the book not opened here
+    if (readsInRust(path))
+      return await indexBookText(hash, title, undefined, true, path);
     const { book } = await openBook(new File([epub as BlobPart], "feed.epub"));
     await indexBookText(hash, title, book, true);
     await book.destroy?.();

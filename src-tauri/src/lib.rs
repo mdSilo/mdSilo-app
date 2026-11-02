@@ -7,6 +7,7 @@ mod atomic;
 mod books;
 mod custom_plugins;
 mod db;
+mod ebook;
 mod feed;
 mod files;
 mod index;
@@ -123,6 +124,8 @@ pub fn run() {
       books::read_file_bytes,
       books::write_file_bytes,
       books::write_file_raw,
+      ebook::book_info,
+      ebook::book_index_text,
       index::index_open,
       index::index_update,
       index::index_search,

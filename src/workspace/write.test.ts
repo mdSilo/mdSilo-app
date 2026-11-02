@@ -72,4 +72,25 @@ describe("write (tauri)", () => {
       { filePath: "/save/mdsilo.json", text: expect.any(String) },
     ]);
   });
+
+  test("writeAllFile copies the notes not loaded, not read", async () => {
+    const a = makeNote({ id: "/old/a.md", title: "a", content: "A" });
+    const b = makeNote({
+      id: "/old/b.md",
+      title: "b",
+      content: "",
+      parsed: { links: [], tags: [], issues: [], has_tasks: false },
+    });
+    await write.writeAllFile("/save", NoteMap.from([a, b]));
+    expect(invoke).toHaveBeenCalledWith("copy_file", {
+      srcPath: "/old/b.md",
+      toPath: "/save/b.md",
+    });
+    expect(invoke.mock.calls.some((c) => c[0] === "read_file")).toBe(false);
+    expect(
+      invoke.mock.calls
+        .filter((c) => c[0] === "write_file")
+        .map((c) => (c[1] as { filePath: string }).filePath),
+    ).toEqual(["/save/a.md", "/save/mdsilo.json"]);
+  });
 });

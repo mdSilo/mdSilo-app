@@ -179,10 +179,24 @@ describe("feed articles made a book", () => {
     await invoke("write_file", { filePath: `${BOOK}.md`, text: md });
     const link = `[quote](book:${made.hash}#${encodeURIComponent(`epubcfi(/6/6[${data.articles[2].id}]!/4/2/1:0)`)})`;
     await invoke("write_file", { filePath: `${WS}/writing/a.md`, text: link });
+    // not loaded: read as the index has the link to the book in it
+    const parsed = { links: [], tags: [], issues: [], has_tasks: false };
+    store.getState().upsertNote(
+      makeNote({
+        id: `${WS}/writing/a.md`,
+        title: "a",
+        content: "",
+        parsed: { ...parsed, books: [made.hash] },
+      }),
+    );
+    // not loaded, no link to the book as the index has it: not read, its
+    // link to post 1 not seen
+    const other = `[quote](book:${made.hash}#${encodeURIComponent(`epubcfi(/6/2[${data.articles[0].id}]!/4/2/1:0)`)})`;
+    await invoke("write_file", { filePath: `${WS}/writing/b.md`, text: other });
     store
       .getState()
       .upsertNote(
-        makeNote({ id: `${WS}/writing/a.md`, title: "a", content: link }),
+        makeNote({ id: `${WS}/writing/b.md`, title: "b", content: "", parsed }),
       );
 
     for (const n of [1, 2, 3, 4]) {
