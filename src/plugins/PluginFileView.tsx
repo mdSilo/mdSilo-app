@@ -4,19 +4,35 @@ import { useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { isTauri, normalizeSlash } from "@/workspace/util";
 import { getFileExt } from "@/workspace/process";
+import { readBytes, writeBytes } from "@/reader/library/library";
 import type { PluginHost, PluginMethods } from "./host";
 import PluginFrame from "./PluginFrame";
 
 const nameOf = (path: string) => path.split(/[/\\]/).pop() ?? path;
 
+/** The content of a file last read or written: text, or bytes */
+type Content = string | Uint8Array;
+
+const sameContent = (a: Content, b: Content) =>
+  typeof a === "string" || typeof b === "string"
+    ? a === b
+    : a.length === b.length && a.every((x, i) => x === b[i]);
+
+const bytesOf = (data: unknown) =>
+  data instanceof Uint8Array
+    ? data
+    : data instanceof ArrayBuffer
+      ? new Uint8Array(data)
+      : null;
+
 /**
  * The methods of a plugin that opens a file: only that file, read and
- * written as text. `text` is the content last read or written, not to tell
- * the plugin of its own writes.
+ * written as text or as bytes. `text` is the content last read or written,
+ * not to tell the plugin of its own writes.
  */
 export function fileMethods(
   path: string,
-  text: { current: string | null },
+  text: { current: Content | null },
 ): PluginMethods {
   return {
     "file.info": {
@@ -48,6 +64,26 @@ export function fileMethods(
         return true;
       },
     },
+    "file.readBytes": {
+      permission: "file:read",
+      handler: async () => {
+        const data = await readBytes(path);
+        text.current = data;
+        return data;
+      },
+    },
+    "file.writeBytes": {
+      permission: "file:write",
+      handler: async (params) => {
+        const data = bytesOf((params as { data?: unknown } | undefined)?.data);
+        if (!data)
+          throw new Error("file.writeBytes wants { data: Uint8Array }");
+        if (!(await writeBytes(path, data)))
+          throw new Error(`Could not write ${nameOf(path)}`);
+        text.current = data;
+        return true;
+      },
+    },
   };
 }
 
@@ -57,7 +93,7 @@ type Changes = { paths: string[]; event: string };
 function useFileChanged(
   path: string,
   host: { current: PluginHost | null },
-  text: { current: string | null },
+  text: { current: Content | null },
 ) {
   useEffect(() => {
     if (!isTauri) return;
@@ -74,9 +110,15 @@ function useFileChanged(
             )
           )
             return;
-          const content = await invoke<string>("read_file", { filePath: path });
-          if (content === text.current) return;
-          text.current = content;
+          // read as the plugin read it: bytes are not text
+          if (text.current !== null) {
+            const content =
+              typeof text.current === "string"
+                ? await invoke<string>("read_file", { filePath: path })
+                : await readBytes(path);
+            if (sameContent(text.current, content)) return;
+            text.current = content;
+          }
           host.current?.emit("file.changed");
         }),
       )
@@ -101,7 +143,7 @@ export default function PluginFileView() {
   const plugin = useStore((s) =>
     s.installedPlugins.find((p) => p.id === pluginId),
   );
-  const text = useRef<string | null>(null);
+  const text = useRef<Content | null>(null);
   const host = useRef<PluginHost | null>(null);
   const methods = useMemo(() => fileMethods(filePath, text), [filePath]);
   useFileChanged(filePath, host, text);

@@ -80,6 +80,9 @@ export type Methods = {
   "file.info": Method<void, { name: string; ext: string }>;
   "file.read": Method<void, string, "file:read">;
   "file.write": Method<{ text: string }, true, "file:write">;
+  /** the file as bytes, for a file not of text (an image, a database…) */
+  "file.readBytes": Method<void, Uint8Array, "file:read">;
+  "file.writeBytes": Method<{ data: Uint8Array }, true, "file:write">;
   // views of the workspace
   "view.info": Method<void, { id: string }>;
   "notes.list": Method<

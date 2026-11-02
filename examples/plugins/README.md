@@ -76,6 +76,8 @@ parent.postMessage({ mdsilo: 1, id: 1, method: 'file.read' }, '*');
 | `file.info` | | `{ name, ext }` of the file opened |
 | `file.read` | `file:read` | the text of the file |
 | `file.write` `{ text }` | `file:write` | `true` |
+| `file.readBytes` | `file:read` | the file as a `Uint8Array` (images, databases, any file not of text) |
+| `file.writeBytes` `{ data }` | `file:write` | `true`; `data` a `Uint8Array` or an `ArrayBuffer` |
 
 Views (not file viewers) also have, with paths relative to the workspace; only the notes the app
 knows can be read or written, not other files:

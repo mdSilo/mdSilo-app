@@ -82,6 +82,37 @@ describe("fileMethods", () => {
     expect(methods["file.write"].permission).toBe("file:write");
   });
 
+  it("reads and writes the file opened as bytes", async () => {
+    let disk: Uint8Array = new Uint8Array([1, 2, 3]);
+    mockInvoke(invoke, {
+      read_file_bytes: () => disk.buffer,
+      write_file_bytes: ({ data }: Record<string, unknown>) => {
+        disk = data as Uint8Array;
+        return true;
+      },
+    });
+    const text = { current: null as string | Uint8Array | null };
+    const methods = fileMethods("/n/a.sqlite", text);
+    expect(await methods["file.readBytes"].handler(undefined)).toEqual(
+      new Uint8Array([1, 2, 3]),
+    );
+    expect(text.current).toEqual(new Uint8Array([1, 2, 3]));
+    expect(
+      await methods["file.writeBytes"].handler({ data: new Uint8Array([9]) }),
+    ).toBe(true);
+    expect(disk).toEqual(new Uint8Array([9]));
+    expect(
+      await methods["file.writeBytes"].handler({
+        data: new Uint8Array([7]).buffer,
+      }),
+    ).toBe(true);
+    await expect(
+      methods["file.writeBytes"].handler({ data: [1, 2] }),
+    ).rejects.toThrow("{ data: Uint8Array }");
+    expect(methods["file.readBytes"].permission).toBe("file:read");
+    expect(methods["file.writeBytes"].permission).toBe("file:write");
+  });
+
   it("says when the file can not be written", async () => {
     mockInvoke(invoke, { write_file: false });
     const methods = fileMethods("/n/data.csv", { current: null });
