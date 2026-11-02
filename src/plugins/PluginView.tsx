@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
-import type { PluginMethods } from "./host";
+import type { PluginHost, PluginMethods } from "./host";
+import { useWorkspaceChanged } from "./changes";
 import { workspaceMethods } from "./workspaceApi";
 import PluginFrame from "./PluginFrame";
 import { contributesOf } from "./registry";
@@ -16,9 +17,10 @@ export default function PluginView() {
   );
   // views added as a trusted plugin runs too
   useTrustedVersion();
-  const view = plugin && contributesOf(plugin).views.find(
-    (v) => v.id === pluginViewId,
-  );
+  const view =
+    plugin && contributesOf(plugin).views.find((v) => v.id === pluginViewId);
+  const host = useRef<PluginHost | null>(null);
+  useWorkspaceChanged(host);
   const methods: PluginMethods = useMemo(
     () => ({
       ...workspaceMethods(dispatch),
@@ -40,6 +42,9 @@ export default function PluginView() {
       plugin={plugin}
       page={view.page}
       methods={methods}
+      onHost={(h) => {
+        host.current = h;
+      }}
     />
   );
 }

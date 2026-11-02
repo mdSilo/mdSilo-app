@@ -146,6 +146,10 @@ export type Events = {
   "file.changed": undefined;
   /** the note open was changed by another app or a sync; read it again */
   "note.changed": undefined;
+  /** views: notes were edited (in the app too), made, renamed or deleted; paths relative to the workspace */
+  "notes.changed": { paths: string[] };
+  /** views: files of the workspace changed on the disk, as the watcher saw them */
+  "files.changed": { paths: string[]; event: string };
 };
 
 export type EventName = keyof Events;

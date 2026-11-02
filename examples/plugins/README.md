@@ -108,6 +108,8 @@ Note modes have, for the note open only:
 | `style` | the theme or the font changed; data as `app.style` |
 | `file.changed` | the file was changed by another app or a sync (not by the plugin) |
 | `note.changed` | the note was changed by another app or a sync (not by the plugin); read it again |
+| `notes.changed` | views: notes were edited (in the app too), made, renamed or deleted; `{ paths }`, once the changes pause |
+| `files.changed` | views: files of the workspace changed on the disk; `{ paths, event }` as the watcher saw them (not hidden folders) |
 
 ## Drawing code blocks
 

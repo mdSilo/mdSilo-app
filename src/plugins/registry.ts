@@ -272,7 +272,9 @@ export function contributesOf(plugin: InstalledPlugin): Contributes {
   return {
     viewers: [...declared.viewers, ...(added.viewers ?? [])],
     views: [...declared.views, ...(added.views ?? [])],
-    codeBlocks: [...new Set([...declared.codeBlocks, ...(added.codeBlocks ?? [])])],
+    codeBlocks: [
+      ...new Set([...declared.codeBlocks, ...(added.codeBlocks ?? [])]),
+    ],
     selectionActions: [
       ...declared.selectionActions,
       ...(added.selectionActions ?? []),
@@ -291,8 +293,8 @@ export function viewersOf(
   const ext = getFileExt(path.split(/[/\\]/).pop() ?? "").toLowerCase();
   if (!ext) return [];
   return enabledPlugins(plugins, states).flatMap((plugin) =>
-    contributesOf(plugin).viewers
-      .filter((viewer) => viewer.extensions.includes(ext))
+    contributesOf(plugin)
+      .viewers.filter((viewer) => viewer.extensions.includes(ext))
       .map((viewer) => ({ plugin, viewer })),
   );
 }

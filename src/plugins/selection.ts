@@ -32,8 +32,8 @@ export const selectionActionsIn = (
   states = store.getState().pluginStates,
 ): PluginSelectionAction[] =>
   enabledPlugins(plugins, states).flatMap((plugin) =>
-    contributesOf(plugin).selectionActions
-      .filter((action) => action.where.includes(where))
+    contributesOf(plugin)
+      .selectionActions.filter((action) => action.where.includes(where))
       .map((action) => ({ plugin, action })),
   );
 

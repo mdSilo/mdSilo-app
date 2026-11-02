@@ -190,15 +190,13 @@ describe("notes", () => {
   });
 
   it("gives the graph of the notes", () => {
-    store
-      .getState()
-      .upsertNotes([
-        makeNote({
-          id: "/ws/c.md",
-          title: "c",
-          content: "[[a]] [[a]] [[nowhere]] [[c]]",
-        }),
-      ]);
+    store.getState().upsertNotes([
+      makeNote({
+        id: "/ws/c.md",
+        title: "c",
+        content: "[[a]] [[a]] [[nowhere]] [[c]]",
+      }),
+    ]);
     expect(noteGraph()).toEqual({
       nodes: [
         { path: "writing/a.md", title: "a", tags: ["fruit"] },
