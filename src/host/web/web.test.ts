@@ -301,6 +301,46 @@ describe("web invoke: feed", () => {
     expect(parseFeed("<html></html>", "u", "rss")).toBeNull();
   });
 
+  it("adds an OPDS catalog: the channel, no articles", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(ATOM)),
+    );
+    expect(
+      await invoke("add_channel", {
+        url: "https://a.com/opds",
+        ty: "opds",
+        title: null,
+      }),
+    ).toBe(1);
+    expect(await invoke("get_channels")).toMatchObject([
+      { link: "https://a.com/opds", ty: "opds" },
+    ]);
+    expect(
+      await invoke("get_articles", {
+        feedLink: "https://a.com/opds",
+        readStatus: null,
+        starStatus: null,
+      }),
+    ).toEqual([]);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ metadata: { title: "Shelf" } })),
+      ),
+    );
+    await invoke("add_channel", {
+      url: "https://a.com/opds2",
+      ty: "opds",
+      title: null,
+    });
+    expect(await invoke("get_channels")).toMatchObject([
+      { link: "https://a.com/opds" },
+      { link: "https://a.com/opds2", title: "Shelf" },
+    ]);
+  });
+
   it("adds channel and manages articles", async () => {
     vi.stubGlobal(
       "fetch",

@@ -1,11 +1,6 @@
 import React, { useState } from "react";
-import {
-  TbHeadphones as IconHeadphones,
-  TbRefresh as IconRefresh,
-  TbRss as IconRss,
-  TbSettings as IconSettings,
-  TbStar as IconStar,
-} from "react-icons/tb";
+import { TbHeadphones, TbRefresh, TbRss, TbSettings, TbStar } from "react-icons/tb";
+import { ImLibrary, ImBooks } from "react-icons/im";
 import { getFavicon } from "@/lib/helper";
 import { Spinner, Tooltip } from "@/ui/ui";
 import { ChannelType } from "@/types/model";
@@ -33,10 +28,48 @@ export function ChannelList(props: Props) {
 
   const [highlighted, setHighlighted] = useState<ChannelType>();
 
+  // the OPDS catalogs on top, apart from the feeds
+  const catalogs = channelList.filter((c) => c.ty === "opds");
+  const feeds = channelList.filter((c) => c.ty !== "opds");
+
+  const renderCatalogList = (): JSX.Element | null => {
+    if (catalogs.length === 0) return null;
+    return (
+      <div className="mb-2 pb-1 border-b border-base-300">
+        <div className="flex flex-row items-center p-1">
+          <ImLibrary size={18} className="m-1" />
+          <span className="m-1">Catalogs</span>
+        </div>
+        {catalogs.map((channel: ChannelType, idx: number) => {
+          const { title, link } = channel;
+          const activeClass = `${highlighted?.link === link ? "border-l-2 border-primary" : ""}`;
+          return (
+            <div
+              key={`${link}-${idx}`}
+              className={`m-1 pl-1 flex flex-row items-center whitespace-nowrap cursor-pointer ${activeClass}`}
+              onClick={() => {
+                onClickFeed(link);
+                setHighlighted(channel);
+              }}
+            >
+              <Tooltip content={link} placement="top">
+                <div className="flex flex-row items-center justify-start mr-1">
+                  {/* no favicon: a catalog may be private, e.g. on the local network */}
+                  <ImBooks size={16} className="flex-none mx-1 opacity-70" />
+                  <span className="text-sm text-base-content">{title}</span>
+                </div>
+              </Tooltip>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderFeedList = (): JSX.Element => {
     return (
       <>
-        {channelList.map((channel: ChannelType, idx: number) => {
+        {feeds.map((channel: ChannelType, idx: number) => {
           const { unread = 0, title, ty, link } = channel;
           const ico = getFavicon(link);
           const activeClass = `${highlighted?.link === link ? "border-l-2 border-primary" : ""}`;
@@ -60,9 +93,9 @@ export function ChannelList(props: Props) {
               <span className="sticky right-0 flex flex-none items-center justify-between pl-1 bg-base-100">
                 <span className="text-sm">{unread}</span>
                 {ty === "rss" ? (
-                  <IconRss size={12} className="ml-1 text-orange-500" />
+                  <TbRss size={12} className="ml-1 text-orange-500" />
                 ) : (
-                  <IconHeadphones size={12} className="ml-1 text-secondary" />
+                  <TbHeadphones size={12} className="ml-1 text-secondary" />
                 )}
               </span>
             </div>
@@ -78,12 +111,12 @@ export function ChannelList(props: Props) {
         <div className="flex flex-end">
           <Tooltip content="Refresh All" placement="bottom">
             <button className="cursor-pointer" onClick={refreshList}>
-              <IconRefresh size={24} className="m-1" />
+              <TbRefresh size={24} className="m-1" />
             </button>
           </Tooltip>
           <Tooltip content="Manage Channels and Settings" placement="bottom">
             <button className="cursor-pointer" onClick={onShowManager}>
-              <IconSettings size={24} className="m-1" />
+              <TbSettings size={24} className="m-1" />
             </button>
           </Tooltip>
         </div>
@@ -92,7 +125,7 @@ export function ChannelList(props: Props) {
         <div className="flex flex-col items-center justify-center">
           <Spinner size="xs" />
           <span className="">
-            {doneNum}/{channelList.length}
+            {doneNum}/{feeds.length}
           </span>
         </div>
       )}
@@ -100,12 +133,13 @@ export function ChannelList(props: Props) {
       <div className="flex-1 overflow-auto" data-testid="channel-list-scroller">
         {/* as wide as the longest title, at least the column */}
         <div className="p-1 w-max min-w-full">
+          {renderCatalogList()}
           <div
             className="flex flex-row items-center justify-between cursor-pointer"
             onClick={onClickStar}
           >
             <div className="flex flex-row items-center justify-start">
-              <IconStar size={18} className="m-1 fill-warning text-warning" />
+              <TbStar size={18} className="m-1 fill-warning text-warning" />
               <span className="m-1">Starred</span>
             </div>
           </div>

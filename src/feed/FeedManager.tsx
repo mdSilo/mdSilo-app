@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  TbBooks as IconBooks,
   TbHeadphones as IconHeadphones,
   TbPlus as IconPlus,
   TbRss as IconRss,
@@ -10,6 +11,7 @@ import { CorsProxySetting } from "@/shell/settings/CorsProxySetting";
 import { isWeb } from "@/workspace/util";
 import { ChannelType } from "@/types/model";
 import * as dataAgent from "./dataAgent";
+import { loadCatalog } from "./opds";
 
 type Props = {
   channelList: ChannelType[];
@@ -27,9 +29,9 @@ export function FeedManager(props: Props) {
   const [searchText, setSearchText] = useState<string>("");
 
   const [feedUrl, setFeedUrl] = useState(
-    "https://www.propublica.org/feeds/propublica/main",
+    "https://m.gutenberg.org/ebooks.opds/",
   );
-  const [feedType, setFeedType] = useState("rss");
+  const [feedType, setFeedType] = useState("opds");
   const [feedTitle, setFeedTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,6 +43,17 @@ export function FeedManager(props: Props) {
 
   const handleLoad = async () => {
     setLoading(true);
+    if (feedType === "opds") {
+      try {
+        const catalog = await loadCatalog(feedUrl);
+        setFeedTitle(catalog.title);
+        setDescription(catalog.subtitle);
+      } catch {
+        setDescription("Cannot find an OPDS catalog, please check the URL");
+      }
+      setLoading(false);
+      return;
+    }
     const res = await dataAgent.fetchFeed(feedUrl);
     // console.log("res from rust", res);
     if (!res) {
@@ -118,6 +131,7 @@ export function FeedManager(props: Props) {
                 id="feedType1"
                 name="feedType"
                 value="RSS"
+                checked={feedType === "rss"}
                 onChange={() => setFeedType("rss")}
               />
               <label className="mr-4 text-sm" htmlFor="feedType1">
@@ -129,11 +143,29 @@ export function FeedManager(props: Props) {
                 id="feedType2"
                 name="feedType"
                 value="Podcast"
+                checked={feedType === "podcast"}
                 onChange={() => setFeedType("podcast")}
               />
-              <label className="text-sm" htmlFor="feedType2">
+              <label className="mr-4 text-sm" htmlFor="feedType2">
                 Podcast
               </label>
+              <input
+                type="radio"
+                className="m-1 text-sm"
+                id="feedType3"
+                name="feedType"
+                value="OPDS"
+                checked={feedType === "opds"}
+                onChange={() => setFeedType("opds")}
+              />
+              <Tooltip
+                content="A catalog of books, to browse, search and download them"
+                placement="top"
+              >
+                <label className="text-sm" htmlFor="feedType3">
+                  OPDS
+                </label>
+              </Tooltip>
             </div>
           </div>
           <div className="w-full m-1">{description}</div>
@@ -185,6 +217,8 @@ export function FeedManager(props: Props) {
               <span className="flex items-center justify-between">
                 {channel.ty === "rss" ? (
                   <IconRss size={12} className="mr-1 text-orange-500" />
+                ) : channel.ty === "opds" ? (
+                  <IconBooks size={12} className="mr-1 text-primary" />
                 ) : (
                   <IconHeadphones size={12} className="mr-1 text-secondary" />
                 )}

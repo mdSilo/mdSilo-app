@@ -34,6 +34,14 @@ Press *Make* again later with the same name and the new articles are **appended*
 
 This is the bridge between *streams* and *books*: let a feed accumulate for a month, then read the month as a book, with notes.
 
+## Book catalogs (OPDS)
+
+An **OPDS** catalog is a library on the web that apps can browse: Project Gutenberg, Feedbooks, your own Calibre content server and many others offer one. Add it in *Manage Channels* like a feed, with the type **OPDS** (both OPDS 1 and OPDS 2 work). Catalogs are listed apart, at the top of the channel list.
+
+Click a catalog to browse it: open its sections, go back or home, page through with *Previous* and *Next*, and **search** it when the catalog has a search. Each book shows its cover, author and summary, with a button for each format the Reader opens (EPUB, PDF, MOBI, AZW3, CBZ, FB2…). A download goes into `reading/` and into your Library; the book is then marked **Downloaded**, with *Open* to read it right away.
+
+Catalogs that need a login are not supported yet.
+
 ## Sync
 
 Subscriptions and starred articles are written to `.mdsilo/feeds.json` and merged when the workspace is opened, so your subscriptions follow your workspace across devices.

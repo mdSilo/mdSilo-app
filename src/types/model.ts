@@ -8,7 +8,7 @@ export interface ChannelType {
   link: string;
   description?: string;
   published?: string; // iso date string
-  ty: string; // podcast | rss
+  ty: string; // podcast | rss | opds (a catalog of books, see feed/opds.ts)
   unread: number;
 }
 

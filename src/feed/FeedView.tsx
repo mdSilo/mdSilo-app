@@ -7,6 +7,7 @@ import { ChannelList } from "@/feed/ChannelList";
 import { Channel } from "@/feed/Channel";
 import { ArticleView } from "@/feed/ArticleView";
 import { FeedManager } from "@/feed/FeedManager";
+import { OpdsBrowser } from "@/feed/OpdsBrowser";
 import * as dataAgent from "@/feed/dataAgent";
 import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
 import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from "@/state/userSettings";
@@ -33,6 +34,10 @@ export default function Feed() {
     null,
   );
   const [starChannel, setStarChannel] = useState(false);
+  // an OPDS catalog browsed, in place of the articles
+  const [currentCatalog, setCurrentCatalog] = useState<ChannelType | null>(
+    null,
+  );
   const [showManager, setShowManager] = useState(false);
 
   const storeArticle = useStore((state) => state.currentArticle);
@@ -75,9 +80,10 @@ export default function Feed() {
   const refreshList = async () => {
     setRefreshing(true);
     setDoneNum(0);
-    for (const channel of channelList) {
+    // the catalogs have no articles to refresh
+    for (const channel of channelList.filter((c) => c.ty !== "opds")) {
       await refreshChannel(channel.link, channel.ty, channel.title);
-      setDoneNum(doneNum + 1);
+      setDoneNum((n) => n + 1);
     }
     setRefreshing(false);
   };
@@ -96,7 +102,11 @@ export default function Feed() {
   const onClickFeed = async (link: string) => {
     setLoading(true);
     const clickedChannel = channelList.find((c) => c.link === link);
-    if (clickedChannel) {
+    if (clickedChannel?.ty === "opds") {
+      setCurrentCatalog(clickedChannel);
+      setShowManager(false);
+    } else if (clickedChannel) {
+      setCurrentCatalog(null);
       setCurrentChannel(clickedChannel);
       setShowManager(false);
       await loadArticleList(clickedChannel.link);
@@ -108,6 +118,7 @@ export default function Feed() {
     setLoading(true);
     setCurrentChannel(null);
     setCurrentArticles(null);
+    setCurrentCatalog(null);
     setStarChannel(true);
     setShowManager(false);
     const starArticles = await dataAgent.getArticleList(null, null, 1);
@@ -125,6 +136,7 @@ export default function Feed() {
   const handleDeleteFeed = async (channel: ChannelType) => {
     if (channel && channel.link) {
       await dataAgent.deleteChannel(channel.link);
+      if (currentCatalog?.link === channel.link) setCurrentCatalog(null);
       getList();
     }
   };
@@ -209,6 +221,14 @@ export default function Feed() {
               channelList={channelList}
               handleAddFeed={handleAddFeed}
               handleDelete={handleDeleteFeed}
+            />
+          </div>
+        ) : currentCatalog ? (
+          <div className="flex-1 min-w-0 p-1">
+            <OpdsBrowser
+              key={currentCatalog.link}
+              channel={currentCatalog}
+              onOpenBook={openBook}
             />
           </div>
         ) : (

@@ -132,6 +132,7 @@ describe("Feed view", () => {
         .getAllByRole("button")
         .find((b) => b.className.includes("bg-primary/25")) as HTMLElement,
     );
+    await userEvent.click(screen.getByLabelText("RSS"));
     await userEvent.click(screen.getByText("OK"));
     await waitFor(() =>
       expect(invoke).toHaveBeenCalledWith(

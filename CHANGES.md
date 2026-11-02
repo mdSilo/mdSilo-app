@@ -4,6 +4,8 @@
 
 2026-XX-XX
 
+- Feat: OPDS catalogs in Feeds: browse, search and download books
+
 ## app-v0.7.0 
 
 2026-10-30

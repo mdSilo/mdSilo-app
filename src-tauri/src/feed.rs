@@ -15,6 +15,9 @@ pub async fn process_feed(
   ty: &str,
   title: Option<String>,
 ) -> Option<(NewChannel, Vec<NewArticle>)> {
+  if ty == "opds" {
+    return process_opds(url, ty, title).await;
+  }
   match process_rss(url, ty, title.clone()).await {
     Some(res) => Some(res),
     None => process_atom(url, ty, title).await,
@@ -192,6 +195,59 @@ async fn process_atom(
   }
 }
 
+// 1.3- process opds: a catalog of books, OPDS 1 (atom) or 2 (json); its
+// pages are browsed and its books downloaded in the app, see src/feed/opds.ts,
+// so only the channel is stored, no articles
+async fn process_opds(
+  url: &str,
+  ty: &str,
+  title: Option<String>,
+) -> Option<(NewChannel, Vec<NewArticle>)> {
+  let content = get_feed_content(url).await?;
+  let channel = opds_channel(&content, url, ty, title)?;
+  Some((channel, vec![]))
+}
+
+fn opds_channel(
+  content: &[u8],
+  url: &str,
+  ty: &str,
+  title: Option<String>,
+) -> Option<NewChannel> {
+  let (catalog_title, description, published) =
+    if let Ok(atom) = atom_syndication::Feed::read_from(content) {
+      (
+        atom.title.to_string(),
+        atom.subtitle.unwrap_or_default().to_string(),
+        atom.updated.to_string(),
+      )
+    } else if let Ok(json) = serde_json::from_slice::<serde_json::Value>(content) {
+      let meta = json.get("metadata")?;
+      let text = |key: &str| {
+        meta
+          .get(key)
+          .and_then(|v| v.as_str())
+          .unwrap_or_default()
+          .to_string()
+      };
+      (text("title"), text("subtitle"), text("modified"))
+    } else {
+      log_error(format!("Err on [process_opds]: not an OPDS catalog: {url}"));
+      return None;
+    };
+  let channel_title = match title {
+    Some(t) if !t.trim().is_empty() => String::from(t.trim()),
+    _ => catalog_title,
+  };
+  Some(NewChannel {
+    title: channel_title,
+    link: url.to_string(),
+    description,
+    published,
+    ty: ty.to_string(),
+  })
+}
+
 // # end process rss or atom feed #
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -238,32 +294,39 @@ const MAX_FETCH_BYTES: usize = 32 << 20;
 /// A browser's: some sites send the full page only to browsers.
 const PAGE_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
 
+/// The most bytes of a file asked for, e.g. a book of an OPDS catalog.
+const MAX_FILE_BYTES: usize = 1 << 30;
+
 /// The bytes of a web page or an image (http, https), sent as binary: the
 /// full text of an article and its images, for a book of a feed, see
-/// src/feed/fullText.ts.
+/// src/feed/fullText.ts. Up to `max_bytes` if given: a book downloaded from
+/// an OPDS catalog, see src/feed/opds.ts.
 #[command]
-pub async fn fetch_url(url: String) -> Result<tauri::ipc::Response, String> {
+pub async fn fetch_url(
+  url: String,
+  max_bytes: Option<usize>,
+) -> Result<tauri::ipc::Response, String> {
   let parsed = reqwest::Url::parse(&url).map_err(|e| e.to_string())?;
   if !matches!(parsed.scheme(), "http" | "https") {
     return Err(format!("not a web url: {url}"));
   }
+  let max = max_bytes.map_or(MAX_FETCH_BYTES, |n| n.min(MAX_FILE_BYTES));
+  // a big file takes its time
+  let timeout = if max > MAX_FETCH_BYTES { 600 } else { 30 };
   let client = reqwest::Client::builder()
     .user_agent(PAGE_USER_AGENT)
-    .timeout(std::time::Duration::from_secs(30))
+    .timeout(std::time::Duration::from_secs(timeout))
     .build()
     .map_err(|e| e.to_string())?;
   let response = client.get(parsed).send().await.map_err(|e| e.to_string())?;
   if !response.status().is_success() {
     return Err(format!("{url}: {}", response.status()));
   }
-  if response
-    .content_length()
-    .is_some_and(|n| n as usize > MAX_FETCH_BYTES)
-  {
+  if response.content_length().is_some_and(|n| n as usize > max) {
     return Err(format!("{url}: too big"));
   }
   let bytes = response.bytes().await.map_err(|e| e.to_string())?;
-  if bytes.len() > MAX_FETCH_BYTES {
+  if bytes.len() > max {
     return Err(format!("{url}: too big"));
   }
   Ok(tauri::ipc::Response::new(bytes.to_vec()))
@@ -301,7 +364,7 @@ pub async fn add_articles_with_channel(link: String) -> usize {
   let channel = db::get_channel_by_link(link.clone());
   match channel {
     Some(channel) => {
-      let res = match process_feed(&channel.link, "rss", None).await {
+      let res = match process_feed(&channel.link, &channel.ty, None).await {
         Some(r) => r,
         None => return 0,
       };
@@ -369,5 +432,27 @@ mod tests {
   #[test]
   fn test_get_unread_num() {
     get_unread_num();
+  }
+
+  #[test]
+  fn test_opds_channel() {
+    let atom = br#"<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>urn:x</id><title>Books</title><updated>2026-01-01T00:00:00Z</updated>
+  <entry><id>urn:a</id><title>A</title><updated>2026-01-01T00:00:00Z</updated></entry>
+</feed>"#;
+    let channel = opds_channel(atom, "https://x.org/opds", "opds", None).unwrap();
+    assert_eq!(channel.title, "Books");
+    assert_eq!(channel.ty, "opds");
+
+    let json =
+      br#"{"metadata": {"title": "Shelf"}, "links": [], "publications": []}"#;
+    let channel = opds_channel(json, "https://x.org/opds2", "opds", None).unwrap();
+    assert_eq!(channel.title, "Shelf");
+    let titled =
+      opds_channel(json, "https://x.org/opds2", "opds", Some(" Mine ".into()));
+    assert_eq!(titled.unwrap().title, "Mine");
+
+    assert!(opds_channel(b"<html></html>", "https://x.org", "opds", None).is_none());
   }
 }

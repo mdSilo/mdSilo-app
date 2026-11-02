@@ -66,6 +66,7 @@ export function parseFeed(
   ty: string,
   title?: string | null,
 ): FeedResult | null {
+  if (ty === "opds") return parseOpds(xml, url, title);
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   if (doc.getElementsByTagName("parsererror").length) return null;
   const root = doc.documentElement;
@@ -146,6 +147,52 @@ export function parseFeed(
   }
 
   return null;
+}
+
+/**
+ * An OPDS catalog, OPDS 1 (Atom) or 2 (JSON): the channel only, its pages
+ * browsed in the app (src/feed/opds.ts).
+ */
+function parseOpds(
+  text: string,
+  url: string,
+  title?: string | null,
+): FeedResult | null {
+  const customTitle = title?.trim();
+  if (text.trimStart().startsWith("{")) {
+    try {
+      const meta = (JSON.parse(text) as { metadata?: Record<string, unknown> })
+        .metadata;
+      if (!meta) return null;
+      const str = (v: unknown) => (typeof v === "string" ? v : "");
+      return {
+        channel: {
+          title: customTitle || str(meta.title),
+          link: url,
+          description: str(meta.subtitle),
+          published: str(meta.modified),
+          ty: "opds",
+        },
+        articles: [],
+      };
+    } catch {
+      return null;
+    }
+  }
+  const doc = new DOMParser().parseFromString(text, "application/xml");
+  if (doc.getElementsByTagName("parsererror").length) return null;
+  const root = doc.documentElement;
+  if (root.localName !== "feed") return null;
+  return {
+    channel: {
+      title: customTitle || childText(root, "title"),
+      link: url,
+      description: childText(root, "subtitle"),
+      published: childText(root, "updated"),
+      ty: "opds",
+    },
+    articles: [],
+  };
 }
 
 /** KV key of the CORS proxy setting, set in src/shell/settings/CorsProxySetting.tsx */
@@ -307,7 +354,9 @@ async function saveChannel(
   if (!old) {
     await put(CHANNELS, { ...channel, id: await nextId(CHANNELS) });
   }
-  return addArticles(articles);
+  const added = await addArticles(articles);
+  // a new channel without articles, e.g. an OPDS catalog, is added still
+  return added || (old ? 0 : 1);
 }
 
 export async function fetchFeed(url: string): Promise<FeedResult | null> {
@@ -365,7 +414,7 @@ export async function addStarredArticles(
 export async function addArticlesWithChannel(link: string): Promise<number> {
   const channel = await get<Channel>(CHANNELS, link);
   if (!channel) return 0;
-  const res = await processFeed(channel.link, "rss");
+  const res = await processFeed(channel.link, channel.ty || "rss");
   return res ? addArticles(res.articles) : 0;
 }
 

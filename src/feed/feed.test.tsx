@@ -553,6 +553,9 @@ describe("FeedManager", () => {
     const url = screen.getByPlaceholderText("Feed URL");
     await userEvent.clear(url);
     await userEvent.type(url, "https://new.example/rss");
+    // OPDS by default
+    expect(screen.getByLabelText("OPDS")).toBeChecked();
+    await userEvent.click(screen.getByLabelText("RSS"));
     await userEvent.click(screen.getByText("Load"));
     expect(invoke).toHaveBeenCalledWith("fetch_feed", {
       url: "https://new.example/rss",
@@ -578,11 +581,33 @@ describe("FeedManager", () => {
       />,
     );
     await userEvent.click(screen.getAllByRole("button")[0]);
+    await userEvent.click(screen.getByLabelText("RSS"));
     await userEvent.click(screen.getByText("Load"));
     expect(
       await screen.findByText("Cannot find any feed, please check the URL"),
     ).toBeInTheDocument();
     await userEvent.click(screen.getByText("Cancel"));
     expect(screen.queryByPlaceholderText("Feed URL")).not.toBeInTheDocument();
+  });
+
+  test("reports when no OPDS catalog is found", async () => {
+    render(
+      <FeedManager
+        channelList={[]}
+        handleAddFeed={vi.fn()}
+        handleDelete={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getAllByRole("button")[0]);
+    await userEvent.click(screen.getByText("Load"));
+    expect(invoke).toHaveBeenCalledWith(
+      "fetch_url",
+      expect.objectContaining({ url: "https://m.gutenberg.org/ebooks.opds/" }),
+    );
+    expect(
+      await screen.findByText(
+        "Cannot find an OPDS catalog, please check the URL",
+      ),
+    ).toBeInTheDocument();
   });
 });
