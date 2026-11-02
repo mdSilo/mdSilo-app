@@ -11,6 +11,8 @@ import { usePlugins } from "@/plugins/registry";
 import { PluginsModal } from "@/plugins/PluginManager";
 import { PluginAnswerModal } from "@/plugins/PluginAnswer";
 import { TrustedPlugins } from "@/plugins/trusted";
+import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
+import FontsModal from "@/shell/settings/FontsModal";
 import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
 import { shareSettings } from "@/state/windowSync";
 import { isWeb } from "@/workspace/util";
@@ -142,6 +144,8 @@ const App = () => {
             handleClose={() => setIsAboutOpen(false)}
           />
           <PluginsModal />
+          <ThemeEditorModal />
+          <FontsModal />
           <PluginAnswerModal />
           <TrustedPlugins />
         </div>

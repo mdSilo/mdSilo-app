@@ -31,6 +31,7 @@ export function PluginsModal() {
   return (
     <BaseModal
       title="Plugins"
+      scrollBody
       isOpen={isOpen}
       handleClose={() => setIsOpen(false)}
     >

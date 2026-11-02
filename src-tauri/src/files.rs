@@ -260,7 +260,7 @@ pub async fn get_file_meta(file_path: &str) -> Result<FileMetaData, String> {
       Ok(text) => text,
       Err(e) => {
         log_error(format!(
-          "Error on [get_file_meta: read_to_string, {}]: {:?}",
+          "Error on [get_file_meta: read_to_string, {}]: {}",
           file_path, e
         ));
         String::new()
@@ -436,7 +436,8 @@ pub async fn read_file(file_path: String) -> String {
     .read_to_string(Path::new(&file_path))
     .map_err(|e| {
       log_error(format!(
-        "Error on [read_file: read_to_string, {}]: {:?}",
+        // Display, not Debug: the Debug of a UTF-8 error has all the bytes of the file
+        "Error on [read_file: read_to_string, {}]: {}",
         file_path, e
       ))
     })

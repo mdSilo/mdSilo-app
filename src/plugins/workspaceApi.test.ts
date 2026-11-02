@@ -51,6 +51,24 @@ describe("notes", () => {
     ]);
   });
 
+  it("leaves out the other files of the tree: no PDF read as text", async () => {
+    store.getState().upsertNotes([
+      makeNote({ id: "/ws/reading/book.pdf", title: "book" }),
+      makeNote({ id: "/ws/writing/img/cat.png", title: "cat" }),
+    ]);
+    expect(listNotes(undefined).map((n) => n.path)).toEqual([
+      "writing/a.md",
+      "writing/sub/b.md",
+    ]);
+    await expect(readNote({ path: "reading/book.pdf" })).rejects.toThrow(
+      "No note at reading/book.pdf",
+    );
+    await expect(
+      writeNote({ path: "writing/img/cat.png", text: "x" }),
+    ).rejects.toThrow("No note at");
+    expect(invoke).not.toHaveBeenCalledWith("read_file", expect.anything());
+  });
+
   it("lists the notes of a folder, or with a tag", () => {
     expect(listNotes({ folder: "writing/sub" }).map((n) => n.path)).toEqual([
       "writing/sub/b.md",

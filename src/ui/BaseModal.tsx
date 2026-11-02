@@ -16,6 +16,11 @@ type Props = {
   handleClose: () => void;
   /** classes for the panel, to override the default small width */
   panelClassName?: string;
+  /**
+   * the content scrolls inside the panel, under its title, and the panel is
+   * no higher than the window; otherwise the dialog grows and scrolls itself
+   */
+  scrollBody?: boolean;
 };
 
 export const BaseModal = ({
@@ -24,6 +29,7 @@ export const BaseModal = ({
   isOpen,
   handleClose,
   panelClassName = "max-w-sm",
+  scrollBody = false,
 }: Props) => {
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -83,7 +89,15 @@ export const BaseModal = ({
                   >
                     {title}
                   </Dialog.Title>
-                  <div className="mt-2">{children}</div>
+                  <div
+                    className={
+                      scrollBody
+                        ? "mt-2 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain"
+                        : "mt-2"
+                    }
+                  >
+                    {children}
+                  </div>
                 </div>
               </div>
             </Dialog.Panel>

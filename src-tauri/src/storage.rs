@@ -112,6 +112,9 @@ pub struct LogItems {
 const LOG_KEY: &str = "log";
 /// the log keeps the latest ones only: it is read and written on each entry
 pub const MAX_LOG_ITEMS: usize = 500;
+/// the most of an entry kept: an error can carry a whole file (a PDF read as
+/// text was 81 MB), and the log is read and written on each entry
+pub const MAX_LOG_INFO: usize = 2000;
 /// one writer of the log at a time, the entries of another one would be lost
 static LOG_LOCK: Mutex<()> = Mutex::new(());
 
@@ -122,11 +125,28 @@ fn get_log_in(dir: &Path) -> Vec<LogItem> {
     .logs
 }
 
-/// Add the items before the ones logged already, newest first.
+/// At most MAX_LOG_INFO bytes of the text, cut at a char
+fn shorten(info: &mut String) {
+  if info.len() <= MAX_LOG_INFO {
+    return;
+  }
+  let mut end = MAX_LOG_INFO;
+  while !info.is_char_boundary(end) {
+    end -= 1;
+  }
+  info.truncate(end);
+  info.push('…');
+}
+
+/// Add the items before the ones logged already, newest first; long ones
+/// shortened, those logged before too (a log made big by an old version).
 fn add_log_in(dir: &Path, mut items: Vec<LogItem>) -> bool {
   let _guard = LOG_LOCK.lock().unwrap_or_else(|e| e.into_inner());
   items.extend(get_log_in(dir));
   items.truncate(MAX_LOG_ITEMS);
+  for item in &mut items {
+    shorten(&mut item.info);
+  }
   // not logged if it fails: it would log again, and again
   serde_json::to_value(LogItems { logs: items })
     .is_ok_and(|value| set_data_in(dir, LOG_KEY, &value).is_ok())
@@ -229,6 +249,26 @@ mod tests {
     assert_eq!(log.len(), MAX_LOG_ITEMS);
     assert_eq!(log[0].info, "0");
     assert_eq!(log[MAX_LOG_ITEMS - 1].info, (MAX_LOG_ITEMS - 1).to_string());
+    fs::remove_dir_all(&dir).unwrap();
+  }
+
+  #[test]
+  fn the_log_shortens_long_items_old_ones_too() {
+    let dir = temp_dir("long");
+    // as an old version logged it, with the bytes of a whole file
+    let big = "字".repeat(MAX_LOG_INFO);
+    let value = serde_json::to_value(LogItems {
+      logs: vec![item(&big)],
+    })
+    .unwrap();
+    set_data_in(&dir, LOG_KEY, &value).unwrap();
+    assert!(add_log_in(&dir, vec![item(&"x".repeat(MAX_LOG_INFO * 2))]));
+    let log = get_log_in(&dir);
+    assert_eq!(log.len(), 2);
+    for item in &log {
+      assert!(item.info.len() <= MAX_LOG_INFO + '…'.len_utf8());
+      assert!(item.info.ends_with('…'));
+    }
     fs::remove_dir_all(&dir).unwrap();
   }
 

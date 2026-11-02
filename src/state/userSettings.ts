@@ -110,6 +110,12 @@ export type UserSettings = {
   /** the plugin manager shown, see plugins/PluginManager */
   isPluginsOpen: boolean;
   setIsPluginsOpen: Setter<boolean>;
+  /** the theme edited in its dialog, opened from the settings: an id, 'new', or none; not persisted */
+  themeEditing: string | null;
+  setThemeEditing: Setter<string | null>;
+  /** the dialog of the fonts, opened from the settings; not persisted */
+  isFontsOpen: boolean;
+  setIsFontsOpen: Setter<boolean>;
   setIsAboutOpen: Setter<boolean>;
   isFindOrCreateModalOpen: boolean;
   setIsFindOrCreateModalOpen: Setter<boolean>;
@@ -206,6 +212,10 @@ const userSettingsSlice = (
   setIsAboutOpen: setter(set, "isAboutOpen"),
   isPluginsOpen: false,
   setIsPluginsOpen: setter(set, "isPluginsOpen"),
+  themeEditing: null,
+  setThemeEditing: setter(set, "themeEditing"),
+  isFontsOpen: false,
+  setIsFontsOpen: setter(set, "isFontsOpen"),
   isFindOrCreateModalOpen: false,
   setIsFindOrCreateModalOpen: setter(set, "isFindOrCreateModalOpen"),
   isRTL: false,

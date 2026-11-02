@@ -11,6 +11,8 @@ import {
   isAbsolutePath,
   toWorkspacePath,
 } from "@/workspace/util";
+import { checkFileIsMd } from "@/workspace/process";
+import type { Note } from "@/types/model";
 import { isBookFile } from "@/reader/document";
 import { loadBooks } from "@/reader/library/books";
 import { useIssueStore } from "@/issue/issueStore";
@@ -43,11 +45,19 @@ function pathIn(dir: string, path: unknown): string {
 }
 
 /** The note at the path, if the app knows it */
+/**
+ * A note: a Markdown file the app knows. The files of the tree are in the
+ * notes of the store too (images, PDFs…), not to be read as text: a PDF
+ * read so once logged all its bytes and stalled the app.
+ */
+const isNote = (note: Note | undefined): note is Note =>
+  Boolean(note && !note.is_dir && checkFileIsMd(note.file_path));
+
 function noteAt(params: unknown) {
   const dir = workspace();
   const id = pathIn(dir, asObject(params).path);
   const note = store.getState().notes.get(id);
-  if (!note || note.is_dir)
+  if (!isNote(note))
     throw new Error(`No note at ${String(asObject(params).path)}`);
   return note;
 }
@@ -61,7 +71,7 @@ export function listNotes(params: unknown): NoteInfo[] {
     typeof folder === "string" && folder ? `${pathIn(dir, folder)}/` : "";
   const infos: NoteInfo[] = [];
   for (const note of notes.values()) {
-    if (note.is_dir || (prefix && !note.id.startsWith(prefix))) continue;
+    if (!isNote(note) || (prefix && !note.id.startsWith(prefix))) continue;
     const tags = index.tags(note.id);
     if (typeof tag === "string" && tag && !tags.includes(tag)) continue;
     infos.push({
