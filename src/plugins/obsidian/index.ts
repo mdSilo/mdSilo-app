@@ -15,7 +15,12 @@ import { reloadOpenNote } from "@/workspace/noteReloads";
 import { dispatchView } from "../trusted";
 import type { InstalledPlugin } from "../registry";
 import { pluginUrl } from "../registry";
-import { activeCmView, addCmExtension } from "../cmEditor";
+import {
+  activeCmView,
+  addCmExtension,
+  editorInfoField,
+  editorLivePreviewField,
+} from "../cmEditor";
 import { createEl, installDomHelpers } from "./dom";
 import { CmEditor, Editor, TextEditor } from "./editor";
 
@@ -483,7 +488,11 @@ type Command = {
 type CodeBlockProcessor = (
   source: string,
   el: HTMLElement,
-  ctx: { sourcePath: string; getSectionInfo: () => null; addChild: Callback },
+  ctx: {
+    sourcePath: string;
+    getSectionInfo: () => null;
+    addChild: (child: Component) => void;
+  },
 ) => unknown;
 
 /** What an Obsidian plugin registers, handed to the app by `obsidianActivate` */
@@ -616,6 +625,13 @@ export class Plugin extends Component {
       }),
     );
   }
+  /** suggestions as one types in Obsidian's editor: not in mdSilo's */
+  registerEditorSuggest(_suggest: unknown) {
+    console.warn(`${this.manifest.id}: editor suggestions are not supported`);
+  }
+  /** obsidian:// links: not in mdSilo */
+  registerObsidianProtocolHandler(_action: string, _handler: unknown) {}
+  registerHoverLinkSource(_id: string, _info: unknown) {}
   /** a CodeMirror extension: in the Markdown mode of notes */
   registerEditorExtension(extension: cmState.Extension) {
     this.register(addCmExtension(extension));
@@ -1050,6 +1066,164 @@ export class Notice {
   }
 }
 
+/** What a code block draws, kept until the block goes */
+export class MarkdownRenderChild extends Component {
+  constructor(public containerEl: HTMLElement) {
+    super();
+  }
+}
+
+/** Suggestions in Obsidian's editor, or under an input: never shown in mdSilo */
+export class EditorSuggest<T> extends Component {
+  context: unknown = null;
+  limit = 100;
+  constructor(public app: App) {
+    super();
+  }
+  setInstructions(_instructions: unknown[]) {}
+  close() {}
+  getSuggestions(_context: unknown): T[] | Promise<T[]> {
+    return [];
+  }
+}
+export class AbstractInputSuggest<T> extends EditorSuggest<T> {
+  constructor(
+    app: App,
+    public inputEl?: HTMLElement,
+  ) {
+    super(app);
+  }
+}
+
+type MenuItemFields = { title: string; onClick?: (e: MouseEvent) => unknown };
+
+/** An item of a Menu, as plugins set it */
+class MenuItem {
+  constructor(private fields: MenuItemFields) {}
+  setTitle(title: string | DocumentFragment) {
+    this.fields.title =
+      typeof title === "string" ? title : (title.textContent ?? "");
+    return this;
+  }
+  setIcon(_icon: string | null) {
+    return this;
+  }
+  setSection(_section: string) {
+    return this;
+  }
+  setChecked(_checked: boolean | null) {
+    return this;
+  }
+  setDisabled(_disabled: boolean) {
+    return this;
+  }
+  onClick(fn: (e: MouseEvent) => unknown) {
+    this.fields.onClick = fn;
+    return this;
+  }
+}
+
+/** A menu at a place of the page: a list of items, closed on a click */
+export class Menu extends Component {
+  private items: MenuItemFields[] = [];
+  private el: HTMLElement | null = null;
+  addItem(fn: (item: MenuItem) => unknown) {
+    const fields: MenuItemFields = { title: "" };
+    this.items.push(fields);
+    fn(new MenuItem(fields));
+    return this;
+  }
+  addSeparator() {
+    return this;
+  }
+  showAtMouseEvent(e: MouseEvent) {
+    return this.showAtPosition({ x: e.clientX, y: e.clientY });
+  }
+  showAtPosition({ x, y }: { x: number; y: number }) {
+    this.hide();
+    const el = createEl("ul", {
+      cls: "menu dropdown-content z-50 rounded-box bg-base-100 p-1 shadow",
+      parent: document.body,
+    });
+    el.style.cssText = `position:fixed;left:${x}px;top:${y}px`;
+    for (const item of this.items) {
+      const button = createEl("button", { text: item.title });
+      button.type = "button";
+      button.addEventListener("click", (e) => {
+        this.hide();
+        void item.onClick?.(e);
+      });
+      createEl("li", { parent: el }).append(button);
+    }
+    const away = (e: MouseEvent) => {
+      if (!el.contains(e.target as Node)) this.hide();
+    };
+    setTimeout(() => document.addEventListener("click", away), 0);
+    this.register(() => document.removeEventListener("click", away));
+    this.el = el;
+    this.load();
+    return this;
+  }
+  hide() {
+    this.el?.remove();
+    this.el = null;
+    this.unload();
+    return this;
+  }
+}
+
+export const Keymap = {
+  isModEvent: (e?: MouseEvent | KeyboardEvent | null) =>
+    Boolean(e && (e.ctrlKey || e.metaKey)),
+  isModifier: (e: MouseEvent | KeyboardEvent, key: string) =>
+    key === "Mod"
+      ? e.ctrlKey || e.metaKey
+      : Boolean((e as never)[`${key.toLowerCase()}Key`]),
+};
+
+/** The tags of front matter, as `#tag` */
+export function parseFrontMatterTags(
+  frontmatter: Record<string, unknown> | null | undefined,
+): string[] | null {
+  const raw = frontmatter?.tags ?? frontmatter?.tag;
+  if (raw === undefined || raw === null) return null;
+  const list = Array.isArray(raw) ? raw : String(raw).split(/[,\s]+/);
+  return list
+    .map((t) => String(t).trim().replace(/^#/, ""))
+    .filter(Boolean)
+    .map((t) => `#${t}`);
+}
+
+/** HTML made safe, as nodes */
+export function sanitizeHTMLToDom(html: string): DocumentFragment {
+  return document.createRange().createContextualFragment(sanitizeHtml(html));
+}
+
+export const getIconIds = (): string[] => [];
+
+/** A search of all the words of the query, in any case */
+export function prepareSimpleSearch(query: string) {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  return (text: string) => {
+    const lower = text.toLowerCase();
+    const matches: [number, number][] = [];
+    for (const word of words) {
+      const at = lower.indexOf(word);
+      if (at < 0) return null;
+      matches.push([at, at + word.length]);
+    }
+    return { score: -matches.length, matches };
+  };
+}
+
+export function renderMatches(
+  el: HTMLElement,
+  text: string,
+  _matches: [number, number][] | null,
+) {
+  el.append(text);
+}
+
 /** A dialog over the app */
 export class Modal {
   containerEl: HTMLElement;
@@ -1185,7 +1359,19 @@ export const request = async (r: Parameters<typeof requestUrl>[0]) =>
 
 /** The `obsidian` module the plugins require */
 const obsidianModule = {
+  AbstractInputSuggest,
   App,
+  EditorSuggest,
+  Keymap,
+  MarkdownRenderChild,
+  Menu,
+  editorInfoField,
+  editorLivePreviewField,
+  getIconIds,
+  parseFrontMatterTags,
+  prepareSimpleSearch,
+  renderMatches,
+  sanitizeHTMLToDom,
   ButtonComponent,
   Component,
   DropdownComponent,
@@ -1223,6 +1409,35 @@ const obsidianModule = {
   requestUrl,
   setIcon,
 };
+
+/** How long a canvas may animate before it is taken as an image */
+const CANVAS_SETTLE_MS = 1100;
+
+const nextFrame = () =>
+  new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+/**
+ * The HTML of what a code block drew: its canvases (charts) as images,
+ * once drawn, since the HTML is all the app keeps.
+ */
+export async function snapshot(el: HTMLElement): Promise<string> {
+  await nextFrame();
+  if (el.querySelector("canvas")) {
+    await new Promise((resolve) => setTimeout(resolve, CANVAS_SETTLE_MS));
+    for (const canvas of el.querySelectorAll("canvas")) {
+      try {
+        const img = createEl("img");
+        img.src = canvas.toDataURL("image/png");
+        img.width = canvas.clientWidth || canvas.width;
+        img.height = canvas.clientHeight || canvas.height;
+        canvas.replaceWith(img);
+      } catch {
+        // a canvas tainted, or none drawn: left as it is
+      }
+    }
+  }
+  return el.innerHTML;
+}
 
 /** The modules an Obsidian plugin gets from the app, as from Obsidian */
 const SHARED_MODULES: Record<string, unknown> = {
@@ -1296,14 +1511,27 @@ export function obsidianActivate(run: CommonJs, plugin: InstalledPlugin) {
     api.handle("code.render", async ({ lang, code }) => {
       const processor = registry.codeBlocks.get(lang);
       if (!processor) throw new Error(`No code block ${lang}`);
-      const el = createEl("div");
-      const active = app.workspace.getActiveFile();
-      await processor(code, el, {
-        sourcePath: active?.path ?? "",
-        getSectionInfo: () => null,
-        addChild: () => undefined,
-      });
-      return el.innerHTML;
+      // in the page, out of sight, with a width: charts measure where they draw
+      const box = createEl("div", { parent: document.body });
+      box.style.cssText =
+        "position:fixed;left:-10000px;top:0;width:720px;visibility:hidden";
+      const el = createEl("div", { parent: box });
+      const children: Component[] = [];
+      try {
+        const active = app.workspace.getActiveFile();
+        await processor(code, el, {
+          sourcePath: active?.path ?? "",
+          getSectionInfo: () => null,
+          addChild: (child) => {
+            children.push(child);
+            child.load();
+          },
+        });
+        return await snapshot(el);
+      } finally {
+        children.forEach((child) => child.unload());
+        box.remove();
+      }
     });
 
     // its styles, as Obsidian loads them

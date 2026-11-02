@@ -224,8 +224,35 @@ marked "Obsidian (partial)". `main.js` is served as a module (the app runs no `e
   `requestUrl`, `normalizePath`, `debounce`, `moment` (also `window.moment`), `parseYaml`,
   `stringifyYaml`, `Platform`, and the DOM helpers (`createEl`, `createDiv`, `empty`…).
 
+Also: `Menu` (a simple list at the mouse), `Keymap.isModEvent`, `MarkdownRenderChild` (loaded with
+the code block), `parseFrontMatterTags`, `sanitizeHTMLToDom`, `prepareSimpleSearch`, and the editor
+fields `editorInfoField`/`editorLivePreviewField` (null and false). `registerEditorSuggest`,
+`EditorSuggest`, `AbstractInputSuggest` and `registerObsidianProtocolHandler` are accepted but do
+nothing. A code block is drawn in the page out of sight (720 px wide); its canvases (charts) are
+taken as images once drawn (about a second).
+
 Not there: the WYSIWYG editor for editor extensions (it is ProseMirror, not CodeMirror; they run in
 the Markdown mode only), `MarkdownView` internals, its layout of leaves and splits, and its
 internals. So small plugins (code
 block renderers, commands, simple views and settings) run; big ones (Dataview, Excalidraw, Kanban,
 Templater) don't.
+
+### Known plugins
+
+Checked by reading their released `main.js` against this layer (which modules they `require`, which
+of Obsidian's API they use), **not run in the app yet** (2026-11-02):
+
+| Plugin | Version | Expected |
+|---|---|---|
+| Kroki (`obsidian-kroki`) | 1.3.1 | works: diagram code blocks as SVG from kroki.io (`net`) |
+| Charts (`obsidian-charts`) | 3.9.0 | works: `chart` code blocks, drawn as images |
+| Vega (`obsidian-vega`) | 0.1.1 | works: `vega`/`vega-lite` code blocks, drawn as images |
+| Smart Typography (`obsidian-smart-typography`) | 1.0.18 | works in the Markdown mode (an editor extension) |
+| Natural Language Dates (`nldates-obsidian`) | 0.6.4 | partly: its commands; not the `@` suggestions |
+| Better Word Count, Reading Time | 0.10.1, 1.1.2 | load; their status bar items show nowhere |
+| Hider (`obsidian-hider`) | 1.7.1 | loads; hides parts of Obsidian, none of mdSilo |
+| Calendar (`calendar`) | 2.0.0 | unknown: a side view, relies on Obsidian's daily notes |
+| Auto Link Title, Paste URL into selection | 1.5.5, 1.11.4 | no: they need Electron or Node (`path`) |
+| PlantUML (`obsidian-plantuml`) | 1.9.0 | no: needs `@codemirror/search`, `FileSystemAdapter` |
+| Dataview, Admonition, Outliner | 0.5.68, 12.0.11, 4.10.2 | no: post processors, live preview, Obsidian's editor |
+

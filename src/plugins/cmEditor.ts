@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { Extension } from "@codemirror/state";
+import { StateField, type Extension } from "@codemirror/state";
 import { EditorView, ViewPlugin } from "@codemirror/view";
 
 // The CodeMirror of the Markdown mode of notes (writer/md/Markdown.tsx), for
@@ -34,8 +34,21 @@ export const useCmExtensions = () =>
 /** The views of the Markdown mode open, the last opened last */
 const views: EditorView[] = [];
 
+/**
+ * Obsidian's fields of its editor, which its plugins read: the Markdown
+ * mode is never live preview; the file is not told (null).
+ */
+export const editorLivePreviewField = StateField.define<boolean>({
+  create: () => false,
+  update: (value) => value,
+});
+export const editorInfoField = StateField.define<null>({
+  create: () => null,
+  update: (value) => value,
+});
+
 /** Keeps the views of the Markdown mode known while they are open */
-export const cmTracker: Extension = ViewPlugin.define((view) => {
+const tracker: Extension = ViewPlugin.define((view) => {
   views.push(view);
   return {
     destroy: () => {
@@ -44,6 +57,13 @@ export const cmTracker: Extension = ViewPlugin.define((view) => {
     },
   };
 });
+
+/** In the Markdown mode: the tracker, and Obsidian's fields */
+export const cmTracker: Extension = [
+  tracker,
+  editorLivePreviewField,
+  editorInfoField,
+];
 
 /** The view of the Markdown mode open, if one is */
 export const activeCmView = (): EditorView | undefined =>

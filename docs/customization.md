@@ -196,8 +196,11 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 - Trusted mode: `main.js` imported in-process after a warning, listed apart; pages drawn into the app in place of frames; `handle`, `page`, `contribute`, `editor.addExtension` (mdsmirror), `reader.addStyles`, `onUnload`; app CSP `script-src` allows the plugin scheme. Sample `book-indent`.
 - Obsidian layer (`src/plugins/obsidian`): Obsidian manifests run as trusted, `compat: "obsidian"`; `main.js` served as a module by the scheme (`__cjs/`), the `obsidian` module mapped onto ours (see examples/plugins/README.md for what is in and out).
 
+**Plugins — done (branch `customization-2`, M7)**
+- Obsidian: `vault.create`, front matter (`yaml`) in `getFileCache`, `fileManager.processFrontMatter`, `moment`; `registerExtensions` + `FileView`/`TextFileView` as viewers; `editorCallback`/`editorCheckCallback` over an `Editor` (CodeMirror of the Markdown mode, or the note's text); `registerEditorExtension` in the Markdown mode (`@codemirror/*` from the app); `Menu`, `MarkdownRenderChild`, suggestions accepted as no-ops; canvases of code blocks taken as images. Known plugins listed in examples/plugins/README.md, read from their code, not run.
+
 **Plugins — still open**
-- Obsidian: `registerExtensions` (viewers), editor callbacks and extensions, `vault.create`, `moment`, front matter in `getFileCache`; a curated list of known-working plugins.
+- Obsidian plugins tried in the desktop app (the list above is from reading their code; running downloaded plugins was not allowed here).
 - Trusted and Obsidian plugins are tested in jsdom only, not in the desktop app (module import over the plugin scheme, CSP).
 
 **Housekeeping**
