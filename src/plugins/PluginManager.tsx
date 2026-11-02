@@ -4,14 +4,17 @@ import { TbRefresh as IconRefresh, TbTrash as IconTrash } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import { BaseModal } from "@/ui/BaseModal";
 import { isTauri } from "@/workspace/util";
+import { dataRoot } from "@/workspace/layout";
 import { PERMISSION_LABELS, type Permission } from "./manifest";
 import {
   disablePlugin,
   enablePlugin,
   grantedPermissions,
   installPlugin,
+  isChanged,
   isEnabled,
   loadPlugins,
+  movePlugin,
   uninstallPlugin,
   type InstalledPlugin,
 } from "./registry";
@@ -115,7 +118,12 @@ function PluginItem({
   onError: (error: string) => void;
 }) {
   const pluginStates = useStore((state) => state.pluginStates);
+  const initDir = useStore((state) => state.initDir);
+  const layout = useStore((state) => state.layout);
+  const hasWorkspace = Boolean(dataRoot({ initDir, layout }));
+  const [moving, setMoving] = useState(false);
   const enabled = isEnabled(plugin, pluginStates);
+  const changed = isChanged(plugin, pluginStates);
   const granted = grantedPermissions(plugin, pluginStates);
   const { manifest } = plugin;
   const asked = manifest?.permissions ?? [];
@@ -143,13 +151,24 @@ function PluginItem({
     else enablePlugin(plugin, next);
   };
 
+  const inWorkspace = plugin.where === "workspace";
+
   const onUninstall = async () => {
     const ok = await ask(
-      `Uninstall ${name}? Its files are removed from this device.`,
+      inWorkspace
+        ? `Uninstall ${name}? Its files are removed from the workspace, and from the other devices after a sync.`
+        : `Uninstall ${name}? Its files are removed from this device.`,
       { title: "Uninstall Plugin" },
     );
     if (!ok) return;
-    uninstallPlugin(plugin.id).catch((e) => onError(errorText(e)));
+    uninstallPlugin(plugin).catch((e) => onError(errorText(e)));
+  };
+
+  const onSync = (on: boolean) => {
+    setMoving(true);
+    movePlugin(plugin, on ? "workspace" : "device")
+      .catch((e) => onError(errorText(e)))
+      .finally(() => setMoving(false));
   };
 
   const viewers =
@@ -196,6 +215,27 @@ function PluginItem({
       {plugin.error ? (
         <p className="text-xs text-error">{plugin.error}</p>
       ) : null}
+      {changed && !plugin.error ? (
+        <p className="text-xs text-warning">
+          Changed in the workspace since you enabled it; enable it again to run
+          it.
+        </p>
+      ) : null}
+      <label className="flex items-center gap-2 text-xs text-base-content/70">
+        <input
+          type="checkbox"
+          className="checkbox checkbox-xs"
+          checked={inWorkspace}
+          disabled={moving || (!inWorkspace && !hasWorkspace)}
+          onChange={(e) => onSync(e.target.checked)}
+        />
+        Sync with workspace
+        {inWorkspace ? (
+          <span className="text-base-content/50">
+            (other devices get it disabled)
+          </span>
+        ) : null}
+      </label>
       {trusted && !plugin.error ? (
         <p className="text-xs text-warning">
           Trusted plugins run with full access to your files; they can not be

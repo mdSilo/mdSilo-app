@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { store, useStore } from "@/state/store";
 import { isTauri, joinPath } from "@/workspace/util";
 import { getFileExt } from "@/workspace/process";
+import { dataRoot } from "@/workspace/layout";
+import { defineKind, moveTo, workspaceData, type Where } from "@/custom/store";
 import {
   MANIFEST_FILE,
   parseManifest,
@@ -15,14 +17,19 @@ import {
 } from "./manifest";
 
 /**
- * The plugins installed on this device (src-tauri/src/custom_plugins.rs), and
- * which of them are enabled with which permissions. That is kept in the
- * settings of this device only: a plugin that comes with a synced workspace
- * never runs before the user enables it here.
+ * The plugins installed (src-tauri/src/custom_plugins.rs): on this device,
+ * or in the workspace (`.mdsilo/plugins/<id>`, synced); the one of this
+ * device is used when a plugin is in both. Which of them are enabled with
+ * which permissions is kept in the settings of this device only: a plugin
+ * that comes with a synced workspace never runs before the user enables it
+ * here, nor after a sync changed it.
  */
 export type InstalledPlugin = {
   id: string;
   dir: string;
+  where: Where;
+  /** of the files of a plugin of the workspace, '' for one of this device */
+  hash: string;
   /** missing when the manifest can't be read, see `error` */
   manifest?: PluginManifest;
   /** why the plugin can't run */
@@ -33,9 +40,17 @@ export type PluginState = {
   enabled: boolean;
   /** the permissions the user gave, of those the manifest asks for */
   granted: Permission[];
+  /** the files of a plugin of the workspace when it was enabled */
+  hash?: string;
 };
 
-type PluginFolder = { id: string; dir: string; manifest: string };
+type PluginFolder = {
+  id: string;
+  dir: string;
+  manifest: string;
+  where?: Where;
+  hash?: string;
+};
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -43,36 +58,43 @@ export function readPlugin(
   folder: PluginFolder,
   appVersion: string,
 ): InstalledPlugin {
-  const { id, dir } = folder;
-  if (!folder.manifest) return { id, dir, error: `No ${MANIFEST_FILE}` };
+  const plugin = {
+    id: folder.id,
+    dir: folder.dir,
+    where: folder.where ?? "device",
+    hash: folder.hash ?? "",
+  };
+  if (!folder.manifest) return { ...plugin, error: `No ${MANIFEST_FILE}` };
   try {
     const manifest = parseManifest(folder.manifest);
-    if (manifest.id !== id)
+    if (manifest.id !== plugin.id)
       return {
-        id,
-        dir,
+        ...plugin,
         manifest,
-        error: `Installed as ${id}, but its id is ${manifest.id}`,
+        error: `Installed as ${plugin.id}, but its id is ${manifest.id}`,
       };
     if (appVersion && !supportsApp(manifest, appVersion)) {
       return {
-        id,
-        dir,
+        ...plugin,
         manifest,
         error: `Needs mdSilo ${manifest.minAppVersion} or later`,
       };
     }
-    return { id, dir, manifest };
+    return { ...plugin, manifest };
   } catch (e) {
-    return { id, dir, error: errorText(e) };
+    return { ...plugin, error: errorText(e) };
   }
 }
 
 const appVersion = () => getVersion().catch(() => "");
 
-/** Reads the plugins installed, into the store. */
-export async function loadPlugins(): Promise<InstalledPlugin[]> {
-  const folders = await invoke<PluginFolder[]>("list_plugins");
+/** Reads the plugins installed, of this device and of the workspace, into the store. */
+export async function loadPlugins(
+  workspace = dataRoot(),
+): Promise<InstalledPlugin[]> {
+  const folders = await invoke<PluginFolder[]>("list_plugins", {
+    workspace: workspace ?? null,
+  });
   const version = await appVersion();
   const plugins = folders.map((folder) => readPlugin(folder, version));
   store.getState().setInstalledPlugins(plugins);
@@ -100,10 +122,55 @@ export async function installPlugin(srcDir: string): Promise<PluginManifest> {
   return manifest;
 }
 
-export async function uninstallPlugin(id: string) {
-  await invoke("remove_plugin", { id });
+const workspaceArg = (where: Where) =>
+  where === "workspace" ? workspaceData() : null;
+
+/** Plugins of each place; their folders are their list, nothing else to save. */
+export const plugins = defineKind<InstalledPlugin>({
+  paths: ["plugins"],
+  list: (where) =>
+    store.getState().installedPlugins.filter((p) => p.where === where),
+  copy: async (plugin, to) => {
+    const dir = await invoke<string>("install_plugin", {
+      src: plugin.dir,
+      id: plugin.id,
+      workspace: workspaceArg(to),
+    });
+    return { ...plugin, dir, where: to };
+  },
+  remove: (plugin, from) =>
+    invoke("remove_plugin", { id: plugin.id, workspace: workspaceArg(from) }),
+  load: async () => {
+    await loadPlugins();
+  },
+});
+
+/**
+ * Keeps a plugin on this device or in the workspace. Enabled, it stays
+ * enabled here: what is in the workspace now is what the user enabled.
+ */
+export async function movePlugin(plugin: InstalledPlugin, to: Where) {
+  try {
+    await moveTo(plugins, plugin, to);
+  } finally {
+    await loadPlugins();
+  }
+  const state = store.getState().pluginStates[plugin.id];
+  const moved = store
+    .getState()
+    .installedPlugins.find((p) => p.id === plugin.id && p.where === to);
+  if (state?.enabled && moved)
+    setState(plugin.id, { ...state, hash: moved.hash });
+}
+
+/** Removes the plugin from where it is: this device, or the workspace (for all devices). */
+export async function uninstallPlugin(plugin: InstalledPlugin) {
+  await invoke("remove_plugin", {
+    id: plugin.id,
+    workspace: workspaceArg(plugin.where),
+  });
   const { pluginStates, setPluginStates } = store.getState();
-  const { [id]: _removed, ...rest } = pluginStates;
+  const { [plugin.id]: _removed, ...rest } = pluginStates;
   setPluginStates(rest);
   await loadPlugins();
 }
@@ -124,6 +191,7 @@ export function enablePlugin(
   setState(plugin.id, {
     enabled: true,
     granted: granted.filter((p) => asked.includes(p)),
+    ...(plugin.where === "workspace" ? { hash: plugin.hash } : {}),
   });
 }
 
@@ -141,10 +209,21 @@ export function grantedPermissions(
   return (states[plugin.id]?.granted ?? []).filter((p) => asked.includes(p));
 }
 
+/** A plugin of the workspace enabled here, then changed (by a sync): to be enabled again. */
+export const isChanged = (
+  plugin: InstalledPlugin,
+  states = store.getState().pluginStates,
+) =>
+  plugin.where === "workspace" &&
+  Boolean(states[plugin.id]?.enabled) &&
+  states[plugin.id]?.hash !== plugin.hash;
+
 export const isEnabled = (
   plugin: InstalledPlugin,
   states = store.getState().pluginStates,
-) => Boolean(plugin.manifest && !plugin.error && states[plugin.id]?.enabled);
+) =>
+  Boolean(plugin.manifest && !plugin.error && states[plugin.id]?.enabled) &&
+  !isChanged(plugin, states);
 
 /** The plugins that run: installed, without error, enabled on this device. */
 export const enabledPlugins = (
@@ -199,15 +278,19 @@ export const netPlugins = (
     .filter((plugin) => grantedPermissions(plugin, states).includes("net"))
     .map((plugin) => plugin.id);
 
-/** Reads the plugins installed on startup (desktop only, for now). */
+/** Reads the plugins installed on startup and when the workspace changes (desktop only, for now). */
 export function usePlugins() {
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
+  const initDir = useStore((state) => state.initDir);
+  const layout = useStore((state) => state.layout);
 
   useEffect(() => {
     if (isTauri)
-      loadPlugins().catch((e) => console.error("Error on loading plugins:", e));
-  }, []);
+      loadPlugins(dataRoot({ initDir, layout })).catch((e) =>
+        console.error("Error on loading plugins:", e),
+      );
+  }, [initDir, layout]);
 
   useEffect(() => {
     if (!isTauri) return;

@@ -6,6 +6,8 @@ import { enablePlugin, type InstalledPlugin } from "./registry";
 const plugin: InstalledPlugin = {
   id: "csv",
   dir: "/data/csv",
+  where: "device",
+  hash: "",
   manifest: parseManifest({
     id: "csv",
     name: "CSV",

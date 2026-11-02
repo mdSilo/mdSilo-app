@@ -4,7 +4,7 @@
 //! plugin loads comes from its own folder, and it reaches the network only
 //! when the user granted `net` (see `set_plugin_net`).
 
-use crate::custom_plugins::{is_valid_id, plugins_dir};
+use crate::custom_plugins::{base_of_plugin, is_valid_id};
 use percent_encoding::percent_decode_str;
 use std::collections::HashSet;
 use std::fs;
@@ -142,12 +142,15 @@ pub fn serve(base: &Path, uri_path: &str, net: bool) -> Response<Vec<u8>> {
 }
 
 pub fn handle(request: &Request<Vec<u8>>) -> Response<Vec<u8>> {
-  let Ok(base) = plugins_dir() else {
+  let uri_path = request.uri().path();
+  let Some((id, _)) = split_path(uri_path) else {
+    return status(StatusCode::BAD_REQUEST);
+  };
+  // on this device or in the workspace
+  let Some(base) = base_of_plugin(&id) else {
     return status(StatusCode::NOT_FOUND);
   };
-  let uri_path = request.uri().path();
-  let net = split_path(uri_path).is_some_and(|(id, _)| has_net(&id));
-  serve(&base, uri_path, net)
+  serve(&base, uri_path, has_net(&id))
 }
 
 #[cfg(test)]

@@ -7,6 +7,8 @@ import { disablePlugin, enablePlugin, type InstalledPlugin } from "./registry";
 const drawer = (id: string, codeBlocks: string[]): InstalledPlugin => ({
   id,
   dir: `/data/${id}`,
+  where: "device",
+  hash: "",
   manifest: parseManifest({
     id,
     name: id.toUpperCase(),

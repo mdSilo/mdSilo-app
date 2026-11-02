@@ -1,6 +1,6 @@
 import { store } from "@/state/store";
 import { themeVarsOf } from "@/custom/themes";
-import { fontFamilyOf } from "@/custom/fonts";
+import { allFonts, fontFamilyOf } from "@/custom/fonts";
 import type { Permission } from "./manifest";
 import { grantedPermissions, type InstalledPlugin } from "./registry";
 
@@ -39,13 +39,14 @@ export type PluginStyle = {
 };
 
 export function appStyle(): PluginStyle {
-  const { darkMode, font, customFonts } = store.getState();
+  const state = store.getState();
+  const { darkMode, font } = state;
   const theme = document.documentElement.dataset.theme ?? "";
   return {
     theme,
     dark: darkMode,
     vars: themeVarsOf(theme),
-    font: fontFamilyOf(font, customFonts),
+    font: fontFamilyOf(font, allFonts(state)),
   };
 }
 

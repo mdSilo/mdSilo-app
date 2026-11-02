@@ -180,7 +180,7 @@ describe("persistence", () => {
     expect(saved.state.theme).toBe("nord");
     expect(saved.state).not.toHaveProperty("currentNoteId");
     expect(saved.state).not.toHaveProperty("notes");
-    expect(saved.version).toBe(4);
+    expect(saved.version).toBe(5);
   });
 
   test("writes storage only when persisted settings change", async () => {
@@ -261,6 +261,21 @@ describe("persistence", () => {
     );
     await persist.rehydrate();
     expect(store.getState().readerSettings).toEqual({ fontSize: 20 });
+  });
+
+  test("keeps the fonts of version 4 on this device", async () => {
+    const persist = (
+      store as unknown as { persist: { rehydrate: () => Promise<void> } }
+    ).persist;
+    const customFonts = [{ id: "a", family: "A", fileName: "a.ttf" }];
+    localStorage.setItem(
+      "mdsilo-storage",
+      JSON.stringify(JSON.stringify({ state: { customFonts }, version: 4 })),
+    );
+    await persist.rehydrate();
+    expect(store.getState().customFonts).toEqual([
+      { ...customFonts[0], where: "device" },
+    ]);
   });
 
   test("finishes hydrating on first launch w/o saved settings", async () => {

@@ -86,8 +86,10 @@ export type UserSettings = {
   setDarkMode: Setter<boolean>;
   font: string; // a font id, see custom/fonts
   setFont: Setter<string>;
-  customFonts: CustomFont[]; // the fonts added by the user, see custom/fonts
+  customFonts: CustomFont[]; // the fonts added by the user, kept on this device, see custom/fonts
   setCustomFonts: Setter<CustomFont[]>;
+  workspaceFonts: CustomFont[]; // fonts of the workspace, not persisted
+  setWorkspaceFonts: Setter<CustomFont[]>;
   /** the plugins installed on this device, read on startup, not persisted */
   installedPlugins: InstalledPlugin[];
   setInstalledPlugins: Setter<InstalledPlugin[]>;
@@ -184,6 +186,8 @@ const userSettingsSlice = (
   setFont: setter(set, "font"),
   customFonts: [],
   setCustomFonts: setter(set, "customFonts"),
+  workspaceFonts: [],
+  setWorkspaceFonts: setter(set, "workspaceFonts"),
   installedPlugins: [],
   setInstalledPlugins: setter(set, "installedPlugins"),
   pluginStates: {},

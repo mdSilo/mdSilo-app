@@ -2,8 +2,10 @@
 
 A plugin is a folder with a `manifest.json` and a page (`index.html` by default). Install it from the
 Plugins button of the side menu → Manage Plugins → Install from Folder, then enable it and choose
-what it may do. Plugins are
-kept on each device: a plugin is never enabled by a sync.
+what it may do. A plugin is kept on this device, or, with *Sync with workspace*, in
+`.mdsilo/plugins/<id>/` and synced. Whether it is enabled, and with which permissions, stays on
+each device: a plugin is never enabled by a sync, and a plugin of the workspace changed by a sync
+stops until it is enabled again.
 
 Two samples here:
 

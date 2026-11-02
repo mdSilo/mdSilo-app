@@ -27,6 +27,7 @@ A sync saves everything you changed as a commit, takes what the other devices se
 
 - **What is synced**: your notes, the annotations and reading progress of books, the vocabulary, issues, projects and feed subscriptions.
 - **What is not**: `.mdsilo/local/` (the search index and caches of this device), and **book files**, unless you turn on sync for a book in the Library (see [[5 Reader|Reader]]). Turning it off later keeps the book on your other devices.
+- **Themes, fonts and plugins**: each one you check *Sync with workspace* for (in Settings, and in Manage Plugins) is kept in `.mdsilo/` and synced; the others stay on the device. Themes are synced by default. A plugin that comes in by a sync is **not enabled** on the other device until you enable it there, and a plugin you enabled stops if a sync changes its files, until you enable it again.
 - **A new device**: open an empty folder, set up the same repository, and **Sync now**. Everything comes in. If the repository's main branch is `master` (or any other name), the new workspace follows it.
 
 ### Automatic sync

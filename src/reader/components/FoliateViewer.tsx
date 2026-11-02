@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { openUrl } from "@/workspace/open";
-import { useFontsVersion } from "@/custom/fonts";
+import { allFonts, useFonts, useFontsVersion } from "@/custom/fonts";
 import { store, useStore } from "@/state/store";
 import {
   DEFAULT_READER_SETTINGS,
@@ -309,7 +309,7 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const darkMode = useStore((state) => state.darkMode);
   const theme = useStore((state) => state.theme);
-  const customFonts = useStore((state) => state.customFonts);
+  const customFonts = useFonts();
   const fontsVersion = useFontsVersion();
   const notes = bookStore((state) => state.notes);
   const fixed = book.rendition?.layout === "pre-paginated";
@@ -892,7 +892,7 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
             noteSettings,
             themeColors(store.getState().darkMode, settings.pageTheme),
             "auto",
-            store.getState().customFonts,
+            allFonts(store.getState()),
           ),
         );
       });
@@ -938,7 +938,7 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
           current,
           themeColors(store.getState().darkMode, current.pageTheme),
           textMode,
-          store.getState().customFonts,
+          allFonts(store.getState()),
         ),
       );
       setView(view, pane);

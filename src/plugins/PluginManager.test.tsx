@@ -29,6 +29,8 @@ const installed = (
 ): InstalledPlugin => ({
   id: manifest.id as string,
   dir: `/data/${manifest.id}`,
+  where: "device",
+  hash: "",
   manifest: parseManifest(manifest),
   error,
 });
@@ -43,6 +45,60 @@ beforeEach(() => {
 });
 
 describe("PluginManager", () => {
+  it("keeps a plugin in the workspace when synced", async () => {
+    store.setState({ initDir: "/ws", layout: "workspace" });
+    mockInvoke(invoke, {
+      install_plugin: () => "/ws/.mdsilo/plugins/csv",
+      remove_plugin: () => undefined,
+      list_plugins: () => [
+        {
+          id: "csv",
+          dir: "/ws/.mdsilo/plugins/csv",
+          manifest: JSON.stringify(csvManifest),
+          where: "workspace",
+          hash: "h1",
+        },
+      ],
+    });
+    render(<PluginManager />);
+    await userEvent.click(item("csv").getByLabelText(/Sync with workspace/));
+    await waitFor(() =>
+      expect(item("csv").getByLabelText(/Sync with workspace/)).toBeChecked(),
+    );
+    expect(invoke).toHaveBeenCalledWith("install_plugin", {
+      src: "/data/csv",
+      id: "csv",
+      workspace: "/ws/.mdsilo",
+    });
+    expect(invoke).toHaveBeenCalledWith("remove_plugin", {
+      id: "csv",
+      workspace: null,
+    });
+    expect(
+      item("csv").getByText("(other devices get it disabled)"),
+    ).toBeInTheDocument();
+  });
+
+  it("can not sync without a workspace", () => {
+    store.setState({ initDir: "" });
+    render(<PluginManager />);
+    expect(item("csv").getByLabelText(/Sync with workspace/)).toBeDisabled();
+  });
+
+  it("says when a sync changed a plugin enabled", () => {
+    store.setState({
+      installedPlugins: [
+        { ...installed(csvManifest), where: "workspace", hash: "h2" },
+      ],
+      pluginStates: { csv: { enabled: true, granted: [], hash: "h1" } },
+    });
+    render(<PluginManager />);
+    expect(
+      item("csv").getByText(/Changed in the workspace since you enabled it/),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Enable CSV Viewer")).not.toBeChecked();
+  });
+
   it("lists the plugins, what they open", () => {
     render(<PluginManager />);
     expect(item("csv").getByText("CSV Viewer")).toBeInTheDocument();
@@ -153,6 +209,8 @@ describe("PluginManager", () => {
         {
           id: "clock",
           dir: "/data/clock",
+          where: "device",
+          hash: "",
           manifest: JSON.stringify({
             id: "clock",
             name: "Clock",
@@ -183,7 +241,10 @@ describe("PluginManager", () => {
     vi.mocked(ask).mockResolvedValueOnce(true);
     await userEvent.click(screen.getByLabelText("Uninstall CSV Viewer"));
     await waitFor(() => expect(screen.queryByText("CSV Viewer")).toBeNull());
-    expect(invoke).toHaveBeenCalledWith("remove_plugin", { id: "csv" });
+    expect(invoke).toHaveBeenCalledWith("remove_plugin", {
+      id: "csv",
+      workspace: null,
+    });
     expect(store.getState().pluginStates).toEqual({});
   });
 

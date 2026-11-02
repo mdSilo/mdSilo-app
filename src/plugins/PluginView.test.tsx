@@ -16,6 +16,8 @@ vi.mock("@/workspace/util", async (importOriginal) => ({
 const stats: InstalledPlugin = {
   id: "stats",
   dir: "/data/stats",
+  where: "device",
+  hash: "",
   manifest: parseManifest({
     id: "stats",
     name: "Stats",

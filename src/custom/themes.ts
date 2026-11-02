@@ -1,9 +1,16 @@
-import { invoke } from "@tauri-apps/api/core";
 import { useEffect } from "react";
 import { store, useStore } from "@/state/store";
-import { joinPath } from "@/workspace/util";
 import { dataRoot } from "@/workspace/layout";
 import type { ThemeInfo } from "@/lib/themes";
+import {
+  defineKind,
+  drop,
+  keep,
+  merged,
+  readWorkspaceList,
+  writeWorkspaceList,
+  type Where,
+} from "./store";
 
 /**
  * Themes made by the user: the variables of a daisyUI theme, applied as
@@ -16,7 +23,7 @@ export type CustomTheme = {
   dark: boolean;
   /** `--color-base-100` ... `--radius-box`, values as CSS */
   vars: Record<string, string>;
-  where: "workspace" | "device";
+  where: Where;
 };
 
 export const THEME_FILE = "themes.json";
@@ -139,52 +146,31 @@ export function toHex(color: string): string {
   }
 }
 
-const readThemes = async (path: string): Promise<CustomTheme[]> => {
-  try {
-    const text = await invoke<string>("read_file", { filePath: path });
-    const themes = JSON.parse(text) as CustomTheme[];
-    return Array.isArray(themes)
-      ? themes.map((t) => ({ ...t, where: "workspace" }))
-      : [];
-  } catch {
-    return [];
-  }
-};
-
-async function writeWorkspaceThemes(themes: CustomTheme[]) {
-  const data = dataRoot();
-  if (!data) throw new Error("No workspace to keep the theme in");
-  const text = `${JSON.stringify(
-    themes.map(({ where: _, ...t }) => t),
-    null,
-    2,
-  )}\n`;
-  await invoke("write_file", { filePath: joinPath(data, THEME_FILE), text });
-  store.getState().setWorkspaceThemes(themes);
-}
+/** Themes of the workspace win over those of this device with the same id. */
+export const themes = defineKind<CustomTheme>({
+  paths: [THEME_FILE],
+  list: (where) =>
+    where === "workspace"
+      ? store.getState().workspaceThemes
+      : store.getState().customThemes,
+  save: async (where, items) => {
+    if (where === "workspace") {
+      await writeWorkspaceList(THEME_FILE, items);
+      store.getState().setWorkspaceThemes(items);
+    } else store.getState().setCustomThemes(items);
+  },
+  load: async () =>
+    store
+      .getState()
+      .setWorkspaceThemes(await readWorkspaceList<CustomTheme>(THEME_FILE)),
+});
 
 /** Add or update a theme, where it is to be kept (moved there if it was elsewhere). */
-export async function saveTheme(theme: CustomTheme) {
-  const { customThemes, workspaceThemes, setCustomThemes } = store.getState();
-  const others = <T extends CustomTheme>(list: T[]) =>
-    list.filter((t) => t.id !== theme.id);
-  if (theme.where === "workspace") {
-    await writeWorkspaceThemes([...others(workspaceThemes), theme]);
-    if (customThemes.some((t) => t.id === theme.id))
-      setCustomThemes(others(customThemes));
-  } else {
-    setCustomThemes([...others(customThemes), theme]);
-    if (workspaceThemes.some((t) => t.id === theme.id))
-      await writeWorkspaceThemes(others(workspaceThemes));
-  }
-}
+export const saveTheme = (theme: CustomTheme) => keep(themes, theme);
 
 export async function deleteTheme(id: string) {
-  const { customThemes, workspaceThemes, setCustomThemes, theme, setTheme } =
-    store.getState();
-  setCustomThemes(customThemes.filter((t) => t.id !== id));
-  if (workspaceThemes.some((t) => t.id === id))
-    await writeWorkspaceThemes(workspaceThemes.filter((t) => t.id !== id));
+  await drop(themes, id);
+  const { theme, setTheme } = store.getState();
   if (theme === `user-${id}`) setTheme("system");
 }
 
@@ -192,13 +178,7 @@ export async function deleteTheme(id: string) {
 export const allCustomThemes = (state: {
   customThemes: CustomTheme[];
   workspaceThemes: CustomTheme[];
-}) => {
-  const ids = new Set(state.workspaceThemes.map((t) => t.id));
-  return [
-    ...state.workspaceThemes,
-    ...state.customThemes.filter((t) => !ids.has(t.id)),
-  ];
-};
+}) => merged(state.customThemes, state.workspaceThemes, "workspace");
 
 const STYLE_ID = "mdsilo-custom-themes";
 
@@ -227,8 +207,8 @@ export function useCustomThemes() {
       return;
     }
     let live = true;
-    void readThemes(joinPath(data, THEME_FILE)).then((themes) => {
-      if (live) store.getState().setWorkspaceThemes(themes);
+    void readWorkspaceList<CustomTheme>(THEME_FILE, data).then((items) => {
+      if (live) store.getState().setWorkspaceThemes(items);
     });
     return () => {
       live = false;

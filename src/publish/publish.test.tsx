@@ -328,6 +328,8 @@ describe("the diagrams drawn", () => {
     const plugin = {
       id: "uml",
       dir: "/data/uml",
+      where: "device" as const,
+      hash: "",
       manifest: parseManifest({
         id: "uml",
         name: "UML",

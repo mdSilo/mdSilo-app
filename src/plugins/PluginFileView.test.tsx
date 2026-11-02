@@ -17,6 +17,8 @@ import PluginFileView, { fileMethods } from "./PluginFileView";
 const plugin = (id: string, extensions: string[]): InstalledPlugin => ({
   id,
   dir: `/data/${id}`,
+  where: "device",
+  hash: "",
   manifest: parseManifest({
     id,
     name: id.toUpperCase(),

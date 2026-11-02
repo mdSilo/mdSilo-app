@@ -147,32 +147,24 @@ Here is everything not done, from the plan in `docs/customization.md` and the ro
 - Importing a font, the theme editor, and the plugin pieces: the `mdsplugin://` scheme and its CSP, the sandboxed iframe, the hidden background frames, and all four samples (csv-viewer, tag-index, bars, text-stats).
 - Checking every built-in theme in a browser, with screenshots of the editor, CodeMirror, Graph and the reader's `auto` page.
 
-**Shared storage**
-- A shared `src/custom/store.ts` with `moveTo(item, 'device' | 'workspace')`.
-
-No, we haven't built it. There is no `src/custom/store.ts`, and the "move between device and workspace" idea is only partly there.
-
-- **Themes:** done, but inside [themes.ts](src/custom/themes.ts) itself. Each theme has `where: 'workspace' | 'device'`. They are saved to `.mdsilo/themes.json` or to the device settings, and the Sync with workspace toggle moves a theme between the two. The workspace copy wins if both exist.
-- **Fonts:** device only. The files are in IndexedDB and the list is in the device settings. There is no Sync with workspace toggle and no `.mdsilo/fonts/`. I noted this as not done in the C1 roadmap entry.
-- **Plugins:** device only (`<data>/mdsilo/custom/plugins/`). There is no `.mdsilo/plugins/` and no toggle. Enabled state and granted permissions are meant to stay on the device anyway. I listed this as not done in the C3 entry.
-
-So each kind has its own code (or none), and no shared module ties them together. A shared `moveTo(item, 'device' | 'workspace')` would mainly add fonts and plugins to the workspace. Themes would then use it instead of their own logic.
+**Shared storage** — done (branch `customization-2`, M1)
+- `src/custom/store.ts`: a `Kind` per kind of item (themes, fonts, plugins) says how its items are listed, saved, copied and removed in each place; `keep`, `moveTo(kind, item, 'device' | 'workspace')`, `drop` and `merged` are shared. Themes and fonts: workspace wins; plugins: device wins (merged in Rust, which also serves each plugin from the folder it was listed in).
+- Fonts: `.mdsilo/fonts.json` + `.mdsilo/fonts/<file>`, a per-font "Sync with workspace" checkbox in Settings → Fonts. File names from the synced list are reduced to plain names.
+- Plugins: `.mdsilo/plugins/<id>/`, a "Sync with workspace" checkbox in Manage Plugins. A synced plugin is never enabled by the sync; a workspace plugin carries a hash of its files, saved when enabled on this device: when a sync changes the files, it stops until enabled again.
+- A git sync that changes `themes.json`, `fonts.json`, `fonts/` or `plugins/` reloads them (themes used to be read only on opening the workspace).
 
 **C1 Fonts**
 - Listing installed system fonts from Rust, using `font-kit` (today you type the name).
 - A separate font setting for code in the editor.
 - A fallback font for CJK text in the reader.
-- Sync with workspace: `.mdsilo/fonts/` and `fonts.json`, plus the toggle.
 - The web build: a manual check, and a free-text family name.
 
 **C2 Themes**
 - A contrast warning for content-on-color pairs.
 - Sliders for radius and border (the values are kept, there's no UI).
-- Re-reading `.mdsilo/themes.json` when git sync changes it. Today it is read only when the workspace opens.
 
 **C3 Plugin core**
 - Install from a `.zip`.
-- Sync with workspace: `.mdsilo/plugins/`, plus the toggle. A synced plugin must stay disabled until you enable it on each device.
 - Reading binary files in file viewers (text only now).
 - "Open with…" when several plugins match an extension (the first one wins now).
 - Dev mode that reloads a plugin when its files change.

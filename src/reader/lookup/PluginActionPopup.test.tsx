@@ -13,6 +13,8 @@ vi.mock("@/plugins/background", () => ({ askPlugin: vi.fn() }));
 const plugin: InstalledPlugin = {
   id: "ai",
   dir: "/data/ai",
+  where: "device",
+  hash: "",
   manifest: parseManifest({
     id: "ai",
     name: "AI",

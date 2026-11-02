@@ -1,5 +1,4 @@
-import { useStore } from "@/state/store";
-import { BUNDLED_FONTS, GENERIC_FONTS } from "@/custom/fonts";
+import { BUNDLED_FONTS, GENERIC_FONTS, useFonts } from "@/custom/fonts";
 import { Select } from "./ui";
 
 type Props = {
@@ -19,7 +18,7 @@ export default function FontSelect({
   onChange,
   defaultOption,
 }: Props) {
-  const customFonts = useStore((state) => state.customFonts);
+  const customFonts = useFonts();
   return (
     <Select
       label={label}

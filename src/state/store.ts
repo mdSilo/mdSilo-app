@@ -340,11 +340,12 @@ export const store = createStore<Store>()(
     })),
     {
       name: "mdsilo-storage",
-      version: 4,
+      version: 5,
       storage,
       // v1 had a dark mode switch only: keep the mode as the mdSilo theme
       // v2 had a switch to open the previous folder: keep it as openOnStartup
       // v3 hid the contents of the reader by default: shown now, as the default
+      // v4 kept fonts on this device only: they say where they are now
       migrate: (persisted, version) => {
         const state = (persisted ?? {}) as Partial<PersistedState> & {
           isOpenPreOn?: boolean;
@@ -369,6 +370,12 @@ export const store = createStore<Store>()(
             state.readerSettings;
           state.readerSettings =
             readerSettings as PersistedState["readerSettings"];
+        }
+        if (version < 5 && Array.isArray(state.customFonts)) {
+          state.customFonts = state.customFonts.map((f) => ({
+            ...f,
+            where: "device",
+          }));
         }
         return state as PersistedState;
       },

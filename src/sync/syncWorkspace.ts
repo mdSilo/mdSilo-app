@@ -7,6 +7,7 @@ import { openFilePaths } from "@/workspace/open";
 import { joinPath } from "@/workspace/util";
 import { DATA_DIR } from "@/workspace/layout";
 import { reloadOpenNote } from "@/workspace/noteReloads";
+import { reloadPulled } from "@/custom/store";
 import { syncRun, type SyncReport } from "./api";
 
 type SyncState = {
@@ -71,6 +72,8 @@ export async function applyPulled(ws: string, pulled: string[]) {
     const { syncFeeds } = await import("@/feed/feedSync");
     await syncFeeds();
   }
+  // themes, fonts, plugins of the workspace
+  await reloadPulled(pulled);
 
   const notes = pulled
     .filter((p) => p.toLowerCase().endsWith(".md") && !p.startsWith("."))
