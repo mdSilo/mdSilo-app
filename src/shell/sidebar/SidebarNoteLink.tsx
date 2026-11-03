@@ -8,7 +8,7 @@ import {
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { TbCaretRight, TbMarkdown, TbNote, TbPhoto } from "react-icons/tb";
 import { NoteTreeItem, store, useStore } from "@/state/store";
-import { isMobile } from "@/lib/helper";
+import { isMobileWidth } from "@/lib/hooks/useIsMobile";
 import { imageExtensions } from "@/lib/file-extensions";
 import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
 import { Tooltip } from "@/ui/ui";
@@ -129,7 +129,7 @@ const SidebarNoteLink = (
       } else {
         await onNoteLinkClick(node.id);
       }
-      if (isMobile()) {
+      if (isMobileWidth()) {
         setIsSidebarOpen(false);
       }
     },

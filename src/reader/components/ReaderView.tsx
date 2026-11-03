@@ -36,7 +36,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { openFilePath } from "@/workspace/open";
 import { store, useStore } from "@/state/store";
 import { READER_SIDEBAR_WIDTH } from "@/state/userSettings";
-import { isMobile } from "@/lib/helper";
+import useIsMobile from "@/lib/hooks/useIsMobile";
 import { selectionActionsIn } from "@/plugins/selection";
 import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { annotationsPathOf } from "../annotations/annotations";
@@ -129,8 +129,13 @@ export function Reader({
   );
   const format = useReaderStore((s) => s.format);
   // on mobile the sidebar covers the book: hidden at first, and not kept
-  const [mobile] = useState(() => isMobile(768));
+  const mobile = useIsMobile();
   const [mobileSidebar, setMobileSidebar] = useState(false);
+  // ... and closed once the book goes somewhere: a chapter, a search result
+  const cfiNow = useReaderStore((s) => s.location?.cfi);
+  useEffect(() => {
+    setMobileSidebar(false);
+  }, [cfiNow]);
   const showSidebar = mobile ? mobileSidebar : settings.showSidebar;
   const toggleSidebar = mobile ? setMobileSidebar : setSidebar;
   const sidebarCol = useResizableWidth(
@@ -277,7 +282,7 @@ export function Reader({
     <ErrorBoundary>
       {/* min-h-0: shrinks to the room left by the status bar, no scrollbar around the pages */}
       <div
-        className="flex w-full h-full min-h-0 bg-base-100"
+        className="relative flex w-full h-full min-h-0 bg-base-100"
         data-testid="reader"
       >
         {/* a click outside the menu closes it, also over the book (an iframe).
@@ -289,10 +294,24 @@ export function Reader({
             onClick={closeMenu}
           />
         ) : null}
+        {showSidebar && mobile ? (
+          <div
+            className="absolute inset-0 z-30 bg-base-content/25"
+            data-testid="reader-sidebar-backdrop"
+            onClick={() => toggleSidebar(false)}
+          />
+        ) : null}
         {showSidebar ? (
           <div
-            className="relative flex flex-col border-r shrink-0 border-base-300 bg-base-200/50"
-            style={{ width: sidebarCol.width }}
+            className={
+              mobile
+                ? "absolute inset-y-0 left-0 z-40 flex flex-col border-r shadow-popover border-base-300 bg-base-200"
+                : "relative flex flex-col border-r shrink-0 border-base-300 bg-base-200/50"
+            }
+            style={{
+              width: sidebarCol.width,
+              maxWidth: mobile ? "85vw" : undefined,
+            }}
             data-testid="reader-sidebar"
           >
             {sideTitle ? (
@@ -327,13 +346,15 @@ export function Reader({
                 {activeTab.render()}
               </div>
             </OverlayScroll>
-            <ResizeHandle
-              width={sidebarCol.width}
-              bounds={READER_SIDEBAR_WIDTH}
-              label="Resize contents"
-              onResize={sidebarCol.onResize}
-              onResizeEnd={sidebarCol.onResizeEnd}
-            />
+            {mobile ? null : (
+              <ResizeHandle
+                width={sidebarCol.width}
+                bounds={READER_SIDEBAR_WIDTH}
+                label="Resize contents"
+                onResize={sidebarCol.onResize}
+                onResizeEnd={sidebarCol.onResizeEnd}
+              />
+            )}
           </div>
         ) : null}
 

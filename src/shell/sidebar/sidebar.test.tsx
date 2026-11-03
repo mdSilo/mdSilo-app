@@ -32,6 +32,7 @@ import {
   renderWithView,
 } from "../../testUtils";
 import SideMenu from "../SideMenu";
+import MainView from "../MainView";
 import SidebarItem from "./SidebarItem";
 import SidebarTab from "./SidebarTab";
 import SidebarContent from "./SidebarContent";
@@ -707,8 +708,8 @@ describe("Sidebar", () => {
       value: 500,
     });
     store.getState().setOpenOnStartup("none");
-    const { container } = renderWithView(<Sidebar />);
-    fireEvent.click(container.querySelector(".fixed.inset-0") as Element);
+    renderWithView(<Sidebar />);
+    fireEvent.click(screen.getByTestId("sidebar-backdrop"));
     expect(store.getState().isSidebarOpen).toBe(false);
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
@@ -864,6 +865,57 @@ describe("SidebarNotesTree horizontal scroll", () => {
       treeContentWidth([row("a", 0), row("abcd", 0)], measure) -
         treeContentWidth([row("a", 0)], measure),
     ).toBe(3);
+  });
+});
+
+describe("on a phone", () => {
+  const setWidth = (value: number) =>
+    Object.defineProperty(window, "innerWidth", { configurable: true, value });
+  afterEach(() => setWidth(1024));
+
+  test("the menu is a row on top, its buttons scroll sideways", () => {
+    setWidth(390);
+    renderWithView(withContainer(<SideMenu />));
+    const btns = document.getElementById("side-menu-btns") as HTMLElement;
+    expect(btns.className).toContain("overflow-x-auto");
+    expect(btns.className).toContain("flex-row");
+    // back to a desktop window: a column on the side
+    setWidth(1024);
+    fireEvent(window, new Event("resize"));
+    expect(btns.className).toContain("flex-col");
+  });
+
+  test("the sidebar closes once a view is opened", async () => {
+    setWidth(390);
+    store.getState().setCurrentDir("/n");
+    store.getState().setIsSidebarOpen(true);
+    renderWithView(
+      withContainer(
+        <>
+          <SideMenu />
+          <MainView />
+        </>,
+      ),
+    );
+    await waitFor(() => expect(store.getState().isSidebarOpen).toBe(false));
+    store.getState().setIsSidebarOpen(true);
+    await userEvent.click(screen.getByRole("button", { name: "Issues" }));
+    await waitFor(() => expect(store.getState().isSidebarOpen).toBe(false));
+  });
+
+  test("not on a desktop", async () => {
+    store.getState().setCurrentDir("/n");
+    store.getState().setIsSidebarOpen(true);
+    renderWithView(
+      withContainer(
+        <>
+          <SideMenu />
+          <MainView />
+        </>,
+      ),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Issues" }));
+    expect(store.getState().isSidebarOpen).toBe(true);
   });
 });
 

@@ -200,6 +200,45 @@
   }
 }
 
+/*
+  The app fills the visible area: 100dvh leaves out the address bar of a
+  mobile browser (100vh does not; iOS < 15.4 has no dvh). The safe-area
+  padding keeps it off the notch and the home indicator, when the page is
+  laid out under them (viewport-fit=cover, the installed web app).
+*/
+#app-container {
+  height: 100vh;
+  height: 100dvh;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  box-sizing: border-box;
+}
+
+/*
+  Scrolls without showing a scrollbar, e.g. the row of menu buttons on a
+  phone. A plain class (not @utility): it must win over `* { scrollbar-width }`
+  below, which is outside of the layers.
+*/
+.no-scrollbar,
+.no-scrollbar:hover {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+  Touch screens: iOS zooms into a field whose text is under 16px when it is
+  focused, and does not zoom back out.
+*/
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+
 @utility pop-btn {
   @apply px-2 py-2 text-sm text-base-content rounded-sm shadow-sm bg-primary/25 hover:bg-primary/15;
 }
