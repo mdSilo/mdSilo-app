@@ -916,6 +916,13 @@ export const makePDF = async file => {
         cMapUrl: pdfjsURL('cmaps/'),
         standardFontDataUrl: pdfjsURL('standard_fonts/'),
         isEvalSupported: false,
+        // pdf.js draws image masks, soft masks and groups on scratch canvases
+        // from its canvas factory, which are `willReadFrequently` (CPU-backed)
+        // unless this is set. A scanned book is one full-page 1-bit mask per
+        // page, so each page was a large software composite, then an upload to
+        // the GPU page canvas: very slow on older iPhones. Rendering reads none
+        // of those canvases back, so keeping them on the GPU costs nothing.
+        enableHWA: true,
         // 's worker hook shrinks those images as it decodes them. It runs
         // in a blob: worker, which on iOS can't fetch tauri:// URLs, so the page
         // fetches the decoder data (JBIG2/CCITT wasm, CMaps, fonts) for it.
