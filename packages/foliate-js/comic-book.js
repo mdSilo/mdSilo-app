@@ -73,14 +73,37 @@ const readComicBookInfo = async ({ getComment }) => {
     }
 }
 
+// JPEG XL shows only in Safari 17+; elsewhere its pages would be blank. Known
+// once one decodes: until then each JPEG XL page is tried with an <img>.
+let jxlDecodes = false
+const canShow = async (name, src) => {
+    if (jxlDecodes || !name.toLowerCase().endsWith('.jxl')) return true
+    const img = new Image()
+    img.src = src
+    try {
+        await img.decode()
+        jxlDecodes = true
+        return true
+    } catch {
+        return false
+    } finally {
+        img.src = ''
+    }
+}
+
+const UNSUPPORTED_PAGE = `<div style="display: flex; align-items: center; justify-content: center;
+    width: 100vw; height: 100vh; padding: 1em; box-sizing: border-box; text-align: center;
+    font: 1.2em sans-serif">This page is a JPEG XL image, which this browser cannot display.</div>`
+
 export const makeComicBook = async ({ entries, loadBlob, getSize, getComment }, file) => {
     const cache = new Map()
     const urls = new Map()
     const load = async name => {
         if (cache.has(name)) return cache.get(name)
         const src = URL.createObjectURL(await loadBlob(name))
+        const body = await canShow(name, src) ? `<img src="${src}">` : UNSUPPORTED_PAGE
         const page = URL.createObjectURL(
-            new Blob([`<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin: 0"><img src="${src}"></body></html>`], { type: 'text/html' }))
+            new Blob([`<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin: 0">${body}</body></html>`], { type: 'text/html' }))
         urls.set(name, [src, page])
         cache.set(name, page)
         return page

@@ -535,6 +535,32 @@ const getImageRects = ({ fnArray, argsArray }, baseTransform) => {
 // page, or a scanned book would stay white in a dark theme.
 const MAX_KEPT_IMAGE_COVERAGE = 0.5
 
+// Canvas `filter` is missing in Safari before 18 (iOS 16/17): an assignment is
+// ignored there and the page would keep its own colors.
+let canvasFilterSupported
+const supportsCanvasFilter = () => {
+    if (canvasFilterSupported === undefined) {
+        const ctx = document.createElement('canvas').getContext('2d')
+        if (ctx && typeof ctx.filter === 'string') ctx.filter = 'blur(1px)'
+        canvasFilterSupported = ctx?.filter === 'blur(1px)'
+    }
+    return canvasFilterSupported
+}
+
+// The feColorMatrix of getPageColorMatrix on RGBA bytes, in place, for where
+// canvas filters are missing. Alpha is kept, as the matrix's alpha row does.
+export const applyColorMatrix = (data, matrix) => {
+    const [r0, r1, r2, , r4, g0, g1, g2, , g4, b0, b1, b2, , b4] = matrix
+    const [ro, go, bo] = [r4 * 255, g4 * 255, b4 * 255]
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2]
+        // Uint8ClampedArray clamps and rounds the results
+        data[i] = r0 * r + r1 * g + r2 * b + ro
+        data[i + 1] = g0 * r + g1 * g + g2 * b + go
+        data[i + 2] = b0 * r + b1 * g + b2 * b + bo
+    }
+}
+
 const applyPageColors = (canvas, matrix, imageRects) => {
     const { width, height } = canvas
     // Round inward: an edge pixel the image only partly covers is blended with
@@ -554,9 +580,15 @@ const applyPageColors = (canvas, matrix, imageRects) => {
     const ctx = canvas.getContext('2d')
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
-    ctx.filter = getPageColorFilter(matrix)
-    ctx.drawImage(canvas, 0, 0)
-    ctx.filter = 'none'
+    if (supportsCanvasFilter()) {
+        ctx.filter = getPageColorFilter(matrix)
+        ctx.drawImage(canvas, 0, 0)
+        ctx.filter = 'none'
+    } else {
+        const image = ctx.getImageData(0, 0, width, height)
+        applyColorMatrix(image.data, matrix)
+        ctx.putImageData(image, 0, 0)
+    }
     for (const { copy, x, y } of kept) {
         ctx.drawImage(copy, x, y)
         copy.width = copy.height = 0

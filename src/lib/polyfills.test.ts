@@ -53,3 +53,21 @@ describe("groupBy polyfills", () => {
     expect(M.groupBy).toBe(nativeMap);
   });
 });
+
+describe("URL.canParse polyfill", () => {
+  const U = URL as unknown as Record<string, unknown>;
+  const native = U.canParse;
+  afterEach(() => {
+    U.canParse = native;
+  });
+
+  it("adds URL.canParse when missing", async () => {
+    delete U.canParse;
+    vi.resetModules();
+    await import("./polyfills");
+    const canParse = U.canParse as (u: string, b?: string) => boolean;
+    expect(canParse("https://a.b/c")).toBe(true);
+    expect(canParse("c", "https://a.b/")).toBe(true);
+    expect(canParse("not a url")).toBe(false);
+  });
+});

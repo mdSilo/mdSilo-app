@@ -1,5 +1,6 @@
-// ES2024 builtins missing before Safari 17.4 (iOS 16): foliate-js epub
-// parsing and mermaid call Object.groupBy / Map.groupBy. Import first.
+// Builtins missing on iOS 16 (Safari 16.4+ is the build baseline). Import first.
+// - Object.groupBy / Map.groupBy (Safari 17.4): foliate-js epub parsing, mermaid
+// - URL.canParse (Safari 17): mermaid's link sanitizer (@braintree/sanitize-url)
 
 type KeyFn<T, K> = (item: T, index: number) => K;
 
@@ -39,6 +40,24 @@ if (typeof M.groupBy !== "function") {
         else out.set(key, [item]);
       }
       return out;
+    },
+  });
+}
+
+const U = URL as unknown as {
+  canParse?: (url: string | URL, base?: string | URL) => boolean;
+};
+if (typeof U.canParse !== "function") {
+  Object.defineProperty(URL, "canParse", {
+    configurable: true,
+    writable: true,
+    value(url: string | URL, base?: string | URL) {
+      try {
+        new URL(url, base);
+        return true;
+      } catch {
+        return false;
+      }
     },
   });
 }

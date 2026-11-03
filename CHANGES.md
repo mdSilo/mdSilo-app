@@ -4,13 +4,14 @@
 
 2026-XX-XX
 
-- Feat: OPDS catalogs in Feeds: browse, search and download books
+- Feat: OPDS catalogs in Feeds, browse, search and download books
 - Feat: Customize fonts and theme  
 - Feat: Custom plugins
 - Feat: Drag and drop to move files and folders in the explorer tree
-- Performance: Index book(epub/mobi/azw/azws/fb) in Rust end  
+- Performance: Index book(epub/mobi/azw/azw3/fb) in Rust end  
 - Performance: Faster Library and lists, using react-virtuoso+OverlayScrollbars
 - Fix: Cannot import or open EPUB books on iOS 16 Safari (polyfill `Object.groupBy`)
+- Fix: On older Safari (iOS 16/17): mermaid links, PDF page colors in themes; a note on JPEG XL comic pages a browser cannot show; macOS 11+ required
 
 ## app-v0.7.0 
 
