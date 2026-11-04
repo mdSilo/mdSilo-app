@@ -3,11 +3,15 @@ import {
   fromWorkspacePath,
   isTauri,
   joinPath,
+  movedPath,
+  normalizeSlash,
   toWorkspacePath,
 } from "@/workspace/util";
+import { flushSave } from "@/workspace/pendingSaves";
 import { announce } from "@/state/windowSync";
 import { DATA_DIR, READING_DIR, WRITING_DIR } from "@/workspace/layout";
 import { updateGitignore } from "@/workspace/gitignore";
+import { annotationsPathOf } from "../annotations/annotations";
 import {
   BOOK_EXTS,
   bookFormatOf,
@@ -321,6 +325,8 @@ async function refresh(ws: string): Promise<Library> {
       )
         continue;
       lib.books[hash] = { ...known, file };
+      // its notes with it
+      await moveAnnotations(fromWorkspacePath(ws, known.file), path);
     } else {
       lib.books[hash] = {
         hash,
@@ -338,6 +344,54 @@ async function refresh(ws: string): Promise<Library> {
     await writeReadingGitignore(ws, lib);
   }
   return lib;
+}
+
+/**
+ * The notes of a book follow its file moved or renamed: `Foo.epub.md` to
+ * `Bar.epub.md` with `Foo.epub`, unless there is one there already (e.g.
+ * moved too).
+ */
+async function moveAnnotations(from: string, to: string) {
+  const src = annotationsPathOf(from);
+  const tar = annotationsPathOf(to);
+  if (src === tar) return;
+  const exists = (filePath: string) =>
+    invoke<boolean>("file_exist", { filePath }).catch(() => false);
+  if (!(await exists(src)) || (await exists(tar))) return;
+  // with the changes not written yet, if open
+  await flushSave(src);
+  await invoke("rename_file", { fromPath: src, toPath: tar });
+}
+
+/**
+ * The library follows a book file, or a dir of them, moved or renamed: the
+ * entries to the new paths, the notes of a book file with it. Done already
+ * (e.g. seen again) changes nothing.
+ * @returns if the library changed
+ */
+export function followBookFiles(
+  ws: string,
+  from: string,
+  to: string,
+): Promise<boolean> {
+  return changeLibrary(async () => {
+    if (isBookFile(to)) await moveAnnotations(from, to);
+    const lib = await readLibrary(ws);
+    const fromRel = normalizeSlash(toWorkspacePath(ws, from));
+    const toRel = normalizeSlash(toWorkspacePath(ws, to));
+    let changed = false;
+    for (const entry of Object.values(lib.books)) {
+      const file = movedPath(normalizeSlash(entry.file), fromRel, toRel);
+      if (!file) continue;
+      lib.books[entry.hash] = { ...entry, file };
+      changed = true;
+    }
+    if (changed) {
+      await writeLibrary(ws, lib);
+      await writeReadingGitignore(ws, lib);
+    }
+    return changed;
+  });
 }
 
 /**

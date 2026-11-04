@@ -10,7 +10,7 @@ Type `[[` and start typing the title of a note; pick one from the list. If it do
 
 Try it: here is a link to [[1 Philosophy|the philosophy]], and one back to the [[0 Start Here|start page]].
 
-When you rename or move a note, the links to it are updated.
+When you rename or move a note, the links to it are updated, also when you do it outside the app (in your file manager, or while the app is closed).
 
 ## Backlinks
 

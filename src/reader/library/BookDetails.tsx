@@ -7,6 +7,7 @@ import {
   TbBookmarks,
   TbCloud,
   TbCloudOff,
+  TbFilePencil,
   TbLink,
   TbNotes,
   TbPencil,
@@ -20,7 +21,10 @@ import { IconButton } from "@/ui/ui";
 import { openFileDilog, openFilePath } from "@/workspace/open";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { canOpenBookWindow, readBook } from "@/shell/windows";
+import { followRename } from "@/workspace/renames";
+import { renameFile } from "@/workspace/util";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { useReaderStore, useSideStore } from "../readerStore";
 import { annotationsPathOf, bookHref } from "../annotations/annotations";
 import { COVER_EXTS, coverUrl, deleteCovers, setCustomCover } from "./covers";
 import { formOf, metaOfForm, validateMeta, type Form } from "./metaForm";
@@ -47,7 +51,7 @@ type Props = {
   onChanged: () => void;
 };
 
-type Mode = "view" | "edit" | "mark" | "delete";
+type Mode = "view" | "edit" | "mark" | "rename" | "delete";
 
 /** A book of the library: its details; its metadata edited; its group and status; deleted. */
 export default function BookDetails({
@@ -63,6 +67,7 @@ export default function BookDetails({
     view: "Book details",
     edit: "Edit metadata",
     mark: "Group and status",
+    rename: "Rename the file",
     delete: "Delete the book",
   }[mode];
   const done = () => {
@@ -92,6 +97,12 @@ export default function BookDetails({
             books={books}
             onCancel={() => setMode("view")}
             onSaved={done}
+          />
+        ) : mode === "rename" ? (
+          <RenameBook
+            book={book}
+            onCancel={() => setMode("view")}
+            onRenamed={done}
           />
         ) : mode === "delete" ? (
           <DeleteBook
@@ -235,6 +246,11 @@ function ViewBook({
             <Action title="Group and status" onClick={() => onMode("mark")}>
               <TbBookmarks size={16} />
             </Action>
+            {book.here ? (
+              <Action title="Rename the file" onClick={() => onMode("rename")}>
+                <TbFilePencil size={16} />
+              </Action>
+            ) : null}
             <Action
               title={
                 book.synced
@@ -656,6 +672,115 @@ function MarkBook({
         </button>
         <button type="submit" className="btn btn-sm btn-primary">
           Save
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/** a name of a file: none of the characters some systems do not allow */
+const BAD_NAME = /[\\/:*?"<>|]/;
+
+/**
+ * The book file renamed, its notes (`Foo.epub.md`) with it; its library
+ * entry, its links, its reading progress stay the book's.
+ */
+function RenameBook({
+  book,
+  onCancel,
+  onRenamed,
+}: {
+  book: ShelfBook;
+  onCancel: () => void;
+  onRenamed: () => void;
+}) {
+  const slash = book.path.lastIndexOf("/");
+  const dir = book.path.slice(0, slash);
+  const fileName = book.path.slice(slash + 1);
+  const dot = fileName.lastIndexOf(".");
+  const ext = dot > 0 ? fileName.slice(dot) : "";
+  const [name, setName] = useState(dot > 0 ? fileName.slice(0, dot) : fileName);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const rename = async () => {
+    const newName = name.trim();
+    if (!newName || BAD_NAME.test(newName) || newName.startsWith(".")) {
+      setError("Not a name for a file.");
+      return;
+    }
+    const to = `${dir}/${newName}${ext}`;
+    if (to === book.path) {
+      onCancel();
+      return;
+    }
+    const exists = (filePath: string) =>
+      invoke<boolean>("file_exist", { filePath }).catch(() => false);
+    if ((await exists(to)) || (await exists(annotationsPathOf(to)))) {
+      setError(`${newName}${ext} is there already.`);
+      return;
+    }
+    setBusy(true);
+    // the book open: its notes written first
+    for (const reader of [useReaderStore, useSideStore]) {
+      if (reader.getState().path === book.path) await reader.getState().flush();
+    }
+    if (!(await renameFile(book.path, to))) {
+      setBusy(false);
+      setError("Could not rename the file.");
+      return;
+    }
+    await followRename(book.path, to);
+    onRenamed();
+  };
+
+  return (
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void rename();
+      }}
+    >
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-semibold">File name</span>
+        <div className="join w-full">
+          <input
+            className="input input-sm join-item w-full"
+            value={name}
+            autoFocus
+            aria-label="File name"
+            onChange={(e) => {
+              setName(e.target.value);
+              setError("");
+            }}
+          />
+          {ext ? (
+            <span className="join-item btn btn-sm btn-disabled no-animation">
+              {ext}
+            </span>
+          ) : null}
+        </div>
+      </label>
+      <p className="text-sm text-base-content/70">
+        Its notes ({fileName}.md) are renamed with it. The title, reading
+        progress, highlights and links to the book stay as they are.
+      </p>
+      {error ? <p className="text-sm text-error">{error}</p> : null}
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          className="btn btn-sm btn-ghost"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="btn btn-sm btn-primary"
+          disabled={busy}
+        >
+          Rename
         </button>
       </div>
     </form>

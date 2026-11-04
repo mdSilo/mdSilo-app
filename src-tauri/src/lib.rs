@@ -127,6 +127,7 @@ pub fn run() {
       ebook::book_info,
       ebook::book_index_text,
       index::index_open,
+      index::index_renames,
       index::index_update,
       index::index_search,
       index::index_book,

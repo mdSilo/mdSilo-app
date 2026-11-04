@@ -16,9 +16,9 @@ Open it with the books icon in the side menu (`Ctrl/Cmd + Shift + L`). It lists 
 - **Search** with plain text or a regular expression: it matches title, author, format, group, status, series, subjects and description.
 - **Groups**: drag a book onto a book to make a group, onto a group to move into it, onto the breadcrumbs to move up. Groups nest (`Fiction/Classics`). You can also group by author, series, format or status.
 - **Status**: tag a book *Todo*, *Doing* or *Done*, or your own word.
-- **Details**: open a book's card to read it, edit its metadata (title, author, series, language...), set its group and status, copy a link to it or open its notes.
+- **Details**: open a book's card to read it, edit its metadata (title, author, series, language...), set its group and status, rename its file, copy a link to it or open its notes.
 
-Books are recognised by their content (a partial MD5 hash), so a renamed or moved book is still the same book, on every device.
+Books are recognised by their content (a partial MD5 hash), so a renamed or moved book is still the same book, on every device. Its notes (`Foo.epub.md`) go with it, whether you rename it in the app, in the sidebar or in your file manager.
 
 :::info
 **Sync, book by book.** Books can be large, so they are *not* synced with git by default. Each book and each group has a sync switch; the annotations and the reading progress are always synced. See [[9 Sync and Publish|Sync and Publish]].

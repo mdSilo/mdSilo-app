@@ -403,6 +403,8 @@ async function loadNotes(dir: string) {
     });
     store.getState().setNotes(NoteMap.from(notes));
     store.getState().setIsLoaded(true);
+    // what was renamed or moved while the app did not see it: followed
+    void import("./renames").then((m) => m.followMovedMeanwhile(dir));
   } catch (e) {
     console.error("Failed to load notes:", e);
   }

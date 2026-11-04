@@ -1,7 +1,11 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import FileAPI from "@/workspace/files";
-import { fromWorkspacePath, toWorkspacePath } from "@/workspace/util";
+import {
+  fromWorkspacePath,
+  movedPath,
+  toWorkspacePath,
+} from "@/workspace/util";
 import { store, useStore } from "@/state/store";
 import { announce, onAnnounce } from "@/state/windowSync";
 import { dataDirOf, type Layout } from "@/workspace/layout";
@@ -279,6 +283,23 @@ export async function updateIssueNoteLinks(
   useIssueStore
     .getState()
     .apply((d) => renameNoteRefs(d, oldPath, newPath, oldTitle, newTitle));
+}
+
+/** On a dir renamed or moved: keep the issue links to its notes working. */
+export async function moveIssueNotePaths(fromDir: string, toDir: string) {
+  const initDir = store.getState().initDir;
+  if (!initDir) return;
+  await useIssueStore.getState().load(initDir);
+  useIssueStore.getState().apply((d) => {
+    let moved = false;
+    const next = mapNotePaths(d, (path) => {
+      const to = movedPath(path, fromDir, toDir);
+      if (!to) return path;
+      moved = true;
+      return to;
+    });
+    return moved ? next : d;
+  });
 }
 
 /** Reset module state; for tests. */

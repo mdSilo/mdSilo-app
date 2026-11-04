@@ -218,6 +218,8 @@ export const commands: Record<string, Command> = {
   },
   // the index, src-tauri/src/index
   index_open: ({ dir }) => indexer.indexOpen(dir),
+  // the files change in the app only: no rename it did not see
+  index_renames: () => [],
   index_update: ({ paths }) => indexer.indexUpdate(paths ?? []),
   index_search: ({ query, kind, limit }) =>
     indexer.indexSearch(query ?? "", kind ?? undefined, limit ?? 50),

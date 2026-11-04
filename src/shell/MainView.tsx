@@ -8,6 +8,7 @@ import { Spinner } from "@/ui/ui";
 import useNoteTaskSync from "@/issue/useNoteTaskSync";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import useStartupView from "@/state/useStartupView";
+import useFollowRenames from "@/state/useFollowRenames";
 import { useViewsOfBookWindows } from "@/shell/windows";
 import NotePage from "@/writer/MdView";
 
@@ -53,6 +54,8 @@ export default function MainView() {
   const { state, dispatch } = useCurrentViewContext();
   // the views asked by the book windows, e.g. a note linking to the book
   useViewsOfBookWindows(dispatch);
+  // the note or book shown renamed or moved, in the app or not
+  useFollowRenames(state, dispatch);
   // a phone: the sidebar covers the page, close it once a page is opened
   useEffect(() => {
     if (isMobileWidth()) store.getState().setIsSidebarOpen(false);

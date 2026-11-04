@@ -307,6 +307,7 @@ export async function rename(
   if (ok) {
     emitFsChange("renameFrom", [from]);
     emitFsChange("renameTo", [to]);
+    emitFsChange("renamed", [from, to]);
   }
   return ok;
 }

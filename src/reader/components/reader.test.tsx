@@ -1244,6 +1244,47 @@ describe("library", () => {
     expect((await libraryEntry("My Tiny Book"))?.title).toBe("My Tiny Book");
   });
 
+  test("a book file renamed, its notes with it", async () => {
+    await invoke("write_file", { filePath: `${BOOK}.md`, text: "# Tiny Book" });
+    const hash = await invoke<string>("book_hash", { filePath: BOOK });
+    const dir = BOOK.slice(0, BOOK.lastIndexOf("/"));
+    const ext = BOOK.slice(BOOK.lastIndexOf("."));
+    const to = `${dir}/Renamed${ext}`;
+    renderMain();
+    await go({ view: "library" });
+    fireEvent.click(await screen.findByLabelText(/Book details/));
+    fireEvent.click(await screen.findByLabelText("Rename the file"));
+    const name = screen.getByLabelText("File name");
+    // a name taken: not renamed
+    await invoke("write_file", { filePath: `${dir}/Taken${ext}`, text: "x" });
+    fireEvent.change(name, { target: { value: "Taken" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    });
+    expect(await screen.findByText(/is there already/)).toBeInTheDocument();
+
+    fireEvent.change(name, { target: { value: "Renamed" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    });
+    await waitFor(async () =>
+      expect(await invoke<boolean>("file_exist", { filePath: to })).toBe(true),
+    );
+    expect(await invoke<boolean>("file_exist", { filePath: BOOK })).toBe(false);
+    expect(await invoke<string>("read_file", { filePath: `${to}.md` })).toBe(
+      "# Tiny Book",
+    );
+    expect(
+      await invoke<boolean>("file_exist", { filePath: `${BOOK}.md` }),
+    ).toBe(false);
+    const lib = JSON.parse(
+      await invoke<string>("read_file", {
+        filePath: `${WS}/.mdsilo/books.json`,
+      }),
+    );
+    expect(lib.books[hash].file).toBe(to.slice(WS.length + 1));
+  });
+
   test("a book deleted", async () => {
     await invoke("write_file", { filePath: `${BOOK}.md`, text: "# Tiny Book" });
     renderMain();

@@ -48,6 +48,8 @@ pub struct WorkspaceIndex {
   db: IndexDb,
   /// none if it can not be opened, e.g. the workspace open in another window
   search: Option<SearchIndex>,
+  /// the notes renamed or moved found by the last sync, [from, to]
+  renames: Vec<(String, String)>,
 }
 
 /// Markdown (or text) notes are parsed and searched, as files.rs check_md
@@ -111,6 +113,7 @@ impl WorkspaceIndex {
       fs,
       db,
       search,
+      renames: Vec::new(),
     };
     if fresh {
       // a new search index: the notes and books in it again
@@ -236,6 +239,10 @@ impl WorkspaceIndex {
       .filter(|p| !seen.contains(*p))
       .cloned()
       .collect();
+    self.renames = renames_of(&rows, &gone, &changed)
+      .into_iter()
+      .map(|(from, to)| (self.abs(&from), self.abs(&to)))
+      .collect();
     if let Some(search) = self.search.as_mut() {
       for path in &gone {
         search.delete(path);
@@ -251,6 +258,11 @@ impl WorkspaceIndex {
       rows.insert(row.path.clone(), row);
     }
     Ok(rows.values().map(|r| self.note_of(r)).collect())
+  }
+
+  /// The notes renamed or moved found by the last sync, once.
+  pub fn take_renames(&mut self) -> Vec<(String, String)> {
+    std::mem::take(&mut self.renames)
   }
 
   /// Update the index for the paths changed: added, changed or removed; a dir
@@ -374,6 +386,50 @@ pub struct BookSection {
 /// The index of the workspace open, one at a time.
 static CURRENT: Mutex<Option<WorkspaceIndex>> = Mutex::new(None);
 
+/// The notes renamed or moved while the index did not follow, e.g. while
+/// the app was closed: a note gone and a new one of the same size, modified
+/// time (a rename keeps both) and extension, each the only match of the other.
+/// Their paths as rows have them, [from, to].
+fn renames_of(
+  old: &HashMap<String, Row>,
+  gone: &[String],
+  changed: &[Row],
+) -> Vec<(String, String)> {
+  fn key(row: &Row) -> (i64, i64, Option<&str>) {
+    let ext = Path::new(&row.path).extension().and_then(|e| e.to_str());
+    (row.size, row.modified, ext)
+  }
+  let note = |row: &Row| row.is_dir == 0 && is_text_note(Path::new(&row.path));
+  let mut by_key: HashMap<_, (Vec<&Row>, Vec<&Row>)> = HashMap::new();
+  for row in gone
+    .iter()
+    .filter_map(|path| old.get(path))
+    .filter(|r| note(r))
+  {
+    by_key.entry(key(row)).or_default().0.push(row);
+  }
+  if by_key.is_empty() {
+    return Vec::new();
+  }
+  for row in changed
+    .iter()
+    .filter(|r| !old.contains_key(&r.path) && note(r))
+  {
+    if let Some((_, new)) = by_key.get_mut(&key(row)) {
+      new.push(row);
+    }
+  }
+  let mut renames: Vec<(String, String)> = by_key
+    .into_values()
+    .filter_map(|(gone, new)| match (gone.as_slice(), new.as_slice()) {
+      ([from], [to]) => Some((from.path.clone(), to.path.clone())),
+      _ => None,
+    })
+    .collect();
+  renames.sort();
+  renames
+}
+
 fn with_index<T>(
   f: impl FnOnce(&mut WorkspaceIndex) -> Result<T, String>,
 ) -> Result<T, String> {
@@ -445,6 +501,13 @@ pub async fn index_update(paths: Vec<String>) -> Result<IndexDelta, String> {
   })
   .await
   .map_err(|e| e.to_string())?
+}
+
+/// The notes renamed or moved found by the last open of the index, e.g.
+/// while the app was closed: [from, to]; once.
+#[tauri::command]
+pub async fn index_renames() -> Vec<(String, String)> {
+  with_index(|index| Ok(index.take_renames())).unwrap_or_default()
 }
 
 /// Search the notes and the books: kind `note`, `book`, or any.
@@ -582,6 +645,51 @@ mod tests {
     let notes = index.sync().unwrap();
     assert_eq!(notes.len(), 5); // writing, a.md, pic.png, new, new/c.md
     assert_eq!(by_rel(&notes, "writing/a.md").unwrap().parsed.links, ["C"]);
+    fs::remove_dir_all(&base).unwrap();
+  }
+
+  #[test]
+  fn finds_the_notes_renamed_while_closed() {
+    let (base, root) = setup("renames");
+    let local = base.join("local");
+    let abs = |rel: &str| root.join(rel).normalize_slash().unwrap();
+    // two notes alike: same size, written at the same time
+    fs::write(root.join("writing/twin1.md"), "same").unwrap();
+    fs::write(root.join("writing/twin2.md"), "same").unwrap();
+    let same_time = fs::metadata(root.join("writing/twin1.md"))
+      .unwrap()
+      .modified()
+      .unwrap();
+    fs::File::options()
+      .write(true)
+      .open(root.join("writing/twin2.md"))
+      .unwrap()
+      .set_modified(same_time)
+      .unwrap();
+    let mut index = WorkspaceIndex::open(&root, &local, Box::new(LocalFs)).unwrap();
+    index.sync().unwrap();
+    assert!(index.take_renames().is_empty());
+    drop(index);
+
+    // closed: a note renamed, another moved, one deleted and one written
+    fs::rename(root.join("writing/a.md"), root.join("writing/A2.md")).unwrap();
+    fs::rename(root.join("writing/sub/b.md"), root.join("writing/b.md")).unwrap();
+    fs::remove_file(root.join("writing/pic.png")).unwrap();
+    fs::write(root.join("writing/new.md"), "new").unwrap();
+    // the twins renamed: either could be either, no rename
+    fs::rename(root.join("writing/twin1.md"), root.join("writing/t1.md")).unwrap();
+    fs::rename(root.join("writing/twin2.md"), root.join("writing/t2.md")).unwrap();
+    let mut index = WorkspaceIndex::open(&root, &local, Box::new(LocalFs)).unwrap();
+    index.sync().unwrap();
+    assert_eq!(
+      index.take_renames(),
+      [
+        (abs("writing/a.md"), abs("writing/A2.md")),
+        (abs("writing/sub/b.md"), abs("writing/b.md")),
+      ]
+    );
+    // once
+    assert!(index.take_renames().is_empty());
     fs::remove_dir_all(&base).unwrap();
   }
 

@@ -59,6 +59,9 @@ export function isHiddenIn(dir: string, path: string): boolean {
 // the only listener of dir changes: listening again replaces it
 let listener: UnlistenFn | undefined;
 let listenSeq = 0;
+// the changes handled one after the other, as they came: a rename is
+// followed once the store has its new path
+let changes: Promise<void> = Promise.resolve();
 
 /** Invoke Rust command to handle directory */
 class DirectoryAPI {
@@ -150,68 +153,83 @@ class DirectoryAPI {
       listener?.();
       listener = undefined;
       const { getCurrentWindow } = await import("@tauri-apps/api/window");
+      const onChange = async (e: Event<EventPayload>) => {
+        // console.log("listen event: ", e);
+        // sync the change on listen
+        const payload: EventPayload = e.payload;
+        const event = payload.event;
+        // FULL PATH; skip mdsilo.json, the data of Save As / Import JSON, and
+        // the hidden files and dirs (.mdsilo/, .git/...), never listed
+        const filePaths = payload.paths.filter(
+          (f) => !f.endsWith("/mdsilo.json") && !isHiddenIn(this.dirPath, f),
+        );
+        if (filePaths.length === 0 && payload.paths.length > 0) return;
+        // console.log("event kind: ", event);
+        // console.log("file paths: ", filePaths);
+        if (event === "write" || event === "close_write") {
+          const currentNoteId = store.getState().currentNoteId;
+          // console.log("write: ", event, filePaths, currentNoteId)
+          // any change on current note will not be loaded
+          const wrotePaths = filePaths.filter((f) => f !== currentNoteId);
+          if (wrotePaths.length > 0) await openFilePaths(wrotePaths);
+        } else if (event === "renameFrom" || event === "remove") {
+          // The file is gone from the path already (on Linux, delete is
+          // renameFrom): only sync the store, never touch the disk here.
+          // A file may already be there again, e.g. vim saves by renaming
+          // the original away and then writing a new file at the path, so
+          // deleting it on disk would silently delete the saved file.
+          const currentNoteId = store.getState().currentNoteId;
+          const backPaths: string[] = [];
+          for (const filePath of filePaths) {
+            if (await invoke<boolean>("file_exist", { filePath })) {
+              backPaths.push(filePath);
+              continue;
+            }
+            store.getState().deleteNote(filePath);
+            if (
+              filePath === currentNoteId ||
+              currentNoteId.startsWith(`${filePath}/`)
+            ) {
+              store.getState().setCurrentNoteId("");
+            }
+          }
+          if (backPaths.length > 0) await openFilePaths(backPaths);
+        } else if (event === "renameTo") {
+          await openFilePaths(filePaths);
+          // for (const filePath of filePaths) {
+          //   const res = await openFilePaths([filePath]);
+          //   console.log("open rename file", filePath, res, event)
+          // }
+        } else if (event === "renamed") {
+          // [from, to], after renameFrom and renameTo: links, issues, the
+          // notes of a book follow it, as on a rename in the app
+          const [from, to] = filePaths;
+          if (filePaths.length === 2) {
+            // apart: it may write many notes, the changes go on meanwhile
+            void import("./renames").then((m) => m.followRename(from, to));
+          }
+          return;
+        } else if (event === "create") {
+          // console.log("create: ", filePaths)
+          // files and dir moved into a watch folder on Linux will now be reported as rename to events instead of create events
+          // open, upsert
+          await openFilePaths(filePaths);
+        } else {
+          // CANNOT LISTEN on load
+          // console.log("custom event: ", filePaths, event);
+          // TODO: to handle some event
+          emitCustomEvent(event, filePaths.pop() || "");
+        }
+        callbackFn();
+      };
       const unlisten = await getCurrentWindow().listen(
         "changes",
-        async (e: Event<EventPayload>) => {
-          // console.log("listen event: ", e);
-          // sync the change on listen
-          const payload: EventPayload = e.payload;
-          const event = payload.event;
-          // FULL PATH; skip mdsilo.json, the data of Save As / Import JSON, and
-          // the hidden files and dirs (.mdsilo/, .git/...), never listed
-          const filePaths = payload.paths.filter(
-            (f) => !f.endsWith("/mdsilo.json") && !isHiddenIn(this.dirPath, f),
-          );
-          if (filePaths.length === 0 && payload.paths.length > 0) return;
-          // console.log("event kind: ", event);
-          // console.log("file paths: ", filePaths);
-          if (event === "write" || event === "close_write") {
-            const currentNoteId = store.getState().currentNoteId;
-            // console.log("write: ", event, filePaths, currentNoteId)
-            // any change on current note will not be loaded
-            const wrotePaths = filePaths.filter((f) => f !== currentNoteId);
-            if (wrotePaths.length > 0) await openFilePaths(wrotePaths);
-          } else if (event === "renameFrom" || event === "remove") {
-            // The file is gone from the path already (on Linux, delete is
-            // renameFrom): only sync the store, never touch the disk here.
-            // A file may already be there again, e.g. vim saves by renaming
-            // the original away and then writing a new file at the path, so
-            // deleting it on disk would silently delete the saved file.
-            const currentNoteId = store.getState().currentNoteId;
-            const backPaths: string[] = [];
-            for (const filePath of filePaths) {
-              if (await invoke<boolean>("file_exist", { filePath })) {
-                backPaths.push(filePath);
-                continue;
-              }
-              store.getState().deleteNote(filePath);
-              if (
-                filePath === currentNoteId ||
-                currentNoteId.startsWith(`${filePath}/`)
-              ) {
-                store.getState().setCurrentNoteId("");
-              }
-            }
-            if (backPaths.length > 0) await openFilePaths(backPaths);
-          } else if (event === "renameTo") {
-            await openFilePaths(filePaths);
-            // for (const filePath of filePaths) {
-            //   const res = await openFilePaths([filePath]);
-            //   console.log("open rename file", filePath, res, event)
-            // }
-          } else if (event === "create") {
-            // console.log("create: ", filePaths)
-            // files and dir moved into a watch folder on Linux will now be reported as rename to events instead of create events
-            // open, upsert
-            await openFilePaths(filePaths);
-          } else {
-            // CANNOT LISTEN on load
-            // console.log("custom event: ", filePaths, event);
-            // TODO: to handle some event
-            emitCustomEvent(event, filePaths.pop() || "");
-          }
-          callbackFn();
-        },
+        (e: Event<EventPayload>) =>
+          (changes = changes
+            .then(() => onChange(e))
+            .catch((err: unknown) =>
+              console.error("Failed to handle a change of the files:", err),
+            )),
       );
       if (seq !== listenSeq) {
         // listened again meanwhile

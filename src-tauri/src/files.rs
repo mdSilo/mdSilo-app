@@ -10,7 +10,7 @@ use notify::{
 use std::fs;
 use std::path::Path;
 use std::sync::Mutex;
-use std::time::SystemTime;
+use std::time::{Duration, Instant, SystemTime};
 use tauri::{AppHandle, Emitter};
 
 #[cfg(windows)]
@@ -642,6 +642,7 @@ pub async fn listen_dir(
       .unwrap_or(());
   };
 
+  let mut renames = RenamePairs::default();
   let handler = move |res: notify::Result<RawEvent>| match res {
     Ok(RawEvent {
       paths,  // Vec<PathBuff>
@@ -665,25 +666,58 @@ pub async fn listen_dir(
       if paths.is_empty() {
         return;
       }
+      // a rename, its old and new paths: "renamed" [from, to], after the
+      // two sides reported as renameFrom and renameTo; the frontend follows
+      // it as a rename in the app (links, issues, the notes of a book)
+      let emit_renamed = |pair: Option<(String, String)>| {
+        if let Some((from, to)) = pair {
+          emit("renamed", vec![from, to]);
+        }
+      };
+      let now = Instant::now();
       match kind {
         // EventKind::Access(_) => "access",
-        EventKind::Create(_) => emit("create", paths),
+        EventKind::Create(_) => {
+          renames.other();
+          emit("create", paths)
+        }
         EventKind::Modify(ModifyKind::Name(rename)) => match rename {
-          RenameMode::To => emit("renameTo", paths),
-          RenameMode::From => emit("renameFrom", paths),
-          // [from, to] of a rename already reported by From and To, on Linux
-          RenameMode::Both => {}
+          RenameMode::To => {
+            let pair = renames.to(&paths, now);
+            emit("renameTo", paths);
+            emit_renamed(pair);
+          }
+          RenameMode::From => {
+            renames.from(&paths, now);
+            emit("renameFrom", paths);
+          }
+          // [from, to] of a rename reported by From and To already, on
+          // Linux: both paths still there if neither is a temp file
+          RenameMode::Both => {
+            if let [from, to] = paths.as_slice() {
+              emit_renamed(Some((from.clone(), to.clone())));
+            }
+          }
           // FSEvents (macOS) cannot tell the old path from the new one of a
           // rename: the path is the new one if it exists, the old one if not
           _ => {
             let (to, from): (Vec<String>, Vec<String>) =
               paths.into_iter().partition(|path| Path::new(path).exists());
+            renames.from(&from, now);
+            let pair = renames.to(&to, now);
             emit("renameFrom", from);
             emit("renameTo", to);
+            emit_renamed(pair);
           }
         },
-        EventKind::Modify(_) => emit("write", paths),
-        EventKind::Remove(_) => emit("remove", paths),
+        EventKind::Modify(_) => {
+          renames.other();
+          emit("write", paths)
+        }
+        EventKind::Remove(_) => {
+          renames.other();
+          emit("remove", paths)
+        }
         _ => {}
       }
     }
@@ -711,6 +745,61 @@ pub async fn listen_dir(
       log_watch_err(format!("Err on [listen_dir: lock watcher]: {}", e));
       Err(format!("lock watcher on listen err: {}", e))
     }
+  }
+}
+
+/// The old and new paths of a rename reported apart, paired: the new one
+/// right after the old one (Windows: From then To; FSEvents on macOS: two
+/// events the frontend can tell apart by the path still there or not). On
+/// Linux the rename is reported whole (Both), the sides are not paired.
+struct RenamePairs {
+  /// the sides are reported apart
+  apart: bool,
+  from: Option<(String, Instant)>,
+}
+
+impl Default for RenamePairs {
+  fn default() -> Self {
+    Self {
+      apart: !cfg!(target_os = "linux"),
+      from: None,
+    }
+  }
+}
+
+/// The new path of a rename comes right after the old one: a file moved out
+/// of the dir, then later another one moved in, is no rename.
+const RENAME_PAIR_WINDOW: Duration = Duration::from_millis(500);
+
+impl RenamePairs {
+  /// The old path of a rename, one only.
+  fn from(&mut self, paths: &[String], now: Instant) {
+    if !self.apart || paths.is_empty() {
+      return;
+    }
+    self.from = match paths {
+      [path] => Some((path.clone(), now)),
+      _ => None,
+    };
+  }
+
+  /// The new path of a rename: [from, to] if it follows the old one.
+  fn to(&mut self, paths: &[String], now: Instant) -> Option<(String, String)> {
+    if paths.is_empty() {
+      return None;
+    }
+    let (from, at) = self.from.take()?;
+    match paths {
+      [to] if *to != from && now.duration_since(at) <= RENAME_PAIR_WINDOW => {
+        Some((from, to.clone()))
+      }
+      _ => None,
+    }
+  }
+
+  /// Another change in between: no rename.
+  fn other(&mut self) {
+    self.from = None;
   }
 }
 
@@ -767,6 +856,41 @@ pub async fn watch_event(id: String, ev: String, window: tauri::Window) {
 mod tests {
   use super::*;
   use std::path::PathBuf;
+
+  #[test]
+  fn pairs_the_sides_of_a_rename_reported_apart() {
+    let now = Instant::now();
+    let p = |s: &str| vec![s.to_string()];
+    // Linux: reported whole, by Both
+    let mut whole = RenamePairs {
+      apart: false,
+      from: None,
+    };
+    whole.from(&p("/ws/a.md"), now);
+    assert_eq!(whole.to(&p("/ws/b.md"), now), None);
+
+    let mut pairs = RenamePairs {
+      apart: true,
+      from: None,
+    };
+    pairs.from(&p("/ws/a.md"), now);
+    assert_eq!(
+      pairs.to(&p("/ws/b.md"), now + Duration::from_millis(10)),
+      Some(("/ws/a.md".into(), "/ws/b.md".into()))
+    );
+    // once only
+    assert_eq!(pairs.to(&p("/ws/c.md"), now), None);
+    // another change in between, or too late: no rename
+    pairs.from(&p("/ws/a.md"), now);
+    pairs.other();
+    assert_eq!(pairs.to(&p("/ws/b.md"), now), None);
+    pairs.from(&p("/ws/a.md"), now);
+    assert_eq!(pairs.to(&p("/ws/b.md"), now + Duration::from_secs(2)), None);
+    // nothing new yet (FSEvents: the old side alone): still waiting
+    pairs.from(&p("/ws/a.md"), now);
+    assert_eq!(pairs.to(&[], now), None);
+    assert!(pairs.to(&p("/ws/b.md"), now).is_some());
+  }
 
   fn temp_dir(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!(

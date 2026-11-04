@@ -76,6 +76,21 @@ export const toWorkspacePath = (dir: string, path: string): string => {
     : path;
 };
 
+/**
+ * The path after `from` (a file or dir) moved to `to`: `path` itself, or a
+ * path in it; undefined if not moved.
+ */
+export const movedPath = (
+  path: string,
+  from: string,
+  to: string,
+): string | undefined =>
+  path === from
+    ? to
+    : from && path.startsWith(`${from}/`)
+      ? to + path.slice(from.length)
+      : undefined;
+
 /** The absolute path of a path stored relative to dir; absolute as is. */
 export const fromWorkspacePath = (dir: string, path: string): string =>
   !path || isAbsolutePath(path)
