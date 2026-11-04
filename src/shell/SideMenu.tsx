@@ -36,6 +36,7 @@ import {
   TbWorldUpload,
   TbPuzzle,
   TbPlayerPlay,
+  TbDeviceMobileDown,
 } from "react-icons/tb";
 import { MdFolderOpen } from "react-icons/md";
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
@@ -51,7 +52,7 @@ import {
 import { isTauri, isWeb } from "@/workspace/util";
 import { store, useStore } from "@/state/store";
 import type { SideMenuOrientation } from "@/state/userSettings";
-import { isMobile } from "@/lib/helper";
+import useIsMobile, { isMobileWidth } from "@/lib/hooks/useIsMobile";
 import { ViewAction } from "@/state/viewReducer";
 import Dropdown, { DropdownItem } from "@/ui/Dropdown";
 import { Tooltip } from "@/ui/ui";
@@ -64,14 +65,15 @@ import { useTTS } from "@/reader/tts/tts";
 import { pluginViews } from "@/plugins/registry";
 import { pluginCommands, runCommand } from "@/plugins/commands";
 import { useTrustedVersion } from "@/plugins/trusted";
+import { installApp, isIos, isStandalone, usePwa } from "@/host/web/pwa";
+import { showMessage } from "@/host/web/browser";
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>("auto");
 
 const useIsHorizontalMenu = () => {
   const orientation = useContext(SideMenuOrientationContext);
-  return (
-    orientation === "horizontal" || (orientation === "auto" && isMobile(768))
-  );
+  const mobile = useIsMobile();
+  return orientation === "horizontal" || (orientation === "auto" && mobile);
 };
 
 const useTooltipPlacement = () => (useIsHorizontalMenu() ? "top" : "right");
@@ -138,24 +140,18 @@ export default function SideMenu() {
   );
   useHotkeys(hotkeys);
   const orientation = useStore((state) => state.sideMenuOrientation);
-  const menuClassName =
-    orientation === "horizontal"
-      ? "flex flex-row items-center w-full px-1 bg-base-200"
-      : orientation === "vertical"
-        ? "flex flex-col h-full pb-3 bg-base-200"
-        : "flex flex-row items-center w-full px-1 bg-base-200 md:flex-col md:items-stretch md:w-auto md:h-full md:pb-3";
-  const buttonsClassName =
-    orientation === "horizontal"
-      ? "flex flex-row items-center"
-      : orientation === "vertical"
-        ? "flex flex-col h-full"
-        : "flex flex-row items-center md:flex-col md:flex-1 md:items-stretch";
-  const bottomClassName =
-    orientation === "horizontal"
-      ? "ml-auto"
-      : orientation === "vertical"
-        ? ""
-        : "ml-auto md:ml-0";
+  const mobile = useIsMobile();
+  const isHorizontal =
+    orientation === "horizontal" || (orientation === "auto" && mobile);
+  // a row on top: the buttons scroll sideways when they do not fit (a phone),
+  // the bottom section (player, sync, settings) stays at the end
+  const menuClassName = isHorizontal
+    ? "flex flex-row items-center w-full min-w-0 shrink-0 px-1 bg-base-200"
+    : "flex flex-col h-full pb-3 bg-base-200";
+  const buttonsClassName = isHorizontal
+    ? "flex flex-row items-center flex-1 min-w-0 overflow-x-auto no-scrollbar"
+    : "flex flex-col h-full";
+  const bottomClassName = isHorizontal ? "shrink-0 ml-auto" : "";
 
   return (
     <SideMenuOrientationContext.Provider value={orientation}>
@@ -224,6 +220,9 @@ const LogoMenu = () => {
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
+  // the web version: as an app of its own, offline and on the home screen
+  const canInstall = usePwa((s) => s.canInstall);
+  const iosHint = isWeb && !canInstall && isIos() && !isStandalone();
 
   return (
     <Dropdown
@@ -238,7 +237,7 @@ const LogoMenu = () => {
     >
       <DropdownItem
         onClick={() => {
-          if (isMobile(768)) {
+          if (isMobileWidth()) {
             setIsSidebarOpen(false);
           }
           setIsSettingsOpen(true);
@@ -267,6 +266,29 @@ const LogoMenu = () => {
         <TbInfoCircle size={18} className="mr-1" />
         <span>About</span>
       </DropdownItem>
+      {isWeb && canInstall ? (
+        <DropdownItem
+          className="border-t border-base-300"
+          onClick={() => void installApp()}
+        >
+          <TbDeviceMobileDown size={18} className="mr-1" />
+          <span>Install App</span>
+        </DropdownItem>
+      ) : null}
+      {iosHint ? (
+        <DropdownItem
+          className="border-t border-base-300"
+          onClick={() =>
+            showMessage(
+              "Install mdSilo",
+              "In Safari, tap Share, then Add to Home Screen. It opens as an app, works offline, and Safari keeps its files.",
+            )
+          }
+        >
+          <TbDeviceMobileDown size={18} className="mr-1" />
+          <span>Add to Home Screen</span>
+        </DropdownItem>
+      ) : null}
       {!isWeb && (
         <DropdownItem
           onClick={async () => {
@@ -339,7 +361,7 @@ const NewButton = () => {
   );
 
   const onCreateNoteClick = useCallback(() => {
-    if (isMobile(768)) {
+    if (isMobileWidth()) {
       setIsSidebarOpen(false);
     }
     setIsFindOrCreateModalOpen((isOpen) => !isOpen);

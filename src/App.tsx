@@ -5,6 +5,7 @@ import "tippy.js/dist/tippy.css";
 import { ProvideCurrentView } from "@/state/useCurrentView";
 import useHotkeys from "@/lib/hooks/useHotkeys";
 import useTheme from "@/lib/hooks/useTheme";
+import useIsMobile from "@/lib/hooks/useIsMobile";
 import { useCustomFonts } from "@/custom/fonts";
 import { useCustomThemes } from "@/custom/themes";
 import { usePlugins } from "@/plugins/registry";
@@ -28,6 +29,7 @@ import Player from "@/player/Player";
 import MainView from "@/shell/MainView";
 import SettingsModal from "@/shell/settings/SettingsModal";
 import AboutModal from "@/shell/settings/AboutModal";
+import PwaPrompts from "@/shell/PwaPrompts";
 
 const App = () => {
   const isFindOrCreateModalOpen = useStore(
@@ -42,6 +44,10 @@ const App = () => {
   useCustomThemes();
   usePlugins();
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
+  const mobile = useIsMobile();
+  const menuOnTop =
+    sideMenuOrientation === "horizontal" ||
+    (sideMenuOrientation === "auto" && mobile);
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
@@ -113,14 +119,11 @@ const App = () => {
 
   return (
     <ProvideCurrentView route={routeMain}>
-      <div id="app-container" className="h-screen flex flex-col">
+      {/* the height of the visible area, see #app-container in styles.css */}
+      <div id="app-container" className="flex flex-col">
         <div
-          className={`flex w-full h-full bg-base-100 ${
-            sideMenuOrientation === "horizontal"
-              ? "flex-col"
-              : sideMenuOrientation === "vertical"
-                ? "flex-row"
-                : "flex-col md:flex-row"
+          className={`flex w-full h-full min-h-0 bg-base-100 ${
+            menuOnTop ? "flex-col" : "flex-row"
           }`}
         >
           <SideMenu />
@@ -150,6 +153,7 @@ const App = () => {
           <PluginAnswerModal />
           <TrustedPlugins />
           <PluginDev />
+          {isWeb ? <PwaPrompts /> : null}
         </div>
       </div>
     </ProvideCurrentView>

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { TbChevronLeft } from "react-icons/tb";
+import useIsMobile from "@/lib/hooks/useIsMobile";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { store, useStore } from "@/state/store";
 import { ArticleType, ChannelType } from "@/types/model";
@@ -11,6 +13,9 @@ import { OpdsBrowser } from "@/feed/OpdsBrowser";
 import * as dataAgent from "@/feed/dataAgent";
 import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
 import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from "@/state/userSettings";
+
+/** the pane shown on a phone */
+type MobilePane = "channels" | "articles" | "article" | "manager" | "catalog";
 
 export default function Feed() {
   const dispatch = useCurrentViewContext().dispatch;
@@ -39,6 +44,9 @@ export default function Feed() {
     null,
   );
   const [showManager, setShowManager] = useState(false);
+  // a phone: one pane at a time, from the channels down to an article
+  const mobile = useIsMobile();
+  const [mobilePane, setMobilePane] = useState<MobilePane>("channels");
 
   const storeArticle = useStore((state) => state.currentArticle);
 
@@ -90,6 +98,7 @@ export default function Feed() {
 
   const onShowManager = () => {
     setShowManager(!showManager);
+    setMobilePane(showManager ? "channels" : "manager");
   };
 
   const loadArticleList = async (link: string) => {
@@ -105,10 +114,12 @@ export default function Feed() {
     if (clickedChannel?.ty === "opds") {
       setCurrentCatalog(clickedChannel);
       setShowManager(false);
+      setMobilePane("catalog");
     } else if (clickedChannel) {
       setCurrentCatalog(null);
       setCurrentChannel(clickedChannel);
       setShowManager(false);
+      setMobilePane("articles");
       await loadArticleList(clickedChannel.link);
     }
     setLoading(false);
@@ -121,6 +132,7 @@ export default function Feed() {
     setCurrentCatalog(null);
     setStarChannel(true);
     setShowManager(false);
+    setMobilePane("articles");
     const starArticles = await dataAgent.getArticleList(null, null, 1);
     setCurrentArticles(starArticles);
     setLoading(false);
@@ -167,6 +179,7 @@ export default function Feed() {
   const onClickArticle = async (article: ArticleType) => {
     setCurrentArticle(article);
     store.getState().setCurrentArticle(article);
+    setMobilePane("article");
     if (article.read_status !== 0) return;
     // update read_status to db
     const res = await dataAgent.updateArticleReadStatus(article.url, 1);
@@ -180,7 +193,9 @@ export default function Feed() {
 
   const [hideCol, setHideCol] = useState(false);
   const hideChannelCol = () => {
-    setHideCol(!hideCol);
+    // a phone: the article is the only pane, back to the articles
+    if (mobile) setMobilePane("articles");
+    else setHideCol(!hideCol);
   };
   const [isHideChannel, setIsHideChannel] = useState(false);
   useEffect(() => {
@@ -188,6 +203,103 @@ export default function Feed() {
       hideCol || !(currentArticles && currentArticles.length > 0),
     );
   }, [currentArticles, hideCol]);
+
+  if (mobile) {
+    const channels = (
+      <div className="h-full p-1 overflow-y-auto">
+        <ChannelList
+          channelList={channelList}
+          refreshList={refreshList}
+          onShowManager={onShowManager}
+          onClickFeed={onClickFeed}
+          onClickStar={onClickStar}
+          refreshing={refreshing}
+          doneNum={doneNum}
+        />
+      </div>
+    );
+    const back = (label: string, to: MobilePane) => (
+      <button
+        className="flex items-center shrink-0 gap-1 px-2 py-2 text-sm border-b border-base-300 text-base-content/70 hover:bg-base-content/10"
+        onClick={() => {
+          if (to === "channels") setShowManager(false);
+          setMobilePane(to);
+        }}
+      >
+        <TbChevronLeft size={18} />
+        <span className="truncate">{label}</span>
+      </button>
+    );
+    const article = currentArticle || storeArticle;
+    let pane = channels;
+    if (mobilePane === "manager" && showManager) {
+      pane = (
+        <>
+          {back("Channels", "channels")}
+          <div className="flex-1 min-h-0 p-2 overflow-y-auto">
+            <FeedManager
+              channelList={channelList}
+              handleAddFeed={handleAddFeed}
+              handleDelete={handleDeleteFeed}
+            />
+          </div>
+        </>
+      );
+    } else if (mobilePane === "catalog" && currentCatalog) {
+      pane = (
+        <>
+          {back("Channels", "channels")}
+          <div className="flex-1 min-h-0 p-1">
+            <OpdsBrowser
+              key={currentCatalog.link}
+              channel={currentCatalog}
+              onOpenBook={openBook}
+            />
+          </div>
+        </>
+      );
+    } else if (mobilePane === "article" && article) {
+      pane = (
+        <>
+          {back(currentChannel?.title || "Articles", "articles")}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <ArticleView
+              article={article}
+              starArticle={updateStarStatus}
+              hideChannelCol={hideChannelCol}
+              onOpenNote={openNote}
+            />
+          </div>
+        </>
+      );
+    } else if (mobilePane === "articles" || mobilePane === "article") {
+      pane = (
+        <>
+          {back("Channels", "channels")}
+          <div className="flex-1 min-h-0 p-1 overflow-x-hidden overflow-y-auto">
+            <Channel
+              channel={currentChannel}
+              starChannel={starChannel}
+              articles={currentArticles}
+              handleRefresh={handleRefresh}
+              updateAllReadStatus={updateAllReadStatus}
+              onClickArticle={onClickArticle}
+              loading={loading}
+              syncing={syncing}
+              onOpenBook={openBook}
+            />
+          </div>
+        </>
+      );
+    }
+    return (
+      <ErrorBoundary>
+        <div className="flex flex-col h-full min-h-0" data-testid="feed-mobile">
+          {pane}
+        </div>
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>

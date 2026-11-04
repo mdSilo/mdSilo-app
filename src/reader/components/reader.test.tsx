@@ -762,6 +762,28 @@ describe("reader on mobile", () => {
     expect(screen.getByTestId("reader-toc")).toBeInTheDocument();
     expect(store.getState().readerSettings.showSidebar).toBe(true);
   });
+
+  test("the sidebar is a drawer over the book, closed by its backdrop", async () => {
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 500,
+    });
+    renderMain();
+    await go({ view: "book", path: BOOK });
+    await waitFor(() =>
+      expect(screen.getByTestId("foliate-viewer")).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByTitle("Contents and notes"));
+    expect(screen.getByTestId("reader-sidebar").className).toContain(
+      "absolute",
+    );
+    // no resizing a drawer
+    expect(
+      screen.queryByRole("separator", { name: "Resize contents" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("reader-sidebar-backdrop"));
+    expect(screen.queryByTestId("reader-sidebar")).not.toBeInTheDocument();
+  });
 });
 
 describe("library", () => {

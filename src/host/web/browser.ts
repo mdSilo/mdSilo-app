@@ -1,6 +1,7 @@
 /**
  * Browser helpers for the web version
  */
+import { listenInstall, watchRegistration } from "./pwa";
 
 /** URL prefix served by the service worker (web/public/fs-sw.js) from IndexedDB */
 export const FS_URL_PREFIX = "__mdsilo_fs__";
@@ -25,16 +26,22 @@ export function assetProtocol(): string {
 
 let swRegistering: Promise<void> | null = null;
 
-/** register the service worker which serves files in IndexedDB */
+/**
+ * Register the service worker: it serves the files in IndexedDB, and keeps
+ * the app for offline use (see pwa.ts).
+ */
 export function registerFsServiceWorker(): Promise<void> {
   if (swRegistering) return swRegistering;
+  listenInstall();
   swRegistering = (async () => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator))
       return;
     try {
-      await navigator.serviceWorker.register(`${baseUrl()}fs-sw.js`, {
-        scope: baseUrl(),
-      });
+      const reg = await navigator.serviceWorker.register(
+        `${baseUrl()}fs-sw.js`,
+        { scope: baseUrl() },
+      );
+      watchRegistration(reg);
     } catch (e) {
       console.warn(
         "Failed to register service worker, local images may not load",

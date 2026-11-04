@@ -8,6 +8,7 @@ import {
   type LibrarySettings,
 } from "@/reader/library/shelf";
 import { isSystemDark, SYSTEM_THEME } from "@/lib/themes";
+import { isMobileWidth } from "@/lib/hooks/useIsMobile";
 import type { CustomFont } from "@/custom/fonts";
 import type { CustomTheme } from "@/custom/themes";
 import type { InstalledPlugin, PluginState } from "@/plugins/registry";
@@ -212,7 +213,8 @@ const userSettingsSlice = (
   setFontWt: setter(set, "fontWt"),
   lineHeight: 1.6,
   setLineHeight: setter(set, "lineHeight"),
-  isSidebarOpen: true,
+  // a phone has no room beside the page: start with the page
+  isSidebarOpen: typeof window === "undefined" || !isMobileWidth(),
   setIsSidebarOpen: setter(set, "isSidebarOpen"),
   isSettingsOpen: false,
   setIsSettingsOpen: setter(set, "isSettingsOpen"),

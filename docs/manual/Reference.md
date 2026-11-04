@@ -66,6 +66,7 @@ The web version at the same address as this manual is the same app. Differences:
 - Use **Open Folder** to import a folder from your device, and the options of a note to export it; files are downloaded by your browser.
 - Feeds go through a CORS proxy, see [[6 Feeds|Feeds]].
 - No native file watching, no git sync and no publishing; the desktop app is the choice for big libraries.
+- **Install it as an app**, on a phone too: the logo menu > **Install App** (Chrome, Edge, Android), or in Safari on iPhone and iPad: Share > **Add to Home Screen**. It then opens in a window of its own and works offline; feeds and catalogs still need the network. On a phone the side menu is a row on top (swipe it sideways for more buttons), and Feed shows one pane at a time. When a new version is out, a prompt offers to reload into it.
 
 :::warning
 **Back up.** Clearing the site data of your browser deletes your notes. Use the **File Menu** (the folder icon at the bottom of the side menu) > **Backup** to download everything as a zip. To restore, unzip it and import the folder with *Open Folder*.

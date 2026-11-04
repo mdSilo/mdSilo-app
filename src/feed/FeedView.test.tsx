@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { invoke } from "@tauri-apps/api/core";
@@ -214,3 +214,37 @@ describe("Feed view", () => {
 });
 
 vi.setConfig({ testTimeout: 15000 });
+
+describe("Feed view on a phone", () => {
+  const setWidth = (value: number) =>
+    Object.defineProperty(window, "innerWidth", { configurable: true, value });
+  afterEach(() => setWidth(1024));
+
+  test("one pane at a time: channels, articles, article, and back", async () => {
+    setWidth(390);
+    setup();
+    await userEvent.click(await screen.findByText("Tech"));
+    // the articles in place of the channels
+    expect(await screen.findByText("Hello world")).toBeInTheDocument();
+    expect(screen.queryByText("Pods")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText("Hello world"));
+    expect(await screen.findByText("Body text")).toBeInTheDocument();
+    // the article only, back to the articles of the channel
+    expect(screen.queryByText("Starred")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Tech" }));
+    expect(await screen.findByText("Hello world")).toBeInTheDocument();
+    expect(screen.queryByText("Body text")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Channels" }));
+    expect(await screen.findByText("Pods")).toBeInTheDocument();
+    expect(screen.queryByText("Hello world")).not.toBeInTheDocument();
+  });
+
+  test("follows the window: a phone after a resize", async () => {
+    setup();
+    await screen.findByText("Tech");
+    expect(screen.queryByTestId("feed-mobile")).not.toBeInTheDocument();
+    setWidth(390);
+    fireEvent(window, new Event("resize"));
+    expect(await screen.findByTestId("feed-mobile")).toBeInTheDocument();
+  });
+});

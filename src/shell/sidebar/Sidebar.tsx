@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useTransition, animated, SpringConfig } from "@react-spring/web";
-import { isMobile } from "@/lib/helper";
+import useIsMobile from "@/lib/hooks/useIsMobile";
 import { useStore } from "@/state/store";
 import { SIDEBAR_WIDTH } from "@/state/userSettings";
 import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
@@ -24,13 +24,8 @@ function Sidebar(props: Props) {
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const sidebarWidth = useStore((state) => state.sidebarWidth);
   const setSidebarWidth = useStore((state) => state.setSidebarWidth);
-  const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
-  const horizontalMenu =
-    sideMenuOrientation === "horizontal"
-      ? "top-12 md:top-0"
-      : sideMenuOrientation === "vertical"
-        ? "top-0"
-        : "top-12 md:top-0";
+  // a phone: over the page (in the area under the menu), with a backdrop
+  const mobile = useIsMobile();
   // width while dragging, saved to store (persisted) on release
   const { width, onResize, onResizeEnd } = useResizableWidth(
     sidebarWidth,
@@ -79,13 +74,13 @@ function Sidebar(props: Props) {
     (styles, item) =>
       item && (
         <>
-          {isMobile(768) ? (
+          {mobile ? (
             <animated.div
-              className="fixed inset-0 z-10"
+              className="absolute inset-0 z-10"
+              data-testid="sidebar-backdrop"
               style={{
                 backgroundColor: styles.backgroundColor,
                 opacity: styles.backgroundOpacity,
-                top: sideMenuOrientation === "vertical" ? 0 : "3rem",
                 display: styles.dspl.to((displ) =>
                   displ === 0 ? "none" : "initial",
                 ),
@@ -94,11 +89,15 @@ function Sidebar(props: Props) {
             />
           ) : null}
           <animated.div
-            className={`fixed bottom-0 left-0 z-20 flex-none shadow-popover md:shadow-none md:relative md:z-0 ${horizontalMenu}`}
+            className={
+              mobile
+                ? "absolute inset-y-0 left-0 z-20 flex-none shadow-popover"
+                : "relative flex-none"
+            }
             style={{
               width,
-              // overlay on mobile: keep some of the page visible
-              maxWidth: isMobile(768) ? "85vw" : undefined,
+              // keep some of the page visible
+              maxWidth: mobile ? "85vw" : undefined,
               transform: styles.transform,
               display: styles.dspl.to((displ) =>
                 displ === 0 ? "none" : "initial",
@@ -110,13 +109,15 @@ function Sidebar(props: Props) {
             >
               <SidebarContent className="flex-1 overflow-x-hidden overflow-y-auto" />
             </div>
-            <ResizeHandle
-              width={width}
-              bounds={SIDEBAR_WIDTH}
-              label="Resize sidebar"
-              onResize={onResize}
-              onResizeEnd={onResizeEnd}
-            />
+            {mobile ? null : (
+              <ResizeHandle
+                width={width}
+                bounds={SIDEBAR_WIDTH}
+                label="Resize sidebar"
+                onResize={onResize}
+                onResizeEnd={onResizeEnd}
+              />
+            )}
           </animated.div>
         </>
       ),

@@ -1,6 +1,7 @@
-import { lazy, Suspense, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, type ComponentType } from "react";
 import MsEditor from "mdsmirror";
-import { useStore } from "@/state/store";
+import { store, useStore } from "@/state/store";
+import { isMobileWidth } from "@/lib/hooks/useIsMobile";
 import { EDITOR_THEME } from "@/lib/themes";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import { Spinner } from "@/ui/ui";
@@ -52,6 +53,10 @@ export default function MainView() {
   const { state, dispatch } = useCurrentViewContext();
   // the views asked by the book windows, e.g. a note linking to the book
   useViewsOfBookWindows(dispatch);
+  // a phone: the sidebar covers the page, close it once a page is opened
+  useEffect(() => {
+    if (isMobileWidth()) store.getState().setIsSidebarOpen(false);
+  }, [state]);
   const viewTy = state.view;
   const View = VIEWS[viewTy] ?? NotePage;
   return (

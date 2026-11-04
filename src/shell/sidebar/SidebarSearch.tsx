@@ -11,7 +11,7 @@ import useDebounce from "@/lib/hooks/useDebounce";
 import useLoadNotes from "@/lib/hooks/useLoadNotes";
 import { store, useStore } from "@/state/store";
 import { sanitizeHtml } from "@/lib/sanitize";
-import { isMobile } from "@/lib/helper";
+import { isMobileWidth } from "@/lib/hooks/useIsMobile";
 import { openFilePath } from "@/workspace/open";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import VirtualTree from "@/ui/VirtualTree";
@@ -181,7 +181,7 @@ export const SearchLeaf = memo(function SearchLeaf(props: SearchLeafProps) {
       onClick={async () => {
         const hash = block ? `0-${block.path}` : "";
         // close Sidebar before go to note page on small screen
-        if (isMobile(767)) {
+        if (isMobileWidth()) {
           setIsSidebarOpen(false);
         }
         // console.log("block hash", hash, text)
