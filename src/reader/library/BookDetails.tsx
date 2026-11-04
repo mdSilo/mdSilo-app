@@ -14,10 +14,11 @@ import {
   TbPhoto,
   TbPhotoOff,
   TbRestore,
+  TbRss,
   TbTrash,
 } from "react-icons/tb";
 import { BaseModal } from "@/ui/BaseModal";
-import { IconButton } from "@/ui/ui";
+import { IconButton, Spinner } from "@/ui/ui";
 import { openFileDilog, openFilePath } from "@/workspace/open";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { canOpenBookWindow, readBook } from "@/shell/windows";
@@ -153,6 +154,37 @@ function ViewBook({
   const [size, setSize] = useState<number | undefined>();
   const [hasNotes, setHasNotes] = useState(false);
   const [copied, setCopied] = useState(false);
+  // the feed fetched again: what it is at, then what it did
+  const [updating, setUpdating] = useState(false);
+  const [progress, setProgress] = useState("");
+  const [updated, setUpdated] = useState<{ text: string; error?: boolean }>();
+  const updateFromFeed = async () => {
+    setUpdating(true);
+    setProgress("Fetching the feed…");
+    setUpdated(undefined);
+    try {
+      // the feed code loaded only when used
+      const [{ updateFeedBook }, { summaryOf }] = await Promise.all([
+        import("@/feed/feedToBook"),
+        import("@/feed/MakeBook"),
+      ]);
+      const report = await updateFeedBook(book.hash, (done, total) =>
+        setProgress(
+          total ? `Fetching the full text ${done}/${total}…` : "Saving…",
+        ),
+      );
+      setUpdated({ text: summaryOf(report) });
+      onChanged();
+    } catch (e) {
+      setUpdated({
+        text: e instanceof Error ? e.message : String(e),
+        error: true,
+      });
+    } finally {
+      setUpdating(false);
+      setProgress("");
+    }
+  };
   const notesPath = annotationsPathOf(book.path);
   useEffect(() => {
     if (!book.here) return;
@@ -251,6 +283,15 @@ function ViewBook({
                 <TbFilePencil size={16} />
               </Action>
             ) : null}
+            {book.here && book.feed && book.feedUrl ? (
+              <Action
+                title="Add the new articles from the feed"
+                onClick={updateFromFeed}
+                disabled={updating}
+              >
+                {updating ? <Spinner size="xs" /> : <TbRss size={16} />}
+              </Action>
+            ) : null}
             <Action
               title={
                 book.synced
@@ -291,6 +332,14 @@ function ViewBook({
           </div>
         </div>
       </div>
+      {progress || updated ? (
+        <p
+          className={`mb-3 text-sm ${updated?.error ? "text-error" : updated ? "text-success" : ""}`}
+          role="status"
+        >
+          {progress || updated?.text}
+        </p>
+      ) : null}
       <dl className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-3">
         {fields.map(([label, value]) => (
           <div key={label} className="min-w-0">
@@ -841,11 +890,13 @@ function Action({
   title,
   onClick,
   danger = false,
+  disabled,
   children,
 }: {
   title: string;
   onClick: () => void;
   danger?: boolean;
+  disabled?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -853,6 +904,7 @@ function Action({
       className={danger ? "text-error" : ""}
       title={title}
       onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </IconButton>

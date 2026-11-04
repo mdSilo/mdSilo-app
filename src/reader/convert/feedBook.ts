@@ -60,6 +60,8 @@ export type FeedBookData = {
   /** of the book, kept as it is made again */
   uid: string;
   title: string;
+  /** the URL of the feed, if of one (not the starred articles) */
+  feedUrl?: string;
   language: string;
   createdAt: string;
   /** in the order of the spine */
@@ -275,6 +277,8 @@ const FEED_CSS = `
 
 export type FeedBookOptions = {
   title: string;
+  /** the URL of the feed, kept in the book; the one in it already stays */
+  feedUrl?: string;
   /** the book as it is, if made before */
   existing?: FeedBookFiles;
   /** in the order to add them; those in the book already are not added again */
@@ -397,6 +401,9 @@ export async function makeFeedBook(
     version: FEED_DATA_VERSION,
     uid: old?.uid ?? `uuid:${crypto.randomUUID()}`,
     title: options.title,
+    ...((old?.feedUrl ?? options.feedUrl)
+      ? { feedUrl: old?.feedUrl ?? options.feedUrl }
+      : {}),
     language,
     createdAt: old?.createdAt ?? now,
     articles,

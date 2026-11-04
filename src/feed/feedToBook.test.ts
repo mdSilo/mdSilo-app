@@ -13,7 +13,7 @@ import {
 } from "@/reader/library/library";
 import type { ArticleType } from "@/types/model";
 import { makeNote, useWebFs } from "@/testUtils";
-import { inBookOrder, saveFeedBook } from "./feedToBook";
+import { inBookOrder, saveFeedBook, updateFeedBook } from "./feedToBook";
 import { SHORT_TEXT } from "./fullText";
 
 const WS = "/mdSilo";
@@ -40,6 +40,15 @@ const post = (n: number, extra: Partial<ArticleType> = {}): ArticleType => ({
 });
 const excerpt = (n: number) =>
   post(n, { content: "", description: `<p>The start of post ${n}…</p>` });
+
+const FEED = "https://example.com/feed";
+const rss = (...ns: number[]) =>
+  `<?xml version="1.0"?><rss version="2.0"><channel><title>Example</title><link>https://example.com</link>${ns
+    .map(
+      (n) =>
+        `<item><title>Post ${n}</title><link>https://example.com/${n}</link><pubDate>${new Date(`2026-01-0${n}T00:00:00Z`).toUTCString()}</pubDate><description><![CDATA[${longText(n)}]]></description></item>`,
+    )
+    .join("")}</channel></rss>`;
 
 const annotation = (cfi: string): BookNote => ({
   id: `n-${cfi}`,
@@ -228,6 +237,72 @@ describe("feed articles made a book", () => {
       "not on this device",
     );
     expect(Object.keys((await readLibrary(WS)).books)).toEqual([made.hash]);
+  });
+
+  test("found by the URL of its feed, before its name", async () => {
+    const made = await saveFeedBook("Example", [post(1)], { feedUrl: FEED });
+    expect((await readLibrary(WS)).books[made.hash].feedUrl).toBe(FEED);
+    expect((await bookData()).feedUrl).toBe(FEED);
+    // the channel renamed: the same book still
+    const again = await saveFeedBook("Renamed", [post(2)], { feedUrl: FEED });
+    expect(again).toMatchObject({
+      hash: made.hash,
+      path: BOOK,
+      name: "Example",
+      created: false,
+      added: 1,
+    });
+    expect(Object.keys((await readLibrary(WS)).books)).toEqual([made.hash]);
+    expect((await bookData()).title).toBe("Example");
+    // another feed of the name: not added to it
+    await expect(
+      saveFeedBook("Example", [post(3)], {
+        feedUrl: "https://other.example/feed",
+      }),
+    ).rejects.toThrow("of another feed");
+    // the starred, of no feed: by the name, as before
+    expect(await saveFeedBook("Example", [post(3)])).toMatchObject({
+      hash: made.hash,
+      added: 1,
+    });
+  });
+
+  test("made before the URL was kept: found by its name, the URL kept then", async () => {
+    const made = await saveFeedBook("Example", [post(1)]);
+    expect((await readLibrary(WS)).books[made.hash].feedUrl).toBeUndefined();
+    await saveFeedBook("Example", [post(1)], { feedUrl: FEED });
+    expect((await readLibrary(WS)).books[made.hash].feedUrl).toBe(FEED);
+    expect(
+      await saveFeedBook("Renamed", [post(2)], { feedUrl: FEED }),
+    ).toMatchObject({ hash: made.hash, added: 1 });
+  });
+
+  test("the feed fetched again: its new articles at the end of the book", async () => {
+    const made = await saveFeedBook("Example", [post(1)], { feedUrl: FEED });
+    pages[FEED] = rss(3, 1, 2);
+    const report = await updateFeedBook(made.hash);
+    expect(report).toMatchObject({
+      hash: made.hash,
+      created: false,
+      added: 2,
+      total: 3,
+    });
+    expect((await bookData()).articles.map((a) => a.title)).toEqual([
+      "Post 1",
+      "Post 2",
+      "Post 3",
+    ]);
+    expect(await updateFeedBook(made.hash)).toMatchObject({ added: 0 });
+  });
+
+  test("the feed fetched again: not of a feed, or the feed failing", async () => {
+    const starred = await saveFeedBook("Starred", [post(1)]);
+    await expect(updateFeedBook(starred.hash)).rejects.toThrow("not of a feed");
+    const made = await saveFeedBook("Example", [post(1)], { feedUrl: FEED });
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    await expect(updateFeedBook(made.hash)).rejects.toThrow(
+      "Failed to fetch the feed",
+    );
   });
 
   test("no workspace", async () => {

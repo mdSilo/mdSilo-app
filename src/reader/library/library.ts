@@ -87,6 +87,8 @@ export type BookEntry = {
   translate?: boolean;
   /** a book made of feed articles: its name, to add the new articles to it (see ../convert/feedBook.ts) */
   feed?: string;
+  /** of a feed book: the URL of the feed, to find the book by and fetch the new articles from */
+  feedUrl?: string;
   /** downloaded from an OPDS catalog: the id of its entry there (see src/feed/opds.ts) */
   opds?: string;
 };

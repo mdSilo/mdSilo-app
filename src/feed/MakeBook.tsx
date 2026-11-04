@@ -8,18 +8,20 @@ type Props = {
   defaultName: string;
   /** shown in each article, e.g. the channel */
   source?: string;
+  /** the URL of the feed, if of one: the book of it found by it */
+  feedUrl?: string;
   articles: ArticleType[];
   onOpenBook?: (path: string) => void;
   onClose: () => void;
 };
 
-const summaryOf = (r: FeedBookReport) => {
+export const summaryOf = (r: FeedBookReport) => {
   const parts = [
     r.created
       ? `Made, ${r.added} article(s)`
       : r.added
-        ? `${r.added} new article(s) added`
-        : "No new articles",
+        ? `${r.added} new article(s) added to "${r.name}"`
+        : `No new articles for "${r.name}"`,
     r.fromPage ? `${r.fromPage} full text from the page` : "",
     r.partial
       ? `${r.partial} excerpt(s) only: the full text could not be fetched`
@@ -32,7 +34,7 @@ const summaryOf = (r: FeedBookReport) => {
 
 /** Make a book of the articles, or add the new ones to it. */
 export function MakeBook(props: Props) {
-  const { defaultName, source, articles, onOpenBook, onClose } = props;
+  const { defaultName, source, feedUrl, articles, onOpenBook, onClose } = props;
   const [name, setName] = useState(defaultName);
   const [progress, setProgress] = useState<{ done: number; total: number }>();
   const [busy, setBusy] = useState(false);
@@ -53,6 +55,7 @@ export function MakeBook(props: Props) {
       setReport(
         await saveFeedBook(name.trim(), articles, {
           source,
+          feedUrl,
           onProgress: (done, total) => setProgress({ done, total }),
         }),
       );
@@ -95,8 +98,9 @@ export function MakeBook(props: Props) {
       </div>
       <p className="mt-1 text-base-content/60">
         {articles.length} article(s), each a chapter of the book in reading/.
-        Made again, a book of this name gets the new articles at its end; the
-        articles in it stay as they are, so do your annotations.
+        Made again, the book of this feed (or of this name) gets the new
+        articles at its end; the articles in it stay as they are, so do your
+        annotations.
       </p>
       {progress && progress.total > 0 && (
         <p className="mt-1">

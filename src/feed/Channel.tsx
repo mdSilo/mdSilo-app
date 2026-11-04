@@ -93,6 +93,7 @@ export function Channel(props: Props) {
         <MakeBook
           defaultName={channel?.title || "Starred"}
           source={channel?.title}
+          feedUrl={channel?.link}
           articles={articles}
           onOpenBook={onOpenBook}
           onClose={() => setMakingBook(false)}

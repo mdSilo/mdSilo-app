@@ -24,10 +24,13 @@ import {
   readLibrary,
   saveBookEntry,
   writeBytes,
+  type BookEntry,
+  type Library,
 } from "@/reader/library/library";
 import { useReaderStore, useSideStore } from "@/reader/readerStore";
 import { readVocabulary } from "@/reader/vocabulary/vocabulary";
 import type { ArticleType } from "@/types/model";
+import { fetchFeed } from "./dataAgent";
 import { fetchImage, fullTextOf } from "./fullText";
 
 /**
@@ -39,6 +42,8 @@ import { fetchImage, fullTextOf } from "./fullText";
 export type FeedBookReport = {
   /** of the book file */
   path: string;
+  /** the name of the book: found by the URL of the feed, maybe not the one given */
+  name: string;
   /** of the book in the library */
   hash: string;
   created: boolean;
@@ -136,8 +141,32 @@ async function articlesInUse(
 }
 
 /**
- * Make the book of a name of the articles, or add the new ones to it.
+ * The feed book to add the articles to: the one of the feed URL, else the
+ * one of the name. Undefined if none, to be made.
+ * @throws if the book of the name is of another feed
+ */
+export function feedBookOf(
+  lib: Library,
+  name: string,
+  feedUrl?: string,
+): BookEntry | undefined {
+  const books = Object.values(lib.books).filter((b) => b.feed);
+  const url = feedUrl?.trim();
+  const byUrl = url ? books.find((b) => b.feedUrl === url) : undefined;
+  if (byUrl) return byUrl;
+  const byName = books.find((b) => b.feed === name);
+  if (byName?.feedUrl && url && byName.feedUrl !== url)
+    throw new Error(
+      `The book "${name}" is of another feed (${byName.feedUrl}): choose another name`,
+    );
+  return byName;
+}
+
+/**
+ * Make the book of a name of the articles, or add the new ones to it: the
+ * book of the feed URL if any, else the one of the name (see feedBookOf).
  * @param source e.g. the channel, shown in each article
+ * @param feedUrl of the articles, if of a feed: kept with the book
  * @throws if no workspace, or the book is in the library but not on this device
  */
 export async function saveFeedBook(
@@ -145,6 +174,7 @@ export async function saveFeedBook(
   articles: ArticleType[],
   options: {
     source?: string;
+    feedUrl?: string;
     onProgress?: (done: number, total: number) => void;
   } = {},
 ): Promise<FeedBookReport> {
@@ -152,7 +182,9 @@ export async function saveFeedBook(
   if (!ws)
     throw new Error("Open a folder first: the book is saved in its reading/");
   const lib = await readLibrary(ws);
-  const entry = Object.values(lib.books).find((b) => b.feed === name);
+  const feedUrl = options.feedUrl?.trim() || undefined;
+  const entry = feedBookOf(lib, name, feedUrl);
+  if (entry?.feed) name = entry.feed;
   let path: string | undefined;
   let existing: FeedBookFiles | undefined;
   if (entry) {
@@ -216,7 +248,8 @@ export async function saveFeedBook(
   }));
 
   const result = await makeFeedBook({
-    title: name,
+    title: existing?.data.title ?? name,
+    feedUrl,
     existing,
     articles: inputs,
     canRefresh: (id) => !inUse.has(id),
@@ -224,6 +257,7 @@ export async function saveFeedBook(
   });
   const addedTexts = texts.slice(0, fresh.length);
   const report = {
+    name,
     created: !entry,
     added: result.added.length,
     fromPage: addedTexts.filter((t) => t.fromPage).length,
@@ -237,6 +271,9 @@ export async function saveFeedBook(
     result.added.length === 0 &&
     result.refreshed.length === 0
   ) {
+    // a book made before the URL was kept: found by it from now on
+    if (feedUrl && !entry.feedUrl)
+      await saveBookEntry(ws, { hash: entry.hash, feedUrl });
     return { ...report, path, hash: entry.hash };
   }
 
@@ -259,6 +296,7 @@ export async function saveFeedBook(
     await saveBookEntry(ws, {
       hash,
       fileHash: fileHash !== hash ? fileHash : undefined,
+      ...(feedUrl && !entry.feedUrl ? { feedUrl } : {}),
     });
   } else {
     await saveBookEntry(ws, {
@@ -269,10 +307,37 @@ export async function saveFeedBook(
       format: "EPUB",
       addedAt: new Date().toISOString(),
       feed: name,
+      ...(feedUrl ? { feedUrl } : {}),
     });
   }
   void reindex(hash, name, result.epub, path);
   return { ...report, path, hash };
+}
+
+/**
+ * The feed of a feed book fetched again, its new articles added to the end
+ * of the book.
+ * @throws if the book is not of a feed URL, or the feed could not be fetched
+ */
+export async function updateFeedBook(
+  hash: string,
+  onProgress?: (done: number, total: number) => void,
+): Promise<FeedBookReport> {
+  const ws = store.getState().initDir;
+  if (!ws) throw new Error("Open a folder first");
+  const entry = (await readLibrary(ws)).books[hash];
+  if (!entry?.feed || !entry.feedUrl)
+    throw new Error(
+      "The book is not of a feed, or of one made before its URL was kept",
+    );
+  const fetched = await fetchFeed(entry.feedUrl).catch(() => null);
+  if (!fetched?.articles)
+    throw new Error(`Failed to fetch the feed ${entry.feedUrl}`);
+  return saveFeedBook(entry.feed, fetched.articles, {
+    feedUrl: entry.feedUrl,
+    source: fetched.channel?.title,
+    onProgress,
+  });
 }
 
 /** The text of the book in the search again: the new articles found. */

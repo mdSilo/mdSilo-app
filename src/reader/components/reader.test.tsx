@@ -29,7 +29,12 @@ import { usePopups } from "../popups";
 import { resetReaderChrome, useReaderChrome } from "../chrome";
 import { DEFAULT_READER_SETTINGS } from "../settings";
 import { DEFAULT_LIBRARY_SETTINGS } from "../library/shelf";
-import { readLibrary, refreshLibrary, setBooksGroup } from "../library/library";
+import {
+  readLibrary,
+  refreshLibrary,
+  saveBookEntry,
+  setBooksGroup,
+} from "../library/library";
 import { resetVocabulary, useVocabulary } from "../vocabulary/vocabulary";
 import { setActivePane, setView, type FoliateView } from "../view";
 
@@ -888,6 +893,36 @@ describe("library", () => {
     fireEvent.click(screen.getByLabelText("Back to the library"));
     expect(await bookItem("Jane Doe")).toBeInTheDocument();
     container.remove();
+  });
+
+  test("a feed book: its feed fetched again from its details", async () => {
+    await refreshLibrary(WS);
+    const entry = await libraryEntry("Tiny Book");
+    await saveBookEntry(WS, {
+      hash: entry!.hash,
+      feed: "Tiny Book",
+      feedUrl: "https://example.com/feed",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            `<?xml version="1.0"?><rss version="2.0"><channel><title>T</title><item><title>P</title><link>https://example.com/p</link></item></channel></rss>`,
+          ),
+      ),
+    );
+    renderMain();
+    await go({ view: "library" });
+    fireEvent.click(await screen.findByLabelText(/Book details/));
+    fireEvent.click(
+      await screen.findByLabelText("Add the new articles from the feed"),
+    );
+    // fetched; the file not a book of feed articles: said so
+    expect(
+      await screen.findByText(/not a book of feed articles/),
+    ).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 
   test("a book put in a group, the group opened, renamed, ungrouped", async () => {
