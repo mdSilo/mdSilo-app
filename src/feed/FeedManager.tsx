@@ -29,7 +29,7 @@ export function FeedManager(props: Props) {
   const [searchText, setSearchText] = useState<string>("");
 
   const [feedUrl, setFeedUrl] = useState(
-    "https://m.gutenberg.org/ebooks.opds/",
+    "https://www.gutenberg.org/ebooks.opds/",
   );
   const [feedType, setFeedType] = useState("opds");
   const [feedTitle, setFeedTitle] = useState("");

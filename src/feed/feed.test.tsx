@@ -602,7 +602,7 @@ describe("FeedManager", () => {
     await userEvent.click(screen.getByText("Load"));
     expect(invoke).toHaveBeenCalledWith(
       "fetch_url",
-      expect.objectContaining({ url: "https://m.gutenberg.org/ebooks.opds/" }),
+      expect.objectContaining({ url: "https://www.gutenberg.org/ebooks.opds/" }),
     );
     expect(
       await screen.findByText(
