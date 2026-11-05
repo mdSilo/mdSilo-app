@@ -58,8 +58,13 @@ export type FeedBookReport = {
   total: number;
 };
 
-/** The pages fetched at a time. */
-const CONCURRENCY = 3;
+/** The pages of the articles fetched at a time. */
+const PAGE_CONCURRENCY = 6;
+/** The images fetched at a time, of all the articles. */
+const IMAGE_CONCURRENCY = 8;
+
+/** What is being done, for the progress: the full texts fetched, then the pages made (their images). */
+export type FeedBookStage = "text" | "pages";
 
 // not in a file name on some systems; the control characters too
 const fileNameOf = (name: string) =>
@@ -78,25 +83,24 @@ const publishedTime = (a: ArticleType) => {
 export const inBookOrder = (articles: ArticleType[]) =>
   [...articles].sort((a, b) => publishedTime(a) - publishedTime(b));
 
-async function mapLimited<T, R>(
-  items: T[],
+/** fn, called no more than `limit` at a time; the others wait their turn. */
+export function limited<A extends unknown[], R>(
   limit: number,
-  fn: (item: T) => Promise<R>,
-  onDone?: () => void,
-) {
-  const out: R[] = new Array(items.length);
-  let next = 0;
-  const work = async () => {
-    while (next < items.length) {
-      const i = next++;
-      out[i] = await fn(items[i]);
-      onDone?.();
+  fn: (...args: A) => Promise<R>,
+): (...args: A) => Promise<R> {
+  let running = 0;
+  const waiting: (() => void)[] = [];
+  return async (...args) => {
+    if (running >= limit)
+      await new Promise<void>((resolve) => waiting.push(resolve));
+    running++;
+    try {
+      return await fn(...args);
+    } finally {
+      running--;
+      waiting.shift()?.();
     }
   };
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, work),
-  );
-  return out;
 }
 
 const BOOK_LINK = /book:[0-9a-f]{32}#[^\s)\]>"'`]+/gi;
@@ -141,6 +145,22 @@ async function articlesInUse(
 }
 
 /**
+ * The images of the articles fetched a few at a time, all of them together;
+ * an image in more than one article (e.g. a logo) fetched once.
+ */
+function imageFetcher() {
+  const fetchLimited = limited(IMAGE_CONCURRENCY, (url: string) =>
+    fetchImage(url).catch(() => undefined),
+  );
+  const cache = new Map<string, Promise<Uint8Array | undefined>>();
+  return (url: string) => {
+    let data = cache.get(url);
+    if (!data) cache.set(url, (data = fetchLimited(url)));
+    return data;
+  };
+}
+
+/**
  * The feed book to add the articles to: the one of the feed URL, else the
  * one of the name. Undefined if none, to be made.
  * @throws if the book of the name is of another feed
@@ -175,7 +195,7 @@ export async function saveFeedBook(
   options: {
     source?: string;
     feedUrl?: string;
-    onProgress?: (done: number, total: number) => void;
+    onProgress?: (done: number, total: number, stage: FeedBookStage) => void;
   } = {},
 ): Promise<FeedBookReport> {
   const ws = store.getState().initDir;
@@ -229,13 +249,13 @@ export async function saveFeedBook(
   const toFetch = [...fresh, ...toRefresh];
 
   let done = 0;
-  options.onProgress?.(0, toFetch.length);
-  const texts = await mapLimited(
-    toFetch,
-    CONCURRENCY,
-    (a) => fullTextOf(a),
-    () => options.onProgress?.(++done, toFetch.length),
-  );
+  options.onProgress?.(0, toFetch.length, "text");
+  const fullText = limited(PAGE_CONCURRENCY, async (a: ArticleType) => {
+    const text = await fullTextOf(a);
+    options.onProgress?.(++done, toFetch.length, "text");
+    return text;
+  });
+  const texts = await Promise.all(toFetch.map((a) => fullText(a)));
   const inputs: FeedArticleInput[] = toFetch.map((a, i) => ({
     url: a.url.trim(),
     title: a.title,
@@ -253,7 +273,8 @@ export async function saveFeedBook(
     existing,
     articles: inputs,
     canRefresh: (id) => !inUse.has(id),
-    fetchImage: (url) => fetchImage(url).catch(() => undefined),
+    fetchImage: imageFetcher(),
+    onPage: (done, total) => options.onProgress?.(done, total, "pages"),
   });
   const addedTexts = texts.slice(0, fresh.length);
   const report = {
@@ -321,7 +342,7 @@ export async function saveFeedBook(
  */
 export async function updateFeedBook(
   hash: string,
-  onProgress?: (done: number, total: number) => void,
+  onProgress?: (done: number, total: number, stage: FeedBookStage) => void,
 ): Promise<FeedBookReport> {
   const ws = store.getState().initDir;
   if (!ws) throw new Error("Open a folder first");

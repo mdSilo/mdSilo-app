@@ -232,9 +232,9 @@ const searchTagContent = (content: string) => {
       for (const mark of node.marks) {
         if (mark.type === "hashtag") {
           out.push({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             text:
               context?.reduce(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (res: string, node: any) => res + " " + (node.text || ""),
                 "",
               ) || node.text,

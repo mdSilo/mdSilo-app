@@ -1,5 +1,5 @@
 /**
- * RSS / Atom feed on web, stored in IndexedDB.
+ * RSS / Atom / JSON feed on web, stored in IndexedDB.
  * Port of src-tauri/src/feed.rs and db.rs.
  * NOTE: fetching a feed from browser is subject to CORS, a CORS proxy is used
  * as fallback, see getCorsProxy.
@@ -67,6 +67,8 @@ export function parseFeed(
   title?: string | null,
 ): FeedResult | null {
   if (ty === "opds") return parseOpds(xml, url, title);
+  if (xml.trimStart().startsWith("{"))
+    return parseJsonFeed(xml, url, ty, title);
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   if (doc.getElementsByTagName("parsererror").length) return null;
   const root = doc.documentElement;
@@ -149,6 +151,103 @@ export function parseFeed(
   return null;
 }
 
+type JsonFeedAuthor = { name?: unknown };
+type JsonFeedItem = {
+  id?: unknown;
+  url?: unknown;
+  external_url?: unknown;
+  title?: unknown;
+  content_html?: unknown;
+  content_text?: unknown;
+  summary?: unknown;
+  image?: unknown;
+  date_published?: unknown;
+  date_modified?: unknown;
+  author?: JsonFeedAuthor;
+  authors?: JsonFeedAuthor[];
+  attachments?: { url?: unknown; mime_type?: unknown }[];
+};
+
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+const isWebUrl = (v: string) => /^https?:\/\//i.test(v);
+
+/** Plain text as HTML: escaped, its paragraphs (by blank lines) in `<p>`. */
+export const htmlOfText = (text: string) =>
+  text
+    .split("\n\n")
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map(
+      (p) =>
+        `<p>${p.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</p>`,
+    )
+    .join("");
+
+/** A JSON Feed, https://www.jsonfeed.org/version/1.1/ (and 1); as feed.rs reads it. */
+function parseJsonFeed(
+  text: string,
+  url: string,
+  ty: string,
+  title?: string | null,
+): FeedResult | null {
+  let feed: Record<string, unknown>;
+  try {
+    // a BOM, if any, is not JSON
+    feed = JSON.parse(text.trimStart());
+  } catch {
+    return null;
+  }
+  if (!str(feed?.version).startsWith("https://jsonfeed.org/version/"))
+    return null;
+  const items = Array.isArray(feed.items) ? (feed.items as JsonFeedItem[]) : [];
+  const articles: NewArticle[] = items.map((item) => {
+    const id = str(item.id);
+    const description = str(item.summary);
+    const contentText = str(item.content_text);
+    const date = str(item.date_published) || str(item.date_modified);
+    const time = new Date(date);
+    const authors = [
+      ...(item.authors ?? []),
+      ...(item.author ? [item.author] : []),
+    ];
+    const audio = (item.attachments ?? []).find((a) =>
+      str(a?.mime_type).startsWith("audio/"),
+    );
+    return {
+      title: str(item.title),
+      url: str(item.url) || str(item.external_url) || (isWebUrl(id) ? id : ""),
+      feed_link: url,
+      audio_url: str(audio?.url),
+      description,
+      published: !date || isNaN(time.getTime()) ? date : time.toUTCString(),
+      content:
+        str(item.content_html) ||
+        (contentText ? htmlOfText(contentText) : description),
+      author: authors
+        .map((a) => str(a?.name))
+        .filter(Boolean)
+        .join(", "),
+      image: str(item.image),
+    };
+  });
+  // the newest of the articles, JSON Feed has no date of its own
+  const newest = Math.max(
+    ...articles
+      .map((a) => new Date(a.published).getTime())
+      .filter((t) => !isNaN(t)),
+  );
+  return {
+    channel: {
+      title: title?.trim() || str(feed.title),
+      link: url,
+      description: str(feed.description),
+      published: Number.isFinite(newest) ? new Date(newest).toUTCString() : "",
+      ty,
+    },
+    articles,
+  };
+}
+
 /**
  * An OPDS catalog, OPDS 1 (Atom) or 2 (JSON): the channel only, its pages
  * browsed in the app (src/feed/opds.ts).
@@ -164,7 +263,6 @@ function parseOpds(
       const meta = (JSON.parse(text) as { metadata?: Record<string, unknown> })
         .metadata;
       if (!meta) return null;
-      const str = (v: unknown) => (typeof v === "string" ? v : "");
       return {
         channel: {
           title: customTitle || str(meta.title),

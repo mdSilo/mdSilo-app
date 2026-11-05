@@ -276,6 +276,61 @@ const ATOM = `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><ti
 <updated>2024-01-01T00:00:00Z</updated><summary>sum</summary></entry></feed>`;
 
 describe("web invoke: feed", () => {
+  test("parseFeed: a JSON Feed", () => {
+    const json = JSON.stringify({
+      version: "https://jsonfeed.org/version/1.1",
+      title: "J",
+      description: "about",
+      items: [
+        {
+          id: "1",
+          url: "https://j.org/1",
+          title: "One",
+          content_html: "<p>hi</p>",
+          summary: "s",
+          date_published: "2026-01-02T10:00:00+02:00",
+          authors: [{ name: "Ann" }, { name: "Bo" }],
+          attachments: [
+            { url: "https://j.org/1.mp3", mime_type: "audio/mpeg" },
+          ],
+        },
+        {
+          id: "https://j.org/2",
+          content_text: "a < b\nc\n\nd",
+          date_modified: "2026-01-03T00:00:00Z",
+          author: { name: "Cy" },
+        },
+        { id: 3, external_url: "https://e.org/3", summary: "only" },
+      ],
+    });
+    const res = parseFeed(`\ufeff ${json}`, "https://j.org/feed.json", "rss")!;
+    expect(res.channel).toEqual({
+      title: "J",
+      link: "https://j.org/feed.json",
+      description: "about",
+      published: "Sat, 03 Jan 2026 00:00:00 GMT",
+      ty: "rss",
+    });
+    expect(res.articles[0]).toMatchObject({
+      url: "https://j.org/1",
+      content: "<p>hi</p>",
+      author: "Ann, Bo",
+      audio_url: "https://j.org/1.mp3",
+      published: "Fri, 02 Jan 2026 08:00:00 GMT",
+    });
+    expect(res.articles[1]).toMatchObject({
+      url: "https://j.org/2",
+      content: "<p>a &lt; b<br>c</p><p>d</p>",
+      author: "Cy",
+    });
+    expect(res.articles[2]).toMatchObject({
+      url: "https://e.org/3",
+      content: "only",
+      published: "",
+    });
+    expect(parseFeed('{"title": "x"}', "https://x.org", "rss")).toBeNull();
+  });
+
   afterEach(() => vi.unstubAllGlobals());
 
   it("parses rss and atom", () => {

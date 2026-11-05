@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { ArticleType } from "@/types/model";
 import { Spinner } from "@/ui/ui";
-import { saveFeedBook, type FeedBookReport } from "./feedToBook";
+import {
+  saveFeedBook,
+  type FeedBookReport,
+  type FeedBookStage,
+} from "./feedToBook";
 
 type Props = {
   /** the name of the book by default, e.g. the channel's */
@@ -14,6 +18,18 @@ type Props = {
   onOpenBook?: (path: string) => void;
   onClose: () => void;
 };
+
+/** The progress of making a feed book, as shown. */
+export const progressText = (
+  done: number,
+  total: number,
+  stage: FeedBookStage,
+) =>
+  !total
+    ? "Saving…"
+    : stage === "text"
+      ? `Fetching the full text ${done}/${total}…`
+      : `Fetching the images of the articles ${done}/${total}…`;
 
 export const summaryOf = (r: FeedBookReport) => {
   const parts = [
@@ -36,7 +52,7 @@ export const summaryOf = (r: FeedBookReport) => {
 export function MakeBook(props: Props) {
   const { defaultName, source, feedUrl, articles, onOpenBook, onClose } = props;
   const [name, setName] = useState(defaultName);
-  const [progress, setProgress] = useState<{ done: number; total: number }>();
+  const [progress, setProgress] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [report, setReport] = useState<FeedBookReport>();
   const [error, setError] = useState("");
@@ -56,7 +72,8 @@ export function MakeBook(props: Props) {
         await saveFeedBook(name.trim(), articles, {
           source,
           feedUrl,
-          onProgress: (done, total) => setProgress({ done, total }),
+          onProgress: (done, total, stage) =>
+            setProgress(progressText(done, total, stage)),
         }),
       );
     } catch (e) {
@@ -102,11 +119,7 @@ export function MakeBook(props: Props) {
         articles at its end; the articles in it stay as they are, so do your
         annotations.
       </p>
-      {progress && progress.total > 0 && (
-        <p className="mt-1">
-          Fetching the full text {progress.done}/{progress.total}…
-        </p>
-      )}
+      {progress && <p className="mt-1">{progress}</p>}
       {error && <p className="mt-1 text-error">{error}</p>}
       {report && (
         <div className="mt-1 flex flex-row items-center gap-2">

@@ -205,6 +205,46 @@ describe("feed book", () => {
     );
   });
 
+  test("the images fetched all at once, put in the book in their order", async () => {
+    const waiting: (() => void)[] = [];
+    let inFlight = 0;
+    let most = 0;
+    const pages: number[] = [];
+    const made = makeFeedBook({
+      title: "Example",
+      articles: [1, 2].map((n) =>
+        article(n, {
+          html: `<p>Post ${n}</p><img src="/${n}a.png"><img src="/${n}b.png">`,
+        }),
+      ),
+      fetchImage: (url) => {
+        most = Math.max(most, ++inFlight);
+        return new Promise((resolve) =>
+          // the first image of each article comes last
+          waiting.push(() => {
+            inFlight--;
+            resolve(
+              url.endsWith("b.png") ? PNG : new Uint8Array([0xff, 0xd8, 0xff]),
+            );
+          }),
+        );
+      },
+      onPage: (done) => pages.push(done),
+    });
+    // the images of both articles asked for before any came
+    await vi.waitFor(() => expect(waiting).toHaveLength(4));
+    expect(most).toBe(4);
+    for (const resolve of waiting.reverse()) resolve();
+    const { data } = await made;
+    expect(pages).toEqual([0, 1, 2]);
+    expect(data.articles.map((a) => a.title)).toEqual(["Post 1", "Post 2"]);
+    const id = data.articles[0].id;
+    expect(data.articles[0].resources).toEqual([
+      `articles/${id}/1.jpg`,
+      `articles/${id}/2.png`,
+    ]);
+  });
+
   test("the images in the book; those that fail, a link", async () => {
     const fetched: string[] = [];
     const { epub, data } = await makeFeedBook({

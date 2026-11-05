@@ -13,7 +13,12 @@ import {
 } from "@/reader/library/library";
 import type { ArticleType } from "@/types/model";
 import { makeNote, useWebFs } from "@/testUtils";
-import { inBookOrder, saveFeedBook, updateFeedBook } from "./feedToBook";
+import {
+  inBookOrder,
+  limited,
+  saveFeedBook,
+  updateFeedBook,
+} from "./feedToBook";
 import { SHORT_TEXT } from "./fullText";
 
 const WS = "/mdSilo";
@@ -311,4 +316,25 @@ describe("feed articles made a book", () => {
       "Open a folder",
     );
   });
+});
+
+test("limited: no more than the limit at a time, all done", async () => {
+  let running = 0;
+  let most = 0;
+  const run = limited(2, async (n: number) => {
+    most = Math.max(most, ++running);
+    await new Promise((r) => setTimeout(r, 5 - n));
+    running--;
+    return n * 10;
+  });
+  const failing = limited(1, async () => {
+    throw new Error("no");
+  });
+  await expect(failing()).rejects.toThrow("no");
+  // a failure frees its place
+  await expect(failing()).rejects.toThrow("no");
+  expect(await Promise.all([1, 2, 3, 4, 5].map((n) => run(n)))).toEqual([
+    10, 20, 30, 40, 50,
+  ]);
+  expect(most).toBe(2);
 });

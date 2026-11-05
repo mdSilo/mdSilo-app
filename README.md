@@ -16,7 +16,7 @@ So mdSilo is built around the whole loop, and gives each step its own tool:
 
 | | Step | Tool | In mdSilo |
 |---|------|------|-----------|
-| 📖 | **Reading** (input) | Reader, Feeds, Podcasts | Books (EPUB, PDF, MOBI, FB2, CBZ...), RSS/Atom, podcasts and clipped web pages; highlight and annotate anything |
+| 📖 | **Reading** (input) | Reader, Feeds, Podcasts | Books (EPUB, PDF, MOBI, FB2, CBZ...), RSS/Atom/JSON Feed, podcasts and clipped web pages; highlight and annotate anything |
 | 🧩 | **Issue** (process) | Issues, Projects | A GitHub-like tracker for the questions, ideas and tasks that reading raises: labels, milestones, boards |
 | ✍️ | **Writing** (output) | WYSIWYG Markdown editor | Notes, a personal wiki, mind maps, diagrams, math |
 
@@ -33,7 +33,7 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 - **Look up as you read**: dictionary, Wikipedia, translation, read aloud; words go to a vocabulary with flash cards
 - **Parallel reading**: two books side by side, each with its own notes
 - **Library**: covers, groups, status, search, drag and drop; books are identified by content, so a renamed book is still the same book
-- **Feeds & podcasts**: RSS/Atom client with full text, starred articles, clipping to notes and a podcast player; turn a channel into an EPUB and read a month of news as a book
+- **Feeds & podcasts**: RSS/Atom/JSON Feed client with full text, starred articles, clipping to notes and a podcast player; turn a channel into an EPUB and read a month of news as a book
 
 ### 🧩 Process: Issue
 
@@ -134,7 +134,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 
 ### Input
 
-- [X] RSS, Atom and podcasts
+- [X] RSS, Atom, JSON Feed and podcasts
 - [X] Read and annotate EPUB, PDF, MOBI, FB2, CBZ; library, parallel reading, dictionary, vocabulary, read aloud
 - [X] Feeds into books
 - [ ] AI helpers, OPDS

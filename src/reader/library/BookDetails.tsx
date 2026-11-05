@@ -164,14 +164,13 @@ function ViewBook({
     setUpdated(undefined);
     try {
       // the feed code loaded only when used
-      const [{ updateFeedBook }, { summaryOf }] = await Promise.all([
-        import("@/feed/feedToBook"),
-        import("@/feed/MakeBook"),
-      ]);
-      const report = await updateFeedBook(book.hash, (done, total) =>
-        setProgress(
-          total ? `Fetching the full text ${done}/${total}…` : "Saving…",
-        ),
+      const [{ updateFeedBook }, { summaryOf, progressText }] =
+        await Promise.all([
+          import("@/feed/feedToBook"),
+          import("@/feed/MakeBook"),
+        ]);
+      const report = await updateFeedBook(book.hash, (done, total, stage) =>
+        setProgress(progressText(done, total, stage)),
       );
       setUpdated({ text: summaryOf(report) });
       onChanged();

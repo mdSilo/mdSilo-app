@@ -15,7 +15,7 @@ flowchart LR
 
 ## 1. Reading is the input
 
-Information comes in from books (EPUB, PDF, MOBI, FB2, CBZ and more), from RSS and Atom feeds, from podcasts and from web pages you clip. Everything you read can be marked up: a highlight, a note on a sentence, a bookmark. The marks are plain Markdown, next to the book. See [[5 Reader|Reader]] and [[6 Feeds|Feeds]].
+Information comes in from books (EPUB, PDF, MOBI, FB2, CBZ and more), from RSS, Atom and JSON feeds, from podcasts and from web pages you clip. Everything you read can be marked up: a highlight, a note on a sentence, a bookmark. The marks are plain Markdown, next to the book. See [[5 Reader|Reader]] and [[6 Feeds|Feeds]].
 
 ## 2. Issue is the process
 

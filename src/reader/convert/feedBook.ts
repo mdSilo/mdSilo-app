@@ -209,8 +209,10 @@ async function articlePage(
     if (url) a.setAttribute("href", url);
     else a.removeAttribute("href");
   }
-  const resources: EpubResource[] = [];
-  const inBook = new Map<string, string | undefined>();
+  // the images found, then fetched all at once (as fetchImage lets), then
+  // put in the book in their order in the page
+  const found: { img: Element; url?: string }[] = [];
+  const toFetch = new Set<string>();
   for (const img of Array.from(doc.querySelectorAll("img"))) {
     const width = img.getAttribute("width");
     const height = img.getAttribute("height");
@@ -230,9 +232,23 @@ async function articlePage(
       continue;
     }
     const url = raw ? absolute(raw, article.base) : undefined;
+    if (url && fetchImage && toFetch.size < MAX_IMAGES) toFetch.add(url);
+    found.push({ img, url });
+  }
+  const fetched = new Map(
+    await Promise.all(
+      Array.from(toFetch, async (url) => {
+        const data = await fetchImage!(url).catch(() => undefined);
+        return [url, data] as const;
+      }),
+    ),
+  );
+  const resources: EpubResource[] = [];
+  const inBook = new Map<string, string | undefined>();
+  for (const { img, url } of found) {
     let at = url ? inBook.get(url) : undefined;
-    if (url && !inBook.has(url) && fetchImage && inBook.size < MAX_IMAGES) {
-      const data = await fetchImage(url).catch(() => undefined);
+    if (url && !inBook.has(url)) {
+      const data = fetched.get(url);
       const ext = data && imageExtOf(data);
       if (data && ext) {
         at = `${DIR}/${id}/${resources.length + 1}.${ext}`;
@@ -289,7 +305,13 @@ export type FeedBookOptions = {
    * words), its CFIs pointing nowhere else.
    */
   canRefresh?: (id: string) => boolean;
+  /**
+   * Fetched as many at a time as called: limited by the caller if need be
+   * (see feed/feedToBook.ts)
+   */
   fetchImage?: (url: string) => Promise<Uint8Array | undefined>;
+  /** the pages of the articles made so far, their images fetched */
+  onPage?: (done: number, total: number) => void;
   now?: Date;
 };
 
@@ -322,6 +344,9 @@ export async function makeFeedBook(
   const added: string[] = [];
   const refreshed: string[] = [];
 
+  // the pages to make, in order (the ids and the spine decided here); then
+  // made all at once, their images fetched as fetchImage lets
+  const jobs: { article: FeedBookArticle; input: FeedArticleInput }[] = [];
   for (const input of options.articles) {
     const url = input.url.trim();
     const known = byUrl.get(url);
@@ -329,15 +354,10 @@ export async function makeFeedBook(
       if (
         known.partial &&
         !input.partial &&
-        !pages.has(known.id) &&
+        !refreshed.includes(known.id) &&
         canRefresh?.(known.id)
       ) {
-        const page = await articlePage(input, known.id, fetchImage);
-        pages.set(known.id, page);
-        Object.assign(known, {
-          partial: undefined,
-          resources: page.resources.map((r) => r.path),
-        });
+        jobs.push({ article: known, input });
         refreshed.push(known.id);
       }
       continue;
@@ -345,24 +365,34 @@ export async function makeFeedBook(
     // the same id of another URL (unlikely): another id
     let id = articleIdOf(url);
     for (let n = 2; byId.has(id); n++) id = `${articleIdOf(url)}-${n}`;
-    const page = await articlePage({ ...input, url }, id, fetchImage);
     const article: FeedBookArticle = {
       id,
       url,
       title: input.title || url,
       file: `${DIR}/${id}.xhtml`,
-      ...(page.resources.length
-        ? { resources: page.resources.map((r) => r.path) }
-        : {}),
       addedAt: now,
       ...(input.partial ? { partial: true } : {}),
     };
-    pages.set(id, page);
+    jobs.push({ article, input: { ...input, url } });
     articles.push(article);
     byId.set(id, article);
     byUrl.set(url, article);
     added.push(id);
   }
+  let made = 0;
+  options.onPage?.(made, jobs.length);
+  await Promise.all(
+    jobs.map(async ({ article, input }) => {
+      const page = await articlePage(input, article.id, fetchImage);
+      pages.set(article.id, page);
+      // a refreshed one: no excerpt any more
+      if (article.partial && !input.partial) delete article.partial;
+      if (page.resources.length)
+        article.resources = page.resources.map((r) => r.path);
+      else delete article.resources;
+      options.onPage?.(++made, jobs.length);
+    }),
+  );
 
   const language =
     old?.language ||

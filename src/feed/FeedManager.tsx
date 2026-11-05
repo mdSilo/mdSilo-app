@@ -52,6 +52,7 @@ export function FeedManager(props: Props) {
     // console.log("res from rust", res);
     if (!res) {
       setDescription("Cannot find any feed, please check the URL");
+      setLoading(false);
       return;
     }
     const { channel } = res;
@@ -128,9 +129,11 @@ export function FeedManager(props: Props) {
                 checked={feedType === "rss"}
                 onChange={() => setFeedType("rss")}
               />
-              <label className="mr-4 text-sm" htmlFor="feedType1">
-                RSS
-              </label>
+              <Tooltip content="RSS, Atom or JSON Feed" placement="top">
+                <label className="mr-4 text-sm" htmlFor="feedType1">
+                  RSS
+                </label>
+              </Tooltip>
               <input
                 type="radio"
                 className="m-1 text-sm"
@@ -207,7 +210,10 @@ export function FeedManager(props: Props) {
       <div className="w-full flex flex-col items-between justify-center border-t-2 border-base-content/40 my-4">
         {realList.map((channel: ChannelType, idx: number) => {
           return (
-            <div key={idx} className="flex flex-wrap items-center justify-start m-1">
+            <div
+              key={idx}
+              className="flex flex-wrap items-center justify-start m-1"
+            >
               <span className="flex items-center justify-between">
                 {channel.ty === "rss" ? (
                   <TbRss size={12} className="mr-1 text-orange-500" />
@@ -224,7 +230,9 @@ export function FeedManager(props: Props) {
               >
                 <TbX size={12} className="m-1" />
               </button>
-              <span className="w-full text-xs text-wrap break-words">{channel.link}</span>
+              <span className="w-full text-xs text-wrap break-words">
+                {channel.link}
+              </span>
             </div>
           );
         })}
