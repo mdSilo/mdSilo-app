@@ -29,7 +29,7 @@ Books are recognised by their content (a partial MD5 hash), so a renamed or move
 Open a book and the page fills the window. The bars appear when you move the mouse to the top or bottom edge, or click the middle of the page.
 
 - **Turn pages** by clicking the left or right part of the page, with the arrow keys, with the mouse wheel, or with the slider at the bottom. Clicking the middle shows or hides the bars.
-- **Top bar**: back to the Library, contents and notes, bookmark, copy a link to this page, parallel reading, and *Font and layout*.
+- **Top bar**: back to the Library, contents and notes, bookmark, parallel reading, and *Font and layout*.
 - **Back to the book**: once you have read a book in a workspace, an open-book button in the side menu (`Ctrl/Cmd + Shift + B`) takes you back to it, at the page you left. In Settings, *View on Startup* → *Last Book* opens it when mdSilo starts.
 - **A book in its own window** (desktop): in the Library's view menu, *Open books in* → *A new window*; or *Read in a new window* in a book's details. The window has the reader only: notes, issues and the Library open in the main window. Opening the book again brings its window to the front.
 - **Bottom bar**: back and forward in your reading history, previous and next chapter, a progress slider, and the time left in the book.

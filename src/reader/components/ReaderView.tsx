@@ -42,7 +42,7 @@ import { selectionActionsIn } from "@/plugins/selection";
 import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { annotationsPathOf } from "../annotations/annotations";
 import { useActiveStore, useReaderStore, useSideStore } from "../readerStore";
-import { bookmarkAt, copyLink, toggleBookmark } from "../actions";
+import { bookmarkAt, toggleBookmark } from "../actions";
 import { usePopups, type TextSelection } from "../popups";
 import { resetReaderChrome, useReaderChrome } from "../chrome";
 import { formatMinutes, formatProgress, turn } from "../pagination";
@@ -466,13 +466,6 @@ export function Reader({
                 <span className="font-semibold">{title}</span>
               </div>
               {headerButtons}
-              <IconButton
-                title="Copy a link to this page"
-                disabled={!location}
-                onClick={() => location && copyLink(location.cfi, "main")}
-              >
-                <TbLink size={18} />
-              </IconButton>
               <div className="relative flex items-center gap-1" ref={menuRef}>
                 {/* a book beside, e.g. its translation: not on a phone */}
                 {!mobile && format ? (
