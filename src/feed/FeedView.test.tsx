@@ -121,7 +121,7 @@ describe("Feed view", () => {
     await userEvent.click(screen.getAllByRole("button")[1]);
     expect(screen.getByPlaceholderText("Search Feed")).toBeInTheDocument();
     await userEvent.click(
-      screen.getByText("https://pods/feed").nextSibling as HTMLElement,
+      screen.getByText("https://pods/feed").previousSibling as HTMLElement,
     );
     expect(invoke).toHaveBeenCalledWith("delete_channel", {
       link: "https://pods/feed",
@@ -133,7 +133,7 @@ describe("Feed view", () => {
         .find((b) => b.className.includes("bg-primary/25")) as HTMLElement,
     );
     await userEvent.click(screen.getByLabelText("RSS"));
-    await userEvent.click(screen.getByText("OK"));
+    await userEvent.click(screen.getByText("Add"));
     await waitFor(() =>
       expect(invoke).toHaveBeenCalledWith(
         "add_channel",

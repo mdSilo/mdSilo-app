@@ -1,11 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  TbChevronLeft as IconChevronLeft,
-  TbHeadphones as IconHeadphones,
-  TbLink as IconLink,
-  TbStar as IconStar,
-  TbClipboardText as IconClip,
-} from "react-icons/tb";
+import { TbColumns, TbHeadphones, TbLink,TbStar, TbClipboardText } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import { getFavicon, fmtDatetime } from "@/lib/helper";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -70,17 +64,17 @@ export function ArticleView(props: ViewProps) {
         <div className="m-1 text-3xl font-bold">{title}</div>
         <div className="flex items-center justify-start">
           <span className="mr-2 my-1 cursor-pointer" onClick={hideChannelCol}>
-            <IconChevronLeft size={20} className="" />
+            <TbColumns size={18} className="" />
           </span>
           <Tooltip content={feed_link} placement="top">
             <span className="h-4 w-4 m-1">
               <img src={ico} alt="#" />
             </span>
           </Tooltip>
-          <span className="m-1">{fmtDatetime(published || "")}</span>
-          <span className="m-1">{author}</span>
+          <span className="m-1 text-xs truncate">{fmtDatetime(published || "")}</span>
+          <span className="m-1 text-xs truncate">{author}</span>
           <a className="m-1" target="_blank" rel="noreferrer" href={url}>
-            <IconLink size={20} />
+            <TbLink size={20} />
           </a>
           <span
             className="m-1 cursor-pointer"
@@ -89,7 +83,7 @@ export function ArticleView(props: ViewProps) {
               setIsStar(!isStar);
             }}
           >
-            <IconStar
+            <TbStar
               size={20}
               className={`text-error ${isStar ? "fill-error" : ""}`}
             />
@@ -116,7 +110,7 @@ export function ArticleView(props: ViewProps) {
                 }
               }}
             >
-              <IconClip size={20} />
+              <TbClipboardText size={20} />
             </button>
           </Tooltip>
           {clipMsg && (
@@ -135,7 +129,7 @@ export function ArticleView(props: ViewProps) {
                 })
               }
             >
-              <IconHeadphones size={20} color="purple" />
+              <TbHeadphones size={20} color="purple" />
             </span>
           )}
         </div>

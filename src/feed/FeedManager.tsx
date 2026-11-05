@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  TbBooks as IconBooks,
-  TbHeadphones as IconHeadphones,
-  TbPlus as IconPlus,
-  TbRss as IconRss,
-  TbTrash as IconTrash,
-} from "react-icons/tb";
+import { TbBooks, TbHeadphones, TbPlus, TbRss, TbX } from "react-icons/tb";
 import { Tooltip } from "@/ui/ui";
 import { CorsProxySetting } from "@/shell/settings/CorsProxySetting";
 import { isWeb } from "@/workspace/util";
@@ -177,7 +171,7 @@ export function FeedManager(props: Props) {
               Cancel
             </button>
             <button className="mx-3 m-btn2" onClick={handleSave}>
-              {confirming ? "Saving.." : "OK"}
+              {confirming ? "Saving.." : "Add"}
             </button>
           </div>
         </div>
@@ -188,13 +182,13 @@ export function FeedManager(props: Props) {
             className="px-2 py-1 text-sm text-base-content rounded-sm bg-primary/25 hover:bg-primary/15"
             onClick={() => setShowAdd(!showAdd)}
           >
-            <IconPlus size={15} className="" />
+            <TbPlus size={16} className="" />
           </button>
         </Tooltip>
         <div className="">
           <input
             type="text"
-            className="p-2 m-2 bg-base-200 border-base-300 rounded-sm"
+            className="p-1 m-1 bg-base-200 border-base-300 rounded-xs"
             placeholder="Search Feed"
             value={searchText}
             onChange={(e) => {
@@ -213,24 +207,24 @@ export function FeedManager(props: Props) {
       <div className="w-full flex flex-col items-between justify-center border-t-2 border-base-content/40 my-4">
         {realList.map((channel: ChannelType, idx: number) => {
           return (
-            <div key={idx} className="flex items-center justify-between m-1">
+            <div key={idx} className="flex flex-wrap items-center justify-start m-1">
               <span className="flex items-center justify-between">
                 {channel.ty === "rss" ? (
-                  <IconRss size={12} className="mr-1 text-orange-500" />
+                  <TbRss size={12} className="mr-1 text-orange-500" />
                 ) : channel.ty === "opds" ? (
-                  <IconBooks size={12} className="mr-1 text-primary" />
+                  <TbBooks size={12} className="mr-1 text-primary" />
                 ) : (
-                  <IconHeadphones size={12} className="mr-1 text-secondary" />
+                  <TbHeadphones size={12} className="mr-1 text-secondary" />
                 )}
                 <span className="text-sm">{channel.title}</span>
               </span>
-              <span className="text-sm">{channel.link}</span>
               <button
-                className="cursor-pointer"
+                className="cursor-pointer hover:text-warning"
                 onClick={async () => await handleDelete(channel)}
               >
-                <IconTrash size={18} className="m-1" />
+                <TbX size={12} className="m-1" />
               </button>
+              <span className="w-full text-xs text-wrap break-words">{channel.link}</span>
             </div>
           );
         })}

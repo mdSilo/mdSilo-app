@@ -461,7 +461,7 @@ export default function Library() {
           className={`relative flex flex-col w-full h-full overflow-y-auto bg-base-100 ${draggingFiles ? "ring-4 ring-inset ring-primary/60" : ""}`}
           data-testid="library"
         >
-          <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 p-4 bg-base-100">
+          <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 p-2 bg-base-100">
             <h1 className="text-xl font-semibold me-2">Library</h1>
             <label className="relative flex items-center flex-1 min-w-40 max-w-md">
               <TbSearch
@@ -516,7 +516,7 @@ export default function Library() {
               onClick={onAdd}
               disabled={busy}
             >
-              <TbBookUpload size={18} /> Add books
+              <TbBookUpload size={18} /> Import
             </button>
           </div>
           <DndContext

@@ -526,9 +526,10 @@ describe("FeedManager", () => {
     );
     expect(screen.queryByText("Tech News")).not.toBeInTheDocument();
     expect(screen.getByText("Pod Show")).toBeInTheDocument();
-    await userEvent.click(
-      screen.getByText("https://pod.example/rss").nextSibling as HTMLElement,
-    );
+    const deleteButton =
+      screen.getByText("Pod Show").parentElement?.nextElementSibling;
+    expect(deleteButton).not.toBeNull();
+    await userEvent.click(deleteButton as HTMLElement);
     expect(handleDelete).toHaveBeenCalledWith(channels[1]);
     await userEvent.clear(screen.getByPlaceholderText("Search Feed"));
     expect(screen.getByText("Tech News")).toBeInTheDocument();
@@ -563,7 +564,7 @@ describe("FeedManager", () => {
     expect(await screen.findByDisplayValue("Fetched")).toBeInTheDocument();
     expect(screen.getByText("About it")).toBeInTheDocument();
     await userEvent.click(screen.getByLabelText("Podcast"));
-    await userEvent.click(screen.getByText("OK"));
+    await userEvent.click(screen.getByText("Add"));
     expect(handleAddFeed).toHaveBeenCalledWith(
       "https://new.example/rss",
       "podcast",

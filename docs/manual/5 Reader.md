@@ -10,7 +10,7 @@ Formats: **EPUB, PDF, MOBI, AZW/AZW3, FB2, CBZ** (comics). TXT, Markdown, HTML a
 
 Open it with the books icon in the side menu (`Ctrl/Cmd + Shift + L`). It lists every book of the workspace.
 
-- **Add books**: drag book files into the window, or use *Add books*. In the web version they are stored in your browser; on the desktop they are copied into `reading/`.
+- **Add books**: drag book files into the window, or use *Import*. In the web version they are stored in your browser; on the desktop they are copied into `reading/`.
 - **Add folder**: import all books of a folder and its subfolders, choosing the formats.
 - **Grid or list**: the grid shows covers, the list shows author, series and description.
 - **Search** with plain text or a regular expression: it matches title, author, format, group, status, series, subjects and description.

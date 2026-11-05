@@ -841,7 +841,7 @@ describe("library", () => {
     await go({ view: "library" });
     await bookItem("Tiny Book");
     await act(async () => {
-      fireEvent.click(screen.getByText("Add books"));
+      fireEvent.click(screen.getByText("Import"));
     });
     await waitForView();
     // one book added: read
@@ -1160,16 +1160,19 @@ describe("library", () => {
     fireEvent.click(
       screen.getByTitle("Import from folder"),
     );
-    expect(screen.getByRole("button", { name: "Import" })).toBeDisabled();
+    const importDialog = screen.getByRole("dialog");
+    expect(
+      within(importDialog).getByRole("button", { name: "Import" }),
+    ).toBeDisabled();
     await act(async () => {
-      fireEvent.click(screen.getByLabelText("Choose a folder"));
+      fireEvent.click(within(importDialog).getByLabelText("Choose a folder"));
     });
-    expect(await screen.findByText("/downloads/books")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Minimum file size (KB)"), {
+    expect(await within(importDialog).findByText("/downloads/books")).toBeInTheDocument();
+    fireEvent.change(within(importDialog).getByLabelText("Minimum file size (KB)"), {
       target: { value: "0" },
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Import" }));
+      fireEvent.click(within(importDialog).getByRole("button", { name: "Import" }));
     });
     // the same content as Tiny Book: not copied again
     expect(
