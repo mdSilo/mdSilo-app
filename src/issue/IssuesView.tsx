@@ -18,6 +18,7 @@ import {
 import IssueList from "@/issue/IssueList";
 import IssueEditor from "@/issue/IssueEditor";
 import IssueDetail from "@/issue/IssueDetail";
+import ViewMenu from "@/shell/ViewMenu";
 import LabelManager from "@/issue/LabelManager";
 import MilestoneManager from "@/issue/MilestoneManager";
 import NoteTaskList from "@/issue/NoteTaskList";
@@ -92,6 +93,7 @@ export default function Issues() {
       <div className="flex flex-col w-full h-full overflow-y-auto bg-base-100">
         <div className="w-full max-w-5xl px-6 py-4 mx-auto">
           <div className="flex flex-wrap items-center gap-2 mb-4">
+            <ViewMenu />
             <button
               type="button"
               className={tabClass("issues")}

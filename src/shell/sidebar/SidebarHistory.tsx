@@ -27,13 +27,12 @@ function SidebarHistory(props: Props) {
   );
 
   const openOnStartup = useStore((state) => state.openOnStartup);
-  const showHistory = useStore((state) => state.showHistory);
   // open the startup folder once: listInitDir updates recentDir, which
   // would otherwise re-run this effect forever while the history is mounted
   const isOpened = useRef(false);
   useEffect(() => {
     // web: the workspace is opened on startup, see openWebWorkspace
-    if (isWeb || showHistory || isOpened.current) return;
+    if (isWeb || isOpened.current) return;
     const dir = startupDir({ openOnStartup, recentDir: history, pinnedDir });
     if (!dir) return;
     isOpened.current = true;

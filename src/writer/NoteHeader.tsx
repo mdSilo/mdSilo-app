@@ -12,6 +12,7 @@ import {
   TbTrash as IconTrash,
 } from "react-icons/tb";
 import { usePopper } from "react-popper";
+import ViewMenu from "@/shell/ViewMenu";
 import { useCurrentMdContext } from "@/writer/useCurrentMd";
 import { ExportAs } from "@/writer/hooks/useExport";
 import { useStore } from "@/state/store";
@@ -66,6 +67,7 @@ export default function NoteHeader({
       className={`flex items-center justify-between w-full px-2 py-1 mb-2 text-right`}
     >
       <div className="flex items-center" id="note-header-btns">
+        <ViewMenu className="me-1" />
         <Tooltip content="WYSIWYG">
           <button className={switchClass} onClick={() => setRaw("wysiwyg")}>
             <IconFileText

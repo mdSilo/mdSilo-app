@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useRef } from "react";
+import ViewMenu from "@/shell/ViewMenu";
 import { store, useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { normalizeSlash, toWorkspacePath } from "@/workspace/util";
@@ -149,10 +150,13 @@ export default function PluginFileView() {
   }
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="truncate border-b border-base-300 px-3 py-1 text-sm text-base-content/70">
-        {nameOf(filePath)}
-        <span className="ml-2 text-xs text-base-content/50">
-          {plugin.manifest?.name ?? plugin.id}
+      <div className="flex items-center gap-2 border-b border-base-300 px-3 py-1 text-sm text-base-content/70">
+        <ViewMenu />
+        <span className="min-w-0 truncate">
+          {nameOf(filePath)}
+          <span className="ml-2 text-xs text-base-content/50">
+            {plugin.manifest?.name ?? plugin.id}
+          </span>
         </span>
       </div>
       <div className="min-h-0 flex-1">

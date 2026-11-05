@@ -107,7 +107,8 @@ export function ChannelList(props: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-none items-center justify-end">
+      <div className="flex flex-none items-center justify-between bg-base-300 p-1">
+        <span className="px-1 font-bold truncate">Channels</span>
         <div className="flex flex-end">
           <Tooltip content="Refresh All" placement="bottom">
             <button className="cursor-pointer" onClick={refreshList}>

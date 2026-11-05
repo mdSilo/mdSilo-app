@@ -7,6 +7,7 @@ import {
   TbListCheck,
   TbTrash,
 } from "react-icons/tb";
+import ViewMenu from "@/shell/ViewMenu";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import { Spinner } from "@/ui/ui";
 import { useCurrentViewContext } from "@/state/useCurrentView";
@@ -222,6 +223,7 @@ export default function Vocabulary() {
         data-testid="vocabulary"
       >
         <div className="flex items-center gap-2 px-4 py-2 border-b border-base-300">
+          <ViewMenu />
           <button
             className="btn btn-ghost btn-xs"
             title="Library"

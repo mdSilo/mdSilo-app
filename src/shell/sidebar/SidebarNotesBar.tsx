@@ -3,10 +3,10 @@ import { TbArrowBarToUp as IconArrowBarToUp } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import { Sort } from "@/state/userSettings";
 import { Tooltip } from "@/ui/ui";
-import { normalizeSlash, getParentDir } from "@/workspace/util";
+import { getParentDir } from "@/workspace/util";
 import { listDirPath } from "@/workspace/useOpen";
 import SidebarNotesSortDropdown from "./SidebarNotesSortDropdown";
-import { SidebarDirDropdown } from "./SidebarDropdown";
+import WorkspaceSwitcher from "./WorkspaceSwitcher";
 
 type Props = {
   noteSort: Sort;
@@ -21,11 +21,6 @@ function SidebarNotesBar(props: Props) {
   const currentDir = useStore((state) => state.currentDir);
   const checkInit: boolean = !currentDir || currentDir === initDir;
 
-  const currentFolder = currentDir
-    ? normalizeSlash(currentDir).split("/").pop() || "/"
-    : "md";
-  const barClass = `px-2 text-sm bg-secondary text-secondary-content rounded-sm overflow-hidden`;
-
   return (
     <div className="flex items-center justify-between border-t border-base-300">
       <div className="flex mx-2 my-1">
@@ -34,24 +29,9 @@ function SidebarNotesBar(props: Props) {
           setCurrentSort={setNoteSort}
         />
       </div>
-      <Tooltip content={currentDir ? currentDir : "md"}>
-        <div className="flex mx-2 my-1">
-          <div className="relative">
-            {currentDir ? (
-              <SidebarDirDropdown
-                dirPath={currentDir}
-                className="group-hover:opacity-100"
-                isOnBar={true}
-                menuBtn={`${currentFolder}: ${numOfNotes}`}
-              />
-            ) : (
-              <span className={barClass}>
-                {currentFolder}: {numOfNotes}
-              </span>
-            )}
-          </div>
-        </div>
-      </Tooltip>
+      <div className="flex-1 min-w-0 my-1">
+        <WorkspaceSwitcher count={numOfNotes} />
+      </div>
       <Tooltip content={checkInit ? "" : "Go Upper Folder"}>
         <button
           className="p-1 mx-2 rounded-sm hover:bg-base-content/10"

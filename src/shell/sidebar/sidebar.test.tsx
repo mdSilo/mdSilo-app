@@ -33,6 +33,7 @@ import {
 } from "../../testUtils";
 import SideMenu from "../SideMenu";
 import MainView from "../MainView";
+import ViewMenu, { ViewMenuFallback } from "../ViewMenu";
 import SidebarItem from "./SidebarItem";
 import SidebarTab from "./SidebarTab";
 import SidebarContent from "./SidebarContent";
@@ -175,7 +176,7 @@ describe("SidebarNotes", () => {
     store.getState().setNoteSort(sort);
     renderWithView(withContainer(<SidebarNotes />));
     await waitFor(() => expect(rowTitles()).toEqual(expected));
-    expect(screen.getByText("n: 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^n:\s*4$/ })).toBeInTheDocument();
   });
 
   test("shows expanded sub dirs as a nested tree", async () => {
@@ -194,7 +195,7 @@ describe("SidebarNotes", () => {
     await waitFor(() =>
       expect(rowTitles()).toEqual(["sub", "deep", "z", "A", "b", "c"]),
     );
-    expect(screen.getByText("n: 4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^n:\s*4$/ })).toBeInTheDocument();
   });
 
   test("flattens nested dirs with depth", () => {
@@ -248,7 +249,9 @@ describe("SidebarNotesBar", () => {
         <SidebarNotesBar noteSort={Sort.TitleAscending} numOfNotes={2} />,
       ),
     );
-    expect(screen.getByText("sub: 2")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^root \/ sub:\s*2$/ }),
+    ).toBeInTheDocument();
     const up = screen.getAllByRole("button").at(-1) as HTMLButtonElement;
     expect(up).not.toBeDisabled();
     await act(async () => {
@@ -268,11 +271,11 @@ describe("SidebarNotesBar", () => {
     expect(screen.getAllByRole("button").at(-1)).toBeDisabled();
   });
 
-  test("shows a plain label without a dir", () => {
+  test("no workspace name without a dir", () => {
     renderWithView(
       <SidebarNotesBar noteSort={Sort.TitleAscending} numOfNotes={0} />,
     );
-    expect(screen.getByText("md: 0")).toBeInTheDocument();
+    expect(screen.queryByTestId("dropdown-button")).toBeNull();
   });
 });
 
@@ -873,16 +876,52 @@ describe("on a phone", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value });
   afterEach(() => setWidth(1024));
 
-  test("the menu is a row on top, its buttons scroll sideways", () => {
+  test("no side menu: its buttons are in a dropdown of the logo", async () => {
     setWidth(390);
+    renderWithView(
+      withContainer(
+        <>
+          <SideMenu />
+          <ViewMenuFallback />
+        </>,
+      ),
+    );
+    expect(document.getElementById("side-menu-btns")).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "mdSilo" }));
+    expect(screen.getByTestId("view-menu")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Feed" })).toBeInTheDocument();
+    // back to a desktop window: a column on the side, no dropdown
+    setWidth(1024);
+    fireEvent(window, new Event("resize"));
+    const btns = document.getElementById("side-menu-btns") as HTMLElement;
+    expect(btns.className).toContain("flex-col");
+    expect(screen.queryByTestId("view-menu")).toBeNull();
+  });
+
+  test("set horizontal: a row on top, its buttons scroll sideways", () => {
+    setWidth(390);
+    store.getState().setSideMenuOrientation("horizontal");
     renderWithView(withContainer(<SideMenu />));
     const btns = document.getElementById("side-menu-btns") as HTMLElement;
     expect(btns.className).toContain("overflow-x-auto");
     expect(btns.className).toContain("flex-row");
-    // back to a desktop window: a column on the side
-    setWidth(1024);
-    fireEvent(window, new Event("resize"));
-    expect(btns.className).toContain("flex-col");
+  });
+
+  test("the logo in the bar of a view, not floating then", () => {
+    setWidth(390);
+    renderWithView(
+      withContainer(
+        <>
+          <ViewMenuFallback />
+          <div data-testid="bar">
+            <ViewMenu />
+          </div>
+        </>,
+      ),
+    );
+    const logos = screen.getAllByRole("button", { name: "mdSilo" });
+    expect(logos).toHaveLength(1);
+    expect(screen.getByTestId("bar")).toContainElement(logos[0]);
   });
 
   test("the sidebar closes once a view is opened", async () => {
@@ -892,14 +931,15 @@ describe("on a phone", () => {
     renderWithView(
       withContainer(
         <>
-          <SideMenu />
+          <ViewMenuFallback />
           <MainView />
         </>,
       ),
     );
     await waitFor(() => expect(store.getState().isSidebarOpen).toBe(false));
     store.getState().setIsSidebarOpen(true);
-    await userEvent.click(screen.getByRole("button", { name: "Issues" }));
+    await userEvent.click(screen.getByRole("button", { name: "mdSilo" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Issues" }));
     await waitFor(() => expect(store.getState().isSidebarOpen).toBe(false));
   });
 
@@ -1067,18 +1107,10 @@ describe("SideMenu", () => {
       '#side-menu-btns [aria-haspopup="menu"]',
     );
     await userEvent.click(menus[1] as HTMLElement);
-    for (const label of [
-      "Open Folder",
-      "Open File",
-      "Import JSON",
-      "Recent",
-      "Save",
-    ]) {
+    for (const label of ["Open Folder", "Open File", "Import JSON", "Save"]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
-    act(() => store.getState().setCurrentDir("/n"));
-    await userEvent.click(screen.getByText("Recent"));
-    expect(store.getState().showHistory).toBe(true);
-    expect(store.getState().currentDir).toBeUndefined();
+    // the recent folders are in the explorer, see WorkspaceSwitcher
+    expect(screen.queryByText("Recent")).toBeNull();
   });
 });

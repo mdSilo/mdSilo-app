@@ -31,6 +31,7 @@ import {
   TbVocabulary,
   TbX,
 } from "react-icons/tb";
+import AppMenu from "@/shell/ViewMenu";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import OverlayScroll from "@/ui/OverlayScroll";
 import { IconButton, Spinner } from "@/ui/ui";
@@ -462,6 +463,7 @@ export default function Library() {
           data-testid="library"
         >
           <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 p-2 bg-base-100">
+            <AppMenu />
             <h1 className="text-xl font-semibold me-2">Library</h1>
             <label className="relative flex items-center flex-1 min-w-40 max-w-md">
               <TbSearch

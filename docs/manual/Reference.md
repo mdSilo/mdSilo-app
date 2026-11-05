@@ -53,7 +53,7 @@ The gear at the bottom of the side menu opens the global settings:
 - **Theme**: mdSilo light and dark, or follow the system, plus eight built-in themes and the themes you make. The theme editor sets each color and the color of its content (it warns when the content is hard to read on its color, below 4.5:1), the radius of boxes, fields and selectors and the border width; it imports and copies daisyUI theme CSS.
 - **Fonts**: import font files or add an installed font by name; they show in the editor and reader font lists. In the app (not the web version) the fonts installed on the device are listed there too (*System*).
 - **Sync with workspace** (themes, fonts, plugins): kept in the workspace and synced, or on this device only (see [[9 Sync and Publish|Sync and Publish]]).
-- **Side menu orientation**: vertical or horizontal.
+- **Side menu orientation**: auto, vertical or horizontal. Auto: on the side, but on a phone the side menu is folded into the logo at the start of the bar of each page; tap it for the views, the File Menu, sync and settings.
 - **Open on startup**: the last folder, a fixed folder, or none; and the **view on startup**, e.g. the Library or the last book read in that folder.
 
 Settings of one area are kept where you use them: the editor's in the gear of a note (font, size, spell check, attachment folder), the reader's in *Font and layout* of the top bar, the feed's in *Manage Channels and Settings*.
@@ -66,7 +66,7 @@ The web version at the same address as this manual is the same app. Differences:
 - Use **Open Folder** to import a folder from your device, and the options of a note to export it; files are downloaded by your browser.
 - Feeds go through a CORS proxy, see [[6 Feeds|Feeds]].
 - No native file watching, no git sync and no publishing; the desktop app is the choice for big libraries.
-- **Install it as an app**, on a phone too: the logo menu > **Install App** (Chrome, Edge, Android), or in Safari on iPhone and iPad: Share > **Add to Home Screen**. It then opens in a window of its own and works offline; feeds and catalogs still need the network. On a phone the side menu is a row on top (swipe it sideways for more buttons), and Feed shows one pane at a time. When a new version is out, a prompt offers to reload into it.
+- **Install it as an app**, on a phone too: the logo menu > **Install App** (Chrome, Edge, Android), or in Safari on iPhone and iPad: Share > **Add to Home Screen**. It then opens in a window of its own and works offline; feeds and catalogs still need the network. On a phone the side menu is a dropdown of the logo, at the start of the bar of each page, and Feed shows one pane at a time. When a new version is out, a prompt offers to reload into it.
 
 :::warning
 **Back up.** Clearing the site data of your browser deletes your notes. Use the **File Menu** (the folder icon at the bottom of the side menu) > **Backup** to download everything as a zip. To restore, unzip it and import the folder with *Open Folder*.

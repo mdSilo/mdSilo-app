@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { TbArrowLeft as IconBack, TbTrash as IconTrash } from "react-icons/tb";
+import ViewMenu from "@/shell/ViewMenu";
 import { useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import useDebounce from "@/lib/hooks/useDebounce";
@@ -103,13 +104,16 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
     >
       <div className="w-full max-w-5xl px-6 py-4 mx-auto">
         {onClose ? null : (
-          <button
-            type="button"
-            className="flex items-center gap-1 mb-2 text-sm ms-link"
-            onClick={() => dispatch({ view: "issues" })}
-          >
-            <IconBack size={14} /> Issues
-          </button>
+          <div className="flex items-center gap-2 mb-2">
+            <ViewMenu />
+            <button
+              type="button"
+              className="flex items-center gap-1 text-sm ms-link"
+              onClick={() => dispatch({ view: "issues" })}
+            >
+              <IconBack size={14} /> Issues
+            </button>
+          </div>
         )}
         {/* header */}
         <div className="pb-3 mb-4 border-b border-base-300">

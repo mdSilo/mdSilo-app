@@ -19,6 +19,7 @@ import {
 } from "@/issue/issueOps";
 import { btnClass, inputClass } from "@/issue/common";
 import IssueDetail from "@/issue/IssueDetail";
+import ViewMenu from "@/shell/ViewMenu";
 import ProjectBoard from "@/issue/project/ProjectBoard";
 import ProjectTable from "@/issue/project/ProjectTable";
 import { parseIssueLabel } from "./refs";
@@ -77,6 +78,7 @@ export default function ProjectView() {
     <ErrorBoundary>
       <div className="flex flex-col w-full h-full overflow-hidden bg-base-100">
         <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-base-300">
+          <ViewMenu />
           {data.projects.map((p) => (
             <button
               type="button"

@@ -29,6 +29,7 @@ import {
 import { FaList, FaSearch } from "react-icons/fa";
 import { CgNotes } from "react-icons/cg";
 import { VscReferences } from "react-icons/vsc";
+import ViewMenu from "@/shell/ViewMenu";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
 import { IconButton, Spinner } from "@/ui/ui";
@@ -436,6 +437,7 @@ export function Reader({
               onMouseLeave={leaveBars}
               data-testid="reader-header"
             >
+              <ViewMenu />
               <IconButton
                 title="Library"
                 onClick={() => dispatch({ view: "library" })}

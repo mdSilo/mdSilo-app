@@ -11,6 +11,7 @@ import { ArticleView } from "@/feed/ArticleView";
 import { FeedManager } from "@/feed/FeedManager";
 import { OpdsBrowser } from "@/feed/OpdsBrowser";
 import * as dataAgent from "@/feed/dataAgent";
+import ViewMenu, { useMenuInView } from "@/shell/ViewMenu";
 import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
 import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from "@/state/userSettings";
 
@@ -46,6 +47,7 @@ export default function Feed() {
   const [showManager, setShowManager] = useState(false);
   // a phone: one pane at a time, from the channels down to an article
   const mobile = useIsMobile();
+  const menuInView = useMenuInView();
   const [mobilePane, setMobilePane] = useState<MobilePane>("channels");
 
   const storeArticle = useStore((state) => state.currentArticle);
@@ -206,29 +208,41 @@ export default function Feed() {
 
   if (mobile) {
     const channels = (
-      <div className="h-full p-1 overflow-y-auto">
-        <ChannelList
-          channelList={channelList}
-          refreshList={refreshList}
-          onShowManager={onShowManager}
-          onClickFeed={onClickFeed}
-          onClickStar={onClickStar}
-          refreshing={refreshing}
-          doneNum={doneNum}
-        />
-      </div>
+      <>
+        {menuInView ? (
+          <div className="flex items-center shrink-0 gap-1 px-1 border-b border-base-300">
+            <ViewMenu />
+            <span className="text-sm font-semibold truncate">Feeds</span>
+          </div>
+        ) : null}
+        <div className="flex-1 min-h-0 p-1 overflow-y-auto">
+          <ChannelList
+            channelList={channelList}
+            refreshList={refreshList}
+            onShowManager={onShowManager}
+            onClickFeed={onClickFeed}
+            onClickStar={onClickStar}
+            refreshing={refreshing}
+            doneNum={doneNum}
+          />
+        </div>
+      </>
     );
+    // the menu of the app before it, on a phone: see ViewMenu
     const back = (label: string, to: MobilePane) => (
-      <button
-        className="flex items-center shrink-0 gap-1 px-2 py-2 text-sm border-b border-base-300 text-base-content/70 hover:bg-base-content/10"
-        onClick={() => {
-          if (to === "channels") setShowManager(false);
-          setMobilePane(to);
-        }}
-      >
-        <TbChevronLeft size={18} />
-        <span className="truncate">{label}</span>
-      </button>
+      <div className="flex items-center shrink-0 ps-1 border-b border-base-300">
+        <ViewMenu />
+        <button
+          className="flex items-center flex-1 min-w-0 gap-1 px-2 py-2 text-sm text-base-content/70 hover:bg-base-content/10"
+          onClick={() => {
+            if (to === "channels") setShowManager(false);
+            setMobilePane(to);
+          }}
+        >
+          <TbChevronLeft size={18} className="shrink-0 rtl:rotate-180" />
+          <span className="truncate">{label}</span>
+        </button>
+      </div>
     );
     const article = currentArticle || storeArticle;
     let pane = channels;

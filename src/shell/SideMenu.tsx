@@ -18,7 +18,6 @@ import {
   TbFolderPlus,
   TbFileText,
   TbDeviceFloppy,
-  TbClearAll,
   TbFileImport,
   TbRss,
   TbSettings,
@@ -143,6 +142,9 @@ export default function SideMenu() {
   const mobile = useIsMobile();
   const isHorizontal =
     orientation === "horizontal" || (orientation === "auto" && mobile);
+  // a phone, "auto": the menu is a dropdown in the bar of the view (ViewMenu),
+  // the hotkeys above stay
+  const inView = orientation === "auto" && mobile;
   // a row on top: the buttons scroll sideways when they do not fit (a phone),
   // the bottom section (player, sync, settings) stays at the end
   const menuClassName = isHorizontal
@@ -152,6 +154,7 @@ export default function SideMenu() {
     ? "flex flex-row items-center flex-1 min-w-0 overflow-x-auto no-scrollbar"
     : "flex flex-col h-full";
   const bottomClassName = isHorizontal ? "shrink-0 ml-auto" : "";
+  if (inView) return null;
 
   return (
     <SideMenuOrientationContext.Provider value={orientation}>
@@ -217,12 +220,6 @@ export default function SideMenu() {
 const LogoMenu = () => {
   const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
-  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
-  const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
-  const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
-  // the web version: as an app of its own, offline and on the home screen
-  const canInstall = usePwa((s) => s.canInstall);
-  const iosHint = isWeb && !canInstall && isIos() && !isStandalone();
 
   return (
     <Dropdown
@@ -235,19 +232,37 @@ const LogoMenu = () => {
       tooltipContent="mdSilo"
       tooltipPlacement={tooltipPlacement}
     >
+      <AppMenuItems />
+    </Dropdown>
+  );
+};
+
+/** The items of the logo menu: settings, about the app, install it. */
+export function AppMenuItems({ settings = true }: { settings?: boolean }) {
+  const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
+  const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
+  // the web version: as an app of its own, offline and on the home screen
+  const canInstall = usePwa((s) => s.canInstall);
+  const iosHint = isWeb && !canInstall && isIos() && !isStandalone();
+
+  return (
+    <>
+      {settings ? (
+        <DropdownItem
+          onClick={() => {
+            if (isMobileWidth()) {
+              setIsSidebarOpen(false);
+            }
+            setIsSettingsOpen(true);
+          }}
+        >
+          <TbSettings size={18} className="mr-1" />
+          <span>Settings</span>
+        </DropdownItem>
+      ) : null}
       <DropdownItem
-        onClick={() => {
-          if (isMobileWidth()) {
-            setIsSidebarOpen(false);
-          }
-          setIsSettingsOpen(true);
-        }}
-      >
-        <TbSettings size={18} className="mr-1" />
-        <span>Settings</span>
-      </DropdownItem>
-      <DropdownItem
-        className="border-t border-base-300"
+        className={settings ? "border-t border-base-300" : ""}
         as="link"
         href="https://mdsilo.com"
       >
@@ -300,9 +315,9 @@ const LogoMenu = () => {
           <span>Local mdsilo</span>
         </DropdownItem>
       )}
-    </Dropdown>
+    </>
   );
-};
+}
 
 const btnClass = "title flex items-center text-lg p-1.5";
 const btnIconClass = "shrink-0 mx-px text-base-content/70";
@@ -535,13 +550,6 @@ const PluginsButton = ({
 }) => {
   const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
-  const installedPlugins = useStore((state) => state.installedPlugins);
-  const pluginStates = useStore((state) => state.pluginStates);
-  const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
-  // and what trusted plugins add as they run
-  useTrustedVersion();
-  const views = hasWorkspace ? pluginViews(installedPlugins, pluginStates) : [];
-  const commands = pluginCommands(installedPlugins, pluginStates);
 
   return (
     <MenuItem isHighlighted={viewTy === "plugin"}>
@@ -558,47 +566,68 @@ const PluginsButton = ({
         tooltipContent="Plugins"
         tooltipPlacement={tooltipPlacement}
       >
-        {views.map(({ plugin, view }) => (
-          <DropdownItem
-            key={`${plugin.id}/${view.id}`}
-            onClick={() =>
-              onDispatch({ view: "plugin", plugin: plugin.id, viewId: view.id })
-            }
-          >
-            <span className="truncate">{view.title}</span>
-            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">
-              {plugin.manifest?.name}
-            </span>
-          </DropdownItem>
-        ))}
-        {commands.map((found, i) => (
-          <DropdownItem
-            key={`${found.plugin.id}:${found.command.id}`}
-            className={
-              i === 0 && views.length ? "border-t border-base-300" : ""
-            }
-            onClick={() => void runCommand(found)}
-          >
-            <TbPlayerPlay size={18} className="mr-1 shrink-0" />
-            <span className="truncate">{found.command.title}</span>
-            <span className="ml-auto pl-2 text-xs truncate text-base-content/60">
-              {found.plugin.manifest?.name}
-            </span>
-          </DropdownItem>
-        ))}
-        <DropdownItem
-          className={
-            views.length || commands.length ? "border-t border-base-300" : ""
-          }
-          onClick={() => setIsPluginsOpen(true)}
-        >
-          <TbSettings size={18} className="mr-1" />
-          <span>Manage Plugins</span>
-        </DropdownItem>
+        <PluginMenuItems hasWorkspace={hasWorkspace} onDispatch={onDispatch} />
       </Dropdown>
     </MenuItem>
   );
 };
+
+/** The items of the plugins menu: views, commands, the plugin manager. */
+export function PluginMenuItems({
+  hasWorkspace,
+  onDispatch,
+}: {
+  hasWorkspace: boolean;
+  onDispatch: (view: ViewAction) => void;
+}) {
+  const installedPlugins = useStore((state) => state.installedPlugins);
+  const pluginStates = useStore((state) => state.pluginStates);
+  const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
+  // and what trusted plugins add as they run
+  useTrustedVersion();
+  const views = hasWorkspace ? pluginViews(installedPlugins, pluginStates) : [];
+  const commands = pluginCommands(installedPlugins, pluginStates);
+
+  return (
+    <>
+      {views.map(({ plugin, view }) => (
+        <DropdownItem
+          key={`${plugin.id}/${view.id}`}
+          onClick={() =>
+            onDispatch({ view: "plugin", plugin: plugin.id, viewId: view.id })
+          }
+        >
+          <span className="truncate">{view.title}</span>
+          <span className="ml-auto pl-2 text-xs truncate text-base-content/60">
+            {plugin.manifest?.name}
+          </span>
+        </DropdownItem>
+      ))}
+      {commands.map((found, i) => (
+        <DropdownItem
+          key={`${found.plugin.id}:${found.command.id}`}
+          className={i === 0 && views.length ? "border-t border-base-300" : ""}
+          onClick={() => void runCommand(found)}
+        >
+          <TbPlayerPlay size={18} className="mr-1 shrink-0" />
+          <span className="truncate">{found.command.title}</span>
+          <span className="ml-auto pl-2 text-xs truncate text-base-content/60">
+            {found.plugin.manifest?.name}
+          </span>
+        </DropdownItem>
+      ))}
+      <DropdownItem
+        className={
+          views.length || commands.length ? "border-t border-base-300" : ""
+        }
+        onClick={() => setIsPluginsOpen(true)}
+      >
+        <TbSettings size={18} className="mr-1" />
+        <span>Manage Plugins</span>
+      </DropdownItem>
+    </>
+  );
+}
 
 export function FileDrop() {
   const initDir = useStore((state) => state.initDir);
@@ -624,13 +653,6 @@ export function FileDrop() {
     } catch (e) {
       console.error("Failed to remove the demo:", e);
     }
-  }, []);
-
-  const onClear = useCallback(() => {
-    // to see recent history
-    store.getState().setShowHistory(true);
-    store.getState().setCurrentDir(undefined);
-    // store.getState().setInitDir(undefined);
   }, []);
 
   return (
@@ -689,12 +711,6 @@ export function FileDrop() {
           </Tooltip>
         </DropdownItem>
       )}
-      <DropdownItem onClick={onClear} className="border-t-2 border-base-300">
-        <TbClearAll size={18} className="mr-1" />
-        <Tooltip content="Open Recent History">
-          <span>Recent</span>
-        </Tooltip>
-      </DropdownItem>
       <DropdownItem onClick={onSave} className="border-t-2 border-base-300">
         <TbDeviceFloppy size={18} className="mr-1" />
         <Tooltip content="Save All Data">

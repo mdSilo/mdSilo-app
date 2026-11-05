@@ -24,6 +24,8 @@ Because everything is a file, you can sync the whole workspace with git, Dropbox
 An empty folder you open becomes a workspace by itself. A folder that already has Markdown files is opened as it is (a *legacy* workspace); the sidebar then offers **Upgrade** to move into this layout.
 :::
 
+**Switch workspaces.** The name of the workspace in the middle of the explorer's bar (with the number of items) opens a list of your folders: the pinned one first, then the recent ones. Pick one to switch to it, **Open Folder…** for another, or **New Subfolder**. The pin marks the folder to open on startup when *Open on startup* is set to the pinned folder; the × removes a folder from the list.
+
 ## The side menu
 
 The narrow bar at the edge of the window switches between views.

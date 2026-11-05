@@ -5,7 +5,6 @@ import "tippy.js/dist/tippy.css";
 import { ProvideCurrentView } from "@/state/useCurrentView";
 import useHotkeys from "@/lib/hooks/useHotkeys";
 import useTheme from "@/lib/hooks/useTheme";
-import useIsMobile from "@/lib/hooks/useIsMobile";
 import { useCustomFonts } from "@/custom/fonts";
 import { useCustomThemes } from "@/custom/themes";
 import { usePlugins } from "@/plugins/registry";
@@ -21,6 +20,7 @@ import { isWeb } from "@/workspace/util";
 import { openWebWorkspace } from "@/workspace/useOpen";
 import FindOrCreateModal from "@/writer/NoteNewModal";
 import SideMenu from "@/shell/SideMenu";
+import { ViewMenuFallback } from "@/shell/ViewMenu";
 import { routeMain } from "@/shell/windows";
 import { useAutoSync } from "@/sync/autoSync";
 import PublishModal from "@/publish/PublishModal";
@@ -44,10 +44,8 @@ const App = () => {
   useCustomThemes();
   usePlugins();
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
-  const mobile = useIsMobile();
-  const menuOnTop =
-    sideMenuOrientation === "horizontal" ||
-    (sideMenuOrientation === "auto" && mobile);
+  // a phone, "auto": no side menu, see ViewMenu
+  const menuOnTop = sideMenuOrientation === "horizontal";
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
@@ -129,6 +127,8 @@ const App = () => {
           <SideMenu />
           {/* min-w-0: shrink to the window, not to the widest content */}
           <div className="relative flex flex-1 min-h-0 min-w-0">
+            {/* a view without a bar for the menu; under the sidebar */}
+            <ViewMenuFallback />
             <Sidebar />
             <div className="relative flex flex-1 flex-col min-w-0 overflow-y-auto">
               <MainView />

@@ -137,8 +137,6 @@ export type UserSettings = {
   /** the book last read in each workspace, by the folder of the workspace */
   lastBooks: Record<string, string>;
   setLastBook: (dir: string, path: string) => void;
-  showHistory: boolean;
-  setShowHistory: Setter<boolean>;
   readMode: boolean;
   setReadMode: Setter<boolean>;
   rawMode: string; // 'raw' | 'wysiwyg' | 'mindmap' | 'plugin:<id>:<mode>', see plugins/registry;
@@ -244,8 +242,6 @@ const userSettingsSlice = (
       state.lastBooks = { ...state.lastBooks, [dir]: path };
     });
   },
-  showHistory: false,
-  setShowHistory: setter(set, "showHistory"),
   readMode: false,
   setReadMode: setter(set, "readMode"),
   rawMode: "wysiwyg",
