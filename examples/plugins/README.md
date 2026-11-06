@@ -34,6 +34,8 @@ Samples here:
 - `quote-card/`: a "Quote card" button on the text selected, in the reader and the editor: an image
   card of the text with the book or the note it is from, to copy, save, insert, or post (see
   Images).
+- `speed-reader/`: a panel of the reader (its button in the header of the reader): the book read a
+  word at a time (RSVP) from the page shown; the book behind it follows, the paragraph marked.
 
 ## manifest.json
 
@@ -57,7 +59,8 @@ Samples here:
   at 16 to 24 px); in Manage Plugins, the Plugins menu, and the list of actions on the text
   selected. A puzzle piece if none.
 - `permissions`: `file:read`, `file:write` (the file the plugin opens), `notes:read`, `notes:write`,
-  `books:read`, `issues:read`, `net` (`https:` and `wss:` from the page). The user can grant fewer.
+  `books:read`, `issues:read`, `reader:read` (the book open: where the reader is, its text, go to a
+  place, mark text), `net` (`https:` and `wss:` from the page). The user can grant fewer.
 - `contributes.viewers`: `[{ "extensions": ["csv"], "title": "Table", "page": "table.html" }]`, the
   plugin opens files of these extensions (not notes or books); `page` is the main page by default.
 - `contributes.views`: `[{ "id": "stats", "title": "Reading Stats", "page": "stats.html" }]`, views of the
@@ -71,6 +74,9 @@ Samples here:
 - `contributes.noteModes`: `[{ "id": "cards", "title": "Cards", "page": "cards.html" }]`, modes of
   the note open, beside WYSIWYG, Markdown and MindMap; its page shows in place of the editor (see
   below). `page` is the main page by default.
+- `contributes.readerPanels`: `[{ "id": "rsvp", "title": "Speed reading", "placement": "overlay" }]`,
+  panels of the reader, from a button in its header: its page over the book (`overlay`, by default)
+  or beside it (`side`); see below. `page` is the main page by default.
 - `mode`: `sandboxed` (default), or `trusted` (see the end). For a trusted plugin `main` is its ES
   module, `main.js` by default, and `permissions` are not asked: it has them all.
 
@@ -131,6 +137,23 @@ Note modes have, for the note open only, and `app.open` as views:
 | `note.changed` | the note was changed by another app or a sync (not by the plugin); read it again |
 | `notes.changed` | views: notes were edited (in the app too), made, renamed or deleted; `{ paths }`, once the changes pause |
 | `files.changed` | views: files of the workspace changed on the disk; `{ paths, event }` as the watcher saw them (not hidden folders) |
+| `reader.relocated` | panels of the reader: the page shown changed; data as `reader.info` |
+
+## Panels of the reader
+
+A panel of `readerPanels` opens from the header of the reader: its page over the book, or beside it,
+under a bar with its name and a close button; one at a time, closed with the book. Its page gets the
+keys once open (Escape is the plugin's to handle: call `panel.close`). It has the methods of views,
+`panel.info` (`{ id }`), `panel.close`, and those of the book open, which the hidden main page has
+too (for an action or a command on the book):
+
+| Method | Permission | Gives |
+|---|---|---|
+| `reader.info` | `reader:read` | `{ path, title, author, chapter, cfi, fraction }` of the book open and the page shown; `null` if none |
+| `reader.blocks` `{ from?, count? }` | `reader:read` | `{ blocks: [{ cfi, text }], next? }`: the paragraphs, headings, items… of the book from `from` (`"current"`, the page shown, by default; or a CFI) on, across chapters, `count` of them (50 by default, 500 at most); `next` to go on from, none at the end |
+| `reader.goTo` `{ cfi }` | `reader:read` | `true`; shows that place |
+| `reader.mark` `{ cfi, color? }` | `reader:read` | `true`; marks the text (`yellow`, `red`, `green`, `blue`, `violet`) while the book is open, not kept as a highlight |
+| `reader.clearMarks` | `reader:read` | `true`; takes back the marks of the plugin |
 
 ## Drawing code blocks
 

@@ -40,6 +40,7 @@ import useIsMobile from "@/lib/hooks/useIsMobile";
 import { selectionActionsIn } from "@/plugins/selection";
 import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { PluginIcon } from "@/plugins/PluginIcon";
+import { ReaderPanelHost, ReaderPanelsButton } from "@/plugins/ReaderPanels";
 import { annotationsPathOf } from "../annotations/annotations";
 import { useActiveStore, useReaderStore, useSideStore } from "../readerStore";
 import { bookmarkAt, toggleBookmark } from "../actions";
@@ -702,19 +703,23 @@ export default function ReaderView() {
     <Reader
       tools={lookupTools}
       headerButtons={
-        canRead ? (
-          <IconButton
-            title="Read aloud"
-            onClick={() => void readAloud(undefined, "main")}
-          >
-            <TbVolume size={18} />
-          </IconButton>
-        ) : null
+        <>
+          <ReaderPanelsButton />
+          {canRead ? (
+            <IconButton
+              title="Read aloud"
+              onClick={() => void readAloud(undefined, "main")}
+            >
+              <TbVolume size={18} />
+            </IconButton>
+          ) : null}
+        </>
       }
       overlay={(rootRef) => (
         <>
           <LookupPopup rootRef={rootRef} />
           <PluginActionPopup rootRef={rootRef} />
+          <ReaderPanelHost />
         </>
       )}
     />

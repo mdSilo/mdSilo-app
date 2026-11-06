@@ -12,6 +12,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import type { ViewAction } from "@/state/viewReducer";
 import { baseMethods, type PluginHost, type PluginMethods } from "./host";
 import { workspaceMethods } from "./workspaceApi";
+import { readerMethods } from "./readerApi";
 import type { CommonJs } from "./obsidian";
 import {
   enabledPlugins,
@@ -144,6 +145,7 @@ function load(plugin: InstalledPlugin): Loaded {
     plugin: { id: plugin.id, version: manifest.version, dir: plugin.dir },
     call: caller(() => ({
       ...workspaceMethods((action) => dispatch(action)),
+      ...readerMethods(plugin),
       ...baseMethods(plugin),
     })) as TrustedApi["call"],
     handle: (request, handler) => {

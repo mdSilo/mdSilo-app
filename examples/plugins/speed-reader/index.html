@@ -1,0 +1,334 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Speed Reader</title>
+    <style>
+      :root {
+        --bg: #fff;
+        --fg: #222;
+        --accent: #d1342f;
+        --muted: color-mix(in srgb, var(--fg) 55%, transparent);
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        outline: none;
+      }
+      .stage {
+        width: min(90vw, 760px);
+        border-block: 1px solid color-mix(in srgb, var(--fg) 15%, transparent);
+        padding: 28px 0;
+        position: relative;
+      }
+      /* the line the focus letter stays on */
+      .stage::before,
+      .stage::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        width: 2px;
+        height: 10px;
+        background: var(--accent);
+      }
+      .stage::before { top: 0; }
+      .stage::after { bottom: 0; }
+      .word {
+        display: flex;
+        font-size: clamp(32px, 6vw, 56px);
+        font-family: Georgia, "Noto Serif CJK SC", "Songti SC", serif;
+        line-height: 1.2;
+        min-height: 1.2em;
+        white-space: pre;
+      }
+      .word .pre { flex: 1; text-align: right; }
+      .word .pivot { color: var(--accent); }
+      .word .post { flex: 1; text-align: left; }
+      .context {
+        width: min(90vw, 760px);
+        max-height: 30vh;
+        overflow: auto;
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--muted);
+        visibility: hidden;
+      }
+      .paused .context { visibility: visible; }
+      .context b { color: var(--fg); }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        background: color-mix(in srgb, var(--fg) 8%, transparent);
+        border: 0;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      button:hover { background: color-mix(in srgb, var(--fg) 15%, transparent); }
+      .help { font-size: 12px; color: var(--muted); }
+      .error { color: var(--accent); }
+    </style>
+  </head>
+  <body tabindex="0" class="paused">
+    <div class="stage">
+      <div class="word" id="word"><span class="pre"></span><span class="pivot"></span><span class="post"></span></div>
+    </div>
+    <div class="context" id="context"></div>
+    <div class="controls">
+      <button id="back" title="Paragraph before (←)">⏮</button>
+      <button id="play" title="Play or pause (Space)">▶ Play</button>
+      <button id="fwd" title="Paragraph after (→)">⏭</button>
+      <button id="slower" title="Slower (↓)">−</button>
+      <span id="wpm"></span>
+      <button id="faster" title="Faster (↑)">+</button>
+    </div>
+    <div class="help" id="help">Space play/pause · ← → paragraph · ↑ ↓ speed · Esc close</div>
+    <script>
+      // A panel of the reader (contributes.readerPanels): it reads the book
+      // open from the page shown (reader.blocks), a word at a time, and
+      // keeps the book behind it at the paragraph read (reader.goTo, mark).
+
+      // # talking with the app #
+      let calls = 0;
+      const waiting = new Map();
+      const call = (method, params) =>
+        new Promise((resolve, reject) => {
+          const id = ++calls;
+          waiting.set(id, { resolve, reject });
+          parent.postMessage({ mdsilo: 1, id, method, params }, "*");
+        });
+      window.addEventListener("message", (event) => {
+        if (event.source !== parent) return;
+        const msg = event.data;
+        if (msg?.mdsilo !== 1) return;
+        if ("id" in msg && waiting.has(msg.id)) {
+          const { resolve, reject } = waiting.get(msg.id);
+          waiting.delete(msg.id);
+          msg.error ? reject(new Error(msg.error)) : resolve(msg.result);
+        } else if (msg.event === "style") applyStyle(msg.data);
+      });
+
+      function applyStyle(style) {
+        const vars = style?.vars ?? {};
+        const root = document.documentElement.style;
+        if (vars["--color-base-100"]) root.setProperty("--bg", vars["--color-base-100"]);
+        if (vars["--color-base-content"]) root.setProperty("--fg", vars["--color-base-content"]);
+        if (vars["--color-error"]) root.setProperty("--accent", vars["--color-error"]);
+      }
+
+      // # the words #
+      const segmenter =
+        typeof Intl !== "undefined" && Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: "word" }) : null;
+
+      /** The words of a paragraph, punctuation kept with the word before it */
+      function wordsOf(text) {
+        if (!segmenter) return text.split(/\s+/).filter(Boolean);
+        const words = [];
+        for (const { segment, isWordLike } of segmenter.segment(text)) {
+          if (/^\s+$/.test(segment)) {
+            words.push("");
+            continue;
+          }
+          if (!isWordLike && words.length && words[words.length - 1] !== "") words[words.length - 1] += segment;
+          else if (words.length && words[words.length - 1] !== "" && isWide(segment) && isWide(words[words.length - 1]) && words[words.length - 1].length + segment.length <= 3)
+            // short words of CJK together: a few characters at once
+            words[words.length - 1] += segment;
+          else words.push(segment);
+        }
+        return words.filter(Boolean);
+      }
+      const isWide = (s) => /[⺀-鿿가-힯豈-﫿]/.test(s);
+
+      /** The letter the eye rests on */
+      function pivotOf(word) {
+        const n = [...word.replace(/[^\p{L}\p{N}]+$/u, "")].length;
+        if (isWide(word)) return Math.floor((n - 1) / 2);
+        return n <= 1 ? 0 : n <= 5 ? 1 : n <= 9 ? 2 : n <= 13 ? 3 : 4;
+      }
+
+      /** How long a word shows, times the time of a word */
+      function weightOf(word, last) {
+        let w = 1;
+        if ([...word].length > 8) w += 0.3;
+        if (/[,;:，；：、]$/.test(word)) w += 0.5;
+        if (/[.!?。！？…]["'”’」』)]*$/.test(word)) w += 1;
+        if (last) w += 1;
+        return w;
+      }
+
+      // # reading #
+      let blocks = []; // { cfi, text, words }
+      let next; // where to go on from, a CFI
+      let b = 0; // the block read
+      let w = 0; // its word
+      let playing = false;
+      let timer;
+      let wpm = 300;
+      let loading;
+
+      const $ = (id) => document.getElementById(id);
+
+      async function load(from) {
+        const res = await call("reader.blocks", { from, count: 40 });
+        for (const block of res.blocks) blocks.push({ ...block, words: wordsOf(block.text) });
+        next = res.next;
+      }
+
+      /** More blocks before they run out */
+      function loadMore() {
+        if (loading || !next || blocks.length - b > 8) return;
+        loading = load(next).finally(() => (loading = undefined));
+      }
+
+      function show() {
+        const block = blocks[b];
+        const word = block?.words[w] ?? "";
+        const chars = [...word];
+        const p = pivotOf(word);
+        const [pre, pivot, post] = $("word").children;
+        pre.textContent = chars.slice(0, p).join("");
+        pivot.textContent = chars[p] ?? "";
+        post.textContent = chars.slice(p + 1).join("");
+        // the paragraph, the word in it, when paused
+        const ctx = $("context");
+        ctx.replaceChildren();
+        block?.words.forEach((x, i) => {
+          const el = i === w ? document.createElement("b") : document.createTextNode("");
+          el.textContent = x;
+          // CJK runs on, without spaces
+          ctx.append(el, isWide(x) && isWide(block.words[i + 1] ?? "") ? "" : " ");
+        });
+      }
+
+      let shownBlock = -1;
+      /** The book behind at the paragraph read, marked */
+      function follow() {
+        const block = blocks[b];
+        if (!block || shownBlock === b) return;
+        shownBlock = b;
+        call("reader.clearMarks").catch(() => {});
+        call("reader.goTo", { cfi: block.cfi }).catch(() => {});
+        call("reader.mark", { cfi: block.cfi, color: "green" }).catch(() => {});
+      }
+
+      function tick() {
+        const block = blocks[b];
+        if (!block) return pause();
+        show();
+        follow();
+        const last = w === block.words.length - 1;
+        const delay = (60000 / wpm) * weightOf(block.words[w] ?? "", last);
+        timer = setTimeout(() => {
+          if (step(1)) return tick();
+          // more on the way: read on once there
+          if (loading)
+            return loading.then(() => (playing && blocks[b] ? tick() : pause()));
+          pause();
+        }, delay);
+      }
+
+      /** One word on or back; false at the end */
+      function step(dir) {
+        w += dir;
+        while (blocks[b] && (w >= blocks[b].words.length || w < 0)) {
+          if (w < 0) {
+            if (b === 0) { w = 0; break; }
+            b -= 1;
+            w = blocks[b].words.length - 1;
+          } else {
+            b += 1;
+            w = 0;
+          }
+        }
+        loadMore();
+        return Boolean(blocks[b]);
+      }
+
+      function play() {
+        if (!blocks[b]) return;
+        playing = true;
+        document.body.classList.remove("paused");
+        $("play").textContent = "⏸ Pause";
+        tick();
+      }
+      function pause() {
+        playing = false;
+        clearTimeout(timer);
+        document.body.classList.add("paused");
+        $("play").textContent = "▶ Play";
+        show();
+        follow();
+      }
+      const toggle = () => (playing ? pause() : play());
+
+      function jump(dir) {
+        b = Math.max(0, Math.min(blocks.length - 1, b + dir));
+        w = 0;
+        loadMore();
+        clearTimeout(timer);
+        playing ? tick() : (show(), follow());
+      }
+
+      function setWpm(value) {
+        wpm = Math.max(100, Math.min(1000, value));
+        $("wpm").textContent = `${wpm} wpm`;
+        try { localStorage.setItem("wpm", String(wpm)); } catch {}
+      }
+
+      $("play").onclick = toggle;
+      $("back").onclick = () => jump(-1);
+      $("fwd").onclick = () => jump(1);
+      $("slower").onclick = () => setWpm(wpm - 25);
+      $("faster").onclick = () => setWpm(wpm + 25);
+      document.addEventListener("keydown", (e) => {
+        const keys = {
+          " ": toggle,
+          ArrowLeft: () => jump(-1),
+          ArrowRight: () => jump(1),
+          ArrowUp: () => setWpm(wpm + 25),
+          ArrowDown: () => setWpm(wpm - 25),
+          Escape: () => call("panel.close"),
+        };
+        const fn = keys[e.key];
+        if (!fn) return;
+        e.preventDefault();
+        fn();
+      });
+
+      (async () => {
+        let saved = 300;
+        // the storage of a sandboxed page may be refused
+        try { saved = Number(localStorage.getItem("wpm")) || 300; } catch {}
+        setWpm(saved);
+        call("app.style").then(applyStyle, () => {});
+        document.body.focus();
+        try {
+          await call("reader.clearMarks");
+          await load("current");
+          show();
+        } catch (e) {
+          $("word").textContent = "";
+          $("help").textContent = e.message;
+          $("help").className = "error";
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -69,16 +69,14 @@ async function bookOnWeb(
 }
 
 /**
- * The book open in the reader (of the pane in use), as the plugin may see
- * it; `cfi` the text selected, else the page shown.
+ * The book open in the reader (of the pane in use); `cfi` the text
+ * selected, else the page shown. None if no book is open.
  */
-export async function bookContext(
-  plugin: InstalledPlugin,
+export async function openBookPlace(
   cfi?: string,
-): Promise<PluginContext> {
-  if (!may(plugin, "books:read")) return {};
+): Promise<BookPlace | undefined> {
   const { path, ws, entry, location } = activeStore().getState();
-  if (!path) return {};
+  if (!path) return undefined;
   const relative = ws ? toWorkspacePath(ws, path) : path;
   const book: BookPlace = {
     // a book out of the workspace by its file name, not where it is
@@ -96,7 +94,17 @@ export async function bookContext(
   // in the repo, if synced with it
   if (ws && entry?.synced)
     Object.assign(book, await bookOnWeb(ws, entry.file, at));
-  return { book };
+  return book;
+}
+
+/** The book open, as the plugin may see it (`books:read`) */
+export async function bookContext(
+  plugin: InstalledPlugin,
+  cfi?: string,
+): Promise<PluginContext> {
+  if (!may(plugin, "books:read")) return {};
+  const book = await openBookPlace(cfi);
+  return book ? { book } : {};
 }
 
 /** What is open in the view shown: its note or its book */

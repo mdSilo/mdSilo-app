@@ -1,5 +1,6 @@
 import type { FoliateView } from "../view";
 import { markQuote, useQuoteMark } from "../quoteMark";
+import { useMarks } from "../marks";
 import { flashPlace, markPlace, type Flash } from "./FoliateViewer";
 
 // a view of one section, the page in the document of the test
@@ -94,22 +95,19 @@ describe("a text quoted, marked while the book is open", () => {
   afterEach(() => {
     vi.useRealTimers();
     markQuote(undefined);
+    useMarks.setState({ marks: [] });
   });
 
-  test("the text itself, not the sentence, and it stays", async () => {
+  test("the text itself, not the sentence, as a mark of the pane", async () => {
     const cfi = "epubcfi(/6/4!/4/2,/1:16,/1:20)";
     const view = fakeView((doc) => wordIn(doc, "cold"));
     const flash: { current?: Flash } = {};
-    const quote: { current?: string } = {};
     markQuote(cfi);
-    await markPlace(view, cfi, flash, quote);
-    expect(view.addAnnotation).toHaveBeenCalledWith({
-      value: `foliate-note:${cfi}`,
-    });
-    expect(quote.current).toBe(cfi);
+    await markPlace(view, cfi, flash, "main");
+    expect(useMarks.getState().marks).toEqual([
+      { cfi, color: "yellow", owner: "quote", pane: "main" },
+    ]);
     expect(flash.current).toBeUndefined();
-    vi.advanceTimersByTime(10_000);
-    expect(view.deleteAnnotation).not.toHaveBeenCalled();
     // once: going there again flashes the sentence
     expect(useQuoteMark.getState().cfi).toBeUndefined();
   });
@@ -117,10 +115,9 @@ describe("a text quoted, marked while the book is open", () => {
   test("another place gone to: the sentence for a moment, as before", async () => {
     const view = fakeView((doc) => wordIn(doc, "cold"));
     const flash: { current?: Flash } = {};
-    const quote: { current?: string } = {};
     markQuote("epubcfi(/6/8!/4/2,/1:0,/1:5)");
-    await markPlace(view, "epubcfi(/6/4!/4/2,/1:16,/1:20)", flash, quote);
-    expect(quote.current).toBeUndefined();
+    await markPlace(view, "epubcfi(/6/4!/4/2,/1:16,/1:20)", flash, "main");
+    expect(useMarks.getState().marks).toEqual([]);
     expect(flash.current?.value).toBe(
       "foliate-note:epubcfi(It was a bright cold day in April.)",
     );

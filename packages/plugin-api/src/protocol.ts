@@ -93,6 +93,20 @@ export type PluginContext = {
   book?: BookPlace;
 };
 
+/** Where the reader is in the book open (`reader.info`, `reader.relocated`) */
+export type ReaderInfo = BookPlace & {
+  /** the page shown, as `cfi` */
+  cfi: string;
+  /** how far in the book, 0 to 1 */
+  fraction: number;
+};
+
+/** A block of text of the book: a paragraph, a heading, an item... */
+export type TextBlock = { cfi: string; text: string };
+
+/** The colors of the marks over the text, as of the highlights */
+export type MarkColor = "yellow" | "red" | "green" | "blue" | "violet";
+
 /** A note found by `notes.search` */
 export type NoteHit = {
   /** relative to the workspace */
@@ -165,6 +179,33 @@ export type Methods = {
     { note: string } | { book: string } | { issue: number },
     true
   >;
+  // the book open in the reader: in a panel of the reader, an action, a command
+  /** where the reader is; null if no book is open */
+  "reader.info": Method<void, ReaderInfo | null, "reader:read">;
+  /**
+   * `count` blocks of text (50 by default, 500 at most) from `from` on: the
+   * page shown (`"current"`, by default) or a CFI; `next` the CFI to go on
+   * from, none at the end of the book
+   */
+  "reader.blocks": Method<
+    { from?: string; count?: number } | void,
+    { blocks: TextBlock[]; next?: string },
+    "reader:read"
+  >;
+  /** shows the place, a CFI */
+  "reader.goTo": Method<{ cfi: string }, true, "reader:read">;
+  /** marks the text at the CFI, while the book is open: not kept as a highlight */
+  "reader.mark": Method<
+    { cfi: string; color?: MarkColor },
+    true,
+    "reader:read"
+  >;
+  /** takes back the marks of the plugin */
+  "reader.clearMarks": Method<void, true, "reader:read">;
+  // a panel of the reader
+  "panel.info": Method<void, { id: string }>;
+  /** closes the panel, e.g. on Escape: the keys go to the panel while it shows */
+  "panel.close": Method<void, true>;
   // note modes: the note open only (and app.open, as views)
   "note.info": Method<void, { title: string; readOnly: boolean }>;
   "note.read": Method<void, string, "notes:read">;
@@ -185,6 +226,8 @@ export type Events = {
   "note.changed": undefined;
   /** views: notes were edited (in the app too), made, renamed or deleted; paths relative to the workspace */
   "notes.changed": { paths: string[] };
+  /** panels of the reader: the page shown changed */
+  "reader.relocated": ReaderInfo;
   /** views: files of the workspace changed on the disk, as the watcher saw them */
   "files.changed": { paths: string[]; event: string };
 };

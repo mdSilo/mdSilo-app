@@ -12,6 +12,7 @@ import {
   supportsApp,
   type Contributes,
   type NoteModeContribution,
+  type ReaderPanelContribution,
   type Permission,
   type PluginManifest,
   type ViewContribution,
@@ -323,6 +324,7 @@ const NO_CONTRIBUTES: Contributes = {
   selectionActions: [],
   commands: [],
   noteModes: [],
+  readerPanels: [],
 };
 
 /** What a plugin contributes: its manifest, and what it adds as it runs (trusted only). */
@@ -342,6 +344,7 @@ export function contributesOf(plugin: InstalledPlugin): Contributes {
     ],
     commands: [...declared.commands, ...(added.commands ?? [])],
     noteModes: [...declared.noteModes, ...(added.noteModes ?? [])],
+    readerPanels: [...declared.readerPanels, ...(added.readerPanels ?? [])],
   };
 }
 
@@ -359,6 +362,15 @@ export function viewersOf(
       .map((viewer) => ({ plugin, viewer })),
   );
 }
+
+/** The panels of the reader of the enabled plugins, for its header */
+export const pluginReaderPanels = (
+  plugins = store.getState().installedPlugins,
+  states = store.getState().pluginStates,
+): { plugin: InstalledPlugin; panel: ReaderPanelContribution }[] =>
+  enabledPlugins(plugins, states).flatMap((plugin) =>
+    contributesOf(plugin).readerPanels.map((panel) => ({ plugin, panel })),
+  );
 
 /** The views of the enabled plugins, for the side menu */
 export const pluginViews = (
