@@ -62,6 +62,30 @@ export type IssueInfo = {
   notes: string[];
 };
 
+/**
+ * The book open in the reader, given with what a plugin is asked about it
+ * (`selection.action`, `command.run`) if it is granted `books:read`
+ */
+export type BookPlace = {
+  /** the book file, relative to the workspace */
+  path: string;
+  title: string;
+  author: string;
+  /** the chapter shown, as the table of contents of the book names it */
+  chapter?: string;
+  /** the text selected, or the page shown, as an EPUB CFI */
+  cfi?: string;
+};
+
+/**
+ * What is open in the app, given with what a plugin is asked: the note
+ * (with `notes:read`) or the book (with `books:read`)
+ */
+export type PluginContext = {
+  note?: NoteInfo;
+  book?: BookPlace;
+};
+
 /** A note found by `notes.search` */
 export type NoteHit = {
   /** relative to the workspace */
@@ -165,20 +189,26 @@ export type Requests = {
     params: { lang: string; code: string; dark: boolean };
     result: string;
   };
-  /** a button of `contributes.selectionActions` was clicked on the text selected */
+  /**
+   * a button of `contributes.selectionActions` was clicked on the text
+   * selected: in the note open (`note`) or the book open (`book`, its `cfi`
+   * the text selected)
+   */
   "selection.action": {
-    params: {
+    params: PluginContext & {
       action: string;
       text: string;
+      /** in the editor: the text selected as Markdown, with its marks and links */
+      markdown?: string;
       where: "reader" | "editor";
       lang?: string;
     };
     /** text or HTML to show; in the editor, or text to put in place of the selection, or after it */
     result: string | Html | { replace: string } | { insert: string };
   };
-  /** a command of `contributes.commands` was run */
+  /** a command of `contributes.commands` was run, with the note or the book open */
   "command.run": {
-    params: { command: string };
+    params: PluginContext & { command: string };
     result: void | string | Html;
   };
 };

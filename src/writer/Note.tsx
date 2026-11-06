@@ -97,7 +97,7 @@ function Note(props: Props) {
   // code blocks drawn by plugins, ```plantuml
   const { codeRenderers, key: codeRenderersKey } = useCodeRenderers();
   // buttons of plugins on the text selected
-  const selectionActions = useEditorSelectionActions();
+  const selectionActions = useEditorSelectionActions(noteId);
   // read when the editor is made: a new one when trusted plugins change them
   useTrustedVersion();
   const extensionsKey = trustedExtensionsKey();

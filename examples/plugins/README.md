@@ -140,10 +140,15 @@ The app waits 15 seconds for an answer. For a published site each block is asked
 The button of a `selectionActions` entry asks the main page, in the same hidden frame:
 
 ```js
-// { mdsilo: 1, request, method: 'selection.action', params: { action, text, where, lang } }
+// { mdsilo: 1, request, method: 'selection.action', params: { action, text, where, lang, … } }
 // answer text, or { html } to show (sanitized: no scripts, styles or forms)
 parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }, '*');
 ```
+
+With the text the plugin is given where it is: in the editor `markdown`, the text selected as
+Markdown (its bold, links, math), and `note`, the note (as `notes.list` gives it) if the plugin
+may read notes; in the reader `book`, `{ path, title, author, chapter, cfi }` (`cfi` the text
+selected), if it may read books.
 
 In the reader, the answer shows in a popup by the text, with a button to keep it as the note of a
 highlight. In the editor, it shows in a dialog, to insert after the text or copy; or the plugin
@@ -155,12 +160,14 @@ changes the text itself by answering `{ replace: '…' }` (in place of the text 
 A command of `commands` asks the main page, in the same hidden frame:
 
 ```js
-// { mdsilo: 1, request, method: 'command.run', params: { command } }
+// { mdsilo: 1, request, method: 'command.run', params: { command, note?, book? } }
 // answer nothing, text, or { html } to show in a dialog (sanitized)
 parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }, '*');
 ```
 
-The hidden frame has `app.info` and `app.style` only: commands can't read notes yet.
+A command is given what is shown, as an action is: `note` (with `notes:read`) or `book` (with
+`books:read`, `cfi` the page shown). The hidden frame has the methods of views (`notes.read`,
+`notes.write`, `books.list`, `app.open`…), each with its permission, to read the whole note, say.
 
 See `csv-viewer/index.html` for a small client.
 

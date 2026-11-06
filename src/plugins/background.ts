@@ -1,12 +1,15 @@
 import { store } from "@/state/store";
 import { createHost, type PluginHost } from "./host";
 import { enabledPlugins, pluginUrl, type InstalledPlugin } from "./registry";
-import { askTrusted } from "./trusted";
+import { askTrusted, dispatchView } from "./trusted";
+import { workspaceMethods } from "./workspaceApi";
 
 /**
  * The main page of a plugin running in the background, in a hidden sandboxed
  * frame, to be asked: to draw a code block, to act on the text selected...
  * One frame per plugin, loaded on its first use, closed when it is disabled.
+ * It has the methods of the workspace as views do (`notes.read`…), each with
+ * its permission, to read the note it is given, say.
  */
 type Background = {
   plugin: InstalledPlugin;
@@ -33,7 +36,8 @@ function backgroundOf(plugin: InstalledPlugin): Background {
   );
   frame.src = pluginUrl(plugin.id, plugin.manifest?.main ?? "index.html");
   document.body.append(frame);
-  const background = { plugin, frame, host: createHost(plugin, frame), ready };
+  const host = createHost(plugin, frame, () => workspaceMethods(dispatchView));
+  const background = { plugin, frame, host, ready };
   backgrounds.set(plugin.id, background);
   return background;
 }

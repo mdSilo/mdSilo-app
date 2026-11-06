@@ -1,3 +1,4 @@
+import type { PluginContext } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { askPlugin } from "./background";
@@ -10,8 +11,9 @@ import {
 
 /**
  * Actions of plugins on the text selected, in the reader or the editor: the
- * main page of the plugin is asked `selection.action({ action, text, where, lang })`
- * and answers text, or `{ html }` (sanitized here) to show; in the editor,
+ * main page of the plugin is asked `selection.action({ action, text, where, lang })`,
+ * with the note or the book it is in (see context.ts) and in the editor the
+ * text as Markdown too; it answers text, or `{ html }` (sanitized here) to show; in the editor,
  * also `{ replace }` or `{ insert }` to change the text.
  */
 export type PluginSelectionAction = {
@@ -43,8 +45,10 @@ export async function runSelectionAction(
   text: string,
   where: SelectionPlace,
   lang?: string,
+  more: PluginContext & { markdown?: string } = {},
 ): Promise<SelectionResult> {
   const result = await askPlugin(plugin, "selection.action", {
+    ...more,
     action: action.id,
     text,
     where,

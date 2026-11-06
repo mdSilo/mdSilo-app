@@ -6,9 +6,12 @@ import MsEditor from "./index";
 
 vi.mock("copy-to-clipboard", () => ({ default: vi.fn() }));
 
-const setup = async (props: Partial<React.ComponentProps<typeof MsEditor>>) => {
+const setup = async (
+  props: Partial<React.ComponentProps<typeof MsEditor>>,
+  value = "hello selected world"
+) => {
   const ref = React.createRef<MsEditor>();
-  render(<MsEditor ref={ref} value="hello selected world" {...props} />);
+  render(<MsEditor ref={ref} value={value} {...props} />);
   const { view } = ref.current as MsEditor;
   // select "selected"
   await act(async () => {
@@ -67,8 +70,20 @@ describe("selection toolbar", () => {
     await act(async () => {
       fireEvent.click(button("Upper case")!);
     });
-    expect(run).toHaveBeenCalledWith("selected");
+    expect(run).toHaveBeenCalledWith("selected", { markdown: "selected" });
     expect(view.state.doc.textContent).toBe("hello SELECTED world");
+  });
+
+  test("an action is given the text selected as Markdown too", async () => {
+    const run = vi.fn(async () => undefined);
+    await setup(
+      { selectionActions: [{ id: "show", title: "Show", run }] },
+      "hello **selected** world"
+    );
+    await act(async () => {
+      fireEvent.click(button("Show")!);
+    });
+    expect(run).toHaveBeenCalledWith("selected", { markdown: "**selected**" });
   });
 
   test("an action given puts its answer after the text", async () => {

@@ -587,6 +587,8 @@ export function PluginMenuItems({
   useTrustedVersion();
   const views = hasWorkspace ? pluginViews(installedPlugins, pluginStates) : [];
   const commands = pluginCommands(installedPlugins, pluginStates);
+  // commands are given the note or the book shown
+  const { state: viewState } = useCurrentViewContext();
 
   return (
     <>
@@ -607,7 +609,7 @@ export function PluginMenuItems({
         <DropdownItem
           key={`${found.plugin.id}:${found.command.id}`}
           className={i === 0 && views.length ? "border-t border-base-300" : ""}
-          onClick={() => void runCommand(found)}
+          onClick={() => void runCommand(found, viewState)}
         >
           <TbPlayerPlay size={18} className="mr-1 shrink-0" />
           <span className="truncate">{found.command.title}</span>

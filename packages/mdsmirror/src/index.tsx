@@ -125,6 +125,7 @@ export type { CodeRenderer } from "./plugins/Diagram";
 export type {
   SelectionAction,
   SelectionActionResult,
+  SelectionInfo,
 } from "./components/SelectionToolbar";
 
 export const theme = lightTheme;
@@ -939,6 +940,7 @@ class MsEditor extends React.PureComponent<Props, State> {
                   onSearchSelectText={this.props.onSearchSelectText}
                   onCreateIssue={this.props.onCreateIssue}
                   selectionActions={this.props.selectionActions}
+                  serializer={this.serializer}
                   onOpenLink={this.props.onOpenLink}
                   onShowToast={this.props.onShowToast}
                 />

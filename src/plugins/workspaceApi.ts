@@ -71,6 +71,19 @@ function noteAt(params: unknown) {
   return note;
 }
 
+const infoOf = (
+  dir: string,
+  note: Note,
+  index: ReturnType<typeof indexOf>,
+): NoteInfo => ({
+  path: toWorkspacePath(dir, note.id),
+  title: note.title,
+  created: note.created_at,
+  updated: note.updated_at,
+  tags: index.tags(note.id),
+  links: index.rawLinks(note.id),
+});
+
 export function listNotes(params: unknown): NoteInfo[] {
   const dir = workspace();
   const { tag, folder } = asObject(params);
@@ -81,18 +94,19 @@ export function listNotes(params: unknown): NoteInfo[] {
   const infos: NoteInfo[] = [];
   for (const note of notes.values()) {
     if (!isNote(note) || (prefix && !note.id.startsWith(prefix))) continue;
-    const tags = index.tags(note.id);
-    if (typeof tag === "string" && tag && !tags.includes(tag)) continue;
-    infos.push({
-      path: toWorkspacePath(dir, note.id),
-      title: note.title,
-      created: note.created_at,
-      updated: note.updated_at,
-      tags,
-      links: index.rawLinks(note.id),
-    });
+    const info = infoOf(dir, note, index);
+    if (typeof tag === "string" && tag && !info.tags.includes(tag)) continue;
+    infos.push(info);
   }
   return infos;
+}
+
+/** The note of the workspace with this id (its absolute path), if the app knows it */
+export function noteInfo(id: string): NoteInfo | undefined {
+  const { initDir: dir, notes } = store.getState();
+  const note = notes.get(id);
+  if (!dir || !isNote(note)) return undefined;
+  return infoOf(dir, note, indexOf(notes));
 }
 
 export const readNote = async (params: unknown) =>

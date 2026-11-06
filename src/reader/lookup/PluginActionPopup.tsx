@@ -2,6 +2,7 @@ import { memo, useEffect, useState, type RefObject } from "react";
 import { TbNote, TbX } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import { useTrustedVersion } from "@/plugins/trusted";
+import { bookContext } from "@/plugins/context";
 import { Spinner } from "@/ui/ui";
 import {
   runSelectionAction,
@@ -49,6 +50,7 @@ function PluginActionPopup({
       target.selection.text,
       "reader",
       getView()?.language?.canonical,
+      bookContext(found.plugin, target.selection.cfi),
     )
       .then((res) => {
         if (!cancelled) setResult(res);

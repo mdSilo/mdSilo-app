@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { store } from "@/state/store";
 import SideMenu from "@/shell/SideMenu";
-import { renderWithView } from "@/testUtils";
+import { makeNote, renderWithView } from "@/testUtils";
 import { askPlugin } from "./background";
 import { pluginCommands, runCommand } from "./commands";
 import { parseManifest } from "./manifest";
@@ -60,6 +60,28 @@ describe("commands", () => {
     expect(document.querySelector("script")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByText("noon")).toBeNull();
+  });
+
+  it("gives the command the note of the view shown, if it may read notes", async () => {
+    const reader = {
+      ...plugin,
+      manifest: { ...plugin.manifest!, permissions: ["notes:read" as const] },
+    };
+    store.setState({ installedPlugins: [reader] });
+    enablePlugin(reader);
+    store.getState().setInitDir("/ws");
+    store
+      .getState()
+      .upsertNotes([makeNote({ id: "/ws/a.md", title: "a", content: "x" })]);
+    vi.mocked(askPlugin).mockResolvedValue(undefined);
+    await runCommand(pluginCommands()[0], {
+      view: "md",
+      params: { noteId: "/ws/a.md" },
+    });
+    expect(askPlugin).toHaveBeenCalledWith(reader, "command.run", {
+      command: "now",
+      note: expect.objectContaining({ path: "a.md", title: "a" }),
+    });
   });
 
   it("shows the error of a command, and nothing for no answer", async () => {

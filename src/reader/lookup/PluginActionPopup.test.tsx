@@ -4,6 +4,8 @@ import { store } from "@/state/store";
 import { askPlugin } from "@/plugins/background";
 import { parseManifest } from "@/plugins/manifest";
 import { enablePlugin, type InstalledPlugin } from "@/plugins/registry";
+import { activeStore, resetReaderStore } from "../readerStore";
+import type { BookEntry } from "../library/library";
 import { usePopups, type TextSelection } from "../popups";
 import { isPopupShown } from "../popups";
 import PluginActionPopup from "./PluginActionPopup";
@@ -106,6 +108,49 @@ describe("PluginActionPopup", () => {
         }),
     );
     expect(await screen.findByText("No network")).toBeInTheDocument();
+  });
+
+  it("gives the book and the place selected to a plugin that may read books", async () => {
+    const reader = {
+      ...plugin,
+      manifest: { ...plugin.manifest!, permissions: ["books:read" as const] },
+    };
+    store.setState({ installedPlugins: [reader] });
+    enablePlugin(reader);
+    resetReaderStore();
+    activeStore().setState({
+      path: "/ws/reading/Dune.epub",
+      ws: "/ws",
+      entry: {
+        file: "reading/Dune.epub",
+        title: "Dune",
+        author: "Frank Herbert",
+      } as BookEntry,
+    });
+    vi.mocked(askPlugin).mockResolvedValue("ok");
+    renderPopup();
+    act(() =>
+      usePopups.getState().setPluginAction({
+        plugin: "ai",
+        action: "explain",
+        title: "Explain",
+        selection,
+      }),
+    );
+    expect(await screen.findByText("ok")).toBeInTheDocument();
+    expect(askPlugin).toHaveBeenCalledWith(
+      reader,
+      "selection.action",
+      expect.objectContaining({
+        text: "entropy",
+        book: {
+          path: "reading/Dune.epub",
+          title: "Dune",
+          author: "Frank Herbert",
+          cfi: "epubcfi(/6/4)",
+        },
+      }),
+    );
   });
 
   it("runs nothing of a plugin not enabled", async () => {

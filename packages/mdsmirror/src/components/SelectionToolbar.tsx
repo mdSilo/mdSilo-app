@@ -7,6 +7,7 @@ import * as React from "react";
 import { TbPuzzle } from "react-icons/tb";
 import createAndInsertLink from "../core/commands/createAndInsertLink";
 import { CommandFactory } from "../core/Extension";
+import type { MarkdownSerializer } from "../core/mdSerializer";
 import { getColumnIndex, getRowIndex } from "../core/queries/table";
 import getMarkRange from "../core/queries/getMarkRange";
 import { isMarkActive } from "../core/queries/isMarkActive";
@@ -32,11 +33,20 @@ const TOOLBAR_ACTIONS = ["search", "copy", "issue"];
 /** What an action on the text selected does to it: put text in its place, or after it */
 export type SelectionActionResult = { replace?: string; insert?: string };
 
+/** What else is known of the text selected, for an action on it */
+export type SelectionInfo = {
+  /** the text selected as Markdown, if the editor has a serializer */
+  markdown?: string;
+};
+
 /** A button on the text selected, given by the app, e.g. of a plugin */
 export type SelectionAction = {
   id: string;
   title: string;
-  run: (text: string) => Promise<SelectionActionResult | undefined | void>;
+  run: (
+    text: string,
+    info: SelectionInfo
+  ) => Promise<SelectionActionResult | undefined | void>;
 };
 
 const actionName = (id: string) => `action:${id}`;
@@ -58,6 +68,8 @@ type Props = {
   onOpenLink?: (href: string) => void;
   onShowToast?: (msg: string, code: string) => void;
   selectionActions?: SelectionAction[];
+  /** to give actions the text selected as Markdown */
+  serializer?: MarkdownSerializer;
   view: EditorView;
 };
 
@@ -220,10 +232,16 @@ export default class SelectionToolbar extends React.Component<Props> {
 
   /** Runs the action on the text, then puts its answer where the text is now. */
   handleSelectionAction = async (action: SelectionAction, text: string) => {
-    const { view, onShowToast } = this.props;
+    const { view, onShowToast, serializer } = this.props;
+    const { state: before } = view;
+    const info: SelectionInfo = {};
+    if (serializer) {
+      const { from, to } = before.selection;
+      info.markdown = serializer.serialize(before.doc.cut(from, to)).trim();
+    }
     let result: SelectionActionResult | undefined | void;
     try {
-      result = await action.run(text);
+      result = await action.run(text, info);
     } catch (e) {
       onShowToast?.(
         `${action.title}: ${(e as Error)?.message ?? e}`,
