@@ -188,6 +188,7 @@ const FloatingToolbar = React.forwardRef(
     return createPortal(
       <Wrapper
         $active={!!props.active && position.visible}
+        data-active={!!props.active}
         ref={menuRef}
         $offset={position.offset}
         style={{

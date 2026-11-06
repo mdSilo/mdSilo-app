@@ -94,6 +94,11 @@ import History from "./plugins/History";
 import Keys from "./plugins/Keys";
 import MaxLength from "./plugins/MaxLength";
 import Placeholder from "./plugins/Placeholder";
+import BlockMarks, {
+  setBlockMarks,
+  textBlocksOf,
+  type BlockMark,
+} from "./plugins/BlockMarks";
 import SmartText from "./plugins/SmartText";
 import QuickAction from "./plugins/QuickAction";
 import TrailingNode from "./plugins/TrailingNode";
@@ -121,10 +126,12 @@ export { Heading, getHeadings } from "./core/queries/getHeadings";
 export { HashTag, getHashtags } from "./core/queries/getHashtags";
 export { Task, getTasks } from "./core/queries/getTasks";
 export { renderSmiles } from "./lib/smiles";
+export { textBlocksOf, type BlockMark } from "./plugins/BlockMarks";
 export type { CodeRenderer } from "./plugins/Diagram";
 export type {
   SelectionAction,
   SelectionActionResult,
+  SelectionInfo,
 } from "./components/SelectionToolbar";
 
 export const theme = lightTheme;
@@ -437,10 +444,13 @@ class MsEditor extends React.PureComponent<Props, State> {
       new HardBreak(),
       new Paragraph(),
       new Blockquote(),
+      // fenced code in markdown, and typed ```, are parsed into code_block
+      // nodes: they need the renderers too, to draw and offer their languages
       new CodeBlock({
         dark: this.props.dark,
         showLineNumber: this.props.showLineNumber,
         onSaveDiagram: this.props.onSaveDiagram,
+        codeRenderers: this.props.codeRenderers,
       }),
       new CodeFence({
         dark: this.props.dark,
@@ -535,6 +545,7 @@ class MsEditor extends React.PureComponent<Props, State> {
       new Placeholder({
         placeholder: this.props.placeholder || "",
       }),
+      new BlockMarks(),
       new MaxLength({
         maxLength: this.props.maxLength,
       }),
@@ -668,6 +679,9 @@ class MsEditor extends React.PureComponent<Props, State> {
   createDocument(content: string) {
     return this.parser.parse(content);
   }
+
+  /** Markdown of the app (e.g. of a plugin) as blocks, read as a paste is */
+  parseMarkdown = (markdown: string) => this.pasteParser.parse(markdown);
 
   createView() {
     if (!this.elementRef.current) {
@@ -860,6 +874,43 @@ class MsEditor extends React.PureComponent<Props, State> {
     this.view.focus();
   };
 
+  /** The blocks of text (paragraphs, headings, items...): their text */
+  textBlocks = () =>
+    textBlocksOf(this.view.state.doc).map(({ index, node }) => ({
+      index,
+      text: node.textContent,
+      type: node.type.name,
+    }));
+
+  /** The block of text the cursor is in, or the one after it; -1 if none */
+  blockAtCursor = () => {
+    const { from } = this.view.state.selection;
+    const blocks = textBlocksOf(this.view.state.doc);
+    const found = blocks.find(
+      ({ pos, node }) => from >= pos && from <= pos + node.nodeSize
+    );
+    return found?.index ?? blocks.find(({ pos }) => pos >= from)?.index ?? -1;
+  };
+
+  /** The cursor at the start of the block, shown in the middle of the editor */
+  goToBlock = (index: number) => {
+    const block = textBlocksOf(this.view.state.doc)[index];
+    if (!block) return false;
+    const { state } = this.view;
+    this.view.dispatch(
+      state.tr.setSelection(Selection.near(state.doc.resolve(block.pos + 1)))
+    );
+    const dom = this.view.nodeDOM(block.pos);
+    if (dom instanceof HTMLElement)
+      dom.scrollIntoView({ block: "center", behavior: "smooth" });
+    return true;
+  };
+
+  /** Marks blocks of text: these, in place of those before */
+  setBlockMarks = (marks: BlockMark[]) => {
+    this.view.dispatch(setBlockMarks(this.view.state, marks));
+  };
+
   getHeadings = () => {
     return getHeadings(this.view.state.doc);
   };
@@ -939,6 +990,8 @@ class MsEditor extends React.PureComponent<Props, State> {
                   onSearchSelectText={this.props.onSearchSelectText}
                   onCreateIssue={this.props.onCreateIssue}
                   selectionActions={this.props.selectionActions}
+                  serializer={this.serializer}
+                  parseMarkdown={this.parseMarkdown}
                   onOpenLink={this.props.onOpenLink}
                   onShowToast={this.props.onShowToast}
                 />

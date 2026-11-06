@@ -19,8 +19,40 @@ describe("parseManifest", () => {
         selectionActions: [],
         commands: [],
         noteModes: [],
+        readerPanels: [],
       },
     });
+  });
+
+  it("reads the panels of the reader, over the book by default", () => {
+    const { readerPanels } = parseManifest({
+      ...minimal,
+      contributes: {
+        readerPanels: [
+          { id: "rsvp", title: "Speed reading" },
+          {
+            id: "notes",
+            title: "Notes",
+            placement: "side",
+            page: "./side.html",
+          },
+        ],
+      },
+    }).contributes;
+    expect(readerPanels).toEqual([
+      { id: "rsvp", title: "Speed reading", placement: "overlay" },
+      { id: "notes", title: "Notes", placement: "side", page: "side.html" },
+    ]);
+    expect(() =>
+      parseManifest({
+        ...minimal,
+        contributes: {
+          readerPanels: [{ id: "x", title: "X", placement: "top" }],
+        },
+      }),
+    ).toThrow(
+      '"contributes.readerPanels[0].placement" should be "overlay" or "side"',
+    );
   });
 
   it("reads the JSON text of the file", () => {
@@ -69,6 +101,22 @@ describe("parseManifest", () => {
     expect(() =>
       parseManifest({ ...minimal, main: "https://example.com/x.html" }),
     ).toThrow('"main"');
+  });
+
+  it("takes an icon: an image inside the plugin", () => {
+    expect(parseManifest(minimal).icon).toBeUndefined();
+    expect(parseManifest({ ...minimal, icon: "./icon.svg" }).icon).toBe(
+      "icon.svg",
+    );
+    expect(parseManifest({ ...minimal, icon: "img/Logo.PNG" }).icon).toBe(
+      "img/Logo.PNG",
+    );
+    expect(() => parseManifest({ ...minimal, icon: "../x.svg" })).toThrow(
+      '"icon" should be a path inside the plugin',
+    );
+    expect(() => parseManifest({ ...minimal, icon: "icon.html" })).toThrow(
+      '"icon" should be an SVG, PNG, WebP, JPEG or GIF',
+    );
   });
 
   it("reads the viewers and the views", () => {

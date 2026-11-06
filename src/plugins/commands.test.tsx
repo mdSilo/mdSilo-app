@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { store } from "@/state/store";
 import SideMenu from "@/shell/SideMenu";
-import { renderWithView } from "@/testUtils";
+import { makeNote, renderWithView } from "@/testUtils";
 import { askPlugin } from "./background";
 import { pluginCommands, runCommand } from "./commands";
 import { parseManifest } from "./manifest";
@@ -60,6 +60,49 @@ describe("commands", () => {
     expect(document.querySelector("script")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByText("noon")).toBeNull();
+  });
+
+  it("gives the command the note of the view shown, if it may read notes", async () => {
+    const reader = {
+      ...plugin,
+      manifest: { ...plugin.manifest!, permissions: ["notes:read" as const] },
+    };
+    store.setState({ installedPlugins: [reader] });
+    enablePlugin(reader);
+    store.getState().setInitDir("/ws");
+    store
+      .getState()
+      .upsertNotes([makeNote({ id: "/ws/a.md", title: "a", content: "x" })]);
+    vi.mocked(askPlugin).mockResolvedValue(undefined);
+    await runCommand(pluginCommands()[0], {
+      view: "md",
+      params: { noteId: "/ws/a.md" },
+    });
+    expect(askPlugin).toHaveBeenCalledWith(reader, "command.run", {
+      command: "now",
+      note: expect.objectContaining({ path: "a.md", title: "a" }),
+    });
+  });
+
+  it("shows an image, without putting it in a note", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:card");
+    URL.revokeObjectURL = vi.fn();
+    enablePlugin(plugin);
+    render(<PluginAnswerModal />);
+    vi.mocked(askPlugin).mockResolvedValue({
+      image: "data:image/svg+xml,%3Csvg%3E%3C/svg%3E",
+      alt: "Today",
+    });
+    void runCommand(pluginCommands()[0]);
+    expect(
+      await screen.findByRole("img", { name: "Today" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Insert/ })).toBeNull();
+    // an image that isn't one: its error
+    vi.mocked(askPlugin).mockResolvedValue({ image: "data:,hello" });
+    void runCommand(pluginCommands()[0]);
+    expect(await screen.findByText(/Not an image/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
   });
 
   it("shows the error of a command, and nothing for no answer", async () => {

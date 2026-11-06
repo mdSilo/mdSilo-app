@@ -2,6 +2,8 @@ import { memo, useEffect, useState, type RefObject } from "react";
 import { TbNote, TbX } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import { useTrustedVersion } from "@/plugins/trusted";
+import { bookContext } from "@/plugins/context";
+import { PluginImageView } from "@/plugins/PluginImageView";
 import { Spinner } from "@/ui/ui";
 import {
   runSelectionAction,
@@ -44,14 +46,22 @@ function PluginActionPopup({
       setError("The plugin is not enabled");
       return;
     }
-    runSelectionAction(
-      found,
-      target.selection.text,
-      "reader",
-      getView()?.language?.canonical,
-    )
+    bookContext(found.plugin, target.selection.cfi)
+      .then((context) =>
+        runSelectionAction(
+          found,
+          target.selection.text,
+          "reader",
+          getView()?.language?.canonical,
+          context,
+        ),
+      )
       .then((res) => {
-        if (!cancelled) setResult(res);
+        if (cancelled) return;
+        setResult(res);
+        // the text quoted highlighted, as the plugin asks (e.g. a quote card)
+        if ("highlight" in res && res.highlight)
+          annotateSelection(target.selection);
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
@@ -72,13 +82,15 @@ function PluginActionPopup({
     usePopups.getState().clear();
   };
 
+  // an image: wider, with its buttons by it
+  const isImage = Boolean(result && "image" in result);
   return (
     <Popup
       box={target.selection.box}
       rootRef={rootRef}
       testId="plugin-action-popup"
-      height={260}
-      width={360}
+      height={isImage ? 320 : 260}
+      width={isImage ? 400 : 360}
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-semibold uppercase text-base-content/60">
@@ -94,7 +106,7 @@ function PluginActionPopup({
         </button>
       </div>
       <div
-        className="overflow-y-auto text-sm max-h-60"
+        className={`overflow-y-auto text-sm ${isImage ? "max-h-[70vh]" : "max-h-60"}`}
         style={{ contain: "paint" }}
         onClick={openLinkOutside}
       >
@@ -102,6 +114,8 @@ function PluginActionPopup({
           <p className="text-error">{error}</p>
         ) : !result ? (
           <Spinner size="sm" className="mx-auto my-4" />
+        ) : "image" in result ? (
+          <PluginImageView image={result.image} imageWidth={210} />
         ) : "html" in result ? (
           // sanitized in plugins/selection.ts
           <div dangerouslySetInnerHTML={{ __html: result.html }} />
@@ -109,7 +123,7 @@ function PluginActionPopup({
           <p className="whitespace-pre-wrap">{textOf(result)}</p>
         )}
       </div>
-      {result && textOf(result) ? (
+      {result && !("image" in result) && textOf(result) ? (
         <div className="flex justify-end mt-1">
           <button
             className="btn btn-ghost btn-xs"

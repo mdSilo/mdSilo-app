@@ -53,21 +53,26 @@ describe("plugins in development", () => {
     await userEvent.click(screen.getByRole("button", { name: "Develop" }));
     const row = within(await screen.findByTestId("plugin-clock"));
     expect(await row.findByText("Dev")).toBeInTheDocument();
+    const source = { kind: "folder", path: "/src/clock" };
     expect(store.getState().pluginStates.clock).toEqual({
       enabled: false,
       granted: [],
       devSource: "/src/clock",
+      source,
     });
     enablePlugin(store.getState().installedPlugins[0]);
     expect(store.getState().pluginStates.clock.devSource).toBe("/src/clock");
     await userEvent.click(
       row.getByRole("button", { name: "Stop developing Clock" }),
     );
+    // updated from the folder from now on, by its button
     expect(store.getState().pluginStates.clock).toEqual({
       enabled: true,
       granted: [],
+      source,
     });
     expect(row.queryByText("Dev")).toBeNull();
+    expect(row.getByRole("button", { name: /Update/ })).toBeInTheDocument();
   });
 
   it("watches the folders of the plugins in development, as they change", () => {

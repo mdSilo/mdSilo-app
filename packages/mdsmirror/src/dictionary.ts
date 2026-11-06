@@ -69,6 +69,7 @@ export const baseDictionary = {
   searchText: "Search Text",
   copy: "Copy",
   copied: "Copied",
+  plugins: "Plugins",
   createIssue: "New issue of it",
   strikethrough: "Strikethrough",
   strong: "Bold",

@@ -11,6 +11,7 @@ export const PERMISSIONS = [
   "notes:write",
   "books:read",
   "issues:read",
+  "reader:read",
   "net",
 ] as const;
 
@@ -51,6 +52,18 @@ export type CommandContribution = { id: string; title: string };
  */
 export type NoteModeContribution = { id: string; title: string; page?: string };
 
+/**
+ * A panel of the reader, opened from its header: its page (`page`, or the
+ * main page) over the book (`overlay`, by default) or beside it (`side`),
+ * with the methods of the book open (`reader.*`)
+ */
+export type ReaderPanelContribution = {
+  id: string;
+  title: string;
+  page?: string;
+  placement: "overlay" | "side";
+};
+
 export type Contributes = {
   viewers: ViewerContribution[];
   views: ViewContribution[];
@@ -62,6 +75,8 @@ export type Contributes = {
   commands: CommandContribution[];
   /** modes of the note open */
   noteModes: NoteModeContribution[];
+  /** panels of the reader, on the book open */
+  readerPanels: ReaderPanelContribution[];
 };
 
 export type PluginManifest = {
@@ -71,6 +86,12 @@ export type PluginManifest = {
   minAppVersion?: string;
   author?: string;
   description?: string;
+  /**
+   * its icon, relative to its folder: SVG, PNG, WebP, JPEG or GIF, square,
+   * shown at 16 to 24 px (in the plugin manager, the menus, the toolbars of
+   * the text selected); a puzzle piece if none
+   */
+  icon?: string;
   mode: PluginMode;
   /** a plugin made for another app, run by a compatibility layer: trusted */
   compat?: "obsidian";
@@ -89,9 +110,12 @@ export type ManifestJson = Omit<
   permissions?: Permission[];
   main?: string;
   contributes?: Partial<
-    Omit<Contributes, "selectionActions"> & {
+    Omit<Contributes, "selectionActions" | "readerPanels"> & {
       selectionActions: (Omit<SelectionAction, "where"> & {
         where?: SelectionPlace[];
+      })[];
+      readerPanels: (Omit<ReaderPanelContribution, "placement"> & {
+        placement?: ReaderPanelContribution["placement"];
       })[];
     }
   >;

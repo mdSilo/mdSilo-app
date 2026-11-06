@@ -1,5 +1,7 @@
 import type { FoliateView } from "../view";
-import { flashPlace, type Flash } from "./FoliateViewer";
+import { markQuote, useQuoteMark } from "../quoteMark";
+import { useMarks } from "../marks";
+import { flashPlace, markPlace, type Flash } from "./FoliateViewer";
 
 // a view of one section, the page in the document of the test
 const fakeView = (anchor: (doc: Document) => Range | Element | null) => {
@@ -81,5 +83,43 @@ describe("the place gone to, marked for a moment", () => {
     expect(collapsed.addAnnotation).not.toHaveBeenCalled();
     expect(away.addAnnotation).not.toHaveBeenCalled();
     expect(flash.current).toBeUndefined();
+  });
+});
+
+describe("a text quoted, marked while the book is open", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    document.body.innerHTML =
+      "<p>It was a bright cold day in April. The clocks were striking thirteen.</p>";
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    markQuote(undefined);
+    useMarks.setState({ marks: [] });
+  });
+
+  test("the text itself, not the sentence, as a mark of the pane", async () => {
+    const cfi = "epubcfi(/6/4!/4/2,/1:16,/1:20)";
+    const view = fakeView((doc) => wordIn(doc, "cold"));
+    const flash: { current?: Flash } = {};
+    markQuote(cfi);
+    await markPlace(view, cfi, flash, "main");
+    expect(useMarks.getState().marks).toEqual([
+      { cfi, color: "yellow", owner: "quote", pane: "main" },
+    ]);
+    expect(flash.current).toBeUndefined();
+    // once: going there again flashes the sentence
+    expect(useQuoteMark.getState().cfi).toBeUndefined();
+  });
+
+  test("another place gone to: the sentence for a moment, as before", async () => {
+    const view = fakeView((doc) => wordIn(doc, "cold"));
+    const flash: { current?: Flash } = {};
+    markQuote("epubcfi(/6/8!/4/2,/1:0,/1:5)");
+    await markPlace(view, "epubcfi(/6/4!/4/2,/1:16,/1:20)", flash, "main");
+    expect(useMarks.getState().marks).toEqual([]);
+    expect(flash.current?.value).toBe(
+      "foliate-note:epubcfi(It was a bright cold day in April.)",
+    );
   });
 });

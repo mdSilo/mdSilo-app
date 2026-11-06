@@ -34,13 +34,13 @@ import {
   TbEraser,
   TbWorldUpload,
   TbPuzzle,
-  TbPlayerPlay,
   TbDeviceMobileDown,
 } from "react-icons/tb";
 import { MdFolderOpen } from "react-icons/md";
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { usePopper } from "react-popper";
 import { useCurrentViewContext } from "@/state/useCurrentView";
+import { PluginIcon } from "@/plugins/PluginIcon";
 import useHotkeys from "@/lib/hooks/useHotkeys";
 import {
   onOpenFile,
@@ -587,6 +587,8 @@ export function PluginMenuItems({
   useTrustedVersion();
   const views = hasWorkspace ? pluginViews(installedPlugins, pluginStates) : [];
   const commands = pluginCommands(installedPlugins, pluginStates);
+  // commands are given the note or the book shown
+  const { state: viewState } = useCurrentViewContext();
 
   return (
     <>
@@ -597,6 +599,7 @@ export function PluginMenuItems({
             onDispatch({ view: "plugin", plugin: plugin.id, viewId: view.id })
           }
         >
+          <PluginIcon plugin={plugin} size={18} className="mr-1" />
           <span className="truncate">{view.title}</span>
           <span className="ml-auto pl-2 text-xs truncate text-base-content/60">
             {plugin.manifest?.name}
@@ -607,9 +610,9 @@ export function PluginMenuItems({
         <DropdownItem
           key={`${found.plugin.id}:${found.command.id}`}
           className={i === 0 && views.length ? "border-t border-base-300" : ""}
-          onClick={() => void runCommand(found)}
+          onClick={() => void runCommand(found, viewState)}
         >
-          <TbPlayerPlay size={18} className="mr-1 shrink-0" />
+          <PluginIcon plugin={found.plugin} size={18} className="mr-1" />
           <span className="truncate">{found.command.title}</span>
           <span className="ml-auto pl-2 text-xs truncate text-base-content/60">
             {found.plugin.manifest?.name}

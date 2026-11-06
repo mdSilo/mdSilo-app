@@ -62,6 +62,64 @@ export type IssueInfo = {
   notes: string[];
 };
 
+/**
+ * The book open in the reader, given with what a plugin is asked about it
+ * (`selection.action`, `command.run`) if it is granted `books:read`
+ */
+export type BookPlace = {
+  /** the book file, relative to the workspace */
+  path: string;
+  title: string;
+  author: string;
+  /** the chapter shown, as the table of contents of the book names it */
+  chapter?: string;
+  /** the text selected, or the page shown, as an EPUB CFI */
+  cfi?: string;
+  /**
+   * the book file on the web, when the workspace syncs it to a git repo on
+   * GitHub, GitLab or Gitea; others can get it if the repo is public
+   */
+  url?: string;
+  /** a link to read the book at `cfi` in the web app of mdSilo, with `url` */
+  readUrl?: string;
+};
+
+/**
+ * What is open in the app, given with what a plugin is asked: the note
+ * (with `notes:read`) or the book (with `books:read`)
+ */
+export type PluginContext = {
+  note?: NoteInfo;
+  book?: BookPlace;
+};
+
+/** Where the reader is in the book open (`reader.info`, `reader.relocated`) */
+export type ReaderInfo = BookPlace & {
+  /** the page shown, as `cfi` */
+  cfi: string;
+  /** how far in the book, 0 to 1 */
+  fraction: number;
+};
+
+/** A block of text of the book: a paragraph, a heading, an item... */
+export type TextBlock = { cfi: string; text: string };
+
+/** The colors of the marks over the text, as of the highlights */
+export type MarkColor = "yellow" | "red" | "green" | "blue" | "violet";
+
+/** A block of text of a note: a paragraph, a heading, an item... by its place */
+export type NoteBlock = { index: number; text: string };
+
+/** The note open in the editor (`editor.info`) */
+export type EditorInfo = {
+  /** the note, if in the workspace */
+  note?: NoteInfo;
+  /** the block of text the cursor is in; -1 if none */
+  block: number;
+  /** how many blocks of text the note has */
+  blocks: number;
+};
+
 /** A note found by `notes.search` */
 export type NoteHit = {
   /** relative to the workspace */
@@ -94,6 +152,13 @@ export type Methods = {
     { id: string; version?: string; permissions: Permission[] }
   >;
   "app.style": Method<void, PluginStyle>;
+  /** Markdown as HTML, as the app reads it: sanitized (no scripts, styles or forms) */
+  "markdown.render": Method<{ text: string }, string>;
+  /**
+   * opens a web page (http or https) in the browser, one a second at most;
+   * from the hidden main page only while it answers an action or a command
+   */
+  "app.openUrl": Method<{ url: string }, true>;
   // file viewers: the file opened only
   /** `path` relative to the workspace, if the file is in it */
   "file.info": Method<void, { name: string; ext: string; path?: string }>;
@@ -129,8 +194,75 @@ export type Methods = {
     { note: string } | { book: string } | { issue: number },
     true
   >;
-  // note modes: the note open only
-  "note.info": Method<void, { title: string; readOnly: boolean }>;
+  // the book open in the reader: in a panel of the reader, an action, a command
+  /** where the reader is; null if no book is open */
+  "reader.info": Method<void, ReaderInfo | null, "reader:read">;
+  /**
+   * `count` blocks of text (50 by default, 500 at most) from `from` on: the
+   * page shown (`"current"`, by default) or a CFI; `next` the CFI to go on
+   * from, none at the end of the book
+   */
+  "reader.blocks": Method<
+    { from?: string; count?: number } | void,
+    { blocks: TextBlock[]; next?: string },
+    "reader:read"
+  >;
+  /** shows the place, a CFI */
+  "reader.goTo": Method<{ cfi: string }, true, "reader:read">;
+  /** marks the text at the CFI, while the book is open: not kept as a highlight */
+  "reader.mark": Method<
+    { cfi: string; color?: MarkColor },
+    true,
+    "reader:read"
+  >;
+  /** takes back the marks of the plugin */
+  "reader.clearMarks": Method<void, true, "reader:read">;
+  // the note open in the editor (WYSIWYG): from an action, a command
+  /** where the cursor is; null if no note is open in the editor */
+  "editor.info": Method<void, EditorInfo | null, "notes:read">;
+  /**
+   * `count` blocks of text (50 by default, 500 at most) from `from` on: the
+   * block of the cursor (`"current"`, by default) or a number; `next` the
+   * block to go on from, none at the end
+   */
+  "editor.blocks": Method<
+    { from?: number | "current"; count?: number } | void,
+    { blocks: NoteBlock[]; next?: number },
+    "notes:read"
+  >;
+  /** the cursor at the start of the block, shown */
+  "editor.goTo": Method<{ block: number }, true, "notes:read">;
+  /** a color behind the block, not in the note: it follows the edits, gone when the note closes */
+  "editor.mark": Method<
+    { block: number; color?: MarkColor },
+    true,
+    "notes:read"
+  >;
+  /** takes back the marks of the plugin */
+  "editor.clearMarks": Method<void, true, "notes:read">;
+  // a panel of the reader
+  "panel.info": Method<void, { id: string }>;
+  /** closes the panel, e.g. on Escape: the keys go to the panel while it shows */
+  "panel.close": Method<void, true>;
+  // note modes: the note open only (and app.open, as views)
+  "note.info": Method<
+    void,
+    {
+      title: string;
+      readOnly: boolean;
+      /** the note in the workspace: relative to it */
+      path?: string;
+      tags?: string[];
+      created?: string;
+      updated?: string;
+    }
+  >;
+  /** the blocks of text of the note, as `editor.blocks` (from 0) */
+  "note.blocks": Method<
+    { from?: number; count?: number } | void,
+    { blocks: NoteBlock[]; next?: number },
+    "notes:read"
+  >;
   "note.read": Method<void, string, "notes:read">;
   "note.write": Method<{ text: string }, true, "notes:write">;
 };
@@ -149,6 +281,8 @@ export type Events = {
   "note.changed": undefined;
   /** views: notes were edited (in the app too), made, renamed or deleted; paths relative to the workspace */
   "notes.changed": { paths: string[] };
+  /** panels of the reader: the page shown changed */
+  "reader.relocated": ReaderInfo;
   /** views: files of the workspace changed on the disk, as the watcher saw them */
   "files.changed": { paths: string[]; event: string };
 };
@@ -158,6 +292,26 @@ export type EventName = keyof Events;
 /** Some HTML to show: sanitized by the app, no scripts, styles or forms */
 export type Html = { html: string };
 
+/**
+ * An image to show, e.g. a card drawn on a canvas: PNG, JPEG, WebP, GIF or
+ * SVG, of 20 MB at most. The app shows it with buttons to copy it, save it,
+ * share it (where the system can) and, in the editor, put it in the note
+ * (saved in `assets/`).
+ */
+export type ImageAnswer = {
+  /** the bytes (a `Uint8Array`, an `ArrayBuffer`, a `Blob`) or a `data:` URL */
+  image: Uint8Array | ArrayBuffer | Blob | string;
+  /** the file name to save it as, e.g. `quote.png` */
+  name?: string;
+  /** what it shows, for those who can't see it, and the text of the image in a note */
+  alt?: string;
+  /**
+   * buttons to open web pages by the image, 4 at most: to post it, say
+   * (`https://bsky.app/intent/compose?text=…`); http(s) only
+   */
+  links?: { title: string; url: string }[];
+};
+
 /** What the app asks the main page of a plugin, with what it wants back */
 export type Requests = {
   /** draw a code block of a language in `contributes.codeBlocks`: SVG or HTML */
@@ -165,21 +319,35 @@ export type Requests = {
     params: { lang: string; code: string; dark: boolean };
     result: string;
   };
-  /** a button of `contributes.selectionActions` was clicked on the text selected */
+  /**
+   * a button of `contributes.selectionActions` was clicked on the text
+   * selected: in the note open (`note`) or the book open (`book`, its `cfi`
+   * the text selected)
+   */
   "selection.action": {
-    params: {
+    params: PluginContext & {
       action: string;
       text: string;
+      /** in the editor: the text selected as Markdown, with its marks and links */
+      markdown?: string;
       where: "reader" | "editor";
       lang?: string;
     };
-    /** text or HTML to show; in the editor, or text to put in place of the selection, or after it */
-    result: string | Html | { replace: string } | { insert: string };
+    /**
+     * text, HTML or an image to show; in the editor, or text to put in place
+     * of the selection, or after it. In the reader, `highlight: true` with
+     * them highlights the text selected too, as the user would (e.g. a quote)
+     */
+    result:
+      | string
+      | (({ text: string } | Html | ImageAnswer) & { highlight?: boolean })
+      | { replace: string }
+      | { insert: string };
   };
-  /** a command of `contributes.commands` was run */
+  /** a command of `contributes.commands` was run, with the note or the book open */
   "command.run": {
-    params: { command: string };
-    result: void | string | Html;
+    params: PluginContext & { command: string };
+    result: void | string | Html | ImageAnswer;
   };
 };
 

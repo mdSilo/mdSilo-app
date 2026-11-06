@@ -6,6 +6,8 @@ import {
   enablePlugin,
   grantedPermissions,
   installPlugin,
+  installPluginZip,
+  updatePlugin,
   isChanged,
   isEnabled,
   loadPlugins,
@@ -127,6 +129,82 @@ describe("installing", () => {
       "install_plugin",
       expect.anything(),
     );
+  });
+
+  it("keeps where it is from, and updates it from there, enabled as it was", async () => {
+    await installPlugin("/src/csv");
+    expect(store.getState().pluginStates.csv).toEqual({
+      enabled: false,
+      granted: [],
+      source: { kind: "folder", path: "/src/csv" },
+    });
+    enablePlugin(store.getState().installedPlugins[0], ["file:read"]);
+    const before = store.getState().installedPlugins[0];
+    vi.mocked(invoke).mockClear();
+    await updatePlugin(before);
+    expect(invoke).toHaveBeenCalledWith("install_plugin", {
+      src: "/src/csv",
+      id: "csv",
+    });
+    const after = store.getState().installedPlugins[0];
+    // listed again: its pages loaded anew
+    expect(after).not.toBe(before);
+    expect(isEnabled(after)).toBe(true);
+    expect(store.getState().pluginStates.csv).toMatchObject({
+      enabled: true,
+      granted: ["file:read"],
+      source: { kind: "folder", path: "/src/csv" },
+    });
+  });
+
+  it("updates from the .zip it is from", async () => {
+    const base = vi.mocked(invoke).getMockImplementation()!;
+    vi.mocked(invoke).mockImplementation(async (cmd, args) => {
+      if (cmd === "unpack_plugin") return "/src/csv";
+      if (cmd === "forget_unpacked") return undefined;
+      return base(cmd, args);
+    });
+    await installPluginZip("/dl/csv.zip");
+    expect(store.getState().pluginStates.csv.source).toEqual({
+      kind: "zip",
+      path: "/dl/csv.zip",
+    });
+    vi.mocked(invoke).mockClear();
+    await updatePlugin(store.getState().installedPlugins[0]);
+    expect(invoke).toHaveBeenCalledWith("unpack_plugin", {
+      zip: "/dl/csv.zip",
+    });
+  });
+
+  it("updates nothing from a folder with another plugin now, or none known", async () => {
+    await installPlugin("/src/csv");
+    const plugin = store.getState().installedPlugins[0];
+    store.setState({
+      pluginStates: {
+        csv: {
+          enabled: true,
+          granted: [],
+          source: { kind: "folder", path: "/src/other" },
+        },
+      },
+    });
+    const base = vi.mocked(invoke).getMockImplementation()!;
+    vi.mocked(invoke).mockImplementation(async (cmd, args) =>
+      cmd === "read_file" &&
+      (args as { filePath: string }).filePath === "/src/other/manifest.json"
+        ? manifest({ id: "other" })
+        : base(cmd, args),
+    );
+    vi.mocked(invoke).mockClear();
+    await expect(updatePlugin(plugin)).rejects.toThrow(
+      "/src/other has the plugin other now",
+    );
+    expect(invoke).not.toHaveBeenCalledWith(
+      "install_plugin",
+      expect.anything(),
+    );
+    store.setState({ pluginStates: {} });
+    await expect(updatePlugin(plugin)).rejects.toThrow("is not known");
   });
 
   it("forgets the plugin when uninstalled", async () => {

@@ -12,6 +12,7 @@ import {
   supportsApp,
   type Contributes,
   type NoteModeContribution,
+  type ReaderPanelContribution,
   type Permission,
   type PluginManifest,
   type ViewContribution,
@@ -46,7 +47,12 @@ export type PluginState = {
   hash?: string;
   /** in development: the folder it is installed from again when its files change, see plugins/dev */
   devSource?: string;
+  /** what it was installed from, on this device: to update it from there */
+  source?: PluginSource;
 };
+
+/** A folder or a .zip a plugin is installed from */
+export type PluginSource = { kind: "folder" | "zip"; path: string };
 
 type PluginFolder = {
   id: string;
@@ -107,14 +113,22 @@ export async function loadPlugins(
 
 /**
  * Installs, or updates, the plugin in a folder. It is not enabled, and an
- * update keeps only the permissions granted before.
+ * update keeps only the permissions granted before. Where it is from is
+ * kept, to update it from there (see updatePlugin).
  */
-export async function installPlugin(srcDir: string): Promise<PluginManifest> {
+export async function installPlugin(
+  srcDir: string,
+  source: PluginSource = { kind: "folder", path: srcDir },
+  /** to update this plugin: nothing installed if the folder has another */
+  expectId?: string,
+): Promise<PluginManifest> {
   const text = await invoke<string>("read_file", {
     filePath: joinPath(srcDir, MANIFEST_FILE),
   });
   if (!text) throw new Error(`No ${MANIFEST_FILE} in ${srcDir}`);
   const manifest = parseManifest(text);
+  if (expectId && manifest.id !== expectId)
+    throw new Error(`${source.path} has the plugin ${manifest.id} now`);
   const version = await appVersion();
   if (version && !supportsApp(manifest, version)) {
     throw new Error(
@@ -122,15 +136,23 @@ export async function installPlugin(srcDir: string): Promise<PluginManifest> {
     );
   }
   await invoke<string>("install_plugin", { src: srcDir, id: manifest.id });
+  const { pluginStates } = store.getState();
+  setState(manifest.id, {
+    ...(pluginStates[manifest.id] ?? { enabled: false, granted: [] }),
+    source,
+  });
   await loadPlugins();
   return manifest;
 }
 
 /** Installs, or updates, the plugin in a .zip: of its folder, or of what is in it. */
-export async function installPluginZip(zip: string): Promise<PluginManifest> {
+export async function installPluginZip(
+  zip: string,
+  expectId?: string,
+): Promise<PluginManifest> {
   const dir = await invoke<string>("unpack_plugin", { zip });
   try {
-    return await installPlugin(dir);
+    return await installPlugin(dir, { kind: "zip", path: zip }, expectId);
   } finally {
     await invoke("forget_unpacked").catch(() => undefined);
   }
@@ -138,6 +160,18 @@ export async function installPluginZip(zip: string): Promise<PluginManifest> {
 
 const workspaceArg = (where: Where) =>
   where === "workspace" ? workspaceData() : null;
+
+/**
+ * Installs the plugin again from where it was installed from, to take its
+ * changes: enabled as it was, with the permissions still asked for.
+ */
+export async function updatePlugin(plugin: InstalledPlugin) {
+  const source = store.getState().pluginStates[plugin.id]?.source;
+  if (!source) throw new Error(`Where ${plugin.id} is from is not known`);
+  return source.kind === "zip"
+    ? installPluginZip(source.path, plugin.id)
+    : installPlugin(source.path, source, plugin.id);
+}
 
 /** Plugins of each place; their folders are their list, nothing else to save. */
 export const plugins = defineKind<InstalledPlugin>({
@@ -225,12 +259,13 @@ export function enablePlugin(
   if (!plugin.manifest || plugin.error)
     throw new Error(plugin.error ?? "Not a plugin");
   const asked = plugin.manifest.permissions;
-  const devSource = store.getState().pluginStates[plugin.id]?.devSource;
+  const { devSource, source } = store.getState().pluginStates[plugin.id] ?? {};
   setState(plugin.id, {
     enabled: true,
     granted: granted.filter((p) => asked.includes(p)),
     ...(plugin.where === "workspace" ? { hash: plugin.hash } : {}),
     ...(devSource ? { devSource } : {}),
+    ...(source ? { source } : {}),
   });
 }
 
@@ -289,6 +324,7 @@ const NO_CONTRIBUTES: Contributes = {
   selectionActions: [],
   commands: [],
   noteModes: [],
+  readerPanels: [],
 };
 
 /** What a plugin contributes: its manifest, and what it adds as it runs (trusted only). */
@@ -308,6 +344,7 @@ export function contributesOf(plugin: InstalledPlugin): Contributes {
     ],
     commands: [...declared.commands, ...(added.commands ?? [])],
     noteModes: [...declared.noteModes, ...(added.noteModes ?? [])],
+    readerPanels: [...declared.readerPanels, ...(added.readerPanels ?? [])],
   };
 }
 
@@ -325,6 +362,15 @@ export function viewersOf(
       .map((viewer) => ({ plugin, viewer })),
   );
 }
+
+/** The panels of the reader of the enabled plugins, for its header */
+export const pluginReaderPanels = (
+  plugins = store.getState().installedPlugins,
+  states = store.getState().pluginStates,
+): { plugin: InstalledPlugin; panel: ReaderPanelContribution }[] =>
+  enabledPlugins(plugins, states).flatMap((plugin) =>
+    contributesOf(plugin).readerPanels.map((panel) => ({ plugin, panel })),
+  );
 
 /** The views of the enabled plugins, for the side menu */
 export const pluginViews = (
@@ -365,6 +411,18 @@ export const PLUGIN_SCHEME = "mdsplugin";
  * The URL of a file of a plugin, served by src-tauri/src/plugin_scheme.rs:
  * `mdsplugin://localhost/<id>/<path>`, `http://mdsplugin.localhost/…` on Windows.
  */
+/**
+ * A number for each plugin as listed: listed again (installed again, as in
+ * development), its pages are loaded again, not from the cache.
+ */
+const loads = new WeakMap<InstalledPlugin, number>();
+let lastLoad = 0;
+export const loadOf = (plugin: InstalledPlugin) => {
+  let n = loads.get(plugin);
+  if (n === undefined) loads.set(plugin, (n = ++lastLoad));
+  return n;
+};
+
 export function pluginUrl(id: string, path = "") {
   const encoded = path.split("/").map(encodeURIComponent).join("/");
   return `${convertFileSrc("", PLUGIN_SCHEME)}${encodeURIComponent(id)}/${encoded}`;

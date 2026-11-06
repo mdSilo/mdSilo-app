@@ -85,6 +85,9 @@ function getNewState({
         // what the widget is drawn from: keep the drawn diagram while it is
         // the same, instead of drawing all of them again on every edit
         key: `${diagramId}:${visible}:${block.node.textContent}`,
+        // kept with its code block: a block inserted right after it, like the
+        // trailing paragraph at the end of the note, goes below the diagram
+        side: -1,
       }
     );
 

@@ -2,11 +2,14 @@ import copy from "copy-to-clipboard";
 import { some } from "lodash";
 import { NodeSelection, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
+import type { Node as ProsemirrorNode } from "prosemirror-model";
 import { CellSelection } from "prosemirror-tables";
 import * as React from "react";
+import styled from "styled-components";
 import { TbPuzzle } from "react-icons/tb";
 import createAndInsertLink from "../core/commands/createAndInsertLink";
 import { CommandFactory } from "../core/Extension";
+import type { MarkdownSerializer } from "../core/mdSerializer";
 import { getColumnIndex, getRowIndex } from "../core/queries/table";
 import getMarkRange from "../core/queries/getMarkRange";
 import { isMarkActive } from "../core/queries/isMarkActive";
@@ -30,16 +33,40 @@ import ToolbarMenu from "./ToolbarMenu";
 const TOOLBAR_ACTIONS = ["search", "copy", "issue"];
 
 /** What an action on the text selected does to it: put text in its place, or after it */
-export type SelectionActionResult = { replace?: string; insert?: string };
+export type SelectionActionResult = {
+  /** text in place of the text selected */
+  replace?: string;
+  /** text after the text selected */
+  insert?: string;
+  /** Markdown after the block of the text selected, e.g. an image */
+  insertMarkdown?: string;
+};
 
-/** A button on the text selected, given by the app, e.g. of a plugin */
+/** What else is known of the text selected, for an action on it */
+export type SelectionInfo = {
+  /** the text selected as Markdown, if the editor has a serializer */
+  markdown?: string;
+};
+
+/**
+ * An action on the text selected, given by the app, e.g. of a plugin: all
+ * of them in a list under one button of the toolbar
+ */
 export type SelectionAction = {
   id: string;
   title: string;
-  run: (text: string) => Promise<SelectionActionResult | undefined | void>;
+  /** the URL of its icon, e.g. of its plugin; a puzzle piece otherwise */
+  icon?: string;
+  /** who it is of, shown smaller beside it: the name of its plugin */
+  group?: string;
+  run: (
+    text: string,
+    info: SelectionInfo
+  ) => Promise<SelectionActionResult | undefined | void>;
 };
 
-const actionName = (id: string) => `action:${id}`;
+/** the button of the list of the actions */
+const ACTIONS_MENU = "action:menu";
 
 type Props = {
   dictionary: typeof baseDictionary;
@@ -58,6 +85,10 @@ type Props = {
   onOpenLink?: (href: string) => void;
   onShowToast?: (msg: string, code: string) => void;
   selectionActions?: SelectionAction[];
+  /** to give actions the text selected as Markdown */
+  serializer?: MarkdownSerializer;
+  /** to put the Markdown of an action in the note */
+  parseMarkdown?: (markdown: string) => ProsemirrorNode;
   view: EditorView;
 };
 
@@ -91,14 +122,21 @@ function isVisible(props: Props) {
   return some(nodes, (n) => n.content.size);
 }
 
-export default class SelectionToolbar extends React.Component<Props> {
+export default class SelectionToolbar extends React.Component<
+  Props,
+  { actionsOpen: boolean; running: boolean }
+> {
   isActive = false;
   menuRef = React.createRef<HTMLDivElement>();
+  // running: an action on the text, maybe with its answer in a dialog of the
+  // app, which the toolbar (above all) would cover
+  state = { actionsOpen: false, running: false };
 
   componentDidUpdate(): void {
     const visible = isVisible(this.props);
     if (this.isActive && !visible) {
       this.isActive = false;
+      if (this.state.actionsOpen) this.setState({ actionsOpen: false });
       this.props.onClose();
     }
     if (!this.isActive && visible) {
@@ -220,16 +258,25 @@ export default class SelectionToolbar extends React.Component<Props> {
 
   /** Runs the action on the text, then puts its answer where the text is now. */
   handleSelectionAction = async (action: SelectionAction, text: string) => {
-    const { view, onShowToast } = this.props;
+    const { view, onShowToast, serializer } = this.props;
+    const { state: before } = view;
+    const info: SelectionInfo = {};
+    if (serializer) {
+      const { from, to } = before.selection;
+      info.markdown = serializer.serialize(before.doc.cut(from, to)).trim();
+    }
     let result: SelectionActionResult | undefined | void;
+    this.setState({ running: true });
     try {
-      result = await action.run(text);
+      result = await action.run(text, info);
     } catch (e) {
       onShowToast?.(
         `${action.title}: ${(e as Error)?.message ?? e}`,
         ToastType.Error
       );
       return;
+    } finally {
+      this.setState({ running: false });
     }
     if (!result) return;
     const { state, dispatch } = view;
@@ -240,6 +287,22 @@ export default class SelectionToolbar extends React.Component<Props> {
       dispatch(state.tr.insertText(result.replace, from, to));
     } else if (typeof result.insert === "string") {
       dispatch(state.tr.insertText(` ${result.insert}`, to));
+    } else if (
+      typeof result.insertMarkdown === "string" &&
+      this.props.parseMarkdown
+    ) {
+      const $to = state.doc.resolve(to);
+      // after the block, in what holds it (a list item, a quote...)
+      const at = $to.depth ? $to.after() : to;
+      try {
+        const blocks = this.props.parseMarkdown(result.insertMarkdown);
+        dispatch(state.tr.insert(at, blocks.content));
+      } catch (e) {
+        onShowToast?.(
+          `${action.title}: ${(e as Error)?.message ?? e}`,
+          ToastType.Error
+        );
+      }
     }
   };
 
@@ -303,11 +366,12 @@ export default class SelectionToolbar extends React.Component<Props> {
       if (selectionActions?.length) {
         items.push(
           { name: "separator" },
-          ...selectionActions.map((action) => ({
-            name: actionName(action.id),
-            tooltip: action.title,
+          {
+            name: ACTIONS_MENU,
+            tooltip: dictionary.plugins,
             icon: TbPuzzle,
-          }))
+            active: () => this.state.actionsOpen,
+          }
         );
       }
       isTextSelection = true;
@@ -355,15 +419,13 @@ export default class SelectionToolbar extends React.Component<Props> {
       },
       issue: () => void this.handleCreateIssue(selectionText),
     };
-    for (const action of selectionActions ?? []) {
-      actions[actionName(action.id)] = () =>
-        void this.handleSelectionAction(action, selectionText);
-    }
+    actions[ACTIONS_MENU] = () =>
+      this.setState(({ actionsOpen }) => ({ actionsOpen: !actionsOpen }));
 
     return (
       <FloatingToolbar
         view={view}
-        active={isVisible(this.props)}
+        active={isVisible(this.props) && !this.state.running}
         ref={this.menuRef}
       >
         {isLink && linkRange ? (
@@ -379,7 +441,95 @@ export default class SelectionToolbar extends React.Component<Props> {
         ) : (
           <ToolbarMenu items={items} actions={actions} {...rest} />
         )}
+        {this.state.actionsOpen && selectionActions?.length && !isLink ? (
+          <ActionsList role="menu">
+            {selectionActions.map((action) => (
+              <ActionItem
+                key={action.id}
+                type="button"
+                role="menuitem"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  this.setState({ actionsOpen: false });
+                  void this.handleSelectionAction(action, selectionText);
+                }}
+              >
+                {action.icon ? (
+                  <img src={action.icon} alt="" width={16} height={16} />
+                ) : (
+                  <TbPuzzle size={16} />
+                )}
+                <span className="title">{action.title}</span>
+                {action.group ? (
+                  <span className="group">{action.group}</span>
+                ) : null}
+              </ActionItem>
+            ))}
+          </ActionsList>
+        ) : null}
       </FloatingToolbar>
     );
   }
 }
+
+/** The actions on the text selected: above the toolbar, clear of the text */
+const ActionsList = styled.div`
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  min-width: 200px;
+  max-width: 320px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 6px;
+  line-height: normal;
+  white-space: normal;
+  pointer-events: auto;
+  background-color: ${(props) => props.theme.toolbarBackground};
+  color: ${(props) => props.theme.toolbarItem};
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+`;
+
+const ActionItem = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgba(255, 255, 255, 0.12);
+    outline: none;
+  }
+
+  img,
+  svg {
+    flex-shrink: 0;
+  }
+
+  .title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .group {
+    flex-shrink: 0;
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+    opacity: 0.6;
+  }
+`;

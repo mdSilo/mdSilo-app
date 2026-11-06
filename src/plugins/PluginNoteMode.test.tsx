@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { store } from "@/state/store";
+import { makeNote } from "@/testUtils";
 import { parseManifest } from "./manifest";
 import {
   enablePlugin,
@@ -7,6 +8,13 @@ import {
   type InstalledPlugin,
 } from "./registry";
 import PluginNoteMode, { noteMethods } from "./PluginNoteMode";
+import { openInApp } from "./workspaceApi";
+import { dispatchView } from "./trusted";
+
+vi.mock("./workspaceApi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./workspaceApi")>()),
+  openInApp: vi.fn(async () => true),
+}));
 
 const plugin: InstalledPlugin = {
   id: "cards",
@@ -82,6 +90,46 @@ describe("PluginNoteMode", () => {
     readOnly: false,
     onChange: vi.fn(),
   };
+
+  it("says where the note is, its tags and dates; gives its blocks", async () => {
+    store.getState().setInitDir("/ws");
+    store
+      .getState()
+      .upsertNotes([
+        makeNote({ id: "/ws/a.md", title: "a", content: "x #idea# " }),
+      ]);
+    const methods = noteMethods(
+      () => ({ title: "a", readOnly: false }),
+      { current: "# Title\n\nOne.\n\n- two" },
+      [],
+      vi.fn(),
+      "/ws/a.md",
+    );
+    expect(await methods["note.info"].handler(undefined)).toEqual({
+      title: "a",
+      readOnly: false,
+      path: "a.md",
+      tags: ["idea"],
+      created: "2022-01-01T00:00:00.000Z",
+      updated: "2022-01-01T00:00:00.000Z",
+    });
+    expect(methods["note.blocks"].permission).toBe("notes:read");
+    expect(await methods["note.blocks"].handler({ from: 1, count: 1 })).toEqual(
+      { blocks: [{ index: 1, text: "One." }], next: 2 },
+    );
+  });
+
+  it("opens a note, a book or an issue, as views do", async () => {
+    const methods = noteMethods(
+      () => ({ title: "A", readOnly: false }),
+      { current: "" },
+      [],
+      vi.fn(),
+    );
+    expect(methods["app.open"].permission).toBeUndefined();
+    expect(await methods["app.open"].handler({ note: "b.md" })).toBe(true);
+    expect(openInApp).toHaveBeenCalledWith({ note: "b.md" }, dispatchView);
+  });
 
   it("shows the page of the mode, and tells it of changes made elsewhere", () => {
     enablePlugin(plugin);

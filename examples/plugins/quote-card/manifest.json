@@ -1,0 +1,13 @@
+{
+  "id": "quote-card",
+  "name": "Quote Card",
+  "version": "0.1.0",
+  "minAppVersion": "0.8.0",
+  "author": "mdSilo",
+  "icon": "icon.svg",
+  "description": "Makes an image card of the text selected, with the book or the note it is from, to copy, save, put in a note or post.",
+  "permissions": ["books:read", "notes:read"],
+  "contributes": {
+    "selectionActions": [{ "id": "card", "title": "Quote card" }]
+  }
+}

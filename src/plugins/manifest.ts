@@ -18,6 +18,7 @@ export type {
   CommandContribution,
   Contributes,
   NoteModeContribution,
+  ReaderPanelContribution,
   Permission,
   PluginManifest,
   PluginMode,
@@ -35,6 +36,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "notes:write": "Change your notes",
   "books:read": "Read your library",
   "issues:read": "Read your issues",
+  "reader:read": "Read the book open, where you are in it, and move in it",
   net: "Reach the internet",
 };
 
@@ -74,6 +76,14 @@ const innerPath = (value: unknown, field: string): string => {
   return path;
 };
 
+/** An image inside the plugin, as browsers show in an <img> */
+const imagePath = (value: unknown, field: string): string => {
+  const path = innerPath(value, field);
+  if (!/\.(svg|png|webp|jpe?g|gif)$/i.test(path))
+    throw new Error(`"${field}" should be an SVG, PNG, WebP, JPEG or GIF`);
+  return path;
+};
+
 /** `.CSV` → `csv` */
 const extension = (value: unknown, field: string): string => {
   const ext = text(value, field).replace(/^\./, "").toLowerCase();
@@ -91,6 +101,7 @@ function parseContributes(value: unknown): Contributes {
       selectionActions: [],
       commands: [],
       noteModes: [],
+      readerPanels: [],
     };
   if (!isObject(value)) throw new Error('"contributes" should be an object');
   const viewers = list(value.viewers, "contributes.viewers").map(
@@ -194,6 +205,28 @@ function parseContributes(value: unknown): Contributes {
       };
     },
   );
+  const readerPanels = list(value.readerPanels, "contributes.readerPanels").map(
+    (panel, i) => {
+      const field = `contributes.readerPanels[${i}]`;
+      if (!isObject(panel)) throw new Error(`"${field}" should be an object`);
+      const id = text(panel.id, `${field}.id`);
+      if (!ID.test(id))
+        throw new Error(
+          `"${field}.id" should be lowercase letters, digits, . _ -`,
+        );
+      const placement = panel.placement ?? "overlay";
+      if (placement !== "overlay" && placement !== "side")
+        throw new Error(`"${field}.placement" should be "overlay" or "side"`);
+      return {
+        id,
+        title: text(panel.title, `${field}.title`),
+        placement: placement as "overlay" | "side",
+        ...(panel.page === undefined
+          ? {}
+          : { page: innerPath(panel.page, `${field}.page`) }),
+      };
+    },
+  );
   return {
     viewers,
     views,
@@ -201,6 +234,7 @@ function parseContributes(value: unknown): Contributes {
     selectionActions,
     commands,
     noteModes,
+    readerPanels,
   };
 }
 
@@ -241,6 +275,9 @@ export function parseManifest(json: unknown): PluginManifest {
     minAppVersion,
     author: optionalText(value.author, "author"),
     description: optionalText(value.description, "description"),
+    ...(value.icon === undefined
+      ? {}
+      : { icon: imagePath(value.icon, "icon") }),
     mode,
     permissions: [...new Set(permissions)],
     // a page in a frame, or the module of a trusted plugin

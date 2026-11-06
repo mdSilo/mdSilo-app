@@ -2,13 +2,20 @@ import { act, render, screen } from "@testing-library/react";
 import { createRef } from "react";
 import { store } from "@/state/store";
 import { askPlugin } from "@/plugins/background";
+import { openUrl } from "@/workspace/open";
 import { parseManifest } from "@/plugins/manifest";
 import { enablePlugin, type InstalledPlugin } from "@/plugins/registry";
+import { activeStore, resetReaderStore } from "../readerStore";
+import type { BookEntry } from "../library/library";
 import { usePopups, type TextSelection } from "../popups";
 import { isPopupShown } from "../popups";
 import PluginActionPopup from "./PluginActionPopup";
 
 vi.mock("@/plugins/background", () => ({ askPlugin: vi.fn() }));
+vi.mock("@/workspace/open", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/workspace/open")>()),
+  openUrl: vi.fn(async () => true),
+}));
 
 const plugin: InstalledPlugin = {
   id: "ai",
@@ -106,6 +113,102 @@ describe("PluginActionPopup", () => {
         }),
     );
     expect(await screen.findByText("No network")).toBeInTheDocument();
+  });
+
+  it("gives the book and the place selected to a plugin that may read books", async () => {
+    const reader = {
+      ...plugin,
+      manifest: { ...plugin.manifest!, permissions: ["books:read" as const] },
+    };
+    store.setState({ installedPlugins: [reader] });
+    enablePlugin(reader);
+    resetReaderStore();
+    activeStore().setState({
+      path: "/ws/reading/Dune.epub",
+      ws: "/ws",
+      entry: {
+        file: "reading/Dune.epub",
+        title: "Dune",
+        author: "Frank Herbert",
+      } as BookEntry,
+    });
+    vi.mocked(askPlugin).mockResolvedValue("ok");
+    renderPopup();
+    act(() =>
+      usePopups.getState().setPluginAction({
+        plugin: "ai",
+        action: "explain",
+        title: "Explain",
+        selection,
+      }),
+    );
+    expect(await screen.findByText("ok")).toBeInTheDocument();
+    expect(askPlugin).toHaveBeenCalledWith(
+      reader,
+      "selection.action",
+      expect.objectContaining({
+        text: "entropy",
+        book: {
+          path: "reading/Dune.epub",
+          title: "Dune",
+          author: "Frank Herbert",
+          cfi: "epubcfi(/6/4)",
+        },
+      }),
+    );
+  });
+
+  it("shows an image, with no note to keep", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:card");
+    URL.revokeObjectURL = vi.fn();
+    enablePlugin(plugin);
+    vi.mocked(askPlugin).mockResolvedValue({
+      image: Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      alt: "A card of entropy",
+      links: [{ title: "Bluesky", url: "https://bsky.app/intent/compose?text=x" }],
+    });
+    renderPopup();
+    act(() =>
+      usePopups.getState().setPluginAction({
+        plugin: "ai",
+        action: "explain",
+        title: "Explain",
+        selection,
+      }),
+    );
+    expect(
+      await screen.findByRole("img", { name: "A card of entropy" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Copy/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Keep as a note/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Insert/ })).toBeNull();
+    act(() => screen.getByRole("button", { name: /Bluesky/ }).click());
+    expect(openUrl).toHaveBeenCalledWith("https://bsky.app/intent/compose?text=x");
+  });
+
+  it("highlights the text in the book, if the plugin asks", async () => {
+    enablePlugin(plugin);
+    resetReaderStore();
+    vi.mocked(askPlugin).mockResolvedValue({ text: "quoted", highlight: true });
+    renderPopup();
+    act(() =>
+      usePopups.getState().setPluginAction({
+        plugin: "ai",
+        action: "explain",
+        title: "Explain",
+        selection,
+      }),
+    );
+    expect(await screen.findByText("quoted")).toBeInTheDocument();
+    expect(activeStore().getState().notes).toEqual([
+      expect.objectContaining({
+        type: "annotation",
+        cfi: "epubcfi(/6/4)",
+        text: "entropy",
+      }),
+    ]);
+    // the popup stays, with its answer
+    expect(usePopups.getState().pluginAction).toBeDefined();
   });
 
   it("runs nothing of a plugin not enabled", async () => {

@@ -19,8 +19,10 @@ import {
   movePlugin,
   stopDeveloping,
   uninstallPlugin,
+  updatePlugin,
   type InstalledPlugin,
 } from "./registry";
+import { PluginIcon } from "./PluginIcon";
 import { trustedError, trustedPage, useTrustedVersion } from "./trusted";
 import PluginFrame from "./PluginFrame";
 import { devError } from "./dev";
@@ -120,6 +122,7 @@ export default function PluginManager() {
           type="button"
           className="btn btn-ghost btn-xs"
           aria-label="Reload Plugins"
+          title="Read the plugins installed again; to take the changes of a plugin's folder, use its Update"
           onClick={onReload}
         >
           <IconRefresh size={14} />
@@ -257,6 +260,16 @@ function PluginItem({
 
   const devSource = pluginStates[plugin.id]?.devSource;
   const reloadError = devSource ? devError(plugin.id) : undefined;
+  // installed from a folder or a .zip here: updated from there
+  const source = devSource ? undefined : pluginStates[plugin.id]?.source;
+  const [updating, setUpdating] = useState(false);
+  const onUpdate = () => {
+    setUpdating(true);
+    onError("");
+    updatePlugin(plugin)
+      .catch((e) => onError(errorText(e)))
+      .finally(() => setUpdating(false));
+  };
 
   const viewers =
     manifest?.contributes.viewers.flatMap((v) => v.extensions) ?? [];
@@ -276,6 +289,7 @@ function PluginItem({
           disabled={Boolean(plugin.error)}
           onChange={() => void onToggle()}
         />
+        <PluginIcon plugin={plugin} size={18} />
         <span className="flex-1 truncate">
           {name}
           <span className="ml-2 text-xs text-base-content/60">
@@ -306,6 +320,18 @@ function PluginItem({
             onClick={() => stopDeveloping(plugin.id)}
           >
             Stop Dev
+          </button>
+        ) : null}
+        {source ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-xs"
+            title={`Install again from ${source.path}, to take its changes`}
+            disabled={updating}
+            onClick={onUpdate}
+          >
+            <IconRefresh size={14} className={updating ? "animate-spin" : ""} />
+            Update
           </button>
         ) : null}
         {hasSettings ? (

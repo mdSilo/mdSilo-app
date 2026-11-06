@@ -1,11 +1,17 @@
 {
   "id": "text-stats",
   "name": "Text Stats",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minAppVersion": "0.8.0",
   "author": "mdSilo",
-  "description": "Counts the words, characters and sentences of the text selected, and the time to read it.",
+  "icon": "icon.svg",
+  "description": "Counts the words, characters and sentences of the text selected, and the time to read it; marks the long paragraphs of the note open.",
+  "permissions": ["notes:read"],
   "contributes": {
-    "selectionActions": [{ "id": "count", "title": "Count words" }]
+    "selectionActions": [{ "id": "count", "title": "Count words" }],
+    "commands": [
+      { "id": "long", "title": "Mark long paragraphs" },
+      { "id": "clear", "title": "Clear the paragraph marks" }
+    ]
   }
 }

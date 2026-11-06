@@ -2,30 +2,37 @@ import { create } from "zustand";
 import copy from "copy-to-clipboard";
 import { BaseModal } from "@/ui/BaseModal";
 import { textOf, type SelectionResult } from "./selection";
+import { saveImageToAssets } from "./image";
+import { PluginImageView } from "./PluginImageView";
 
 /**
  * What a plugin answers, shown in a dialog: of an action on the text selected
- * in the editor (to put after it, or copy), or of a command (to copy).
+ * in the editor (to put after it, or copy), or of a command (to copy). An
+ * image has its own buttons (PluginImageView); put in the note, it is saved
+ * in `assets/` and inserted as Markdown.
  */
 export type PluginAnswer = SelectionResult | { error: string };
+
+/** What to put after the text selected: text, or Markdown (an image) */
+export type AnswerInsert = string | { markdown: string };
 
 type Shown = {
   title: string;
   answer: PluginAnswer;
   /** the answer can be put after the text selected */
   canInsert: boolean;
-  done: (insert?: string) => void;
+  done: (insert?: AnswerInsert) => void;
 };
 
 const useShown = create<{ shown?: Shown }>(() => ({}));
 
-/** Shows the answer; done with the text to insert, if chosen. */
+/** Shows the answer; done with what to insert, if chosen. */
 export const showAnswer = (
   title: string,
   answer: PluginAnswer,
   canInsert = false,
 ) =>
-  new Promise<string | undefined>((resolve) => {
+  new Promise<AnswerInsert | undefined>((resolve) => {
     useShown.getState().shown?.done();
     useShown.setState({
       shown: {
@@ -46,6 +53,22 @@ export function PluginAnswerModal() {
   if (!shown) return null;
   const { title, answer, canInsert, done } = shown;
   const text = "error" in answer ? answer.error : textOf(answer);
+  if ("image" in answer) {
+    const { image } = answer;
+    return (
+      <BaseModal title={title} isOpen handleClose={() => done()}>
+        <PluginImageView
+          image={image}
+          imageWidth={280}
+          onInsert={
+            canInsert
+              ? async () => done({ markdown: await saveImageToAssets(image) })
+              : undefined
+          }
+        />
+      </BaseModal>
+    );
+  }
   return (
     <BaseModal title={title} isOpen handleClose={() => done()}>
       <div

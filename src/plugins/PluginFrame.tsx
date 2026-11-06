@@ -6,25 +6,13 @@ import {
   type PluginHost,
   type PluginMethods,
 } from "./host";
-import { isEnabled, pluginUrl, type InstalledPlugin } from "./registry";
+import { isEnabled, loadOf, pluginUrl, type InstalledPlugin } from "./registry";
 import {
   mountTrustedPage,
   trustedError,
   trustedPage,
   useTrustedVersion,
 } from "./trusted";
-
-/**
- * A number for each plugin as listed: listed again (installed again, as in
- * development), its pages are loaded again, not from the cache.
- */
-const loads = new WeakMap<InstalledPlugin, number>();
-let lastLoad = 0;
-const loadOf = (plugin: InstalledPlugin) => {
-  let n = loads.get(plugin);
-  if (n === undefined) loads.set(plugin, (n = ++lastLoad));
-  return n;
-};
 
 type Props = {
   plugin: InstalledPlugin;
@@ -35,6 +23,8 @@ type Props = {
   /** gets the host, to tell the plugin of changes */
   onHost?: (host: PluginHost | null) => void;
   className?: string;
+  /** the page gets the keys once loaded: e.g. a panel of the reader */
+  autoFocus?: boolean;
 };
 
 /**
@@ -47,6 +37,7 @@ export default function PluginFrame({
   methods,
   onHost,
   className = "",
+  autoFocus = false,
 }: Props) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const pluginStates = useStore((state) => state.pluginStates);
@@ -112,6 +103,14 @@ export default function PluginFrame({
       src={`${pluginUrl(plugin.id, main)}?v=${load}`}
       sandbox="allow-scripts"
       referrerPolicy="no-referrer"
+      onLoad={
+        autoFocus
+          ? (e) => {
+              e.currentTarget.focus();
+              e.currentTarget.contentWindow?.focus();
+            }
+          : undefined
+      }
       className={`h-full w-full border-0 bg-base-100 ${className}`}
     />
   );

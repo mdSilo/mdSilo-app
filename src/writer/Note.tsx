@@ -68,6 +68,7 @@ import {
 import { getFileExt } from "@/workspace/process";
 import { useWritingRoot } from "@/workspace/useWorkspace";
 import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
+import { setEditor } from "./editors";
 import NoteHeader from "./NoteHeader";
 import Backlinks from "./backlinks/Backlinks";
 import IssueRefs from "./IssueRefs";
@@ -97,7 +98,7 @@ function Note(props: Props) {
   // code blocks drawn by plugins, ```plantuml
   const { codeRenderers, key: codeRenderersKey } = useCodeRenderers();
   // buttons of plugins on the text selected
-  const selectionActions = useEditorSelectionActions();
+  const selectionActions = useEditorSelectionActions(noteId);
   // read when the editor is made: a new one when trusted plugins change them
   useTrustedVersion();
   const extensionsKey = trustedExtensionsKey();
@@ -524,7 +525,11 @@ function Note(props: Props) {
                   ) : (
                     <MsEditor
                       key={`wys-${noteId}-${codeRenderersKey}-${extensionsKey}`}
-                      ref={editorInstance}
+                      ref={(editor) => {
+                        editorInstance.current = editor;
+                        // for plugins, see plugins/editorApi.ts
+                        setEditor(noteId, editor);
+                      }}
                       value={mdContent}
                       dark={darkMode}
                       readOnly={readMode}

@@ -39,6 +39,8 @@ import { READER_SIDEBAR_WIDTH } from "@/state/userSettings";
 import useIsMobile from "@/lib/hooks/useIsMobile";
 import { selectionActionsIn } from "@/plugins/selection";
 import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
+import { PluginIcon } from "@/plugins/PluginIcon";
+import { ReaderPanelHost, ReaderPanelsButton } from "@/plugins/ReaderPanels";
 import { annotationsPathOf } from "../annotations/annotations";
 import { useActiveStore, useReaderStore, useSideStore } from "../readerStore";
 import { bookmarkAt, toggleBookmark } from "../actions";
@@ -643,6 +645,7 @@ const LOOKUPS = [
 function lookupTools(selection: TextSelection): Tool[] {
   // a word or a few: a dictionary entry
   const words = selection.text.trim().split(/\s+/).length;
+  const pluginActions = selectionActionsIn("reader");
   return [
     {
       id: "search",
@@ -661,18 +664,26 @@ function lookupTools(selection: TextSelection): Tool[] {
       onClick: () =>
         usePopups.getState().setLookup({ kind: l.kind, selection }),
     })),
-    ...selectionActionsIn("reader").map(({ plugin, action }) => ({
-      id: `plugin:${plugin.id}:${action.id}`,
-      title: action.title,
+    // the actions of plugins: in a menu under one button
+    {
+      id: "plugins",
+      title: "Plugins",
       icon: <TbPuzzle size={18} />,
-      onClick: () =>
-        usePopups.getState().setPluginAction({
-          plugin: plugin.id,
-          action: action.id,
-          title: action.title,
-          selection,
-        }),
-    })),
+      hidden: !pluginActions.length,
+      menu: pluginActions.map(({ plugin, action }) => ({
+        id: `${plugin.id}:${action.id}`,
+        title: action.title,
+        group: plugin.manifest?.name,
+        icon: <PluginIcon plugin={plugin} size={16} />,
+        onClick: () =>
+          usePopups.getState().setPluginAction({
+            plugin: plugin.id,
+            action: action.id,
+            title: action.title,
+            selection,
+          }),
+      })),
+    },
     {
       id: "tts",
       title: "Read aloud from here",
@@ -692,19 +703,23 @@ export default function ReaderView() {
     <Reader
       tools={lookupTools}
       headerButtons={
-        canRead ? (
-          <IconButton
-            title="Read aloud"
-            onClick={() => void readAloud(undefined, "main")}
-          >
-            <TbVolume size={18} />
-          </IconButton>
-        ) : null
+        <>
+          <ReaderPanelsButton />
+          {canRead ? (
+            <IconButton
+              title="Read aloud"
+              onClick={() => void readAloud(undefined, "main")}
+            >
+              <TbVolume size={18} />
+            </IconButton>
+          ) : null}
+        </>
       }
       overlay={(rootRef) => (
         <>
           <LookupPopup rootRef={rootRef} />
           <PluginActionPopup rootRef={rootRef} />
+          <ReaderPanelHost />
         </>
       )}
     />

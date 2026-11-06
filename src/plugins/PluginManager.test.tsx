@@ -45,6 +45,52 @@ beforeEach(() => {
 });
 
 describe("PluginManager", () => {
+  it("shows the icon of a plugin, and updates it from where it is from", async () => {
+    store.setState({
+      installedPlugins: [installed({ ...csvManifest, icon: "icon.svg" })],
+      pluginStates: {
+        csv: {
+          enabled: true,
+          granted: ["file:read"],
+          source: { kind: "folder", path: "/src/csv" },
+        },
+      },
+    });
+    mockInvoke(invoke, {
+      read_file: ({ filePath }: Record<string, unknown>) =>
+        filePath === "/src/csv/manifest.json"
+          ? JSON.stringify(csvManifest)
+          : "",
+      install_plugin: () => "/data/csv",
+      list_plugins: () => [
+        { id: "csv", dir: "/data/csv", manifest: JSON.stringify(csvManifest) },
+      ],
+    });
+    render(<PluginManager />);
+    const icon = screen
+      .getByTestId("plugin-csv")
+      .querySelector("img") as HTMLImageElement;
+    expect(icon.getAttribute("src")).toMatch(/csv\/icon\.svg$/);
+    const update = item("csv").getByRole("button", { name: /Update/ });
+    expect(update).toHaveAttribute(
+      "title",
+      "Install again from /src/csv, to take its changes",
+    );
+    await userEvent.click(update);
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("install_plugin", {
+        src: "/src/csv",
+        id: "csv",
+      }),
+    );
+    expect(store.getState().pluginStates.csv.enabled).toBe(true);
+  });
+
+  it("has no Update for a plugin not known where from", () => {
+    render(<PluginManager />);
+    expect(item("csv").queryByRole("button", { name: /Update/ })).toBeNull();
+  });
+
   it("keeps a plugin in the workspace when synced", async () => {
     store.setState({ initDir: "/ws", layout: "workspace" });
     mockInvoke(invoke, {

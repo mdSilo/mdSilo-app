@@ -61,6 +61,8 @@ import RangeHandles from "../annotations/RangeHandles";
 import ReadingRuler from "../ruler/ReadingRuler";
 import { moveRuler } from "../ruler/ruler";
 import { useBookTranslation } from "../translation/useBookTranslation";
+import { takeQuoteMark } from "../quoteMark";
+import { addMark, clearMarks, useMarks, type ReaderMark } from "../marks";
 import DoubleBorder from "./DoubleBorder";
 import { placeOf } from "./BookPopups";
 
@@ -92,6 +94,8 @@ const FLASH_MS = 2000;
 /** the prefix of the mark: drawn apart from the notes, which have their bare CFI */
 const FLASH_PREFIX = "foliate-note:";
 const FLASH_COLOR = HIGHLIGHT_CSS.blue;
+/** a mark of marks.ts: drawn as the notes' bubbles and the flash, by its CFI */
+const markValue = (mark: Pick<ReaderMark, "cfi">) => FLASH_PREFIX + mark.cfi;
 /** the bubble on a highlight with a note: its CFI, as the marks apart from the notes */
 const bubbleOf = (cfi: string) => FLASH_PREFIX + cfi;
 const hasNote = (note: BookNote) => Boolean(noteText(note.note));
@@ -164,6 +168,21 @@ export async function flashPlace(
     timer: setTimeout(() => clearFlash(view, flash), FLASH_MS),
   };
   await view.addAnnotation({ value });
+}
+
+/**
+ * At the place asked for: the text quoted marked, if it is one (see
+ * quoteMark.ts), as long as the book is open (see marks.ts); else the
+ * sentence there for a moment.
+ */
+export async function markPlace(
+  view: FoliateView,
+  cfi: string,
+  flash: { current?: Flash; cleared?: (value: string) => void },
+  pane: Pane,
+) {
+  if (!takeQuoteMark(cfi)) return flashPlace(view, cfi, flash);
+  addMark({ cfi, color: "yellow", owner: "quote", pane });
 }
 
 /** ms between the clicks of a double click: a single click waits as long */
@@ -329,6 +348,8 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
     cleared?: (value: string) => void;
   };
   const previewRef = useRef<Preview | undefined>(undefined);
+  /** the marks drawn (see marks.ts), by their value: their colors */
+  const marksRef = useRef(new Map<string, ReaderMark>());
   // a bubble at the place marked: drawn again, the mark gone
   flashRef.cleared = (value) => {
     if (
@@ -343,6 +364,36 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
   // the view opened, for what goes with it
   const [opened, setOpened] = useState<FoliateView | null>(null);
   useBookTranslation(opened, pane);
+
+  // the marks of this pane (see marks.ts): drawn, changed, taken back
+  useEffect(() => {
+    const view = opened;
+    if (!view) return;
+    const sync = (marks: ReaderMark[]) => {
+      const wanted = new Map(
+        marks.filter((m) => m.pane === pane).map((m) => [markValue(m), m]),
+      );
+      const drawn = marksRef.current;
+      for (const value of [...drawn.keys()]) {
+        if (wanted.has(value)) continue;
+        drawn.delete(value);
+        void view.deleteAnnotation({ value }).catch(() => undefined);
+      }
+      for (const [value, mark] of wanted) {
+        if (drawn.get(value)?.color === mark.color) continue;
+        drawn.set(value, mark);
+        void view.addAnnotation({ value }).catch(() => undefined);
+      }
+    };
+    sync(useMarks.getState().marks);
+    const off = useMarks.subscribe((state) => sync(state.marks));
+    const drawn = marksRef.current;
+    return () => {
+      off();
+      // another view: nothing drawn in it yet
+      drawn.clear();
+    };
+  }, [opened, pane]);
 
   // open the book, once per book; again in another writing
   useEffect(() => {
@@ -569,6 +620,11 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
         draw(overlayer.highlight, { color: FLASH_COLOR });
         return;
       }
+      const mark = marksRef.current.get(annotation.value);
+      if (overlayer && mark) {
+        draw(overlayer.highlight, { color: HIGHLIGHT_CSS[mark.color] });
+        return;
+      }
       const preview = previewRef.current;
       if (
         overlayer &&
@@ -656,6 +712,12 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
       const view = viewRef.current;
       for (const note of drawnRef.current.values()) {
         if (view && sectionOf(note.cfi) === index) drawNote(view, note);
+      }
+      for (const mark of marksRef.current.values()) {
+        if (view && sectionOf(mark.cfi) === index)
+          void view
+            .addAnnotation({ value: markValue(mark) })
+            .catch(() => undefined);
       }
     };
 
@@ -962,7 +1024,9 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
           initialCfi &&
           bookStore.getState().targetCfi === initialCfi
         ) {
-          void flashPlace(view, initialCfi, flashRef).catch(() => undefined);
+          void markPlace(view, initialCfi, flashRef, pane).catch(
+            () => undefined,
+          );
         }
       } catch (e) {
         console.error("Failed to go to the place in the book", e);
@@ -992,6 +1056,8 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
       viewRef.current = null;
       if (flashRef.current) clearTimeout(flashRef.current.timer);
       flashRef.current = undefined;
+      // the marks were of this book
+      clearMarks({ pane });
       setView(null, pane);
       setOpened(null);
       usePopups.getState().clear();
@@ -1016,11 +1082,11 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
           viewRef.current === view &&
           bookStore.getState().targetCfi === initialCfi
         ) {
-          return flashPlace(view, initialCfi, flashRef);
+          return markPlace(view, initialCfi, flashRef, pane);
         }
       })
       .catch(() => undefined);
-  }, [initialCfi, bookStore]);
+  }, [initialCfi, bookStore, pane]);
 
   // the settings and theme
   const look = lookKey(settings);

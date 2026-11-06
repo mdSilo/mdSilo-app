@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef } from "react";
 import { useStore } from "@/state/store";
 import type { PluginHost, PluginMethods } from "./host";
 import PluginFrame from "./PluginFrame";
-import { useTrustedVersion } from "./trusted";
+import { dispatchView, useTrustedVersion } from "./trusted";
+import { noteInfo, openInApp } from "./workspaceApi";
+import { blocksFrom, markdownBlocks } from "./editorApi";
 import { pluginNoteModes, type InstalledPlugin } from "./registry";
 import type { NoteModeContribution } from "./manifest";
 
@@ -27,17 +29,46 @@ const OWN_WRITES = 20;
 /**
  * The methods of a note mode, for the note open only. `text` is the content
  * last read or written; `written` the latest texts the plugin wrote, not to
- * tell it of its own writes when the store catches up with them.
+ * tell it of its own writes when the store catches up with them. `noteId`
+ * the note, for its path, tags and dates.
  */
 export function noteMethods(
   info: () => NoteInfo,
   text: { current: string },
   written: string[],
   onChange: (text: string) => void,
+  noteId?: string,
 ): PluginMethods {
   return {
-    "note.info": { handler: info },
+    // to follow a link of the note, as views do
+    "app.open": { handler: (params) => openInApp(params, dispatchView) },
+    "note.info": {
+      handler: () => {
+        const known = noteId ? noteInfo(noteId) : undefined;
+        return {
+          ...info(),
+          ...(known
+            ? {
+                path: known.path,
+                tags: known.tags,
+                created: known.created,
+                updated: known.updated,
+              }
+            : {}),
+        };
+      },
+    },
     "note.read": { permission: "notes:read", handler: () => text.current },
+    "note.blocks": {
+      permission: "notes:read",
+      handler: (params) => {
+        const { from = 0, count } = (params ?? {}) as Record<string, unknown>;
+        if (typeof from !== "number") throw new Error("from should be a block");
+        if (count !== undefined && typeof count !== "number")
+          throw new Error("count should be a number");
+        return blocksFrom(markdownBlocks(text.current), from, count);
+      },
+    },
     "note.write": {
       permission: "notes:write",
       handler: (params) => {
@@ -92,8 +123,9 @@ export default function PluginNoteMode({
         text,
         written.current,
         (t) => onChangeRef.current(t),
+        noteId,
       ),
-    [],
+    [noteId],
   );
 
   // changed elsewhere: by another app, git, or a plugin of the workspace

@@ -8,6 +8,10 @@ what it may do. A plugin is kept on this device, or, with *Sync with workspace*,
 each device: a plugin is never enabled by a sync, and a plugin of the workspace changed by a sync
 stops until it is enabled again.
 
+The app keeps where a plugin was installed from (its folder, or its .zip): its **Update** button in
+Manage Plugins installs it again from there, to take what changed, enabled as it was. (The button
+at the top only reads the plugins installed again.)
+
 To develop a plugin, use **Develop** instead of Install Folder: the folder is watched, and when
 its files change (once the writes pause) the plugin is installed again and reloaded: its open pages
 and hidden frames load again, a trusted plugin is imported again. It is marked *Dev*; **Stop Dev**
@@ -20,13 +24,20 @@ Samples here:
 
 - `csv-viewer/`: install it, enable it, then click a `.csv` file in the explorer.
 - `tag-index/`: a view of the notes by tag; open it from the Plugins button of the side menu.
-- `text-stats/`: a "Count words" button on the text selected, in the reader and the editor.
+- `text-stats/`: a "Count words" button on the text selected, in the reader and the editor; its
+  commands "Mark long paragraphs" and "Clear the paragraph marks" on the note open (`editor.*`).
 - `outline/`: a note mode, the headings of the note open as an outline to rename them; switch to
   it with its button by WYSIWYG, Markdown and MindMap above the note.
 - `book-indent/`: a **trusted** plugin (see below): indents the paragraphs of books, and a view
   of the words of each note.
 - `bars/`: draws ```` ```bars ```` code blocks (`label: number` lines) as a bar chart, in the editor
   and in the published site; its command "How to write bars" is in the Plugins menu.
+- `quote-card/`: a "Quote card" button on the text selected, in the reader and the editor: an image
+  card of the text with the book or the note it is from, to copy, save, insert, or post (see
+  Images).
+- `speed-reader/`: a panel of the reader (its button in the header of the reader): the book read a
+  word at a time (RSVP) from the page shown; the book behind it follows, the paragraph marked. And a
+  note mode, "Speed read", for the note open (`note.blocks`).
 
 ## manifest.json
 
@@ -46,20 +57,30 @@ Samples here:
 ```
 
 - `id`: lowercase letters, digits, `.`, `_`, `-`; it is the name of the installed folder.
+- `icon`: its icon, a path in its folder: `"icon.svg"` (SVG, PNG, WebP, JPEG or GIF, square, shown
+  at 16 to 24 px); in Manage Plugins, the Plugins menu, and the list of actions on the text
+  selected. A puzzle piece if none.
 - `permissions`: `file:read`, `file:write` (the file the plugin opens), `notes:read`, `notes:write`,
-  `books:read`, `issues:read`, `net` (`https:` and `wss:` from the page). The user can grant fewer.
+  `books:read`, `issues:read`, `reader:read` (the book open: where the reader is, its text, go to a
+  place, mark text), `net` (`https:` and `wss:` from the page). The user can grant fewer.
 - `contributes.viewers`: `[{ "extensions": ["csv"], "title": "Table", "page": "table.html" }]`, the
   plugin opens files of these extensions (not notes or books); `page` is the main page by default.
 - `contributes.views`: `[{ "id": "stats", "title": "Reading Stats", "page": "stats.html" }]`, views of the
   whole workspace, in the Plugins menu of the side menu; `page` is the main page by default.
 - `contributes.codeBlocks`: `["plantuml"]`, the languages of the code blocks it draws (see below).
 - `contributes.selectionActions`: `[{ "id": "explain", "title": "Explain", "where": ["reader"] }]`,
-  buttons on the text selected (see below); `where` is `reader`, `editor` or both (default).
+  actions on the text selected (see below), in a list under the Plugins button of its toolbar, with
+  the icon and the name of the plugin; `where` is `reader`, `editor` or both (default).
 - `contributes.commands`: `[{ "id": "today", "title": "Stats of today" }]`, in the Plugins menu of
   the side menu (see below).
 - `contributes.noteModes`: `[{ "id": "cards", "title": "Cards", "page": "cards.html" }]`, modes of
-  the note open, beside WYSIWYG, Markdown and MindMap; its page shows in place of the editor (see
-  below). `page` is the main page by default.
+  the note open, beside WYSIWYG, Markdown and MindMap, with the icon of the plugin (more than two
+  of them: in a list under one button); its page shows in place of the editor (see below). `page`
+  is the main page by default.
+- `contributes.readerPanels`: `[{ "id": "rsvp", "title": "Speed reading", "placement": "overlay" }]`,
+  panels of the reader, from a button in its header with the icon of the plugin (more than two of
+  them: in a list under one button): its page over the book (`overlay`, by default) or beside it
+  (`side`); see below. `page` is the main page by default.
 - `mode`: `sandboxed` (default), or `trusted` (see the end). For a trusted plugin `main` is its ES
   module, `main.js` by default, and `permissions` are not asked: it has them all.
 
@@ -82,6 +103,8 @@ parent.postMessage({ mdsilo: 1, id: 1, method: 'file.read' }, '*');
 |---|---|---|
 | `app.info` | | `{ id, version, permissions }` |
 | `app.style` | | `{ theme, dark, vars, font }`: the daisyUI variables of the theme and the editor font |
+| `app.openUrl` `{ url }` | | `true`; opens an `http:` or `https:` page in the browser, one a second at most; the hidden main page may only while it answers an action or a command |
+| `markdown.render` `{ text }` | | the HTML of the Markdown, as the app reads it; sanitized (no scripts, styles or forms) |
 | `file.info` | | `{ name, ext, path }` of the file opened; `path` relative to the workspace, if in it |
 | `file.read` | `file:read` | the text of the file |
 | `file.write` `{ text }` | `file:write` | `true` |
@@ -104,12 +127,13 @@ knows can be read or written, not other files:
 | `issues.list` | `issues:read` | `[{ number, title, body, state, labels, milestone, due, created, updated, closed, notes }]` |
 | `app.open` `{ note }`, `{ book }` or `{ issue }` | | opens it in the app |
 
-Note modes have, for the note open only:
+Note modes have, for the note open only, and `app.open` as views:
 
 | Method | Permission | Gives |
 |---|---|---|
-| `note.info` | | `{ title, readOnly }`: `readOnly` in the read mode of the app |
+| `note.info` | | `{ title, readOnly, path, tags, created, updated }`: `readOnly` in the read mode of the app; `path` and the rest if the note is in the workspace |
 | `note.read` | `notes:read` | the text of the note |
+| `note.blocks` `{ from?, count? }` | `notes:read` | `{ blocks: [{ index, text }], next? }`: its blocks of text (paragraphs, headings, items…) from `from` (0) on, `count` of them (50, 500 at most) |
 | `note.write` `{ text }` | `notes:write` | `true`; saved as the editor saves, once the writes pause |
 
 | Event | When |
@@ -119,6 +143,37 @@ Note modes have, for the note open only:
 | `note.changed` | the note was changed by another app or a sync (not by the plugin); read it again |
 | `notes.changed` | views: notes were edited (in the app too), made, renamed or deleted; `{ paths }`, once the changes pause |
 | `files.changed` | views: files of the workspace changed on the disk; `{ paths, event }` as the watcher saw them (not hidden folders) |
+| `reader.relocated` | panels of the reader: the page shown changed; data as `reader.info` |
+
+## The note open in the editor
+
+The hidden main page (an action, a command) and trusted plugins can act on the note open in the
+editor (WYSIWYG), by its blocks of text: its paragraphs, headings, items… numbered from 0, as
+`note.blocks` gives them.
+
+| Method | Permission | Gives |
+|---|---|---|
+| `editor.info` | `notes:read` | `{ note, block, blocks }`: the note (as `notes.list`), the block of the cursor, how many there are; `null` if no note is open in the editor |
+| `editor.blocks` `{ from?, count? }` | `notes:read` | `{ blocks: [{ index, text }], next? }` from `from` (`"current"`, the block of the cursor, by default; or a number) on |
+| `editor.goTo` `{ block }` | `notes:read` | `true`; the cursor at the start of the block, shown |
+| `editor.mark` `{ block, color? }` | `notes:read` | `true`; a color behind the block (`yellow`, `red`, `green`, `blue`, `violet`), not in the note: it follows the edits, gone when the note closes |
+| `editor.clearMarks` | `notes:read` | `true`; takes back the marks of the plugin |
+
+## Panels of the reader
+
+A panel of `readerPanels` opens from the header of the reader: its page over the book, or beside it,
+under a bar with its name and a close button; one at a time, closed with the book. Its page gets the
+keys once open (Escape is the plugin's to handle: call `panel.close`). It has the methods of views,
+`panel.info` (`{ id }`), `panel.close`, and those of the book open, which the hidden main page has
+too (for an action or a command on the book):
+
+| Method | Permission | Gives |
+|---|---|---|
+| `reader.info` | `reader:read` | `{ path, title, author, chapter, cfi, fraction }` of the book open and the page shown; `null` if none |
+| `reader.blocks` `{ from?, count? }` | `reader:read` | `{ blocks: [{ cfi, text }], next? }`: the paragraphs, headings, items… of the book from `from` (`"current"`, the page shown, by default; or a CFI) on, across chapters, `count` of them (50 by default, 500 at most); `next` to go on from, none at the end |
+| `reader.goTo` `{ cfi }` | `reader:read` | `true`; shows that place |
+| `reader.mark` `{ cfi, color? }` | `reader:read` | `true`; marks the text (`yellow`, `red`, `green`, `blue`, `violet`) while the book is open, not kept as a highlight |
+| `reader.clearMarks` | `reader:read` | `true`; takes back the marks of the plugin |
 
 ## Drawing code blocks
 
@@ -140,27 +195,61 @@ The app waits 15 seconds for an answer. For a published site each block is asked
 The button of a `selectionActions` entry asks the main page, in the same hidden frame:
 
 ```js
-// { mdsilo: 1, request, method: 'selection.action', params: { action, text, where, lang } }
-// answer text, or { html } to show (sanitized: no scripts, styles or forms)
+// { mdsilo: 1, request, method: 'selection.action', params: { action, text, where, lang, … } }
+// answer text, { html } to show (sanitized: no scripts, styles or forms), or { image } (see Images)
 parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }, '*');
 ```
 
+With the text the plugin is given where it is: in the editor `markdown`, the text selected as
+Markdown (its bold, links, math), and `note`, the note (as `notes.list` gives it) if the plugin
+may read notes; in the reader `book`, `{ path, title, author, chapter, cfi }` (`cfi` the text
+selected), if it may read books. A book synced with the workspace's git repo on GitHub, GitLab or
+Gitea also has `url`, the book file there, and `readUrl`, a link that opens it at `cfi` in the web
+app (`https://mdsilo.github.io/mdSilo-app/?read=<url>&cfi=<cfi>`): who opens it is asked, and the
+book is downloaded into `reading/` of their workspace and opened there, the text at `cfi` marked
+(not kept as a highlight). It works for others if the repo is public.
+
 In the reader, the answer shows in a popup by the text, with a button to keep it as the note of a
-highlight. In the editor, it shows in a dialog, to insert after the text or copy; or the plugin
+highlight; with `highlight: true` beside the text, HTML or image answered, the text selected is
+highlighted at once, as the user would (`quote-card` does, for the text it quotes). In the editor, it shows in a dialog, to insert after the text or copy; or the plugin
 changes the text itself by answering `{ replace: '…' }` (in place of the text selected) or
 `{ insert: '…' }` (after it), in the editor only.
+
+## Images
+
+An action or a command may answer an image, e.g. a card drawn on a canvas:
+
+```js
+canvas.toBlob((blob) =>
+  parent.postMessage({ mdsilo: 1, reply: request, result: { image: blob, name: 'quote.png', alt: 'A quote of Dune' } }, '*'),
+);
+```
+
+`image` is a `Blob`, a `Uint8Array`, an `ArrayBuffer` or a `data:` URL, of a PNG, JPEG, WebP, GIF or
+SVG (known by its bytes, not by the type said), 20 MB at most. The app shows it with its own
+buttons, as the page of the plugin can't reach the clipboard or the files: **Copy** (as PNG),
+**Save…**, **Share** (where the system has a share sheet: macOS, iOS, Android) and, for an action in
+the editor, **Insert**: saved in `assets/` of the notes (a new name if taken) and put after the
+paragraph of the text, as `![alt](./assets/quote.png)`.
+
+With `links: [{ title, url }]` (4 at most, `http:` or `https:`), it has buttons to open those pages
+too, e.g. to post it: `https://bsky.app/intent/compose?text=…`. Such a page takes text, not an
+image: copy the image first, then paste it there. `quote-card` puts the `readUrl` of the book in
+what it posts, and a button to open it.
 
 ## Commands
 
 A command of `commands` asks the main page, in the same hidden frame:
 
 ```js
-// { mdsilo: 1, request, method: 'command.run', params: { command } }
-// answer nothing, text, or { html } to show in a dialog (sanitized)
+// { mdsilo: 1, request, method: 'command.run', params: { command, note?, book? } }
+// answer nothing, text, { html } (sanitized) or { image } (see Images) to show in a dialog
 parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }, '*');
 ```
 
-The hidden frame has `app.info` and `app.style` only: commands can't read notes yet.
+A command is given what is shown, as an action is: `note` (with `notes:read`) or `book` (with
+`books:read`, `cfi` the page shown). The hidden frame has the methods of views (`notes.read`,
+`notes.write`, `books.list`, `app.open`…), each with its permission, to read the whole note, say.
 
 See `csv-viewer/index.html` for a small client.
 

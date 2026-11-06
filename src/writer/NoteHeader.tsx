@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import {
+  TbCheck as IconCheck,
   TbDots as IconDots,
   TbFile as IconFile,
   TbFileText as IconFileText,
@@ -19,11 +20,15 @@ import { useStore } from "@/state/store";
 import { openFilePath } from "@/workspace/open";
 import { Tooltip } from "@/ui/ui";
 import Portal from "@/ui/Portal";
-import { DropdownItem } from "@/ui/Dropdown";
+import Dropdown, { DropdownItem } from "@/ui/Dropdown";
 import NoteMetadata from "@/writer/NoteMetadata";
 import NoteDelModal from "@/writer/NoteDelModal";
 import EditorSettings from "@/shell/settings/EditorSettings";
 import { usePluginNoteModes } from "@/plugins/PluginNoteMode";
+import { PluginIcon } from "@/plugins/PluginIcon";
+
+/** the modes of plugins shown as buttons, each its own; more are in a list */
+const MAX_MODE_BUTTONS = 2;
 
 export default function NoteHeader({
   setShowBacklink,
@@ -89,22 +94,60 @@ export default function NoteHeader({
             />
           </button>
         </Tooltip>
-        {pluginModes.map(({ plugin, mode, name }) => (
-          <Tooltip
-            key={name}
-            content={`${mode.title} (${plugin.manifest?.name ?? plugin.id})`}
+        {pluginModes.length > MAX_MODE_BUTTONS ? (
+          // many: in a list under one button, as the actions on the text
+          <Dropdown
+            buttonChildren={
+              <>
+                <IconPuzzle
+                  className={
+                    pluginModes.some((m) => m.name === rawMode)
+                      ? "text-success"
+                      : iconClass
+                  }
+                />
+                <span className="sr-only">Modes of plugins</span>
+              </>
+            }
+            buttonClassName={`${switchClass} h-6 flex items-center`}
+            itemsClassName="w-60"
+            placement="bottom-start"
+            tooltipContent="Modes of plugins"
           >
-            <button
-              className={switchClass}
-              aria-label={mode.title}
-              onClick={() => setRaw(name)}
+            {pluginModes.map(({ plugin, mode, name }) => (
+              <DropdownItem key={name} onClick={() => void setRaw(name)}>
+                <PluginIcon plugin={plugin} size={16} className="mr-2" />
+                <span className="truncate">{mode.title}</span>
+                <span className="pl-2 ml-auto text-xs truncate text-base-content/60">
+                  {plugin.manifest?.name}
+                </span>
+                {rawMode === name ? (
+                  <IconCheck size={14} className="ml-1 text-success shrink-0" />
+                ) : null}
+              </DropdownItem>
+            ))}
+          </Dropdown>
+        ) : (
+          pluginModes.map(({ plugin, mode, name }) => (
+            <Tooltip
+              key={name}
+              content={`${mode.title} (${plugin.manifest?.name ?? plugin.id})`}
             >
-              <IconPuzzle
-                className={rawMode === name ? "text-success" : iconClass}
-              />
-            </button>
-          </Tooltip>
-        ))}
+              <button
+                className={`${switchClass} h-6 flex items-center ${rawMode === name ? "bg-base-content/15" : ""}`}
+                aria-label={mode.title}
+                aria-pressed={rawMode === name}
+                onClick={() => setRaw(name)}
+              >
+                <PluginIcon
+                  plugin={plugin}
+                  size={16}
+                  className={rawMode === name ? "text-success" : iconClass}
+                />
+              </button>
+            </Tooltip>
+          ))
+        )}
       </div>
       <div className="flex items-center">
         <div className="relative">
