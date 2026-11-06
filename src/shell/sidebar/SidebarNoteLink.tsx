@@ -22,7 +22,11 @@ import { bookPathOfAnnotations } from "@/reader/annotations/annotations";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { viewersOf } from "@/plugins/registry";
 import SidebarItem from "./SidebarItem";
-import { SidebarDirDropdown, SidebarNoteDropdown } from "./SidebarDropdown";
+import {
+  SidebarBookDropdown,
+  SidebarDirDropdown,
+  SidebarNoteDropdown,
+} from "./SidebarDropdown";
 import { parentOf } from "./treeMove";
 
 // indent of each nesting level in the tree
@@ -218,6 +222,11 @@ const SidebarNoteLink = (
         {isDir ? (
           <SidebarDirDropdown
             dirPath={node.id}
+            className="opacity-[0.001] group-hover:opacity-100"
+          />
+        ) : isBook ? (
+          <SidebarBookDropdown
+            bookPath={node.id}
             className="opacity-[0.001] group-hover:opacity-100"
           />
         ) : !isNonMd ? (

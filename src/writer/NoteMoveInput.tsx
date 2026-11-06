@@ -10,8 +10,8 @@ import useNoteSearch from "@/lib/hooks/useNoteSearch";
 import { store, useStore } from "@/state/store";
 import type { Note } from "@/types/model";
 import { ciStringCompare } from "@/lib/helper";
-import FileAPI from "@/workspace/files";
-import { flushSave } from "@/workspace/pendingSaves";
+import { followRename } from "@/workspace/renames";
+import { moveIntoDir } from "@/shell/sidebar/treeMove";
 import useLoadNotes from "@/lib/hooks/useLoadNotes";
 import { createDirRecursive, joinPaths } from "@/workspace/util";
 
@@ -30,6 +30,8 @@ type Option = {
 
 type Props = {
   noteId: string;
+  /** moves it into the dir, instead of moving it as a note */
+  onMove?: (tarDir: string) => Promise<unknown>;
   onOptionClick?: () => void;
   className?: string;
 };
@@ -37,6 +39,7 @@ type Props = {
 function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const {
     noteId,
+    onMove,
     onOptionClick: onOptionClickCallback,
     className = "",
   } = props;
@@ -49,7 +52,6 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
 
   const noteTree = useStore((state) => state.noteTree);
-  const notes = useStore((state) => state.notes);
 
   const inputTxt = inputText.trim();
   const search = useNoteSearch({ numOfResults: 10, searchDir: true });
@@ -112,19 +114,13 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           tarDir = res ? newDir : undefined;
         }
       }
-      // move file in disk and store
-      if (tarDir) {
-        // move the file with all the changes
-        await flushSave(noteId);
-        const thisFile = new FileAPI(noteId);
-        const tarPath = await thisFile.moveFile(tarDir);
-        const oldNote = notes.get(noteId);
-        if (tarPath && oldNote) {
-          moveNoteTreeItem(noteId, tarDir, tarPath, oldNote);
-        }
+      if (tarDir && onMove) {
+        await onMove(tarDir);
+      } else if (tarDir) {
+        await moveNote(noteId, tarDir);
       }
     },
-    [onOptionClickCallback, initDir, currentDir, inputTxt, noteId, notes],
+    [onOptionClickCallback, onMove, initDir, currentDir, inputTxt, noteId],
   );
 
   const onKeyDown = useCallback(
@@ -209,7 +205,25 @@ const OptionItem = (props: OptionProps) => {
 
 export default forwardRef(MoveToInput);
 
-//
+/**
+ * Move a note into the dir, never over an existing file: its changes saved
+ * first (moveIntoDir); then followed as a rename: the issues linked to it,
+ * the view of it. The links by title stay as they are.
+ * @returns the new path, if moved
+ */
+export async function moveNote(
+  noteId: string,
+  tarDir: string,
+): Promise<string | undefined> {
+  const tarPath = await moveIntoDir(noteId, tarDir);
+  if (!tarPath) return;
+  // in the tree at once, the watcher sees it later
+  const oldNote = store.getState().notes.get(noteId);
+  if (oldNote) moveNoteTreeItem(noteId, tarDir, tarPath, oldNote);
+  await followRename(noteId, tarPath);
+  return tarPath;
+}
+
 export const moveNoteTreeItem = (
   srcPath: string,
   tarDir: string,

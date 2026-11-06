@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
-import DirectoryAPI, { FileMetaData } from "./directory";
-import { hasFs, normalizeSlash, joinPath, joinPaths, getDirPath } from "./util";
+import type { FileMetaData } from "./directory";
+import { hasFs, normalizeSlash, joinPath, getDirPath } from "./util";
 
 /** Invoke Rust command to handle files */
 class FileAPI {
@@ -121,30 +121,6 @@ class FileAPI {
    */
   async deleteFiles(): Promise<boolean> {
     return await invoke<boolean>("delete_files", { paths: [this.fileName] });
-  }
-
-  /**
-   * move file to dir
-   * @returns new file path
-   */
-  async moveFile(tar: string): Promise<string | undefined> {
-    if (typeof this.fileName === "string") {
-      if (hasFs) {
-        const tarDir = new DirectoryAPI(tar);
-        if (await tarDir.isDir()) {
-          const fileBaseName = (await this.getBasename())[0];
-          const tarPath = await joinPaths(tar, [fileBaseName]);
-          const done = await invoke<boolean>("copy_file", {
-            srcPath: this.fileName,
-            toPath: tarPath,
-          });
-          if (done) {
-            this.deleteFiles();
-            return tarPath;
-          }
-        }
-      }
-    }
   }
 }
 

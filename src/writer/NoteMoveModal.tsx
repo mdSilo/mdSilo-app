@@ -4,11 +4,13 @@ import MoveToInput from "./NoteMoveInput";
 
 type Props = {
   noteId: string;
+  /** moves it into the dir, instead of moving it as a note */
+  onMove?: (tarDir: string) => Promise<unknown>;
   setIsOpen: (isOpen: boolean) => void;
 };
 
 export default function MoveToModal(props: Props) {
-  const { noteId, setIsOpen } = props;
+  const { noteId, onMove, setIsOpen } = props;
 
   const hotkeys = useMemo(
     () => [
@@ -30,6 +32,7 @@ export default function MoveToModal(props: Props) {
       <div className="flex justify-center px-6 max-h-screen-80 my-screen-10">
         <MoveToInput
           noteId={noteId}
+          onMove={onMove}
           onOptionClick={() => setIsOpen(false)}
           className="z-30 w-full max-w-(--breakpoint-sm) bg-base-200 rounded-sm shadow-popover"
         />

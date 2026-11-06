@@ -56,11 +56,6 @@ describe("FileAPI (web)", () => {
     expect(invoke).toHaveBeenCalledWith("is_file", { path: "/a.md" });
     expect(invoke).toHaveBeenCalledWith("delete_files", { paths: ["/a.md"] });
   });
-
-  test("moveFile does nothing outside Tauri", async () => {
-    await expect(new FileAPI("/a.md").moveFile("/b")).resolves.toBeUndefined();
-    expect(invoke).not.toHaveBeenCalled();
-  });
 });
 
 describe("FileAPI (tauri)", () => {
@@ -114,53 +109,5 @@ describe("FileAPI (tauri)", () => {
       filePath: "/notes/a.md",
       text: "hello",
     });
-  });
-
-  test("moveFile copies into the target dir and deletes the source", async () => {
-    mockInvoke(tauriInvoke, {
-      is_dir: true,
-      get_basename: ["a.md", true],
-      join_paths: ({ root, parts }: Record<string, unknown>) =>
-        `${root}/${(parts as string[]).join("/")}`,
-      copy_file: true,
-      delete_files: true,
-    });
-    await expect(
-      new TauriFileAPI("/notes/a.md").moveFile("/archive"),
-    ).resolves.toBe("/archive/a.md");
-    expect(tauriInvoke).toHaveBeenCalledWith("copy_file", {
-      srcPath: "/notes/a.md",
-      toPath: "/archive/a.md",
-    });
-    expect(tauriInvoke).toHaveBeenCalledWith("delete_files", {
-      paths: ["/notes/a.md"],
-    });
-  });
-
-  test("moveFile keeps the source when copy fails", async () => {
-    mockInvoke(tauriInvoke, {
-      is_dir: true,
-      get_basename: ["a.md", true],
-      join_paths: "/archive/a.md",
-      copy_file: false,
-    });
-    await expect(
-      new TauriFileAPI("/notes/a.md").moveFile("/archive"),
-    ).resolves.toBeUndefined();
-    expect(tauriInvoke).not.toHaveBeenCalledWith(
-      "delete_files",
-      expect.anything(),
-    );
-  });
-
-  test("moveFile ignores targets that are not directories", async () => {
-    mockInvoke(tauriInvoke, { is_dir: false });
-    await expect(
-      new TauriFileAPI("/notes/a.md").moveFile("/x.md"),
-    ).resolves.toBeUndefined();
-    expect(tauriInvoke).not.toHaveBeenCalledWith(
-      "copy_file",
-      expect.anything(),
-    );
   });
 });

@@ -42,6 +42,7 @@ import { fromWorkspacePath, joinPath } from "@/workspace/util";
 import { useStore } from "@/state/store";
 import { onAnnounce } from "@/state/windowSync";
 import { READING_DIR } from "@/workspace/layout";
+import { onRenamed } from "@/workspace/renames";
 import { BOOK_EXTS, CONVERTIBLE_EXTS } from "../document";
 import {
   breadcrumbs,
@@ -176,6 +177,20 @@ export default function Library() {
       stop();
     };
   }, [initDir, load]);
+
+  // a book, or a dir of them, renamed or moved, in the app or not: its
+  // entry is followed already, the shelf shows it; once the renames pause
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = onRenamed(() => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void load(), 300);
+    });
+    return () => {
+      clearTimeout(timer);
+      stop();
+    };
+  }, [load]);
 
   const changed = useCallback(async () => {
     await load();

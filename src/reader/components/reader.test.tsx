@@ -20,6 +20,8 @@ import type { ViewAction } from "@/state/viewReducer";
 import MainView from "@/shell/MainView";
 import useLinkHandlers from "@/writer/hooks/useLinkHandlers";
 import { writeFile } from "@/host/web/fs";
+import { renamePath } from "@/workspace/renamePath";
+import { followRename } from "@/workspace/renames";
 import { issueStore, resetIssueStore } from "@/issue/issueStore";
 import { useWebFs, waitForView } from "../../testUtils";
 import { makeEpub } from "../testBook";
@@ -29,6 +31,7 @@ import { usePopups } from "../popups";
 import { resetReaderChrome, useReaderChrome } from "../chrome";
 import { DEFAULT_READER_SETTINGS } from "../settings";
 import { DEFAULT_LIBRARY_SETTINGS } from "../library/shelf";
+import { bookRenameOptions } from "../library/bookFile";
 import {
   readLibrary,
   refreshLibrary,
@@ -1299,7 +1302,7 @@ describe("library", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Rename" }));
     });
-    expect(await screen.findByText(/is there already/)).toBeInTheDocument();
+    expect(await screen.findByText(/already exists/)).toBeInTheDocument();
 
     fireEvent.change(name, { target: { value: "Renamed" } });
     await act(async () => {
@@ -1321,6 +1324,27 @@ describe("library", () => {
       }),
     );
     expect(lib.books[hash].file).toBe(to.slice(WS.length + 1));
+  });
+
+  test("the shelf follows a book renamed elsewhere, e.g. in the sidebar", async () => {
+    const to = `${WS}/reading/Renamed.epub`;
+    renderMain();
+    await go({ view: "library" });
+    await bookItem("Tiny Book");
+    expect(
+      await renamePath(BOOK, "Renamed", {
+        ...bookRenameOptions(BOOK),
+        ext: ".epub",
+      }),
+    ).toBeUndefined();
+    // the shelf reloaded, once the renames pause: the book opens at its new
+    // path, not at the one gone
+    await act(() => new Promise((r) => setTimeout(r, 600)));
+    fireEvent.click(await bookItem("Tiny Book"));
+    await waitForView();
+    expect(viewState()).toMatchObject({ view: "book", bookPath: to });
+    // the rename seen by the watcher too: followed before the next test
+    await act(() => followRename(BOOK, to));
   });
 
   test("a book deleted", async () => {

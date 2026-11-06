@@ -363,6 +363,39 @@ describe("MoveToInput", () => {
     expect(onOptionClick).toHaveBeenCalled();
   });
 
+  test("moves it by renaming, never by copying", async () => {
+    seedTree();
+    mockInvoke(invoke, { file_exist: false, rename_file: true });
+    render(<MoveToInput noteId="/root/file.md" />);
+    await userEvent.click(screen.getByText("beta"));
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("rename_file", {
+        fromPath: "/root/file.md",
+        toPath: "/root/beta/file.md",
+      }),
+    );
+    expect(invoke).not.toHaveBeenCalledWith("copy_file", expect.anything());
+    await waitFor(() =>
+      expect(store.getState().notes.get("/root/beta/file.md")).toBeDefined(),
+    );
+    expect(store.getState().notes.get("/root/file.md")).toBeUndefined();
+  });
+
+  test("a move onto an existing file is refused", async () => {
+    seedTree();
+    mockInvoke(invoke, { file_exist: true, rename_file: true });
+    render(<MoveToInput noteId="/root/file.md" />);
+    await userEvent.click(screen.getByText("beta"));
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("msg_dialog", {
+        title: "Move",
+        msg: "file.md already exists in /root/beta",
+      }),
+    );
+    expect(invoke).not.toHaveBeenCalledWith("rename_file", expect.anything());
+    expect(store.getState().notes.get("/root/file.md")).toBeDefined();
+  });
+
   test("loads the dir when not loaded", async () => {
     store.getState().setInitDir("/root");
     const dir = makeNote({ id: "/root/sub", title: "sub", is_dir: true });

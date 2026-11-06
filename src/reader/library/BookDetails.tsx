@@ -22,16 +22,15 @@ import { IconButton, Spinner } from "@/ui/ui";
 import { openFileDilog, openFilePath } from "@/workspace/open";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { canOpenBookWindow, readBook } from "@/shell/windows";
-import { followRename } from "@/workspace/renames";
-import { renameFile } from "@/workspace/util";
+import { renamePath } from "@/workspace/renamePath";
 import { sanitizeHtml } from "@/lib/sanitize";
-import { useReaderStore, useSideStore } from "../readerStore";
 import { annotationsPathOf, bookHref } from "../annotations/annotations";
 import { COVER_EXTS, coverUrl, deleteCovers, setCustomCover } from "./covers";
 import { formOf, metaOfForm, validateMeta, type Form } from "./metaForm";
 import { allGroups, formatSeries, STATUSES, type ShelfBook } from "./shelf";
 import { formatDuration, totalSeconds } from "./stats";
 import BookCover from "./BookCover";
+import { bookRenameOptions } from "./bookFile";
 import { useLibrarySettings } from "./ViewMenu";
 import {
   deleteBook,
@@ -726,9 +725,6 @@ function MarkBook({
   );
 }
 
-/** a name of a file: none of the characters some systems do not allow */
-const BAD_NAME = /[\\/:*?"<>|]/;
-
 /**
  * The book file renamed, its notes (`Foo.epub.md`) with it; its library
  * entry, its links, its reading progress stay the book's.
@@ -743,7 +739,6 @@ function RenameBook({
   onRenamed: () => void;
 }) {
   const slash = book.path.lastIndexOf("/");
-  const dir = book.path.slice(0, slash);
   const fileName = book.path.slice(slash + 1);
   const dot = fileName.lastIndexOf(".");
   const ext = dot > 0 ? fileName.slice(dot) : "";
@@ -752,34 +747,14 @@ function RenameBook({
   const [busy, setBusy] = useState(false);
 
   const rename = async () => {
-    const newName = name.trim();
-    if (!newName || BAD_NAME.test(newName) || newName.startsWith(".")) {
-      setError("Not a name for a file.");
-      return;
-    }
-    const to = `${dir}/${newName}${ext}`;
-    if (to === book.path) {
-      onCancel();
-      return;
-    }
-    const exists = (filePath: string) =>
-      invoke<boolean>("file_exist", { filePath }).catch(() => false);
-    if ((await exists(to)) || (await exists(annotationsPathOf(to)))) {
-      setError(`${newName}${ext} is there already.`);
-      return;
-    }
     setBusy(true);
-    // the book open: its notes written first
-    for (const reader of [useReaderStore, useSideStore]) {
-      if (reader.getState().path === book.path) await reader.getState().flush();
-    }
-    if (!(await renameFile(book.path, to))) {
-      setBusy(false);
-      setError("Could not rename the file.");
-      return;
-    }
-    await followRename(book.path, to);
-    onRenamed();
+    const err = await renamePath(book.path, name, {
+      ...bookRenameOptions(book.path),
+      ext,
+    });
+    setBusy(false);
+    if (err) setError(err);
+    else onRenamed();
   };
 
   return (

@@ -465,6 +465,55 @@ describe("SidebarNoteLink", () => {
     ).toBeInTheDocument();
   });
 
+  test("note dropdown offers rename, not for the notes of a book: nor move", async () => {
+    const note = makeNote({ id: "/n/a.md", title: "a" });
+    const notes = makeNote({ id: "/n/b.epub.md", title: "b.epub" });
+    store
+      .getState()
+      .setNotes(NoteMap.from({ [note.id]: note, [notes.id]: notes }));
+    const { unmount } = renderWithView(
+      withContainer(<SidebarNoteLink node={treeItem("/n/a.md", "a")} />),
+    );
+    await userEvent.click(screen.getAllByRole("button").at(-1) as HTMLElement);
+    await userEvent.click(screen.getByText("Rename"));
+    expect(await screen.findByText("Rename the note")).toBeInTheDocument();
+    expect(screen.getByLabelText("New name")).toHaveValue("a");
+    unmount();
+
+    renderWithView(
+      withContainer(
+        <SidebarNoteLink node={treeItem("/n/b.epub.md", "b.epub")} />,
+      ),
+    );
+    await userEvent.click(screen.getAllByRole("button").at(-1) as HTMLElement);
+    expect(screen.getByText(/Created:/)).toBeInTheDocument();
+    expect(screen.queryByText("Move to")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rename")).not.toBeInTheDocument();
+  });
+
+  test("book dropdown offers move to in a workspace", async () => {
+    store.setState({ layout: "workspace" });
+    renderWithView(
+      withContainer(<SidebarNoteLink node={treeItem("/n/b.epub", "b")} />),
+    );
+    await userEvent.click(screen.getAllByRole("button").at(-1) as HTMLElement);
+    await userEvent.click(screen.getByText("Move to"));
+    expect(
+      screen.getByPlaceholderText("Search to move to"),
+    ).toBeInTheDocument();
+  });
+
+  test("book dropdown offers rename in a workspace", async () => {
+    store.setState({ layout: "workspace" });
+    renderWithView(
+      withContainer(<SidebarNoteLink node={treeItem("/n/b.epub", "b")} />),
+    );
+    await userEvent.click(screen.getAllByRole("button").at(-1) as HTMLElement);
+    await userEvent.click(screen.getByText("Rename"));
+    expect(await screen.findByText("Rename the book file")).toBeInTheDocument();
+    expect(screen.getByLabelText("New name")).toHaveValue("b");
+  });
+
   test.each([
     ["New Subfolder", "Create New Subfolder"],
     ["Rename", "Rename the folder"],
