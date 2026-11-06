@@ -4,6 +4,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { askPlugin } from "./background";
 import type { CommandContribution } from "./manifest";
 import { showAnswer } from "./PluginAnswer";
+import { imageOf } from "./image";
 import { viewContext } from "./context";
 import {
   contributesOf,
@@ -15,7 +16,7 @@ import {
  * Commands of plugins, in the Plugins menu of the side menu: the main page of
  * the plugin is asked `command.run({ command })`, with the note or the book
  * of the view shown (see context.ts), in its hidden frame (see
- * background.ts); an answer, text or `{ html }`, is shown.
+ * background.ts); an answer, text, `{ html }` or `{ image }`, is shown.
  */
 export type PluginCommand = {
   plugin: InstalledPlugin;
@@ -39,18 +40,22 @@ export async function runCommand(
   view?: ViewState,
 ): Promise<void> {
   let result: unknown;
+  let image: Awaited<ReturnType<typeof imageOf>>;
   try {
     result = await askPlugin(plugin, "command.run", {
       ...viewContext(plugin, view),
       command: command.id,
     });
+    image = await imageOf(result);
   } catch (e) {
     await showAnswer(command.title, {
       error: e instanceof Error ? e.message : String(e),
     });
     return;
   }
-  if (typeof result === "string" && result) {
+  if (image) {
+    await showAnswer(command.title, { image });
+  } else if (typeof result === "string" && result) {
     await showAnswer(command.title, { text: result });
   } else if (typeof result === "object" && result !== null) {
     const { html, text } = result as Record<string, unknown>;

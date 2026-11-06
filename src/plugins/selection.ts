@@ -2,6 +2,7 @@ import type { PluginContext } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { askPlugin } from "./background";
+import { imageOf, type PluginImage } from "./image";
 import type { SelectionAction, SelectionPlace } from "./manifest";
 import {
   contributesOf,
@@ -13,8 +14,9 @@ import {
  * Actions of plugins on the text selected, in the reader or the editor: the
  * main page of the plugin is asked `selection.action({ action, text, where, lang })`,
  * with the note or the book it is in (see context.ts) and in the editor the
- * text as Markdown too; it answers text, or `{ html }` (sanitized here) to show; in the editor,
- * also `{ replace }` or `{ insert }` to change the text.
+ * text as Markdown too; it answers text, `{ html }` (sanitized here) or
+ * `{ image }` (checked in image.ts) to show; in the editor, also `{ replace }`
+ * or `{ insert }` to change the text.
  */
 export type PluginSelectionAction = {
   plugin: InstalledPlugin;
@@ -24,6 +26,7 @@ export type PluginSelectionAction = {
 export type SelectionResult =
   | { text: string }
   | { html: string }
+  | { image: PluginImage }
   | { replace: string }
   | { insert: string };
 
@@ -55,6 +58,8 @@ export async function runSelectionAction(
     lang,
   });
   if (typeof result === "string") return { text: result };
+  const image = await imageOf(result);
+  if (image) return { image };
   if (typeof result === "object" && result !== null) {
     const {
       html,
@@ -75,6 +80,7 @@ export function textOf(result: SelectionResult): string {
   if ("text" in result) return result.text;
   if ("replace" in result) return result.replace;
   if ("insert" in result) return result.insert;
+  if ("image" in result) return result.image.alt;
   const div = document.createElement("div");
   div.innerHTML = result.html;
   return div.textContent?.trim() ?? "";

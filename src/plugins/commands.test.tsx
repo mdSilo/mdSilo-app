@@ -84,6 +84,27 @@ describe("commands", () => {
     });
   });
 
+  it("shows an image, without putting it in a note", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:card");
+    URL.revokeObjectURL = vi.fn();
+    enablePlugin(plugin);
+    render(<PluginAnswerModal />);
+    vi.mocked(askPlugin).mockResolvedValue({
+      image: "data:image/svg+xml,%3Csvg%3E%3C/svg%3E",
+      alt: "Today",
+    });
+    void runCommand(pluginCommands()[0]);
+    expect(
+      await screen.findByRole("img", { name: "Today" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Insert/ })).toBeNull();
+    // an image that isn't one: its error
+    vi.mocked(askPlugin).mockResolvedValue({ image: "data:,hello" });
+    void runCommand(pluginCommands()[0]);
+    expect(await screen.findByText(/Not an image/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+  });
+
   it("shows the error of a command, and nothing for no answer", async () => {
     enablePlugin(plugin);
     render(<PluginAnswerModal />);

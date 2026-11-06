@@ -9,7 +9,8 @@ import { noteContext } from "./context";
 /**
  * The actions of plugins on the text selected in the editor. An answer that
  * changes the text, `{ replace }` or `{ insert }`, is done at once; text or
- * html is shown (see PluginAnswer), to put after the text selected or copy.
+ * html or an image is shown (see PluginAnswer), to put after the text
+ * selected (an image in its own paragraph after it) or copy.
  * The plugin is given the note of the editor too.
  */
 export function useEditorSelectionActions(noteId?: string): SelectionAction[] {
@@ -36,7 +37,10 @@ export function useEditorSelectionActions(noteId?: string): SelectionAction[] {
             );
             if ("replace" in result || "insert" in result) return result;
             const insert = await showAnswer(found.action.title, result, true);
-            return insert === undefined ? undefined : { insert };
+            if (insert === undefined) return undefined;
+            return typeof insert === "string"
+              ? { insert }
+              : { insertMarkdown: insert.markdown };
           },
         }),
       ),

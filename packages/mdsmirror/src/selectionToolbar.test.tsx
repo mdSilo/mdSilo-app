@@ -74,6 +74,27 @@ describe("selection toolbar", () => {
     expect(view.state.doc.textContent).toBe("hello SELECTED world");
   });
 
+  test("an action puts Markdown after the block of the text", async () => {
+    const run = vi.fn(async () => ({
+      insertMarkdown: "![A card](./assets/card.png)",
+    }));
+    const view = await setup({
+      selectionActions: [{ id: "card", title: "Card", run }],
+    });
+    await act(async () => {
+      fireEvent.click(button("Card")!);
+    });
+    const { doc } = view.state;
+    expect(doc.childCount).toBe(2);
+    expect(doc.child(0).textContent).toBe("hello selected world");
+    const image = doc.child(1).firstChild!;
+    expect(image.type.name).toBe("image");
+    expect(image.attrs).toMatchObject({
+      src: "./assets/card.png",
+      alt: "A card",
+    });
+  });
+
   test("an action is given the text selected as Markdown too", async () => {
     const run = vi.fn(async () => undefined);
     await setup(

@@ -11,6 +11,10 @@ import { PluginAnswerModal } from "./PluginAnswer";
 
 vi.mock("./background", () => ({ askPlugin: vi.fn() }));
 vi.mock("copy-to-clipboard", () => ({ default: vi.fn() }));
+vi.mock("./image", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./image")>()),
+  saveImageToAssets: vi.fn(async () => "![A card](./assets/card.png)"),
+}));
 
 const plugin: InstalledPlugin = {
   id: "ai",
@@ -103,6 +107,32 @@ describe("useEditorSelectionActions", () => {
     await userEvent.click(screen.getByRole("button", { name: "Insert after" }));
     expect(await answer).toEqual({ insert: "A word" });
     expect(screen.queryByText("Insert after")).toBeNull();
+  });
+
+  it("shows an image, to put in the note as Markdown", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:card");
+    URL.revokeObjectURL = vi.fn();
+    enablePlugin(plugin);
+    const png = Uint8Array.from([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    ]);
+    vi.mocked(askPlugin).mockResolvedValue({ image: png, alt: "A card" });
+    const [action] = actions().current;
+    render(<PluginAnswerModal />);
+    let answer: Promise<unknown> = Promise.resolve();
+    await act(async () => {
+      answer = action.run("word", {});
+    });
+    expect(await screen.findByRole("img", { name: "A card" })).toHaveAttribute(
+      "src",
+      "blob:card",
+    );
+    expect(screen.getByRole("button", { name: /Save/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Insert/ }));
+    expect(await answer).toEqual({
+      insertMarkdown: "![A card](./assets/card.png)",
+    });
+    expect(screen.queryByRole("img")).toBeNull();
   });
 
   it("copies an answer, the text unchanged", async () => {

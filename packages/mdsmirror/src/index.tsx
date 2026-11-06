@@ -670,6 +670,9 @@ class MsEditor extends React.PureComponent<Props, State> {
     return this.parser.parse(content);
   }
 
+  /** Markdown of the app (e.g. of a plugin) as blocks, read as a paste is */
+  parseMarkdown = (markdown: string) => this.pasteParser.parse(markdown);
+
   createView() {
     if (!this.elementRef.current) {
       throw new Error("createView called before ref available");
@@ -941,6 +944,7 @@ class MsEditor extends React.PureComponent<Props, State> {
                   onCreateIssue={this.props.onCreateIssue}
                   selectionActions={this.props.selectionActions}
                   serializer={this.serializer}
+                  parseMarkdown={this.parseMarkdown}
                   onOpenLink={this.props.onOpenLink}
                   onShowToast={this.props.onShowToast}
                 />

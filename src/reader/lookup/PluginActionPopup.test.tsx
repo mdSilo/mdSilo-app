@@ -153,6 +153,31 @@ describe("PluginActionPopup", () => {
     );
   });
 
+  it("shows an image, with no note to keep", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:card");
+    URL.revokeObjectURL = vi.fn();
+    enablePlugin(plugin);
+    vi.mocked(askPlugin).mockResolvedValue({
+      image: Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      alt: "A card of entropy",
+    });
+    renderPopup();
+    act(() =>
+      usePopups.getState().setPluginAction({
+        plugin: "ai",
+        action: "explain",
+        title: "Explain",
+        selection,
+      }),
+    );
+    expect(
+      await screen.findByRole("img", { name: "A card of entropy" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Copy/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Keep as a note/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Insert/ })).toBeNull();
+  });
+
   it("runs nothing of a plugin not enabled", async () => {
     renderPopup();
     act(() =>

@@ -182,6 +182,21 @@ export type EventName = keyof Events;
 /** Some HTML to show: sanitized by the app, no scripts, styles or forms */
 export type Html = { html: string };
 
+/**
+ * An image to show, e.g. a card drawn on a canvas: PNG, JPEG, WebP, GIF or
+ * SVG, of 20 MB at most. The app shows it with buttons to copy it, save it,
+ * share it (where the system can) and, in the editor, put it in the note
+ * (saved in `assets/`).
+ */
+export type ImageAnswer = {
+  /** the bytes (a `Uint8Array`, an `ArrayBuffer`, a `Blob`) or a `data:` URL */
+  image: Uint8Array | ArrayBuffer | Blob | string;
+  /** the file name to save it as, e.g. `quote.png` */
+  name?: string;
+  /** what it shows, for those who can't see it, and the text of the image in a note */
+  alt?: string;
+};
+
 /** What the app asks the main page of a plugin, with what it wants back */
 export type Requests = {
   /** draw a code block of a language in `contributes.codeBlocks`: SVG or HTML */
@@ -203,13 +218,14 @@ export type Requests = {
       where: "reader" | "editor";
       lang?: string;
     };
-    /** text or HTML to show; in the editor, or text to put in place of the selection, or after it */
-    result: string | Html | { replace: string } | { insert: string };
+    /** text, HTML or an image to show; in the editor, or text to put in place of the selection, or after it */
+    result:
+      string | Html | ImageAnswer | { replace: string } | { insert: string };
   };
   /** a command of `contributes.commands` was run, with the note or the book open */
   "command.run": {
     params: PluginContext & { command: string };
-    result: void | string | Html;
+    result: void | string | Html | ImageAnswer;
   };
 };
 

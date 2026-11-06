@@ -3,6 +3,7 @@ import { TbNote, TbX } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import { useTrustedVersion } from "@/plugins/trusted";
 import { bookContext } from "@/plugins/context";
+import { PluginImageView } from "@/plugins/PluginImageView";
 import { Spinner } from "@/ui/ui";
 import {
   runSelectionAction,
@@ -104,6 +105,8 @@ function PluginActionPopup({
           <p className="text-error">{error}</p>
         ) : !result ? (
           <Spinner size="sm" className="mx-auto my-4" />
+        ) : "image" in result ? (
+          <PluginImageView image={result.image} imageClassName="max-h-44" />
         ) : "html" in result ? (
           // sanitized in plugins/selection.ts
           <div dangerouslySetInnerHTML={{ __html: result.html }} />
@@ -111,7 +114,7 @@ function PluginActionPopup({
           <p className="whitespace-pre-wrap">{textOf(result)}</p>
         )}
       </div>
-      {result && textOf(result) ? (
+      {result && !("image" in result) && textOf(result) ? (
         <div className="flex justify-end mt-1">
           <button
             className="btn btn-ghost btn-xs"

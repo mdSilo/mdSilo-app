@@ -141,7 +141,7 @@ The button of a `selectionActions` entry asks the main page, in the same hidden 
 
 ```js
 // { mdsilo: 1, request, method: 'selection.action', params: { action, text, where, lang, … } }
-// answer text, or { html } to show (sanitized: no scripts, styles or forms)
+// answer text, { html } to show (sanitized: no scripts, styles or forms), or { image } (see Images)
 parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }, '*');
 ```
 
@@ -155,13 +155,30 @@ highlight. In the editor, it shows in a dialog, to insert after the text or copy
 changes the text itself by answering `{ replace: '…' }` (in place of the text selected) or
 `{ insert: '…' }` (after it), in the editor only.
 
+## Images
+
+An action or a command may answer an image, e.g. a card drawn on a canvas:
+
+```js
+canvas.toBlob((blob) =>
+  parent.postMessage({ mdsilo: 1, reply: request, result: { image: blob, name: 'quote.png', alt: 'A quote of Dune' } }, '*'),
+);
+```
+
+`image` is a `Blob`, a `Uint8Array`, an `ArrayBuffer` or a `data:` URL, of a PNG, JPEG, WebP, GIF or
+SVG (known by its bytes, not by the type said), 20 MB at most. The app shows it with its own
+buttons, as the page of the plugin can't reach the clipboard or the files: **Copy** (as PNG),
+**Save…**, **Share** (where the system has a share sheet: macOS, iOS, Android) and, for an action in
+the editor, **Insert**: saved in `assets/` of the notes (a new name if taken) and put after the
+paragraph of the text, as `![alt](./assets/quote.png)`.
+
 ## Commands
 
 A command of `commands` asks the main page, in the same hidden frame:
 
 ```js
 // { mdsilo: 1, request, method: 'command.run', params: { command, note?, book? } }
-// answer nothing, text, or { html } to show in a dialog (sanitized)
+// answer nothing, text, { html } (sanitized) or { image } (see Images) to show in a dialog
 parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }, '*');
 ```
 

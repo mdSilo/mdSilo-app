@@ -2,6 +2,7 @@ import copy from "copy-to-clipboard";
 import { some } from "lodash";
 import { NodeSelection, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
+import type { Node as ProsemirrorNode } from "prosemirror-model";
 import { CellSelection } from "prosemirror-tables";
 import * as React from "react";
 import { TbPuzzle } from "react-icons/tb";
@@ -31,7 +32,14 @@ import ToolbarMenu from "./ToolbarMenu";
 const TOOLBAR_ACTIONS = ["search", "copy", "issue"];
 
 /** What an action on the text selected does to it: put text in its place, or after it */
-export type SelectionActionResult = { replace?: string; insert?: string };
+export type SelectionActionResult = {
+  /** text in place of the text selected */
+  replace?: string;
+  /** text after the text selected */
+  insert?: string;
+  /** Markdown after the block of the text selected, e.g. an image */
+  insertMarkdown?: string;
+};
 
 /** What else is known of the text selected, for an action on it */
 export type SelectionInfo = {
@@ -70,6 +78,8 @@ type Props = {
   selectionActions?: SelectionAction[];
   /** to give actions the text selected as Markdown */
   serializer?: MarkdownSerializer;
+  /** to put the Markdown of an action in the note */
+  parseMarkdown?: (markdown: string) => ProsemirrorNode;
   view: EditorView;
 };
 
@@ -258,6 +268,22 @@ export default class SelectionToolbar extends React.Component<Props> {
       dispatch(state.tr.insertText(result.replace, from, to));
     } else if (typeof result.insert === "string") {
       dispatch(state.tr.insertText(` ${result.insert}`, to));
+    } else if (
+      typeof result.insertMarkdown === "string" &&
+      this.props.parseMarkdown
+    ) {
+      const $to = state.doc.resolve(to);
+      // after the block, in what holds it (a list item, a quote...)
+      const at = $to.depth ? $to.after() : to;
+      try {
+        const blocks = this.props.parseMarkdown(result.insertMarkdown);
+        dispatch(state.tr.insert(at, blocks.content));
+      } catch (e) {
+        onShowToast?.(
+          `${action.title}: ${(e as Error)?.message ?? e}`,
+          ToastType.Error
+        );
+      }
     }
   };
 
