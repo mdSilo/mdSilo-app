@@ -7,7 +7,6 @@ import {
   TbFolder as IconFolder,
   TbId as IconId,
   TbPlus as IconPlus,
-  TbTrash as IconTrash,
 } from "react-icons/tb";
 import { usePopper } from "react-popper";
 import { DropdownItem } from "@/ui/Dropdown";
@@ -16,7 +15,6 @@ import MoveToModal from "@/writer/NoteMoveModal";
 import NoteMetadata from "@/writer/NoteMetadata";
 import DirNewModal from "@/shell/dir/DirNewModal";
 import DirRenameModal from "@/shell/dir/DirRenameModal";
-import DirDelModal from "@/shell/dir/DirDelModal";
 import { listDirPath } from "@/workspace/useOpen";
 
 type NoteProps = {
@@ -102,23 +100,14 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
 
   const [isNewDirModalOpen, setIsNewDirModalOpen] = useState(false);
   const [isRenameDirModalOpen, setIsRenameDirModalOpen] = useState(false);
-  const [isDelDirModalOpen, setIsDelDirModalOpen] = useState(false);
 
   const onNewDirClick = useCallback(() => {
     setIsNewDirModalOpen(true);
-    setIsDelDirModalOpen(false);
     setIsRenameDirModalOpen(false);
   }, []);
 
   const onRenameDirClick = useCallback(() => {
-    setIsDelDirModalOpen(false);
     setIsRenameDirModalOpen(true);
-    setIsNewDirModalOpen(false);
-  }, []);
-
-  const onDelDirClick = useCallback(() => {
-    setIsDelDirModalOpen(true);
-    setIsRenameDirModalOpen(false);
     setIsNewDirModalOpen(false);
   }, []);
 
@@ -164,10 +153,6 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
                         <IconId size={18} className="mr-1" />
                         <span>Rename</span>
                       </DropdownItem>
-                      <DropdownItem onClick={onDelDirClick}>
-                        <IconTrash size={18} className="mr-1" />
-                        <span>Delete</span>
-                      </DropdownItem>
                     </>
                   )}
                 </MenuItems>
@@ -191,15 +176,6 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
             dirPath={dirPath}
             isOpen={isRenameDirModalOpen}
             handleClose={() => setIsRenameDirModalOpen(false)}
-          />
-        </Portal>
-      ) : null}
-      {isDelDirModalOpen ? (
-        <Portal>
-          <DirDelModal
-            dirPath={dirPath}
-            isOpen={isDelDirModalOpen}
-            handleClose={() => setIsDelDirModalOpen(false)}
           />
         </Portal>
       ) : null}

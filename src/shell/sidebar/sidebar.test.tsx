@@ -176,7 +176,9 @@ describe("SidebarNotes", () => {
     store.getState().setNoteSort(sort);
     renderWithView(withContainer(<SidebarNotes />));
     await waitFor(() => expect(rowTitles()).toEqual(expected));
-    expect(screen.getByRole("button", { name: /^n:\s*4$/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^n:\s*4$/ }),
+    ).toBeInTheDocument();
   });
 
   test("shows expanded sub dirs as a nested tree", async () => {
@@ -195,7 +197,9 @@ describe("SidebarNotes", () => {
     await waitFor(() =>
       expect(rowTitles()).toEqual(["sub", "deep", "z", "A", "b", "c"]),
     );
-    expect(screen.getByRole("button", { name: /^n:\s*4$/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^n:\s*4$/ }),
+    ).toBeInTheDocument();
   });
 
   test("flattens nested dirs with depth", () => {
@@ -464,7 +468,6 @@ describe("SidebarNoteLink", () => {
   test.each([
     ["New Subfolder", "Create New Subfolder"],
     ["Rename", "Rename the folder"],
-    ["Delete", "Delete This Folder?"],
   ])("dir dropdown %s opens its modal", async (item, title) => {
     renderWithView(
       withContainer(
