@@ -97,6 +97,29 @@ describe("imageOf", () => {
     expect(png?.blob.type).toBe("image/png");
   });
 
+  it("takes links to open by the image: web pages, 4 at most", async () => {
+    const link = (n: number) => ({
+      title: ` Post ${n} `,
+      url: `https://x.org/intent?text=${n}`,
+    });
+    const found = await imageOf({
+      image: PNG,
+      links: [1, 2, 3, 4, 5].map(link),
+    });
+    expect(found?.links).toHaveLength(4);
+    expect(found?.links[0]).toEqual({
+      title: "Post 1",
+      url: "https://x.org/intent?text=1",
+    });
+    expect((await imageOf({ image: PNG }))?.links).toEqual([]);
+    await expect(
+      imageOf({ image: PNG, links: [{ title: "Go", url: "file:///etc" }] }),
+    ).rejects.toThrow("Only web pages");
+    await expect(
+      imageOf({ image: PNG, links: [{ url: "https://x.org" }] }),
+    ).rejects.toThrow("A link wants a title");
+  });
+
   it("refuses what is too big, or not bytes", async () => {
     const big = new Uint8Array(MAX_IMAGE_BYTES + 1);
     big.set(PNG);

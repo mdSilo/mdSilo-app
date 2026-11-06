@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { useStore } from "@/state/store";
 import type { PluginHost, PluginMethods } from "./host";
 import PluginFrame from "./PluginFrame";
-import { useTrustedVersion } from "./trusted";
+import { dispatchView, useTrustedVersion } from "./trusted";
+import { openInApp } from "./workspaceApi";
 import { pluginNoteModes, type InstalledPlugin } from "./registry";
 import type { NoteModeContribution } from "./manifest";
 
@@ -36,6 +37,8 @@ export function noteMethods(
   onChange: (text: string) => void,
 ): PluginMethods {
   return {
+    // to follow a link of the note, as views do
+    "app.open": { handler: (params) => openInApp(params, dispatchView) },
     "note.info": { handler: info },
     "note.read": { permission: "notes:read", handler: () => text.current },
     "note.write": {

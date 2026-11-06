@@ -4,6 +4,7 @@ import { writeBytes } from "@/reader/library/library";
 import { writingRoot } from "@/workspace/layout";
 import { openFilePaths } from "@/workspace/open";
 import { createDirRecursive, isTauri, joinPath } from "@/workspace/util";
+import { webUrl } from "./host";
 
 /**
  * An image answered by a plugin (`{ image, name?, alt? }`, see ImageAnswer of
@@ -17,7 +18,25 @@ export type PluginImage = {
   /** a file name, with the extension of the type */
   name: string;
   alt: string;
+  /** buttons to open web pages, e.g. to post it */
+  links: ImageLink[];
 };
+
+export type ImageLink = { title: string; url: string };
+
+export const MAX_IMAGE_LINKS = 4;
+
+/** The links of an image: http(s), with a title; throws on a bad one */
+function linksOf(links: unknown): ImageLink[] {
+  if (links === undefined) return [];
+  if (!Array.isArray(links)) throw new Error("links is a list");
+  return links.slice(0, MAX_IMAGE_LINKS).map((link) => {
+    const { title, url } = (link ?? {}) as Record<string, unknown>;
+    if (typeof title !== "string" || !title.trim())
+      throw new Error("A link wants a title");
+    return { title: title.trim().slice(0, 40), url: webUrl(url) };
+  });
+}
 
 const EXTENSIONS = {
   "image/png": "png",
@@ -85,7 +104,7 @@ export async function imageOf(
 ): Promise<PluginImage | undefined> {
   if (typeof answer !== "object" || answer === null || !("image" in answer))
     return undefined;
-  const { image, name, alt } = answer as Record<string, unknown>;
+  const { image, name, alt, links } = answer as Record<string, unknown>;
   let bytes: Uint8Array;
   if (typeof image === "string") bytes = bytesOfDataUrl(image);
   else if (image instanceof Uint8Array) bytes = image;
@@ -102,6 +121,7 @@ export async function imageOf(
     type,
     name: imageName(name, type),
     alt: typeof alt === "string" ? alt.trim() : "",
+    links: linksOf(links),
   };
 }
 

@@ -36,7 +36,9 @@ function backgroundOf(plugin: InstalledPlugin): Background {
   );
   frame.src = pluginUrl(plugin.id, plugin.manifest?.main ?? "index.html");
   document.body.append(frame);
-  const host = createHost(plugin, frame, () => workspaceMethods(dispatchView));
+  const host = createHost(plugin, frame, () => workspaceMethods(dispatchView), {
+    hidden: true,
+  });
   const background = { plugin, frame, host, ready };
   backgrounds.set(plugin.id, background);
   return background;

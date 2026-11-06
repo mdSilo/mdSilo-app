@@ -75,6 +75,13 @@ export type BookPlace = {
   chapter?: string;
   /** the text selected, or the page shown, as an EPUB CFI */
   cfi?: string;
+  /**
+   * the book file on the web, when the workspace syncs it to a git repo on
+   * GitHub, GitLab or Gitea; others can get it if the repo is public
+   */
+  url?: string;
+  /** a link to read the book at `cfi` in the web app of mdSilo, with `url` */
+  readUrl?: string;
 };
 
 /**
@@ -118,6 +125,11 @@ export type Methods = {
     { id: string; version?: string; permissions: Permission[] }
   >;
   "app.style": Method<void, PluginStyle>;
+  /**
+   * opens a web page (http or https) in the browser, one a second at most;
+   * from the hidden main page only while it answers an action or a command
+   */
+  "app.openUrl": Method<{ url: string }, true>;
   // file viewers: the file opened only
   /** `path` relative to the workspace, if the file is in it */
   "file.info": Method<void, { name: string; ext: string; path?: string }>;
@@ -153,7 +165,7 @@ export type Methods = {
     { note: string } | { book: string } | { issue: number },
     true
   >;
-  // note modes: the note open only
+  // note modes: the note open only (and app.open, as views)
   "note.info": Method<void, { title: string; readOnly: boolean }>;
   "note.read": Method<void, string, "notes:read">;
   "note.write": Method<{ text: string }, true, "notes:write">;
@@ -195,6 +207,11 @@ export type ImageAnswer = {
   name?: string;
   /** what it shows, for those who can't see it, and the text of the image in a note */
   alt?: string;
+  /**
+   * buttons to open web pages by the image, 4 at most: to post it, say
+   * (`https://bsky.app/intent/compose?text=…`); http(s) only
+   */
+  links?: { title: string; url: string }[];
 };
 
 /** What the app asks the main page of a plugin, with what it wants back */

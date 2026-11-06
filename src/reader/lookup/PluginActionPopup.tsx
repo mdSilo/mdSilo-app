@@ -46,13 +46,16 @@ function PluginActionPopup({
       setError("The plugin is not enabled");
       return;
     }
-    runSelectionAction(
-      found,
-      target.selection.text,
-      "reader",
-      getView()?.language?.canonical,
-      bookContext(found.plugin, target.selection.cfi),
-    )
+    bookContext(found.plugin, target.selection.cfi)
+      .then((context) =>
+        runSelectionAction(
+          found,
+          target.selection.text,
+          "reader",
+          getView()?.language?.canonical,
+          context,
+        ),
+      )
       .then((res) => {
         if (!cancelled) setResult(res);
       })
@@ -75,13 +78,15 @@ function PluginActionPopup({
     usePopups.getState().clear();
   };
 
+  // an image: wider, with its buttons by it
+  const isImage = Boolean(result && "image" in result);
   return (
     <Popup
       box={target.selection.box}
       rootRef={rootRef}
       testId="plugin-action-popup"
-      height={260}
-      width={360}
+      height={isImage ? 320 : 260}
+      width={isImage ? 400 : 360}
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-semibold uppercase text-base-content/60">
@@ -97,7 +102,7 @@ function PluginActionPopup({
         </button>
       </div>
       <div
-        className="overflow-y-auto text-sm max-h-60"
+        className={`overflow-y-auto text-sm ${isImage ? "max-h-[70vh]" : "max-h-60"}`}
         style={{ contain: "paint" }}
         onClick={openLinkOutside}
       >
@@ -106,7 +111,7 @@ function PluginActionPopup({
         ) : !result ? (
           <Spinner size="sm" className="mx-auto my-4" />
         ) : "image" in result ? (
-          <PluginImageView image={result.image} imageClassName="max-h-44" />
+          <PluginImageView image={result.image} imageWidth={210} />
         ) : "html" in result ? (
           // sanitized in plugins/selection.ts
           <div dangerouslySetInnerHTML={{ __html: result.html }} />

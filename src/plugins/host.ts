@@ -1,5 +1,6 @@
 import { PROTOCOL, type PluginStyle } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
+import { openUrl } from "@/workspace/open";
 import { themeVarsOf } from "@/custom/themes";
 import { allFonts, fontFamilyOf } from "@/custom/fonts";
 import type { Permission } from "./manifest";
@@ -44,8 +45,43 @@ export function appStyle(): PluginStyle {
   };
 }
 
+/** A web page a plugin may open: http(s) only, not too long; the URL, or throws */
+export function webUrl(url: unknown): string {
+  if (typeof url !== "string" || url.length > 8192)
+    throw new Error("A URL is wanted");
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Not a URL: ${url}`);
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:")
+    throw new Error(`Only web pages can be opened: ${url}`);
+  return parsed.href;
+}
+
+/** the last time each plugin opened a page */
+const lastOpened = new Map<string, number>();
+export const OPEN_URL_INTERVAL = 1000;
+
+/** Opens a web page in the browser for a plugin: one a second at most. */
+async function openUrlFor(plugin: InstalledPlugin, params: unknown) {
+  const url = webUrl(
+    typeof params === "object" && params !== null
+      ? (params as { url?: unknown }).url
+      : undefined,
+  );
+  const now = Date.now();
+  if (now - (lastOpened.get(plugin.id) ?? -Infinity) < OPEN_URL_INTERVAL)
+    throw new Error("Pages are opened one a second at most");
+  lastOpened.set(plugin.id, now);
+  if (!(await openUrl(url))) throw new Error(`Can't open ${url}`);
+  return true;
+}
+
 /** Methods every plugin has, whatever it is granted. */
 export const baseMethods = (plugin: InstalledPlugin): PluginMethods => ({
+  "app.openUrl": { handler: (params) => openUrlFor(plugin, params) },
   "app.info": {
     handler: () => ({
       id: plugin.id,
@@ -100,6 +136,13 @@ export function createHost(
   plugin: InstalledPlugin,
   frame: HTMLIFrameElement,
   methods: () => PluginMethods = () => ({}),
+  options: {
+    /**
+     * a frame the user doesn't see: it opens pages only while it answers
+     * what the user did (an action, a command), not on its own
+     */
+    hidden?: boolean;
+  } = {},
 ): PluginHost {
   const base = baseMethods(plugin);
   // the origin of a sandboxed page is opaque, so no target origin can be named
@@ -128,6 +171,11 @@ export function createHost(
     const all = { ...methods(), ...base };
     const found = Object.hasOwn(all, method) ? all[method] : undefined;
     if (!found) return post({ id, error: `Unknown method: ${method}` });
+    if (method === "app.openUrl" && options.hidden && waiting.size === 0)
+      return post({
+        id,
+        error: "A page is opened only while answering the user",
+      });
     if (
       found.permission &&
       !grantedPermissions(plugin).includes(found.permission)

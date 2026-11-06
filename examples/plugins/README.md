@@ -27,6 +27,9 @@ Samples here:
   of the words of each note.
 - `bars/`: draws ```` ```bars ```` code blocks (`label: number` lines) as a bar chart, in the editor
   and in the published site; its command "How to write bars" is in the Plugins menu.
+- `quote-card/`: a "Quote card" button on the text selected, in the reader and the editor: an image
+  card of the text with the book or the note it is from, to copy, save, insert, or post (see
+  Images).
 
 ## manifest.json
 
@@ -82,6 +85,7 @@ parent.postMessage({ mdsilo: 1, id: 1, method: 'file.read' }, '*');
 |---|---|---|
 | `app.info` | | `{ id, version, permissions }` |
 | `app.style` | | `{ theme, dark, vars, font }`: the daisyUI variables of the theme and the editor font |
+| `app.openUrl` `{ url }` | | `true`; opens an `http:` or `https:` page in the browser, one a second at most; the hidden main page may only while it answers an action or a command |
 | `file.info` | | `{ name, ext, path }` of the file opened; `path` relative to the workspace, if in it |
 | `file.read` | `file:read` | the text of the file |
 | `file.write` `{ text }` | `file:write` | `true` |
@@ -104,7 +108,7 @@ knows can be read or written, not other files:
 | `issues.list` | `issues:read` | `[{ number, title, body, state, labels, milestone, due, created, updated, closed, notes }]` |
 | `app.open` `{ note }`, `{ book }` or `{ issue }` | | opens it in the app |
 
-Note modes have, for the note open only:
+Note modes have, for the note open only, and `app.open` as views:
 
 | Method | Permission | Gives |
 |---|---|---|
@@ -148,7 +152,10 @@ parent.postMessage({ mdsilo: 1, reply: request, result: { html: '<p>…</p>' } }
 With the text the plugin is given where it is: in the editor `markdown`, the text selected as
 Markdown (its bold, links, math), and `note`, the note (as `notes.list` gives it) if the plugin
 may read notes; in the reader `book`, `{ path, title, author, chapter, cfi }` (`cfi` the text
-selected), if it may read books.
+selected), if it may read books. A book synced with the workspace's git repo on GitHub, GitLab or
+Gitea also has `url`, the book file there, and `readUrl`, a link that opens it at `cfi` in the web
+app (`https://mdsilo.github.io/mdSilo-app/?read=<url>&cfi=<cfi>`): who opens it is asked, and the
+book is downloaded into `reading/` of their workspace. It works for others if the repo is public.
 
 In the reader, the answer shows in a popup by the text, with a button to keep it as the note of a
 highlight. In the editor, it shows in a dialog, to insert after the text or copy; or the plugin
@@ -171,6 +178,11 @@ buttons, as the page of the plugin can't reach the clipboard or the files: **Cop
 **Save…**, **Share** (where the system has a share sheet: macOS, iOS, Android) and, for an action in
 the editor, **Insert**: saved in `assets/` of the notes (a new name if taken) and put after the
 paragraph of the text, as `![alt](./assets/quote.png)`.
+
+With `links: [{ title, url }]` (4 at most, `http:` or `https:`), it has buttons to open those pages
+too, e.g. to post it: `https://bsky.app/intent/compose?text=…`. Such a page takes text, not an
+image: copy the image first, then paste it there. `quote-card` puts the `readUrl` of the book in
+what it posts, and a button to open it.
 
 ## Commands
 

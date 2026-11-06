@@ -2,9 +2,17 @@ import { store } from "@/state/store";
 import { makeNote } from "@/testUtils";
 import { activeStore, resetReaderStore } from "@/reader/readerStore";
 import type { BookEntry } from "@/reader/library/library";
+import { syncInfo } from "@/sync/api";
 import { parseManifest, type Permission } from "./manifest";
 import { enablePlugin, type InstalledPlugin } from "./registry";
-import { bookContext, noteContext, viewContext } from "./context";
+import {
+  bookContext,
+  forgetRemotes,
+  noteContext,
+  viewContext,
+} from "./context";
+
+vi.mock("@/sync/api", () => ({ isSyncAvailable: true, syncInfo: vi.fn() }));
 
 const pluginWith = (
   permissions: Permission[],
@@ -46,6 +54,8 @@ const openBook = (patch: Record<string, unknown> = {}) =>
 
 beforeEach(() => {
   resetReaderStore();
+  forgetRemotes();
+  vi.mocked(syncInfo).mockReset();
   store.getState().setInitDir("/ws");
   store
     .getState()
@@ -55,7 +65,7 @@ beforeEach(() => {
 });
 
 describe("noteContext", () => {
-  it("gives the note to a plugin that may read notes only", () => {
+  it("gives the note to a plugin that may read notes only", async () => {
     const plugin = pluginWith(["notes:read"]);
     store.setState({ installedPlugins: [plugin], pluginStates: {} });
     enablePlugin(plugin, []);
@@ -70,7 +80,7 @@ describe("noteContext", () => {
     });
   });
 
-  it("gives nothing for a note the app doesn't know", () => {
+  it("gives nothing for a note the app doesn't know", async () => {
     const plugin = pluginWith(["notes:read"]);
     store.setState({ installedPlugins: [plugin], pluginStates: {} });
     enablePlugin(plugin);
@@ -80,12 +90,12 @@ describe("noteContext", () => {
 });
 
 describe("bookContext", () => {
-  it("gives the book open, its chapter and the place selected", () => {
+  it("gives the book open, its chapter and the place selected", async () => {
     const plugin = pluginWith(["books:read"]);
     store.setState({ installedPlugins: [plugin], pluginStates: {} });
     enablePlugin(plugin);
     openBook();
-    expect(bookContext(plugin, "epubcfi(/6/8!/4/2,/1:0,/1:5)")).toEqual({
+    expect(await bookContext(plugin, "epubcfi(/6/8!/4/2,/1:0,/1:5)")).toEqual({
       book: {
         path: "reading/Dune.epub",
         title: "Dune",
@@ -95,20 +105,20 @@ describe("bookContext", () => {
       },
     });
     // the page shown, without a selection
-    expect(bookContext(plugin).book?.cfi).toBe("epubcfi(/6/8!/4/2)");
+    expect((await bookContext(plugin)).book?.cfi).toBe("epubcfi(/6/8!/4/2)");
   });
 
-  it("gives nothing without books:read, or no book open", () => {
+  it("gives nothing without books:read, or no book open", async () => {
     const plugin = pluginWith(["books:read"]);
     store.setState({ installedPlugins: [plugin], pluginStates: {} });
     enablePlugin(plugin);
-    expect(bookContext(plugin)).toEqual({});
+    expect(await bookContext(plugin)).toEqual({});
     openBook();
     enablePlugin(plugin, []);
-    expect(bookContext(plugin)).toEqual({});
+    expect(await bookContext(plugin)).toEqual({});
   });
 
-  it("names a book out of the workspace by its file, not where it is", () => {
+  it("names a book out of the workspace by its file, not where it is", async () => {
     const plugin = pluginWith(["books:read"]);
     store.setState({ installedPlugins: [plugin], pluginStates: {} });
     enablePlugin(plugin);
@@ -117,22 +127,73 @@ describe("bookContext", () => {
       entry: undefined,
       location: undefined,
     });
-    expect(bookContext(plugin)).toEqual({
+    expect(await bookContext(plugin)).toEqual({
       book: { path: "Some Book.epub", title: "Some Book", author: "" },
     });
   });
 });
 
+describe("the book on the web", () => {
+  it("gives the file in the repo and a link to read it at the place", async () => {
+    const plugin = pluginWith(["books:read"]);
+    store.setState({ installedPlugins: [plugin], pluginStates: {} });
+    enablePlugin(plugin);
+    vi.mocked(syncInfo).mockResolvedValue({
+      isRepo: true,
+      remoteUrl: "https://github.com/me/notes.git",
+      branch: "main",
+      hasToken: true,
+      changes: 0,
+    });
+    openBook({ entry: { ...entry, synced: true } });
+    const { book } = await bookContext(plugin, "epubcfi(/6/8!/4/2,/1:0,/1:5)");
+    const url =
+      "https://raw.githubusercontent.com/me/notes/main/reading/Dune.epub";
+    expect(book?.url).toBe(url);
+    const read = new URL(book!.readUrl!);
+    expect(read.origin + read.pathname).toBe(
+      "https://mdsilo.github.io/mdSilo-app/",
+    );
+    expect(read.searchParams.get("read")).toBe(url);
+    expect(read.searchParams.get("cfi")).toBe("epubcfi(/6/8!/4/2,/1:0,/1:5)");
+    // asked once a while
+    await bookContext(plugin);
+    expect(syncInfo).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives none for a book not synced, or no remote", async () => {
+    const plugin = pluginWith(["books:read"]);
+    store.setState({ installedPlugins: [plugin], pluginStates: {} });
+    enablePlugin(plugin);
+    vi.mocked(syncInfo).mockResolvedValue({
+      isRepo: false,
+      hasToken: false,
+      changes: 0,
+    });
+    openBook();
+    expect((await bookContext(plugin)).book?.url).toBeUndefined();
+    expect(syncInfo).not.toHaveBeenCalled();
+    openBook({ entry: { ...entry, synced: true } });
+    expect((await bookContext(plugin)).book).not.toHaveProperty("url");
+  });
+});
+
 describe("viewContext", () => {
-  it("gives the note or the book of the view shown; all to a trusted plugin", () => {
+  it("gives the note or the book of the view shown; all to a trusted plugin", async () => {
     const plugin = pluginWith([], "trusted");
     openBook();
     expect(
-      viewContext(plugin, { view: "md", params: { noteId: "/ws/a.md" } }).note
-        ?.path,
+      (
+        await viewContext(plugin, {
+          view: "md",
+          params: { noteId: "/ws/a.md" },
+        })
+      ).note?.path,
     ).toBe("a.md");
-    expect(viewContext(plugin, { view: "book" }).book?.title).toBe("Dune");
-    expect(viewContext(plugin, { view: "graph" })).toEqual({});
-    expect(viewContext(plugin, undefined)).toEqual({});
+    expect((await viewContext(plugin, { view: "book" })).book?.title).toBe(
+      "Dune",
+    );
+    expect(await viewContext(plugin, { view: "graph" })).toEqual({});
+    expect(await viewContext(plugin, undefined)).toEqual({});
   });
 });

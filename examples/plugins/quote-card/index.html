@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Quote Card</title>
+  </head>
+  <body>
+    <script>
+      // The main page of the plugin, in a hidden frame: asked
+      // `selection.action` on the text selected, it draws a card of it and
+      // answers `{ image, name, alt, links }`; the app shows it with Copy,
+      // Save…, Share, Insert, and the links to post it.
+
+      const WIDTH = 1080;
+      const PAD = 96;
+      const SERIF =
+        '"Iowan Old Style", Georgia, "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", serif';
+      const SANS =
+        'system-ui, -apple-system, "Segoe UI", "Noto Sans CJK SC", "PingFang SC", sans-serif';
+
+      const THEMES = {
+        light: { bg: "#f7f3ea", text: "#2b2622", muted: "#8a7f72", accent: "#b5562b" },
+        dark: { bg: "#1f2124", text: "#ece7df", muted: "#9a9389", accent: "#e09a5f" },
+      };
+
+      let dark = false;
+
+      // the app's light or dark, asked once and told of changes
+      let calls = 0;
+      const waiting = new Map();
+      const call = (method, params) =>
+        new Promise((resolve, reject) => {
+          const id = ++calls;
+          waiting.set(id, { resolve, reject });
+          parent.postMessage({ mdsilo: 1, id, method, params }, "*");
+        });
+
+      // CJK, kana, hangul and fullwidth: a line may break between any two
+      const WIDE = /[⺀-鿿가-힯豈-﫿＀-￯]/;
+      const TOKENS =
+        /[⺀-鿿가-힯豈-﫿＀-￯]|[^\s⺀-鿿가-힯豈-﫿＀-￯]+|\s+/g;
+      // no line starts with these
+      const NO_START = /^[,.;:!?)\]}、。，．；：！？）」』】》〉…—]/;
+
+      /** The lines of the text in `width`, at the font of `ctx` */
+      function wrap(ctx, text, width) {
+        const lines = [];
+        for (const para of text.split(/\n+/)) {
+          let line = "";
+          for (const token of para.match(TOKENS) ?? []) {
+            if (/^\s+$/.test(token)) {
+              if (line) line += " ";
+              continue;
+            }
+            const next = line + token;
+            if (ctx.measureText(next).width <= width || !line.trim()) {
+              line = next;
+            } else if (NO_START.test(token)) {
+              // punctuation stays on the line it closes
+              line = next;
+            } else {
+              lines.push(line.trimEnd());
+              line = token;
+            }
+            // a word wider than the line: by its characters
+            while (ctx.measureText(line).width > width && line.length > 1) {
+              let cut = line.length - 1;
+              while (cut > 1 && ctx.measureText(line.slice(0, cut)).width > width) cut--;
+              lines.push(line.slice(0, cut));
+              line = line.slice(cut);
+            }
+          }
+          if (line.trim()) lines.push(line.trimEnd());
+        }
+        return lines;
+      }
+
+      /** Where the text is from, as lines: title, then author · chapter */
+      function sourceOf({ book, note }) {
+        if (book)
+          return [book.title, [book.author, book.chapter].filter(Boolean).join(" · ")].filter(Boolean);
+        if (note) return [note.title];
+        return [];
+      }
+
+      /** The card: the text as large as fits, in 4:5 at most */
+      function draw(text, source) {
+        const theme = dark ? THEMES.dark : THEMES.light;
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const inner = WIDTH - PAD * 2;
+        const maxHeight = Math.round(WIDTH * 1.25);
+        const footer = source.length ? 72 + source.length * 44 : 0;
+        const room = maxHeight - PAD * 2 - 110 - footer;
+
+        // the largest size that fits, from 72 (a line or two) down to 30
+        let size = 74;
+        let lines;
+        do {
+          size -= 2;
+          ctx.font = `${size}px ${SERIF}`;
+          lines = wrap(ctx, text, inner);
+        } while (size > 30 && lines.length * size * 1.5 > room);
+        const lineHeight = Math.round(size * 1.5);
+        const fit = Math.max(1, Math.floor(room / lineHeight));
+        if (lines.length > fit) {
+          lines = lines.slice(0, fit);
+          // the last word goes (a character, in CJK): the line has room for …
+          const last = lines[fit - 1];
+          lines[fit - 1] =
+            (/\s\S+$/.test(last) && !WIDE.test(last.slice(-1))
+              ? last.replace(/\s+\S+$/, "")
+              : last.slice(0, -1)) + "…";
+        }
+
+        const block = 110 + lines.length * lineHeight + footer;
+        const height = Math.max(WIDTH * 0.75, PAD * 2 + block);
+        canvas.width = WIDTH;
+        canvas.height = Math.round(height);
+        // in the middle, if the card is taller than the text
+        const top = Math.round((height - block) / 2);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.textBaseline = "top";
+
+        // the opening mark
+        ctx.fillStyle = theme.accent;
+        ctx.font = `bold 160px ${SERIF}`;
+        // its ink at the left edge of the text, whatever the font's bearing
+        const mark = ctx.measureText("“");
+        ctx.fillText("“", PAD + (mark.actualBoundingBoxLeft || 0), top - 30);
+
+        let y = top + 110;
+        ctx.fillStyle = theme.text;
+        ctx.font = `${size}px ${SERIF}`;
+        for (const line of lines) {
+          ctx.fillText(line, PAD, y);
+          y += lineHeight;
+        }
+
+        if (source.length) {
+          y += 40;
+          ctx.fillStyle = theme.accent;
+          ctx.fillRect(PAD, y, 64, 4);
+          y += 32;
+          source.forEach((part, i) => {
+            ctx.fillStyle = i === 0 ? theme.text : theme.muted;
+            ctx.font = `${i === 0 ? "600 " : ""}34px ${SANS}`;
+            const [first] = wrap(ctx, part, inner);
+            ctx.fillText(first === part ? part : `${first}…`, PAD, y);
+            y += 44;
+          });
+        }
+        return canvas;
+      }
+
+      const toBlob = (canvas) =>
+        new Promise((resolve, reject) =>
+          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Can't draw the card"))), "image/png"),
+        );
+
+      /**
+       * Links to post the text (copy the image first, then paste it there).
+       * With the link to read the book at the quote (`readUrl`), if the book
+       * is in a git repo the workspace syncs to: it works if the repo is public.
+       */
+      function linksOf(quote, source, readUrl) {
+        const credit = source.length ? ` — ${source.join(", ")}` : "";
+        // a link counts as about 25 characters (X, Bluesky shorten them)
+        const max = 250 - credit.length - (readUrl ? 25 : 0);
+        const body = quote.length > max ? `${quote.slice(0, max - 1)}…` : quote;
+        const text = `\u201C${body}\u201D${credit}`;
+        const q = encodeURIComponent;
+        const url = readUrl ? `&url=${q(readUrl)}` : "";
+        const links = [
+          { title: "Post to X", url: `https://twitter.com/intent/tweet?text=${q(text)}${url}` },
+          {
+            title: "Post to Bluesky",
+            url: `https://bsky.app/intent/compose?text=${q(readUrl ? `${text}\n${readUrl}` : text)}`,
+          },
+          { title: "Post to Weibo", url: `https://service.weibo.com/share/share.php?title=${q(text)}${url}` },
+        ];
+        if (readUrl) links.push({ title: "Open the book", url: readUrl });
+        return links;
+      }
+
+      const slug = (s) =>
+        s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 40);
+
+      async function card(params) {
+        const quote = params.text.replace(/\s*\n\s*/g, "\n").trim();
+        if (!quote) throw new Error("Select some text first");
+        await document.fonts?.ready;
+        const source = sourceOf(params);
+        const image = await toBlob(draw(quote, source));
+        const title = params.book?.title ?? params.note?.title ?? "quote";
+        return {
+          image,
+          name: `quote-${slug(title) || "card"}.png`,
+          alt: `“${quote}”${source.length ? ` — ${source.join(", ")}` : ""}`,
+          links: linksOf(quote, source, params.book?.readUrl),
+        };
+      }
+
+      window.addEventListener("message", async (event) => {
+        if (event.source !== parent) return;
+        const msg = event.data;
+        if (msg?.mdsilo !== 1) return;
+        // the answer to a call of ours
+        if ("id" in msg && waiting.has(msg.id)) {
+          const { resolve, reject } = waiting.get(msg.id);
+          waiting.delete(msg.id);
+          return msg.error ? reject(new Error(msg.error)) : resolve(msg.result);
+        }
+        if (msg.event === "style") dark = Boolean(msg.data?.dark);
+        if (msg.method === "selection.action" && msg.params?.action === "card") {
+          try {
+            const result = await card(msg.params);
+            parent.postMessage({ mdsilo: 1, reply: msg.request, result }, "*");
+          } catch (e) {
+            parent.postMessage({ mdsilo: 1, reply: msg.request, error: String(e?.message ?? e) }, "*");
+          }
+        }
+      });
+
+      call("app.style").then((style) => (dark = Boolean(style?.dark)), () => {});
+    </script>
+  </body>
+</html>

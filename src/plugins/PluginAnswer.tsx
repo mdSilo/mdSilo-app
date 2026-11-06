@@ -59,7 +59,7 @@ export function PluginAnswerModal() {
       <BaseModal title={title} isOpen handleClose={() => done()}>
         <PluginImageView
           image={image}
-          imageClassName="max-h-[60vh]"
+          imageWidth={280}
           onInsert={
             canInsert
               ? async () => done({ markdown: await saveImageToAssets(image) })

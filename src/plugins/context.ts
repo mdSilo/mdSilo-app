@@ -3,6 +3,8 @@ import type { ViewState } from "@/state/viewReducer";
 import { isAbsolutePath, toWorkspacePath } from "@/workspace/util";
 import { titleOfFile } from "@/reader/library/library";
 import { activeStore } from "@/reader/readerStore";
+import { readLinkOf, repoFileUrl } from "@/reader/library/sharedBook";
+import { isSyncAvailable, syncInfo } from "@/sync/api";
 import type { Permission } from "./manifest";
 import { grantedPermissions, type InstalledPlugin } from "./registry";
 import { noteInfo } from "./workspaceApi";
@@ -26,14 +28,54 @@ export function noteContext(
   return note ? { note } : {};
 }
 
+/** the git remote of each workspace, asked again after a while */
+const REMOTE_TTL = 5 * 60_000;
+const remotes = new Map<
+  string,
+  { at: number; remote: Promise<{ url: string; branch: string } | undefined> }
+>();
+
+/** For tests: the remotes asked again */
+export const forgetRemotes = () => remotes.clear();
+
+function remoteOf(ws: string) {
+  const known = remotes.get(ws);
+  if (known && Date.now() - known.at < REMOTE_TTL) return known.remote;
+  const remote = syncInfo(ws).then(
+    (info) =>
+      info.remoteUrl && info.branch
+        ? { url: info.remoteUrl, branch: info.branch }
+        : undefined,
+    () => undefined,
+  );
+  remotes.set(ws, { at: Date.now(), remote });
+  return remote;
+}
+
+/**
+ * Where a book synced with the workspace is on the web: the file in the git
+ * repo (GitHub, GitLab, Gitea) and the link to read it at `cfi` in the web
+ * app. Only if the repo is public do they work for others.
+ */
+async function bookOnWeb(
+  ws: string,
+  file: string,
+  cfi?: string,
+): Promise<{ url?: string; readUrl?: string }> {
+  if (!isSyncAvailable) return {};
+  const remote = await remoteOf(ws);
+  const url = remote && repoFileUrl(remote.url, remote.branch, file);
+  return url ? { url, readUrl: readLinkOf(url, cfi) } : {};
+}
+
 /**
  * The book open in the reader (of the pane in use), as the plugin may see
  * it; `cfi` the text selected, else the page shown.
  */
-export function bookContext(
+export async function bookContext(
   plugin: InstalledPlugin,
   cfi?: string,
-): PluginContext {
+): Promise<PluginContext> {
   if (!may(plugin, "books:read")) return {};
   const { path, ws, entry, location } = activeStore().getState();
   if (!path) return {};
@@ -51,14 +93,17 @@ export function bookContext(
   if (location?.tocLabel) book.chapter = location.tocLabel;
   const at = cfi ?? location?.cfi;
   if (at) book.cfi = at;
+  // in the repo, if synced with it
+  if (ws && entry?.synced)
+    Object.assign(book, await bookOnWeb(ws, entry.file, at));
   return { book };
 }
 
 /** What is open in the view shown: its note or its book */
-export function viewContext(
+export async function viewContext(
   plugin: InstalledPlugin,
   view: ViewState | undefined,
-): PluginContext {
+): Promise<PluginContext> {
   if (view?.view === "md") return noteContext(plugin, view.params?.noteId);
   if (view?.view === "book") return bookContext(plugin);
   return {};

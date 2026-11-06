@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { createRef } from "react";
 import { store } from "@/state/store";
 import { askPlugin } from "@/plugins/background";
+import { openUrl } from "@/workspace/open";
 import { parseManifest } from "@/plugins/manifest";
 import { enablePlugin, type InstalledPlugin } from "@/plugins/registry";
 import { activeStore, resetReaderStore } from "../readerStore";
@@ -11,6 +12,10 @@ import { isPopupShown } from "../popups";
 import PluginActionPopup from "./PluginActionPopup";
 
 vi.mock("@/plugins/background", () => ({ askPlugin: vi.fn() }));
+vi.mock("@/workspace/open", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/workspace/open")>()),
+  openUrl: vi.fn(async () => true),
+}));
 
 const plugin: InstalledPlugin = {
   id: "ai",
@@ -160,6 +165,7 @@ describe("PluginActionPopup", () => {
     vi.mocked(askPlugin).mockResolvedValue({
       image: Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
       alt: "A card of entropy",
+      links: [{ title: "Bluesky", url: "https://bsky.app/intent/compose?text=x" }],
     });
     renderPopup();
     act(() =>
@@ -176,6 +182,8 @@ describe("PluginActionPopup", () => {
     expect(screen.getByRole("button", { name: /Copy/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Keep as a note/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Insert/ })).toBeNull();
+    act(() => screen.getByRole("button", { name: /Bluesky/ }).click());
+    expect(openUrl).toHaveBeenCalledWith("https://bsky.app/intent/compose?text=x");
   });
 
   it("runs nothing of a plugin not enabled", async () => {

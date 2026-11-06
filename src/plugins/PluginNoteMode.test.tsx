@@ -7,6 +7,10 @@ import {
   type InstalledPlugin,
 } from "./registry";
 import PluginNoteMode, { noteMethods } from "./PluginNoteMode";
+import { openInApp } from "./workspaceApi";
+import { dispatchView } from "./trusted";
+
+vi.mock("./workspaceApi", () => ({ openInApp: vi.fn(async () => true) }));
 
 const plugin: InstalledPlugin = {
   id: "cards",
@@ -82,6 +86,18 @@ describe("PluginNoteMode", () => {
     readOnly: false,
     onChange: vi.fn(),
   };
+
+  it("opens a note, a book or an issue, as views do", async () => {
+    const methods = noteMethods(
+      () => ({ title: "A", readOnly: false }),
+      { current: "" },
+      [],
+      vi.fn(),
+    );
+    expect(methods["app.open"].permission).toBeUndefined();
+    expect(await methods["app.open"].handler({ note: "b.md" })).toBe(true);
+    expect(openInApp).toHaveBeenCalledWith({ note: "b.md" }, dispatchView);
+  });
 
   it("shows the page of the mode, and tells it of changes made elsewhere", () => {
     enablePlugin(plugin);

@@ -421,7 +421,8 @@ export function searchUrl(template: string, query: string) {
 /** The most bytes of a book downloaded. */
 export const MAX_BOOK_BYTES = 512 << 20;
 
-async function fetchBytes(url: string, maxBytes?: number) {
+/** The bytes at the URL: by Rust on the desktop, by the CORS proxy on the web */
+export async function fetchBytes(url: string, maxBytes?: number) {
   const data = await invoke<ArrayBuffer | Uint8Array | number[]>("fetch_url", {
     url,
     maxBytes,

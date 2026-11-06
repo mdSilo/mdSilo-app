@@ -1,4 +1,6 @@
+import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
+import { mockInvoke } from "@/testUtils";
 import { CALL_TIMEOUT, createHost, type PluginMethods } from "./host";
 import { parseManifest } from "./manifest";
 import { enablePlugin, type InstalledPlugin } from "./registry";
@@ -190,5 +192,65 @@ describe("asking the plugin", () => {
     const answered = host.call("code.render");
     host.dispose();
     await expect(answered).rejects.toThrow("The plugin is closed");
+  });
+});
+
+describe("app.openUrl", () => {
+  const open = (id: number, url: unknown) =>
+    send({ mdsilo: 1, id, method: "app.openUrl", params: { url } });
+
+  beforeEach(() => {
+    mockInvoke(invoke, { open_url: true });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-06T10:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("opens web pages only, one a second", async () => {
+    const host = createHost(plugin, frame);
+    open(1, "https://bsky.app/intent/compose?text=a%20quote");
+    expect(await answer()).toEqual({ mdsilo: 1, id: 1, result: true });
+    expect(invoke).toHaveBeenCalledWith("open_url", {
+      url: "https://bsky.app/intent/compose?text=a%20quote",
+    });
+    posted.mockClear();
+    open(2, "https://example.org/");
+    expect(await answer()).toMatchObject({
+      error: "Pages are opened one a second at most",
+    });
+    vi.setSystemTime(new Date("2026-11-06T10:00:02Z"));
+    for (const [id, url] of [
+      [3, "file:///etc/passwd"],
+      [4, "javascript:alert(1)"],
+      [5, "mdsplugin://localhost/x/index.html"],
+      [6, "not a url"],
+    ] as const) {
+      posted.mockClear();
+      open(id, url);
+      expect((await answer()).error).toMatch(/Only web pages|Not a URL/);
+    }
+    expect(invoke).toHaveBeenCalledTimes(1);
+    host.dispose();
+  });
+
+  it("from a hidden frame, only while it answers the user", async () => {
+    // the last page opened (by the test above) long ago
+    vi.setSystemTime(new Date("2026-11-06T10:01:00Z"));
+    const host = createHost(plugin, frame, undefined, { hidden: true });
+    open(1, "https://example.org/");
+    expect(await answer()).toMatchObject({
+      error: "A page is opened only while answering the user",
+    });
+    // asked by the app: an action on the text selected
+    const asked = host.call("selection.action", { text: "x" });
+    posted.mockClear();
+    open(2, "https://example.org/");
+    expect(await answer()).toEqual({ mdsilo: 1, id: 2, result: true });
+    send({ mdsilo: 1, reply: 1, result: "ok" });
+    expect(await asked).toBe("ok");
+    host.dispose();
   });
 });

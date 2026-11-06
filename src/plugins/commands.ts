@@ -43,7 +43,7 @@ export async function runCommand(
   let image: Awaited<ReturnType<typeof imageOf>>;
   try {
     result = await askPlugin(plugin, "command.run", {
-      ...viewContext(plugin, view),
+      ...(await viewContext(plugin, view)),
       command: command.id,
     });
     image = await imageOf(result);

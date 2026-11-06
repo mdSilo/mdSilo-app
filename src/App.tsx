@@ -12,6 +12,7 @@ import { usePlugins } from "@/plugins/registry";
 import { PluginsModal } from "@/plugins/PluginManager";
 import { PluginAnswerModal } from "@/plugins/PluginAnswer";
 import { TrustedPlugins } from "@/plugins/trusted";
+import { SharedBookPrompt } from "@/reader/library/SharedBookPrompt";
 import { PluginDev } from "@/plugins/dev";
 import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
@@ -177,6 +178,7 @@ const App = () => {
           <TrustedPlugins />
           <PluginDev />
           {isWeb ? <PwaPrompts /> : null}
+          {isWeb ? <SharedBookPrompt /> : null}
         </div>
       </div>
     </ProvideCurrentView>
