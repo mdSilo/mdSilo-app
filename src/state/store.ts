@@ -42,6 +42,8 @@ const immer =
 
 // last value written per storage key
 const lastSaved: Record<string, string> = {};
+// storage keys being read (hydration): no write meanwhile, see setItem
+const reading: Record<string, number> = {};
 
 // storage in LOCAL_DATA_DIR, saved as a JSON string (same format as before)
 const storage: PersistStorage<PersistedState> = {
@@ -50,7 +52,13 @@ const storage: PersistStorage<PersistedState> = {
   ): Promise<StorageValue<PersistedState> | null> => {
     // missing key is `{}`: return null, otherwise zustand fails to parse it
     // and never finishes hydrating on the first launch
-    const value = await Storage.get(name);
+    reading[name] = (reading[name] ?? 0) + 1;
+    let value: unknown;
+    try {
+      value = await Storage.get(name);
+    } finally {
+      reading[name] -= 1;
+    }
     if (typeof value !== "string") return null;
     // as saved: no need to write it back unchanged
     lastSaved[name] = value;
@@ -66,6 +74,10 @@ const storage: PersistStorage<PersistedState> = {
   ): Promise<void> => {
     // the main window writes them, with what a book window changed
     if (isBookWindow) return;
+    // persist writes on any update, even one made while the saved settings
+    // are still read (async: IndexedDB on web, IPC on desktop): that would
+    // write the defaults over them. Hydration merges them in right after.
+    if (reading[name]) return;
     // persist runs on every store update: skip writing what's already saved
     const serialized = serializePersisted(value);
     if (lastSaved[name] === serialized) return;

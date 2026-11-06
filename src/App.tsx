@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useMemo, useEffect } from "react";
 import "@/styles/styles.css";
 import "tippy.js/dist/tippy.css";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ProvideCurrentView } from "@/state/useCurrentView";
 import useHotkeys from "@/lib/hooks/useHotkeys";
 import useTheme from "@/lib/hooks/useTheme";
@@ -15,7 +16,10 @@ import { PluginDev } from "@/plugins/dev";
 import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
 import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
-import { shareSettings } from "@/state/windowSync";
+import { hasWindows, shareSettings } from "@/state/windowSync";
+import { flushSave } from "@/workspace/pendingSaves";
+import { issueStore } from "@/issue/issueStore";
+import { useReaderStore, useSideStore } from "@/reader/readerStore";
 import { isWeb } from "@/workspace/util";
 import { openWebWorkspace } from "@/workspace/useOpen";
 import FindOrCreateModal from "@/writer/NoteNewModal";
@@ -105,6 +109,25 @@ const App = () => {
 
   // sync every few minutes and on exit, if set
   useAutoSync();
+
+  // closing the window (or quitting from the tray) leaves no time for the
+  // timers of the saves: written first, as in a book window
+  useEffect(() => {
+    if (!hasWindows) return;
+    const unlisten = getCurrentWindow().onCloseRequested(async () => {
+      try {
+        await Promise.all([
+          useReaderStore.getState().flush(),
+          useSideStore.getState().flush(),
+          issueStore.getState().flush(),
+          flushSave(),
+        ]);
+      } catch (e) {
+        console.error("Failed to save before closing:", e);
+      }
+    });
+    return () => void unlisten.then((off) => off());
+  }, []);
 
   // the settings changed in the book windows, and theirs
   useEffect(() => shareSettings(), []);

@@ -18,7 +18,6 @@ import {
   TbChevronsRight,
   TbLanguage,
   TbLayoutSidebar,
-  TbLink,
   TbSearch,
   TbColumns2,
   TbTypography,

@@ -434,6 +434,16 @@ export function createReaderStore() {
     useStore.setState(empty());
   };
 
+  // the app may be closed from the background (a PWA on a phone) without a
+  // chance to run the timers: write the place read when it is left
+  if (typeof window !== "undefined") {
+    const flushAll = () => void Promise.all([saveNotes(), saveState()]);
+    window.addEventListener("pagehide", flushAll);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flushAll();
+    });
+  }
+
   return Object.assign(useStore, { reset });
 }
 

@@ -205,6 +205,28 @@ describe("persistence", () => {
     setItem.mockRestore();
   });
 
+  test("an update while loading does not write over the saved settings", async () => {
+    const saved = JSON.stringify({
+      state: { fontSize: 1.7, theme: "nord" },
+      version: 5,
+    });
+    localStorage.setItem("mdsilo-storage", JSON.stringify(saved));
+    const persist = (
+      store as unknown as { persist: { rehydrate: () => Promise<void> } }
+    ).persist;
+    const hydrating = persist.rehydrate();
+    // e.g. the app starting up, before the settings are loaded
+    store.getState().setSidebarWidth(111);
+    await hydrating;
+    await new Promise((r) => setTimeout(r, 0));
+    const stored = JSON.parse(
+      JSON.parse(localStorage.getItem("mdsilo-storage") as string),
+    );
+    expect(stored.state.fontSize).toBe(1.7);
+    expect(stored.state.theme).toBe("nord");
+    expect(store.getState().fontSize).toBe(1.7);
+  });
+
   test("loads settings saved by the previous version", async () => {
     // as written by zustand 3 persist: a JSON string, stored as JSON
     const saved = JSON.stringify({

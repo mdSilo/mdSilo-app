@@ -254,6 +254,16 @@ onAnnounce("issues", (dir) => {
 
 export const issueStore = useIssueStore;
 
+// the app may be closed from the background (a PWA on a phone) without a
+// chance to run the timer: write the changes when it is left
+if (typeof window !== "undefined") {
+  const flushAll = () => void useIssueStore.getState().flush();
+  window.addEventListener("pagehide", flushAll);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushAll();
+  });
+}
+
 /** Issue data of the open workspace, loading it on first use. */
 export function useIssueData() {
   const initDir = useStore((state) => state.initDir);
