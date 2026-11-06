@@ -124,11 +124,13 @@ function isVisible(props: Props) {
 
 export default class SelectionToolbar extends React.Component<
   Props,
-  { actionsOpen: boolean }
+  { actionsOpen: boolean; running: boolean }
 > {
   isActive = false;
   menuRef = React.createRef<HTMLDivElement>();
-  state = { actionsOpen: false };
+  // running: an action on the text, maybe with its answer in a dialog of the
+  // app, which the toolbar (above all) would cover
+  state = { actionsOpen: false, running: false };
 
   componentDidUpdate(): void {
     const visible = isVisible(this.props);
@@ -264,6 +266,7 @@ export default class SelectionToolbar extends React.Component<
       info.markdown = serializer.serialize(before.doc.cut(from, to)).trim();
     }
     let result: SelectionActionResult | undefined | void;
+    this.setState({ running: true });
     try {
       result = await action.run(text, info);
     } catch (e) {
@@ -272,6 +275,8 @@ export default class SelectionToolbar extends React.Component<
         ToastType.Error
       );
       return;
+    } finally {
+      this.setState({ running: false });
     }
     if (!result) return;
     const { state, dispatch } = view;
@@ -420,7 +425,7 @@ export default class SelectionToolbar extends React.Component<
     return (
       <FloatingToolbar
         view={view}
-        active={isVisible(this.props)}
+        active={isVisible(this.props) && !this.state.running}
         ref={this.menuRef}
       >
         {isLink && linkRange ? (

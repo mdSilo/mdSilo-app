@@ -1,6 +1,8 @@
 import { PROTOCOL, type PluginStyle } from "@mdsilo/plugin-api";
+import { renderToHtml } from "mdsmirror";
 import { store } from "@/state/store";
 import { openUrl } from "@/workspace/open";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { themeVarsOf } from "@/custom/themes";
 import { allFonts, fontFamilyOf } from "@/custom/fonts";
 import type { Permission } from "./manifest";
@@ -82,6 +84,18 @@ async function openUrlFor(plugin: InstalledPlugin, params: unknown) {
 /** Methods every plugin has, whatever it is granted. */
 export const baseMethods = (plugin: InstalledPlugin): PluginMethods => ({
   "app.openUrl": { handler: (params) => openUrlFor(plugin, params) },
+  // Markdown as the app reads it, to show: no scripts, styles or forms
+  "markdown.render": {
+    handler: (params) => {
+      const text =
+        typeof params === "object" && params !== null
+          ? (params as { text?: unknown }).text
+          : undefined;
+      if (typeof text !== "string")
+        throw new Error("markdown.render wants { text: string }");
+      return sanitizeHtml(renderToHtml(text));
+    },
+  },
   "app.info": {
     handler: () => ({
       id: plugin.id,

@@ -1,13 +1,14 @@
 {
   "id": "speed-reader",
   "name": "Speed Reader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minAppVersion": "0.8.0",
   "author": "mdSilo",
   "icon": "icon.svg",
-  "description": "Reads the book a word at a time (RSVP), from the page shown, at the speed you choose.",
-  "permissions": ["reader:read"],
+  "description": "Reads a book (from the page shown) or a note a word at a time (RSVP), at the speed you choose.",
+  "permissions": ["reader:read", "notes:read"],
   "contributes": {
-    "readerPanels": [{ "id": "rsvp", "title": "Speed reading" }]
+    "readerPanels": [{ "id": "rsvp", "title": "Speed reading" }],
+    "noteModes": [{ "id": "rsvp", "title": "Speed read", "page": "note.html" }]
   }
 }

@@ -24,7 +24,8 @@ Samples here:
 
 - `csv-viewer/`: install it, enable it, then click a `.csv` file in the explorer.
 - `tag-index/`: a view of the notes by tag; open it from the Plugins button of the side menu.
-- `text-stats/`: a "Count words" button on the text selected, in the reader and the editor.
+- `text-stats/`: a "Count words" button on the text selected, in the reader and the editor; its
+  commands "Mark long paragraphs" and "Clear the paragraph marks" on the note open (`editor.*`).
 - `outline/`: a note mode, the headings of the note open as an outline to rename them; switch to
   it with its button by WYSIWYG, Markdown and MindMap above the note.
 - `book-indent/`: a **trusted** plugin (see below): indents the paragraphs of books, and a view
@@ -35,7 +36,8 @@ Samples here:
   card of the text with the book or the note it is from, to copy, save, insert, or post (see
   Images).
 - `speed-reader/`: a panel of the reader (its button in the header of the reader): the book read a
-  word at a time (RSVP) from the page shown; the book behind it follows, the paragraph marked.
+  word at a time (RSVP) from the page shown; the book behind it follows, the paragraph marked. And a
+  note mode, "Speed read", for the note open (`note.blocks`).
 
 ## manifest.json
 
@@ -72,11 +74,13 @@ Samples here:
 - `contributes.commands`: `[{ "id": "today", "title": "Stats of today" }]`, in the Plugins menu of
   the side menu (see below).
 - `contributes.noteModes`: `[{ "id": "cards", "title": "Cards", "page": "cards.html" }]`, modes of
-  the note open, beside WYSIWYG, Markdown and MindMap; its page shows in place of the editor (see
-  below). `page` is the main page by default.
+  the note open, beside WYSIWYG, Markdown and MindMap, with the icon of the plugin (more than two
+  of them: in a list under one button); its page shows in place of the editor (see below). `page`
+  is the main page by default.
 - `contributes.readerPanels`: `[{ "id": "rsvp", "title": "Speed reading", "placement": "overlay" }]`,
-  panels of the reader, from a button in its header: its page over the book (`overlay`, by default)
-  or beside it (`side`); see below. `page` is the main page by default.
+  panels of the reader, from a button in its header with the icon of the plugin (more than two of
+  them: in a list under one button): its page over the book (`overlay`, by default) or beside it
+  (`side`); see below. `page` is the main page by default.
 - `mode`: `sandboxed` (default), or `trusted` (see the end). For a trusted plugin `main` is its ES
   module, `main.js` by default, and `permissions` are not asked: it has them all.
 
@@ -100,6 +104,7 @@ parent.postMessage({ mdsilo: 1, id: 1, method: 'file.read' }, '*');
 | `app.info` | | `{ id, version, permissions }` |
 | `app.style` | | `{ theme, dark, vars, font }`: the daisyUI variables of the theme and the editor font |
 | `app.openUrl` `{ url }` | | `true`; opens an `http:` or `https:` page in the browser, one a second at most; the hidden main page may only while it answers an action or a command |
+| `markdown.render` `{ text }` | | the HTML of the Markdown, as the app reads it; sanitized (no scripts, styles or forms) |
 | `file.info` | | `{ name, ext, path }` of the file opened; `path` relative to the workspace, if in it |
 | `file.read` | `file:read` | the text of the file |
 | `file.write` `{ text }` | `file:write` | `true` |
@@ -126,8 +131,9 @@ Note modes have, for the note open only, and `app.open` as views:
 
 | Method | Permission | Gives |
 |---|---|---|
-| `note.info` | | `{ title, readOnly }`: `readOnly` in the read mode of the app |
+| `note.info` | | `{ title, readOnly, path, tags, created, updated }`: `readOnly` in the read mode of the app; `path` and the rest if the note is in the workspace |
 | `note.read` | `notes:read` | the text of the note |
+| `note.blocks` `{ from?, count? }` | `notes:read` | `{ blocks: [{ index, text }], next? }`: its blocks of text (paragraphs, headings, items…) from `from` (0) on, `count` of them (50, 500 at most) |
 | `note.write` `{ text }` | `notes:write` | `true`; saved as the editor saves, once the writes pause |
 
 | Event | When |
@@ -138,6 +144,20 @@ Note modes have, for the note open only, and `app.open` as views:
 | `notes.changed` | views: notes were edited (in the app too), made, renamed or deleted; `{ paths }`, once the changes pause |
 | `files.changed` | views: files of the workspace changed on the disk; `{ paths, event }` as the watcher saw them (not hidden folders) |
 | `reader.relocated` | panels of the reader: the page shown changed; data as `reader.info` |
+
+## The note open in the editor
+
+The hidden main page (an action, a command) and trusted plugins can act on the note open in the
+editor (WYSIWYG), by its blocks of text: its paragraphs, headings, items… numbered from 0, as
+`note.blocks` gives them.
+
+| Method | Permission | Gives |
+|---|---|---|
+| `editor.info` | `notes:read` | `{ note, block, blocks }`: the note (as `notes.list`), the block of the cursor, how many there are; `null` if no note is open in the editor |
+| `editor.blocks` `{ from?, count? }` | `notes:read` | `{ blocks: [{ index, text }], next? }` from `from` (`"current"`, the block of the cursor, by default; or a number) on |
+| `editor.goTo` `{ block }` | `notes:read` | `true`; the cursor at the start of the block, shown |
+| `editor.mark` `{ block, color? }` | `notes:read` | `true`; a color behind the block (`yellow`, `red`, `green`, `blue`, `violet`), not in the note: it follows the edits, gone when the note closes |
+| `editor.clearMarks` | `notes:read` | `true`; takes back the marks of the plugin |
 
 ## Panels of the reader
 

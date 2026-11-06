@@ -68,6 +68,7 @@ import {
 import { getFileExt } from "@/workspace/process";
 import { useWritingRoot } from "@/workspace/useWorkspace";
 import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
+import { setEditor } from "./editors";
 import NoteHeader from "./NoteHeader";
 import Backlinks from "./backlinks/Backlinks";
 import IssueRefs from "./IssueRefs";
@@ -524,7 +525,11 @@ function Note(props: Props) {
                   ) : (
                     <MsEditor
                       key={`wys-${noteId}-${codeRenderersKey}-${extensionsKey}`}
-                      ref={editorInstance}
+                      ref={(editor) => {
+                        editorInstance.current = editor;
+                        // for plugins, see plugins/editorApi.ts
+                        setEditor(noteId, editor);
+                      }}
                       value={mdContent}
                       dark={darkMode}
                       readOnly={readMode}

@@ -214,6 +214,46 @@ describe("Note", () => {
     }
   });
 
+  test("shows the icon of the plugin of a mode; many modes in a list", async () => {
+    const modeOf = (id: string, icon?: string): InstalledPlugin => ({
+      ...cards,
+      id,
+      manifest: parseManifest({
+        id,
+        name: id.toUpperCase(),
+        version: "1.0.0",
+        ...(icon ? { icon } : {}),
+        contributes: { noteModes: [{ id: "m", title: `Mode ${id}` }] },
+      }),
+    });
+    const a = modeOf("a", "icon.svg");
+    const enabled = { enabled: true, granted: [] };
+    store.setState({ installedPlugins: [a], pluginStates: { a: enabled } });
+    try {
+      const { unmount } = setup();
+      const button = screen.getByRole("button", { name: "Mode a" });
+      expect(button.querySelector("img")?.getAttribute("src")).toMatch(
+        /a\/icon\.svg$/,
+      );
+      unmount();
+      // three: in a list under one button
+      store.setState({
+        installedPlugins: [a, modeOf("b"), modeOf("c")],
+        pluginStates: { a: enabled, b: enabled, c: enabled },
+      });
+      setup();
+      expect(screen.queryByRole("button", { name: "Mode a" })).toBeNull();
+      await userEvent.click(
+        screen.getByRole("button", { name: /Modes of plugins/ }),
+      );
+      await userEvent.click(await screen.findByText("Mode c"));
+      expect(store.getState().rawMode).toBe("plugin:c:m");
+    } finally {
+      store.setState({ installedPlugins: [], pluginStates: {} });
+      store.getState().setRawMode("wysiwyg");
+    }
+  });
+
   test("shows the editor for the mode of a plugin not enabled", async () => {
     store.setState({ installedPlugins: [cards], pluginStates: {} });
     store.getState().setRawMode("plugin:cards:cards");

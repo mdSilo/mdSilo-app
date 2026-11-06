@@ -157,6 +157,22 @@ describe("selection toolbar", () => {
     expect(document.querySelectorAll('[role="menuitem"]')).toHaveLength(0);
   });
 
+  test("the toolbar hides while an action runs: its answer not covered", async () => {
+    let done: (v: undefined) => void = () => undefined;
+    const run = vi.fn(
+      () => new Promise<undefined>((resolve) => (done = resolve))
+    );
+    await setup({ selectionActions: [{ id: "show", title: "Show", run }] });
+    const toolbar = () =>
+      document.querySelector("[data-active]") as HTMLElement;
+    expect(toolbar().dataset.active).toBe("true");
+    await pickAction("Show");
+    expect(run).toHaveBeenCalled();
+    expect(toolbar().dataset.active).toBe("false");
+    await act(async () => done(undefined));
+    expect(toolbar().dataset.active).toBe("true");
+  });
+
   test("an action changing nothing, or failing", async () => {
     const onShowToast = vi.fn();
     const view = await setup({

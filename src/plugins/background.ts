@@ -9,13 +9,15 @@ import {
 import { askTrusted, dispatchView } from "./trusted";
 import { workspaceMethods } from "./workspaceApi";
 import { readerMethods } from "./readerApi";
+import { editorMethods } from "./editorApi";
 
 /**
  * The main page of a plugin running in the background, in a hidden sandboxed
  * frame, to be asked: to draw a code block, to act on the text selected...
  * One frame per plugin, loaded on its first use, closed when it is disabled.
  * It has the methods of the workspace as views do (`notes.read`…), and of
- * the book open (`reader.*`), each with its permission: to read the note it
+ * the book open (`reader.*`) and the note open (`editor.*`), each with its
+ * permission: to read the note it
  * is given, say.
  */
 type Background = {
@@ -47,7 +49,11 @@ function backgroundOf(plugin: InstalledPlugin): Background {
   const host = createHost(
     plugin,
     frame,
-    () => ({ ...workspaceMethods(dispatchView), ...readerMethods(plugin) }),
+    () => ({
+      ...workspaceMethods(dispatchView),
+      ...readerMethods(plugin),
+      ...editorMethods(plugin),
+    }),
     { hidden: true },
   );
   const background = { plugin, frame, host, ready };

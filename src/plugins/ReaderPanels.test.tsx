@@ -73,19 +73,36 @@ describe("panels of the reader", () => {
     expect(useReaderPanel.getState().open).toBeUndefined();
   });
 
-  it("more panels: in a list; one beside the book", async () => {
+  it("two panels: two buttons; one beside the book", async () => {
     enablePlugin(rsvp);
     enablePlugin(notes);
     renderReader();
-    await userEvent.click(
-      screen.getByRole("button", { name: /Plugin panels/ }),
-    );
-    await userEvent.click(await screen.findByText("Margin notes"));
+    expect(screen.queryByRole("button", { name: /Plugin panels/ })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Margin notes" }));
     expect(useReaderPanel.getState().open).toEqual({
       plugin: "margin",
       panel: "notes",
     });
     expect(screen.getByTestId("reader-panel").className).toContain("w-80");
+  });
+
+  it("more panels: in a list, with their icons", async () => {
+    const third = pluginWith("third", [{ id: "x", title: "Third panel" }]);
+    store.setState({ installedPlugins: [rsvp, notes, third] });
+    enablePlugin(rsvp);
+    enablePlugin(notes);
+    enablePlugin(third);
+    renderReader();
+    expect(screen.queryByRole("button", { name: "Speed reading" })).toBeNull();
+    await userEvent.click(
+      screen.getByRole("button", { name: /Plugin panels/ }),
+    );
+    expect(await screen.findByText("Speed reading")).toBeInTheDocument();
+    await userEvent.click(screen.getByText("Third panel"));
+    expect(useReaderPanel.getState().open).toEqual({
+      plugin: "third",
+      panel: "x",
+    });
   });
 
   it("closes with the reader, and when its plugin is disabled", async () => {

@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Speed Reader</title>
+    <link rel="stylesheet" href="rsvp.css" />
+  </head>
+  <body tabindex="0" class="paused">
+    <div class="stage">
+      <div class="word" id="word"><span class="pre"></span><span class="pivot"></span><span class="post"></span></div>
+    </div>
+    <div class="context" id="context"></div>
+    <div class="controls">
+      <button id="back" title="Paragraph before (←)">⏮</button>
+      <button id="play" title="Play or pause (Space)">▶ Play</button>
+      <button id="fwd" title="Paragraph after (→)">⏭</button>
+      <button id="slower" title="Slower (↓)">−</button>
+      <span id="wpm"></span>
+      <button id="faster" title="Faster (↑)">+</button>
+    </div>
+    <div class="help" id="help">Space play/pause · ← → paragraph · ↑ ↓ speed · Esc close</div>
+    <script>window.RSVP_SOURCE = "note";</script>
+    <script src="rsvp.js"></script>
+  </body>
+</html>

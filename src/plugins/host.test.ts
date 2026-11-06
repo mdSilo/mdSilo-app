@@ -254,3 +254,20 @@ describe("app.openUrl", () => {
     host.dispose();
   });
 });
+
+describe("markdown.render", () => {
+  it("gives HTML as the app reads Markdown, sanitized", async () => {
+    const host = createHost(plugin, frame);
+    send({
+      mdsilo: 1,
+      id: 1,
+      method: "markdown.render",
+      params: { text: "# Hi\n\n**bold** <script>alert(1)</script>" },
+    });
+    const { result } = await answer();
+    expect(result).toContain("<h1");
+    expect(result).toContain("<strong>bold</strong>");
+    expect(result).not.toContain("<script");
+    host.dispose();
+  });
+});

@@ -107,6 +107,19 @@ export type TextBlock = { cfi: string; text: string };
 /** The colors of the marks over the text, as of the highlights */
 export type MarkColor = "yellow" | "red" | "green" | "blue" | "violet";
 
+/** A block of text of a note: a paragraph, a heading, an item... by its place */
+export type NoteBlock = { index: number; text: string };
+
+/** The note open in the editor (`editor.info`) */
+export type EditorInfo = {
+  /** the note, if in the workspace */
+  note?: NoteInfo;
+  /** the block of text the cursor is in; -1 if none */
+  block: number;
+  /** how many blocks of text the note has */
+  blocks: number;
+};
+
 /** A note found by `notes.search` */
 export type NoteHit = {
   /** relative to the workspace */
@@ -139,6 +152,8 @@ export type Methods = {
     { id: string; version?: string; permissions: Permission[] }
   >;
   "app.style": Method<void, PluginStyle>;
+  /** Markdown as HTML, as the app reads it: sanitized (no scripts, styles or forms) */
+  "markdown.render": Method<{ text: string }, string>;
   /**
    * opens a web page (http or https) in the browser, one a second at most;
    * from the hidden main page only while it answers an action or a command
@@ -202,12 +217,52 @@ export type Methods = {
   >;
   /** takes back the marks of the plugin */
   "reader.clearMarks": Method<void, true, "reader:read">;
+  // the note open in the editor (WYSIWYG): from an action, a command
+  /** where the cursor is; null if no note is open in the editor */
+  "editor.info": Method<void, EditorInfo | null, "notes:read">;
+  /**
+   * `count` blocks of text (50 by default, 500 at most) from `from` on: the
+   * block of the cursor (`"current"`, by default) or a number; `next` the
+   * block to go on from, none at the end
+   */
+  "editor.blocks": Method<
+    { from?: number | "current"; count?: number } | void,
+    { blocks: NoteBlock[]; next?: number },
+    "notes:read"
+  >;
+  /** the cursor at the start of the block, shown */
+  "editor.goTo": Method<{ block: number }, true, "notes:read">;
+  /** a color behind the block, not in the note: it follows the edits, gone when the note closes */
+  "editor.mark": Method<
+    { block: number; color?: MarkColor },
+    true,
+    "notes:read"
+  >;
+  /** takes back the marks of the plugin */
+  "editor.clearMarks": Method<void, true, "notes:read">;
   // a panel of the reader
   "panel.info": Method<void, { id: string }>;
   /** closes the panel, e.g. on Escape: the keys go to the panel while it shows */
   "panel.close": Method<void, true>;
   // note modes: the note open only (and app.open, as views)
-  "note.info": Method<void, { title: string; readOnly: boolean }>;
+  "note.info": Method<
+    void,
+    {
+      title: string;
+      readOnly: boolean;
+      /** the note in the workspace: relative to it */
+      path?: string;
+      tags?: string[];
+      created?: string;
+      updated?: string;
+    }
+  >;
+  /** the blocks of text of the note, as `editor.blocks` (from 0) */
+  "note.blocks": Method<
+    { from?: number; count?: number } | void,
+    { blocks: NoteBlock[]; next?: number },
+    "notes:read"
+  >;
   "note.read": Method<void, string, "notes:read">;
   "note.write": Method<{ text: string }, true, "notes:write">;
 };

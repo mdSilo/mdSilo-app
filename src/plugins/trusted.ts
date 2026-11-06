@@ -13,6 +13,7 @@ import type { ViewAction } from "@/state/viewReducer";
 import { baseMethods, type PluginHost, type PluginMethods } from "./host";
 import { workspaceMethods } from "./workspaceApi";
 import { readerMethods } from "./readerApi";
+import { editorMethods } from "./editorApi";
 import type { CommonJs } from "./obsidian";
 import {
   enabledPlugins,
@@ -146,6 +147,7 @@ function load(plugin: InstalledPlugin): Loaded {
     call: caller(() => ({
       ...workspaceMethods((action) => dispatch(action)),
       ...readerMethods(plugin),
+      ...editorMethods(plugin),
       ...baseMethods(plugin),
     })) as TrustedApi["call"],
     handle: (request, handler) => {

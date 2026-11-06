@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { create } from "zustand";
-import { TbPuzzle, TbX } from "react-icons/tb";
+import { TbCheck, TbPuzzle, TbX } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import Dropdown, { DropdownItem } from "@/ui/Dropdown";
 import { IconButton } from "@/ui/ui";
@@ -40,7 +40,10 @@ function usePanels() {
   );
 }
 
-/** The button of the panels in the header of the reader: one, or a list */
+/** the panels shown as buttons, each its own; more are in a list */
+const MAX_PANEL_BUTTONS = 2;
+
+/** The buttons of the panels in the header of the reader: a few, or a list */
 export function ReaderPanelsButton() {
   const panels = usePanels();
   const open = useReaderPanel((state) => state.open);
@@ -51,16 +54,21 @@ export function ReaderPanelsButton() {
     isOpen(p)
       ? closeReaderPanel()
       : openReaderPanel({ plugin: p.plugin.id, panel: p.panel.id });
-  if (panels.length === 1) {
-    const [only] = panels;
+  // a few: each its button, with its icon; more: in a list
+  if (panels.length <= MAX_PANEL_BUTTONS) {
     return (
-      <IconButton
-        title={only.panel.title}
-        active={isOpen(only)}
-        onClick={() => toggle(only)}
-      >
-        <PluginIcon plugin={only.plugin} size={18} />
-      </IconButton>
+      <>
+        {panels.map((p) => (
+          <IconButton
+            key={`${p.plugin.id}:${p.panel.id}`}
+            title={p.panel.title}
+            active={isOpen(p)}
+            onClick={() => toggle(p)}
+          >
+            <PluginIcon plugin={p.plugin} size={18} />
+          </IconButton>
+        ))}
+      </>
     );
   }
   return (
@@ -86,6 +94,9 @@ export function ReaderPanelsButton() {
           <span className="pl-2 ml-auto text-xs truncate text-base-content/60">
             {p.plugin.manifest?.name}
           </span>
+          {isOpen(p) ? (
+            <TbCheck size={14} className="ml-1 text-success shrink-0" />
+          ) : null}
         </DropdownItem>
       ))}
     </Dropdown>
