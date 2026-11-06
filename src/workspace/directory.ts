@@ -82,34 +82,27 @@ class DirectoryAPI {
    * Get files with simple metadata, w/o content
    * @returns {Promise<DirectoryData>}
    */
-  listDirectory(): Promise<SimpleFileMeta[]> {
-    return new Promise((resolve) => {
-      if (hasFs) {
-        invoke<SimpleFileMeta[]>("list_directory", { dir: this.dirPath }).then(
-          (files: SimpleFileMeta[]) => {
-            this.files = files;
-            resolve(files);
-          },
-        );
-      }
+  async listDirectory(): Promise<SimpleFileMeta[]> {
+    if (!hasFs) return [];
+    // an error rejects: a promise that never settles would hang the caller
+    const files = await invoke<SimpleFileMeta[]>("list_directory", {
+      dir: this.dirPath,
     });
+    this.files = files;
+    return files;
   }
 
   /**
    * Get files with metadata and content
    * @returns {Promise<DirectoryData>}
    */
-  getFiles(): Promise<DirectoryData> {
-    return new Promise((resolve) => {
-      if (hasFs) {
-        invoke<DirectoryData>("read_directory", { dir: this.dirPath }).then(
-          (files: DirectoryData) => {
-            this.files = files.files;
-            resolve(files);
-          },
-        );
-      }
+  async getFiles(): Promise<DirectoryData> {
+    if (!hasFs) return { files: [], number_of_files: 0 };
+    const data = await invoke<DirectoryData>("read_directory", {
+      dir: this.dirPath,
     });
+    this.files = data.files;
+    return data;
   }
 
   /**
@@ -117,13 +110,8 @@ class DirectoryAPI {
    * @returns {Promise<boolean>}
    */
   async isDir(): Promise<boolean> {
-    return new Promise((resolve) => {
-      if (hasFs) {
-        invoke<boolean>("is_dir", { path: this.dirPath }).then(
-          (result: boolean) => resolve(result),
-        );
-      }
-    });
+    if (!hasFs) return false;
+    return await invoke<boolean>("is_dir", { path: this.dirPath });
   }
 
   /**

@@ -82,6 +82,14 @@ describe("DirectoryAPI (tauri)", () => {
     expect(tauriInvoke).toHaveBeenCalledWith("is_dir", { path: "/notes" });
   });
 
+  test("an error of the backend rejects, never hangs", async () => {
+    tauriInvoke.mockRejectedValue(new Error("closing"));
+    const notes = new Dir("/notes");
+    await expect(notes.isDir()).rejects.toThrow("closing");
+    await expect(notes.listDirectory()).rejects.toThrow("closing");
+    await expect(notes.getFiles()).rejects.toThrow("closing");
+  });
+
   describe("listen", () => {
     type Handler = (e: {
       payload: { paths: string[]; event: string };

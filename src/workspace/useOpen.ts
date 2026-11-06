@@ -91,12 +91,24 @@ export const onListDir = async () => {
 // onListDir
 // SidebarHistory, to recent dir
 export const listInitDir = async (dirPath: string) => {
-  await setWorkspace(dirPath);
-  store.getState().setCurrentDir(dirPath);
-  store.getState().upsertRecentDir(dirPath);
-  // listen on init dir only
-  await listDir(dirPath);
-  await expandLayoutRoots(dirPath);
+  try {
+    await setWorkspace(dirPath);
+    store.getState().upsertRecentDir(dirPath);
+    // listen on init dir only
+    await listDir(dirPath);
+    await expandLayoutRoots(dirPath);
+    // the folder shows (the explorer, the views of a folder) once it is
+    // listed: not as an empty one meanwhile, or for good if listing fails
+    store.getState().setCurrentDir(dirPath);
+  } catch (e) {
+    // back to no folder, where the history can be clicked again
+    if (store.getState().initDir === dirPath) {
+      store.getState().setInitDir(undefined);
+      store.getState().setLayout(undefined);
+      store.getState().setCurrentDir(undefined);
+    }
+    throw e;
+  }
   // all notes with content, e.g. for backlinks and search
   void loadDir(dirPath);
 };
@@ -120,36 +132,60 @@ export const startupDir = (
 
 let isWebWorkspaceOpening = false;
 
+const OPEN_ATTEMPTS = 3;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 /**
  * Web: notes live in IndexedDB, there is always a folder to work in. Open the
  * folder of the setting (previous or pinned), the pinned folder, or the
  * default workspace `/mdSilo`, so the views depending on a folder (issues,
- * chronicle, graph...) are available on startup.
+ * chronicle, graph...) are available on startup. A failure (e.g. the browser
+ * closed the database meanwhile) is tried again.
  */
 export const openWebWorkspace = async (): Promise<string | undefined> => {
-  const state = store.getState();
-  if (state.initDir || isWebWorkspaceOpening) return;
+  if (store.getState().currentDir || isWebWorkspaceOpening) return;
   isWebWorkspaceOpening = true;
   try {
-    const candidates = [startupDir(state), state.pinnedDir].filter(
-      (d): d is string => Boolean(d),
-    );
-    for (const dir of candidates) {
-      if (await new DirectoryAPI(dir).isDir()) {
-        await listInitDir(normalizeSlash(dir));
-        return dir;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await openWebWorkspaceOnce();
+      } catch (e) {
+        console.error(`Failed to open the workspace (${attempt}):`, e);
+        if (attempt >= OPEN_ATTEMPTS) throw e;
+        await sleep(500 * attempt);
+        // opened meanwhile, e.g. by a click on the history
+        if (store.getState().currentDir) return;
       }
-    }
-    // create the default workspace if missing
-    const dir = await invoke<string>("create_mdsilo_dir");
-    if (dir && !store.getState().initDir) {
-      await listInitDir(normalizeSlash(dir));
-      return dir;
     }
   } finally {
     isWebWorkspaceOpening = false;
   }
 };
+
+async function openWebWorkspaceOnce(): Promise<string | undefined> {
+  const state = store.getState();
+  const candidates = [startupDir(state), state.pinnedDir].filter(
+    (d): d is string => Boolean(d),
+  );
+  for (const dir of candidates) {
+    let isDir = false;
+    try {
+      isDir = await new DirectoryAPI(dir).isDir();
+    } catch (e) {
+      console.error(`Failed to check ${dir}:`, e);
+    }
+    if (isDir) {
+      await listInitDir(normalizeSlash(dir));
+      return dir;
+    }
+  }
+  // create the default workspace if missing
+  const dir = await invoke<string>("create_mdsilo_dir");
+  if (dir && !store.getState().currentDir) {
+    await listInitDir(normalizeSlash(dir));
+    return dir;
+  }
+}
 
 // use for list sub-dir:
 // SidebarNoteLink, to sub-dir

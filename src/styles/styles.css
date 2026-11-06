@@ -201,14 +201,24 @@
 }
 
 /*
-  The app fills the visible area: 100dvh leaves out the address bar of a
-  mobile browser (100vh does not; iOS < 15.4 has no dvh). The safe-area
-  padding keeps it off the notch and the home indicator, when the page is
-  laid out under them (viewport-fit=cover, the installed web app).
+  The app fills the visible area, pinned to the edges of the viewport: the
+  browser keeps those right as the screen is rotated, where a height (100vh,
+  100dvh) can stay as it was in the other orientation, and the top and the
+  bottom of the app are cut off. The page itself never scrolls (useViewportReset
+  puts it back if the browser does). The safe-area padding keeps the app off
+  the notch and the home indicator, when the page is laid out under them
+  (viewport-fit=cover, the installed web app).
 */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 #app-container {
-  height: 100vh;
-  height: 100dvh;
+  position: fixed;
+  inset: 0;
+  height: auto;
   padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
     env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
   box-sizing: border-box;

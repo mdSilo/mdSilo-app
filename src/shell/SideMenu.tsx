@@ -35,6 +35,7 @@ import {
   TbWorldUpload,
   TbPuzzle,
   TbDeviceMobileDown,
+  TbRefresh,
 } from "react-icons/tb";
 import { MdFolderOpen } from "react-icons/md";
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
@@ -49,6 +50,7 @@ import {
   openJsonFile,
 } from "@/workspace/useOpen";
 import { isTauri, isWeb } from "@/workspace/util";
+import { flushSave } from "@/workspace/pendingSaves";
 import { store, useStore } from "@/state/store";
 import type { SideMenuOrientation } from "@/state/userSettings";
 import useIsMobile, { isMobileWidth } from "@/lib/hooks/useIsMobile";
@@ -237,6 +239,16 @@ const LogoMenu = () => {
   );
 };
 
+/** Reload the app, e.g. when it got stuck: the pending saves are written first. */
+async function reloadApp() {
+  try {
+    await flushSave();
+  } catch (e) {
+    console.error("Failed to save before reloading:", e);
+  }
+  window.location.reload();
+}
+
 /** The items of the logo menu: settings, about the app, install it. */
 export function AppMenuItems({ settings = true }: { settings?: boolean }) {
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
@@ -280,6 +292,10 @@ export function AppMenuItems({ settings = true }: { settings?: boolean }) {
       <DropdownItem onClick={() => setIsAboutOpen(true)}>
         <TbInfoCircle size={18} className="mr-1" />
         <span>About</span>
+      </DropdownItem>
+      <DropdownItem onClick={reloadApp}>
+        <TbRefresh size={18} className="mr-1" />
+        <span>Reload App</span>
       </DropdownItem>
       {isWeb && canInstall ? (
         <DropdownItem

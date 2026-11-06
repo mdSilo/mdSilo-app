@@ -212,11 +212,11 @@ describe("useOpen (tauri)", () => {
       store.getState().setPinnedDir("/pinned");
       expect(await useOpen.openWebWorkspace()).toBe("/work");
 
-      store.getState().setInitDir(undefined);
+      store.getState().setCurrentDir(undefined);
       store.getState().setRecentDir(["/gone"]);
       expect(await useOpen.openWebWorkspace()).toBe("/pinned");
 
-      store.getState().setInitDir(undefined);
+      store.getState().setCurrentDir(undefined);
       store.getState().setOpenOnStartup("none");
       store.getState().setRecentDir(["/work"]);
       store.getState().setPinnedDir("");
@@ -234,11 +234,39 @@ describe("useOpen (tauri)", () => {
     test("does nothing if a folder is open", async () => {
       withDirs(["/mdSilo"]);
       store.getState().setInitDir("/opened");
+      store.getState().setCurrentDir("/opened");
       expect(await useOpen.openWebWorkspace()).toBeUndefined();
       expect(invoke).not.toHaveBeenCalledWith(
         "create_mdsilo_dir",
         expect.anything(),
       );
+    });
+
+    test("tries again if opening fails", async () => {
+      withDirs(["/mdSilo"]);
+      let failures = 1;
+      const base = invoke.getMockImplementation();
+      invoke.mockImplementation(async (cmd: string, args?: unknown) => {
+        if (cmd === "list_directory" && failures-- > 0) {
+          throw new Error("The database connection is closing");
+        }
+        return base?.(cmd, args);
+      });
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+      expect(await useOpen.openWebWorkspace()).toBe("/mdSilo");
+      expect(store.getState().currentDir).toBe("/mdSilo");
+    });
+
+    test("a folder that fails to list is not left open and empty", async () => {
+      withDirs(["/mdSilo"]);
+      const base = invoke.getMockImplementation();
+      invoke.mockImplementation(async (cmd: string, args?: unknown) => {
+        if (cmd === "list_directory") throw new Error("boom");
+        return base?.(cmd, args);
+      });
+      await expect(useOpen.listInitDir("/mdSilo")).rejects.toThrow("boom");
+      expect(store.getState().initDir).toBeUndefined();
+      expect(store.getState().currentDir).toBeUndefined();
     });
   });
 });

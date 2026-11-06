@@ -21,7 +21,11 @@ function SidebarHistory(props: Props) {
   const openRecentDir = useCallback(
     async (e: React.MouseEvent<HTMLDivElement, MouseEvent>, dir: string) => {
       e.preventDefault();
-      await listInitDir(dir);
+      try {
+        await listInitDir(dir);
+      } catch (error) {
+        console.error(`Failed to open ${dir}:`, error);
+      }
     },
     [],
   );
@@ -36,7 +40,9 @@ function SidebarHistory(props: Props) {
     const dir = startupDir({ openOnStartup, recentDir: history, pinnedDir });
     if (!dir) return;
     isOpened.current = true;
-    listInitDir(dir);
+    listInitDir(dir).catch((error) =>
+      console.error(`Failed to open ${dir}:`, error),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history, pinnedDir]);
 

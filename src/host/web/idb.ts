@@ -48,12 +48,19 @@ export function openDB(): Promise<IDBDatabase> {
         db.close();
         dbPromise = null;
       };
+      // the browser closed the connection (e.g. a phone resumes the app after
+      // a long sleep): the next use opens it again, not fails for good
+      db.onclose = () => {
+        dbPromise = null;
+      };
       resolve(db);
     };
     req.onerror = () => {
       dbPromise = null;
       reject(req.error);
     };
+    // another connection (an old tab) keeps the db from opening: say so
+    req.onblocked = () => console.warn("IndexedDB is blocked by another tab");
   });
   return dbPromise;
 }
@@ -73,6 +80,20 @@ export function reqToPromise<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
+/** A transaction; a connection the browser closed is opened again, once. */
+async function transactionOf(
+  stores: StoreName | StoreName[],
+  mode: IDBTransactionMode,
+): Promise<IDBTransaction> {
+  try {
+    return (await openDB()).transaction(stores, mode);
+  } catch (e) {
+    if (!(e instanceof DOMException) || e.name !== "InvalidStateError") throw e;
+    dbPromise = null;
+    return (await openDB()).transaction(stores, mode);
+  }
+}
+
 /**
  * Run `fn` in a transaction, resolve with its result once the tx completes.
  */
@@ -81,8 +102,7 @@ export async function tx<T>(
   mode: IDBTransactionMode,
   fn: (t: IDBTransaction) => Promise<T> | T,
 ): Promise<T> {
-  const db = await openDB();
-  const t = db.transaction(stores, mode);
+  const t = await transactionOf(stores, mode);
   const done = new Promise<void>((resolve, reject) => {
     t.oncomplete = () => resolve();
     t.onerror = () => reject(t.error);
