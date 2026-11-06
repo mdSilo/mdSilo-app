@@ -41,7 +41,7 @@ function usePanels() {
 }
 
 /** the panels shown as buttons, each its own; more are in a list */
-const MAX_PANEL_BUTTONS = 2;
+const MAX_PANEL_BUTTONS = 1;
 
 /** The buttons of the panels in the header of the reader: a few, or a list */
 export function ReaderPanelsButton() {

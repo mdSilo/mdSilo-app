@@ -13,7 +13,8 @@
 - Performance: Faster Library and lists, using react-virtuoso+OverlayScrollbars
 - Fix: Cannot import or open EPUB books on iOS 16 Safari (polyfill `Object.groupBy`)
 - Fix: On older Safari (iOS 16/17): mermaid links, PDF page colors in themes, faster scanned PDFs; a note on JPEG XL comic pages a browser cannot show; macOS 11+ required 
-- Fix: keep settings, reading progress and issues across relaunch
+- Fix: keep settings, reading progress and issues across relaunch PWA  
+- Support Speed reading mode and share quote via plugins. 
 
 ## app-v0.7.0 
 

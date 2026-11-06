@@ -73,18 +73,19 @@ describe("panels of the reader", () => {
     expect(useReaderPanel.getState().open).toBeUndefined();
   });
 
-  it("two panels: two buttons; one beside the book", async () => {
-    enablePlugin(rsvp);
-    enablePlugin(notes);
-    renderReader();
-    expect(screen.queryByRole("button", { name: /Plugin panels/ })).toBeNull();
-    await userEvent.click(screen.getByRole("button", { name: "Margin notes" }));
-    expect(useReaderPanel.getState().open).toEqual({
-      plugin: "margin",
-      panel: "notes",
-    });
-    expect(screen.getByTestId("reader-panel").className).toContain("w-80");
-  });
+  // // if MAX_PANEL_BUTTONS === 2
+  // it("two panels: two buttons; one beside the book", async () => {
+  //   enablePlugin(rsvp);
+  //   enablePlugin(notes);
+  //   renderReader();
+  //   expect(screen.queryByRole("button", { name: /Plugin panels/ })).toBeNull();
+  //   await userEvent.click(screen.getByRole("button", { name: "Margin notes" }));
+  //   expect(useReaderPanel.getState().open).toEqual({
+  //     plugin: "margin",
+  //     panel: "notes",
+  //   });
+  //   expect(screen.getByTestId("reader-panel").className).toContain("w-80");
+  // });
 
   it("more panels: in a list, with their icons", async () => {
     const third = pluginWith("third", [{ id: "x", title: "Third panel" }]);

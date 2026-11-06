@@ -444,10 +444,13 @@ class MsEditor extends React.PureComponent<Props, State> {
       new HardBreak(),
       new Paragraph(),
       new Blockquote(),
+      // fenced code in markdown, and typed ```, are parsed into code_block
+      // nodes: they need the renderers too, to draw and offer their languages
       new CodeBlock({
         dark: this.props.dark,
         showLineNumber: this.props.showLineNumber,
         onSaveDiagram: this.props.onSaveDiagram,
+        codeRenderers: this.props.codeRenderers,
       }),
       new CodeFence({
         dark: this.props.dark,
