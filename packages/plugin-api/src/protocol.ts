@@ -235,9 +235,16 @@ export type Requests = {
       where: "reader" | "editor";
       lang?: string;
     };
-    /** text, HTML or an image to show; in the editor, or text to put in place of the selection, or after it */
+    /**
+     * text, HTML or an image to show; in the editor, or text to put in place
+     * of the selection, or after it. In the reader, `highlight: true` with
+     * them highlights the text selected too, as the user would (e.g. a quote)
+     */
     result:
-      string | Html | ImageAnswer | { replace: string } | { insert: string };
+      | string
+      | (({ text: string } | Html | ImageAnswer) & { highlight?: boolean })
+      | { replace: string }
+      | { insert: string };
   };
   /** a command of `contributes.commands` was run, with the note or the book open */
   "command.run": {

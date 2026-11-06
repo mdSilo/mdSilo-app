@@ -5,6 +5,7 @@ import { useTrustedVersion } from "./trusted";
 import { runSelectionAction, selectionActionsIn } from "./selection";
 import { showAnswer } from "./PluginAnswer";
 import { noteContext } from "./context";
+import { pluginIconUrl } from "./PluginIcon";
 
 /**
  * The actions of plugins on the text selected in the editor. An answer that
@@ -24,6 +25,8 @@ export function useEditorSelectionActions(noteId?: string): SelectionAction[] {
         (found) => ({
           id: `${found.plugin.id}:${found.action.id}`,
           title: found.action.title,
+          icon: pluginIconUrl(found.plugin),
+          group: found.plugin.manifest?.name,
           run: async (text, { markdown }) => {
             const result = await runSelectionAction(
               found,

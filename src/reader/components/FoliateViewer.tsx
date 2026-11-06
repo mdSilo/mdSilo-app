@@ -61,6 +61,7 @@ import RangeHandles from "../annotations/RangeHandles";
 import ReadingRuler from "../ruler/ReadingRuler";
 import { moveRuler } from "../ruler/ruler";
 import { useBookTranslation } from "../translation/useBookTranslation";
+import { takeQuoteMark } from "../quoteMark";
 import DoubleBorder from "./DoubleBorder";
 import { placeOf } from "./BookPopups";
 
@@ -92,6 +93,8 @@ const FLASH_MS = 2000;
 /** the prefix of the mark: drawn apart from the notes, which have their bare CFI */
 const FLASH_PREFIX = "foliate-note:";
 const FLASH_COLOR = HIGHLIGHT_CSS.blue;
+/** a text quoted, e.g. of a shared link: marked while the book is open */
+const QUOTE_COLOR = HIGHLIGHT_CSS.yellow;
 /** the bubble on a highlight with a note: its CFI, as the marks apart from the notes */
 const bubbleOf = (cfi: string) => FLASH_PREFIX + cfi;
 const hasNote = (note: BookNote) => Boolean(noteText(note.note));
@@ -164,6 +167,22 @@ export async function flashPlace(
     timer: setTimeout(() => clearFlash(view, flash), FLASH_MS),
   };
   await view.addAnnotation({ value });
+}
+
+/**
+ * At the place asked for: the text quoted marked, if it is one (see
+ * quoteMark.ts), as long as the book is open; else the sentence there for a
+ * moment.
+ */
+export async function markPlace(
+  view: FoliateView,
+  cfi: string,
+  flash: { current?: Flash; cleared?: (value: string) => void },
+  quote: { current?: string },
+) {
+  if (!takeQuoteMark(cfi)) return flashPlace(view, cfi, flash);
+  quote.current = cfi;
+  await view.addAnnotation({ value: FLASH_PREFIX + cfi });
 }
 
 /** ms between the clicks of a double click: a single click waits as long */
@@ -329,6 +348,8 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
     cleared?: (value: string) => void;
   };
   const previewRef = useRef<Preview | undefined>(undefined);
+  /** the text quoted marked (see quoteMark.ts): its CFI */
+  const quoteRef = useRef<string | undefined>(undefined);
   // a bubble at the place marked: drawn again, the mark gone
   flashRef.cleared = (value) => {
     if (
@@ -569,6 +590,14 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
         draw(overlayer.highlight, { color: FLASH_COLOR });
         return;
       }
+      if (
+        overlayer &&
+        quoteRef.current &&
+        annotation.value === FLASH_PREFIX + quoteRef.current
+      ) {
+        draw(overlayer.highlight, { color: QUOTE_COLOR });
+        return;
+      }
       const preview = previewRef.current;
       if (
         overlayer &&
@@ -657,6 +686,11 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
       for (const note of drawnRef.current.values()) {
         if (view && sectionOf(note.cfi) === index) drawNote(view, note);
       }
+      const quote = quoteRef.current;
+      if (view && quote && sectionOf(quote) === index)
+        void view
+          .addAnnotation({ value: FLASH_PREFIX + quote })
+          .catch(() => undefined);
     };
 
     // the bubble of a note hovered: the note shown, as long as the pointer is on it or on the note
@@ -962,7 +996,9 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
           initialCfi &&
           bookStore.getState().targetCfi === initialCfi
         ) {
-          void flashPlace(view, initialCfi, flashRef).catch(() => undefined);
+          void markPlace(view, initialCfi, flashRef, quoteRef).catch(
+            () => undefined,
+          );
         }
       } catch (e) {
         console.error("Failed to go to the place in the book", e);
@@ -992,6 +1028,7 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
       viewRef.current = null;
       if (flashRef.current) clearTimeout(flashRef.current.timer);
       flashRef.current = undefined;
+      quoteRef.current = undefined;
       setView(null, pane);
       setOpened(null);
       usePopups.getState().clear();
@@ -1016,7 +1053,7 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
           viewRef.current === view &&
           bookStore.getState().targetCfi === initialCfi
         ) {
-          return flashPlace(view, initialCfi, flashRef);
+          return markPlace(view, initialCfi, flashRef, quoteRef);
         }
       })
       .catch(() => undefined);

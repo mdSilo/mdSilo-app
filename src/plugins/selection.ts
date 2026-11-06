@@ -23,10 +23,13 @@ export type PluginSelectionAction = {
   action: SelectionAction;
 };
 
+/** in the reader: the text selected highlighted too, as the user would */
+type Highlight = { highlight?: true };
+
 export type SelectionResult =
-  | { text: string }
-  | { html: string }
-  | { image: PluginImage }
+  | ({ text: string } & Highlight)
+  | ({ html: string } & Highlight)
+  | ({ image: PluginImage } & Highlight)
   | { replace: string }
   | { insert: string };
 
@@ -58,8 +61,16 @@ export async function runSelectionAction(
     lang,
   });
   if (typeof result === "string") return { text: result };
+  // asked for in the reader only: the editor has no highlights
+  const highlight: Highlight =
+    where === "reader" &&
+    typeof result === "object" &&
+    result !== null &&
+    (result as Record<string, unknown>).highlight === true
+      ? { highlight: true }
+      : {};
   const image = await imageOf(result);
-  if (image) return { image };
+  if (image) return { image, ...highlight };
   if (typeof result === "object" && result !== null) {
     const {
       html,
@@ -67,8 +78,9 @@ export async function runSelectionAction(
       replace,
       insert,
     } = result as Record<string, unknown>;
-    if (typeof html === "string") return { html: sanitizeHtml(html) };
-    if (typeof answer === "string") return { text: answer };
+    if (typeof html === "string")
+      return { html: sanitizeHtml(html), ...highlight };
+    if (typeof answer === "string") return { text: answer, ...highlight };
     if (where === "editor" && typeof replace === "string") return { replace };
     if (where === "editor" && typeof insert === "string") return { insert };
   }

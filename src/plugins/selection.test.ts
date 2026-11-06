@@ -90,3 +90,22 @@ describe("runSelectionAction", () => {
     );
   });
 });
+
+describe("highlight", () => {
+  it("is asked in the reader only, with text, HTML or an image", async () => {
+    enablePlugin(plugin);
+    const [found] = selectionActionsIn("reader");
+    vi.mocked(askPlugin).mockResolvedValue({ text: "ok", highlight: true });
+    expect(await runSelectionAction(found, "x", "reader")).toEqual({
+      text: "ok",
+      highlight: true,
+    });
+    expect(await runSelectionAction(found, "x", "editor")).toEqual({
+      text: "ok",
+    });
+    vi.mocked(askPlugin).mockResolvedValue({ html: "<b>ok</b>", highlight: 1 });
+    expect(await runSelectionAction(found, "x", "reader")).toEqual({
+      html: "<b>ok</b>",
+    });
+  });
+});

@@ -200,6 +200,8 @@
           name: `quote-${slug(title) || "card"}.png`,
           alt: `“${quote}”${source.length ? ` — ${source.join(", ")}` : ""}`,
           links: linksOf(quote, source, params.book?.readUrl),
+          // in the reader: the text quoted highlighted in the book too
+          highlight: params.where === "reader",
         };
       }
 

@@ -179,22 +179,44 @@ function AnchoredBox({
   );
 }
 
+/** An item of the menu of a tool, e.g. an action of a plugin */
+export type ToolMenuItem = {
+  id: string;
+  title: string;
+  icon: ReactNode;
+  /** who it is of, smaller beside it: the name of its plugin */
+  group?: string;
+  onClick: () => void;
+};
+
 export type Tool = {
   id: string;
   title: string;
   icon: ReactNode;
-  onClick: () => void;
+  /** what it does; or, with a `menu`, nothing: the menu opens */
+  onClick?: () => void;
+  /** items to choose from, in a list by the toolbar */
+  menu?: ToolMenuItem[];
   hidden?: boolean;
 };
 
 /** A button of the toolbar: an icon, its name on hover. */
-function ToolButton({ tool }: { tool: Tool }) {
+function ToolButton({
+  tool,
+  open,
+  onToggle,
+}: {
+  tool: Tool;
+  open: boolean;
+  onToggle: () => void;
+}) {
   return (
     <button
-      className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 hover:bg-base-content/15"
+      className={`flex items-center justify-center w-8 h-8 rounded-md shrink-0 hover:bg-base-content/15 ${open ? "bg-base-content/15" : ""}`}
       title={tool.title}
       aria-label={tool.title}
-      onClick={tool.onClick}
+      {...(tool.menu ? { "aria-haspopup": "menu", "aria-expanded": open } : {})}
+      onClick={tool.menu ? onToggle : tool.onClick}
     >
       {tool.icon}
     </button>
@@ -202,17 +224,54 @@ function ToolButton({ tool }: { tool: Tool }) {
 }
 
 function Toolbar({ tools }: { tools: Tool[] }) {
+  const [open, setOpen] = useState<string>();
+  const menu = tools.find((t) => t.id === open && !t.hidden)?.menu;
   return (
-    <div
-      className="relative flex items-center justify-between h-11 gap-0.5 px-1.5 overflow-x-auto rounded-lg shadow-xl bg-base-300 text-base-content"
-      style={{ scrollbarWidth: "none" }}
-      data-testid="annotation-toolbar"
-    >
-      {tools
-        .filter((t) => !t.hidden)
-        .map((t) => (
-          <ToolButton key={t.id} tool={t} />
-        ))}
+    <div className="relative">
+      <div
+        className="relative flex items-center justify-between h-11 gap-0.5 px-1.5 overflow-x-auto rounded-lg shadow-xl bg-base-300 text-base-content"
+        style={{ scrollbarWidth: "none" }}
+        data-testid="annotation-toolbar"
+      >
+        {tools
+          .filter((t) => !t.hidden)
+          .map((t) => (
+            <ToolButton
+              key={t.id}
+              tool={t}
+              open={t.id === open}
+              onToggle={() => setOpen(t.id === open ? undefined : t.id)}
+            />
+          ))}
+      </div>
+      {menu ? (
+        // out of the toolbar, which scrolls: below it, at its right
+        <ul
+          role="menu"
+          className="absolute right-0 z-10 flex flex-col w-64 max-w-full p-1 mt-1 overflow-y-auto rounded-lg shadow-xl top-full max-h-72 bg-base-300 text-base-content"
+        >
+          {menu.map((item) => (
+            <li key={item.id}>
+              <button
+                role="menuitem"
+                className="flex items-center w-full gap-2 px-2 py-1.5 text-sm text-left rounded-md hover:bg-base-content/15"
+                onClick={() => {
+                  setOpen(undefined);
+                  item.onClick();
+                }}
+              >
+                {item.icon}
+                <span className="flex-1 truncate">{item.title}</span>
+                {item.group ? (
+                  <span className="text-xs truncate max-w-[40%] text-base-content/60">
+                    {item.group}
+                  </span>
+                ) : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

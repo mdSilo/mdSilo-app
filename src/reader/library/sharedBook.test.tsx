@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
 import { mockInvoke } from "@/testUtils";
+import { useQuoteMark } from "../quoteMark";
 import {
   fileNameOf,
   importSharedBook,
@@ -120,6 +121,8 @@ describe("opening a shared book", () => {
       path: "/ws/reading/Le Petit Prince.epub",
       cfi: CFI,
     });
+    // the text shared, to mark once there
+    expect(useQuoteMark.getState().cfi).toBe(CFI);
     expect(screen.queryByText("Le Petit Prince.epub")).toBeNull();
   });
 

@@ -71,6 +71,12 @@ export type PluginManifest = {
   minAppVersion?: string;
   author?: string;
   description?: string;
+  /**
+   * its icon, relative to its folder: SVG, PNG, WebP, JPEG or GIF, square,
+   * shown at 16 to 24 px (in the plugin manager, the menus, the toolbars of
+   * the text selected); a puzzle piece if none
+   */
+  icon?: string;
   mode: PluginMode;
   /** a plugin made for another app, run by a compatibility layer: trusted */
   compat?: "obsidian";

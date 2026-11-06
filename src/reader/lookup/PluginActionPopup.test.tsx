@@ -186,6 +186,31 @@ describe("PluginActionPopup", () => {
     expect(openUrl).toHaveBeenCalledWith("https://bsky.app/intent/compose?text=x");
   });
 
+  it("highlights the text in the book, if the plugin asks", async () => {
+    enablePlugin(plugin);
+    resetReaderStore();
+    vi.mocked(askPlugin).mockResolvedValue({ text: "quoted", highlight: true });
+    renderPopup();
+    act(() =>
+      usePopups.getState().setPluginAction({
+        plugin: "ai",
+        action: "explain",
+        title: "Explain",
+        selection,
+      }),
+    );
+    expect(await screen.findByText("quoted")).toBeInTheDocument();
+    expect(activeStore().getState().notes).toEqual([
+      expect.objectContaining({
+        type: "annotation",
+        cfi: "epubcfi(/6/4)",
+        text: "entropy",
+      }),
+    ]);
+    // the popup stays, with its answer
+    expect(usePopups.getState().pluginAction).toBeDefined();
+  });
+
   it("runs nothing of a plugin not enabled", async () => {
     renderPopup();
     act(() =>

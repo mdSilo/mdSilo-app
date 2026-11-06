@@ -3,6 +3,7 @@ import { useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { BaseModal } from "@/ui/BaseModal";
 import { Spinner } from "@/ui/ui";
+import { markQuote } from "../quoteMark";
 import { importSharedBook, fileNameOf, sharedBookOf } from "./sharedBook";
 
 /** The page without the book shared in its URL: not asked again on a reload */
@@ -41,6 +42,8 @@ export function SharedBookPrompt({
     try {
       const path = await importSharedBook(ws, shared);
       close();
+      // the text shared marked there
+      markQuote(shared.cfi);
       dispatch({ view: "book", path, cfi: shared.cfi });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

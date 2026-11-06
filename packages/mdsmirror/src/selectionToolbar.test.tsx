@@ -26,6 +26,19 @@ const setup = async (
 const button = (title: string) =>
   document.querySelector(`[title="${title}"] button`) as HTMLElement | null;
 
+/** an action of the list under the Plugins button */
+const pickAction = async (title: string) => {
+  await act(async () => {
+    fireEvent.click(button("Plugins")!);
+  });
+  const item = [...document.querySelectorAll('[role="menuitem"]')].find(
+    (el) => el.querySelector(".title")?.textContent === title
+  ) as HTMLElement;
+  await act(async () => {
+    fireEvent.click(item);
+  });
+};
+
 describe("selection toolbar", () => {
   test("copies the text selected", async () => {
     const onShowToast = vi.fn();
@@ -67,9 +80,7 @@ describe("selection toolbar", () => {
     const view = await setup({
       selectionActions: [{ id: "up", title: "Upper case", run }],
     });
-    await act(async () => {
-      fireEvent.click(button("Upper case")!);
-    });
+    await pickAction("Upper case");
     expect(run).toHaveBeenCalledWith("selected", { markdown: "selected" });
     expect(view.state.doc.textContent).toBe("hello SELECTED world");
   });
@@ -81,9 +92,7 @@ describe("selection toolbar", () => {
     const view = await setup({
       selectionActions: [{ id: "card", title: "Card", run }],
     });
-    await act(async () => {
-      fireEvent.click(button("Card")!);
-    });
+    await pickAction("Card");
     const { doc } = view.state;
     expect(doc.childCount).toBe(2);
     expect(doc.child(0).textContent).toBe("hello selected world");
@@ -101,9 +110,7 @@ describe("selection toolbar", () => {
       { selectionActions: [{ id: "show", title: "Show", run }] },
       "hello **selected** world"
     );
-    await act(async () => {
-      fireEvent.click(button("Show")!);
-    });
+    await pickAction("Show");
     expect(run).toHaveBeenCalledWith("selected", { markdown: "**selected**" });
   });
 
@@ -112,10 +119,42 @@ describe("selection toolbar", () => {
     const view = await setup({
       selectionActions: [{ id: "cite", title: "Cite", run }],
     });
-    await act(async () => {
-      fireEvent.click(button("Cite")!);
-    });
+    await pickAction("Cite");
     expect(view.state.doc.textContent).toBe("hello selected (1) world");
+  });
+
+  test("the actions are in a list under one button, with icons", async () => {
+    await setup({
+      selectionActions: [
+        {
+          id: "card",
+          title: "Quote card",
+          icon: "mdsplugin://localhost/quote-card/icon.svg",
+          group: "Quote Card",
+          run: async () => undefined,
+        },
+        { id: "count", title: "Count words", run: async () => undefined },
+      ],
+    });
+    expect(button("Quote card")).toBeNull();
+    expect(document.querySelectorAll('[role="menuitem"]')).toHaveLength(0);
+    await act(async () => {
+      fireEvent.click(button("Plugins")!);
+    });
+    const items = [...document.querySelectorAll('[role="menuitem"]')];
+    expect(items.map((el) => el.textContent)).toEqual([
+      "Quote cardQuote Card",
+      "Count words",
+    ]);
+    expect(items[0].querySelector("img")?.getAttribute("src")).toBe(
+      "mdsplugin://localhost/quote-card/icon.svg"
+    );
+    // a puzzle piece for the one without an icon
+    expect(items[1].querySelector("svg")).not.toBeNull();
+    await act(async () => {
+      fireEvent.click(button("Plugins")!);
+    });
+    expect(document.querySelectorAll('[role="menuitem"]')).toHaveLength(0);
   });
 
   test("an action changing nothing, or failing", async () => {
@@ -133,12 +172,8 @@ describe("selection toolbar", () => {
         },
       ],
     });
-    await act(async () => {
-      fireEvent.click(button("Show")!);
-    });
-    await act(async () => {
-      fireEvent.click(button("Fail")!);
-    });
+    await pickAction("Show");
+    await pickAction("Fail");
     expect(view.state.doc.textContent).toBe("hello selected world");
     expect(onShowToast).toHaveBeenCalledWith("Fail: offline", "error");
   });

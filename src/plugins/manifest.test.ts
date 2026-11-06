@@ -71,6 +71,22 @@ describe("parseManifest", () => {
     ).toThrow('"main"');
   });
 
+  it("takes an icon: an image inside the plugin", () => {
+    expect(parseManifest(minimal).icon).toBeUndefined();
+    expect(parseManifest({ ...minimal, icon: "./icon.svg" }).icon).toBe(
+      "icon.svg",
+    );
+    expect(parseManifest({ ...minimal, icon: "img/Logo.PNG" }).icon).toBe(
+      "img/Logo.PNG",
+    );
+    expect(() => parseManifest({ ...minimal, icon: "../x.svg" })).toThrow(
+      '"icon" should be a path inside the plugin',
+    );
+    expect(() => parseManifest({ ...minimal, icon: "icon.html" })).toThrow(
+      '"icon" should be an SVG, PNG, WebP, JPEG or GIF',
+    );
+  });
+
   it("reads the viewers and the views", () => {
     const { contributes } = parseManifest({
       ...minimal,

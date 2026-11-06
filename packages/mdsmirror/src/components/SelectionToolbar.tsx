@@ -5,6 +5,7 @@ import { EditorView } from "prosemirror-view";
 import type { Node as ProsemirrorNode } from "prosemirror-model";
 import { CellSelection } from "prosemirror-tables";
 import * as React from "react";
+import styled from "styled-components";
 import { TbPuzzle } from "react-icons/tb";
 import createAndInsertLink from "../core/commands/createAndInsertLink";
 import { CommandFactory } from "../core/Extension";
@@ -47,17 +48,25 @@ export type SelectionInfo = {
   markdown?: string;
 };
 
-/** A button on the text selected, given by the app, e.g. of a plugin */
+/**
+ * An action on the text selected, given by the app, e.g. of a plugin: all
+ * of them in a list under one button of the toolbar
+ */
 export type SelectionAction = {
   id: string;
   title: string;
+  /** the URL of its icon, e.g. of its plugin; a puzzle piece otherwise */
+  icon?: string;
+  /** who it is of, shown smaller beside it: the name of its plugin */
+  group?: string;
   run: (
     text: string,
     info: SelectionInfo
   ) => Promise<SelectionActionResult | undefined | void>;
 };
 
-const actionName = (id: string) => `action:${id}`;
+/** the button of the list of the actions */
+const ACTIONS_MENU = "action:menu";
 
 type Props = {
   dictionary: typeof baseDictionary;
@@ -113,14 +122,19 @@ function isVisible(props: Props) {
   return some(nodes, (n) => n.content.size);
 }
 
-export default class SelectionToolbar extends React.Component<Props> {
+export default class SelectionToolbar extends React.Component<
+  Props,
+  { actionsOpen: boolean }
+> {
   isActive = false;
   menuRef = React.createRef<HTMLDivElement>();
+  state = { actionsOpen: false };
 
   componentDidUpdate(): void {
     const visible = isVisible(this.props);
     if (this.isActive && !visible) {
       this.isActive = false;
+      if (this.state.actionsOpen) this.setState({ actionsOpen: false });
       this.props.onClose();
     }
     if (!this.isActive && visible) {
@@ -347,11 +361,12 @@ export default class SelectionToolbar extends React.Component<Props> {
       if (selectionActions?.length) {
         items.push(
           { name: "separator" },
-          ...selectionActions.map((action) => ({
-            name: actionName(action.id),
-            tooltip: action.title,
+          {
+            name: ACTIONS_MENU,
+            tooltip: dictionary.plugins,
             icon: TbPuzzle,
-          }))
+            active: () => this.state.actionsOpen,
+          }
         );
       }
       isTextSelection = true;
@@ -399,10 +414,8 @@ export default class SelectionToolbar extends React.Component<Props> {
       },
       issue: () => void this.handleCreateIssue(selectionText),
     };
-    for (const action of selectionActions ?? []) {
-      actions[actionName(action.id)] = () =>
-        void this.handleSelectionAction(action, selectionText);
-    }
+    actions[ACTIONS_MENU] = () =>
+      this.setState(({ actionsOpen }) => ({ actionsOpen: !actionsOpen }));
 
     return (
       <FloatingToolbar
@@ -423,7 +436,95 @@ export default class SelectionToolbar extends React.Component<Props> {
         ) : (
           <ToolbarMenu items={items} actions={actions} {...rest} />
         )}
+        {this.state.actionsOpen && selectionActions?.length && !isLink ? (
+          <ActionsList role="menu">
+            {selectionActions.map((action) => (
+              <ActionItem
+                key={action.id}
+                type="button"
+                role="menuitem"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  this.setState({ actionsOpen: false });
+                  void this.handleSelectionAction(action, selectionText);
+                }}
+              >
+                {action.icon ? (
+                  <img src={action.icon} alt="" width={16} height={16} />
+                ) : (
+                  <TbPuzzle size={16} />
+                )}
+                <span className="title">{action.title}</span>
+                {action.group ? (
+                  <span className="group">{action.group}</span>
+                ) : null}
+              </ActionItem>
+            ))}
+          </ActionsList>
+        ) : null}
       </FloatingToolbar>
     );
   }
 }
+
+/** The actions on the text selected: above the toolbar, clear of the text */
+const ActionsList = styled.div`
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  min-width: 200px;
+  max-width: 320px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 6px;
+  line-height: normal;
+  white-space: normal;
+  pointer-events: auto;
+  background-color: ${(props) => props.theme.toolbarBackground};
+  color: ${(props) => props.theme.toolbarItem};
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+`;
+
+const ActionItem = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgba(255, 255, 255, 0.12);
+    outline: none;
+  }
+
+  img,
+  svg {
+    flex-shrink: 0;
+  }
+
+  .title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .group {
+    flex-shrink: 0;
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+    opacity: 0.6;
+  }
+`;

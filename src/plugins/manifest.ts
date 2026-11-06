@@ -74,6 +74,14 @@ const innerPath = (value: unknown, field: string): string => {
   return path;
 };
 
+/** An image inside the plugin, as browsers show in an <img> */
+const imagePath = (value: unknown, field: string): string => {
+  const path = innerPath(value, field);
+  if (!/\.(svg|png|webp|jpe?g|gif)$/i.test(path))
+    throw new Error(`"${field}" should be an SVG, PNG, WebP, JPEG or GIF`);
+  return path;
+};
+
 /** `.CSV` → `csv` */
 const extension = (value: unknown, field: string): string => {
   const ext = text(value, field).replace(/^\./, "").toLowerCase();
@@ -241,6 +249,9 @@ export function parseManifest(json: unknown): PluginManifest {
     minAppVersion,
     author: optionalText(value.author, "author"),
     description: optionalText(value.description, "description"),
+    ...(value.icon === undefined
+      ? {}
+      : { icon: imagePath(value.icon, "icon") }),
     mode,
     permissions: [...new Set(permissions)],
     // a page in a frame, or the module of a trusted plugin

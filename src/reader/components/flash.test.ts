@@ -1,5 +1,6 @@
 import type { FoliateView } from "../view";
-import { flashPlace, type Flash } from "./FoliateViewer";
+import { markQuote, useQuoteMark } from "../quoteMark";
+import { flashPlace, markPlace, type Flash } from "./FoliateViewer";
 
 // a view of one section, the page in the document of the test
 const fakeView = (anchor: (doc: Document) => Range | Element | null) => {
@@ -81,5 +82,47 @@ describe("the place gone to, marked for a moment", () => {
     expect(collapsed.addAnnotation).not.toHaveBeenCalled();
     expect(away.addAnnotation).not.toHaveBeenCalled();
     expect(flash.current).toBeUndefined();
+  });
+});
+
+describe("a text quoted, marked while the book is open", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    document.body.innerHTML =
+      "<p>It was a bright cold day in April. The clocks were striking thirteen.</p>";
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    markQuote(undefined);
+  });
+
+  test("the text itself, not the sentence, and it stays", async () => {
+    const cfi = "epubcfi(/6/4!/4/2,/1:16,/1:20)";
+    const view = fakeView((doc) => wordIn(doc, "cold"));
+    const flash: { current?: Flash } = {};
+    const quote: { current?: string } = {};
+    markQuote(cfi);
+    await markPlace(view, cfi, flash, quote);
+    expect(view.addAnnotation).toHaveBeenCalledWith({
+      value: `foliate-note:${cfi}`,
+    });
+    expect(quote.current).toBe(cfi);
+    expect(flash.current).toBeUndefined();
+    vi.advanceTimersByTime(10_000);
+    expect(view.deleteAnnotation).not.toHaveBeenCalled();
+    // once: going there again flashes the sentence
+    expect(useQuoteMark.getState().cfi).toBeUndefined();
+  });
+
+  test("another place gone to: the sentence for a moment, as before", async () => {
+    const view = fakeView((doc) => wordIn(doc, "cold"));
+    const flash: { current?: Flash } = {};
+    const quote: { current?: string } = {};
+    markQuote("epubcfi(/6/8!/4/2,/1:0,/1:5)");
+    await markPlace(view, "epubcfi(/6/4!/4/2,/1:16,/1:20)", flash, quote);
+    expect(quote.current).toBeUndefined();
+    expect(flash.current?.value).toBe(
+      "foliate-note:epubcfi(It was a bright cold day in April.)",
+    );
   });
 });

@@ -154,7 +154,10 @@ pub fn serve(base: &Path, uri_path: &str, net: bool) -> Response<Vec<u8>> {
     .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
     .header(header::CONTENT_SECURITY_POLICY, plugin_csp(net))
     .header(header::X_CONTENT_TYPE_OPTIONS, "nosniff")
-    .header(header::CACHE_CONTROL, "no-cache")
+    // not kept: a plugin installed again is read anew, not from a cache
+    // (no-cache leaves the webview a copy, which a custom scheme can't
+    // revalidate)
+    .header(header::CACHE_CONTROL, "no-store")
     .body(body)
     .unwrap_or_else(|_| status(StatusCode::INTERNAL_SERVER_ERROR))
 }
@@ -237,6 +240,7 @@ mod tests {
         .contains("connect-src mdsplugin:")
     );
     assert_eq!(page.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN], "*");
+    assert_eq!(page.headers()[header::CACHE_CONTROL], "no-store");
 
     let script = serve(&base, "/csv/js/app.js", true);
     assert_eq!(

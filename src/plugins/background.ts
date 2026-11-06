@@ -1,6 +1,11 @@
 import { store } from "@/state/store";
 import { createHost, type PluginHost } from "./host";
-import { enabledPlugins, pluginUrl, type InstalledPlugin } from "./registry";
+import {
+  enabledPlugins,
+  loadOf,
+  pluginUrl,
+  type InstalledPlugin,
+} from "./registry";
 import { askTrusted, dispatchView } from "./trusted";
 import { workspaceMethods } from "./workspaceApi";
 
@@ -34,7 +39,8 @@ function backgroundOf(plugin: InstalledPlugin): Background {
   const ready = new Promise<void>((resolve) =>
     frame.addEventListener("load", () => resolve(), { once: true }),
   );
-  frame.src = pluginUrl(plugin.id, plugin.manifest?.main ?? "index.html");
+  // its own load: installed again, the page is read anew
+  frame.src = `${pluginUrl(plugin.id, plugin.manifest?.main ?? "index.html")}?v=${loadOf(plugin)}`;
   document.body.append(frame);
   const host = createHost(plugin, frame, () => workspaceMethods(dispatchView), {
     hidden: true,

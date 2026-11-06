@@ -57,7 +57,11 @@ function PluginActionPopup({
         ),
       )
       .then((res) => {
-        if (!cancelled) setResult(res);
+        if (cancelled) return;
+        setResult(res);
+        // the text quoted highlighted, as the plugin asks (e.g. a quote card)
+        if ("highlight" in res && res.highlight)
+          annotateSelection(target.selection);
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));

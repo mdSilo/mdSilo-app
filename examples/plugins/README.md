@@ -8,6 +8,10 @@ what it may do. A plugin is kept on this device, or, with *Sync with workspace*,
 each device: a plugin is never enabled by a sync, and a plugin of the workspace changed by a sync
 stops until it is enabled again.
 
+The app keeps where a plugin was installed from (its folder, or its .zip): its **Update** button in
+Manage Plugins installs it again from there, to take what changed, enabled as it was. (The button
+at the top only reads the plugins installed again.)
+
 To develop a plugin, use **Develop** instead of Install Folder: the folder is watched, and when
 its files change (once the writes pause) the plugin is installed again and reloaded: its open pages
 and hidden frames load again, a trusted plugin is imported again. It is marked *Dev*; **Stop Dev**
@@ -49,6 +53,9 @@ Samples here:
 ```
 
 - `id`: lowercase letters, digits, `.`, `_`, `-`; it is the name of the installed folder.
+- `icon`: its icon, a path in its folder: `"icon.svg"` (SVG, PNG, WebP, JPEG or GIF, square, shown
+  at 16 to 24 px); in Manage Plugins, the Plugins menu, and the list of actions on the text
+  selected. A puzzle piece if none.
 - `permissions`: `file:read`, `file:write` (the file the plugin opens), `notes:read`, `notes:write`,
   `books:read`, `issues:read`, `net` (`https:` and `wss:` from the page). The user can grant fewer.
 - `contributes.viewers`: `[{ "extensions": ["csv"], "title": "Table", "page": "table.html" }]`, the
@@ -57,7 +64,8 @@ Samples here:
   whole workspace, in the Plugins menu of the side menu; `page` is the main page by default.
 - `contributes.codeBlocks`: `["plantuml"]`, the languages of the code blocks it draws (see below).
 - `contributes.selectionActions`: `[{ "id": "explain", "title": "Explain", "where": ["reader"] }]`,
-  buttons on the text selected (see below); `where` is `reader`, `editor` or both (default).
+  actions on the text selected (see below), in a list under the Plugins button of its toolbar, with
+  the icon and the name of the plugin; `where` is `reader`, `editor` or both (default).
 - `contributes.commands`: `[{ "id": "today", "title": "Stats of today" }]`, in the Plugins menu of
   the side menu (see below).
 - `contributes.noteModes`: `[{ "id": "cards", "title": "Cards", "page": "cards.html" }]`, modes of
@@ -155,10 +163,12 @@ may read notes; in the reader `book`, `{ path, title, author, chapter, cfi }` (`
 selected), if it may read books. A book synced with the workspace's git repo on GitHub, GitLab or
 Gitea also has `url`, the book file there, and `readUrl`, a link that opens it at `cfi` in the web
 app (`https://mdsilo.github.io/mdSilo-app/?read=<url>&cfi=<cfi>`): who opens it is asked, and the
-book is downloaded into `reading/` of their workspace. It works for others if the repo is public.
+book is downloaded into `reading/` of their workspace and opened there, the text at `cfi` marked
+(not kept as a highlight). It works for others if the repo is public.
 
 In the reader, the answer shows in a popup by the text, with a button to keep it as the note of a
-highlight. In the editor, it shows in a dialog, to insert after the text or copy; or the plugin
+highlight; with `highlight: true` beside the text, HTML or image answered, the text selected is
+highlighted at once, as the user would (`quote-card` does, for the text it quotes). In the editor, it shows in a dialog, to insert after the text or copy; or the plugin
 changes the text itself by answering `{ replace: '…' }` (in place of the text selected) or
 `{ insert: '…' }` (after it), in the editor only.
 
