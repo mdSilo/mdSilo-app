@@ -39,30 +39,47 @@ function silence(): string {
 // and once it played, it may play again after a wait (the bytes of a file)
 let player: HTMLAudioElement | null = null;
 
-const play = (audio: HTMLAudioElement) => {
-  // jsdom gives no promise; a load cut by the next one rejects
-  (audio.play() as Promise<void> | undefined)?.catch((e) => {
-    if ((e as Error)?.name !== "AbortError")
-      console.warn("Failed to play the recording", e);
-  });
+/** Why a recording could not be played, as said to the user. */
+export class PlayError extends Error {}
+
+/**
+ * Play the element's source; rejects if it cannot (a format the web view
+ * does not play, a file not found). A play cut by the next one is no error.
+ */
+const play = async (audio: HTMLAudioElement) => {
+  try {
+    // jsdom gives no promise
+    await (audio.play() as Promise<void> | undefined);
+  } catch (e) {
+    const name = (e as Error)?.name;
+    if (name === "AbortError") return;
+    console.warn("Failed to play the recording", e);
+    throw new PlayError(
+      name === "NotSupportedError"
+        ? "This sound cannot be played: its format is not supported, or it was not found"
+        : name === "NotAllowedError"
+          ? "Playing sounds is not allowed here"
+          : "This sound cannot be played",
+    );
+  }
 };
 
-/** Play a recording, from a click. */
+/** Play a recording, from a click; rejects with a PlayError if it cannot be. */
 export async function playRecording(ref: string): Promise<void> {
   player ??= typeof Audio === "undefined" ? null : new Audio();
   if (!player) return;
   if (/^(https?:|data:|blob:)/i.test(ref)) {
     player.src = ref;
-    play(player);
-    return;
+    return play(player);
   }
   const scheme = ref.slice(0, ref.indexOf(":") + 1);
   const resolve = resolvers.get(scheme);
-  if (!resolve) return;
+  if (!resolve) throw new PlayError("This sound cannot be played");
   player.src = silence();
-  play(player);
+  // started in the click (the silence), so the sound may play after the wait
+  void play(player).catch(() => undefined);
   const url = await resolve(ref);
-  if (!url) return;
+  if (!url) throw new PlayError("This sound is not in its dictionary file");
   player.src = url;
-  play(player);
+  return play(player);
 }

@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   TbArrowLeft,
   TbBook,
@@ -120,6 +126,19 @@ function highlight(sentence: string, word: string) {
   );
 }
 
+/**
+ * A side of a card: the one turned away hidden. Not only by
+ * `backface-visibility`, which a web view may not honor (WebKitGTK showed the
+ * back over the front, mirrored): also by `visibility`, switched halfway
+ * through the turn (500ms).
+ */
+const faceStyle = (shown: boolean): CSSProperties => ({
+  backfaceVisibility: "hidden",
+  WebkitBackfaceVisibility: "hidden",
+  visibility: shown ? "visible" : "hidden",
+  transition: "visibility 0s linear 250ms",
+});
+
 /** A card: the word, turned over to its definition. */
 function StudyCard({
   entry,
@@ -145,7 +164,7 @@ function StudyCard({
       >
         <div
           className="absolute inset-0 shadow-lg rounded-xl bg-primary text-primary-content"
-          style={{ backfaceVisibility: "hidden" }}
+          style={faceStyle(!flipped)}
           aria-hidden={flipped}
         >
           <button
@@ -173,7 +192,7 @@ function StudyCard({
         </div>
         <div
           className="absolute inset-0 flex flex-col p-4 overflow-y-auto shadow-lg cursor-pointer rounded-xl bg-base-200"
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          style={{ ...faceStyle(flipped), transform: "rotateY(180deg)" }}
           onClick={onFlip}
           aria-hidden={!flipped}
         >
@@ -203,6 +222,8 @@ export default function Vocabulary() {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // the recording of the card played by P that could not be: why
+  const [playError, setPlayError] = useState("");
 
   useEffect(() => {
     if (ws) void useVocabulary.getState().load(ws);
@@ -225,6 +246,7 @@ export default function Vocabulary() {
   const go = (to: number) => {
     setIndex(to);
     setFlipped(false);
+    setPlayError("");
   };
   const next = () => {
     if (!ws || !current) return;
@@ -252,7 +274,10 @@ export default function Vocabulary() {
       else if (e.key.toLowerCase() === "p" && !e.ctrlKey && !e.metaKey) {
         const audio = current?.pronunciations?.find((p) => p.audio)?.audio;
         if (!audio) return;
-        void playRecording(audio);
+        setPlayError("");
+        playRecording(audio).catch((err: unknown) =>
+          setPlayError(err instanceof Error ? err.message : String(err)),
+        );
       } else return;
       e.preventDefault();
     };
@@ -442,6 +467,11 @@ export default function Vocabulary() {
                 flipped={flipped}
                 onFlip={() => setFlipped(!flipped)}
               />
+              {playError ? (
+                <p role="alert" className="mt-2 text-xs text-center text-error">
+                  {playError}
+                </p>
+              ) : null}
               <div
                 className="mt-6 text-sm text-center opacity-60"
                 data-testid="vocabulary-position"

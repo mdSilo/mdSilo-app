@@ -11,6 +11,9 @@ import { openUrl } from "@/workspace/open";
 import { resetVocabulary, useVocabulary } from "../vocabulary/vocabulary";
 import DictionaryLookup from "./DictionaryLookup";
 import DictionariesModal from "./DictionariesModal";
+import MdictEntry from "./MdictEntry";
+import Pronunciations from "./Pronunciations";
+import { prepareEntry } from "./mdict";
 import {
   DEFAULT_DICTIONARY_SETTINGS,
   orderedSources,
@@ -486,5 +489,57 @@ describe("dictionary files", () => {
       "Wiktionary",
       "Free Dictionary",
     ]);
+  });
+});
+
+describe("sounds that cannot be played", () => {
+  test("a format the web view does not play: said so", async () => {
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockRejectedValue(
+      Object.assign(new Error("no supported source"), {
+        name: "NotSupportedError",
+      }),
+    );
+    render(<Pronunciations list={[{ audio: "https://x/cold.spx" }]} />);
+    fireEvent.click(screen.getByRole("button"));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This sound cannot be played: its format is not supported, or it was not found",
+    );
+    // played again: the message gone until it fails again
+    vi.mocked(HTMLMediaElement.prototype.play).mockResolvedValue(undefined);
+    fireEvent.click(screen.getByRole("button"));
+    await waitFor(() =>
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument(),
+    );
+  });
+
+  test("in an entry: a sound not in the dictionary file, said so", async () => {
+    mockFs();
+    const { html } = prepareEntry(
+      '<a href="sound://cold0001.spx"><img src="Sound.png"></a> cold',
+      "mw",
+    );
+    render(
+      <MdictEntry
+        ws="/ws"
+        dict={{
+          id: "mw",
+          name: "MW",
+          kind: "mdict",
+          files: { mdx: "mw.mdx" },
+          size: 1,
+          biggest: 1,
+          addedAt: "",
+        }}
+        html={html}
+        onNavigate={vi.fn()}
+      />,
+    );
+    const sound = screen
+      .getByTestId("mdict-entry")
+      .shadowRoot!.querySelector<HTMLElement>("[data-mdict-sound]")!;
+    act(() => sound.click());
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This sound is not in its dictionary file",
+    );
   });
 });

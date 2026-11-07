@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { TbVolume, TbVolumeOff } from "react-icons/tb";
 import type { Pronunciation } from "../lookup/lookup";
 import { playRecording } from "./audio";
@@ -19,6 +20,8 @@ export default function Pronunciations({
   className?: string;
 }) {
   const here = useLocalDictionaries((state) => state.here);
+  // a recording that could not be played: why
+  const [error, setError] = useState("");
   if (!list?.length) return null;
   return (
     <span className={`inline-flex flex-wrap items-center gap-1 ${className}`}>
@@ -46,7 +49,10 @@ export default function Pronunciations({
             disabled={away}
             onClick={(e) => {
               e.stopPropagation();
-              void playRecording(p.audio!);
+              setError("");
+              playRecording(p.audio!).catch((err: unknown) =>
+                setError(err instanceof Error ? err.message : String(err)),
+              );
             }}
           >
             {away ? <TbVolumeOff /> : <TbVolume />}
@@ -55,6 +61,11 @@ export default function Pronunciations({
           </button>
         );
       })}
+      {error ? (
+        <span role="alert" className="text-xs font-normal text-error">
+          {error}
+        </span>
+      ) : null}
     </span>
   );
 }

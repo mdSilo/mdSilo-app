@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useStore } from "@/state/store";
 import { openUrl } from "@/workspace/open";
@@ -108,6 +108,8 @@ export default function MdictEntry({
   onNavigate: (word: string) => void;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  // a sound clicked that could not be played: why
+  const [error, setError] = useState("");
   const navigate = useRef(onNavigate);
   navigate.current = onNavigate;
   // a dark theme: the colors of the dictionary (for a white page) made readable
@@ -165,8 +167,12 @@ export default function MdictEntry({
       const sound = el.getAttribute("data-mdict-sound");
       const entry = el.getAttribute("data-mdict-entry");
       const anchor = el.getAttribute("data-mdict-anchor");
-      if (sound) void playRecording(mdictAudioRef(dict.id, sound));
-      else if (entry) navigate.current(entry);
+      if (sound) {
+        setError("");
+        playRecording(mdictAudioRef(dict.id, sound)).catch((e: unknown) =>
+          setError(e instanceof Error ? e.message : String(e)),
+        );
+      } else if (entry) navigate.current(entry);
       else if (anchor) {
         const target =
           root.getElementById?.(anchor) ??
@@ -187,5 +193,14 @@ export default function MdictEntry({
     };
   }, [ws, dict, html, styles, dark]);
 
-  return <div ref={hostRef} data-testid="mdict-entry" />;
+  return (
+    <>
+      <div ref={hostRef} data-testid="mdict-entry" />
+      {error ? (
+        <p role="alert" className="mt-1 text-xs text-error">
+          {error}
+        </p>
+      ) : null}
+    </>
+  );
 }

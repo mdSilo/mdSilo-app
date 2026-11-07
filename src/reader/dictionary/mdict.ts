@@ -328,7 +328,6 @@ registerAudioResolver("mdict:", async (ref) => {
     ? [path]
     : AUDIO_EXTS.flatMap((ext) => [`${path}.${ext}`, `audio/${path}.${ext}`]);
   for (const p of paths) {
-    if (p.toLowerCase().endsWith(".spx")) continue; // Speex: no web view plays it
     const url = await resourceUrl(mdds, p);
     if (url) {
       audioUrls.set(ref, url);

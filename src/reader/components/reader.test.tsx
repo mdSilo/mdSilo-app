@@ -1657,6 +1657,10 @@ describe("vocabulary", () => {
       "aria-hidden",
       "false",
     );
+    // the side turned away hidden, not only by backface-visibility (WebKitGTK)
+    const [front, back] = card.querySelectorAll<HTMLElement>("[aria-hidden]");
+    expect(front.style.visibility).toBe("visible");
+    expect(back.style.visibility).toBe("hidden");
     // the key P
     fireEvent.keyDown(window, { key: "p" });
     expect(plays).toHaveLength(2);
@@ -1665,6 +1669,8 @@ describe("vocabulary", () => {
       within(card).getAllByLabelText("Play the pronunciation (US)")[0],
     ).toBeDisabled();
     fireEvent.keyDown(window, { key: " " });
+    expect(front.style.visibility).toBe("hidden");
+    expect(back.style.visibility).toBe("visible");
     expect(within(card).getByTestId("vocabulary-source")).toHaveTextContent(
       "From Oxford",
     );
