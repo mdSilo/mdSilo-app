@@ -1,5 +1,5 @@
 import { useStore } from "@/state/store";
-import { NumberInput, Toggle } from "@/ui/ui";
+import { Range, Toggle } from "@/ui/ui";
 import FontSelect from "@/ui/FontSelect";
 
 /** How notes are written and shown: font, spacing, direction, assets, spelling. */
@@ -49,28 +49,31 @@ export default function EditorSettings() {
         onChange={setCjkFont}
         defaultOption={["", "None"]}
       />
-      <NumberInput
+      <Range
         label="Font Size"
+        min={0.8}
+        max={2}
+        step={0.1}
         value={fontSize}
-        step={0.1}
-        digits={1}
-        unit="em"
-        onChange={(v) => setFontSize(v || 1.1)}
+        format={(v) => `${v.toFixed(1)}em`}
+        onChange={setFontSize}
       />
-      <NumberInput
+      <Range
         label="Line Height"
-        value={lineHeight}
+        min={1}
+        max={2.4}
         step={0.1}
-        digits={1}
-        unit="em"
-        onChange={(v) => setLineHeight(v || 1.6)}
+        value={lineHeight}
+        format={(v) => v.toFixed(1)}
+        onChange={setLineHeight}
       />
-      <NumberInput
+      <Range
         label="Font Weight"
-        value={fontWt}
+        min={100}
+        max={900}
         step={100}
-        digits={0}
-        onChange={(v) => setFontWt(v || 400)}
+        value={fontWt}
+        onChange={setFontWt}
       />
       <Toggle label="Right to Left" checked={isRTL} onChange={setIsRTL} />
       <Toggle

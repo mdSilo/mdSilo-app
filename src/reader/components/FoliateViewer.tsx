@@ -847,10 +847,10 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
         (e.target as Element | null)?.closest?.("button, a[href]")
       )
         return;
-      // the slider of the progress moves by the arrows
+      // the slider of the progress, a number of the settings: moved by the arrows
       if (
         (e.target as Element | null)?.closest?.(
-          '[role="slider"], input[type="range"]',
+          '[role="slider"], [role="spinbutton"], input[type="range"]',
         )
       )
         return;
