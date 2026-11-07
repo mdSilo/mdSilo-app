@@ -5,6 +5,7 @@ import {
   type CustomFont,
 } from "@/custom/fonts";
 import type { PageTheme, ReaderSettings, WritingMode } from "./settings";
+import { lensLineHeight, lensStyles } from "./lens/lensStyles";
 import { ttsStyles } from "./tts/tts";
 import { codeStyles } from "./highlight";
 import { captionStyles } from "./media/media";
@@ -57,7 +58,6 @@ export function bookStyles(
 ): string {
   const {
     fontSize,
-    lineHeight,
     font,
     cjkFont,
     justify,
@@ -66,6 +66,10 @@ export function bookStyles(
     imageCaptions,
     codeHighlight,
   } = settings;
+  // the word lens: room under the lines for its glosses, of their size
+  const lineHeight = settings.wordLens
+    ? lensLineHeight(settings.lineHeight, settings.lensSize)
+    : settings.lineHeight;
   // a font chosen is set on all the text; a CJK font alone, where the book sets none
   const forced = fontFamilyOf(font, customFonts) !== "";
   const family = fontFamilyWithCjk(font, cjkFont, customFonts);
@@ -108,6 +112,7 @@ export function bookStyles(
     a:any-link { color: ${dark ? primary : "inherit"}; text-decoration: ${dark ? "none" : "underline"}; }
     img, svg { max-width: 100%; height: auto; object-fit: contain; }
     ${invertImages ? "img, svg image { filter: invert(1); }" : dark ? "img { filter: brightness(0.9); }" : ""}
+${settings.wordLens ? lensStyles(settings, colors) : ""}
     pre, code { white-space: pre-wrap !important; font-size: 0.9em; }
     table { max-width: 100%; }
     td, th { overflow-wrap: break-word; }

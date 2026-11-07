@@ -102,6 +102,8 @@ Dictionary files are kept in the workspace (`.mdsilo/dictionaries/`) and are **n
 
 **Add to vocabulary** stores the word with its definition, its pronunciations, the dictionary, the sentence it came from and a link to the book (a word kept without pronunciations gets them the next time you look it up in a dictionary that has them). The **Vocabulary** page (in the Library header) reviews them as flash cards, as a grid, or in bulk; the speakers play a word, on either side of a card, and **P** plays the card shown.
 
+**Word lens** (in *Font and layout*): the words of your vocabulary, met in a book, get a short meaning under them — their forms too (*rabbits*, *taking*), phrases (*take after*) and CJK words. Click one to look the word up. The gloss comes from the definition kept, or, with *Gloss: Translation*, is the word translated into the language chosen for translations (kept in the vocabulary, asked once). Write your own on the back of the word's card in the Vocabulary. *Gloss size* (of the text) and *Gloss color* (the accent of the page, gray, or a color, lighter on dark pages) set their look; the lines get room under them for a gloss of that size, added to your line height. Not for fixed layouts (PDF, comics).
+
 In a dark theme, the colors a dictionary file gives its entries (made for a white page) are turned light where they would be hard to read.
 
 ## Read aloud

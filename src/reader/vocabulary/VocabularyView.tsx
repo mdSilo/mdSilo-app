@@ -20,7 +20,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { useStore } from "@/state/store";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { findBookPath } from "../library/library";
-import { openLinkOutside } from "../lookup/lookup";
+import { openLinkOutside, targetLanguage } from "../lookup/lookup";
 import Pronunciations from "../dictionary/Pronunciations";
 import { playRecording } from "../dictionary/audio";
 import {
@@ -30,7 +30,9 @@ import {
 import { useLocalDictionaries } from "../dictionary/local";
 // the recordings of dictionary files, played
 import "../dictionary/mdict";
-import { useVocabulary, type VocabularyEntry } from "./vocabulary";
+import { glossOf } from "../lens/lens";
+import { withDefaults } from "../settings";
+import { MAX_GLOSS, useVocabulary, type VocabularyEntry } from "./vocabulary";
 
 /** The names of the dictionaries of the app, for the words kept before their name was. */
 const BUILTIN_NAMES = new Map(
@@ -41,6 +43,55 @@ const BUILTIN_NAMES = new Map(
 export const sourceNameOf = (entry: VocabularyEntry) =>
   entry.sourceName ||
   (entry.source ? BUILTIN_NAMES.get(entry.source) : undefined);
+
+/**
+ * The gloss of a word in the books (word lens), as the user writes it; the
+ * one made of its definition (or translation) shown when none is written.
+ */
+function GlossEditor({ entry }: { entry: VocabularyEntry }) {
+  const ws = useStore((state) => state.initDir);
+  const settings = withDefaults(useStore((state) => state.readerSettings));
+  const lang =
+    settings.lensGloss === "translation"
+      ? targetLanguage(settings.translateTo)
+      : undefined;
+  const [text, setText] = useState(entry.gloss ?? "");
+  // another word, or its gloss changed elsewhere (synced)
+  const [shown, setShown] = useState(entry);
+  if (shown.id !== entry.id || shown.gloss !== entry.gloss) {
+    setShown(entry);
+    setText(entry.gloss ?? "");
+  }
+  const save = () => {
+    if (ws && text.trim() !== (entry.gloss ?? ""))
+      void useVocabulary.getState().setGloss(ws, entry.id, text);
+  };
+  return (
+    <label
+      className="flex items-center gap-2 mt-2 text-xs"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <span className="opacity-60 shrink-0">Gloss</span>
+      <input
+        className="flex-1 min-w-0 input input-xs input-bordered"
+        aria-label={`The gloss of ${entry.word} in the books`}
+        placeholder={glossOf({ ...entry, gloss: undefined }, lang)}
+        maxLength={MAX_GLOSS}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          if (e.key === "Escape") {
+            setText(entry.gloss ?? "");
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+      />
+    </label>
+  );
+}
 
 /** The dictionary of a word, a line under it. */
 function Source({ entry }: { entry: VocabularyEntry }) {
@@ -204,6 +255,7 @@ function StudyCard({
             />
           </div>
           <Definition entry={entry} className="text-sm" />
+          <GlossEditor entry={entry} />
           <Context entry={entry} />
           <Source entry={entry} />
         </div>

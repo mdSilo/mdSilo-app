@@ -1674,6 +1674,22 @@ describe("vocabulary", () => {
     expect(within(card).getByTestId("vocabulary-source")).toHaveTextContent(
       "From Oxford",
     );
+    // its gloss in the books: made of its definition, or as written
+    const gloss = within(card).getByLabelText("The gloss of cold in the books");
+    expect(gloss).toHaveAttribute("placeholder", "chilly");
+    fireEvent.change(gloss, { target: { value: " frosty " } });
+    fireEvent.keyDown(gloss, { key: "Enter" });
+    fireEvent.blur(gloss);
+    await waitFor(() =>
+      expect(
+        useVocabulary.getState().entries.find((e) => e.word === "cold")?.gloss,
+      ).toBe("frosty"),
+    );
+    // typing in it: not turning the card
+    expect(card.querySelector(".bg-primary")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
     // the grid: the old word's dictionary by its id
     fireEvent.click(screen.getByLabelText("All the words"));
     expect(await screen.findByText("From Wiktionary")).toBeInTheDocument();

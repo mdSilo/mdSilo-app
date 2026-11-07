@@ -18,6 +18,12 @@ import { useReaderStore } from "../readerStore";
 import { bookDir, pagesDirection, rtlPagesMode, themeColors } from "../styles";
 import { type CodeLanguage } from "../highlight";
 import TranslationSwitches from "../translation/TranslationSwitches";
+import { targetLanguage } from "../lookup/lookup";
+import { LENS_COLORS, LENS_SIZE, lensColorOf } from "../lens/lensStyles";
+
+/** The name of a language code, as the app lists it; else the code. */
+const languageName = (code: string) =>
+  HUMAN_LANGUAGES.find(([c]) => c === code)?.[1] ?? code;
 import { RULER_COLORS, RULER_SWATCHES } from "../ruler/ruler";
 
 const PAGE_THEMES: [PageTheme, string][] = [
@@ -48,6 +54,8 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
   const hasBook = Boolean(book);
   const writingMode = useReaderStore((state) => state.writingMode);
   const vertical = useReaderStore((state) => state.vertical);
+  // the colors of the glosses as on the pages
+  const pageColors = themeColors(darkMode, settings.pageTheme);
 
   return (
     <div
@@ -354,6 +362,64 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
                 </option>
               ))}
             </Select>
+          ) : null}
+          <Toggle
+            label="Word lens"
+            checked={settings.wordLens}
+            onChange={(wordLens) => update({ wordLens })}
+          />
+          {settings.wordLens ? (
+            <p className="-mt-1 text-xs text-base-content/60">
+              The words of your vocabulary with a short meaning under them;
+              click one to look it up.
+            </p>
+          ) : null}
+          {settings.wordLens ? (
+            <Select
+              label="Gloss"
+              value={settings.lensGloss}
+              onChange={(value) =>
+                update({
+                  lensGloss:
+                    value === "translation" ? "translation" : "definition",
+                })
+              }
+            >
+              <option value="definition">Definition</option>
+              <option value="translation">
+                Translation (
+                {languageName(targetLanguage(settings.translateTo))})
+              </option>
+            </Select>
+          ) : null}
+          {settings.wordLens ? (
+            <>
+              <Range
+                label="Gloss size"
+                min={LENS_SIZE.min}
+                max={LENS_SIZE.max}
+                step={0.05}
+                value={settings.lensSize}
+                format={(v) => `${Math.round(v * 100)}%`}
+                onChange={(lensSize) => update({ lensSize })}
+              />
+              <div className="flex items-center justify-between gap-2">
+                <span>Gloss color</span>
+                <div className="flex gap-1.5">
+                  {LENS_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      className={`w-5 h-5 rounded-full border border-base-300 ${settings.lensColor === color ? "ring-2 ring-primary" : ""}`}
+                      style={{ background: lensColorOf(color, pageColors) }}
+                      title={color === "accent" ? "Accent of the page" : color}
+                      aria-label={`Gloss ${color}`}
+                      aria-pressed={settings.lensColor === color}
+                      onClick={() => update({ lensColor: color })}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
           ) : null}
         </>
       )}
