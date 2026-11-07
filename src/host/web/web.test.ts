@@ -676,11 +676,12 @@ describe("web dialogs", () => {
 
   it("creates a folder in the picker without a native prompt", async () => {
     const picked = open({ directory: true });
-    await flush();
-    await flush();
-    const input = document.querySelector(
-      '[aria-label="New folder name"]',
-    ) as HTMLInputElement;
+    // shown once the folders are read: not a fixed time, slower under load
+    const input = await vi.waitFor(() => {
+      const el = document.querySelector('[aria-label="New folder name"]');
+      if (!el) throw new Error("no picker yet");
+      return el as HTMLInputElement;
+    });
     expect(input.parentElement!.style.display).toBe("none");
     button("+ New Folder").click();
     expect(input.parentElement!.style.display).toBe("flex");
@@ -697,8 +698,9 @@ describe("web dialogs", () => {
     input.dispatchEvent(
       new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
     );
-    await flush();
-    expect(await isDir("/mdSilo/Fresh")).toBe(true);
+    await vi.waitFor(async () =>
+      expect(await isDir("/mdSilo/Fresh")).toBe(true),
+    );
     button("Select Folder").click();
     expect(await picked).toBe("/mdSilo/Fresh");
   });
