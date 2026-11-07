@@ -45,6 +45,9 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
     setThemeEditing(id);
   };
   const setIsFontsOpen = useStore((state) => state.setIsFontsOpen);
+  const setIsDictionariesOpen = useStore(
+    (state) => state.setIsDictionariesOpen,
+  );
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
   const setSideMenuOrientation = useStore(
     (state) => state.setSideMenuOrientation,
@@ -117,6 +120,14 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           onClick={() => {
             handleClose();
             setIsFontsOpen(true);
+          }}
+        />
+        <SettingsLink
+          label="Dictionaries"
+          action="Manage Dictionaries"
+          onClick={() => {
+            handleClose();
+            setIsDictionariesOpen(true);
           }}
         />
         {isTauri ? (

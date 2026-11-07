@@ -48,7 +48,7 @@ Select text and a toolbar appears over it. It has:
 | Highlight | Mark the text; choose style (highlight, underline, squiggly) and colour |
 | Note | Write a note on the highlight, in Markdown |
 | Search | Search the book for the selection |
-| Dictionary | Look a word (or up to three) up in Wiktionary, add it to your vocabulary |
+| Dictionary | Look a word (or up to three) up in your dictionaries, hear it, add it to your vocabulary |
 | Wikipedia | A summary of the selection |
 | Translate | Translate into the language chosen in the settings |
 | Read aloud | Speak from the selection |
@@ -84,7 +84,20 @@ Try it on {{Alice's Adventures in Wonderland}}: it is in your Library, with one 
 
 ## Dictionary, vocabulary and translation
 
-Double-click a word, or choose *Dictionary*. The popup shows the Wiktionary definitions (in the language of the book first). **Add to vocabulary** stores the word with its definition, the sentence it came from and a link to the book. The **Vocabulary** page (in the Library header) reviews them as flash cards, as a grid, or in bulk.
+Double-click a word, or choose *Dictionary*. The popup has a tab for each dictionary turned on, in your order, and shows the first that has the word. The speaker buttons play its recordings (UK, US…) where the dictionary has them.
+
+The dictionaries are set in **Settings → Dictionaries** (or the gear of the popup): turn each on or off and drag them into order.
+
+| Dictionary | |
+|---|---|
+| Wiktionary | Most languages, the language of the book first; recordings of many words. On by default |
+| Free Dictionary | English, with pronunciations (dictionaryapi.dev). On by default |
+| Urban Dictionary | English slang |
+| Merriam-Webster | Opens the site; with your API key (free for non-commercial use at dictionaryapi.com), looked up in the popup, with recordings |
+| Google | Opens Google's definition |
+| A site you add | Any dictionary on the web: a url with `%WORD%` where the word goes; opens in the browser |
+
+**Add to vocabulary** stores the word with its definition, the sentence it came from and a link to the book. The **Vocabulary** page (in the Library header) reviews them as flash cards, as a grid, or in bulk.
 
 ## Read aloud
 

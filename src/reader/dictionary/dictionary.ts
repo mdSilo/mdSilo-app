@@ -1,0 +1,218 @@
+import { useMemo } from "react";
+import { useStore } from "@/state/store";
+import type { DictionaryResult } from "../lookup/lookup";
+import {
+  DEFAULT_DICTIONARY_SETTINGS,
+  type DictionarySettings,
+} from "./settings";
+import {
+  isUrlTemplate,
+  lookupFreeDictionary,
+  lookupMerriamWebster,
+  lookupUrban,
+  lookupWiktionaryWithAudio,
+  merriamWebsterUrl,
+  urbanUrl,
+  urlOfTemplate,
+} from "./web";
+
+export {
+  DEFAULT_DICTIONARY_SETTINGS,
+  type DictionarySettings,
+  type WebSite,
+} from "./settings";
+
+/**
+ * The dictionaries a word is looked up in, in the order the user puts them:
+ * on the web (an API), a link to a site, or a dictionary file imported. The
+ * popup of a lookup has a tab for each one turned on.
+ */
+
+export type SourceKind = "web" | "link" | "local";
+
+export type DictionarySource = {
+  /** e.g. `wiktionary`, `web:<id>` of a site added, `mdict:<id>` of a file */
+  id: string;
+  label: string;
+  kind: SourceKind;
+  /** what it is, in the settings */
+  description?: string;
+  /** look a word up; none for a link: it only opens the site */
+  lookup?: (word: string, lang?: string) => Promise<DictionaryResult>;
+  /** the page of the word on the web; none for a dictionary file */
+  url?: (word: string, lang?: string) => string;
+};
+
+const wiktionaryUrl = (word: string) =>
+  `https://en.wiktionary.org/wiki/${encodeURIComponent(word.trim().replace(/ /g, "_"))}`;
+
+/** The dictionaries the app has, in their default order. */
+export function builtinSources(
+  settings: DictionarySettings,
+): DictionarySource[] {
+  const key = settings.merriamWebsterKey?.trim();
+  return [
+    {
+      id: "wiktionary",
+      label: "Wiktionary",
+      kind: "web",
+      description: "Words of most languages, recordings of some",
+      lookup: lookupWiktionaryWithAudio,
+      url: wiktionaryUrl,
+    },
+    {
+      id: "free-dictionary",
+      label: "Free Dictionary",
+      kind: "web",
+      description: "English, with pronunciations (dictionaryapi.dev)",
+      lookup: (word) => lookupFreeDictionary(word),
+      url: wiktionaryUrl,
+    },
+    {
+      id: "urban",
+      label: "Urban Dictionary",
+      kind: "web",
+      description: "English slang",
+      lookup: (word) => lookupUrban(word),
+      url: urbanUrl,
+    },
+    {
+      id: "merriam-webster",
+      label: "Merriam-Webster",
+      kind: key ? "web" : "link",
+      description: key
+        ? "English, with pronunciations, by your API key"
+        : "Opens the site; with an API key (dictionaryapi.com), looked up here",
+      ...(key
+        ? { lookup: (word: string) => lookupMerriamWebster(word, key) }
+        : {}),
+      url: merriamWebsterUrl,
+    },
+    {
+      id: "google",
+      label: "Google",
+      kind: "link",
+      description: "Opens Google's definition of the word",
+      url: (word) =>
+        urlOfTemplate("https://www.google.com/search?q=define+%WORD%", word),
+    },
+  ];
+}
+
+/** The dictionaries turned on when the user has not said. */
+export const ON_BY_DEFAULT = new Set(["wiktionary", "free-dictionary"]);
+
+export const isEnabled = (settings: DictionarySettings, id: string) =>
+  settings.enabled[id] ?? ON_BY_DEFAULT.has(id);
+
+const hostOf = (url: string) => {
+  try {
+    return new URL(url.replace(/%(25)?WORD%(25)?/gi, "w")).hostname;
+  } catch {
+    return url;
+  }
+};
+
+/** The sites added by the user, as dictionaries. */
+export const siteSources = (settings: DictionarySettings): DictionarySource[] =>
+  settings.sites
+    .filter((site) => isUrlTemplate(site.url))
+    .map((site) => ({
+      id: site.id,
+      label: site.name || hostOf(site.url),
+      kind: "link",
+      description: site.url,
+      url: (word) => urlOfTemplate(site.url, word),
+    }));
+
+/** All the dictionaries, in the order of the user; those not ordered yet after, as they come. */
+export function orderedSources(
+  settings: DictionarySettings,
+  local: DictionarySource[] = [],
+): DictionarySource[] {
+  const all = [...builtinSources(settings), ...siteSources(settings), ...local];
+  const at = (id: string) => {
+    const i = settings.order.indexOf(id);
+    return i < 0 ? Number.MAX_SAFE_INTEGER : i;
+  };
+  return all
+    .map((source, i) => ({ source, i }))
+    .sort((a, b) => at(a.source.id) - at(b.source.id) || a.i - b.i)
+    .map(({ source }) => source);
+}
+
+/** The dictionaries turned on, in order: the tabs of a lookup. */
+export const enabledSources = (
+  settings: DictionarySettings,
+  local: DictionarySource[] = [],
+) => orderedSources(settings, local).filter((s) => isEnabled(settings, s.id));
+
+/** The settings with a dictionary moved to a place in the order of all. */
+export function moveSource(
+  settings: DictionarySettings,
+  all: DictionarySource[],
+  id: string,
+  to: number,
+): DictionarySettings {
+  const ids = all.map((s) => s.id).filter((i) => i !== id);
+  if (ids.length === all.length) return settings;
+  ids.splice(Math.max(0, Math.min(to, ids.length)), 0, id);
+  return { ...settings, order: ids };
+}
+
+/** The settings with a dictionary turned on or off. */
+export const setEnabled = (
+  settings: DictionarySettings,
+  id: string,
+  on: boolean,
+): DictionarySettings => ({
+  ...settings,
+  enabled: { ...settings.enabled, [id]: on },
+});
+
+/** The settings with a site added; throws if its url has no place for the word. */
+export function addSite(
+  settings: DictionarySettings,
+  name: string,
+  url: string,
+): DictionarySettings {
+  if (!isUrlTemplate(url))
+    throw new Error("The url needs %WORD% where the word goes");
+  const id = `web:${crypto.randomUUID()}`;
+  return {
+    ...settings,
+    sites: [...settings.sites, { id, name: name.trim(), url: url.trim() }],
+    enabled: { ...settings.enabled, [id]: true },
+  };
+}
+
+/** The settings without a dictionary: a site, or a file, by its id. */
+export const forgetSource = (
+  settings: DictionarySettings,
+  id: string,
+): DictionarySettings => {
+  const { [id]: _, ...enabled } = settings.enabled;
+  return {
+    ...settings,
+    sites: settings.sites.filter((s) => s.id !== id),
+    order: settings.order.filter((i) => i !== id),
+    enabled,
+  };
+};
+
+/** The dictionary settings, with what a newer app added. */
+export const withDictionaryDefaults = (
+  settings?: Partial<DictionarySettings>,
+): DictionarySettings => ({ ...DEFAULT_DICTIONARY_SETTINGS, ...settings });
+
+/** The dictionary settings, in a component. */
+export function useDictionarySettings(): DictionarySettings {
+  const settings = useStore((state) => state.dictionarySettings);
+  return useMemo(() => withDictionaryDefaults(settings), [settings]);
+}
+
+/** All the dictionaries in order, in a component. */
+export function useDictionarySources(): DictionarySource[] {
+  const settings = useDictionarySettings();
+  return useMemo(() => orderedSources(settings), [settings]);
+}
