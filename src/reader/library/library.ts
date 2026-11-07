@@ -11,6 +11,7 @@ import { flushSave } from "@/workspace/pendingSaves";
 import { announce } from "@/state/windowSync";
 import { DATA_DIR, READING_DIR, WRITING_DIR } from "@/workspace/layout";
 import { updateGitignore } from "@/workspace/gitignore";
+import { confirmBigSync, fileSize } from "@/workspace/syncSize";
 import { annotationsPathOf } from "../annotations/annotations";
 import {
   BOOK_EXTS,
@@ -26,6 +27,7 @@ import {
 } from "../document";
 import { convertToBook } from "../convert";
 import type { WritingMode } from "../settings";
+import type { ShelfBook } from "./shelf";
 import { setLibraryBooks } from "./books";
 
 /**
@@ -480,6 +482,19 @@ export async function writeReadingGitignore(ws: string, lib: Library) {
   );
   const text = updateGitignore(old ?? "", synced);
   if (text !== old) await invoke("write_file", { filePath: path, text });
+}
+
+/**
+ * Ask before syncing the files of books if any is big; true to go on. Only
+ * the books here not synced yet count.
+ */
+export async function confirmBooksSync(books: ShelfBook[]): Promise<boolean> {
+  const items = await Promise.all(
+    books
+      .filter((b) => b.here && !b.synced)
+      .map(async (b) => ({ name: b.title, size: await fileSize(b.path) })),
+  );
+  return confirmBigSync(items);
 }
 
 /** Sync a book file with the workspace, or not. */

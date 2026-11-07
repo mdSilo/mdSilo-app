@@ -1543,6 +1543,12 @@ describe("reader, the second part", () => {
       });
     });
     fireEvent.click(screen.getByLabelText("Dictionary"));
+    // each dictionary tried in turn: the error of the last stays
+    await waitFor(() =>
+      expect(
+        screen.getByRole("tab", { name: "Free Dictionary" }),
+      ).toHaveAttribute("aria-selected", "true"),
+    );
     expect(
       await screen.findByText("Could not look it up: offline"),
     ).toBeInTheDocument();

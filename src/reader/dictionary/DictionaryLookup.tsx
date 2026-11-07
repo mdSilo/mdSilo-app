@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  TbArrowLeft,
   TbCheck,
   TbExternalLink,
   TbNote,
@@ -14,6 +15,7 @@ import type { TextSelection } from "../popups";
 import { activeStore } from "../readerStore";
 import {
   definitionOf,
+  textOfHtml,
   sameWord,
   sentenceAround,
   useVocabulary,
@@ -27,21 +29,31 @@ import { playRecording } from "./audio";
 import {
   enabledSources,
   useDictionarySettings,
+  useLocalSources,
   type DictionarySource,
 } from "./dictionary";
+import MdictEntry from "./MdictEntry";
 
 type Found = { result?: DictionaryResult; error?: string };
 
-const found = (f?: Found) => Boolean(f?.result?.entries.length);
+/** The dictionary has the word: its entries, or an entry of a dictionary file. */
+export const hasEntry = (result?: DictionaryResult) =>
+  Boolean(result?.entries.length || result?.html);
+
+const found = (f?: Found) => hasEntry(f?.result);
 
 /** The tab shown first: the first dictionary that looks words up. */
 const firstOf = (list: DictionarySource[]) =>
   (list.find((s) => s.lookup) ?? list[0])?.id;
 
+/** The key of a word looked up in a dictionary. */
+const keyOf = (id: string, word: string) => `${id}\n${word}`;
+
 /**
  * The word selected, looked up in the dictionaries turned on: a tab for each,
  * in the order of the user. The first that has the word shows, unless the
- * user picks a tab.
+ * user picks a tab. A link of an entry to another word looks that one up in
+ * the same tab, with a way back.
  */
 export default function DictionaryLookup({
   selection,
@@ -56,38 +68,51 @@ export default function DictionaryLookup({
   onKeep: (note: string) => void;
 }) {
   const settings = useDictionarySettings();
-  const sources = useMemo(() => enabledSources(settings), [settings]);
-  const word = selection.text.trim();
+  const local = useLocalSources(ws);
+  const sources = useMemo(
+    () => enabledSources(settings, local),
+    [settings, local],
+  );
   const [active, setActive] = useState(() => firstOf(sources));
   // the user picked a tab: no more going on to the next
   const [picked, setPicked] = useState(false);
   const [results, setResults] = useState<Record<string, Found>>({});
+  // the words looked up from links of the entries, the last shown
+  const [trail, setTrail] = useState<string[]>([]);
+  const word = trail.at(-1) ?? selection.text.trim();
 
   // a new word: from the first again
   const [shown, setShown] = useState(selection);
   if (shown !== selection) {
     setShown(selection);
     setResults({});
+    setTrail([]);
     setPicked(false);
     setActive(firstOf(sources));
   }
 
-  // a dictionary turned off while shown: the first
+  // a dictionary turned off while shown, or one not loaded yet: the first
   const source =
     sources.find((s) => s.id === active) ??
     sources.find((s) => s.id === firstOf(sources));
+  const key = source ? keyOf(source.id, word) : "";
+
+  // a dictionary file loaded after the tabs showed: first, if it is
+  useEffect(() => {
+    if (!picked && !trail.length && Object.keys(results).length === 0)
+      setActive(firstOf(sources));
+  }, [sources, picked, trail, results]);
 
   // look the word up in the tab shown, once: kept when another tab is
-  // picked meanwhile, not when another word is looked up
-  const asked = useRef<{ selection: TextSelection; ids: Set<string> }>(null);
+  // picked meanwhile, not when another word is selected
+  const asked = useRef<{ selection: TextSelection; keys: Set<string> }>(null);
   useEffect(() => {
-    if (!source?.lookup || results[source.id]) return;
+    if (!source?.lookup || results[key]) return;
     if (asked.current?.selection !== selection)
-      asked.current = { selection, ids: new Set() };
-    const { ids } = asked.current;
-    if (ids.has(source.id)) return;
-    ids.add(source.id);
-    const id = source.id;
+      asked.current = { selection, keys: new Set() };
+    const { keys } = asked.current;
+    if (keys.has(key)) return;
+    keys.add(key);
     source
       .lookup(word, lang)
       .then((result) => ({ result }))
@@ -96,19 +121,25 @@ export default function DictionaryLookup({
       }))
       .then((f: Found) => {
         if (asked.current?.selection === selection)
-          setResults((r) => ({ ...r, [id]: f }));
+          setResults((r) => ({ ...r, [key]: f }));
       });
-  }, [source, selection, word, lang, results]);
+  }, [source, key, selection, word, lang, results]);
 
   // not found: on to the next dictionary that looks words up
   useEffect(() => {
-    if (picked || !source || !results[source.id] || found(results[source.id]))
+    if (
+      picked ||
+      trail.length ||
+      !source ||
+      !results[key] ||
+      found(results[key])
+    )
       return;
     const next = sources
       .slice(sources.indexOf(source) + 1)
-      .find((s) => s.lookup && !results[s.id]);
+      .find((s) => s.lookup && !results[keyOf(s.id, word)]);
     if (next) setActive(next.id);
-  }, [picked, source, sources, results]);
+  }, [picked, trail, source, sources, results, key, word]);
 
   // the tab shown, in view: those after the first few are scrolled to
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -145,13 +176,28 @@ export default function DictionaryLookup({
     );
   }
 
-  const current = results[source.id];
+  const current = results[key];
   const webUrl = source.url?.(word, lang);
   const result = current?.result;
+  const navigate = (to: string) => {
+    if (!to.trim() || to.trim() === word) return;
+    setPicked(true);
+    setTrail((t) => [...t, to.trim()]);
+  };
 
   return (
     <>
       <div className="flex items-center gap-1 mb-1">
+        {trail.length ? (
+          <button
+            className="btn btn-ghost btn-xs"
+            title="Back"
+            aria-label="Back"
+            onClick={() => setTrail((t) => t.slice(0, -1))}
+          >
+            <TbArrowLeft />
+          </button>
+        ) : null}
         {sources.length > 1 ? (
           <div
             ref={tabsRef}
@@ -168,13 +214,14 @@ export default function DictionaryLookup({
                 key={s.id}
                 role="tab"
                 aria-selected={s.id === source.id}
-                className={`btn btn-xs shrink-0 ${s.id === source.id ? "btn-active" : "btn-ghost font-normal"}`}
+                title={s.label}
+                className={`btn btn-xs shrink-0 max-w-40 ${s.id === source.id ? "btn-active" : "btn-ghost font-normal"}`}
                 onClick={() => {
                   setPicked(true);
                   setActive(s.id);
                 }}
               >
-                {s.label}
+                <span className="truncate">{s.label}</span>
               </button>
             ))}
           </div>
@@ -204,11 +251,27 @@ export default function DictionaryLookup({
           <p className="text-error">Could not look it up: {current.error}</p>
         ) : !result ? (
           <Spinner size="sm" className="mx-auto my-4" />
+        ) : result.html && source.dict && ws ? (
+          <>
+            {/* the entry has its headword: only its recordings above it */}
+            {result.pronunciations?.length ? (
+              <div className="-ml-1">
+                <Pronunciations list={result.pronunciations} />
+              </div>
+            ) : null}
+            <MdictEntry
+              ws={ws}
+              dict={source.dict}
+              html={result.html}
+              styles={result.styles}
+              onNavigate={navigate}
+            />
+          </>
         ) : (
           <Entries result={result} />
         )}
       </div>
-      {result && result.entries.length > 0 ? (
+      {result && hasEntry(result) ? (
         <div className="flex justify-end gap-1 mt-1">
           {ws ? (
             <AddWord
@@ -394,7 +457,7 @@ export function dictionaryNote(result: DictionaryResult): string {
       .replace(/\s+/g, " ")
       .trim();
   const first = result.entries[0];
-  if (!first) return "";
+  if (!first) return result.html ? textOfHtml(result.html, 400) : "";
   return first.meanings
     .slice(0, 2)
     .map((m) => {

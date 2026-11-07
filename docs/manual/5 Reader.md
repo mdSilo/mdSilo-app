@@ -96,6 +96,9 @@ The dictionaries are set in **Settings → Dictionaries** (or the gear of the po
 | Merriam-Webster | Opens the site; with your API key (free for non-commercial use at dictionaryapi.com), looked up in the popup, with recordings |
 | Google | Opens Google's definition |
 | A site you add | Any dictionary on the web: a url with `%WORD%` where the word goes; opens in the browser |
+| A dictionary file | MDict (`.mdx`, with its `.mdd` of pictures and sounds, and `.css`), imported with **Import**; first in the list once imported |
+
+Dictionary files are kept in the workspace (`.mdsilo/dictionaries/`) and are **not synced** unless you turn it on with the cloud button of the dictionary: they are often big. Another device sees the dictionary marked *Not here* until its files are synced to it. Links between entries look the other word up (the arrow goes back), and the speakers play the dictionary's sounds.
 
 **Add to vocabulary** stores the word with its definition, the sentence it came from and a link to the book. The **Vocabulary** page (in the Library header) reviews them as flash cards, as a grid, or in bulk.
 

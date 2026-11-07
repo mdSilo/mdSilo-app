@@ -70,13 +70,27 @@ const escape = (text: string) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c,
   );
 
+/** The text of HTML, its spaces as one; cut at `max` characters, with an ellipsis. */
+export function textOfHtml(html: string, max = Infinity): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  doc.querySelectorAll("style, script").forEach((el) => el.remove());
+  const text = (doc.body.textContent ?? "").replace(/\s+/g, " ").trim();
+  return text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
+}
+
 /** The definition kept for a word: the first meanings of the first entry. */
 export function definitionOf(result: DictionaryResult): {
   definition: string;
   language?: string;
 } {
   const first = result.entries[0];
-  if (!first) return { definition: "" };
+  // an entry of a dictionary file, as HTML: the start of its text
+  if (!first)
+    return {
+      definition: result.html
+        ? `<p>${escape(textOfHtml(result.html, 300))}</p>`
+        : "",
+    };
   const definition = first.meanings
     .slice(0, 3)
     // the definitions end with a period, mostly

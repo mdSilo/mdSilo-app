@@ -30,6 +30,10 @@ export type DictionaryResult = {
   url: string;
   /** the entry as a dictionary file gives it: HTML, sanitized; for a local dictionary */
   html?: string;
+  /** the recordings of the word in an entry given as HTML */
+  pronunciations?: Pronunciation[];
+  /** the style sheets an entry given as HTML links to, in its dictionary */
+  styles?: string[];
 };
 export type WikipediaResult = {
   title: string;

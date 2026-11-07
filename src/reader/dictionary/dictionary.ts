@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useStore } from "@/state/store";
+import { formatSize } from "@/workspace/syncSize";
 import type { DictionaryResult } from "../lookup/lookup";
 import {
   DEFAULT_DICTIONARY_SETTINGS,
@@ -15,6 +16,8 @@ import {
   urbanUrl,
   urlOfTemplate,
 } from "./web";
+import { useLocalDictionaries, type LocalDictionary } from "./local";
+import { lookupMdict } from "./mdict";
 
 export {
   DEFAULT_DICTIONARY_SETTINGS,
@@ -41,6 +44,10 @@ export type DictionarySource = {
   lookup?: (word: string, lang?: string) => Promise<DictionaryResult>;
   /** the page of the word on the web; none for a dictionary file */
   url?: (word: string, lang?: string) => string;
+  /** of a dictionary file */
+  dict?: LocalDictionary;
+  /** a dictionary file not on this device: not synced to it */
+  missing?: boolean;
 };
 
 const wiktionaryUrl = (word: string) =>
@@ -102,8 +109,34 @@ export function builtinSources(
 /** The dictionaries turned on when the user has not said. */
 export const ON_BY_DEFAULT = new Set(["wiktionary", "free-dictionary"]);
 
+/** The id of the source of a dictionary file. */
+export const localSourceId = (id: string) => `mdict:${id}`;
+
 export const isEnabled = (settings: DictionarySettings, id: string) =>
-  settings.enabled[id] ?? ON_BY_DEFAULT.has(id);
+  settings.enabled[id] ?? (ON_BY_DEFAULT.has(id) || id.startsWith("mdict:"));
+
+/** The dictionary files of a workspace, as dictionaries; looked up only when here. */
+export function localSources(
+  ws: string | undefined,
+  list: LocalDictionary[],
+  here: Record<string, boolean>,
+): DictionarySource[] {
+  return list.map((dict) => {
+    const missing = !ws || !here[dict.id];
+    return {
+      id: localSourceId(dict.id),
+      label: dict.name,
+      kind: "local",
+      description: missing
+        ? "Not on this device: its files are not synced"
+        : `MDict, ${formatSize(dict.size)}${dict.synced ? ", synced" : ""}`,
+      dict,
+      ...(missing
+        ? { missing: true }
+        : { lookup: (word: string) => lookupMdict(ws, dict, word) }),
+    };
+  });
+}
 
 const hostOf = (url: string) => {
   try {
@@ -145,7 +178,10 @@ export function orderedSources(
 export const enabledSources = (
   settings: DictionarySettings,
   local: DictionarySource[] = [],
-) => orderedSources(settings, local).filter((s) => isEnabled(settings, s.id));
+) =>
+  orderedSources(settings, local).filter(
+    (s) => isEnabled(settings, s.id) && (s.lookup || s.url),
+  );
 
 /** The settings with a dictionary moved to a place in the order of all. */
 export function moveSource(
@@ -212,7 +248,32 @@ export function useDictionarySettings(): DictionarySettings {
 }
 
 /** All the dictionaries in order, in a component. */
-export function useDictionarySources(): DictionarySource[] {
+export function useDictionarySources(ws?: string): DictionarySource[] {
   const settings = useDictionarySettings();
-  return useMemo(() => orderedSources(settings), [settings]);
+  const local = useLocalSources(ws);
+  return useMemo(() => orderedSources(settings, local), [settings, local]);
+}
+
+/** The dictionary files of a workspace, loaded, as dictionaries; in a component. */
+export function useLocalSources(ws?: string): DictionarySource[] {
+  const loadedWs = useLocalDictionaries((state) => state.ws);
+  const list = useLocalDictionaries((state) => state.list);
+  const here = useLocalDictionaries((state) => state.here);
+  useEffect(() => {
+    if (ws && loadedWs !== ws) void useLocalDictionaries.getState().load(ws);
+  }, [ws, loadedWs]);
+  return useMemo(
+    () => (ws && loadedWs === ws ? localSources(ws, list, here) : []),
+    [ws, loadedWs, list, here],
+  );
+}
+
+/** The settings with dictionaries put first, e.g. those just imported. */
+export function putFirst(
+  settings: DictionarySettings,
+  all: DictionarySource[],
+  ids: string[],
+): DictionarySettings {
+  const rest = all.map((s) => s.id).filter((id) => !ids.includes(id));
+  return { ...settings, order: [...ids, ...rest] };
 }

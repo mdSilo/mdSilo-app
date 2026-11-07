@@ -16,8 +16,17 @@ import {
   withDictionaryDefaults,
   type DictionarySettings,
 } from "./dictionary";
+import {
+  importDictionaries,
+  resetLocalDictionaries,
+  useLocalDictionaries,
+} from "./local";
+import { fixtureFile, mockFs } from "./testFs";
 
-vi.mock("@/workspace/open", () => ({ openUrl: vi.fn(async () => undefined) }));
+vi.mock("@/workspace/open", () => ({
+  openUrl: vi.fn(async () => undefined),
+  openFileDilog: vi.fn(async () => null),
+}));
 
 const respond = (body: unknown, status = 200) =>
   ({
@@ -226,5 +235,176 @@ describe("dictionaries settings", () => {
     expect(
       within(screen.getByTestId("dictionary-merriam-webster")).getByText("Web"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("dictionary files", () => {
+  const WS = "/ws";
+  beforeEach(() => resetLocalDictionaries());
+
+  /** The text of the entry shown, without its styles. */
+  const entryText = () =>
+    screen.getByTestId("mdict-entry").shadowRoot?.querySelector(".mdict-entry")
+      ?.textContent ?? "";
+
+  const importLongman = async () => {
+    mockFs();
+    const { added } = await importDictionaries(WS, [
+      { name: "longman.mdx", file: fixtureFile("mdict-en-en.mdx") },
+    ]);
+    return added[0];
+  };
+
+  test("an entry of a file, in its own root; a link to another entry, and back", async () => {
+    await importLongman();
+    // the file first, the web ones not asked
+    setSettings({ enabled: { wiktionary: false, "free-dictionary": false } });
+    const onKeep = vi.fn();
+    render(
+      <DictionaryLookup
+        selection={selection("abide")}
+        ws={WS}
+        onKeep={onKeep}
+      />,
+    );
+    const entry = await screen.findByTestId("mdict-entry");
+    await waitFor(() => expect(entryText()).toContain("abide by"));
+    expect(fetchMock).not.toHaveBeenCalled();
+    // the styles of the dictionary stay in it
+    expect(entry.shadowRoot?.querySelector("style")?.textContent).toContain(
+      "contain: paint",
+    );
+    const link = entry.shadowRoot!.querySelector<HTMLElement>(
+      '[data-mdict-entry="stick to"]',
+    )!;
+    act(() => link.click());
+    await waitFor(() => expect(entryText()).toMatch(/^stick to/));
+    fireEvent.click(screen.getByLabelText("Back"));
+    await waitFor(() => expect(entryText()).toContain("abide by"));
+    expect(screen.queryByLabelText("Back")).not.toBeInTheDocument();
+    // kept as a note: the text of the entry
+    fireEvent.click(screen.getByText("Keep as note"));
+    expect(onKeep.mock.calls[0][0]).toMatch(/^abide \[.*abide by/);
+    expect(onKeep.mock.calls[0][0]).not.toContain("<");
+  });
+
+  test("not in the file: on to the web", async () => {
+    const dict = await importLongman();
+    setSettings({ order: [`mdict:${dict.id}`] });
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes("media-list") ? respond({}) : respond(WIKTIONARY_COLD),
+    );
+    render(
+      <DictionaryLookup
+        selection={selection("cold")}
+        ws={WS}
+        onKeep={vi.fn()}
+      />,
+    );
+    // the file first
+    await waitFor(() =>
+      expect(screen.getAllByRole("tab")[0]).toHaveTextContent(
+        "Longman Phrasal Verbs",
+      ),
+    );
+    expect(
+      await screen.findByText("Having a low temperature."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Wiktionary" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("imported in the settings, put first; synced; removed", async () => {
+    const files = mockFs();
+    store.setState({ initDir: WS, layout: "workspace" });
+    store.getState().setIsDictionariesOpen(true);
+    render(<DictionariesModal />);
+    fireEvent.change(screen.getByTestId("dictionary-files"), {
+      target: {
+        files: [fixtureFile("mdict-en-en.mdx"), new File(["x"], "lonely.mdd")],
+      },
+    });
+    expect(
+      await screen.findByText(/Imported: Longman Phrasal Verbs/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/lonely\.mdd: No \.mdx of the same name/),
+    ).toBeInTheDocument();
+    const [dict] = useLocalDictionaries.getState().list;
+    const row = screen.getByTestId(`dictionary-mdict:${dict.id}`);
+    expect(within(row).getByText("File")).toBeInTheDocument();
+    expect(within(row).getByLabelText(/^Use /)).toBeChecked();
+    expect(
+      within(screen.getByRole("list", { name: "Dictionaries" })).getAllByRole(
+        "listitem",
+      )[0],
+    ).toBe(row);
+
+    // synced: small, not asked
+    fireEvent.click(within(row).getByLabelText(`Sync ${dict.name}`));
+    await waitFor(() =>
+      expect(useLocalDictionaries.getState().list[0].synced).toBe(true),
+    );
+    expect(files.get("/ws/.mdsilo/dictionaries/.gitignore")).toContain(
+      `!/${dict.id}/`,
+    );
+
+    const { ask } = await import("@tauri-apps/plugin-dialog");
+    vi.mocked(ask).mockResolvedValueOnce(true);
+    fireEvent.click(within(row).getByLabelText(`Remove ${dict.name}`));
+    await waitFor(() =>
+      expect(useLocalDictionaries.getState().list).toEqual([]),
+    );
+    expect(vi.mocked(ask).mock.calls[0][0]).toContain(
+      "and from the other devices",
+    );
+    expect(store.getState().dictionarySettings.order).not.toContain(
+      `mdict:${dict.id}`,
+    );
+  });
+
+  test("a file not on this device: shown in the settings, not in the popup", async () => {
+    mockFs(
+      new Map([
+        [
+          "/ws/.mdsilo/dictionaries.json",
+          JSON.stringify({
+            dictionaries: [
+              {
+                id: "gone",
+                name: "Elsewhere",
+                kind: "mdict",
+                files: { mdx: "e.mdx" },
+                size: 1,
+                biggest: 1,
+                addedAt: "",
+              },
+            ],
+          }),
+        ],
+      ]),
+    );
+    store.setState({ initDir: WS, layout: "workspace" });
+    store.getState().setIsDictionariesOpen(true);
+    const { unmount } = render(<DictionariesModal />);
+    const row = await screen.findByTestId("dictionary-mdict:gone");
+    expect(within(row).getByText("Not here")).toBeInTheDocument();
+    expect(within(row).queryByLabelText("Sync Elsewhere")).toBeNull();
+    unmount();
+    fetchMock.mockImplementation(async () => respond({}, 404));
+    render(
+      <DictionaryLookup
+        selection={selection("cold")}
+        ws={WS}
+        onKeep={vi.fn()}
+      />,
+    );
+    await settle();
+    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
+      "Wiktionary",
+      "Free Dictionary",
+    ]);
   });
 });

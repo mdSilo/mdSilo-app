@@ -109,6 +109,17 @@ describe("vocabulary", () => {
     expect(definitionOf({ word: "x", url: "", entries: [] })).toEqual({
       definition: "",
     });
+    // an entry of a dictionary file: the start of its text, escaped
+    const long = "word ".repeat(100);
+    const { definition } = definitionOf({
+      word: "x",
+      url: "",
+      entries: [],
+      html: `<style>b{}</style><b>x</b> &lt;y&gt;\n  ${long}`,
+    });
+    expect(definition).toMatch(/^<p>x &lt;y&gt; word word/);
+    expect(definition).toMatch(/word…<\/p>$/);
+    expect(definition.length).toBeLessThan(320);
   });
 
   test("the sentence a word is in", () => {

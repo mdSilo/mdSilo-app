@@ -86,6 +86,7 @@ import {
   refreshLibrary,
   setBooksGroup,
   setBooksSynced,
+  confirmBooksSync,
 } from "./library";
 
 const GROUP_LABELS: Record<GroupBy, string> = {
@@ -394,10 +395,17 @@ export default function Library() {
   const sync = useCallback(
     async (hashes: string[], synced: boolean) => {
       if (!initDir || hashes.length === 0) return;
+      if (
+        synced &&
+        !(await confirmBooksSync(
+          (rows ?? []).filter((b) => hashes.includes(b.hash)),
+        ))
+      )
+        return;
       await setBooksSynced(initDir, hashes, synced);
       await load();
     },
-    [initDir, load],
+    [initDir, load, rows],
   );
 
   const onOpen = (item: ShelfItem) => {
