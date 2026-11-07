@@ -51,12 +51,13 @@ The **Search** tab of the sidebar searches the full text of the workspace: notes
 The gear at the bottom of the side menu opens the global settings:
 
 - **Theme**: mdSilo light and dark, or follow the system, plus eight built-in themes and the themes you make. The theme editor sets each color and the color of its content (it warns when the content is hard to read on its color, below 4.5:1), the radius of boxes, fields and selectors and the border width; it imports and copies daisyUI theme CSS.
+- **Dictionaries**: the dictionaries words are looked up in, their order, sites and dictionary files you add (see [[5 Reader|Reader]]).
 - **Fonts**: import font files or add an installed font by name; they show in the editor and reader font lists. In the app (not the web version) the fonts installed on the device are listed there too (*System*).
 - **Sync with workspace** (themes, fonts, plugins): kept in the workspace and synced, or on this device only (see [[9 Sync and Publish|Sync and Publish]]).
 - **Side menu orientation**: auto, vertical or horizontal. Auto: on the side, but on a phone the side menu is folded into the logo at the start of the bar of each page; tap it for the views, the File Menu, sync and settings.
 - **Open on startup**: the last folder, a fixed folder, or none; and the **view on startup**, e.g. the Library or the last book read in that folder.
 
-Settings of one area are kept where you use them: the editor's in the gear of a note (font, size, spell check, attachment folder), the reader's in *Font and layout* of the top bar, the feed's in *Manage Channels and Settings*.
+Settings of one area are kept where you use them: the editor's in the gear of a note (font, size, line height, weight, spell check, attachment folder), the reader's in *Font and layout* of the top bar, the feed's in *Manage Channels and Settings*.
 
 ## The web version
 
@@ -93,6 +94,7 @@ Available for Windows, macOS and Linux. Your workspace is a real folder: sync it
 | Feeds | `.mdsilo/feeds.json` | JSON |
 | What to publish | `.mdsilo/publish.json` | JSON |
 | Vocabulary | `.mdsilo/vocabulary.json` | JSON |
+| Dictionaries imported | `.mdsilo/dictionaries.json`, the files in `.mdsilo/dictionaries/<id>/` | JSON, MDict |
 
 ## Help
 

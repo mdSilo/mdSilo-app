@@ -8,7 +8,11 @@
 - Feat: Customize fonts and theme  
 - Feat: Custom plugins
 - Feat: Drag and drop to move files and folders in the explorer tree  
-- Feat: Support JSON feed and make/update book from feed   
+- Feat: Support JSON feed and make/update book from feed  
+- Feat: support MDict files (.mdx/.mdd) and customize web resource on Dictionary  
+- Feat: Word lens shows a short meaning under the words of your vocabulary  
+- Feat: Ask before syncing files over 50 MB (books, dictionary files)
+- Improve: The numbers in the settings are set by − and + buttons
 - Performance: Index book(epub/mobi/azw/azw3/fb) in Rust end  
 - Performance: Faster Library and lists, using react-virtuoso+OverlayScrollbars
 - Fix: Cannot import or open EPUB books on iOS 16 Safari (polyfill `Object.groupBy`)

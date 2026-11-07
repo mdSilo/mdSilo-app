@@ -30,7 +30,8 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 
 - **Book reader** for EPUB, PDF, MOBI/AZW3, FB2 and CBZ; TXT, Markdown and HTML are converted on import. Paging or scrolling, themes, fonts, margins, footnotes, image and table viewer
 - **Highlight, write notes, bookmark**: kept as a Markdown file next to the book (`Foo.epub.md`), a note like any other: editable, searchable, linkable
-- **Look up as you read**: dictionary, Wikipedia, translation, read aloud; words go to a vocabulary with flash cards
+- **Look up as you read**: your dictionaries in your order (Wiktionary, Free Dictionary, Urban Dictionary, Merriam-Webster, sites you add, MDict files), with pronunciations; Wikipedia, translation, read aloud
+- **Vocabulary**: words kept with their pronunciation and the sentence they came from, studied as flash cards; the **word lens** shows their meaning under them in the books
 - **Parallel reading**: two books side by side, each with its own notes
 - **Library**: covers, groups, status, search, drag and drop; books are identified by content, so a renamed book is still the same book
 - **Feeds & podcasts**: RSS/Atom/JSON Feed client with full text, starred articles, clipping to notes and a podcast player; turn a channel into an EPUB and read a month of news as a book
@@ -135,16 +136,17 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 ### Input
 
 - [X] RSS, Atom, JSON Feed and podcasts
-- [X] Read and annotate EPUB, PDF, MOBI, FB2, CBZ; library, parallel reading, dictionary, vocabulary, read aloud
+- [X] Read and annotate EPUB, PDF, MOBI, FB2, CBZ; library, parallel reading, dictionaries (web and MDict), vocabulary, word lens, read aloud
 - [X] Feeds into books
-- [ ] AI helpers, OPDS
+- [X] OPDS catalogs
+- [ ] AI helpers
 
 ### Process
 
 - [X] Issues, labels, milestones, subtasks, due dates
 - [X] Projects: boards and tables
 - [X] Tasks in notes, issues from highlights and selections
-- [X] Vacubulary: record and revise the new things  
+- [X] Vocabulary: record and revise the new things  
 - [ ] Flashcards
 
 ### Output
@@ -166,8 +168,9 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 
 ### Extension
 
-- [ ] Plugin
-- [ ] Customize theme
+- [X] Plugin
+- [X] Customize theme 
+- [X] Dictionary: .mdx/.mdd mdict dictionary files   
 
 ### Cross-platform
 
