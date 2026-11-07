@@ -15,6 +15,7 @@ import {
   getDirPath,
   getBaseName,
   joinPaths,
+  isWeb,
 } from "@/workspace/util";
 import DirectoryAPI from "@/workspace/directory";
 import { writeAllFile, writeFile } from "@/workspace/write";
@@ -90,7 +91,76 @@ export const onListDir = async () => {
 // use for list init dir
 // onListDir
 // SidebarHistory, to recent dir
-export const listInitDir = async (dirPath: string) => {
+/** Opening a folder taking longer than this shows what it waits on. */
+export const OPEN_SLOW_MS = 8000;
+let reporting = 0;
+
+/**
+ * Run an opening of a folder, telling in the explorer (openProblem) what
+ * fails, or what it waits on if it takes long: on a phone, there is no
+ * console to look at.
+ */
+export async function reportOpening<T>(
+  label: string,
+  run: () => Promise<T>,
+): Promise<T> {
+  // within another one: that one tells
+  if (reporting > 0) return run();
+  reporting += 1;
+  const { setOpenProblem } = store.getState();
+  setOpenProblem(undefined);
+  const slow = setTimeout(() => {
+    void stuckOn().then((on) =>
+      setOpenProblem(
+        `${label} is taking long${on ? `, waiting on ${on}` : ""}.`,
+      ),
+    );
+  }, OPEN_SLOW_MS);
+  try {
+    const result = await run();
+    setOpenProblem(undefined);
+    return result;
+  } catch (e) {
+    const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    setOpenProblem(`${label} failed: ${msg}`);
+    throw e;
+  } finally {
+    clearTimeout(slow);
+    reporting -= 1;
+  }
+}
+
+/**
+ * The settings loading for long (web: from IndexedDB): the folder is opened
+ * once they are, tell what it waits on. Cancel once loaded.
+ */
+export function reportSlowSettings(): { cancel: () => void } {
+  const slow = setTimeout(() => {
+    void stuckOn().then((on) =>
+      store
+        .getState()
+        .setOpenProblem(
+          `Loading the settings is taking long${on ? `, waiting on ${on}` : ""}.`,
+        ),
+    );
+  }, OPEN_SLOW_MS);
+  return { cancel: () => clearTimeout(slow) };
+}
+
+/** The commands running for long, web: the store in the browser. */
+async function stuckOn(): Promise<string> {
+  if (!isWeb) return "";
+  const { stuckCommands } = await import("@/host/web/core");
+  return stuckCommands(OPEN_SLOW_MS / 2)
+    .slice(0, 3)
+    .map((c) => `${c.cmd} (${Math.round(c.ms / 1000)}s)`)
+    .join(", ");
+}
+
+export const listInitDir = (dirPath: string) =>
+  reportOpening(`Opening ${dirPath}`, () => listInitDirNow(dirPath));
+
+const listInitDirNow = async (dirPath: string) => {
   try {
     await setWorkspace(dirPath);
     store.getState().upsertRecentDir(dirPath);
@@ -146,21 +216,25 @@ export const openWebWorkspace = async (): Promise<string | undefined> => {
   if (store.getState().currentDir || isWebWorkspaceOpening) return;
   isWebWorkspaceOpening = true;
   try {
-    for (let attempt = 1; ; attempt++) {
-      try {
-        return await openWebWorkspaceOnce();
-      } catch (e) {
-        console.error(`Failed to open the workspace (${attempt}):`, e);
-        if (attempt >= OPEN_ATTEMPTS) throw e;
-        await sleep(500 * attempt);
-        // opened meanwhile, e.g. by a click on the history
-        if (store.getState().currentDir) return;
-      }
-    }
+    return await reportOpening("Opening the workspace", retryOpening);
   } finally {
     isWebWorkspaceOpening = false;
   }
 };
+
+async function retryOpening(): Promise<string | undefined> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await openWebWorkspaceOnce();
+    } catch (e) {
+      console.error(`Failed to open the workspace (${attempt}):`, e);
+      if (attempt >= OPEN_ATTEMPTS) throw e;
+      await sleep(500 * attempt);
+      // opened meanwhile, e.g. by a click on the history
+      if (store.getState().currentDir) return;
+    }
+  }
+}
 
 async function openWebWorkspaceOnce(): Promise<string | undefined> {
   const state = store.getState();

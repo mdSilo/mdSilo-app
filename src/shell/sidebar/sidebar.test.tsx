@@ -119,6 +119,18 @@ describe("SidebarContent", () => {
 });
 
 describe("SidebarNotes", () => {
+  test("tells what failed opening a folder", () => {
+    store.getState().setOpenOnStartup("none");
+    store.getState().setOpenProblem("Opening /w failed: Error: boom");
+    renderWithView(<SidebarNotes />);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Opening /w failed: Error: boom",
+    );
+    expect(screen.getByText("Reload")).toBeInTheDocument();
+    expect(screen.getByText("Open Folder")).toBeInTheDocument();
+    store.getState().setOpenProblem(undefined);
+  });
+
   test("shows open buttons and history without a dir", async () => {
     store.getState().setOpenOnStartup("none");
     renderWithView(<SidebarNotes />);

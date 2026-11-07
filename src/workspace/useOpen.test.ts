@@ -257,6 +257,47 @@ describe("useOpen (tauri)", () => {
       expect(store.getState().currentDir).toBe("/mdSilo");
     });
 
+    test("tells in the explorer what failed opening a folder", async () => {
+      withDirs(["/mdSilo"]);
+      const base = invoke.getMockImplementation();
+      invoke.mockImplementation(async (cmd: string, args?: unknown) => {
+        if (cmd === "list_directory") throw new TypeError("boom");
+        return base?.(cmd, args);
+      });
+      await expect(useOpen.listInitDir("/mdSilo")).rejects.toThrow("boom");
+      expect(store.getState().openProblem).toBe(
+        "Opening /mdSilo failed: TypeError: boom",
+      );
+      invoke.mockImplementation(base!);
+      await useOpen.listInitDir("/mdSilo");
+      expect(store.getState().openProblem).toBeUndefined();
+    });
+
+    test("tells in the explorer that opening hangs", async () => {
+      vi.useFakeTimers();
+      try {
+        withDirs(["/mdSilo"]);
+        const base = invoke.getMockImplementation();
+        let answer: () => void = () => {};
+        invoke.mockImplementation((cmd: string, args?: unknown) =>
+          cmd === "list_directory"
+            ? new Promise((r) => (answer = () => r([])))
+            : base?.(cmd, args),
+        );
+        const opening = useOpen.listInitDir("/mdSilo");
+        await vi.advanceTimersByTimeAsync(useOpen.OPEN_SLOW_MS);
+        expect(store.getState().openProblem).toBe(
+          "Opening /mdSilo is taking long.",
+        );
+        answer();
+        invoke.mockImplementation(base!);
+        await opening;
+        expect(store.getState().openProblem).toBeUndefined();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     test("a folder that fails to list is not left open and empty", async () => {
       withDirs(["/mdSilo"]);
       const base = invoke.getMockImplementation();

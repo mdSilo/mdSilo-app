@@ -2,8 +2,8 @@ import { memo, useMemo } from "react";
 import { NoteTree, NoteTreeItem, useStore } from "@/state/store";
 import { Sort } from "@/state/userSettings";
 import { ciStringCompare } from "@/lib/helper";
-import { onOpenFile, onListDir } from "@/workspace/useOpen";
-import { normalizeSlash } from "@/workspace/util";
+import { onOpenFile, onListDir, openWebWorkspace } from "@/workspace/useOpen";
+import { isWeb, normalizeSlash } from "@/workspace/util";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import SidebarNotesBar from "./SidebarNotesBar";
 import SidebarNotesTree, { NoteTreeRow } from "./SidebarNotesTree";
@@ -18,6 +18,7 @@ function SidebarNotes(props: SidebarNotesProps) {
   const { className = "" } = props;
 
   const currentDir = useStore((state) => state.currentDir);
+  const openProblem = useStore((state) => state.openProblem);
 
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
@@ -57,6 +58,7 @@ function SidebarNotes(props: SidebarNotesProps) {
           />
         ) : currentDir ? null : (
           <>
+            {openProblem ? <OpenProblem problem={openProblem} /> : null}
             <button className={btnClass} onClick={onListDir}>
               Open Folder
             </button>
@@ -68,6 +70,36 @@ function SidebarNotes(props: SidebarNotesProps) {
         )}
       </div>
     </ErrorBoundary>
+  );
+}
+
+/** What failed or hangs opening a folder: on a phone, no console to look at. */
+function OpenProblem({ problem }: { problem: string }) {
+  const btn = "px-2 py-0.5 rounded-sm bg-base-200 hover:bg-base-300";
+  return (
+    <div
+      role="alert"
+      className="mx-4 mt-4 p-2 text-sm rounded-sm border border-error/40 text-error break-words"
+    >
+      <p>{problem}</p>
+      <div className="flex gap-2 mt-2 text-base-content">
+        {isWeb ? (
+          <button
+            className={btn}
+            onClick={() =>
+              void openWebWorkspace().catch((e) =>
+                console.error("Failed to open the workspace:", e),
+              )
+            }
+          >
+            Try again
+          </button>
+        ) : null}
+        <button className={btn} onClick={() => window.location.reload()}>
+          Reload
+        </button>
+      </div>
+    </div>
   );
 }
 

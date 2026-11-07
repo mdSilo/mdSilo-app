@@ -16,6 +16,9 @@ export type StoreName =
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
+/** Open again if the browser does not answer for that long, see openDB. */
+export const OPEN_RETRY_MS = 3000;
+
 export function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
@@ -23,46 +26,68 @@ export function openDB(): Promise<IDBDatabase> {
       reject(new Error("IndexedDB is not supported in this browser"));
       return;
     }
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(FILES)) {
-        const files = db.createObjectStore(FILES, { keyPath: "path" });
-        files.createIndex("parent", "parent", { unique: false });
-      }
-      if (!db.objectStoreNames.contains(KV)) {
-        db.createObjectStore(KV);
-      }
-      if (!db.objectStoreNames.contains(CHANNELS)) {
-        db.createObjectStore(CHANNELS, { keyPath: "link" });
-      }
-      if (!db.objectStoreNames.contains(ARTICLES)) {
-        const articles = db.createObjectStore(ARTICLES, { keyPath: "url" });
-        articles.createIndex("feed_link", "feed_link", { unique: false });
-      }
-    };
-    req.onsuccess = () => {
-      const db = req.result;
-      // another tab upgraded the db
-      db.onversionchange = () => {
-        db.close();
-        dbPromise = null;
+    let settled = false;
+    const request = () => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => upgrade(req.result);
+      req.onsuccess = () => {
+        const db = req.result;
+        // the answer of the other request came first
+        if (settled) {
+          db.close();
+          return;
+        }
+        settled = true;
+        clearTimeout(retry);
+        // another tab upgraded the db
+        db.onversionchange = () => {
+          db.close();
+          dbPromise = null;
+        };
+        // the browser closed the connection (e.g. a phone resumes the app
+        // after a long sleep): the next use opens it again, not fails for good
+        db.onclose = () => {
+          dbPromise = null;
+        };
+        resolve(db);
       };
-      // the browser closed the connection (e.g. a phone resumes the app after
-      // a long sleep): the next use opens it again, not fails for good
-      db.onclose = () => {
+      req.onerror = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(retry);
         dbPromise = null;
+        reject(req.error);
       };
-      resolve(db);
+      // another connection (an old tab) keeps the db from opening: say so
+      req.onblocked = () => console.warn("IndexedDB is blocked by another tab");
     };
-    req.onerror = () => {
-      dbPromise = null;
-      reject(req.error);
-    };
-    // another connection (an old tab) keeps the db from opening: say so
-    req.onblocked = () => console.warn("IndexedDB is blocked by another tab");
+    // a browser may leave the first open of a launch unanswered (WebKit):
+    // asking again gets it going
+    const retry = setTimeout(() => {
+      if (settled) return;
+      console.warn("IndexedDB does not answer, opening it again");
+      request();
+    }, OPEN_RETRY_MS);
+    request();
   });
   return dbPromise;
+}
+
+function upgrade(db: IDBDatabase) {
+  if (!db.objectStoreNames.contains(FILES)) {
+    const files = db.createObjectStore(FILES, { keyPath: "path" });
+    files.createIndex("parent", "parent", { unique: false });
+  }
+  if (!db.objectStoreNames.contains(KV)) {
+    db.createObjectStore(KV);
+  }
+  if (!db.objectStoreNames.contains(CHANNELS)) {
+    db.createObjectStore(CHANNELS, { keyPath: "link" });
+  }
+  if (!db.objectStoreNames.contains(ARTICLES)) {
+    const articles = db.createObjectStore(ARTICLES, { keyPath: "url" });
+    articles.createIndex("feed_link", "feed_link", { unique: false });
+  }
 }
 
 /** close and forget the connection, for test */

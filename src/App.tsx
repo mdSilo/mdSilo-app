@@ -21,7 +21,7 @@ import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
 import { hasWindows, shareSettings } from "@/state/windowSync";
 import { flushAll } from "@/shell/flushAll";
 import { isWeb } from "@/workspace/util";
-import { openWebWorkspace } from "@/workspace/useOpen";
+import { openWebWorkspace, reportSlowSettings } from "@/workspace/useOpen";
 import FindOrCreateModal from "@/writer/NoteNewModal";
 import SideMenu from "@/shell/SideMenu";
 import { ViewMenuFallback } from "@/shell/ViewMenu";
@@ -100,12 +100,19 @@ const App = () => {
   // (recent / pinned folder) are loaded from storage
   useEffect(() => {
     if (!isWeb) return;
+    // the settings may not load: the folder is not opened then, say why
+    const slow = reportSlowSettings();
     const open = () => {
+      slow.cancel();
       void openWebWorkspace().catch((error) => {
         console.error("Failed to open workspace:", error);
       });
     };
-    return onStoreHydrated(open);
+    const stop = onStoreHydrated(open);
+    return () => {
+      slow.cancel();
+      stop();
+    };
   }, []);
 
   // sync every few minutes and on exit, if set
