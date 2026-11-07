@@ -81,8 +81,18 @@ function OpenProblem({ problem }: { problem: string }) {
       role="alert"
       className="mx-4 mt-4 p-2 text-sm rounded-sm border border-error/40 text-error break-words"
     >
-      <p>{problem}</p>
+      <p className="select-text">{problem}</p>
       <div className="flex gap-2 mt-2 text-base-content">
+        <button
+          className={btn}
+          onClick={() =>
+            void navigator.clipboard
+              ?.writeText(problem)
+              .catch((e) => console.error("Failed to copy:", e))
+          }
+        >
+          Copy
+        </button>
         {isWeb ? (
           <button
             className={btn}

@@ -121,8 +121,7 @@ export async function reportOpening<T>(
     setOpenProblem(undefined);
     return result;
   } catch (e) {
-    const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
-    setOpenProblem(`${label} failed: ${msg}`);
+    setOpenProblem(`${label} failed: ${describeError(e)}`);
     throw e;
   } finally {
     clearTimeout(slow);
@@ -145,6 +144,23 @@ export function reportSlowSettings(): { cancel: () => void } {
     );
   }, OPEN_SLOW_MS);
   return { cancel: () => clearTimeout(slow) };
+}
+
+/**
+ * An error, with where it was thrown: the first frames of its stack, for a
+ * report from a phone (no console there). A stack overflow repeats one frame:
+ * shown once.
+ */
+export function describeError(e: unknown): string {
+  if (!(e instanceof Error)) return String(e);
+  const frames = (e.stack ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    // V8 repeats the message as the first line
+    .filter((line) => line && !line.startsWith(`${e.name}:`));
+  const unique = frames.filter((line, i) => frames.indexOf(line) === i);
+  const at = unique.slice(0, 6).join(" | ");
+  return `${e.name}: ${e.message}${at ? ` [${at}]` : ""}`;
 }
 
 /** The commands running for long, web: the store in the browser. */

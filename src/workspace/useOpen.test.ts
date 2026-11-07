@@ -185,6 +185,26 @@ describe("useOpen (tauri)", () => {
     expect(invoke).not.toHaveBeenCalledWith("write_file", expect.anything());
   });
 
+  test("describes an error with where it was thrown, a frame once", () => {
+    const e = new RangeError("Maximum call stack size exceeded");
+    e.stack = [
+      "RangeError: Maximum call stack size exceeded",
+      "    at walk (a.js:1:10)",
+      "    at walk (a.js:1:10)",
+      "    at walk (a.js:1:10)",
+      "    at open (b.js:2:20)",
+    ].join("\n");
+    expect(useOpen.describeError(e)).toBe(
+      "RangeError: Maximum call stack size exceeded [at walk (a.js:1:10) | at open (b.js:2:20)]",
+    );
+    // Safari: no message line
+    e.stack = "walk@a.js:1:10\nwalk@a.js:1:10\nopen@b.js:2:20";
+    expect(useOpen.describeError(e)).toBe(
+      "RangeError: Maximum call stack size exceeded [walk@a.js:1:10 | open@b.js:2:20]",
+    );
+    expect(useOpen.describeError("boom")).toBe("boom");
+  });
+
   describe("openWebWorkspace", () => {
     const withDirs = (dirs: string[]) =>
       mockInvoke(invoke, {
@@ -265,8 +285,9 @@ describe("useOpen (tauri)", () => {
         return base?.(cmd, args);
       });
       await expect(useOpen.listInitDir("/mdSilo")).rejects.toThrow("boom");
-      expect(store.getState().openProblem).toBe(
-        "Opening /mdSilo failed: TypeError: boom",
+      // with where it was thrown
+      expect(store.getState().openProblem).toMatch(
+        /^Opening \/mdSilo failed: TypeError: boom \[.+useOpen\.test\.ts/,
       );
       invoke.mockImplementation(base!);
       await useOpen.listInitDir("/mdSilo");
