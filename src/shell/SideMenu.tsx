@@ -50,7 +50,7 @@ import {
   openJsonFile,
 } from "@/workspace/useOpen";
 import { isTauri, isWeb } from "@/workspace/util";
-import { flushSave } from "@/workspace/pendingSaves";
+import { flushAll } from "@/shell/flushAll";
 import { store, useStore } from "@/state/store";
 import type { SideMenuOrientation } from "@/state/userSettings";
 import useIsMobile, { isMobileWidth } from "@/lib/hooks/useIsMobile";
@@ -239,10 +239,10 @@ const LogoMenu = () => {
   );
 };
 
-/** Reload the app, e.g. when it got stuck: the pending saves are written first. */
+/** Reload the app, e.g. when it got stuck: what waits to be saved is written first. */
 async function reloadApp() {
   try {
-    await flushSave();
+    await flushAll();
   } catch (e) {
     console.error("Failed to save before reloading:", e);
   }

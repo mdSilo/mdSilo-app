@@ -19,9 +19,7 @@ import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
 import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
 import { hasWindows, shareSettings } from "@/state/windowSync";
-import { flushSave } from "@/workspace/pendingSaves";
-import { issueStore } from "@/issue/issueStore";
-import { useReaderStore, useSideStore } from "@/reader/readerStore";
+import { flushAll } from "@/shell/flushAll";
 import { isWeb } from "@/workspace/util";
 import { openWebWorkspace } from "@/workspace/useOpen";
 import FindOrCreateModal from "@/writer/NoteNewModal";
@@ -119,12 +117,7 @@ const App = () => {
     if (!hasWindows) return;
     const unlisten = getCurrentWindow().onCloseRequested(async () => {
       try {
-        await Promise.all([
-          useReaderStore.getState().flush(),
-          useSideStore.getState().flush(),
-          issueStore.getState().flush(),
-          flushSave(),
-        ]);
+        await flushAll();
       } catch (e) {
         console.error("Failed to save before closing:", e);
       }

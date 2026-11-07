@@ -259,6 +259,8 @@ describe("the time read", () => {
         "Date",
       ],
     });
+    // midday: the ticks never fall on two days (they would near midnight)
+    vi.setSystemTime(new Date(2026, 0, 15, 12));
     try {
       await useReaderStore.getState().open(BOOK);
       const hash = useReaderStore.getState().hash!;
