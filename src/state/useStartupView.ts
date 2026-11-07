@@ -40,9 +40,15 @@ export default function useStartupView() {
         store.getState().setSidebarTab(SidebarTab.Silo);
         return;
       }
+      let shown = false;
       const show = () => {
         const { initDir, layout, lastBooks } = store.getState();
         if (!initDir) return false;
+        // done, before showing: showing the view changes the store (the
+        // last book), which calls this again from the subscription below,
+        // over and over, until the stack overflows
+        shown = true;
+        unsubscribe();
         const available =
           (view !== "library" && view !== "book") || layout === "workspace";
         if (!available || viewRef.current !== "default") return true;
@@ -55,7 +61,7 @@ export default function useStartupView() {
       };
       if (show()) return;
       unsubscribe = store.subscribe(() => {
-        if (show()) unsubscribe();
+        if (!shown) show();
       });
     });
     return () => {

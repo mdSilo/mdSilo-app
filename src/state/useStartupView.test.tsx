@@ -89,6 +89,23 @@ describe("useStartupView", () => {
     });
   });
 
+  test("opens the last book once the folder is open, once", () => {
+    // going to the book sets the last book: a change of the store, which
+    // must not show the startup view again (it did, until the stack overflowed)
+    store.getState().setStartupView("book");
+    store.getState().setLastBook("/ws", "/ws/reading/a.epub");
+    const { result } = renderStartup();
+    expect(result.current.state.view).toBe("default");
+    openFolder();
+    expect(result.current.state).toMatchObject({
+      view: "book",
+      bookPath: "/ws/reading/a.epub",
+    });
+    act(() => result.current.dispatch({ view: "graph" }));
+    act(() => store.getState().setLastBook("/ws", "/ws/reading/b.epub"));
+    expect(result.current.state.view).toBe("graph");
+  });
+
   test("opens the last book in a workspace only", () => {
     store.getState().setStartupView("book");
     store.getState().setLastBook("/ws", "/ws/reading/a.epub");
