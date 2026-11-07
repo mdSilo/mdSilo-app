@@ -15,7 +15,36 @@ import { useStore } from "@/state/store";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { findBookPath } from "../library/library";
 import { openLinkOutside } from "../lookup/lookup";
+import Pronunciations from "../dictionary/Pronunciations";
+import { playRecording } from "../dictionary/audio";
+import {
+  builtinSources,
+  DEFAULT_DICTIONARY_SETTINGS,
+} from "../dictionary/dictionary";
+import { useLocalDictionaries } from "../dictionary/local";
+// the recordings of dictionary files, played
+import "../dictionary/mdict";
 import { useVocabulary, type VocabularyEntry } from "./vocabulary";
+
+/** The names of the dictionaries of the app, for the words kept before their name was. */
+const BUILTIN_NAMES = new Map(
+  builtinSources(DEFAULT_DICTIONARY_SETTINGS).map((s) => [s.id, s.label]),
+);
+
+/** The name of the dictionary a word was looked up in. */
+export const sourceNameOf = (entry: VocabularyEntry) =>
+  entry.sourceName ||
+  (entry.source ? BUILTIN_NAMES.get(entry.source) : undefined);
+
+/** The dictionary of a word, a line under it. */
+function Source({ entry }: { entry: VocabularyEntry }) {
+  const name = sourceNameOf(entry);
+  return name ? (
+    <div className="mt-2 text-xs opacity-50" data-testid="vocabulary-source">
+      From {name}
+    </div>
+  ) : null;
+}
 
 type Mode = "study" | "grid" | "select";
 
@@ -114,30 +143,50 @@ function StudyCard({
           transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
         }}
       >
-        <button
-          className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center shadow-lg rounded-xl bg-primary text-primary-content"
+        <div
+          className="absolute inset-0 shadow-lg rounded-xl bg-primary text-primary-content"
           style={{ backfaceVisibility: "hidden" }}
-          onClick={onFlip}
           aria-hidden={flipped}
-          tabIndex={flipped ? -1 : 0}
         >
-          <span className="mb-4 text-xs opacity-60">
-            Click or press space to see the meaning
-          </span>
-          <span className="text-4xl font-bold break-words">{entry.word}</span>
-          {entry.language ? (
-            <span className="mt-4 text-xs opacity-60">{entry.language}</span>
+          <button
+            className="absolute inset-0 flex flex-col items-center justify-center w-full p-4 text-center"
+            onClick={onFlip}
+            tabIndex={flipped ? -1 : 0}
+          >
+            <span className="mb-4 text-xs opacity-60">
+              Click or press space to see the meaning
+              {entry.pronunciations?.some((p) => p.audio)
+                ? ", P to hear it"
+                : ""}
+            </span>
+            <span className="text-4xl font-bold break-words">{entry.word}</span>
+            {entry.language ? (
+              <span className="mt-4 text-xs opacity-60">{entry.language}</span>
+            ) : null}
+          </button>
+          {/* to hear it before turning it: beside the card, not in it (no button in a button) */}
+          {entry.pronunciations?.length && !flipped ? (
+            <div className="absolute inset-x-0 flex justify-center bottom-6">
+              <Pronunciations list={entry.pronunciations} className="" />
+            </div>
           ) : null}
-        </button>
+        </div>
         <div
           className="absolute inset-0 flex flex-col p-4 overflow-y-auto shadow-lg cursor-pointer rounded-xl bg-base-200"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           onClick={onFlip}
           aria-hidden={!flipped}
         >
-          <div className="mb-2 text-xl font-bold">{entry.word}</div>
+          <div className="mb-2 text-xl font-bold">
+            {entry.word}
+            <Pronunciations
+              list={entry.pronunciations}
+              className="ml-2 text-base font-normal"
+            />
+          </div>
           <Definition entry={entry} className="text-sm" />
           <Context entry={entry} />
+          <Source entry={entry} />
         </div>
       </div>
     </div>
@@ -158,6 +207,13 @@ export default function Vocabulary() {
   useEffect(() => {
     if (ws) void useVocabulary.getState().load(ws);
   }, [ws]);
+
+  // the dictionary files, to play their recordings
+  const dictionariesWs = useLocalDictionaries((state) => state.ws);
+  useEffect(() => {
+    if (ws && dictionariesWs !== ws)
+      void useLocalDictionaries.getState().load(ws);
+  }, [ws, dictionariesWs]);
 
   // fewer words, e.g. one deleted
   useEffect(() => {
@@ -193,7 +249,11 @@ export default function Vocabulary() {
       if (e.key === " ") setFlipped((f) => !f);
       else if (e.key === "ArrowRight") next();
       else if (e.key === "ArrowLeft" && index > 0) go(index - 1);
-      else return;
+      else if (e.key.toLowerCase() === "p" && !e.ctrlKey && !e.metaKey) {
+        const audio = current?.pronunciations?.find((p) => p.audio)?.audio;
+        if (!audio) return;
+        void playRecording(audio);
+      } else return;
       e.preventDefault();
     };
     window.addEventListener("keydown", onKey);
@@ -305,7 +365,14 @@ export default function Vocabulary() {
                     }
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold">{entry.word}</div>
+                    <div className="font-semibold">
+                      {entry.word}
+                      {sourceNameOf(entry) ? (
+                        <span className="ml-2 text-xs font-normal opacity-50">
+                          {sourceNameOf(entry)}
+                        </span>
+                      ) : null}
+                    </div>
                     <Definition
                       entry={entry}
                       className="text-sm overflow-y-auto max-h-24 opacity-80"
@@ -339,11 +406,16 @@ export default function Vocabulary() {
                 </button>
                 <div className="pr-6 mb-1 text-lg font-bold break-words">
                   {entry.word}
+                  <Pronunciations
+                    list={entry.pronunciations}
+                    className="ml-1 text-sm font-normal"
+                  />
                 </div>
                 <Definition
                   entry={entry}
                   className="overflow-y-auto text-sm max-h-40 opacity-80"
                 />
+                <Source entry={entry} />
                 {entry.reviewCount ? (
                   <div className="mt-2 text-xs opacity-50">
                     Reviewed {entry.reviewCount}×

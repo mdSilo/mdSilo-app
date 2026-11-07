@@ -1618,6 +1618,62 @@ describe("vocabulary", () => {
     vi.unstubAllGlobals();
   });
 
+  test("a word heard on its card, front and back; its dictionary named", async () => {
+    const plays: string[] = [];
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockImplementation(function (this: HTMLMediaElement) {
+        plays.push(this.src);
+        return Promise.resolve();
+      });
+    const add = useVocabulary.getState().add;
+    // kept before the names: the name of the dictionary of the app
+    await add(WS, {
+      word: "bright",
+      definition: "<p>shining</p>",
+      source: "wiktionary",
+    });
+    await add(WS, {
+      word: "cold",
+      definition: "<p>chilly</p>",
+      source: "mdict:gone",
+      sourceName: "Oxford",
+      pronunciations: [
+        { text: "/kəʊld/", audio: "https://x/cold-uk.mp3", label: "UK" },
+        { audio: "mdict:gone:cold.mp3", label: "US" },
+      ],
+    });
+    renderMain();
+    await go({ view: "library" });
+    fireEvent.click(await screen.findByTitle("Vocabulary"));
+    const card = await screen.findByTestId("vocabulary-card");
+    expect(card).toHaveTextContent("P to hear it");
+    // on the front, not turning it
+    fireEvent.click(
+      within(card).getAllByLabelText("Play the pronunciation (UK)")[0],
+    );
+    expect(plays).toEqual(["https://x/cold-uk.mp3"]);
+    expect(card.querySelector(".bg-primary")).toHaveAttribute(
+      "aria-hidden",
+      "false",
+    );
+    // the key P
+    fireEvent.keyDown(window, { key: "p" });
+    expect(plays).toHaveLength(2);
+    // a file not on this device: not played
+    expect(
+      within(card).getAllByLabelText("Play the pronunciation (US)")[0],
+    ).toBeDisabled();
+    fireEvent.keyDown(window, { key: " " });
+    expect(within(card).getByTestId("vocabulary-source")).toHaveTextContent(
+      "From Oxford",
+    );
+    // the grid: the old word's dictionary by its id
+    fireEvent.click(screen.getByLabelText("All the words"));
+    expect(await screen.findByText("From Wiktionary")).toBeInTheDocument();
+    play.mockRestore();
+  });
+
   test("the words studied by cards, seen all, deleted", async () => {
     const hash = await invoke<string>("book_hash", { filePath: BOOK });
     const add = useVocabulary.getState().add;

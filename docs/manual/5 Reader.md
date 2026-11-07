@@ -100,7 +100,9 @@ The dictionaries are set in **Settings → Dictionaries** (or the gear of the po
 
 Dictionary files are kept in the workspace (`.mdsilo/dictionaries/`) and are **not synced** unless you turn it on with the cloud button of the dictionary: they are often big. Another device sees the dictionary marked *Not here* until its files are synced to it. Links between entries look the other word up (the arrow goes back), and the speakers play the dictionary's sounds.
 
-**Add to vocabulary** stores the word with its definition, the sentence it came from and a link to the book. The **Vocabulary** page (in the Library header) reviews them as flash cards, as a grid, or in bulk.
+**Add to vocabulary** stores the word with its definition, its pronunciations, the dictionary, the sentence it came from and a link to the book (a word kept without pronunciations gets them the next time you look it up in a dictionary that has them). The **Vocabulary** page (in the Library header) reviews them as flash cards, as a grid, or in bulk; the speakers play a word, on either side of a card, and **P** plays the card shown.
+
+In a dark theme, the colors a dictionary file gives its entries (made for a white page) are turned light where they would be hard to read.
 
 ## Read aloud
 

@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import { store } from "@/state/store";
 import { openUrl } from "@/workspace/open";
+import { resetVocabulary, useVocabulary } from "../vocabulary/vocabulary";
 import DictionaryLookup from "./DictionaryLookup";
 import DictionariesModal from "./DictionariesModal";
 import {
@@ -117,6 +118,62 @@ describe("dictionary lookup", () => {
     expect(
       fetchMock.mock.calls.filter(([u]) => String(u).includes("definition")),
     ).toHaveLength(1);
+  });
+
+  test("added to the vocabulary with its pronunciations and dictionary; a word kept before given them", async () => {
+    resetVocabulary();
+    mockFs();
+    await useVocabulary
+      .getState()
+      .add("/ws", { word: "old", definition: "<p>aged</p>" });
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes("dictionaryapi.dev")
+        ? respond(
+            url.endsWith("/old")
+              ? [
+                  {
+                    ...FREE_COLD[0],
+                    word: "old",
+                    phonetics: [{ text: "/əʊld/" }],
+                  },
+                ]
+              : FREE_COLD,
+          )
+        : respond({}, 404),
+    );
+    const { unmount } = render(
+      <DictionaryLookup
+        selection={selection("cold")}
+        ws="/ws"
+        onKeep={vi.fn()}
+      />,
+    );
+    fireEvent.click(await screen.findByText("Add to vocabulary"));
+    await screen.findByTestId("word-kept");
+    expect(
+      useVocabulary.getState().entries.find((e) => e.word === "cold"),
+    ).toMatchObject({
+      source: "free-dictionary",
+      sourceName: "Free Dictionary",
+      pronunciations: [
+        { text: "/koʊld/", audio: "https://x/cold-us.mp3", label: "US" },
+      ],
+    });
+    unmount();
+    render(
+      <DictionaryLookup
+        selection={selection("old")}
+        ws="/ws"
+        onKeep={vi.fn()}
+      />,
+    );
+    await screen.findByTestId("word-kept");
+    await waitFor(() =>
+      expect(
+        useVocabulary.getState().entries.find((e) => e.word === "old")
+          ?.pronunciations,
+      ).toEqual([{ text: "/əʊld/" }]),
+    );
   });
 
   test("found in the first: the others not looked up", async () => {
@@ -286,6 +343,29 @@ describe("dictionary files", () => {
     fireEvent.click(screen.getByText("Keep as note"));
     expect(onKeep.mock.calls[0][0]).toMatch(/^abide \[.*abide by/);
     expect(onKeep.mock.calls[0][0]).not.toContain("<");
+  });
+
+  test("a dark theme: the dark colors of the dictionary made light", async () => {
+    await importLongman();
+    setSettings({ enabled: { wiktionary: false, "free-dictionary": false } });
+    store.setState({ darkMode: true });
+    render(
+      <DictionaryLookup
+        selection={selection("abide")}
+        ws={WS}
+        onKeep={vi.fn()}
+      />,
+    );
+    await waitFor(() => expect(entryText()).toContain("abide by"));
+    const root = screen.getByTestId("mdict-entry").shadowRoot!;
+    // some of its own colors, for a white page, too dark here
+    await waitFor(() =>
+      expect(
+        [...root.querySelectorAll<HTMLElement>(".mdict-entry *")].some(
+          (el) => el.style.getPropertyPriority("color") === "important",
+        ),
+      ).toBe(true),
+    );
   });
 
   test("not in the file: on to the web", async () => {

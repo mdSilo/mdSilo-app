@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useWebFs } from "../../testUtils";
 import {
+  keptPronunciations,
+  pronunciationsOf,
   definitionOf,
   readVocabulary,
   resetVocabulary,
@@ -120,6 +122,64 @@ describe("vocabulary", () => {
     expect(definition).toMatch(/^<p>x &lt;y&gt; word word/);
     expect(definition).toMatch(/word…<\/p>$/);
     expect(definition.length).toBeLessThan(320);
+  });
+
+  test("pronunciations kept: spellings and recordings the app plays, a few", () => {
+    expect(
+      keptPronunciations([
+        { text: "/kəʊld/", audio: "https://x/cold-uk.mp3", label: "UK" },
+        { audio: "mdict:d1:uk/cold.mp3" },
+        { audio: "javascript:alert(1)", label: "X" },
+        { audio: "data:audio/mp3;base64,AA" },
+        { text: "\\ˈkōld\\" },
+        null,
+        "nope",
+      ]),
+    ).toEqual([
+      { text: "/kəʊld/", audio: "https://x/cold-uk.mp3", label: "UK" },
+      { audio: "mdict:d1:uk/cold.mp3" },
+      { text: "\\ˈkōld\\" },
+    ]);
+    expect(keptPronunciations("x")).toEqual([]);
+    // of the first entry, or of an entry as HTML
+    expect(
+      pronunciationsOf({
+        word: "x",
+        url: "",
+        entries: [],
+        html: "<b>x</b>",
+        pronunciations: [{ audio: "mdict:d:x.mp3" }],
+      }),
+    ).toEqual([{ audio: "mdict:d:x.mp3" }]);
+  });
+
+  test("a word kept: its pronunciations and dictionary; given them later if it had none", async () => {
+    const { add, addPronunciations } = useVocabulary.getState();
+    await add(WS, {
+      word: "cold",
+      definition: "<p>chilly</p>",
+      source: "free-dictionary",
+      sourceName: "Free Dictionary",
+      pronunciations: [
+        { audio: "https://x/cold.mp3", label: "US" },
+        { audio: "file:///etc/passwd" },
+      ],
+    });
+    await add(WS, { word: "old", definition: "<p>aged</p>" });
+    let [old, cold] = useVocabulary.getState().entries;
+    expect(cold).toMatchObject({
+      sourceName: "Free Dictionary",
+      pronunciations: [{ audio: "https://x/cold.mp3", label: "US" }],
+    });
+    expect(old.pronunciations).toBeUndefined();
+    await addPronunciations(WS, old.id, [{ text: "/əʊld/" }]);
+    // not over those it has
+    await addPronunciations(WS, cold.id, [{ text: "/other/" }]);
+    [old, cold] = await readVocabulary(WS);
+    expect(old.pronunciations).toEqual([{ text: "/əʊld/" }]);
+    expect(cold.pronunciations).toEqual([
+      { audio: "https://x/cold.mp3", label: "US" },
+    ]);
   });
 
   test("the sentence a word is in", () => {

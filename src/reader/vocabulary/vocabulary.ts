@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { joinPath } from "@/workspace/util";
 import { DATA_DIR } from "@/workspace/layout";
 import { newNoteId } from "../annotations/annotations";
-import type { DictionaryResult } from "../lookup/lookup";
+import type { DictionaryResult, Pronunciation } from "../lookup/lookup";
 
 /**
  * The words to learn, met in the books and looked up in the dictionary;
@@ -25,8 +25,12 @@ export type VocabularyEntry = {
   definition: string;
   /** the language of the word, e.g. en */
   language?: string;
-  /** e.g. wiktionary */
+  /** the dictionary, by its id: e.g. wiktionary, mdict:<id> of a file */
   source?: string;
+  /** its name, when added: shown, also once the dictionary is gone */
+  sourceName?: string;
+  /** how it is said: spellings (IPA), recordings (web urls, or `mdict:<id>:<path>`) */
+  pronunciations?: Pronunciation[];
   /** where it was met: the sentence, the book and the place in it */
   context?: { sentence?: string; book?: string; title?: string; cfi?: string };
   addedAt: string;
@@ -43,7 +47,13 @@ export async function readVocabulary(ws: string): Promise<VocabularyEntry[]> {
     const text = await invoke<string>("read_file", { filePath: pathOf(ws) });
     if (!text?.trim()) return [];
     const data = JSON.parse(text) as Partial<VocabularyFile>;
-    return (data.entries ?? []).filter((e) => e?.id && e.word);
+    return (data.entries ?? [])
+      .filter((e) => e?.id && e.word)
+      .map((e) => {
+        const pronunciations = keptPronunciations(e.pronunciations);
+        const { pronunciations: _, ...rest } = e;
+        return pronunciations.length ? { ...rest, pronunciations } : rest;
+      });
   } catch (e) {
     if (e instanceof SyntaxError)
       console.error(`${pathOf(ws)} is not valid JSON`, e);
@@ -55,6 +65,38 @@ async function writeVocabulary(ws: string, entries: VocabularyEntry[]) {
   const text = `${JSON.stringify({ version: VOCABULARY_VERSION, entries }, null, 2)}\n`;
   await invoke("write_file", { filePath: pathOf(ws), text });
 }
+
+/**
+ * The pronunciations kept of a word: a few, each a spelling or a recording
+ * the app plays (a web url, or of a dictionary file); the file is synced and
+ * may be edited, so checked when read too.
+ */
+export function keptPronunciations(list?: unknown): Pronunciation[] {
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((p: Partial<Pronunciation> | null) => {
+      const text = typeof p?.text === "string" ? p.text.slice(0, 80) : "";
+      const audio =
+        typeof p?.audio === "string" &&
+        /^(https?:\/\/|mdict:[^:]+:.)/i.test(p.audio)
+          ? p.audio
+          : "";
+      const label = typeof p?.label === "string" ? p.label.slice(0, 12) : "";
+      return {
+        ...(text ? { text } : {}),
+        ...(audio ? { audio } : {}),
+        ...(label && (text || audio) ? { label } : {}),
+      };
+    })
+    .filter((p) => p.text || p.audio)
+    .slice(0, 4);
+}
+
+/** The pronunciations of a word looked up: of its first entry, or of an entry as HTML. */
+export const pronunciationsOf = (result: DictionaryResult) =>
+  keptPronunciations(
+    result.entries[0]?.pronunciations ?? result.pronunciations,
+  );
 
 /** The same word: case aside, in the same language if both say it. */
 export const sameWord = (
@@ -217,6 +259,12 @@ type Vocabulary = {
   ) => Promise<void>;
   remove: (ws: string, ids: string[]) => Promise<void>;
   recordReview: (ws: string, id: string) => Promise<void>;
+  /** give a word kept its pronunciations, if it has none: kept before they were */
+  addPronunciations: (
+    ws: string,
+    id: string,
+    pronunciations: Pronunciation[],
+  ) => Promise<void>;
 };
 
 export const useVocabulary = create<Vocabulary>((set) => {
@@ -247,9 +295,12 @@ export const useVocabulary = create<Vocabulary>((set) => {
     add: (ws, entry) =>
       change(ws, (entries) => {
         if (entries.some((e) => sameWord(e, entry))) return undefined;
+        const pronunciations = keptPronunciations(entry.pronunciations);
+        const { pronunciations: _, ...rest } = entry;
         return [
           {
-            ...entry,
+            ...rest,
+            ...(pronunciations.length ? { pronunciations } : {}),
             word: entry.word.trim(),
             id: newNoteId(),
             addedAt: new Date().toISOString(),
@@ -259,6 +310,18 @@ export const useVocabulary = create<Vocabulary>((set) => {
       }),
     remove: (ws, ids) =>
       change(ws, (entries) => entries.filter((e) => !ids.includes(e.id))),
+    addPronunciations: (ws, id, list) =>
+      change(ws, (entries) => {
+        const pronunciations = keptPronunciations(list);
+        const at = entries.findIndex((e) => e.id === id);
+        if (
+          !pronunciations.length ||
+          at < 0 ||
+          entries[at].pronunciations?.length
+        )
+          return undefined;
+        return entries.map((e, i) => (i === at ? { ...e, pronunciations } : e));
+      }),
     recordReview: (ws, id) =>
       change(ws, (entries) =>
         entries.map((e) =>

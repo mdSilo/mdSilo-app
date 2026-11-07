@@ -6,7 +6,6 @@ import {
   TbNote,
   TbSettings,
   TbVocabulary,
-  TbVolume,
 } from "react-icons/tb";
 import { openUrl } from "@/workspace/open";
 import { store } from "@/state/store";
@@ -15,6 +14,7 @@ import type { TextSelection } from "../popups";
 import { activeStore } from "../readerStore";
 import {
   definitionOf,
+  pronunciationsOf,
   textOfHtml,
   sameWord,
   sentenceAround,
@@ -25,7 +25,7 @@ import {
   type DictionaryResult,
   type Pronunciation,
 } from "../lookup/lookup";
-import { playRecording } from "./audio";
+import Pronunciations from "./Pronunciations";
 import {
   enabledSources,
   useDictionarySettings,
@@ -322,38 +322,6 @@ function LinkOnly({
   );
 }
 
-/** The ways a word is said: the spelling, a button to play each recording. */
-export function Pronunciations({ list }: { list?: Pronunciation[] }) {
-  if (!list?.length) return null;
-  return (
-    <span className="inline-flex flex-wrap items-center gap-1 ml-1">
-      {list.map((p, i) =>
-        p.audio ? (
-          <button
-            key={i}
-            type="button"
-            className="h-auto min-h-0 px-1 py-0 font-normal btn btn-ghost btn-xs"
-            title={`Play${p.label ? ` (${p.label})` : ""}`}
-            aria-label={`Play the pronunciation${p.label ? ` (${p.label})` : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              void playRecording(p.audio!);
-            }}
-          >
-            <TbVolume />
-            {p.label ? <span className="text-xs">{p.label}</span> : null}
-            {p.text ? <span className="text-xs">{p.text}</span> : null}
-          </button>
-        ) : p.text ? (
-          <span key={i} className="text-xs text-base-content/70">
-            {p.text}
-          </span>
-        ) : null,
-      )}
-    </span>
-  );
-}
-
 function Entries({ result }: { result: DictionaryResult }) {
   if (result.entries.length === 0)
     return (
@@ -409,12 +377,18 @@ function AddWord({
   useEffect(() => {
     if (vocabularyWs !== ws) void useVocabulary.getState().load(ws);
   }, [ws, vocabularyWs]);
-  const kept = vocabulary.some((e) =>
+  const kept = vocabulary.find((e) =>
     sameWord(e, {
       word: result.word,
       language: definitionOf(result).language,
     }),
   );
+  // a word kept before its pronunciations were: given those found now
+  const said = useMemo(() => pronunciationsOf(result), [result]);
+  useEffect(() => {
+    if (kept && !kept.pronunciations?.length && said.length)
+      void useVocabulary.getState().addPronunciations(ws, kept.id, said);
+  }, [ws, kept, said]);
   if (kept) {
     return (
       <span
@@ -431,6 +405,8 @@ function AddWord({
       word: result.word,
       ...definitionOf(result),
       source: source.id,
+      sourceName: source.label,
+      ...(said.length ? { pronunciations: said } : {}),
       context: {
         sentence: sentenceAround(selection.range),
         ...(hash ? { book: hash, title: entry?.title } : {}),

@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useStore } from "@/state/store";
 import { openUrl } from "@/workspace/open";
 import { playRecording } from "./audio";
+import { adaptToDark, pageBackground, type Rgb } from "./contrast";
 import { dictionaryFile, type LocalDictionary } from "./local";
 import {
   mdictAudioRef,
@@ -24,6 +26,9 @@ const BASE_CSS = `
 .mdict-entry img { max-width: 100%; height: auto; }
 [data-mdict-sound], [data-mdict-entry], [data-mdict-anchor] { cursor: pointer; }
 `;
+
+/** The page of a dark theme, if the popup's cannot be told. */
+const DARK_PAGE: Rgb = { r: 29, g: 35, b: 42, a: 1 };
 
 const CSS_URL = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]+?))\s*\)/g;
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -105,6 +110,8 @@ export default function MdictEntry({
   const hostRef = useRef<HTMLDivElement>(null);
   const navigate = useRef(onNavigate);
   navigate.current = onNavigate;
+  // a dark theme: the colors of the dictionary (for a white page) made readable
+  const dark = useStore((state) => state.darkMode);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -114,12 +121,23 @@ export default function MdictEntry({
     const urls: string[] = [];
     root.innerHTML = `<style>${BASE_CSS}</style><style data-dict></style><div class="mdict-entry">${html}</div>`;
 
+    const entry = root.querySelector(".mdict-entry");
+    const adapt = () => {
+      if (dark && entry && !cancelled)
+        adaptToDark(entry, pageBackground(host) ?? DARK_PAGE);
+    };
+
     void (async () => {
       const opened = await openDictionary(ws, dict).catch(() => undefined);
-      if (!opened || cancelled) return;
+      if (!opened || cancelled) {
+        adapt();
+        return;
+      }
       const css = await stylesOf(ws, dict, opened, styles ?? [], urls);
       const sheet = root.querySelector("style[data-dict]");
       if (!cancelled && sheet) sheet.textContent = css;
+      // with the styles of the dictionary applied
+      adapt();
       const imgs = [
         ...root.querySelectorAll<HTMLImageElement>("img[data-mdict-src]"),
       ];
@@ -167,7 +185,7 @@ export default function MdictEntry({
       root.removeEventListener("click", onClick);
       urls.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, [ws, dict, html, styles]);
+  }, [ws, dict, html, styles, dark]);
 
   return <div ref={hostRef} data-testid="mdict-entry" />;
 }
