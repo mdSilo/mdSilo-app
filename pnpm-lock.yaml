@@ -134,6 +134,9 @@ importers:
       js-md5:
         specifier: ^0.9.2
         version: 0.9.2
+      js-mdict:
+        specifier: workspace:*
+        version: link:packages/js-mdict
       jspdf:
         specifier: ^4.2.1
         version: 4.2.1
@@ -327,6 +330,12 @@ importers:
       pdfjs-dist:
         specifier: 5.7.284
         version: 5.7.284
+
+  packages/js-mdict:
+    dependencies:
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.3
 
   packages/mdsmirror:
     dependencies:

@@ -361,24 +361,31 @@ export function Select({
   );
 }
 
-const RANGE_SIZES: Record<Size, string> = {
-  xs: "range-xs",
-  sm: "range-sm",
-  md: "range-md",
-  lg: "range-lg",
-};
-const RANGE_COLORS: Record<Color, string> = {
-  primary: "range-primary",
-  secondary: "range-secondary",
-  accent: "range-accent",
-  neutral: "range-neutral",
-  info: "range-info",
-  success: "range-success",
-  warning: "range-warning",
-  error: "range-error",
+const STEP_BUTTON_SIZES: Record<Size, string> = {
+  xs: "btn-xs",
+  sm: "btn-sm",
+  md: "btn-md",
+  lg: "btn-lg",
 };
 
-/** A slider, the value shown on its right if `format` is given. */
+/** The decimals of a step, e.g. 2 of 0.05: a value stepped is rounded to them. */
+const decimalsOf = (step: number) => (String(step).split(".")[1] ?? "").length;
+
+/** A value a number of steps away, within the bounds, rounded to the step. */
+export function stepValue(
+  value: number,
+  steps: number,
+  { min, max, step }: { min: number; max: number; step: number },
+): number {
+  const next = Number((value + steps * step).toFixed(decimalsOf(step)));
+  return Math.min(max, Math.max(min, next));
+}
+
+/**
+ * A number set by steps: its value, and − and + to take a step down or up
+ * (easier to hit than a slider). The arrow keys step too, Page Up and Down
+ * by ten.
+ */
 export function Range({
   label,
   value,
@@ -387,9 +394,7 @@ export function Range({
   step = 1,
   format,
   onChange,
-  size = "xs",
-  color,
-  width = "w-36",
+  size = "sm",
   className,
   ariaLabel,
 }: RowProps & {
@@ -400,77 +405,72 @@ export function Range({
   format?: (v: number) => string;
   onChange: (v: number) => void;
   size?: Size;
+  /** of the old slider: not used */
   color?: Color;
   width?: string;
   ariaLabel?: string;
 }) {
-  return (
-    <Row label={label} className={className}>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        className={join(
-          "range",
-          RANGE_SIZES[size],
-          color && RANGE_COLORS[color],
-          width,
-        )}
-        aria-label={
-          ariaLabel ?? (typeof label === "string" ? label : undefined)
-        }
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-      />
-      {format ? <span className="w-8 text-right">{format(value)}</span> : null}
-    </Row>
+  const name = ariaLabel ?? (typeof label === "string" ? label : undefined);
+  const shown = format ? format(value) : String(value);
+  const go = (steps: number) => {
+    const next = stepValue(value, steps, { min, max, step });
+    if (next !== value) onChange(next);
+  };
+  const button = join(
+    "btn btn-circle btn-ghost bg-base-200 text-lg font-normal",
+    STEP_BUTTON_SIZES[size],
   );
-}
-
-const INPUT_SIZES: Record<Size, string> = {
-  xs: "input-xs",
-  sm: "input-sm",
-  md: "input-md",
-  lg: "input-lg",
-};
-
-export function NumberInput({
-  label,
-  value,
-  step,
-  digits,
-  unit,
-  onChange,
-  size = "xs",
-  width = "w-20",
-  className,
-  ariaLabel,
-}: RowProps & {
-  value: number;
-  step: number;
-  digits: number;
-  unit?: string;
-  onChange: (v: number) => void;
-  size?: Size;
-  width?: string;
-  ariaLabel?: string;
-}) {
   return (
-    <Row label={label} className={className}>
-      <span className="flex items-center gap-1">
-        <input
-          type="number"
-          step={step}
-          className={join("input", INPUT_SIZES[size], width)}
-          aria-label={
-            ariaLabel ?? (typeof label === "string" ? label : undefined)
-          }
-          value={value.toFixed(digits)}
-          onChange={(e) => onChange(Number(e.target.value))}
-        />
-        <span className="w-5 text-xs text-base-content/70">{unit}</span>
-      </span>
+    <Row label={label} className={className} as="div">
+      <div className="flex items-center gap-2">
+        <span
+          role="spinbutton"
+          tabIndex={0}
+          aria-label={name}
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={value}
+          aria-valuetext={shown}
+          className="min-w-10 text-right tabular-nums rounded focus-visible:outline-2 focus-visible:outline-primary"
+          onKeyDown={(e) => {
+            const steps =
+              e.key === "ArrowUp" || e.key === "ArrowRight"
+                ? 1
+                : e.key === "ArrowDown" || e.key === "ArrowLeft"
+                  ? -1
+                  : e.key === "PageUp"
+                    ? 10
+                    : e.key === "PageDown"
+                      ? -10
+                      : 0;
+            if (e.key === "Home") onChange(min);
+            else if (e.key === "End") onChange(max);
+            else if (steps) go(steps);
+            else return;
+            e.preventDefault();
+          }}
+        >
+          {shown}
+        </span>
+        <button
+          type="button"
+          className={button}
+          aria-label={name ? `Decrease ${name}` : "Decrease"}
+          disabled={value <= min}
+          onClick={() => go(-1)}
+        >
+          −
+        </button>
+        <button
+          type="button"
+          className={button}
+          aria-label={name ? `Increase ${name}` : "Increase"}
+          disabled={value >= max}
+          onClick={() => go(1)}
+        >
+          +
+        </button>
+      </div>
     </Row>
   );
 }

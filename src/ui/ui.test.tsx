@@ -12,16 +12,25 @@ import VirtualTree from "./VirtualTree";
 import Dropdown, { DropdownItem } from "./Dropdown";
 import {
   IconButton,
-  NumberInput,
   Range,
   Segmented,
   Select,
   Spinner,
+  stepValue,
   Toggle,
   Tooltip,
 } from "./ui";
 
 describe("settings controls", () => {
+  test("a value stepped: rounded to the step, within the bounds", () => {
+    const bounds = { min: 0.4, max: 0.9, step: 0.05 };
+    expect(stepValue(0.6, 1, bounds)).toBe(0.65);
+    expect(stepValue(0.1 + 0.2, 1, { min: 0, max: 1, step: 0.1 })).toBe(0.4);
+    expect(stepValue(0.9, 1, bounds)).toBe(0.9);
+    expect(stepValue(0.4, -1, bounds)).toBe(0.4);
+    expect(stepValue(18, 10, { min: 12, max: 24, step: 1 })).toBe(24);
+  });
+
   test("Toggle reports the new state", async () => {
     const onChange = vi.fn();
     const { rerender } = render(
@@ -35,10 +44,9 @@ describe("settings controls", () => {
     expect(onChange).toHaveBeenLastCalledWith(false);
   });
 
-  test("Select, Range and NumberInput report values", () => {
+  test("Select and Range report values", () => {
     const onSelect = vi.fn();
     const onRange = vi.fn();
-    const onNumber = vi.fn();
     render(
       <>
         <Select
@@ -58,14 +66,6 @@ describe("settings controls", () => {
           format={(v) => `${v}px`}
           onChange={onRange}
         />
-        <NumberInput
-          label="Weight"
-          value={400}
-          step={100}
-          digits={0}
-          unit="wt"
-          onChange={onNumber}
-        />
       </>,
     );
     fireEvent.change(screen.getByLabelText("Font Family"), {
@@ -73,12 +73,19 @@ describe("settings controls", () => {
     });
     expect(onSelect).toHaveBeenCalledWith("b");
     expect(screen.getByText("3px")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Size"), { target: { value: "5" } });
-    expect(onRange).toHaveBeenCalledWith(5);
-    fireEvent.change(screen.getByLabelText("Weight"), {
-      target: { value: "700" },
-    });
-    expect(onNumber).toHaveBeenCalledWith(700);
+    fireEvent.click(screen.getByLabelText("Increase Size"));
+    expect(onRange).toHaveBeenLastCalledWith(4);
+    fireEvent.click(screen.getByLabelText("Decrease Size"));
+    expect(onRange).toHaveBeenLastCalledWith(2);
+    // the keys: a step, ten steps (within the bounds), the ends
+    const size = screen.getByRole("spinbutton", { name: "Size" });
+    expect(size).toHaveAttribute("aria-valuetext", "3px");
+    fireEvent.keyDown(size, { key: "ArrowUp" });
+    expect(onRange).toHaveBeenLastCalledWith(4);
+    fireEvent.keyDown(size, { key: "PageUp" });
+    expect(onRange).toHaveBeenLastCalledWith(10);
+    fireEvent.keyDown(size, { key: "Home" });
+    expect(onRange).toHaveBeenLastCalledWith(1);
   });
 
   test("take a size, a color and class names", () => {
@@ -108,17 +115,7 @@ describe("settings controls", () => {
           max={1}
           value={0}
           onChange={vi.fn()}
-          color="info"
-          width="w-24"
-        />
-        <NumberInput
-          label="N"
-          value={1}
-          step={1}
-          digits={0}
-          onChange={vi.fn()}
-          size="sm"
-          width="w-16"
+          size="xs"
         />
       </>,
     );
@@ -132,12 +129,9 @@ describe("settings controls", () => {
       "select-accent",
       "w-60",
     );
-    expect(screen.getByLabelText("R")).toHaveClass(
-      "range-xs",
-      "range-info",
-      "w-24",
-    );
-    expect(screen.getByLabelText("N")).toHaveClass("input-sm", "w-16");
+    // its buttons of the size; at the least, no step down
+    expect(screen.getByLabelText("Increase R")).toHaveClass("btn-xs");
+    expect(screen.getByLabelText("Decrease R")).toBeDisabled();
   });
 
   test("Segmented marks and picks an option", async () => {

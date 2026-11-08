@@ -234,6 +234,12 @@ export const commands: Record<string, Command> = {
       .catch(() => ""),
   read_file_bytes: async ({ filePath }) =>
     (await fs.readBlob(filePath)).arrayBuffer(),
+  read_file_range: async ({ filePath, start, len }) =>
+    (await fs.readBlob(filePath))
+      .slice(Number(start), Number(start) + Number(len))
+      .arrayBuffer(),
+  // web only: a file picked on the device written as it is (a big dictionary), see reader/dictionary/local.ts
+  write_file_blob: ({ filePath, blob }) => fs.writeFile(filePath, blob),
   write_file_bytes: ({ filePath, data }) =>
     fs.writeFile(filePath, new Blob([new Uint8Array(data ?? [])])),
   // web only: back up notes in IndexedDB to a zip file

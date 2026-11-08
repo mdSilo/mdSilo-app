@@ -12,7 +12,7 @@ mdSilo keeps everything you read, think and write in one local workspace of plai
 | 2 | [[2 Workspace\|Workspace]] | Folders, files, the sidebar and the side menu |
 | 3 | [[3 Editor\|Editor]] | Writing: Markdown, WYSIWYG, slash commands, diagrams, math |
 | 4 | [[4 Linking\|Linking]] | Wiki links, backlinks, hashtags, links to books and issues |
-| 5 | [[5 Reader\|Reader]] | Reading books, highlights, notes, dictionary, parallel reading |
+| 5 | [[5 Reader\|Reader]] | Reading books, highlights, notes, dictionaries, vocabulary, word lens, parallel reading |
 | 6 | [[6 Feeds\|Feeds]] | RSS, podcasts, clipping articles, turning feeds into books |
 | 7 | [[7 Issues\|Issues]] | Issues, labels, milestones, projects, tasks inside notes |
 | 8 | [[8 Insight\|Insight]] | Graph, Chronicle, activity heat map |

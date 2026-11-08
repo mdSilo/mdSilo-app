@@ -122,6 +122,7 @@ pub fn run() {
       storage::del_log,
       books::book_hash,
       books::read_file_bytes,
+      books::read_file_range,
       books::write_file_bytes,
       books::write_file_raw,
       ebook::book_info,

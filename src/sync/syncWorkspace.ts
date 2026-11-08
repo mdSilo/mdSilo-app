@@ -72,6 +72,12 @@ export async function applyPulled(ws: string, pulled: string[]) {
     const { syncFeeds } = await import("@/feed/feedSync");
     await syncFeeds();
   }
+  // the dictionary files imported, here or on another device
+  if (pulled.includes(`${data}dictionaries.json`)) {
+    const { useLocalDictionaries } = await import("@/reader/dictionary/local");
+    if (useLocalDictionaries.getState().ws === ws)
+      await useLocalDictionaries.getState().load(ws);
+  }
   // themes, fonts, plugins of the workspace
   await reloadPulled(pulled);
 

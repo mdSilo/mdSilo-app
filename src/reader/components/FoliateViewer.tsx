@@ -60,6 +60,8 @@ import { ImageViewer, TableViewer } from "../media/MediaViewer";
 import RangeHandles from "../annotations/RangeHandles";
 import ReadingRuler from "../ruler/ReadingRuler";
 import { moveRuler } from "../ruler/ruler";
+import { useWordLens } from "../lens/useWordLens";
+import { readingArea } from "../area";
 import { useBookTranslation } from "../translation/useBookTranslation";
 import { takeQuoteMark } from "../quoteMark";
 import { addMark, clearMarks, useMarks, type ReaderMark } from "../marks";
@@ -247,38 +249,6 @@ function noteSize(doc: Document, host: HTMLElement, note: HTMLElement) {
   };
 }
 
-/**
- * The text of the pages, in the window: the pages of the renderer, less the
- * margins of the chapter and the progress, above and below them (or on the
- * sides, written down the page).
- */
-function readingArea(
-  view: FoliateView | null,
-  vertical = false,
-): Box | undefined {
-  if (!view) return undefined;
-  const rect = (
-    view.renderer.shadowRoot?.querySelector("#container") ?? view
-  ).getBoundingClientRect();
-  const { margins } = pageLayout(
-    withDefaults(store.getState().readerSettings),
-    vertical,
-  );
-  return vertical
-    ? {
-        left: rect.left + margins.left,
-        top: rect.top,
-        right: rect.right - margins.right,
-        bottom: rect.bottom,
-      }
-    : {
-        left: rect.left,
-        top: rect.top + margins.top,
-        right: rect.right,
-        bottom: rect.bottom - margins.bottom,
-      };
-}
-
 /** A box in a page of the book, in the window. */
 function windowBox(doc: Document | undefined, rect: Box): Box {
   const { left, top, scale } = frameOf(doc);
@@ -364,6 +334,8 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
   // the view opened, for what goes with it
   const [opened, setOpened] = useState<FoliateView | null>(null);
   useBookTranslation(opened, pane);
+  // the words of the vocabulary glossed
+  useWordLens(opened, pane);
 
   // the marks of this pane (see marks.ts): drawn, changed, taken back
   useEffect(() => {
@@ -682,28 +654,24 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
           .getContents()
           .find((c) => c.index === index)?.doc;
         if (rect)
-          usePopups
-            .getState()
-            .setAnnotation({
-              id: bubbled.id,
-              box: windowBox(doc, rect),
-              bubble: true,
-            });
+          usePopups.getState().setAnnotation({
+            id: bubbled.id,
+            box: windowBox(doc, rect),
+            bubble: true,
+          });
         return;
       }
       const note = drawnRef.current.get(value);
       if (!note || !range) return;
       annotationAt = Date.now();
-      usePopups
-        .getState()
-        .setAnnotation({
-          id: note.id,
-          box: boxOfRange(
-            range,
-            readingArea(viewRef.current, bookStore.getState().vertical),
-          ),
+      usePopups.getState().setAnnotation({
+        id: note.id,
+        box: boxOfRange(
           range,
-        });
+          readingArea(viewRef.current, bookStore.getState().vertical),
+        ),
+        range,
+      });
     };
 
     // the annotations of a section, once it shows
@@ -879,10 +847,10 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
         (e.target as Element | null)?.closest?.("button, a[href]")
       )
         return;
-      // the slider of the progress moves by the arrows
+      // the slider of the progress, a number of the settings: moved by the arrows
       if (
         (e.target as Element | null)?.closest?.(
-          '[role="slider"], input[type="range"]',
+          '[role="slider"], [role="spinbutton"], input[type="range"]',
         )
       )
         return;
@@ -1103,7 +1071,15 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
       ) + trustedReaderCss(),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [look, darkMode, theme, vertical, customFonts, fontsVersion, trustedVersion]);
+  }, [
+    look,
+    darkMode,
+    theme,
+    vertical,
+    customFonts,
+    fontsVersion,
+    trustedVersion,
+  ]);
 
   // the code blocks of the sections shown; the sections loaded later, on load
   useEffect(() => {

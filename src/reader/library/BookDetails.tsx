@@ -36,6 +36,7 @@ import {
   deleteBook,
   normalizeGroup,
   saveBookEntry,
+  confirmBooksSync,
   setBookSynced,
   type BookEntry,
 } from "./library";
@@ -297,6 +298,7 @@ function ViewBook({
                   : "Sync the book file too"
               }
               onClick={async () => {
+                if (!book.synced && !(await confirmBooksSync([book]))) return;
                 await setBookSynced(ws, book.hash, !book.synced);
                 onChanged();
               }}

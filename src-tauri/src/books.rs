@@ -57,6 +57,23 @@ pub async fn read_file_bytes(
   Ok(tauri::ipc::Response::new(bytes))
 }
 
+/// `len` bytes of a file from `start`, fewer at its end, sent as binary: a
+/// dictionary file read where its index says, not whole (they are big).
+#[tauri::command]
+pub async fn read_file_range(
+  file_path: String,
+  start: u64,
+  len: u64,
+) -> Result<tauri::ipc::Response, String> {
+  let bytes = tauri::async_runtime::spawn_blocking(move || {
+    LocalFs.read_range(Path::new(&file_path), start, len)
+  })
+  .await
+  .map_err(|e| e.to_string())?
+  .map_err(|e| e.to_string())?;
+  Ok(tauri::ipc::Response::new(bytes))
+}
+
 /// Write bytes to a file, e.g. the cover of a book cached.
 #[tauri::command]
 pub async fn write_file_bytes(file_path: String, data: Vec<u8>) -> bool {

@@ -204,6 +204,7 @@ type PersistedState = Pick<
   | "activities"
   | "readerSettings"
   | "librarySettings"
+  | "dictionarySettings"
   | "syncSettings"
 >;
 
@@ -429,6 +430,7 @@ export const store = createStore<Store>()(
         activities: state.activities,
         readerSettings: state.readerSettings,
         librarySettings: state.librarySettings,
+        dictionarySettings: state.dictionarySettings,
         syncSettings: state.syncSettings,
       }),
     },

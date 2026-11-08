@@ -17,6 +17,7 @@ import { SharedBookPrompt } from "@/reader/library/SharedBookPrompt";
 import { PluginDev } from "@/plugins/dev";
 import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
+import DictionariesModal from "@/reader/dictionary/DictionariesModal";
 import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
 import { hasWindows, shareSettings } from "@/state/windowSync";
 import { flushAll } from "@/shell/flushAll";
@@ -176,6 +177,7 @@ const App = () => {
           <PluginsModal />
           <ThemeEditorModal />
           <FontsModal />
+          <DictionariesModal />
           <PluginAnswerModal />
           <TrustedPlugins />
           <PluginDev />

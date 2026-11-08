@@ -9,12 +9,31 @@ import { sanitizeHtml } from "@/lib/sanitize";
  */
 
 export type Definition = { partOfSpeech: string; definitions: string[] };
-export type DictionaryEntry = { language: string; meanings: Definition[] };
+/** How a word is said: its spelling in IPA, a recording of it, or both. */
+export type Pronunciation = {
+  /** e.g. /kəʊld/ */
+  text?: string;
+  /** a recording: a web url, or `mdict:<dictionary id>:<path in its .mdd>` */
+  audio?: string;
+  /** e.g. UK, US */
+  label?: string;
+};
+export type DictionaryEntry = {
+  language: string;
+  meanings: Definition[];
+  pronunciations?: Pronunciation[];
+};
 
 export type DictionaryResult = {
   word: string;
   entries: DictionaryEntry[];
   url: string;
+  /** the entry as a dictionary file gives it: HTML, sanitized; for a local dictionary */
+  html?: string;
+  /** the recordings of the word in an entry given as HTML */
+  pronunciations?: Pronunciation[];
+  /** the style sheets an entry given as HTML links to, in its dictionary */
+  styles?: string[];
 };
 export type WikipediaResult = {
   title: string;

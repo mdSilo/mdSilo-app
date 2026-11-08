@@ -210,13 +210,11 @@ describe("reader", () => {
       expect(screen.getByTestId("foliate-viewer")).toBeInTheDocument(),
     );
     act(() => {
-      useReaderStore
-        .getState()
-        .setLocation({
-          cfi: "epubcfi(/6/4!/4/2)",
-          fraction: 0.1,
-          tocLabel: "Chapter One",
-        });
+      useReaderStore.getState().setLocation({
+        cfi: "epubcfi(/6/4!/4/2)",
+        fraction: 0.1,
+        tocLabel: "Chapter One",
+      });
       usePopups.getState().setSelection({
         text: "a bright cold day",
         cfi: "epubcfi(/6/4!/4/4,/1:9,/1:26)",
@@ -397,12 +395,10 @@ describe("reader", () => {
         createdAt: now,
         updatedAt: now,
       });
-      usePopups
-        .getState()
-        .setAnnotation({
-          id: "x",
-          box: { left: 0, top: 0, right: 10, bottom: 10 },
-        });
+      usePopups.getState().setAnnotation({
+        id: "x",
+        box: { left: 0, top: 0, right: 10, bottom: 10 },
+      });
     });
     expect(screen.getByTestId("annotation-popup")).toBeInTheDocument();
     // underlined: in the color of underlines
@@ -422,24 +418,20 @@ describe("reader", () => {
     expect(useReaderStore.getState().notes[0].note).toBe("Orwell");
     // the highlight clicked: the toolbar, not the note
     act(() => {
-      usePopups
-        .getState()
-        .setAnnotation({
-          id: "x",
-          box: { left: 0, top: 0, right: 10, bottom: 10 },
-        });
+      usePopups.getState().setAnnotation({
+        id: "x",
+        box: { left: 0, top: 0, right: 10, bottom: 10 },
+      });
     });
     expect(screen.queryByTestId("note-card")).not.toBeInTheDocument();
     // its bubble hovered: the note alone, gone once the pointer leaves it
     act(() => {
-      usePopups
-        .getState()
-        .setAnnotation({
-          id: "x",
-          box: { left: 0, top: 0, right: 10, bottom: 10 },
-          bubble: true,
-          hover: "bubble",
-        });
+      usePopups.getState().setAnnotation({
+        id: "x",
+        box: { left: 0, top: 0, right: 10, bottom: 10 },
+        bubble: true,
+        hover: "bubble",
+      });
     });
     expect(screen.getByTestId("note-card")).toHaveTextContent("Orwell");
     expect(screen.queryByTestId("annotation-toolbar")).not.toBeInTheDocument();
@@ -449,13 +441,11 @@ describe("reader", () => {
     expect(screen.queryByTestId("note-popup")).not.toBeInTheDocument();
     // clicked: it stays; its note edited from there
     act(() => {
-      usePopups
-        .getState()
-        .setAnnotation({
-          id: "x",
-          box: { left: 0, top: 0, right: 10, bottom: 10 },
-          bubble: true,
-        });
+      usePopups.getState().setAnnotation({
+        id: "x",
+        box: { left: 0, top: 0, right: 10, bottom: 10 },
+        bubble: true,
+      });
     });
     fireEvent.click(screen.getByTitle("Edit the note"));
     fireEvent.change(screen.getByPlaceholderText(/A note/), {
@@ -464,12 +454,10 @@ describe("reader", () => {
     fireEvent.click(screen.getByText("Save"));
     expect(useReaderStore.getState().notes[0].note).toBe("Orwell, 1984");
     act(() => {
-      usePopups
-        .getState()
-        .setAnnotation({
-          id: "x",
-          box: { left: 0, top: 0, right: 10, bottom: 10 },
-        });
+      usePopups.getState().setAnnotation({
+        id: "x",
+        box: { left: 0, top: 0, right: 10, bottom: 10 },
+      });
     });
 
     fireEvent.click(screen.getByLabelText("Delete the highlight"));
@@ -580,13 +568,11 @@ describe("reader settings menu", () => {
       expect(screen.getByTestId("foliate-viewer")).toBeInTheDocument(),
     );
     act(() =>
-      useReaderStore
-        .getState()
-        .setLocation({
-          cfi: "epubcfi(/6/2!/4/2)",
-          fraction: 0.5,
-          tocLabel: "One",
-        }),
+      useReaderStore.getState().setLocation({
+        cfi: "epubcfi(/6/2!/4/2)",
+        fraction: 0.5,
+        tocLabel: "One",
+      }),
     );
 
     openMenu();
@@ -668,13 +654,11 @@ describe("parallel reading", () => {
     // the text selected in the book beside: highlighted there, not in the book read
     fireEvent.pointerDown(pane);
     act(() => {
-      useSideStore
-        .getState()
-        .setLocation({
-          cfi: "epubcfi(/6/4!/4/2)",
-          fraction: 0.1,
-          tocLabel: "Chapter One",
-        });
+      useSideStore.getState().setLocation({
+        cfi: "epubcfi(/6/4!/4/2)",
+        fraction: 0.1,
+        tocLabel: "Chapter One",
+      });
       usePopups.getState().setSelection({
         text: "down the rabbit hole",
         cfi: "epubcfi(/6/4!/4/4,/1:0,/1:20)",
@@ -1160,9 +1144,7 @@ describe("library", () => {
     renderMain();
     await go({ view: "library" });
     await bookItem("Tiny Book");
-    fireEvent.click(
-      screen.getByTitle("Import from folder"),
-    );
+    fireEvent.click(screen.getByTitle("Import from folder"));
     const importDialog = screen.getByRole("dialog");
     expect(
       within(importDialog).getByRole("button", { name: "Import" }),
@@ -1170,12 +1152,19 @@ describe("library", () => {
     await act(async () => {
       fireEvent.click(within(importDialog).getByLabelText("Choose a folder"));
     });
-    expect(await within(importDialog).findByText("/downloads/books")).toBeInTheDocument();
-    fireEvent.change(within(importDialog).getByLabelText("Minimum file size (KB)"), {
-      target: { value: "0" },
-    });
+    expect(
+      await within(importDialog).findByText("/downloads/books"),
+    ).toBeInTheDocument();
+    fireEvent.change(
+      within(importDialog).getByLabelText("Minimum file size (KB)"),
+      {
+        target: { value: "0" },
+      },
+    );
     await act(async () => {
-      fireEvent.click(within(importDialog).getByRole("button", { name: "Import" }));
+      fireEvent.click(
+        within(importDialog).getByRole("button", { name: "Import" }),
+      );
     });
     // the same content as Tiny Book: not copied again
     expect(
@@ -1191,9 +1180,7 @@ describe("library", () => {
     });
 
     // the choices of the last time
-    fireEvent.click(
-      screen.getByTitle("Import from folder"),
-    );
+    fireEvent.click(screen.getByTitle("Import from folder"));
     expect(screen.getByText("/downloads/books")).toBeInTheDocument();
     expect(screen.getByLabelText("Minimum file size (KB)")).toHaveValue(0);
   });
@@ -1556,6 +1543,12 @@ describe("reader, the second part", () => {
       });
     });
     fireEvent.click(screen.getByLabelText("Dictionary"));
+    // each dictionary tried in turn: the error of the last stays
+    await waitFor(() =>
+      expect(
+        screen.getByRole("tab", { name: "Free Dictionary" }),
+      ).toHaveAttribute("aria-selected", "true"),
+    );
     expect(
       await screen.findByText("Could not look it up: offline"),
     ).toBeInTheDocument();
@@ -1601,8 +1594,10 @@ describe("vocabulary", () => {
       });
     });
     fireEvent.click(screen.getByLabelText("Dictionary"));
+    // found outside act: an update inside it waits for act to end
+    const add = await screen.findByText("Add to vocabulary");
     await act(async () => {
-      fireEvent.click(await screen.findByText("Add to vocabulary"));
+      fireEvent.click(add);
     });
     expect(await screen.findByTestId("word-kept")).toBeInTheDocument();
     const [entry] = useVocabulary.getState().entries;
@@ -1621,6 +1616,84 @@ describe("vocabulary", () => {
     });
     document.getElementById("page")!.remove();
     vi.unstubAllGlobals();
+  });
+
+  test("a word heard on its card, front and back; its dictionary named", async () => {
+    const plays: string[] = [];
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockImplementation(function (this: HTMLMediaElement) {
+        plays.push(this.src);
+        return Promise.resolve();
+      });
+    const add = useVocabulary.getState().add;
+    // kept before the names: the name of the dictionary of the app
+    await add(WS, {
+      word: "bright",
+      definition: "<p>shining</p>",
+      source: "wiktionary",
+    });
+    await add(WS, {
+      word: "cold",
+      definition: "<p>chilly</p>",
+      source: "mdict:gone",
+      sourceName: "Oxford",
+      pronunciations: [
+        { text: "/kəʊld/", audio: "https://x/cold-uk.mp3", label: "UK" },
+        { audio: "mdict:gone:cold.mp3", label: "US" },
+      ],
+    });
+    renderMain();
+    await go({ view: "library" });
+    fireEvent.click(await screen.findByTitle("Vocabulary"));
+    const card = await screen.findByTestId("vocabulary-card");
+    expect(card).toHaveTextContent("P to hear it");
+    // on the front, not turning it
+    fireEvent.click(
+      within(card).getAllByLabelText("Play the pronunciation (UK)")[0],
+    );
+    expect(plays).toEqual(["https://x/cold-uk.mp3"]);
+    expect(card.querySelector(".bg-primary")).toHaveAttribute(
+      "aria-hidden",
+      "false",
+    );
+    // the side turned away hidden, not only by backface-visibility (WebKitGTK)
+    const [front, back] = card.querySelectorAll<HTMLElement>("[aria-hidden]");
+    expect(front.style.visibility).toBe("visible");
+    expect(back.style.visibility).toBe("hidden");
+    // the key P
+    fireEvent.keyDown(window, { key: "p" });
+    expect(plays).toHaveLength(2);
+    // a file not on this device: not played
+    expect(
+      within(card).getAllByLabelText("Play the pronunciation (US)")[0],
+    ).toBeDisabled();
+    fireEvent.keyDown(window, { key: " " });
+    expect(front.style.visibility).toBe("hidden");
+    expect(back.style.visibility).toBe("visible");
+    expect(within(card).getByTestId("vocabulary-source")).toHaveTextContent(
+      "From Oxford",
+    );
+    // its gloss in the books: made of its definition, or as written
+    const gloss = within(card).getByLabelText("The gloss of cold in the books");
+    expect(gloss).toHaveAttribute("placeholder", "chilly");
+    fireEvent.change(gloss, { target: { value: " frosty " } });
+    fireEvent.keyDown(gloss, { key: "Enter" });
+    fireEvent.blur(gloss);
+    await waitFor(() =>
+      expect(
+        useVocabulary.getState().entries.find((e) => e.word === "cold")?.gloss,
+      ).toBe("frosty"),
+    );
+    // typing in it: not turning the card
+    expect(card.querySelector(".bg-primary")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    // the grid: the old word's dictionary by its id
+    fireEvent.click(screen.getByLabelText("All the words"));
+    expect(await screen.findByText("From Wiktionary")).toBeInTheDocument();
+    play.mockRestore();
   });
 
   test("the words studied by cards, seen all, deleted", async () => {

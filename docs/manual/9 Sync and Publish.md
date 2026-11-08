@@ -26,7 +26,7 @@ The token is kept in the app data of this device, **never in the workspace** and
 A sync saves everything you changed as a commit, takes what the other devices sent, and sends yours: *commit, pull, push*, in one click. The dialog then says how many files came in, whether yours were sent, and when.
 
 - **What is synced**: your notes, the annotations and reading progress of books, the vocabulary, issues, projects and feed subscriptions.
-- **What is not**: `.mdsilo/local/` (the search index and caches of this device), and **book files**, unless you turn on sync for a book in the Library (see [[5 Reader|Reader]]). Turning it off later keeps the book on your other devices.
+- **What is not**: `.mdsilo/local/` (the search index and caches of this device), **book files**, unless you turn on sync for a book in the Library, and **dictionary files**, unless you turn it on in Settings → Dictionaries (see [[5 Reader|Reader]]). Turning it off later keeps the file on your other devices. Turning it on for a file over 50 MB asks first: GitHub refuses files over 100 MB, and every version of a file synced stays in the history.
 - **Themes, fonts and plugins**: each one you check *Sync with workspace* for (in Settings, and in Manage Plugins) is kept in `.mdsilo/` and synced; the others stay on the device. Themes are synced by default. A plugin that comes in by a sync is **not enabled** on the other device until you enable it there, and a plugin you enabled stops if a sync changes its files, until you enable it again.
 - **A new device**: open an empty folder, set up the same repository, and **Sync now**. Everything comes in. If the repository's main branch is `master` (or any other name), the new workspace follows it.
 

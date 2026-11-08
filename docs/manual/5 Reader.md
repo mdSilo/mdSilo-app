@@ -34,7 +34,7 @@ Open a book and the page fills the window. The bars appear when you move the mou
 - **A book in its own window** (desktop): in the Library's view menu, *Open books in* → *A new window*; or *Read in a new window* in a book's details. The window has the reader only: notes, issues and the Library open in the main window. Opening the book again brings its window to the front.
 - **Bottom bar**: back and forward in your reading history, previous and next chapter, a progress slider, and the time left in the book.
 - **Contents and notes** (the side panel): the table of contents, your annotations, the in-book search, and the **Links** tab.
-- **Font and layout**: font, a font for CJK text (used for the characters the font has not, or where the book sets no font), size, spacing, margins, page colour (follow the app, white, sepia, grey, dark), paging or scrolling, animation, which header and footer to show, image options and code highlighting.
+- **Font and layout** (the numbers set with − and +): font, a font for CJK text (used for the characters the font has not, or where the book sets no font), size, spacing, margins, page colour (follow the app, white, sepia, grey, dark), paging or scrolling, animation, which header and footer to show, image options, code highlighting and the word lens.
 - Click an **image** or a **table** in the page to zoom it. Footnotes open in a small popup instead of jumping away.
 - Your place and the time you spend are saved per book. They feed the heat map in [[8 Insight|Insight]].
 
@@ -48,7 +48,7 @@ Select text and a toolbar appears over it. It has:
 | Highlight | Mark the text; choose style (highlight, underline, squiggly) and colour |
 | Note | Write a note on the highlight, in Markdown |
 | Search | Search the book for the selection |
-| Dictionary | Look a word (or up to three) up in Wiktionary, add it to your vocabulary |
+| Dictionary | Look a word (or up to three) up in your dictionaries, hear it, add it to your vocabulary |
 | Wikipedia | A summary of the selection |
 | Translate | Translate into the language chosen in the settings |
 | Read aloud | Speak from the selection |
@@ -84,7 +84,27 @@ Try it on {{Alice's Adventures in Wonderland}}: it is in your Library, with one 
 
 ## Dictionary, vocabulary and translation
 
-Double-click a word, or choose *Dictionary*. The popup shows the Wiktionary definitions (in the language of the book first). **Add to vocabulary** stores the word with its definition, the sentence it came from and a link to the book. The **Vocabulary** page (in the Library header) reviews them as flash cards, as a grid, or in bulk.
+Double-click a word, or choose *Dictionary*. The popup has a tab for each dictionary turned on, in your order, and shows the first that has the word. The speaker buttons play its recordings (UK, US…) where the dictionary has them.
+
+The dictionaries are set in **Settings → Dictionaries** (or the gear of the popup): turn each on or off and drag them into order.
+
+| Dictionary | |
+|---|---|
+| Wiktionary | Most languages, the language of the book first; recordings of many words. On by default |
+| Free Dictionary | English, with pronunciations (dictionaryapi.dev). On by default |
+| Urban Dictionary | English slang |
+| Merriam-Webster | Opens the site; with your API key (free for non-commercial use at dictionaryapi.com), looked up in the popup, with recordings |
+| Google | Opens Google's definition |
+| A site you add | Any dictionary on the web: a url with `%WORD%` where the word goes; opens in the browser |
+| A dictionary file | MDict (`.mdx`, with its `.mdd` of pictures and sounds, and `.css`), imported with **Import**; first in the list once imported |
+
+Dictionary files are kept in the workspace (`.mdsilo/dictionaries/`) and are **not synced** unless you turn it on with the cloud button of the dictionary: they are often big. Another device sees the dictionary marked *Not here* until its files are synced to it. Links between entries look the other word up (the arrow goes back), and the speakers play the dictionary's sounds.
+
+**Add to vocabulary** stores the word with its definition, its pronunciations, the dictionary, the sentence it came from and a link to the book (a word kept without pronunciations gets them the next time you look it up in a dictionary that has them). The **Vocabulary** page (in the Library header) reviews them as flash cards, as a grid, or in bulk; the speakers play a word, on either side of a card, and **P** plays the card shown.
+
+**Word lens** (in *Font and layout*): the words of your vocabulary, met in a book, get a short meaning under them — their forms too (*rabbits*, *taking*), phrases (*take after*) and CJK words. Click one to look the word up. The gloss comes from the definition kept, or, with *Gloss: Translation*, is the word translated into the language chosen for translations (kept in the vocabulary, asked once). Write your own on the back of the word's card in the Vocabulary. *Gloss size* (of the text) and *Gloss color* (the accent of the page, gray, or a color, lighter on dark pages) set their look; the lines get room under them for a gloss of that size, added to your line height. Not for fixed layouts (PDF, comics).
+
+In a dark theme, the colors a dictionary file gives its entries (made for a white page) are turned light where they would be hard to read.
 
 ## Read aloud
 

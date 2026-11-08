@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   TbArrowLeft,
   TbBook,
@@ -14,8 +20,88 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { useStore } from "@/state/store";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { findBookPath } from "../library/library";
-import { openLinkOutside } from "../lookup/lookup";
-import { useVocabulary, type VocabularyEntry } from "./vocabulary";
+import { openLinkOutside, targetLanguage } from "../lookup/lookup";
+import Pronunciations from "../dictionary/Pronunciations";
+import { playRecording } from "../dictionary/audio";
+import {
+  builtinSources,
+  DEFAULT_DICTIONARY_SETTINGS,
+} from "../dictionary/dictionary";
+import { useLocalDictionaries } from "../dictionary/local";
+// the recordings of dictionary files, played
+import "../dictionary/mdict";
+import { glossOf } from "../lens/lens";
+import { withDefaults } from "../settings";
+import { MAX_GLOSS, useVocabulary, type VocabularyEntry } from "./vocabulary";
+
+/** The names of the dictionaries of the app, for the words kept before their name was. */
+const BUILTIN_NAMES = new Map(
+  builtinSources(DEFAULT_DICTIONARY_SETTINGS).map((s) => [s.id, s.label]),
+);
+
+/** The name of the dictionary a word was looked up in. */
+export const sourceNameOf = (entry: VocabularyEntry) =>
+  entry.sourceName ||
+  (entry.source ? BUILTIN_NAMES.get(entry.source) : undefined);
+
+/**
+ * The gloss of a word in the books (word lens), as the user writes it; the
+ * one made of its definition (or translation) shown when none is written.
+ */
+function GlossEditor({ entry }: { entry: VocabularyEntry }) {
+  const ws = useStore((state) => state.initDir);
+  const settings = withDefaults(useStore((state) => state.readerSettings));
+  const lang =
+    settings.lensGloss === "translation"
+      ? targetLanguage(settings.translateTo)
+      : undefined;
+  const [text, setText] = useState(entry.gloss ?? "");
+  // another word, or its gloss changed elsewhere (synced)
+  const [shown, setShown] = useState(entry);
+  if (shown.id !== entry.id || shown.gloss !== entry.gloss) {
+    setShown(entry);
+    setText(entry.gloss ?? "");
+  }
+  const save = () => {
+    if (ws && text.trim() !== (entry.gloss ?? ""))
+      void useVocabulary.getState().setGloss(ws, entry.id, text);
+  };
+  return (
+    <label
+      className="flex items-center gap-2 mt-2 text-xs"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <span className="opacity-60 shrink-0">Gloss</span>
+      <input
+        className="flex-1 min-w-0 input input-xs input-bordered"
+        aria-label={`The gloss of ${entry.word} in the books`}
+        placeholder={glossOf({ ...entry, gloss: undefined }, lang)}
+        maxLength={MAX_GLOSS}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          if (e.key === "Escape") {
+            setText(entry.gloss ?? "");
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+      />
+    </label>
+  );
+}
+
+/** The dictionary of a word, a line under it. */
+function Source({ entry }: { entry: VocabularyEntry }) {
+  const name = sourceNameOf(entry);
+  return name ? (
+    <div className="mt-2 text-xs opacity-50" data-testid="vocabulary-source">
+      From {name}
+    </div>
+  ) : null;
+}
 
 type Mode = "study" | "grid" | "select";
 
@@ -91,6 +177,19 @@ function highlight(sentence: string, word: string) {
   );
 }
 
+/**
+ * A side of a card: the one turned away hidden. Not only by
+ * `backface-visibility`, which a web view may not honor (WebKitGTK showed the
+ * back over the front, mirrored): also by `visibility`, switched halfway
+ * through the turn (500ms).
+ */
+const faceStyle = (shown: boolean): CSSProperties => ({
+  backfaceVisibility: "hidden",
+  WebkitBackfaceVisibility: "hidden",
+  visibility: shown ? "visible" : "hidden",
+  transition: "visibility 0s linear 250ms",
+});
+
 /** A card: the word, turned over to its definition. */
 function StudyCard({
   entry,
@@ -114,30 +213,51 @@ function StudyCard({
           transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
         }}
       >
-        <button
-          className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center shadow-lg rounded-xl bg-primary text-primary-content"
-          style={{ backfaceVisibility: "hidden" }}
-          onClick={onFlip}
+        <div
+          className="absolute inset-0 shadow-lg rounded-xl bg-primary text-primary-content"
+          style={faceStyle(!flipped)}
           aria-hidden={flipped}
-          tabIndex={flipped ? -1 : 0}
         >
-          <span className="mb-4 text-xs opacity-60">
-            Click or press space to see the meaning
-          </span>
-          <span className="text-4xl font-bold break-words">{entry.word}</span>
-          {entry.language ? (
-            <span className="mt-4 text-xs opacity-60">{entry.language}</span>
+          <button
+            className="absolute inset-0 flex flex-col items-center justify-center w-full p-4 text-center"
+            onClick={onFlip}
+            tabIndex={flipped ? -1 : 0}
+          >
+            <span className="mb-4 text-xs opacity-60">
+              Click or press space to see the meaning
+              {entry.pronunciations?.some((p) => p.audio)
+                ? ", P to hear it"
+                : ""}
+            </span>
+            <span className="text-4xl font-bold break-words">{entry.word}</span>
+            {entry.language ? (
+              <span className="mt-4 text-xs opacity-60">{entry.language}</span>
+            ) : null}
+          </button>
+          {/* to hear it before turning it: beside the card, not in it (no button in a button) */}
+          {entry.pronunciations?.length && !flipped ? (
+            <div className="absolute inset-x-0 flex justify-center bottom-6">
+              <Pronunciations list={entry.pronunciations} className="" />
+            </div>
           ) : null}
-        </button>
+        </div>
         <div
           className="absolute inset-0 flex flex-col p-4 overflow-y-auto shadow-lg cursor-pointer rounded-xl bg-base-200"
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          style={{ ...faceStyle(flipped), transform: "rotateY(180deg)" }}
           onClick={onFlip}
           aria-hidden={!flipped}
         >
-          <div className="mb-2 text-xl font-bold">{entry.word}</div>
+          <div className="mb-2 text-xl font-bold">
+            {entry.word}
+            <Pronunciations
+              list={entry.pronunciations}
+              className="ml-2 text-base font-normal"
+            />
+          </div>
           <Definition entry={entry} className="text-sm" />
+          <GlossEditor entry={entry} />
           <Context entry={entry} />
+          <Source entry={entry} />
         </div>
       </div>
     </div>
@@ -154,10 +274,19 @@ export default function Vocabulary() {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // the recording of the card played by P that could not be: why
+  const [playError, setPlayError] = useState("");
 
   useEffect(() => {
     if (ws) void useVocabulary.getState().load(ws);
   }, [ws]);
+
+  // the dictionary files, to play their recordings
+  const dictionariesWs = useLocalDictionaries((state) => state.ws);
+  useEffect(() => {
+    if (ws && dictionariesWs !== ws)
+      void useLocalDictionaries.getState().load(ws);
+  }, [ws, dictionariesWs]);
 
   // fewer words, e.g. one deleted
   useEffect(() => {
@@ -169,6 +298,7 @@ export default function Vocabulary() {
   const go = (to: number) => {
     setIndex(to);
     setFlipped(false);
+    setPlayError("");
   };
   const next = () => {
     if (!ws || !current) return;
@@ -193,7 +323,14 @@ export default function Vocabulary() {
       if (e.key === " ") setFlipped((f) => !f);
       else if (e.key === "ArrowRight") next();
       else if (e.key === "ArrowLeft" && index > 0) go(index - 1);
-      else return;
+      else if (e.key.toLowerCase() === "p" && !e.ctrlKey && !e.metaKey) {
+        const audio = current?.pronunciations?.find((p) => p.audio)?.audio;
+        if (!audio) return;
+        setPlayError("");
+        playRecording(audio).catch((err: unknown) =>
+          setPlayError(err instanceof Error ? err.message : String(err)),
+        );
+      } else return;
       e.preventDefault();
     };
     window.addEventListener("keydown", onKey);
@@ -305,7 +442,14 @@ export default function Vocabulary() {
                     }
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold">{entry.word}</div>
+                    <div className="font-semibold">
+                      {entry.word}
+                      {sourceNameOf(entry) ? (
+                        <span className="ml-2 text-xs font-normal opacity-50">
+                          {sourceNameOf(entry)}
+                        </span>
+                      ) : null}
+                    </div>
                     <Definition
                       entry={entry}
                       className="text-sm overflow-y-auto max-h-24 opacity-80"
@@ -339,11 +483,16 @@ export default function Vocabulary() {
                 </button>
                 <div className="pr-6 mb-1 text-lg font-bold break-words">
                   {entry.word}
+                  <Pronunciations
+                    list={entry.pronunciations}
+                    className="ml-1 text-sm font-normal"
+                  />
                 </div>
                 <Definition
                   entry={entry}
                   className="overflow-y-auto text-sm max-h-40 opacity-80"
                 />
+                <Source entry={entry} />
                 {entry.reviewCount ? (
                   <div className="mt-2 text-xs opacity-50">
                     Reviewed {entry.reviewCount}×
@@ -370,6 +519,11 @@ export default function Vocabulary() {
                 flipped={flipped}
                 onFlip={() => setFlipped(!flipped)}
               />
+              {playError ? (
+                <p role="alert" className="mt-2 text-xs text-center text-error">
+                  {playError}
+                </p>
+              ) : null}
               <div
                 className="mt-6 text-sm text-center opacity-60"
                 data-testid="vocabulary-position"

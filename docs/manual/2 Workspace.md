@@ -10,15 +10,15 @@ A **workspace** is a folder. mdSilo shows it in the sidebar, indexes it, and kee
 my-workspace/
 ├── reading/        books, their annotations (Foo.epub.md), clips
 ├── writing/        notes, attachments, daily notes
-└── .mdsilo/        data: books.json, issues, feeds.json, vocabulary
+└── .mdsilo/        data: books.json, issues, feeds.json, vocabulary, dictionaries
     └── local/      this device only, never synced: search index, caches
 ```
 
 - **writing/** holds your notes. A note is a Markdown file; its title is its file name. Folders can be nested as deep as you like.
 - **reading/** holds the books you read and the Markdown file of annotations that sits next to each book (`Foo.epub` → `Foo.epub.md`). Clipped web articles go to `reading/clips/`.
-- **.mdsilo/** holds what is not meant to be read by hand: the library, reading progress, issues, feed subscriptions. All of it is plain JSON.
+- **.mdsilo/** holds what is not meant to be read by hand: the library, reading progress, issues, feed subscriptions, the vocabulary. All of it is plain JSON, but the dictionary files you import (`.mdsilo/dictionaries/`).
 
-Because everything is a file, you can sync the whole workspace with git, Dropbox or anything else. The desktop app syncs it with a git repository by itself, and can publish chosen notes as a website: see [[9 Sync and Publish|Sync and Publish]]. Books are not added to git unless you choose to, book by book (see [[5 Reader|Reader]]). The `local/` folder is excluded automatically.
+Because everything is a file, you can sync the whole workspace with git, Dropbox or anything else. The desktop app syncs it with a git repository by itself, and can publish chosen notes as a website: see [[9 Sync and Publish|Sync and Publish]]. Books and dictionary files are not added to git unless you choose to, one by one (see [[5 Reader|Reader]]). The `local/` folder is excluded automatically.
 
 :::tip
 An empty folder you open becomes a workspace by itself. A folder that already has Markdown files is opened as it is (a *legacy* workspace); the sidebar then offers **Upgrade** to move into this layout.

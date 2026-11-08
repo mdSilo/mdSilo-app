@@ -9,6 +9,10 @@ import {
 } from "@/reader/library/shelf";
 import { isSystemDark, SYSTEM_THEME } from "@/lib/themes";
 import { isMobileWidth } from "@/lib/hooks/useIsMobile";
+import {
+  DEFAULT_DICTIONARY_SETTINGS,
+  type DictionarySettings,
+} from "@/reader/dictionary/settings";
 import type { CustomFont } from "@/custom/fonts";
 import type { CustomTheme } from "@/custom/themes";
 import type { InstalledPlugin, PluginState } from "@/plugins/registry";
@@ -121,6 +125,9 @@ export type UserSettings = {
   /** the dialog of the fonts, opened from the settings; not persisted */
   isFontsOpen: boolean;
   setIsFontsOpen: Setter<boolean>;
+  /** the dialog of the dictionaries, opened from the settings; not persisted */
+  isDictionariesOpen: boolean;
+  setIsDictionariesOpen: Setter<boolean>;
   setIsAboutOpen: Setter<boolean>;
   isFindOrCreateModalOpen: boolean;
   setIsFindOrCreateModalOpen: Setter<boolean>;
@@ -161,6 +168,8 @@ export type UserSettings = {
   setReaderSidebarWidth: Setter<number>;
   readerSettings: ReaderSettings; // how books show, see reader/settings
   setReaderSettings: Setter<ReaderSettings>;
+  dictionarySettings: DictionarySettings; // the dictionaries to look words up in, see reader/dictionary
+  setDictionarySettings: Setter<DictionarySettings>;
   librarySettings: LibrarySettings; // how the library shows, see reader/shelf
   setLibrarySettings: Setter<LibrarySettings>;
   syncSettings: SyncSettings;
@@ -224,6 +233,8 @@ const userSettingsSlice = (
   setThemeEditing: setter(set, "themeEditing"),
   isFontsOpen: false,
   setIsFontsOpen: setter(set, "isFontsOpen"),
+  isDictionariesOpen: false,
+  setIsDictionariesOpen: setter(set, "isDictionariesOpen"),
   isFindOrCreateModalOpen: false,
   setIsFindOrCreateModalOpen: setter(set, "isFindOrCreateModalOpen"),
   isRTL: false,
@@ -285,6 +296,8 @@ const userSettingsSlice = (
   setReaderSidebarWidth: setter(set, "readerSidebarWidth"),
   readerSettings: DEFAULT_READER_SETTINGS,
   setReaderSettings: setter(set, "readerSettings"),
+  dictionarySettings: DEFAULT_DICTIONARY_SETTINGS,
+  setDictionarySettings: setter(set, "dictionarySettings"),
   librarySettings: DEFAULT_LIBRARY_SETTINGS,
   setLibrarySettings: setter(set, "librarySettings"),
   syncSettings: DEFAULT_SYNC_SETTINGS,

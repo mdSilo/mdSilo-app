@@ -1,6 +1,7 @@
 import type { HighlightColor, HighlightStyle } from "./annotations/annotations";
 import type { CodeLanguage } from "./highlight";
 import type { RulerColor } from "./ruler/ruler";
+import { LENS_SIZE, type LensColor } from "./lens/lensStyles";
 
 /** The colors of the pages: of the app theme, or of paper. */
 export type PageTheme = "auto" | "light" | "sepia" | "gray" | "dark";
@@ -86,6 +87,14 @@ export type ReaderSettings = {
   translateTo: string;
   /** a book translated: the translation in place of the text, not under it */
   translationOnly: boolean;
+  /** the words of the vocabulary with their meaning under them, in the books */
+  wordLens: boolean;
+  /** that meaning: of the definition kept (or as the user wrote it), or the word translated */
+  lensGloss: "definition" | "translation";
+  /** the size of the glosses, of the text (0.4 to 0.9): the room under the lines with it */
+  lensSize: number;
+  /** the color of the glosses */
+  lensColor: LensColor;
 };
 
 export const DEFAULT_READER_SETTINGS: ReaderSettings = {
@@ -135,6 +144,10 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   translator: "google",
   translateTo: "",
   translationOnly: false,
+  wordLens: false,
+  lensGloss: "definition",
+  lensSize: LENS_SIZE.default,
+  lensColor: "accent",
 };
 
 /** %, the zoom of a fixed layout: the least, the most, a step */
@@ -160,6 +173,8 @@ export const KEPT_ON_RESET = [
 
 /** The settings drawn over the pages, not in them: reset, but nothing laid out again. */
 const OVER_PAGES = [
+  // the glosses are changed in the pages as they are: none laid out again
+  "lensGloss",
   "readingRuler",
   "rulerLines",
   "rulerColor",

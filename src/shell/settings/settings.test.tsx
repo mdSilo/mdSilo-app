@@ -106,15 +106,16 @@ describe("EditorSettings", () => {
     });
     expect(store.getState().font).toBe("Sniglet");
 
-    fireEvent.change(screen.getByLabelText("Font Size"), {
-      target: { value: "1.5" },
-    });
-    fireEvent.change(screen.getByLabelText("Line Height"), {
-      target: { value: "2" },
-    });
-    fireEvent.change(screen.getByLabelText("Font Weight"), {
-      target: { value: "700" },
-    });
+    // a step a click: 1.1 → 1.5, 1.6 → 2, 400 → 700
+    for (let i = 0; i < 4; i++)
+      fireEvent.click(screen.getByLabelText("Increase Font Size"));
+    for (let i = 0; i < 4; i++)
+      fireEvent.click(screen.getByLabelText("Increase Line Height"));
+    for (let i = 0; i < 3; i++)
+      fireEvent.click(screen.getByLabelText("Increase Font Weight"));
+    expect(
+      screen.getByRole("spinbutton", { name: "Font Size" }),
+    ).toHaveAttribute("aria-valuetext", "1.5em");
     expect(store.getState().fontSize).toBe(1.5);
     expect(store.getState().lineHeight).toBe(2);
     expect(store.getState().fontWt).toBe(700);
@@ -127,20 +128,17 @@ describe("EditorSettings", () => {
     expect(store.getState().useAsset).toBe(false);
   });
 
-  test("falls back to defaults for invalid numbers", () => {
+  test("the numbers within their bounds", () => {
     render(<EditorSettings />);
-    fireEvent.change(screen.getByLabelText("Font Size"), {
-      target: { value: "" },
-    });
-    fireEvent.change(screen.getByLabelText("Line Height"), {
-      target: { value: "" },
-    });
-    fireEvent.change(screen.getByLabelText("Font Weight"), {
-      target: { value: "" },
-    });
-    expect(store.getState().fontSize).toBe(1.1);
-    expect(store.getState().lineHeight).toBe(1.6);
-    expect(store.getState().fontWt).toBe(400);
+    const weight = screen.getByRole("spinbutton", { name: "Font Weight" });
+    fireEvent.keyDown(weight, { key: "End" });
+    expect(store.getState().fontWt).toBe(900);
+    expect(screen.getByLabelText("Increase Font Weight")).toBeDisabled();
+    fireEvent.keyDown(weight, { key: "PageDown" });
+    expect(store.getState().fontWt).toBe(100);
+    for (let i = 0; i < 30; i++)
+      fireEvent.click(screen.getByLabelText("Decrease Font Size"));
+    expect(store.getState().fontSize).toBe(0.8);
   });
 });
 
@@ -273,12 +271,24 @@ describe("custom themes", () => {
     });
     expect(screen.queryByText(/primary-content on primary/)).toBeNull();
 
-    fireEvent.change(screen.getByLabelText("Box Radius"), {
-      target: { value: "1.5" },
-    });
-    fireEvent.change(screen.getByLabelText("Border"), {
-      target: { value: "2" },
-    });
+    // stepped to a value: up or down, a step a click
+    const stepTo = (name: string, target: number) => {
+      const now = () =>
+        Number(
+          screen
+            .getByRole("spinbutton", { name })
+            .getAttribute("aria-valuenow"),
+        );
+      for (let i = 0; i < 50 && now() !== target; i++)
+        fireEvent.click(
+          screen.getByLabelText(
+            `${now() < target ? "Increase" : "Decrease"} ${name}`,
+          ),
+        );
+      expect(now()).toBe(target);
+    };
+    stepTo("Box Radius", 1.5);
+    stepTo("Border", 2);
     expect(screen.getByText("1.5rem")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(store.getState().customThemes[0].vars).toMatchObject({
