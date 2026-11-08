@@ -38,6 +38,41 @@ afterEach(() => {
 });
 
 describe("a lookup in a note", () => {
+  test("at the text and the toolbar over it: clear of both", () => {
+    const rect = (top: number, bottom: number) =>
+      ({
+        left: 100,
+        right: 160,
+        top,
+        bottom,
+        width: 60,
+        height: bottom - top,
+      }) as DOMRect;
+    const range = { getBoundingClientRect: () => rect(300, 320) } as Range;
+    useEditorLookup.getState().show("cold", range, rect(250, 290));
+    expect(useEditorLookup.getState().lookup?.box).toEqual({
+      left: 100,
+      right: 160,
+      top: 250,
+      bottom: 320,
+    });
+    // no toolbar shown: the text only
+    useEditorLookup.getState().show("cold", range);
+    expect(useEditorLookup.getState().lookup?.box.top).toBe(300);
+  });
+
+  test("the settings of the dictionaries opened: gone", async () => {
+    render(<EditorLookupPopup />);
+    act(() => useEditorLookup.getState().show("cold"));
+    expect(
+      await screen.findByTestId("editor-lookup-popup"),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Dictionary settings"));
+    expect(store.getState().isDictionariesOpen).toBe(true);
+    expect(screen.queryByTestId("editor-lookup-popup")).toBeNull();
+    act(() => store.getState().setIsDictionariesOpen(false));
+  });
+
   test("the dictionaries at the text; gone on Escape, a click elsewhere", async () => {
     render(<EditorLookupPopup />);
     expect(screen.queryByTestId("editor-lookup-popup")).toBeNull();

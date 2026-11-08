@@ -94,7 +94,7 @@ The dictionaries are set in **Settings → Dictionaries** (or the gear of the po
 | Urban Dictionary | English slang |
 | Merriam-Webster | Opens the site; with your API key (free for non-commercial use at dictionaryapi.com), looked up in the popup, with recordings |
 | Google | Opens Google's definition |
-| A site you add | Any dictionary on the web: a url with `%WORD%` where the word goes; opens in the browser |
+| A site you add | Any dictionary on the web: a url with `%WORD%` where the word goes; opens in the browser. With an API key (optional, kept apart from the url and hidden), the url has `%KEY%` where it goes, and the word is looked up in the popup when the site answers as Merriam-Webster's APIs do (e.g. its Learner's or Medical dictionary at dictionaryapi.com: `https://www.dictionaryapi.com/api/v3/references/learners/json/%WORD%?key=%KEY%`); any other answer opens the link |
 | A dictionary file | MDict (`.mdx`, with its `.mdd` of pictures and sounds, and `.css`), imported with **Import**; first in the list once imported |
 
 Dictionary files are kept in the workspace (`.mdsilo/dictionaries/`) and are **not synced** unless you turn it on with the cloud button of the dictionary: they are often big. Another device sees the dictionary marked *Not here* until its files are synced to it. Links between entries look the other word up (the arrow goes back), and the speakers play the dictionary's sounds.

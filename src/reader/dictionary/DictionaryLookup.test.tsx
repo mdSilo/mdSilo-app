@@ -6,6 +6,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
 import { openUrl } from "@/workspace/open";
 import { resetVocabulary, useVocabulary } from "../vocabulary/vocabulary";
@@ -244,6 +245,38 @@ describe("dictionary lookup", () => {
     expect(store.getState().isDictionariesOpen).toBe(true);
   });
 
+  test("a site with a key: its entry, or its link when its answer is not known", async () => {
+    setSettings({
+      enabled: { wiktionary: false, wikipedia: false, "web:mw": true },
+      sites: [
+        {
+          id: "web:mw",
+          name: "Learner's",
+          url: "https://x.com/json/%WORD%?key=%KEY%",
+          key: "K",
+        },
+      ],
+    });
+    vi.mocked(invoke).mockImplementation(async () =>
+      new TextEncoder().encode(
+        JSON.stringify([
+          { meta: { id: "cold" }, fl: "adjective", shortdef: ["chilly"] },
+        ]),
+      ),
+    );
+    const { unmount } = render(
+      <DictionaryLookup selection={selection("cold")} onKeep={vi.fn()} />,
+    );
+    expect(await screen.findByText("chilly")).toBeInTheDocument();
+    unmount();
+    vi.mocked(invoke).mockImplementation(async () =>
+      new TextEncoder().encode(JSON.stringify({ results: [] })),
+    );
+    render(<DictionaryLookup selection={selection("cold")} onKeep={vi.fn()} />);
+    fireEvent.click(await screen.findByText("Open in Learner's"));
+    expect(openUrl).toHaveBeenCalledWith("https://x.com/json/cold?key=K");
+  });
+
   test("all failing: the error", async () => {
     fetchMock.mockRejectedValue(new Error("offline"));
     render(<DictionaryLookup selection={selection("cold")} onKeep={vi.fn()} />);
@@ -304,6 +337,33 @@ describe("dictionaries settings", () => {
     expect(screen.queryByText("Collins")).not.toBeInTheDocument();
     // built in: not removed
     expect(screen.queryByLabelText("Remove Google")).not.toBeInTheDocument();
+
+    // with an API key: needs %KEY% for it; looked up here
+    fireEvent.change(screen.getByLabelText("Site name"), {
+      target: { value: "Learner's" },
+    });
+    fireEvent.change(screen.getByLabelText("Site url"), {
+      target: { value: "https://x.com/json/%WORD%" },
+    });
+    fireEvent.change(screen.getByLabelText("Site API key"), {
+      target: { value: "secret" },
+    });
+    expect(screen.getByLabelText("Site API key")).toHaveAttribute(
+      "type",
+      "password",
+    );
+    fireEvent.click(screen.getByText("Add"));
+    expect(screen.getByText(/needs %KEY%/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Site url"), {
+      target: { value: "https://x.com/json/%WORD%?key=%KEY%" },
+    });
+    fireEvent.click(screen.getByText("Add"));
+    const row = screen.getByTestId(
+      `dictionary-${store.getState().dictionarySettings.sites[0].id}`,
+    );
+    expect(within(row).getByText("Web")).toBeInTheDocument();
+    expect(row.textContent).not.toContain("secret");
+    expect(screen.getByLabelText("Site API key")).toHaveValue("");
 
     const key = screen.getByLabelText("Merriam-Webster API key");
     fireEvent.change(key, { target: { value: " abc " } });

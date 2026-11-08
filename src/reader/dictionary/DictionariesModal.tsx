@@ -420,12 +420,14 @@ function MerriamWebsterKey({ settings }: { settings: DictionarySettings }) {
 function AddSite({ settings }: { settings: DictionarySettings }) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [key, setKey] = useState("");
   const [error, setError] = useState("");
   const add = () => {
     try {
-      save(addSite(settings, name, url));
+      save(addSite(settings, name, url, key));
       setName("");
       setUrl("");
+      setKey("");
       setError("");
     } catch (e) {
       setError(errorText(e));
@@ -441,6 +443,15 @@ function AddSite({ settings }: { settings: DictionarySettings }) {
       <code className="text-xs break-all text-base-content/70">
         https://www.collinsdictionary.com/dictionary/english/%WORD%
       </code>
+      <p className="text-xs text-base-content/70">
+        With an API key, optional: <code>%KEY%</code> where it goes in the url,
+        and the word is looked up here when the site answers as
+        Merriam-Webster&apos;s do (its Learner&apos;s, Medical… at
+        dictionaryapi.com); else the link opens. E.g.
+      </p>
+      <code className="text-xs break-all text-base-content/70">
+        https://www.dictionaryapi.com/api/v3/references/learners/json/%WORD%?key=%KEY%
+      </code>
       <div className="flex flex-wrap gap-2">
         <input
           className="w-32 input input-sm input-bordered"
@@ -455,6 +466,18 @@ function AddSite({ settings }: { settings: DictionarySettings }) {
           aria-label="Site url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") add();
+          }}
+        />
+        <input
+          type="password"
+          autoComplete="off"
+          className="w-40 input input-sm input-bordered"
+          placeholder="API key (optional)"
+          aria-label="Site API key"
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") add();
           }}

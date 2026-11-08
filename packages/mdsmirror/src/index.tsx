@@ -239,8 +239,8 @@ export type Props = {
   onCreateIssue?: (
     text: string
   ) => Promise<{ title: string; href: string } | undefined>;
-  /** Callback to look the text selected up, e.g. in dictionaries; at its range in the page */
-  onLookUpText?: (text: string, range?: Range) => void;
+  /** Callback to look the text selected up, e.g. in dictionaries: at its range in the page, clear of the toolbar (its box) */
+  onLookUpText?: (text: string, range?: Range, toolbar?: DOMRect) => void;
   /** Whether the text selected can be looked up: a word or a few; any if not given */
   canLookUpText?: (text: string) => boolean;
   /** Calback on open link */

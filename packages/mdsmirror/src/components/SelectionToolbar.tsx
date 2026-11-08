@@ -82,8 +82,11 @@ type Props = {
   onCreateIssue?: (
     text: string
   ) => Promise<{ title: string; href: string } | undefined>;
-  /** look the text selected up, e.g. in dictionaries; at its range in the page */
-  onLookUpText?: (text: string, range?: Range) => void;
+  /**
+   * look the text selected up, e.g. in dictionaries: at its range in the
+   * page, clear of the toolbar (its box given)
+   */
+  onLookUpText?: (text: string, range?: Range, toolbar?: DOMRect) => void;
   /** the text selected can be looked up: a word or a few; any if not given */
   canLookUpText?: (text: string) => boolean;
   onOpenLink?: (href: string) => void;
@@ -427,7 +430,12 @@ export default class SelectionToolbar extends React.Component<
         rest.onShowToast?.(dictionary.copied, ToastType.Info);
       },
       issue: () => void this.handleCreateIssue(selectionText),
-      lookup: () => onLookUpText?.(selectionText, rangeOfSelection(view)),
+      lookup: () =>
+        onLookUpText?.(
+          selectionText,
+          rangeOfSelection(view),
+          this.menuRef.current?.getBoundingClientRect()
+        ),
     };
     actions[ACTIONS_MENU] = () =>
       this.setState(({ actionsOpen }) => ({ actionsOpen: !actionsOpen }));

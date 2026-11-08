@@ -6,6 +6,7 @@
 
 - Improve: Wikipedia is one of the dictionaries, no longer a button of its own; Free Dictionary removed (it failed to load)
 - Feat: Look up the text selected in a note in the dictionaries, from the editor toolbar
+- Feat: A dictionary site added can have an API key (`%KEY%` in its url): looked up in the app when it answers as Merriam-Webster's APIs do
 
 ## app-v0.8.0 
 

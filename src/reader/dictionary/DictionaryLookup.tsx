@@ -261,7 +261,7 @@ export default function DictionaryLookup({
         className="overflow-y-auto text-sm max-h-60"
         onClick={openLinkOutside}
       >
-        {!source.lookup ? (
+        {!source.lookup || result?.linkOnly ? (
           <LinkOnly source={source} url={webUrl} word={word} />
         ) : current?.error ? (
           <p className="text-error">Could not look it up: {current.error}</p>

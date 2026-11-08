@@ -8,8 +8,10 @@ import {
   type DictionarySettings,
 } from "./settings";
 import {
+  hasKeyPlace,
   isUrlTemplate,
   lookupMerriamWebster,
+  lookupSite,
   lookupUrban,
   lookupWikipediaEntry,
   lookupWiktionaryWithAudio,
@@ -156,17 +158,27 @@ const hostOf = (url: string) => {
   }
 };
 
-/** The sites added by the user, as dictionaries. */
+/**
+ * The sites added by the user, as dictionaries: looked up in the app with an
+ * API key (where the url has `%KEY%`), else links.
+ */
 export const siteSources = (settings: DictionarySettings): DictionarySource[] =>
   settings.sites
     .filter((site) => isUrlTemplate(site.url))
-    .map((site) => ({
-      id: site.id,
-      label: site.name || hostOf(site.url),
-      kind: "link",
-      description: site.url,
-      url: (word) => urlOfTemplate(site.url, word),
-    }));
+    .map((site) => {
+      const key = site.key?.trim();
+      const url = (word: string) => urlOfTemplate(site.url, word, key);
+      return {
+        id: site.id,
+        label: site.name || hostOf(site.url),
+        kind: key ? "web" : "link",
+        description: key ? `${site.url}, by your API key` : site.url,
+        url,
+        ...(key
+          ? { lookup: (word: string) => lookupSite(site.url, key, word) }
+          : {}),
+      };
+    });
 
 /** All the dictionaries, in the order of the user; those not ordered yet after, as they come. */
 export function orderedSources(
@@ -216,18 +228,30 @@ export const setEnabled = (
   enabled: { ...settings.enabled, [id]: on },
 });
 
-/** The settings with a site added; throws if its url has no place for the word. */
+/**
+ * The settings with a site added, with an API key or not; throws if its url
+ * has no place for the word, or for the key given.
+ */
 export function addSite(
   settings: DictionarySettings,
   name: string,
   url: string,
+  key = "",
 ): DictionarySettings {
   if (!isUrlTemplate(url))
     throw new Error("The url needs %WORD% where the word goes");
+  if (key.trim() && !hasKeyPlace(url))
+    throw new Error("The url needs %KEY% where the API key goes");
   const id = `web:${crypto.randomUUID()}`;
+  const site = {
+    id,
+    name: name.trim(),
+    url: url.trim(),
+    ...(key.trim() ? { key: key.trim() } : {}),
+  };
   return {
     ...settings,
-    sites: [...settings.sites, { id, name: name.trim(), url: url.trim() }],
+    sites: [...settings.sites, site],
     enabled: { ...settings.enabled, [id]: true },
   };
 }

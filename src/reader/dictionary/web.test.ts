@@ -4,6 +4,8 @@ import {
   accentOf,
   commonsAudioUrl,
   lookupMerriamWebster,
+  lookupSite,
+  merriamWebsterEntries,
   lookupUrban,
   lookupWikipediaEntry,
   lookupWiktionaryWithAudio,
@@ -254,6 +256,65 @@ describe("web dictionaries", () => {
     // not found: the words like it, as strings
     vi.mocked(invoke).mockImplementation(async () => bytes(["colt", "cola"]));
     expect((await lookupMerriamWebster("coldd", "KEY")).entries).toEqual([]);
+  });
+
+  test("Merriam-Webster's shape: the Learner's in IPA; not found; other shapes not", () => {
+    expect(
+      merriamWebsterEntries([
+        {
+          meta: { id: "cold" },
+          hwi: { hw: "cold", prs: [{ ipa: "ˈkoʊld" }] },
+          fl: "adjective",
+          shortdef: ["low in temperature"],
+        },
+      ]),
+    ).toEqual([
+      {
+        language: "English",
+        meanings: [
+          { partOfSpeech: "adjective", definitions: ["low in temperature"] },
+        ],
+        pronunciations: [{ text: "/ˈkoʊld/" }],
+      },
+    ]);
+    expect(merriamWebsterEntries([])).toEqual([]);
+    expect(merriamWebsterEntries(["colt"])).toEqual([]);
+    expect(
+      merriamWebsterEntries([{ word: "cold", meanings: [] }]),
+    ).toBeUndefined();
+    expect(merriamWebsterEntries({ list: [] })).toBeUndefined();
+  });
+
+  test("a site with a key: by the app host; its answer shown if known, else its link", async () => {
+    vi.mocked(invoke).mockImplementation(async () =>
+      bytes([{ meta: { id: "cold" }, fl: "noun", shortdef: ["a <chill>"] }]),
+    );
+    const template = "https://x.com/json/%WORD%?key=%KEY%";
+    const res = await lookupSite(template, "K", " cold ");
+    expect(invoke).toHaveBeenCalledWith("fetch_url", {
+      url: "https://x.com/json/cold?key=K",
+    });
+    expect(res).toMatchObject({
+      word: "cold",
+      url: "https://x.com/json/cold?key=K",
+    });
+    expect(res.linkOnly).toBeUndefined();
+    expect(res.entries[0].meanings[0].definitions).toEqual(["a &lt;chill&gt;"]);
+    // another shape of JSON, or not JSON
+    vi.mocked(invoke).mockImplementation(async () => bytes({ results: [] }));
+    expect(await lookupSite(template, "K", "cold")).toMatchObject({
+      entries: [],
+      linkOnly: true,
+    });
+    vi.mocked(invoke).mockImplementation(
+      async () => new TextEncoder().encode("<html></html>").buffer,
+    );
+    expect(await lookupSite(template, "K", "cold")).toMatchObject({
+      linkOnly: true,
+    });
+    // failing: the error
+    vi.mocked(invoke).mockRejectedValue(new Error("401"));
+    await expect(lookupSite(template, "K", "cold")).rejects.toThrow("401");
   });
 
   test("the folders of Merriam-Webster recordings", () => {

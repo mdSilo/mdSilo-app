@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Popup } from "@/reader/components/BookPopups";
 import DictionaryLookup from "@/reader/dictionary/DictionaryLookup";
 import { useDictionaryWorkspace } from "@/reader/dictionary/dictionary";
+import { useStore } from "@/state/store";
 import { useEditorLookup } from "./editorLookup";
 
 const TEST_ID = "editor-lookup-popup";
@@ -17,6 +18,12 @@ export default function EditorLookupPopup() {
   // the window, as the root the popup is put in
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const rootRef = useMemo(() => ({ current: root }), [root]);
+
+  // the settings of the dictionaries opened from it: in its place
+  const settingsOpen = useStore((state) => state.isDictionariesOpen);
+  useEffect(() => {
+    if (settingsOpen) useEditorLookup.getState().clear();
+  }, [settingsOpen]);
 
   useEffect(() => {
     if (!lookup) return;
@@ -40,7 +47,8 @@ export default function EditorLookupPopup() {
 
   if (!lookup) return null;
   return (
-    <div ref={setRoot} className="fixed inset-0 z-40 pointer-events-none">
+    // over the toolbar of the editor (z-index 200), should they meet
+    <div ref={setRoot} className="fixed inset-0 z-[210] pointer-events-none">
       <Popup
         box={lookup.box}
         rootRef={rootRef}

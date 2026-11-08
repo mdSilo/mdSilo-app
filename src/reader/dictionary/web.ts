@@ -215,7 +215,7 @@ type MerriamWebsterEntry = {
   meta?: { id?: string };
   hwi?: {
     hw?: string;
-    prs?: Array<{ mw?: string; sound?: { audio?: string } }>;
+    prs?: Array<{ mw?: string; ipa?: string; sound?: { audio?: string } }>;
   };
   fl?: string;
   shortdef?: string[];
@@ -236,22 +236,25 @@ export function merriamWebsterAudioUrl(audio: string): string {
   return `https://media.merriam-webster.com/audio/prons/en/us/mp3/${subdir}/${encodeURIComponent(audio)}.mp3`;
 }
 
+/** An entry of the APIs of Merriam-Webster, of any of its dictionaries. */
+const isMerriamWebsterEntry = (e: unknown): e is MerriamWebsterEntry =>
+  typeof e === "object" &&
+  e !== null &&
+  ("shortdef" in e || "hwi" in e || "meta" in e);
+
 /**
- * Merriam-Webster's Collegiate Dictionary, by its API: needs a key of the
- * user (free for non-commercial use, dictionaryapi.com).
+ * The entries of an answer of an API of Merriam-Webster (Collegiate,
+ * Learner's, Medical… of dictionaryapi.com): none if not found, undefined
+ * if the answer is not of that shape.
  */
-export async function lookupMerriamWebster(
-  word: string,
-  key: string,
-): Promise<DictionaryResult> {
-  const term = word.trim();
-  const data = await getJsonByHost<Array<MerriamWebsterEntry | string>>(
-    `https://www.dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(term)}?key=${encodeURIComponent(key)}`,
-  );
+export function merriamWebsterEntries(
+  data: unknown,
+): DictionaryEntry[] | undefined {
+  if (!Array.isArray(data)) return undefined;
   // a word not found gives the words like it, as strings
-  const found = (Array.isArray(data) ? data : []).filter(
-    (e): e is MerriamWebsterEntry => typeof e === "object" && e !== null,
-  );
+  const found = data.filter(isMerriamWebsterEntry);
+  if (found.length < data.length && data.some((e) => typeof e !== "string"))
+    return undefined;
   // the homographs of the word (cold:1, cold:2), not the phrases with it
   const headword = (e: MerriamWebsterEntry) =>
     (e.meta?.id ?? "").split(":")[0].toLowerCase();
@@ -264,16 +267,21 @@ export async function lookupMerriamWebster(
     meanings.push({ partOfSpeech: entry.fl ?? "", definitions: defs });
     if (pronunciations.length) continue;
     pronunciations = (entry.hwi?.prs ?? [])
-      .filter((p) => p.mw || p.sound?.audio)
+      .filter((p) => p.mw || p.ipa || p.sound?.audio)
       .slice(0, 2)
       .map((p) => ({
-        ...(p.mw ? { text: `\\${p.mw}\\` } : {}),
+        // the Collegiate in its own notation, the Learner's in IPA
+        ...(p.mw
+          ? { text: `\\${p.mw}\\` }
+          : p.ipa
+            ? { text: `/${p.ipa}/` }
+            : {}),
         ...(p.sound?.audio
           ? { audio: merriamWebsterAudioUrl(p.sound.audio), label: "US" }
           : {}),
       }));
   }
-  const entries: DictionaryEntry[] = meanings.length
+  return meanings.length
     ? [
         {
           language: "English",
@@ -282,21 +290,76 @@ export async function lookupMerriamWebster(
         },
       ]
     : [];
-  return { word: term, entries, url: merriamWebsterUrl(term) };
+}
+
+/**
+ * Merriam-Webster's Collegiate Dictionary, by its API: needs a key of the
+ * user (free for non-commercial use, dictionaryapi.com).
+ */
+export async function lookupMerriamWebster(
+  word: string,
+  key: string,
+): Promise<DictionaryResult> {
+  const term = word.trim();
+  const data = await getJsonByHost<unknown>(
+    `https://www.dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(term)}?key=${encodeURIComponent(key)}`,
+  );
+  return {
+    word: term,
+    entries: merriamWebsterEntries(data) ?? [],
+    url: merriamWebsterUrl(term),
+  };
 }
 
 // --------------------------------------------------------------------- links
 
 /**
  * The url of a site for a word, from a template with `%WORD%` where the word
- * goes (case aside; also `%25WORD%25`, as a url pasted encoded has it).
+ * goes (case aside; also `%25WORD%25`, as a url pasted encoded has it), and
+ * `%KEY%` where the API key of the user goes, if any.
  */
-export const urlOfTemplate = (template: string, word: string) => {
+export const urlOfTemplate = (template: string, word: string, key = "") => {
   const encoded = encodeURIComponent(word.trim());
-  return template.replace(/%25WORD%25/gi, encoded).replace(/%WORD%/gi, encoded);
+  const code = encodeURIComponent(key.trim());
+  return template
+    .replace(/%25WORD%25/gi, encoded)
+    .replace(/%WORD%/gi, encoded)
+    .replace(/%25KEY%25/gi, code)
+    .replace(/%KEY%/gi, code);
 };
+
+/** The template has a place for an API key. */
+export const hasKeyPlace = (template: string) =>
+  /%(25)?KEY%(25)?/i.test(template);
 
 /** A template the app can use: a web url with a place for the word. */
 export const isUrlTemplate = (template: string) =>
   /^https?:\/\/\S+$/i.test(template.trim()) &&
   /%(25)?WORD%(25)?/i.test(template);
+
+/**
+ * A site added by the user, with an API key: its answer for the word, by the
+ * app host (a site may not allow the app to fetch it). An answer of a shape
+ * known (as Merriam-Webster's) is shown; any other, only its link.
+ */
+export async function lookupSite(
+  template: string,
+  key: string,
+  word: string,
+): Promise<DictionaryResult> {
+  const term = word.trim();
+  const url = urlOfTemplate(template, term, key);
+  let data: unknown;
+  try {
+    data = await getJsonByHost<unknown>(url);
+  } catch (e) {
+    // not JSON: a page, to open
+    if (e instanceof SyntaxError)
+      return { word: term, entries: [], url, linkOnly: true };
+    throw e;
+  }
+  const entries = merriamWebsterEntries(data);
+  return entries
+    ? { word: term, entries, url }
+    : { word: term, entries: [], url, linkOnly: true };
+}

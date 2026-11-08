@@ -34,6 +34,8 @@ export type DictionaryResult = {
   pronunciations?: Pronunciation[];
   /** the style sheets an entry given as HTML links to, in its dictionary */
   styles?: string[];
+  /** an answer not understood (of a site added): its link only */
+  linkOnly?: boolean;
 };
 export type WikipediaResult = {
   title: string;

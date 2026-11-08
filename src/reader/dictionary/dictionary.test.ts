@@ -10,7 +10,7 @@ import {
   setEnabled,
   withDictionaryDefaults,
 } from "./dictionary";
-import { isUrlTemplate, urlOfTemplate } from "./web";
+import { hasKeyPlace, isUrlTemplate, urlOfTemplate } from "./web";
 
 const ids = (list: { id: string }[]) => list.map((s) => s.id);
 
@@ -114,7 +114,43 @@ describe("dictionary sources", () => {
     expect(gone.enabled[site.id]).toBeUndefined();
   });
 
+  test("a site with an API key: needs %KEY%; looked up in the app, the key not shown", () => {
+    expect(() =>
+      addSite(DEFAULT_DICTIONARY_SETTINGS, "x", "https://x.com/%WORD%", "k"),
+    ).toThrow("%KEY%");
+    const settings = addSite(
+      DEFAULT_DICTIONARY_SETTINGS,
+      "Learner's",
+      "https://x.com/json/%WORD%?key=%KEY%",
+      " secret ",
+    );
+    expect(settings.sites[0].key).toBe("secret");
+    expect(settings.sites[0].url).toBe("https://x.com/json/%WORD%?key=%KEY%");
+    const site = enabledSources(settings).at(-1)!;
+    expect(site).toMatchObject({ label: "Learner's", kind: "web" });
+    expect(site.lookup).toBeDefined();
+    expect(site.description).not.toContain("secret");
+    expect(site.url!("cold")).toBe("https://x.com/json/cold?key=secret");
+    // no key: a link, its place for the key left empty
+    const noKey = addSite(
+      DEFAULT_DICTIONARY_SETTINGS,
+      "",
+      "https://x.com/%WORD%?key=%KEY%",
+      "  ",
+    );
+    expect(noKey.sites[0].key).toBeUndefined();
+    const link = enabledSources(noKey).at(-1)!;
+    expect(link).toMatchObject({ label: "x.com", kind: "link" });
+    expect(link.url!("cold")).toBe("https://x.com/cold?key=");
+  });
+
   test("url templates", () => {
+    expect(hasKeyPlace("https://a.com/?k=%KEY%")).toBe(true);
+    expect(hasKeyPlace("https://a.com/?k=%25key%25")).toBe(true);
+    expect(hasKeyPlace("https://a.com/?q=%WORD%")).toBe(false);
+    expect(urlOfTemplate("https://a.com/%WORD%?k=%25KEY%25", "a", "x/y")).toBe(
+      "https://a.com/a?k=x%2Fy",
+    );
     expect(isUrlTemplate("https://a.com/?q=%WORD%")).toBe(true);
     expect(isUrlTemplate("https://a.com/?q=%25WORD%25")).toBe(true);
     expect(isUrlTemplate("https://a.com/")).toBe(false);
