@@ -100,13 +100,14 @@ const defaultValue = `
 mdSilo keeps what you read, what you think and what you write in one local workspace of plain Markdown files, tied together by links. Get the Desktop Application [here](https://github.com/mdSilo/mdSilo-app/releases).
 
 ## Features  
-  - 📖 Reading: books (EPUB, PDF...), feeds and podcasts; highlights and notes saved as Markdown  
-  - 🧩 Issue: issues, labels, milestones and project boards; made from a highlight, a selection or a task in a note (#todo# #doing# #done#, checkboxes)  
-  - ✍️ Writing: WYSIWYG Markdown, mind map, diagram, math; slash commands, hotkeys and hovering toolbar  
-  - 🔗 Linking: \`[[notes]]\`, \`{{books}}\`, issues, hashtags and backlinks; Graph view; Chronicle and activity heat map  
-  - 🔍 Full-text search over notes, annotations and books  
-  - 🔄 Sync with git (GitHub, Gitea...) and publish chosen notes as a website, in the desktop app  
-  - ✨ Windows, macOS, Linux and Web; local plain files, no account  
+  - 📖 Reading: books (EPUB, PDF...), feeds and podcasts; highlights and notes saved as Markdown.  
+  - 🧩 Issue: issues, labels, milestones and project boards; made from a highlight, a selection or a task in a note (#todo# #doing# #done#, checkboxes).  
+  - ✍️ Writing: WYSIWYG Markdown, mind map, diagram, math; slash commands, hotkeys and hovering toolbar.  
+  - 🔗 Linking: \`[[notes]]\`, \`{{books}}\`, issues, hashtags and backlinks; Graph view; Chronicle and activity heat map.  
+  - 🔍 Full-text search over notes, annotations and books.  
+  - 🔄 Sync with git (GitHub, Gitea...) and publish chosen notes as a website, in the desktop app.  
+  - 🛠️ Plugins and customization: make mdSilo your own.  
+  - ✨ Windows, macOS, Linux and Web; local plain files, no account.  
 
 For a human brain, reading and writing are the I/O. mdSilo is here to boost it: tiny yet powerful, free for everyone.
 

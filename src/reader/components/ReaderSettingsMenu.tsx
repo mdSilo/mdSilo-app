@@ -83,6 +83,12 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           })}
         </div>
       </div>
+      <Toggle
+        label="Invert image colors"
+        checked={settings.invertImages}
+        onChange={(invertImages) => update({ invertImages })}
+      />
+      <div className="divider my-0" />
       {fixedLayout ? (
         <Segmented
           label="Layout"
@@ -423,11 +429,6 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           ) : null}
         </>
       )}
-      <Toggle
-        label="Invert image colors"
-        checked={settings.invertImages}
-        onChange={(invertImages) => update({ invertImages })}
-      />
       <div className="divider my-0" />
       <Toggle
         label="Page turn animation"

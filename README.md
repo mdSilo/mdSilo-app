@@ -72,6 +72,10 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 - **No lost edits**: changes on two devices merge; when both changed the same lines, your version is kept beside the note as a conflict copy, and the app's data merges field by field
 - **Publish a static site** to GitHub Pages (or export it to a folder): the folders you tick, with backlinks, graph, search, tag pages, book annotations and issues with their milestones and boards. Math, mermaid, echarts and SMILES are drawn as you publish; links to private notes become plain text
 
+### 🛠️ Plugins and customization
+
+Make mdSilo your own: add your own fonts for reading and writing, define a color theme, and extend the app with plugins. some plugins here you can try out: https://github.com/mdSilo/mdSilo-app/tree/main/examples/plugins
+
 ## Learn more
 
 The [user manual](docs/manual/0%20Start%20Here.md) covers every part in detail (also in Chinese: [中文手册](docs/manual-zh/0%20开始.md)). The web version opens with the manual already in your workspace (in Chinese for a Chinese browser), together with a public domain sample book ([Project Gutenberg](https://www.gutenberg.org/ebooks/11)) and a few issues to play with; click around and break things. When you are done, **File Menu > Remove demo** clears all of it in one click and keeps what you made.
@@ -168,7 +172,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 
 ### Extension
 
-- [X] Plugin
+- [X] Plugin, some examples: https://github.com/mdSilo/mdSilo-app/tree/main/examples/plugins
 - [X] Customize theme 
 - [X] Dictionary: .mdx/.mdd mdict dictionary files   
 

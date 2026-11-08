@@ -1,8 +1,12 @@
 # Changelog 
 
-## app-v0.8.0 
+## app-v0.8.1
 
 2026-XX-XX
+
+## app-v0.8.0 
+
+2026-11-08
 
 - Feat: OPDS catalogs in Feeds, browse, search and download books
 - Feat: Customize fonts and theme  

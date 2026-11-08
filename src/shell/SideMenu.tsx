@@ -813,7 +813,7 @@ const PlayerButton = () => {
 
   return (
     <MenuItem isHighlighted={shown}>
-      <Tooltip content={shown ? "Hide" : "Show"} placement={tooltipPlacement}>
+      <Tooltip content={`${shown ? "Hide" : "Show"} The Player`} placement={tooltipPlacement}>
         <button
           aria-label="Player"
           className={btnClass}
