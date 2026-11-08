@@ -26,6 +26,7 @@ import {
   useLocalDictionaries,
 } from "./local";
 import { fixtureFile, mockFs } from "./testFs";
+import { commonsAudioUrl } from "./web";
 
 vi.mock("@/workspace/open", () => ({
   openUrl: vi.fn(async () => undefined),
@@ -50,15 +51,16 @@ const WIKTIONARY_COLD = {
   ],
 };
 
-const FREE_COLD = [
-  {
-    word: "cold",
-    phonetics: [{ text: "/koʊld/", audio: "https://x/cold-us.mp3" }],
-    meanings: [
-      { partOfSpeech: "adjective", definitions: [{ definition: "Chilly." }] },
-    ],
-  },
-];
+const WIKIPEDIA_COLD = {
+  title: "Cold",
+  extract: "Cold is the presence of low temperature.",
+  content_urls: { desktop: { page: "https://en.wikipedia.org/wiki/Cold" } },
+};
+
+/** The recordings of a word on its Wiktionary page. */
+const mediaOf = (...files: string[]) => ({
+  items: files.map((title) => ({ type: "audio", title: `File:${title}` })),
+});
 
 const selection = (text: string) => ({
   text,
@@ -95,25 +97,31 @@ const setSettings = (patch: Partial<DictionarySettings>) =>
     .setDictionarySettings({ ...DEFAULT_DICTIONARY_SETTINGS, ...patch });
 
 describe("dictionary lookup", () => {
-  test("a tab per dictionary on; the first that has the word shows; its recording plays", async () => {
-    // not in Wiktionary: on to Free Dictionary
+  test("a tab per dictionary on; the first that has the word shows; Wikipedia one of them", async () => {
+    // not in Wiktionary: on to Wikipedia
     fetchMock.mockImplementation(async (url: string) =>
-      url.includes("dictionaryapi.dev") ? respond(FREE_COLD) : respond({}, 404),
+      url.includes("wikipedia.org")
+        ? respond(WIKIPEDIA_COLD)
+        : respond({}, 404),
     );
     const onKeep = vi.fn();
     render(<DictionaryLookup selection={selection("cold")} onKeep={onKeep} />);
     const tabs = screen.getAllByRole("tab").map((t) => t.textContent);
-    expect(tabs).toEqual(["Wiktionary", "Free Dictionary"]);
-    expect(await screen.findByText("Chilly.")).toBeInTheDocument();
+    expect(tabs).toEqual(["Wiktionary", "Wikipedia"]);
     expect(
-      screen.getByRole("tab", { name: "Free Dictionary" }),
-    ).toHaveAttribute("aria-selected", "true");
-    fireEvent.click(
-      screen.getByRole("button", { name: "Play the pronunciation (US)" }),
+      await screen.findByText("Cold is the presence of low temperature."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Wikipedia" })).toHaveAttribute(
+      "aria-selected",
+      "true",
     );
-    expect(plays).toEqual(["https://x/cold-us.mp3"]);
+    // the article on the web, not its search
+    fireEvent.click(screen.getByTitle("Open on the web"));
+    expect(openUrl).toHaveBeenCalledWith("https://en.wikipedia.org/wiki/Cold");
     fireEvent.click(screen.getByText("Keep as note"));
-    expect(onKeep).toHaveBeenCalledWith("*adjective* Chilly.");
+    expect(onKeep).toHaveBeenCalledWith(
+      "Cold is the presence of low temperature.",
+    );
     // back to Wiktionary: looked up once, not again
     fireEvent.click(screen.getByRole("tab", { name: "Wiktionary" }));
     expect(screen.getByText("No definition of “cold”")).toBeInTheDocument();
@@ -123,6 +131,17 @@ describe("dictionary lookup", () => {
     ).toHaveLength(1);
   });
 
+  test("no Keep as note without onKeep: in a note", async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      url.includes("media-list") ? respond({}) : respond(WIKTIONARY_COLD),
+    );
+    render(<DictionaryLookup selection={{ text: "cold" }} />);
+    expect(
+      await screen.findByText("Having a low temperature."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Keep as note")).toBeNull();
+  });
+
   test("added to the vocabulary with its pronunciations and dictionary; a word kept before given them", async () => {
     resetVocabulary();
     mockFs();
@@ -130,38 +149,37 @@ describe("dictionary lookup", () => {
       .getState()
       .add("/ws", { word: "old", definition: "<p>aged</p>" });
     fetchMock.mockImplementation(async (url: string) =>
-      url.includes("dictionaryapi.dev")
-        ? respond(
-            url.endsWith("/old")
-              ? [
-                  {
-                    ...FREE_COLD[0],
-                    word: "old",
-                    phonetics: [{ text: "/əʊld/" }],
-                  },
-                ]
-              : FREE_COLD,
-          )
-        : respond({}, 404),
+      url.includes("media-list/cold")
+        ? respond(mediaOf("En-us-cold.ogg"))
+        : url.includes("media-list/old")
+          ? respond(mediaOf("En-uk-old.mp3"))
+          : url.includes("wiktionary.org")
+            ? respond(WIKTIONARY_COLD)
+            : respond({}, 404),
     );
     const { unmount } = render(
       <DictionaryLookup
         selection={selection("cold")}
         ws="/ws"
         onKeep={vi.fn()}
+        placeOf={() => ({ book: "abc", title: "A Book" })}
       />,
     );
     fireEvent.click(await screen.findByText("Add to vocabulary"));
     await screen.findByTestId("word-kept");
+    const cold = commonsAudioUrl("File:En-us-cold.ogg");
     expect(
       useVocabulary.getState().entries.find((e) => e.word === "cold"),
     ).toMatchObject({
-      source: "free-dictionary",
-      sourceName: "Free Dictionary",
-      pronunciations: [
-        { text: "/koʊld/", audio: "https://x/cold-us.mp3", label: "US" },
-      ],
+      source: "wiktionary",
+      sourceName: "Wiktionary",
+      pronunciations: [{ audio: cold, label: "US" }],
+      context: { book: "abc", title: "A Book" },
     });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Play the pronunciation (US)" }),
+    );
+    expect(plays).toEqual([cold]);
     unmount();
     render(
       <DictionaryLookup
@@ -175,7 +193,9 @@ describe("dictionary lookup", () => {
       expect(
         useVocabulary.getState().entries.find((e) => e.word === "old")
           ?.pronunciations,
-      ).toEqual([{ text: "/əʊld/" }]),
+      ).toEqual([
+        { audio: commonsAudioUrl("File:En-uk-old.mp3"), label: "UK" },
+      ]),
     );
   });
 
@@ -189,14 +209,14 @@ describe("dictionary lookup", () => {
     ).toBeInTheDocument();
     await settle();
     expect(
-      fetchMock.mock.calls.some(([u]) => String(u).includes("dictionaryapi")),
+      fetchMock.mock.calls.some(([u]) => String(u).includes("wikipedia")),
     ).toBe(false);
   });
 
   test("the order of the user; a link opens the site; none on", async () => {
     setSettings({
       order: ["google", "wiktionary"],
-      enabled: { google: true, "free-dictionary": false },
+      enabled: { google: true, wikipedia: false },
     });
     fetchMock.mockImplementation(async () => respond(WIKTIONARY_COLD));
     const { unmount } = render(
@@ -217,7 +237,7 @@ describe("dictionary lookup", () => {
     );
     unmount();
 
-    setSettings({ enabled: { wiktionary: false, "free-dictionary": false } });
+    setSettings({ enabled: { wiktionary: false, wikipedia: false } });
     render(<DictionaryLookup selection={selection("cold")} onKeep={vi.fn()} />);
     expect(screen.getByText(/No dictionary is turned on/)).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText("Dictionary settings"));
@@ -229,9 +249,10 @@ describe("dictionary lookup", () => {
     render(<DictionaryLookup selection={selection("cold")} onKeep={vi.fn()} />);
     // each tried, the last shown
     await waitFor(() =>
-      expect(
-        screen.getByRole("tab", { name: "Free Dictionary" }),
-      ).toHaveAttribute("aria-selected", "true"),
+      expect(screen.getByRole("tab", { name: "Wikipedia" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
     );
     expect(
       await screen.findByText("Could not look it up: offline"),
@@ -257,11 +278,7 @@ describe("dictionaries settings", () => {
     expect(store.getState().dictionarySettings.enabled.wiktionary).toBe(false);
 
     fireEvent.click(screen.getByLabelText("Move Urban Dictionary up"));
-    expect(order().slice(0, 3)).toEqual([
-      "wiktionary",
-      "urban",
-      "free-dictionary",
-    ]);
+    expect(order().slice(0, 3)).toEqual(["wiktionary", "urban", "wikipedia"]);
     expect(screen.getByLabelText("Move Wiktionary up")).toBeDisabled();
     fireEvent.click(screen.getByLabelText("Move Wiktionary down"));
     expect(order().slice(0, 2)).toEqual(["urban", "wiktionary"]);
@@ -318,7 +335,7 @@ describe("dictionary files", () => {
   test("an entry of a file, in its own root; a link to another entry, and back", async () => {
     await importLongman();
     // the file first, the web ones not asked
-    setSettings({ enabled: { wiktionary: false, "free-dictionary": false } });
+    setSettings({ enabled: { wiktionary: false, wikipedia: false } });
     const onKeep = vi.fn();
     render(
       <DictionaryLookup
@@ -350,7 +367,7 @@ describe("dictionary files", () => {
 
   test("a dark theme: the dark colors of the dictionary made light", async () => {
     await importLongman();
-    setSettings({ enabled: { wiktionary: false, "free-dictionary": false } });
+    setSettings({ enabled: { wiktionary: false, wikipedia: false } });
     store.setState({ darkMode: true });
     render(
       <DictionaryLookup
@@ -487,7 +504,7 @@ describe("dictionary files", () => {
     await settle();
     expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
       "Wiktionary",
-      "Free Dictionary",
+      "Wikipedia",
     ]);
   });
 });

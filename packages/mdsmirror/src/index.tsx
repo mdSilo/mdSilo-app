@@ -239,6 +239,10 @@ export type Props = {
   onCreateIssue?: (
     text: string
   ) => Promise<{ title: string; href: string } | undefined>;
+  /** Callback to look the text selected up, e.g. in dictionaries; at its range in the page */
+  onLookUpText?: (text: string, range?: Range) => void;
+  /** Whether the text selected can be looked up: a word or a few; any if not given */
+  canLookUpText?: (text: string) => boolean;
   /** Calback on open link */
   onOpenLink?: (href: string) => void;
   /** Callback on click attachment */
@@ -989,6 +993,8 @@ class MsEditor extends React.PureComponent<Props, State> {
                   onCreateLink={this.props.onCreateLink}
                   onSearchSelectText={this.props.onSearchSelectText}
                   onCreateIssue={this.props.onCreateIssue}
+                  onLookUpText={this.props.onLookUpText}
+                  canLookUpText={this.props.canLookUpText}
                   selectionActions={this.props.selectionActions}
                   serializer={this.serializer}
                   parseMarkdown={this.parseMarkdown}

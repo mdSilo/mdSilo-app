@@ -30,7 +30,7 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 
 - **Book reader** for EPUB, PDF, MOBI/AZW3, FB2 and CBZ; TXT, Markdown and HTML are converted on import. Paging or scrolling, themes, fonts, margins, footnotes, image and table viewer
 - **Highlight, write notes, bookmark**: kept as a Markdown file next to the book (`Foo.epub.md`), a note like any other: editable, searchable, linkable
-- **Look up as you read**: your dictionaries in your order (Wiktionary, Free Dictionary, Urban Dictionary, Merriam-Webster, sites you add, MDict files), with pronunciations; Wikipedia, translation, read aloud
+- **Look up as you read**: your dictionaries in your order (Wiktionary, Wikipedia, Urban Dictionary, Merriam-Webster, sites you add, MDict files), with pronunciations, in books and notes; translation, read aloud
 - **Vocabulary**: words kept with their pronunciation and the sentence they came from, studied as flash cards; the **word lens** shows their meaning under them in the books
 - **Parallel reading**: two books side by side, each with its own notes
 - **Library**: covers, groups, status, search, drag and drop; books are identified by content, so a renamed book is still the same book

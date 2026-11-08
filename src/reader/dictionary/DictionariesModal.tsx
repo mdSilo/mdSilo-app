@@ -27,7 +27,6 @@ import {
 import { store, useStore } from "@/state/store";
 import { BaseModal } from "@/ui/BaseModal";
 import { Spinner } from "@/ui/ui";
-import { dataRoot } from "@/workspace/layout";
 import { openFileDilog } from "@/workspace/open";
 import { isTauri } from "@/workspace/util";
 import {
@@ -41,6 +40,7 @@ import {
   putFirst,
   setEnabled,
   useDictionarySettings,
+  useDictionaryWorkspace,
   useDictionarySources,
   withDictionaryDefaults,
   type DictionarySettings,
@@ -81,16 +81,9 @@ export default function DictionariesModal() {
   );
 }
 
-/** The workspace the dictionary files are in: none for a folder that is not one. */
-function useWorkspace(): string | undefined {
-  const initDir = useStore((state) => state.initDir);
-  const layout = useStore((state) => state.layout);
-  return dataRoot({ initDir, layout }) ? initDir : undefined;
-}
-
 export function DictionariesSetting() {
   const settings = useDictionarySettings();
-  const ws = useWorkspace();
+  const ws = useDictionaryWorkspace();
   const sources = useDictionarySources(ws);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),

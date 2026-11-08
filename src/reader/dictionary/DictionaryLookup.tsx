@@ -10,8 +10,6 @@ import {
 import { openUrl } from "@/workspace/open";
 import { store } from "@/state/store";
 import { Spinner } from "@/ui/ui";
-import type { TextSelection } from "../popups";
-import { activeStore } from "../readerStore";
 import {
   definitionOf,
   pronunciationsOf,
@@ -35,6 +33,18 @@ import {
 import MdictEntry from "./MdictEntry";
 
 type Found = { result?: DictionaryResult; error?: string };
+
+/** The text looked up: a new one for each lookup (a selection of a book, of a note). */
+export type LookupTarget = {
+  text: string;
+  /** the range of the text, while shown: for the sentence it is in */
+  range?: Range;
+  /** where it is in its book */
+  cfi?: string;
+};
+
+/** Where the text is, kept with a word added to the vocabulary: its book. */
+export type LookupPlace = { book?: string; title?: string };
 
 /** The dictionary has the word: its entries, or an entry of a dictionary file. */
 export const hasEntry = (result?: DictionaryResult) =>
@@ -60,12 +70,15 @@ export default function DictionaryLookup({
   lang,
   ws,
   onKeep,
+  placeOf,
 }: {
-  selection: TextSelection;
+  selection: LookupTarget;
   lang?: string;
   ws?: string;
-  /** keep what was found as the note of a highlight */
-  onKeep: (note: string) => void;
+  /** keep what was found as the note of a highlight; none: no button */
+  onKeep?: (note: string) => void;
+  /** where the text is, for a word added to the vocabulary */
+  placeOf?: () => LookupPlace;
 }) {
   const settings = useDictionarySettings();
   const local = useLocalSources(ws);
@@ -105,7 +118,7 @@ export default function DictionaryLookup({
 
   // look the word up in the tab shown, once: kept when another tab is
   // picked meanwhile, not when another word is selected
-  const asked = useRef<{ selection: TextSelection; keys: Set<string> }>(null);
+  const asked = useRef<{ selection: LookupTarget; keys: Set<string> }>(null);
   useEffect(() => {
     if (!source?.lookup || results[key]) return;
     if (asked.current?.selection !== selection)
@@ -177,8 +190,11 @@ export default function DictionaryLookup({
   }
 
   const current = results[key];
-  const webUrl = source.url?.(word, lang);
   const result = current?.result;
+  // the page found (an article of Wikipedia), else the page of the word
+  const webUrl = source.url
+    ? (hasEntry(result) && result?.url) || source.url(word, lang)
+    : undefined;
   const navigate = (to: string) => {
     if (!to.trim() || to.trim() === word) return;
     setPicked(true);
@@ -279,15 +295,18 @@ export default function DictionaryLookup({
               result={result}
               source={source}
               selection={selection}
+              placeOf={placeOf}
             />
           ) : null}
-          <button
-            className="btn btn-ghost btn-xs"
-            title="Highlight the text, with this as its note"
-            onClick={() => onKeep(dictionaryNote(result))}
-          >
-            <TbNote /> Keep as note
-          </button>
+          {onKeep ? (
+            <button
+              className="btn btn-ghost btn-xs"
+              title="Highlight the text, with this as its note"
+              onClick={() => onKeep(dictionaryNote(result))}
+            >
+              <TbNote /> Keep as note
+            </button>
+          ) : null}
         </div>
       ) : null}
     </>
@@ -365,11 +384,13 @@ function AddWord({
   result,
   source,
   selection,
+  placeOf,
 }: {
   ws: string;
   result: DictionaryResult;
   source: DictionarySource;
-  selection: TextSelection;
+  selection: LookupTarget;
+  placeOf?: () => LookupPlace;
 }) {
   const vocabulary = useVocabulary((state) => state.entries);
   const vocabularyWs = useVocabulary((state) => state.ws);
@@ -400,7 +421,7 @@ function AddWord({
     );
   }
   const add = () => {
-    const { hash, entry } = activeStore().getState();
+    const { book, title } = placeOf?.() ?? {};
     void useVocabulary.getState().add(ws, {
       word: result.word,
       ...definitionOf(result),
@@ -409,7 +430,7 @@ function AddWord({
       ...(said.length ? { pronunciations: said } : {}),
       context: {
         sentence: sentenceAround(selection.range),
-        ...(hash ? { book: hash, title: entry?.title } : {}),
+        ...(book ? { book, title } : {}),
         ...(selection.cfi ? { cfi: selection.cfi } : {}),
       },
     });

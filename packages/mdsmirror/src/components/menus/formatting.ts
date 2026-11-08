@@ -9,6 +9,7 @@ import {
   TbSearch,
   TbStrikethrough,
   TbUnderline,
+  TbVocabulary,
   TbWriting,
 } from "react-icons/tb";
 import { EditorState } from "prosemirror-state";
@@ -20,7 +21,8 @@ export default function formattingMenuItems(
   state: EditorState,
   isTemplate: boolean,
   dictionary: typeof baseDictionary,
-  canCreateIssue = false
+  canCreateIssue = false,
+  canLookUp = false
 ): MenuItem[] {
   const { schema } = state;
 
@@ -94,6 +96,12 @@ export default function formattingMenuItems(
       name: "search",
       tooltip: dictionary.searchText,
       icon: TbSearch,
+    },
+    {
+      name: "lookup",
+      tooltip: dictionary.lookUp,
+      icon: TbVocabulary,
+      visible: canLookUp,
     },
     {
       name: "issue",

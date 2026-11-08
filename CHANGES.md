@@ -4,6 +4,9 @@
 
 2026-XX-XX
 
+- Improve: Wikipedia is one of the dictionaries, no longer a button of its own; Free Dictionary removed (it failed to load)
+- Feat: Look up the text selected in a note in the dictionaries, from the editor toolbar
+
 ## app-v0.8.0 
 
 2026-11-08

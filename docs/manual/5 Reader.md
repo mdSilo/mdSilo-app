@@ -48,8 +48,7 @@ Select text and a toolbar appears over it. It has:
 | Highlight | Mark the text; choose style (highlight, underline, squiggly) and colour |
 | Note | Write a note on the highlight, in Markdown |
 | Search | Search the book for the selection |
-| Dictionary | Look a word (or up to three) up in your dictionaries, hear it, add it to your vocabulary |
-| Wikipedia | A summary of the selection |
+| Dictionary | Look a word (or up to six) up in your dictionaries, Wikipedia one of them; hear it, add it to your vocabulary |
 | Translate | Translate into the language chosen in the settings |
 | Read aloud | Speak from the selection |
 | Copy quote | The text as a Markdown quote with a link back to the page |
@@ -91,7 +90,7 @@ The dictionaries are set in **Settings → Dictionaries** (or the gear of the po
 | Dictionary | |
 |---|---|
 | Wiktionary | Most languages, the language of the book first; recordings of many words. On by default |
-| Free Dictionary | English, with pronunciations (dictionaryapi.dev). On by default |
+| Wikipedia | The summary of the article, in the language of the book; a search of it when there is none. On by default |
 | Urban Dictionary | English slang |
 | Merriam-Webster | Opens the site; with your API key (free for non-commercial use at dictionaryapi.com), looked up in the popup, with recordings |
 | Google | Opens Google's definition |

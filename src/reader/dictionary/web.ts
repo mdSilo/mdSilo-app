@@ -3,7 +3,9 @@ import { md5 } from "js-md5";
 import { sanitizeHtml } from "@/lib/sanitize";
 import {
   baseLanguage,
+  lookupWikipedia,
   lookupWiktionary,
+  wikipediaSearchUrl,
   type DictionaryEntry,
   type DictionaryResult,
   type Pronunciation,
@@ -128,82 +130,32 @@ export async function lookupWiktionaryWithAudio(
   return result;
 }
 
-// ----------------------------------------------------------- Free Dictionary
+// ----------------------------------------------------------------- Wikipedia
 
-type FreeDictionaryEntry = {
-  word?: string;
-  phonetic?: string;
-  phonetics?: Array<{ text?: string; audio?: string }>;
-  meanings?: Array<{
-    partOfSpeech?: string;
-    definitions?: Array<{ definition?: string; example?: string }>;
-  }>;
-};
-
-/** The pronunciations of an entry: those with a recording first, one per accent. */
-function freeDictionaryPronunciations(
-  entry: FreeDictionaryEntry,
-): Pronunciation[] {
-  const all: Pronunciation[] = (entry.phonetics ?? [])
-    .filter((p) => p.text || p.audio)
-    .map((p) => {
-      const label = p.audio ? accentOf(p.audio) : undefined;
-      return {
-        ...(p.text ? { text: p.text } : {}),
-        ...(p.audio ? { audio: p.audio } : {}),
-        ...(label ? { label } : {}),
-      };
-    });
-  if (!all.length && entry.phonetic) return [{ text: entry.phonetic }];
-  const seen = new Set<string>();
-  return all
-    .sort((a, b) => Number(Boolean(b.audio)) - Number(Boolean(a.audio)))
-    .filter((p) => {
-      const key = p.audio ? (p.label ?? p.audio) : `text:${p.text}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, 3);
-}
-
-/** The Free Dictionary API (dictionaryapi.dev, from Wiktionary): English, with recordings. */
-export async function lookupFreeDictionary(
-  word: string,
+/**
+ * The summary of the Wikipedia article on the text, in the book language, as
+ * an entry of a dictionary: none if there is no article (its search then).
+ */
+export async function lookupWikipediaEntry(
+  text: string,
+  lang?: string,
 ): Promise<DictionaryResult> {
-  const term = word.trim();
-  const url = `https://en.wiktionary.org/wiki/${encodeURIComponent(term.replace(/ /g, "_"))}`;
-  const data = await getJson<FreeDictionaryEntry[]>(
-    `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(term)}`,
-  );
-  const entries: DictionaryEntry[] = [];
-  for (const item of Array.isArray(data) ? data : []) {
-    const meanings = (item.meanings ?? [])
-      .map((m) => ({
-        partOfSpeech: m.partOfSpeech ?? "",
-        definitions: (m.definitions ?? [])
-          .map((d) =>
-            d.definition
-              ? `${escape(d.definition)}${d.example ? ` <i>“${escape(d.example)}”</i>` : ""}`
-              : "",
-          )
-          .filter(Boolean),
-      }))
-      .filter((m) => m.definitions.length > 0);
-    if (!meanings.length) continue;
-    const pronunciations = freeDictionaryPronunciations(item);
-    entries.push({
-      language: "English",
-      meanings,
-      ...(pronunciations.length ? { pronunciations } : {}),
-    });
-  }
-  // the entries of a word share its recordings: put them on the first only
-  if (entries.length > 1 && !entries[0].pronunciations) {
-    const withAudio = entries.find((e) => e.pronunciations);
-    if (withAudio) entries[0].pronunciations = withAudio.pronunciations;
-  }
-  return { word: term, entries, url };
+  const term = text.trim().replace(/\s+/g, " ");
+  const summary = await lookupWikipedia(term, lang);
+  if (!summary)
+    return { word: term, entries: [], url: wikipediaSearchUrl(term, lang) };
+  return {
+    word: summary.title,
+    entries: [
+      {
+        language: "Wikipedia",
+        meanings: [
+          { partOfSpeech: "", definitions: [escape(summary.extract)] },
+        ],
+      },
+    ],
+    url: summary.url,
+  };
 }
 
 // ---------------------------------------------------------- Urban Dictionary

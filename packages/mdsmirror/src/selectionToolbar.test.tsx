@@ -67,6 +67,32 @@ describe("selection toolbar", () => {
     expect(state.doc.rangeHasMark(15, 16, link)).toBe(false);
   });
 
+  test("looks the text selected up, at its range; only text that can be", async () => {
+    const onLookUpText = vi.fn();
+    await setup({ onLookUpText });
+    await act(async () => {
+      fireEvent.click(button("Dictionary")!);
+    });
+    expect(onLookUpText).toHaveBeenCalledTimes(1);
+    const [text, range] = onLookUpText.mock.calls[0];
+    expect(text).toBe("selected");
+    expect(range.toString()).toBe("selected");
+  });
+
+  test("no lookup button without onLookUpText", async () => {
+    await setup({});
+    expect(button("Copy")).not.toBeNull();
+    expect(button("Dictionary")).toBeNull();
+  });
+
+  test("no lookup button for text it cannot look up", async () => {
+    const canLookUpText = vi.fn(() => false);
+    await setup({ onLookUpText: vi.fn(), canLookUpText });
+    expect(canLookUpText).toHaveBeenCalledWith("selected");
+    expect(button("Copy")).not.toBeNull();
+    expect(button("Dictionary")).toBeNull();
+  });
+
   test("no issue button without onCreateIssue", async () => {
     await setup({});
     expect(button("Copy")).not.toBeNull();

@@ -12,7 +12,6 @@ import {
   TbBookmark,
   TbBookmarkFilled,
   TbChevronLeft,
-  TbBrandWikipedia,
   TbChevronRight,
   TbChevronsLeft,
   TbChevronsRight,
@@ -57,6 +56,7 @@ import LinksView from "../annotations/LinksView";
 import TranslatedBookDialog from "../translation/TranslatedBookDialog";
 import LookupPopup from "../lookup/LookupPopup";
 import PluginActionPopup from "../lookup/PluginActionPopup";
+import { isLookupText } from "../dictionary/dictionary";
 import FoliateViewer from "./FoliateViewer";
 import TocView from "./TocView";
 import BookPopups, { type Tool } from "./BookPopups";
@@ -633,18 +633,11 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
 
 const LOOKUPS = [
   { kind: "translate", icon: <TbLanguage size={18} />, title: "Translate" },
-  {
-    kind: "wikipedia",
-    icon: <TbBrandWikipedia size={18} />,
-    title: "Wikipedia",
-  },
   { kind: "dictionary", icon: <TbVocabulary size={18} />, title: "Dictionary" },
 ] as const;
 
 /** The tools on the text selected: search, look up, translate, read aloud. */
 function lookupTools(selection: TextSelection): Tool[] {
-  // a word or a few: a dictionary entry
-  const words = selection.text.trim().split(/\s+/).length;
   const pluginActions = selectionActionsIn("reader");
   return [
     {
@@ -660,7 +653,7 @@ function lookupTools(selection: TextSelection): Tool[] {
       id: l.kind,
       title: l.title,
       icon: l.icon,
-      hidden: l.kind === "dictionary" && words > 3,
+      hidden: l.kind === "dictionary" && !isLookupText(selection.text),
       onClick: () =>
         usePopups.getState().setLookup({ kind: l.kind, selection }),
     })),

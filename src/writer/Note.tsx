@@ -68,11 +68,13 @@ import {
 import { getFileExt } from "@/workspace/process";
 import { useWritingRoot } from "@/workspace/useWorkspace";
 import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
+import { isLookupText } from "@/reader/dictionary/dictionary";
 import { setEditor } from "./editors";
 import NoteHeader from "./NoteHeader";
 import Backlinks from "./backlinks/Backlinks";
 import IssueRefs from "./IssueRefs";
 import updateBacklinks from "./backlinks/updateBacklinks";
+import { useEditorLookup } from "./editorLookup";
 
 // the raw markdown (CodeMirror) and mindmap (markmap) modes, loaded on use
 const RawMarkdown = lazy(() => import("@/writer/md/Markdown"));
@@ -118,6 +120,9 @@ function Note(props: Props) {
   useEffect(() => {
     emitCustomEvent("PageLoaded", noteId);
   }, [noteId]);
+
+  // another note: no popup of a lookup in the one before
+  useEffect(() => () => useEditorLookup.getState().clear(), [noteId]);
 
   const darkMode = useStore((state) => state.darkMode);
   const font = useStore((state) => state.font);
@@ -553,6 +558,8 @@ function Note(props: Props) {
                       onSaveDiagram={onSaveDiagram}
                       codeRenderers={codeRenderers}
                       selectionActions={selectionActions}
+                      onLookUpText={useEditorLookup.getState().show}
+                      canLookUpText={isLookupText}
                       onCopyHash={onCopyHash}
                       embeds={embeds}
                       extensions={extensions}

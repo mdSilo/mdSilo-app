@@ -1,16 +1,17 @@
 import { useEffect, useMemo } from "react";
 import { useStore } from "@/state/store";
 import { formatSize } from "@/workspace/syncSize";
-import type { DictionaryResult } from "../lookup/lookup";
+import { dataRoot } from "@/workspace/layout";
+import { wikipediaSearchUrl, type DictionaryResult } from "../lookup/lookup";
 import {
   DEFAULT_DICTIONARY_SETTINGS,
   type DictionarySettings,
 } from "./settings";
 import {
   isUrlTemplate,
-  lookupFreeDictionary,
   lookupMerriamWebster,
   lookupUrban,
+  lookupWikipediaEntry,
   lookupWiktionaryWithAudio,
   merriamWebsterUrl,
   urbanUrl,
@@ -68,12 +69,12 @@ export function builtinSources(
       url: wiktionaryUrl,
     },
     {
-      id: "free-dictionary",
-      label: "Free Dictionary",
+      id: "wikipedia",
+      label: "Wikipedia",
       kind: "web",
-      description: "English, with pronunciations (dictionaryapi.dev)",
-      lookup: (word) => lookupFreeDictionary(word),
-      url: wiktionaryUrl,
+      description: "The summary of the article, in the language of the book",
+      lookup: lookupWikipediaEntry,
+      url: (text, lang) => wikipediaSearchUrl(text, lang),
     },
     {
       id: "urban",
@@ -106,8 +107,17 @@ export function builtinSources(
   ];
 }
 
+/** The most words looked up in the dictionaries: a phrase, a name, a title. */
+export const MAX_LOOKUP_WORDS = 6;
+
+/** Text to look up in the dictionaries (Wikipedia one of them): a word or a few. */
+export const isLookupText = (text: string) => {
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return words > 0 && words <= MAX_LOOKUP_WORDS;
+};
+
 /** The dictionaries turned on when the user has not said. */
-export const ON_BY_DEFAULT = new Set(["wiktionary", "free-dictionary"]);
+export const ON_BY_DEFAULT = new Set(["wiktionary", "wikipedia"]);
 
 /** The id of the source of a dictionary file. */
 export const localSourceId = (id: string) => `mdict:${id}`;
@@ -252,6 +262,13 @@ export function useDictionarySources(ws?: string): DictionarySource[] {
   const settings = useDictionarySettings();
   const local = useLocalSources(ws);
   return useMemo(() => orderedSources(settings, local), [settings, local]);
+}
+
+/** The workspace the dictionary files (and the vocabulary) are in: none for a folder that is not one. */
+export function useDictionaryWorkspace(): string | undefined {
+  const initDir = useStore((state) => state.initDir);
+  const layout = useStore((state) => state.layout);
+  return dataRoot({ initDir, layout }) ? initDir : undefined;
 }
 
 /** The dictionary files of a workspace, loaded, as dictionaries; in a component. */

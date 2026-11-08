@@ -1488,8 +1488,9 @@ describe("reader, the second part", () => {
         box: { left: 10, top: 10, right: 50, bottom: 20 },
       });
     });
-    // more than a few words: no dictionary
-    expect(screen.queryByLabelText("Dictionary")).not.toBeInTheDocument();
+    // a few words: the dictionaries (Wikipedia one of them); no Wikipedia of its own
+    expect(screen.getByLabelText("Dictionary")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Wikipedia")).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText("Translate"));
     expect(await screen.findByText("un jour froid")).toBeInTheDocument();
     // the language to translate to, chosen in the popup: translated again, and so from then on
@@ -1545,9 +1546,10 @@ describe("reader, the second part", () => {
     fireEvent.click(screen.getByLabelText("Dictionary"));
     // each dictionary tried in turn: the error of the last stays
     await waitFor(() =>
-      expect(
-        screen.getByRole("tab", { name: "Free Dictionary" }),
-      ).toHaveAttribute("aria-selected", "true"),
+      expect(screen.getByRole("tab", { name: "Wikipedia" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
     );
     expect(
       await screen.findByText("Could not look it up: offline"),

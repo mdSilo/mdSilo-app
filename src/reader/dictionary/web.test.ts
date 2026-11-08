@@ -3,9 +3,9 @@ import { md5 } from "js-md5";
 import {
   accentOf,
   commonsAudioUrl,
-  lookupFreeDictionary,
   lookupMerriamWebster,
   lookupUrban,
+  lookupWikipediaEntry,
   lookupWiktionaryWithAudio,
   merriamWebsterAudioUrl,
 } from "./web";
@@ -144,57 +144,42 @@ describe("web dictionaries", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  test("Free Dictionary: meanings, examples escaped, a recording per accent", async () => {
+  test("Wikipedia: the summary as an entry, escaped; its search if no article", async () => {
     fetchMock.mockResolvedValueOnce(
-      respond([
+      respond({
+        title: "Green tea",
+        extract: "A <tea> made from leaves.",
+        content_urls: {
+          desktop: { page: "https://en.wikipedia.org/wiki/Green_tea" },
+        },
+      }),
+    );
+    const res = await lookupWikipediaEntry(" green  tea ");
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://en.wikipedia.org/api/rest_v1/page/summary/green_tea?redirect=true",
+    );
+    expect(res).toEqual({
+      word: "Green tea",
+      entries: [
         {
-          word: "cold",
-          phonetic: "/kəʊld/",
-          phonetics: [
-            { text: "/kəʊld/", audio: "" },
-            { text: "/kɔʊld/", audio: "https://x/cold-uk.mp3" },
-            { text: "/koʊld/", audio: "https://x/cold-us.mp3" },
-            { audio: "https://x/cold-us.mp3" },
-          ],
+          language: "Wikipedia",
           meanings: [
             {
-              partOfSpeech: "adjective",
-              definitions: [
-                {
-                  definition: "Having a <low> temperature.",
-                  example: "a cold day",
-                },
-                { definition: "" },
-              ],
+              partOfSpeech: "",
+              definitions: ["A &lt;tea&gt; made from leaves."],
             },
           ],
         },
-        {
-          word: "cold",
-          meanings: [
-            { partOfSpeech: "noun", definitions: [{ definition: "A cold." }] },
-          ],
-        },
-      ]),
-    );
-    const res = await lookupFreeDictionary(" cold ");
-    expect(fetchMock.mock.calls[0][0]).toBe(
-      "https://api.dictionaryapi.dev/api/v2/entries/en/cold",
-    );
-    expect(res.word).toBe("cold");
-    expect(res.entries).toHaveLength(2);
-    expect(res.entries[0].meanings[0].definitions).toEqual([
-      "Having a &lt;low&gt; temperature. <i>“a cold day”</i>",
-    ]);
-    expect(res.entries[0].pronunciations).toEqual([
-      { text: "/kɔʊld/", audio: "https://x/cold-uk.mp3", label: "UK" },
-      { text: "/koʊld/", audio: "https://x/cold-us.mp3", label: "US" },
-      { text: "/kəʊld/" },
-    ]);
-    expect(res.entries[1].pronunciations).toBeUndefined();
-    // not found
-    fetchMock.mockResolvedValueOnce(respond({ title: "No Definitions" }, 404));
-    expect((await lookupFreeDictionary("zzz")).entries).toEqual([]);
+      ],
+      url: "https://en.wikipedia.org/wiki/Green_tea",
+    });
+    // no article: nothing, the search of it in the language of the book
+    fetchMock.mockResolvedValueOnce(respond({}, 404));
+    expect(await lookupWikipediaEntry("zzz", "fr-FR")).toEqual({
+      word: "zzz",
+      entries: [],
+      url: "https://fr.wikipedia.org/w/index.php?search=zzz",
+    });
   });
 
   test("Urban Dictionary: by the app host, most voted first, links as words", async () => {

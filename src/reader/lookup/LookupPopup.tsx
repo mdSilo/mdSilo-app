@@ -13,26 +13,14 @@ import { Popup } from "../components/BookPopups";
 import TranslationSwitches from "../translation/TranslationSwitches";
 import DictionaryLookup from "../dictionary/DictionaryLookup";
 import {
-  lookupWikipedia,
   openLinkOutside,
   targetLanguage,
   translatorOf,
-  wikipediaSearchUrl,
   TRANSLATORS,
   type TranslationResult,
-  type WikipediaResult,
 } from "./lookup";
 
-type Result =
-  | { kind: "wikipedia"; data?: WikipediaResult }
-  | { kind: "translate"; data: TranslationResult };
-
-const TITLES = {
-  wikipedia: "Wikipedia",
-  translate: "Translation",
-};
-
-/** The text selected, looked up in the dictionaries, Wikipedia, or translated. */
+/** The text selected, looked up in the dictionaries (Wikipedia one of them), or translated. */
 function LookupPopup({
   rootRef,
 }: {
@@ -45,7 +33,7 @@ function LookupPopup({
   const translator = translatorOf(
     useStore((state) => state.readerSettings?.translator),
   );
-  const [result, setResult] = useState<Result | undefined>();
+  const [result, setResult] = useState<TranslationResult | undefined>();
   const [error, setError] = useState("");
   const ws = useActiveStore((state) => state.ws);
 
@@ -55,17 +43,8 @@ function LookupPopup({
     let cancelled = false;
     setResult(undefined);
     setError("");
-    const { kind, selection } = lookup;
-    const lang = getView()?.language?.canonical;
-    const run = async (): Promise<Result> => {
-      if (kind === "wikipedia")
-        return { kind, data: await lookupWikipedia(selection.text, lang) };
-      return {
-        kind,
-        data: await translator.translate(selection.text, translateTo),
-      };
-    };
-    run()
+    translator
+      .translate(lookup.selection.text, translateTo)
       .then((res) => {
         if (!cancelled) setResult(res);
       })
@@ -102,16 +81,13 @@ function LookupPopup({
           lang={lang}
           ws={ws}
           onKeep={keep}
+          placeOf={placeOfBook}
         />
       </Popup>
     );
   }
 
-  const webUrl =
-    kind === "wikipedia"
-      ? (result?.kind === "wikipedia" && result.data?.url) ||
-        wikipediaSearchUrl(selection.text, lang)
-      : translator.url(selection.text, translateTo);
+  const webUrl = translator.url(selection.text, translateTo);
 
   return (
     <Popup
@@ -123,11 +99,9 @@ function LookupPopup({
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-semibold uppercase text-base-content/60">
-          {TITLES[kind]}
+          Translation
         </span>
-        {kind === "translate" ? (
-          <TranslateOptions translator={translator.name} to={translateTo} />
-        ) : null}
+        <TranslateOptions translator={translator.name} to={translateTo} />
         <button
           className="btn btn-ghost btn-xs"
           title="Open on the web"
@@ -144,32 +118,19 @@ function LookupPopup({
           <p className="text-error">Could not look it up: {error}</p>
         ) : !result ? (
           <Spinner size="sm" className="mx-auto my-4" />
-        ) : result.kind === "wikipedia" ? (
-          result.data ? (
-            <div>
-              <div className="font-semibold">{result.data.title}</div>
-              <p>{result.data.extract}</p>
-            </div>
-          ) : (
-            <p className="text-base-content/60">
-              No article: search it on the web.
-            </p>
-          )
         ) : (
-          <p className="whitespace-pre-wrap" lang={result.data.to}>
-            {result.data.text}
+          <p className="whitespace-pre-wrap" lang={result.to}>
+            {result.text}
           </p>
         )}
       </div>
-      {kind === "translate" ? (
-        <TranslationSwitches className="pt-2 mt-2 border-t border-base-300" />
-      ) : null}
-      {result && !error && (result.kind !== "wikipedia" || result.data) ? (
+      <TranslationSwitches className="pt-2 mt-2 border-t border-base-300" />
+      {result && !error ? (
         <div className="flex justify-end gap-1 mt-1">
           <button
             className="btn btn-ghost btn-xs"
             title="Highlight the text, with this as its note"
-            onClick={() => keep(noteOf(result))}
+            onClick={() => keep(result.text)}
           >
             <TbNote /> Keep as note
           </button>
@@ -177,6 +138,12 @@ function LookupPopup({
       ) : null}
     </Popup>
   );
+}
+
+/** The book read, for a word added to the vocabulary. */
+function placeOfBook() {
+  const { hash, entry } = activeStore().getState();
+  return hash ? { book: hash, title: entry?.title } : {};
 }
 
 /** The service and the language to translate to: chosen here, used from then on. */
@@ -226,14 +193,6 @@ function TranslateOptions({
       </select>
     </div>
   );
-}
-
-/** What was found, as the markdown of a note. */
-export function noteOf(result: Result): string {
-  if (result.kind === "translate") return result.data.text;
-  return result.data
-    ? `${result.data.extract}\n\n[${result.data.title}](${result.data.url})`
-    : "";
 }
 
 export default memo(LookupPopup);

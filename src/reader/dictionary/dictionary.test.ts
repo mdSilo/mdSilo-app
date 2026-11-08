@@ -4,6 +4,7 @@ import {
   enabledSources,
   forgetSource,
   isEnabled,
+  isLookupText,
   moveSource,
   orderedSources,
   setEnabled,
@@ -14,19 +15,35 @@ import { isUrlTemplate, urlOfTemplate } from "./web";
 const ids = (list: { id: string }[]) => list.map((s) => s.id);
 
 describe("dictionary sources", () => {
-  test("the defaults: all built in, Wiktionary and Free Dictionary on", () => {
+  test("the defaults: all built in, Wiktionary and Wikipedia on", () => {
     const settings = withDictionaryDefaults();
     expect(ids(orderedSources(settings))).toEqual([
       "wiktionary",
-      "free-dictionary",
+      "wikipedia",
       "urban",
       "merriam-webster",
       "google",
     ]);
+    expect(ids(enabledSources(settings))).toEqual(["wiktionary", "wikipedia"]);
+  });
+
+  test("a dictionary no longer offered, in the settings of an older app: left out", () => {
+    const settings = withDictionaryDefaults({
+      order: ["free-dictionary", "urban"],
+      enabled: { "free-dictionary": true, urban: true },
+    });
     expect(ids(enabledSources(settings))).toEqual([
+      "urban",
       "wiktionary",
-      "free-dictionary",
+      "wikipedia",
     ]);
+  });
+
+  test("looked up: a word or a few", () => {
+    expect(isLookupText(" cold ")).toBe(true);
+    expect(isLookupText("the Old Man and the Sea")).toBe(true);
+    expect(isLookupText("one two three four five six seven")).toBe(false);
+    expect(isLookupText("  ")).toBe(false);
   });
 
   test("turned on and off; reordered; those not ordered go after", () => {
@@ -36,7 +53,7 @@ describe("dictionary sources", () => {
     expect(isEnabled(settings, "wiktionary")).toBe(false);
     const all = orderedSources(settings);
     settings = moveSource(settings, all, "urban", 0);
-    expect(ids(enabledSources(settings))).toEqual(["urban", "free-dictionary"]);
+    expect(ids(enabledSources(settings))).toEqual(["urban", "wikipedia"]);
     // an order of an older app: the new ones after it
     expect(
       ids(orderedSources({ ...settings, order: ["google", "urban"] })),
@@ -44,7 +61,7 @@ describe("dictionary sources", () => {
       "google",
       "urban",
       "wiktionary",
-      "free-dictionary",
+      "wikipedia",
       "merriam-webster",
     ]);
     // not a dictionary: no change

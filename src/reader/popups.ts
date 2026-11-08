@@ -15,7 +15,7 @@ export type TextSelection = {
 
 export type Footnote = { box: Box; size: { width: number; height: number } };
 
-export type LookupKind = "dictionary" | "wikipedia" | "translate";
+export type LookupKind = "dictionary" | "translate";
 
 /** An action of a plugin on the text selected, by plugin and action id */
 export type PluginActionTarget = {

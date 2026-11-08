@@ -30,7 +30,7 @@ import LinkEditor, { SearchResult } from "./LinkEditor";
 import ToolbarMenu from "./ToolbarMenu";
 
 // the items the toolbar does itself, not commands of the editor
-const TOOLBAR_ACTIONS = ["search", "copy", "issue"];
+const TOOLBAR_ACTIONS = ["search", "copy", "issue", "lookup"];
 
 /** What an action on the text selected does to it: put text in its place, or after it */
 export type SelectionActionResult = {
@@ -82,6 +82,10 @@ type Props = {
   onCreateIssue?: (
     text: string
   ) => Promise<{ title: string; href: string } | undefined>;
+  /** look the text selected up, e.g. in dictionaries; at its range in the page */
+  onLookUpText?: (text: string, range?: Range) => void;
+  /** the text selected can be looked up: a word or a few; any if not given */
+  canLookUpText?: (text: string) => boolean;
   onOpenLink?: (href: string) => void;
   onShowToast?: (msg: string, code: string) => void;
   selectionActions?: SelectionAction[];
@@ -312,6 +316,8 @@ export default class SelectionToolbar extends React.Component<
       onCreateLink,
       onSearchSelectText,
       onCreateIssue,
+      onLookUpText,
+      canLookUpText,
       selectionActions,
       isTemplate,
       rtl,
@@ -341,6 +347,11 @@ export default class SelectionToolbar extends React.Component<
       selection.node.type.name === "image";
     const isDividerSelection = isNodeActive(state.schema.nodes.hr)(state);
 
+    const selectionText = state.doc.cut(
+      state.selection.from,
+      state.selection.to
+    ).textContent;
+
     let isTextSelection = false;
 
     let items: MenuItem[] = [];
@@ -361,7 +372,10 @@ export default class SelectionToolbar extends React.Component<
         state,
         isTemplate,
         dictionary,
-        !!onCreateIssue
+        !!onCreateIssue,
+        !!onLookUpText &&
+          !!selectionText.trim() &&
+          (canLookUpText?.(selectionText) ?? true)
       );
       if (selectionActions?.length) {
         items.push(
@@ -399,11 +413,6 @@ export default class SelectionToolbar extends React.Component<
       return null;
     }
 
-    const selectionText = state.doc.cut(
-      state.selection.from,
-      state.selection.to
-    ).textContent;
-
     if (isTextSelection && !selectionText && !isLink) {
       return null;
     }
@@ -418,6 +427,7 @@ export default class SelectionToolbar extends React.Component<
         rest.onShowToast?.(dictionary.copied, ToastType.Info);
       },
       issue: () => void this.handleCreateIssue(selectionText),
+      lookup: () => onLookUpText?.(selectionText, rangeOfSelection(view)),
     };
     actions[ACTIONS_MENU] = () =>
       this.setState(({ actionsOpen }) => ({ actionsOpen: !actionsOpen }));
@@ -469,6 +479,21 @@ export default class SelectionToolbar extends React.Component<
         ) : null}
       </FloatingToolbar>
     );
+  }
+}
+
+/** The range of the text selected in the page, if the editor shows it. */
+function rangeOfSelection(view: EditorView): Range | undefined {
+  try {
+    const { from, to } = view.state.selection;
+    const start = view.domAtPos(from);
+    const end = view.domAtPos(to);
+    const range = document.createRange();
+    range.setStart(start.node, start.offset);
+    range.setEnd(end.node, end.offset);
+    return range;
+  } catch {
+    return undefined;
   }
 }
 

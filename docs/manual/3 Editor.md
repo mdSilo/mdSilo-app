@@ -31,7 +31,7 @@ Many blocks also have a Markdown shortcut, so you never have to leave the keyboa
 
 ## Formatting
 
-Select text and a **toolbar** appears above it: link, bold, highlight, italic, underline, strikethrough, inline code, **Copy** (plain text) and **New issue of it** (see [[7 Issues|Issues]]). The same marks have hotkeys.
+Select text and a **toolbar** appears above it: link, bold, highlight, italic, underline, strikethrough, inline code, **Copy** (plain text), **Dictionary** (a word or a few looked up in your dictionaries, as in the reader: see [[5 Reader|Reader]]; add it to your vocabulary) and **New issue of it** (see [[7 Issues|Issues]]). The same marks have hotkeys.
 
 | Mark | Hotkey | Markdown |
 |------|--------|----------|

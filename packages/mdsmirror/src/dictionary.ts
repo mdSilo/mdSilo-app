@@ -71,6 +71,7 @@ export const baseDictionary = {
   copied: "Copied",
   plugins: "Plugins",
   createIssue: "New issue of it",
+  lookUp: "Dictionary",
   strikethrough: "Strikethrough",
   strong: "Bold",
   table: "Table",
