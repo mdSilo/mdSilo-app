@@ -142,6 +142,27 @@ const bytesOf = (file: File | RangeBook): Bytes =>
       }
     : file;
 
+/**
+ * A file by parts as a Blob is to the readers of foliate-js that read by
+ * parts (pdf.js, MOBI): its size, and the bytes of a slice.
+ */
+function sliceable(file: RangeBook) {
+  return {
+    name: file.name,
+    size: file.size,
+    type: "",
+    slice: (start = 0, end = file.size) => ({
+      arrayBuffer: async () => {
+        const bytes = await file.read(start, Math.max(0, end - start));
+        return bytes.byteOffset === 0 &&
+          bytes.byteLength === bytes.buffer.byteLength
+          ? (bytes.buffer as ArrayBuffer)
+          : (bytes.slice().buffer as ArrayBuffer);
+      },
+    }),
+  } as unknown as File;
+}
+
 async function isZip(file: Bytes) {
   const arr = await file.read(0, 4);
   // PK\x03, some writers get the 4th byte wrong; else the end of the
@@ -251,6 +272,40 @@ async function makeZipLoader(file: File | RangeBook) {
   return { entries, loadText, loadBlob, getSize, getComment, sha1: undefined };
 }
 
+/**
+ * The media of a page not played by itself: no autoplay, nothing loaded
+ * before it is played, controls to play it. A feed book keeps a site's
+ * videos (an article of eight looping videos from the web): played as the
+ * page shows, the webview fetches and decodes them all at once, a section
+ * takes seconds of all the CPU, the window may freeze.
+ */
+export function quietMedia(markup: string): string {
+  if (!/<(video|audio)\b/i.test(markup)) return markup;
+  return markup.replace(
+    /<(video|audio)\b((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/gi,
+    (_, tag: string, attrs: string, slash: string) => {
+      let rest = attrs.replace(
+        /\s(?:autoplay|preload)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>/]+))?/gi,
+        "",
+      );
+      if (!/\scontrols\b/i.test(rest)) rest += ' controls="controls"';
+      return `<${tag}${rest} preload="none"${slash}>`;
+    },
+  );
+}
+
+/** The pages of the book, as they load, with their media quiet (quietMedia). */
+function quietMediaOf(book: BookDoc) {
+  const target = (book as { transformTarget?: EventTarget }).transformTarget;
+  target?.addEventListener("data", (e) => {
+    const detail = (e as CustomEvent<{ data: unknown; type: string }>).detail;
+    if (!/html/i.test(String(detail.type ?? ""))) return;
+    detail.data = Promise.resolve(detail.data).then((data) =>
+      typeof data === "string" ? quietMedia(data) : data,
+    );
+  });
+}
+
 /** The book closing the file read by parts too, with it. */
 function closingWith<T extends { destroy?(): void | Promise<void> }>(
   book: T,
@@ -277,6 +332,7 @@ export async function openBook(
 ): Promise<{ book: BookDoc; format: BookFormat }> {
   try {
     const opened = await openOf(file);
+    quietMediaOf(opened.book);
     return { ...opened, book: closingWith(opened.book, file) };
   } catch (e) {
     if (!(file instanceof Blob)) await file.close();
@@ -294,8 +350,7 @@ async function openOf(
     const loader = await makeZipLoader(source);
     if (name.endsWith(".cbz") || type === "application/vnd.comicbook+zip") {
       const { makeComicBook } = await import("foliate-js/comic-book.js");
-      const file =
-        source instanceof Blob ? source : new File([], source.name);
+      const file = source instanceof Blob ? source : new File([], source.name);
       return {
         book: (await makeComicBook(loader, file)) as unknown as BookDoc,
         format: "CBZ",
@@ -322,26 +377,32 @@ async function openOf(
       format: "EPUB",
     };
   }
-  // read whole: PDF, MOBI, FB2; the file by parts closed then
-  let file: File;
-  if (source instanceof Blob) {
-    file = source;
-  } else {
-    const data = await source.read(0, source.size);
-    await source.close();
-    file = new File([data as BlobPart], source.name);
-  }
-  if (await isPDF(bytesOf(file))) {
+  // a PDF and a MOBI by parts too: pdf.js asks for ranges, a MOBI for its
+  // records, of `size` and `slice` only
+  const parts = source instanceof Blob ? source : sliceable(source);
+  if (await isPDF(bytesOf(source))) {
     const { makePDF } = await import("foliate-js/pdf.js");
-    return { book: (await makePDF(file)) as unknown as BookDoc, format: "PDF" };
+    return {
+      book: (await makePDF(parts)) as unknown as BookDoc,
+      format: "PDF",
+    };
   }
   const mobi = await import("foliate-js/mobi.js");
-  if (await mobi.isMOBI(file)) {
+  if (await mobi.isMOBI(parts)) {
     const fflate = await import("foliate-js/vendor/fflate.js");
-    const book = await new mobi.MOBI({ unzlib: fflate.unzlibSync }).open(file);
+    const book = await new mobi.MOBI({ unzlib: fflate.unzlibSync }).open(parts);
     return { book: book as unknown as BookDoc, format: formatOfMobi(name) };
   }
-  if (name.endsWith(".fb2") || file.type === "application/x-fictionbook+xml") {
+  if (name.endsWith(".fb2") || type === "application/x-fictionbook+xml") {
+    // XML: read whole, the file by parts closed then
+    let file: File;
+    if (source instanceof Blob) {
+      file = source;
+    } else {
+      const data = await source.read(0, source.size);
+      await source.close();
+      file = new File([data as BlobPart], source.name);
+    }
     const { makeFB2 } = await import("foliate-js/fb2.js");
     return { book: (await makeFB2(file)) as unknown as BookDoc, format: "FB2" };
   }

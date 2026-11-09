@@ -167,7 +167,9 @@ export function useScrolling(el: HTMLElement | null) {
 }
 
 /** A book file dropped in: by its path (desktop), or its data (web). */
-export type DroppedBook = { path: string } | { name: string; data: Uint8Array };
+/** A book dropped in: its path on the desktop; on the web, the file as it is (not read into memory). */
+export type DroppedBook =
+  { path: string } | { name: string; data: Uint8Array | Blob };
 
 /**
  * The book files dropped on the element from the device: on the desktop by
@@ -235,12 +237,7 @@ export function useBookDrop(
       setDragging(false);
       const files = Array.from(e.dataTransfer?.files ?? []);
       const books = files.filter((f) => isImportable(f.name));
-      const data = await Promise.all(
-        books.map(async (f) => ({
-          name: f.name,
-          data: new Uint8Array(await f.arrayBuffer()),
-        })),
-      );
+      const data = books.map((f) => ({ name: f.name, data: f as Blob }));
       if (files.length) onDropRef.current(data, files.length - books.length);
     };
     el.addEventListener("dragover", over);

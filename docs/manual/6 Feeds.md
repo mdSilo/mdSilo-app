@@ -32,7 +32,7 @@ The book button at the top of a channel (or of the Starred list) makes an **EPUB
 
 Press *Make* again later with the same name and the new articles are **appended** at the end; the existing chapters never move, so your highlights stay exactly where they were.
 
-Big photos are made smaller as they go into the book: at most 1600 pixels wide and 2.56 megapixels, which is more than a page shows; a tall infographic stays wide enough to read. A book made by an earlier version, with photos as big as the site has them, gets the same treatment the next time it is updated. It becomes much smaller and opens faster.
+Big photos are made smaller as they go into the book: at most 1600 pixels wide and 2.56 megapixels, which is more than a page shows; a tall infographic stays wide enough to read. A book made by an earlier version, with photos as big as the site has them, gets the same treatment the next time it is updated. It becomes much smaller and opens faster. Videos and audio in the articles stay on the web and play only when you press play.
 
 This is the bridge between *streams* and *books*: let a feed accumulate for a month, then read the month as a book, with notes.
 

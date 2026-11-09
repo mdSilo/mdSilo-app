@@ -8,7 +8,9 @@ use encoding_rs::{Encoding, UTF_8, WINDOWS_1252};
 use regex::Regex;
 use regex::bytes::Regex as BytesRegex;
 use std::collections::HashMap;
-use std::sync::LazyLock;
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom};
+use std::sync::{LazyLock, Mutex};
 
 const NONE: u32 = 0xffff_ffff;
 
@@ -326,8 +328,50 @@ impl IndexEntry {
   }
 }
 
+/// The bytes of a MOBI file: in memory, or read from the file as asked, its
+/// records one at a time (a book of many images is big; its metadata, its
+/// cover and its text are a small part of it).
+enum Source {
+  /// all of it in memory: to compare with, in the tests
+  #[cfg(test)]
+  Bytes(Vec<u8>),
+  File {
+    file: Mutex<File>,
+    len: usize,
+  },
+}
+
+impl Source {
+  fn len(&self) -> usize {
+    match self {
+      #[cfg(test)]
+      Source::Bytes(data) => data.len(),
+      Source::File { len, .. } => *len,
+    }
+  }
+
+  /// The bytes from `start` to `end`, fewer at the end of the file.
+  fn read(&self, start: usize, end: usize) -> Result<Vec<u8>, String> {
+    match self {
+      #[cfg(test)]
+      Source::Bytes(data) => Ok(bytes_at(data, start, end).to_vec()),
+      Source::File { file, len } => {
+        let end = end.min(*len);
+        let start = start.min(end);
+        let mut file = file.lock().map_err(|e| e.to_string())?;
+        file
+          .seek(SeekFrom::Start(start as u64))
+          .map_err(|e| e.to_string())?;
+        let mut buf = vec![0; end - start];
+        file.read_exact(&mut buf).map_err(|e| e.to_string())?;
+        Ok(buf)
+      }
+    }
+  }
+}
+
 pub struct Mobi {
-  data: Vec<u8>,
+  data: Source,
   offsets: Vec<(usize, usize)>,
   /// the first record of the book read: of the KF8 part of a combo file
   start: usize,
@@ -339,10 +383,25 @@ pub struct Mobi {
 }
 
 impl Mobi {
+  #[cfg(test)]
   pub fn open(data: Vec<u8>) -> Result<Self, String> {
-    let count = uint(&data, 76, 2) as usize;
+    Self::of(Source::Bytes(data))
+  }
+
+  /// A MOBI file read by parts, as asked: not all of it in memory.
+  pub fn open_file(file: File) -> Result<Self, String> {
+    let len = file.metadata().map_err(|e| e.to_string())?.len() as usize;
+    Self::of(Source::File {
+      file: Mutex::new(file),
+      len,
+    })
+  }
+
+  fn of(data: Source) -> Result<Self, String> {
+    let count = uint(&data.read(76, 78)?, 0, 2) as usize;
+    let table = data.read(78, 78 + count * 8)?;
     let starts: Vec<usize> = (0..count)
-      .map(|i| uint(&data, 78 + i * 8, 4) as usize)
+      .map(|i| uint(&table, i * 8, 4) as usize)
       .collect();
     let offsets = starts
       .iter()
@@ -358,7 +417,7 @@ impl Mobi {
       kf8: false,
       huff: None,
     };
-    mobi.headers = headers_of(mobi.record(0)?)?;
+    mobi.headers = headers_of(&mobi.record(0)?)?;
     mobi.resource_start = mobi.headers.resource_start as usize;
     mobi.kf8 = mobi.headers.version >= 8;
     if !mobi.kf8 {
@@ -370,7 +429,8 @@ impl Mobi {
         .filter(|b| *b < NONE);
       // a combo MOBI/KF8 file: its KF8 part
       if let Some(boundary) = boundary
-        && let Ok(headers) = mobi.record(boundary as usize).and_then(headers_of)
+        && let Ok(headers) =
+          mobi.record(boundary as usize).and_then(|r| headers_of(&r))
       {
         mobi.headers = headers;
         mobi.start = boundary as usize;
@@ -384,7 +444,8 @@ impl Mobi {
         let cdics = (1..mobi.headers.num_huffcdic as usize)
           .map(|i| mobi.record_at(mobi.headers.huffcdic as usize + i))
           .collect::<Result<Vec<_>, _>>()?;
-        mobi.huff = Some(Huff::new(huff, &cdics)?);
+        let cdics: Vec<&[u8]> = cdics.iter().map(Vec::as_slice).collect();
+        mobi.huff = Some(Huff::new(&huff, &cdics)?);
       }
       _ => return Err("Unknown compression type".into()),
     }
@@ -392,21 +453,22 @@ impl Mobi {
   }
 
   /// A record by its index in the file.
-  fn record(&self, index: usize) -> Result<&[u8], String> {
+  fn record(&self, index: usize) -> Result<Vec<u8>, String> {
     let (start, end) = *self
       .offsets
       .get(index)
       .ok_or("Record index out of bounds")?;
-    Ok(bytes_at(&self.data, start, end))
+    self.data.read(start, end)
   }
 
   /// A record of the book read (of its KF8 part in a combo file).
-  fn record_at(&self, index: usize) -> Result<&[u8], String> {
+  fn record_at(&self, index: usize) -> Result<Vec<u8>, String> {
     self.record(self.start + index)
   }
 
   fn text_record(&mut self, index: usize) -> Result<Vec<u8>, String> {
-    let mut array = self.record_at(index + 1)?;
+    let record = self.record_at(index + 1)?;
+    let mut array = record.as_slice();
     let flags = self.headers.trailing_flags;
     for _ in 0..(flags >> 1).count_ones() {
       let length = var_len_from_end(array) as usize;
@@ -453,6 +515,7 @@ impl Mobi {
   ) -> Result<(Vec<IndexEntry>, HashMap<u32, String>), String> {
     let index = index as usize;
     let indx = self.record_at(index)?;
+    let indx = indx.as_slice();
     if bytes_at(indx, 0, 4) != b"INDX" {
       return Err("Invalid INDX record".into());
     }
@@ -474,6 +537,7 @@ impl Mobi {
     let mut cncx = HashMap::new();
     for i in 0..uint(indx, 52, 4) as usize {
       let record = self.record_at(index + num_records + i + 1)?;
+      let record = record.as_slice();
       let mut pos = 0;
       while pos < record.len() {
         let at = pos;
@@ -491,6 +555,7 @@ impl Mobi {
     let mut table = Vec::new();
     for i in 0..num_records {
       let record = self.record_at(index + 1 + i)?;
+      let record = record.as_slice();
       if bytes_at(record, 0, 4) != b"INDX" {
         return Err("Invalid INDX record".into());
       }
@@ -620,10 +685,7 @@ impl Mobi {
       .iter()
       .filter_map(|k| exth.uints.get(k))
       .find(|o| **o < NONE)?;
-    self
-      .record(self.resource_start + *offset as usize)
-      .ok()
-      .map(<[u8]>::to_vec)
+    self.record(self.resource_start + *offset as usize).ok()
   }
 
   pub fn fixed_layout(&self) -> bool {
@@ -1063,5 +1125,35 @@ mod tests {
     assert_eq!(mobi_language(4, 2 << 2), Some("zh-CN"));
     assert_eq!(mobi_language(9, 9 << 2), Some("en"));
     assert_eq!(mobi_language(99, 0), None);
+  }
+
+  /// MOBI files read by parts as read whole: the same metadata, cover and
+  /// text. `MDSILO_MOBI_FILES=a.azw3:b.mobi cargo test -- --ignored by_parts`
+  #[test]
+  #[ignore]
+  fn by_parts_as_whole() {
+    let Ok(files) = std::env::var("MDSILO_MOBI_FILES") else {
+      return;
+    };
+    for path in files.split(':').filter(|p| !p.is_empty()) {
+      let mut whole = Mobi::open(std::fs::read(path).unwrap()).unwrap();
+      let mut parts = Mobi::open_file(File::open(path).unwrap()).unwrap();
+      assert_eq!(
+        serde_json::to_string(&whole.meta()).unwrap(),
+        serde_json::to_string(&parts.meta()).unwrap(),
+        "{path}"
+      );
+      assert_eq!(whole.cover(), parts.cover(), "{path}");
+      assert_eq!(whole.fixed_layout(), parts.fixed_layout(), "{path}");
+      let text = |s: Vec<Section>| {
+        s.into_iter()
+          .map(|s| format!("{} {} {}", s.cfi, s.label, s.text))
+          .collect::<Vec<_>>()
+      };
+      let (a, b) = (text(whole.sections()), text(parts.sections()));
+      assert!(!a.is_empty(), "{path}: no text");
+      assert_eq!(a, b, "{path}");
+      eprintln!("{path}: {} sections, the same", a.len());
+    }
   }
 }

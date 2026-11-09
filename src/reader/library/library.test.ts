@@ -251,6 +251,32 @@ describe("gitignore", () => {
     expect((await readLibrary(WS)).books.x.title).toBe("A");
   });
 
+  test("a file dropped in written as it is; the same one again found by its id", async () => {
+    const text = "the content of a book, ".repeat(200);
+    await write(`${WS}/reading/C.epub`, text);
+    vi.mocked(invoke).mockClear();
+    // the same book there already: by its size and partial hash, not read whole
+    expect(await importBookData(WS, "C.epub", new File([text], "C.epub"))).toBe(
+      `${WS}/reading/C.epub`,
+    );
+    const cmds = vi.mocked(invoke).mock.calls.map(([cmd]) => cmd);
+    expect(cmds).toContain("book_hash");
+    expect(cmds).not.toContain("read_file_bytes");
+    // another one of the name: written as it is, not over it
+    vi.mocked(invoke).mockClear();
+    const other = new File([text.toUpperCase()], "C.epub");
+    expect(await importBookData(WS, "C.epub", other)).toBe(
+      `${WS}/reading/C-1.epub`,
+    );
+    const written = vi
+      .mocked(invoke)
+      .mock.calls.find(([cmd]) => cmd === "write_file_blob");
+    expect(written?.[1]).toEqual({
+      filePath: `${WS}/reading/C-1.epub`,
+      blob: other,
+    });
+  });
+
   test("the files of some books synced at once", async () => {
     await write(`${WS}/reading/A.epub`, "a");
     await write(`${WS}/reading/B.epub`, "b");

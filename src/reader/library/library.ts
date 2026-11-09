@@ -12,6 +12,7 @@ import { announce } from "@/state/windowSync";
 import { DATA_DIR, READING_DIR, WRITING_DIR } from "@/workspace/layout";
 import { updateGitignore } from "@/workspace/gitignore";
 import { confirmBigSync, fileSize } from "@/workspace/syncSize";
+import { partialMd5 } from "@/lib/partialMd5";
 import { annotationsPathOf } from "../annotations/annotations";
 import {
   BOOK_EXTS,
@@ -649,23 +650,33 @@ export const writeBytes = (path: string, data: Uint8Array) =>
       })
     : invoke<boolean>("write_file_bytes", { filePath: path, data });
 
-const sameBytes = (a: Uint8Array, b: Uint8Array) =>
-  a.length === b.length && a.every((x, i) => x === b[i]);
+/**
+ * Write a book file, its bytes or as it is (a file dropped in on the web: a
+ * Blob written as it is, not read into memory).
+ */
+const writeBook = async (path: string, data: Uint8Array | Blob) => {
+  if (!(data instanceof Blob)) return writeBytes(path, data);
+  if (!isTauri)
+    return invoke<boolean>("write_file_blob", { filePath: path, blob: data });
+  return writeBytes(path, new Uint8Array(await data.arrayBuffer()));
+};
 
 /**
- * Write a book file dropped in, by its name and bytes, into reading/ (or a
- * folder in it): not over another file. A text file (TXT, Markdown, HTML,
- * ZIP) is converted to its book, an EPUB.
+ * Write a book file dropped in, by its name and bytes (or the file as it
+ * is), into reading/ (or a folder in it): not over another file. A text
+ * file (TXT, Markdown, HTML, ZIP) is converted to its book, an EPUB.
  * @returns the path written, or of the same book there already; undefined on failure
  */
 export async function importBookData(
   ws: string,
   name: string,
-  data: Uint8Array,
+  data: Uint8Array | Blob,
 ): Promise<string | undefined> {
   if (convertibleFormatOf(name)) {
     try {
-      ({ name, data } = await convertToBook(name, data));
+      const bytes =
+        data instanceof Blob ? new Uint8Array(await data.arrayBuffer()) : data;
+      ({ name, data } = await convertToBook(name, bytes));
     } catch (e) {
       console.warn("Failed to convert to a book", name, e);
       return undefined;
@@ -675,17 +686,22 @@ export async function importBookData(
   const dot = name.lastIndexOf(".");
   const [stem, ext] =
     dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
+  // its id, as the library's: of a few chunks, not all of it
+  const blob = data instanceof Blob ? data : new Blob([data as BlobPart]);
+  let hash: string | undefined;
   for (let i = 0; i < 100; i++) {
     const target = joinPath(readingDir, i === 0 ? name : `${stem}-${i}${ext}`);
     if (await invoke<boolean>("file_exist", { filePath: target })) {
       // the same book there already, e.g. a text file imported again
+      hash ??= await partialMd5(blob);
       if (
-        sameBytes(await readBytes(target).catch(() => new Uint8Array()), data)
+        (await fileSize(target)) === blob.size &&
+        (await bookHashOf(target).catch(() => "")) === hash
       )
         return target;
       continue;
     }
-    return (await writeBytes(target, data)) ? target : undefined;
+    return (await writeBook(target, data)) ? target : undefined;
   }
   return undefined;
 }

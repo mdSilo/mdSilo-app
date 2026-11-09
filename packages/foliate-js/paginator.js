@@ -411,7 +411,13 @@ const uncollapse = range => {
     const { endOffset, endContainer } = range
     if (endContainer.nodeType === 1) {
         const node = endContainer.childNodes[endOffset]
-        if (node?.nodeType === 1) return node
+        // An element that renders no box has no client rects: the <source>
+        // of a <video>, a <track>, anything hidden. Anchored on it, a page of
+        // a video only (the visible range collapsed in the <video>) settles on
+        // the start of the section, as soon as anything expands the view: the
+        // video loading when played sent the reader to the chapter start.
+        // Its container then, the <video> itself.
+        if (node?.nodeType === 1 && node.getClientRects().length) return node
         return endContainer
     }
     if (endOffset + 1 < endContainer.length) range.setEnd(endContainer, endOffset + 1)

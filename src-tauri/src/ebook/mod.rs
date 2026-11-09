@@ -176,14 +176,13 @@ impl Book {
       return Err("PDF is read in the webview".into());
     }
     if n >= 68 && head[60..68] == *b"BOOKMOBI" {
-      let mut data = Vec::new();
-      file.read_to_end(&mut data).map_err(|e| e.to_string())?;
       let format = match ext.as_str() {
         "azw" => "AZW",
         "azw3" => "AZW3",
         _ => "MOBI",
       };
-      return Ok((Book::Mobi(mobi::Mobi::open(data)?), format));
+      // by its records, as asked: its images not read for its metadata, its text
+      return Ok((Book::Mobi(mobi::Mobi::open_file(file)?), format));
     }
     if ext == "fb2" {
       let mut data = Vec::new();

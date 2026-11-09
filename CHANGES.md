@@ -7,8 +7,11 @@
 - Improve: Wikipedia is one of the dictionaries, no longer a button of its own; Free Dictionary removed (it failed to load)
 - Feat: Look up the text selected in a note in the dictionaries, from the editor toolbar
 - Feat: A dictionary site added can have an API key (`%KEY%` in its url): looked up in the app when it answers as Merriam-Webster's APIs do
-- Performance: Big books open without being read into memory whole: the reader reads the parts it asks for, on the desktop and on the web
-- Performance: Feed books get smaller photos (at most 1600 px wide and 2.56 megapixels), in Rust on the desktop and in the browser on the web; a feed book made before gets them when it is updated. A 198 MB book became 63 MB, and its article of 53 photos opens about twice as fast
+- Performance: Big books open without being read into memory whole: the reader reads the parts it asks for, on the desktop and on the web; PDF, MOBI, AZW and AZW3 too
+- Performance: Importing MOBI, AZW and AZW3 books reads only what their metadata, cover and text need, not their images; a book dropped in on the web is written as it is, not read into memory first
+- Performance: Feed books get smaller photos (at most 1600 px wide and 2.56 megapixels), in Rust on the desktop and in the browser on the web; a feed book made before gets them when it is updated. A 198 MB book became 63 MB, and an article of big photos opens about twice as fast
+- Performance: Videos and audio in a book no longer play by themselves or load before you press play: an article of a feed book with eight looping videos from the web took 14 s of CPU to show in the desktop app, now 2 s
+- Fix: Pressing play on a video in a book jumped to the start of the chapter, on a page with nothing but the video
 
 ## app-v0.8.0 
 

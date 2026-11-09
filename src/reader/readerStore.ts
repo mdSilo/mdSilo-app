@@ -121,15 +121,9 @@ export async function readBookFile(path: string): Promise<File | RangeBook> {
       close: () => invoke("close_book_file", { id }),
     };
   }
-  const blob = await invoke<unknown>("read_file_blob", { filePath: path });
+  const blob = await invoke<Blob>("read_file_blob", { filePath: path });
   // of the Blob, not a copy of its bytes
-  if (blob instanceof Blob) return new File([blob], nameOf(path));
-  // not a Blob as stored (a fake IndexedDB in tests): its bytes
-  const data = await invoke<ArrayBuffer | Uint8Array | number[]>(
-    "read_file_bytes",
-    { filePath: path },
-  );
-  return new File([toBytes(data) as BlobPart], nameOf(path));
+  return new File([blob], nameOf(path));
 }
 
 async function writeNotes(path: string, header: BookHeader, notes: BookNote[]) {

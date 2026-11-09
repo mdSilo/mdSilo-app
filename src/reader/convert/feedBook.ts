@@ -191,6 +191,22 @@ async function articlePage(
     doc.querySelectorAll("noscript, picture > source, iframe, script"),
   ))
     el.remove();
+  // a site's videos and audio, from the web: played when asked, not as the
+  // page shows (a loop of eight videos takes all the CPU), see quietMedia
+  for (const el of Array.from(doc.querySelectorAll("video, audio"))) {
+    el.removeAttribute("autoplay");
+    el.setAttribute("preload", "none");
+    el.setAttribute("controls", "controls");
+    // where from, as the links: not in the book
+    for (const at of [el, ...Array.from(el.querySelectorAll("source"))])
+      for (const attr of ["src", "poster"]) {
+        const value = at.getAttribute(attr);
+        if (!value || value.startsWith("data:")) continue;
+        const url = absolute(value, article.base);
+        if (url) at.setAttribute(attr, url);
+        else at.removeAttribute(attr);
+      }
+  }
   for (const el of Array.from(doc.body.querySelectorAll("*"))) {
     for (const attr of [
       "style",

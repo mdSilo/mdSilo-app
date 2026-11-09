@@ -245,6 +245,25 @@ describe("feed book", () => {
     ]);
   });
 
+  test("a site's videos and audio played when asked, from where they are", async () => {
+    const { epub, data } = await makeFeedBook({
+      title: "Example",
+      articles: [
+        article(1, {
+          html: `<p>Post 1</p><video autoplay loop muted playsinline poster="/v.jpg"><source src="/v.mp4" type="video/mp4"></video><audio autoplay preload="auto" src="a.mp3"></audio>`,
+        }),
+      ],
+    });
+    const file = `OEBPS/${data.articles[0].file}`;
+    const page = new TextDecoder().decode((await filesOf(epub)).get(file));
+    expect(page).not.toContain("autoplay");
+    expect(page).toContain('poster="https://example.com/v.jpg"');
+    expect(page).toContain('src="https://example.com/v.mp4"');
+    expect(page).toContain('src="https://example.com/post/a.mp3"');
+    expect(page.match(/preload="none"/g)).toHaveLength(2);
+    expect(page.match(/controls="controls"/g)).toHaveLength(2);
+  });
+
   test("the images in the book; those that fail, a link", async () => {
     const fetched: string[] = [];
     const { epub, data } = await makeFeedBook({

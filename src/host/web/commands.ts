@@ -237,7 +237,14 @@ export const commands: Record<string, Command> = {
   read_file_bytes: async ({ filePath }) =>
     (await fs.readBlob(filePath)).arrayBuffer(),
   // web only: the file as stored, read by parts as asked (a big book), see reader/readerStore.ts
-  read_file_blob: ({ filePath }) => fs.readBlob(filePath),
+  read_file_blob: async ({ filePath }) => {
+    const blob = await fs.readBlob(filePath);
+    // as stored, a Blob of the page; one of another realm (the fake
+    // IndexedDB of the tests) by its bytes
+    return blob instanceof Blob
+      ? blob
+      : new Blob([await (blob as Blob).arrayBuffer()]);
+  },
   read_file_range: async ({ filePath, start, len }) =>
     (await fs.readBlob(filePath))
       .slice(Number(start), Number(start) + Number(len))
