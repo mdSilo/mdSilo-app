@@ -1,6 +1,6 @@
 [package]
 name = "mdsilo"
-version = "0.8.0"
+version = "0.8.1"
 description = "mdSilo"
 authors = ["dloh"]
 license = "AGPL-3.0-or-later"
@@ -32,8 +32,8 @@ tauri-plugin-dialog = "2.8.4"
 #     "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVBRkUxMUMwNTU0QjcyM0MKUldROGNrdFZ3QkgrNm1xWFpmb3FpK3ExV1NWWjk0TFRmSm42UHVqQk9PZmdYa0JhZlpsRzFHZm8K" }
 # tauri-plugin-updater = "2.13.1"
 dirs = "7.0.0"
-trash = "5.2.2"
-notify = "8.2.1"
+trash = "5.3.0"
+notify = "8.2.2"
 open = "5.4.5"
 bincode = { version = "2.0.1", features = ["serde"] }
 chrono = "0.4.41"
@@ -57,8 +57,8 @@ zip = { version = "9.2.2", default-features = false, features = ["deflate-flate2
 quick-xml = { version = "0.42.0", features = ["escape-html"] }
 dom_query = { version = "0.28.0", default-features = false }
 url = "2.5.8"
-encoding_rs = "0.8.41"
-base64 = "0.22.1"
+encoding_rs = "0.8.44"
+base64 = "0.23.1"
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 # walk dir
 ignore = "0.4.34"

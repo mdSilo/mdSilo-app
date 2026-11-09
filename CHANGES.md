@@ -4,9 +4,6 @@
 
 2026-XX-XX
 
-- Improve: Wikipedia is one of the dictionaries, no longer a button of its own; Free Dictionary removed (it failed to load)
-- Feat: Look up the text selected in a note in the dictionaries, from the editor toolbar
-- Feat: A dictionary site added can have an API key (`%KEY%` in its url): looked up in the app when it answers as Merriam-Webster's APIs do
 - Performance: Big books open without being read into memory whole: the reader reads the parts it asks for, on the desktop and on the web; PDF, MOBI, AZW and AZW3 too
 - Performance: Importing MOBI, AZW and AZW3 books reads only what their metadata, cover and text need, not their images; a book dropped in on the web is written as it is, not read into memory first
 - Performance: Feed books get smaller photos (at most 1600 px wide and 2.56 megapixels), in Rust on the desktop and in the browser on the web; a feed book made before gets them when it is updated. A 198 MB book became 63 MB, and an article of big photos opens about twice as fast
@@ -25,12 +22,15 @@
 - Feat: support MDict files (.mdx/.mdd) and customize web resource on Dictionary  
 - Feat: Word lens shows a short meaning under the words of your vocabulary  
 - Feat: Ask before syncing files over 50 MB (books, dictionary files)
+- Feat: Look up the text selected in a note in the dictionaries, from the editor toolbar
+- Feat: A dictionary site added can have an API key (`%KEY%` in its url): looked up in the app when it answers as Merriam-Webster's APIs do
 - Improve: The numbers in the settings are set by − and + buttons
 - Performance: Index book(epub/mobi/azw/azw3/fb) in Rust end  
 - Performance: Faster Library and lists, using react-virtuoso+OverlayScrollbars
 - Fix: Cannot import or open EPUB books on iOS 16 Safari (polyfill `Object.groupBy`)
 - Fix: On older Safari (iOS 16/17): mermaid links, PDF page colors in themes, faster scanned PDFs; a note on JPEG XL comic pages a browser cannot show; macOS 11+ required 
 - Fix: keep settings, reading progress and issues across relaunch PWA  
+- Improve: Wikipedia is one of the dictionaries, no longer a button of its own; Free Dictionary removed (it failed to load)
 - Support Speed reading mode and share quote via plugins. 
 
 ## app-v0.7.0 
