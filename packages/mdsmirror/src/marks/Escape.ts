@@ -1,6 +1,6 @@
 import type { MarkdownIt } from "markdown-it";
 import { MarkSpec, Node } from "prosemirror-model";
-import { MarkdownSerializerState } from "../core/mdSerializer";
+import { MarkdownSerializerState, textAround } from "../core/mdSerializer";
 import Mark from "./Mark";
 
 /**
@@ -36,7 +36,11 @@ export default class Escape extends Mark {
       ) {
         const text = parent.child(index).text || "";
         const startOfLine = state.atBlank() || !!state.closed;
-        return state.esc(text, startOfLine).startsWith("\\") ? "" : "\\";
+        // as the text itself is escaped, see Text
+        const around = textAround(parent, index);
+        return state.esc(text, startOfLine, around).startsWith("\\")
+          ? ""
+          : "\\";
       },
       close: "",
     };

@@ -3,7 +3,7 @@ import { InputRule } from "prosemirror-inputrules";
 import { MarkSpec, MarkType } from "prosemirror-model";
 import { Command } from "prosemirror-state";
 import markInputRule from "../core/markInputRule";
-import markRule from "../core/rules/mark";
+import subRule from "../core/rules/sub";
 import Mark from "./Mark";
 
 export default class Sub extends Mark {
@@ -13,17 +13,19 @@ export default class Sub extends Mark {
 
   get schema(): MarkSpec {
     return {
+      // typing at its end is not in it, see editorMarks.test.ts
+      inclusive: false,
       parseDOM: [{ tag: "sub" }],
       toDOM: () => ["sub"],
     };
   }
 
   get rulePlugins() {
-    return [markRule({ delim: "&", mark: "sub" })];
+    return [subRule];
   }
 
   inputRules({ type }: { type: MarkType }): InputRule[] {
-    return [markInputRule(/(?:^|[^&])(\&([^&\s]+)\&)$/, type)];
+    return [markInputRule(/(?:^|[^~])(~([^~\s]+)~)$/, type)];
   }
 
   keys({ type }: { type: MarkType }): Record<string, Command> {
@@ -34,8 +36,8 @@ export default class Sub extends Mark {
 
   toMarkdown() {
     return {
-      open: "&",
-      close: "&",
+      open: "~",
+      close: "~",
       mixable: true,
       expelEnclosingWhitespace: true,
     };

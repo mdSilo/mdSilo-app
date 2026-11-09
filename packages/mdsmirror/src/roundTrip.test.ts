@@ -1,4 +1,4 @@
-import { parser, serializer } from "./server";
+import { parser, schema, serializer } from "./server";
 
 const roundTrip = (md: string) => serializer.serialize(parser.parse(md));
 
@@ -73,6 +73,83 @@ describe("markdown round trip", () => {
     ]) {
       expect(roundTrip(md)).toBe(md);
     }
+  });
+
+  test("keeps subscript and superscript", () => {
+    for (const md of [
+      "H~2~O and x^2^ + y^2^",
+      "~~del~~ and C~n~",
+      "AT&T and B&B",
+    ]) {
+      expect(roundTrip(md)).toBe(md);
+    }
+    const doc = parser.parse("H~2~O");
+    expect(doc.firstChild?.child(1).marks[0].type.name).toBe("sub");
+  });
+
+  test("escapes a `~` only if it may be read as markup", () => {
+    for (const md of [
+      "~/a and ~/b",
+      "cd ~/notes",
+      "~5 min, a~b, a ~ b",
+      "a ~/x\n~/y",
+      // escaped by hand: kept
+      "\\~/a and \\~/b",
+      // may pair: escaped
+      "a\\~b\\~c",
+      "\\~\\~a\\~\\~",
+      "a\\~ \\~\\~",
+      "~/a **b**",
+      "a\\~b **c** ~x",
+    ]) {
+      expect(roundTrip(md)).toBe(md);
+    }
+    // next to other inline content, a `~` may pair with one in it
+    expect(roundTrip("a~**b**")).toBe("a\\~**b**");
+    expect(roundTrip("**b**~a")).toBe("**b**\\~a");
+    expect(roundTrip("a~ **b**")).toBe("a~ **b**");
+  });
+
+  test("reads typed `~` back as text", () => {
+    const link = schema.marks.link.create({ href: "u" });
+    const texts = ["a~b~c", "~~a~~", "x~y", "a~ ~~", "~/a and ~/b", "~", "~ ~"];
+    const sides = [
+      ["", ""],
+      ["b", ""],
+      ["", "b"],
+      ["~", "~"],
+      ["~~", "~"],
+    ];
+    for (const text of texts) {
+      for (const [before, after] of sides) {
+        const nodes = [
+          before && schema.text(before, [link]),
+          schema.text(text),
+          after && schema.text(after, [link]),
+        ].filter((n) => !!n);
+        const doc = schema.node("doc", null, [
+          schema.node("paragraph", null, nodes),
+        ]);
+        const back = parser.parse(serializer.serialize(doc));
+        expect(back.textContent).toBe(doc.textContent);
+        back.descendants((n) => {
+          for (const m of n.marks) {
+            expect(["link", "escape"]).toContain(m.type.name);
+          }
+        });
+      }
+    }
+    // a `~` pairs with one in bold next to it: `a~**b~**` is subscript
+    const bold = schema.marks.strong.create();
+    const doc = schema.node("doc", null, [
+      schema.node("paragraph", null, [
+        schema.text("a~"),
+        schema.text("b~", [bold]),
+      ]),
+    ]);
+    const md = serializer.serialize(doc);
+    expect(md).toBe("a\\~**b\\~**");
+    expect(parser.parse(md).textContent).toBe("a~b~");
   });
 
   test("escapes what is needed only", () => {

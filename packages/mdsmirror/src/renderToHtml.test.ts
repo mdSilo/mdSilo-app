@@ -128,7 +128,18 @@ test("renders template placeholder marks", () => {
 });
 
 test("renders sub marks", () => {
-  expect(renderToHtml(`this is &subscript& text`)).toMatchSnapshot();
+  expect(renderToHtml(`this is ~subscript~ text`)).toMatchSnapshot();
+  expect(renderToHtml(`H~2~O and x^2^`)).toBe(
+    '<p>H<sub>2</sub>O and x<span class="sup">2</span></p>'
+  );
+  expect(renderToHtml(`~~del~~ and H~2~O`)).toBe(
+    "<p><s>del</s> and H<sub>2</sub>O</p>"
+  );
+  // whitespace inside is not subscript; & is plain text again
+  expect(renderToHtml(`~/a and ~/b`)).toBe("<p>~/a and ~/b</p>");
+  expect(renderToHtml(`AT&T and B&B &amp;`)).toBe(
+    "<p>AT&amp;T and B&amp;B &amp;</p>"
+  );
 });
 
 test("renders sup marks", () => {

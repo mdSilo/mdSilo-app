@@ -42,7 +42,8 @@ Select text and a **toolbar** appears above it: link, bold, highlight, italic, u
 | ==Highlight== | `Ctrl/Cmd + H` | `==highlight==` |
 | `Inline code` | `Ctrl/Cmd + backtick` | `` `code` `` |
 | Link | `Ctrl/Cmd + K` | `[text](url)` |
-| Superscript, as in E=mc^2^ | | `^sup^` |
+| Superscript, as in E=mc^2^ | `Alt + P` | `^sup^` |
+| Subscript, as in H~2~O | `Alt + B` | `~sub~` |
 
 Headings can be folded by clicking the arrow beside them, and a table of contents is shown under the title of a note that has headings. Tables have row and column handles for inserting, deleting, moving, sorting and aligning.
 

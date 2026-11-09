@@ -11,6 +11,8 @@ export default class Highlight extends Mark {
 
   get schema(): MarkSpec {
     return {
+      // typing at its end is not in it, see editorMarks.test.ts
+      inclusive: false,
       parseDOM: [{ tag: "mark" }],
       toDOM: () => ["mark"],
     };

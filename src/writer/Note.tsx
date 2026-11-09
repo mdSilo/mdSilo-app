@@ -563,7 +563,6 @@ function Note(props: Props) {
                       onCopyHash={onCopyHash}
                       embeds={embeds}
                       extensions={extensions}
-                      disables={["sub"]}
                       rootPath={notesRoot}
                       docPath={noteDir}
                       protocol={protocol}

@@ -1,5 +1,5 @@
 import { Node as ProsemirrorNode, NodeSpec } from "prosemirror-model";
-import { MarkdownSerializerState } from "../core/mdSerializer";
+import { MarkdownSerializerState, textAround } from "../core/mdSerializer";
 import Node from "./Node";
 
 export default class Text extends Node {
@@ -13,7 +13,12 @@ export default class Text extends Node {
     };
   }
 
-  toMarkdown(state: MarkdownSerializerState, node: ProsemirrorNode) {
-    state.text(node.text || "", undefined);
+  toMarkdown(
+    state: MarkdownSerializerState,
+    node: ProsemirrorNode,
+    parent?: ProsemirrorNode,
+    index?: number
+  ) {
+    state.text(node.text || "", undefined, textAround(parent, index));
   }
 }

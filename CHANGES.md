@@ -8,6 +8,9 @@
 - Performance: Importing MOBI, AZW and AZW3 books reads only what their metadata, cover and text need, not their images; a book dropped in on the web is written as it is, not read into memory first
 - Performance: Feed books get smaller photos (at most 1600 px wide and 2.56 megapixels), in Rust on the desktop and in the browser on the web; a feed book made before gets them when it is updated. A 198 MB book became 63 MB, and an article of big photos opens about twice as fast
 - Performance: Videos and audio in a book no longer play by themselves or load before you press play: an article of a feed book with eight looping videos from the web took 14 s of CPU to show in the desktop app, now 2 s
+- Editor: Subscript, as in H~2~O, written `~sub~` (was `&sub&`, which broke text like AT&T and `&amp;`), now on in notes; `Alt + B` toggles it
+- Editor: A `~` in text is saved as typed, e.g. `~/notes`, not `\~/notes`, unless it could be read as subscript or strikethrough
+- Fix: Typing right after subscript, superscript, strikethrough, highlight, a hashtag or a placeholder no longer goes into it; bold, italic and underline still carry on, as in word processors
 - Fix: Pressing play on a video in a book jumped to the start of the chapter, on a page with nothing but the video
 
 ## app-v0.8.0 

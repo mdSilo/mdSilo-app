@@ -85,7 +85,7 @@ exports[`renders plain text as paragraph 1`] = `"<p>plain text</p>"`;
 
 exports[`renders strikethrough marks 1`] = `"<p>this is <s>strikethrough</s> text</p>"`;
 
-exports[`renders sub marks 1`] = `"<p>this is <span class="sub">subscript</span> text</p>"`;
+exports[`renders sub marks 1`] = `"<p>this is <sub>subscript</sub> text</p>"`;
 
 exports[`renders sup marks 1`] = `"<p>this is <span class="sup">superscript</span> text</p>"`;
 

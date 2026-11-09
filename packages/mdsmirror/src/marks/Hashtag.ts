@@ -14,6 +14,8 @@ export default class Hashtag extends Mark {
 
   get schema(): MarkSpec {
     return {
+      // typing at its end is not in it, see editorMarks.test.ts
+      inclusive: false,
       parseDOM: [{ tag: "span.hashtag-link" }],
       toDOM: () => ["span", { class: "hashtag-link" }],
     };

@@ -84,6 +84,40 @@ function footnoteBrackets(str: string, startOfLine: boolean): Set<number> {
   return keep;
 }
 
+/** Whether inline content is right before or after a text. */
+export type Around = { before?: boolean; after?: boolean };
+
+/** Whether the inline siblings of `parent.child(index)` may touch its text. */
+export function textAround(
+  parent: { childCount: number } | undefined,
+  index: number | undefined
+): Around {
+  if (!parent || index === undefined) return {};
+  return { before: index > 0, after: index < parent.childCount - 1 };
+}
+
+/**
+ * Whether the `~` at `i` may be read as markup, i.e. strikethrough `~~x~~`
+ * or subscript `~x~`, which has no whitespace inside: so it is escaped.
+ * Otherwise it is kept as is, e.g. `~/notes` or `~5 min`.
+ */
+function tildeMayPair(str: string, i: number, around: Around): boolean {
+  if (str[i - 1] === "~" || str[i + 1] === "~") return true;
+  for (let j = i - 1; ; j--) {
+    if (j < 0) {
+      if (around.before) return true;
+      break;
+    }
+    if (/\s/.test(str[j])) break;
+    if (str[j] === "~") return true;
+  }
+  for (let j = i + 1; ; j++) {
+    if (j >= str.length) return !!around.after;
+    if (/\s/.test(str[j])) return false;
+    if (str[j] === "~") return true;
+  }
+}
+
 // ::- This is an object used to track state and expose
 // methods related to markdown serialization. Instances are passed to
 // node and mark serialization methods (see `toMarkdown`).
@@ -197,13 +231,20 @@ export class MarkdownSerializerState {
   // :: (string, ?bool)
   // Add the given text to the document. When escape is not `false`,
   // it will be escaped.
-  text(text, escape) {
+  // `around` tells whether inline content is next to the text, see `esc`.
+  text(text, escape, around: Around = {}) {
     const lines = text.split("\n");
     for (let i = 0; i < lines.length; i++) {
       const startOfLine = this.atBlank() || this.closed;
       this.write();
+      const lineAround = {
+        before: i === 0 && around.before,
+        after: i === lines.length - 1 && around.after,
+      };
       this.append(
-        escape !== false ? this.esc(lines[i], startOfLine) : lines[i]
+        escape !== false
+          ? this.esc(lines[i], startOfLine, lineAround)
+          : lines[i]
       );
       if (i !== lines.length - 1) {
         this.append("\n");
@@ -474,13 +515,16 @@ export class MarkdownSerializerState {
   // Escape the given string so that it can safely appear in Markdown
   // content. If `startOfLine` is true, also escape characters that
   // has special meaning only at the start of the line.
-  esc(str = "", startOfLine) {
+  // `around` tells whether other inline content (a link, bold text...) is
+  // right before or after the string, so a `~` there may pair with one in it.
+  esc(str = "", startOfLine, around: Around = {}) {
     const keep = footnoteBrackets(str, startOfLine);
     str = str.replace(
       // `\` escapes only an ASCII punctuation, e.g. `\eqref` is as is;
       // escape it at the end too, as what follows is unknown here
       /\\(?=[!-/:-@[-`{-~]|$)|[`*~[\]_]/g,
       (m, i) =>
+        (m === "~" && !tildeMayPair(str, i, around)) ||
         // keep intra-word `_` as is, e.g. snake_case, it is not emphasis
         (m === "_" &&
           i > 0 &&

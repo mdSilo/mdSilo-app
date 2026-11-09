@@ -83,7 +83,6 @@ export default function IssueEditor(props: Props) {
         onSearchItem={onSearchItem}
         onOpenLink={onOpenLink}
         embeds={embeds}
-        disables={["sub"]}
         rootPath={notesRoot}
       />
     </div>

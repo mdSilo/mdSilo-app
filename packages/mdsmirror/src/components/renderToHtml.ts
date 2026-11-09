@@ -4,6 +4,7 @@ import breakRule from "../core/rules/breaks";
 import checkboxRule from "../core/rules/checkboxes";
 import embedsRule from "../core/rules/embedsRule";
 import markRule from "../core/rules/mark";
+import subRule from "../core/rules/sub";
 import noticesRule from "../core/rules/notices";
 import tablesRule from "../core/rules/tables";
 import underlinesRule from "../core/rules/underlines";
@@ -22,7 +23,7 @@ const defaultRules = [
   markRule({ delim: "==", mark: "highlight" }),
   markRule({ delim: "!!", mark: "placeholder" }),
   markRule({ delim: "#", mark: "hashtag" }),
-  markRule({ delim: "&", mark: "sub" }),
+  subRule,
   markRule({ delim: "^", mark: "sup" }),
   underlinesRule,
   tablesRule,
