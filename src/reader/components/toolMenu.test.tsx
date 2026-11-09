@@ -85,3 +85,27 @@ describe("a tool with a menu", () => {
     expect(screen.getByRole("button", { name: "X" })).toBeInTheDocument();
   });
 });
+
+describe("the toolbar of the text selected, on a touch screen", () => {
+  it("is docked at the bottom, its menus opening above it", async () => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === "(hover: none) and (pointer: coarse)",
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    renderPopups(() => [
+      {
+        id: "plugins",
+        title: "Plugins",
+        icon: <span />,
+        menu: [{ id: "a", title: "A", icon: <span />, onClick: vi.fn() }],
+      },
+    ]);
+    const popup = screen.getByTestId("selection-popup");
+    expect(popup).toHaveAttribute("data-docked");
+    expect(popup).toHaveClass("bottom-2");
+    await userEvent.click(screen.getByRole("button", { name: "Plugins" }));
+    expect(screen.getByRole("menu")).toHaveClass("bottom-full");
+  });
+});

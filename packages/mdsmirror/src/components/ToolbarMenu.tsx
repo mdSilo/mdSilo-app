@@ -59,4 +59,20 @@ const FlexibleWrapper = styled.div`
   color: ${(props) => props.theme.toolbarItem};
   display: flex;
   gap: 8px;
+
+  /* a bar across the screen, on touch: the buttons more than its width scroll */
+  @media (hover: none) and (pointer: coarse) {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    pointer-events: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    & > * {
+      flex-shrink: 0;
+    }
+  }
 `;

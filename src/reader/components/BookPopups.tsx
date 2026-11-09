@@ -223,7 +223,14 @@ function ToolButton({
   );
 }
 
-function Toolbar({ tools }: { tools: Tool[] }) {
+function Toolbar({
+  tools,
+  up = false,
+}: {
+  tools: Tool[];
+  /** its menus open above it: at the bottom of the screen */
+  up?: boolean;
+}) {
   const [open, setOpen] = useState<string>();
   const menu = tools.find((t) => t.id === open && !t.hidden)?.menu;
   return (
@@ -245,10 +252,10 @@ function Toolbar({ tools }: { tools: Tool[] }) {
           ))}
       </div>
       {menu ? (
-        // out of the toolbar, which scrolls: below it, at its right
+        // out of the toolbar, which scrolls: below it (or above), at its right
         <ul
           role="menu"
-          className="absolute right-0 z-10 flex flex-col w-64 max-w-full p-1 mt-1 overflow-y-auto rounded-lg shadow-xl top-full max-h-72 bg-base-300 text-base-content"
+          className={`absolute right-0 z-10 flex flex-col w-64 max-w-full p-1 overflow-y-auto rounded-lg shadow-xl max-h-72 bg-base-300 text-base-content ${up ? "mb-1 bottom-full" : "mt-1 top-full"}`}
         >
           {menu.map((item) => (
             <li key={item.id}>
@@ -443,6 +450,13 @@ function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
   );
 }
 
+/** a screen touched, no mouse: e.g. a phone, a tablet */
+function touchScreen() {
+  return (
+    window.matchMedia?.("(hover: none) and (pointer: coarse)")?.matches ?? false
+  );
+}
+
 const TOOLBAR_WIDTH = 380;
 // the toolbar and the highlight options, to choose the side
 const TOOLBAR_HEIGHT = 44 + 8 + 28;
@@ -570,6 +584,19 @@ function BookPopups({
         onClick: () => copyLink(cfi),
       },
     ];
+    // on touch, the menu of the system is by the text, over a popup there: docked at the bottom
+    if (touchScreen()) {
+      return (
+        <div
+          className="absolute z-40 inset-x-2 bottom-2"
+          data-testid="selection-popup"
+          data-docked
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <Toolbar tools={list} up />
+        </div>
+      );
+    }
     return (
       <AnchoredBox
         anchor={anchorOf(selection.box, root, width, TOOLBAR_HEIGHT)}
