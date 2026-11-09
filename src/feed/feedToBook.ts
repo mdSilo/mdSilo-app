@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
 import { withContents } from "@/lib/contentCache";
 import { indexOf } from "@/lib/linkIndex";
-import { fromWorkspacePath, toWorkspacePath } from "@/workspace/util";
+import { fromWorkspacePath, isTauri, toWorkspacePath } from "@/workspace/util";
 import {
   annotationsPathOf,
   parseAnnotations,
@@ -32,6 +32,7 @@ import { readVocabulary } from "@/reader/vocabulary/vocabulary";
 import type { ArticleType } from "@/types/model";
 import { fetchFeed } from "./dataAgent";
 import { fetchImage, fullTextOf } from "./fullText";
+import { shrinkBookImages } from "./shrinkImage";
 
 /**
  * Feed articles made a book, see reader/convert/feedBook.ts: the book of
@@ -295,6 +296,13 @@ export async function saveFeedBook(
     // a book made before the URL was kept: found by it from now on
     if (feedUrl && !entry.feedUrl)
       await saveBookEntry(ws, { hash: entry.hash, feedUrl });
+    // a book made before its images were made smaller: now, unless being
+    // read (not closed for nothing new), then when written next
+    const open = [useReaderStore, useSideStore].some(
+      (reader) => reader.getState().path === path,
+    );
+    if (!open && (await shrinkImages(path)) > 0)
+      await saveFileHash(ws, entry.hash, path);
     return { ...report, path, hash: entry.hash };
   }
 
@@ -306,6 +314,8 @@ export async function saveFeedBook(
   if (entry && path) {
     if (!(await writeBytes(path, result.epub)))
       throw new Error(`Failed to write ${entry.file}`);
+    // its images of before, if made before they were made smaller
+    await shrinkImages(path);
   } else {
     path = await importBookData(ws, fileNameOf(name), result.epub);
     if (!path) throw new Error(`Failed to write the book "${name}"`);
@@ -333,6 +343,39 @@ export async function saveFeedBook(
   }
   void reindex(hash, name, result.epub, path);
   return { ...report, path, hash };
+}
+
+/**
+ * The big images of a feed book made smaller: a book made before they were
+ * when fetched. In Rust on the desktop (src-tauri/src/book_images.rs), in
+ * the browser on the web (./shrinkImage.ts). The file written again if
+ * any; how many.
+ */
+async function shrinkImages(path: string): Promise<number> {
+  try {
+    if (isTauri)
+      return await invoke<number>("shrink_book_images", { filePath: path });
+    const data = await invoke<ArrayBuffer | Uint8Array>("read_file_bytes", {
+      filePath: path,
+    });
+    const smaller = await shrinkBookImages(
+      data instanceof Uint8Array ? data : new Uint8Array(data),
+    );
+    if (!smaller || !(await writeBytes(path, smaller.epub))) return 0;
+    return smaller.count;
+  } catch (e) {
+    console.warn("Failed to make the images of the book smaller", e);
+    return 0;
+  }
+}
+
+/** The file of a book written again: its id kept, its file hash new. */
+async function saveFileHash(ws: string, hash: string, path: string) {
+  const fileHash = await bookHashOf(path);
+  await saveBookEntry(ws, {
+    hash,
+    fileHash: fileHash !== hash ? fileHash : undefined,
+  });
 }
 
 /**

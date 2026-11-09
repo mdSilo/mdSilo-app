@@ -5,6 +5,7 @@ import {
   formatLanguageMap,
   isBookFile,
   openBook,
+  type RangeBook,
 } from "./document";
 
 describe("book files", () => {
@@ -70,6 +71,39 @@ describe("book files", () => {
     expect(new Set(icons.map((i) => i?.icon)).size).toBe(icons.length);
     // the images as they are
     expect(bookIconOf("a.png")).toBeUndefined();
+  });
+
+  test("an EPUB read by parts: only the parts asked, closed with the book", async () => {
+    const data = new Uint8Array(await makeEpub().arrayBuffer());
+    const reads: number[] = [];
+    let closed = 0;
+    const range = (bytes: Uint8Array, name: string): RangeBook => ({
+      name,
+      size: bytes.length,
+      read: async (start, len) => {
+        reads.push(len);
+        return bytes.slice(start, start + len);
+      },
+      close: async () => {
+        closed++;
+      },
+    });
+    const { book, format } = await openBook(range(data, "a.epub"));
+    expect(format).toBe("EPUB");
+    expect(formatLanguageMap(book.metadata.title)).toBe("Tiny Book");
+    const doc = await book.sections[1].createDocument();
+    expect(doc.body.textContent).toContain("striking thirteen");
+    // never the whole file at once
+    expect(Math.max(...reads)).toBeLessThan(data.length);
+    expect(closed).toBe(0);
+    await book.destroy?.();
+    expect(closed).toBe(1);
+
+    // not a book: closed too
+    await expect(
+      openBook(range(new TextEncoder().encode("just text"), "a.txt")),
+    ).rejects.toThrow("Unsupported");
+    expect(closed).toBeGreaterThan(1);
   });
 
   test("refuses what is not a book", async () => {

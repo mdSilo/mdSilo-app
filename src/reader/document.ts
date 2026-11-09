@@ -119,14 +119,37 @@ const formatOfMobi = (name: string): BookFormat => {
   return ext === "azw" ? "AZW" : ext === "azw3" ? "AZW3" : "MOBI";
 };
 
-async function isZip(file: Blob) {
-  const arr = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+/**
+ * A book file read by parts, as the reader asks: a big book (a feed book of
+ * many images) not all of it in memory. Closed with the book (its destroy).
+ */
+export interface RangeBook {
+  name: string;
+  size: number;
+  /** `len` bytes from `start`, fewer at the end */
+  read(start: number, len: number): Promise<Uint8Array>;
+  close(): Promise<void>;
+}
+
+type Bytes = Pick<RangeBook, "size" | "read">;
+
+const bytesOf = (file: File | RangeBook): Bytes =>
+  file instanceof Blob
+    ? {
+        size: file.size,
+        read: async (start, len) =>
+          new Uint8Array(await file.slice(start, start + len).arrayBuffer()),
+      }
+    : file;
+
+async function isZip(file: Bytes) {
+  const arr = await file.read(0, 4);
   // PK\x03, some writers get the 4th byte wrong; else the end of the
   // central directory, PK\x05\x06, in the tail (leading bytes mangled)
   if (arr[0] === 0x50 && arr[1] === 0x4b && arr[2] === 0x03) return true;
   const size = Math.min(1024 * 64 + 22, file.size);
   if (size < 22) return false;
-  const tail = new Uint8Array(await file.slice(file.size - size).arrayBuffer());
+  const tail = await file.read(file.size - size, size);
   for (let i = tail.length - 22; i >= 0; i--) {
     if (
       tail[i] === 0x50 &&
@@ -140,8 +163,8 @@ async function isZip(file: Blob) {
   return false;
 }
 
-async function isPDF(file: Blob) {
-  const arr = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+async function isPDF(file: Bytes) {
+  const arr = await file.read(0, 5);
   return (
     arr[0] === 0x25 &&
     arr[1] === 0x50 &&
@@ -151,10 +174,36 @@ async function isPDF(file: Blob) {
   );
 }
 
-async function makeZipLoader(file: File) {
+/**
+ * A reader of zip.js of a file by parts: of its Reader (not exported, the
+ * parent of BlobReader), which makes the streams of the entries of
+ * readUint8Array.
+ */
+function rangeReader(zip: { BlobReader: unknown }, file: RangeBook): object {
+  type Reader = {
+    size: number;
+    readUint8Array(offset: number, length: number): Promise<Uint8Array>;
+  };
+  const Base = Object.getPrototypeOf(zip.BlobReader) as new () => Reader;
+  class RangeReader extends Base {
+    constructor() {
+      super();
+      this.size = file.size;
+    }
+    readUint8Array(offset: number, length: number) {
+      return file.read(offset, length);
+    }
+  }
+  return new RangeReader();
+}
+
+async function makeZipLoader(file: File | RangeBook) {
   const zip = await import("foliate-js/vendor/zip.js");
   zip.configure({ useWebWorkers: false });
-  const reader = new zip.ZipReader(new zip.BlobReader(file));
+  const bytes = bytesOf(file);
+  const reader = new zip.ZipReader(
+    file instanceof Blob ? new zip.BlobReader(file) : rangeReader(zip, file),
+  );
   const entries = (await reader.getEntries()) as ZipEntry[];
   const map = new Map(entries.map((entry) => [entry.filename, entry]));
   // some books refer to their files in another case
@@ -184,10 +233,8 @@ async function makeZipLoader(file: File) {
   const getSize = (name: string) => getEntry(name)?.uncompressedSize ?? 0;
   // the comment of the archive, comic books keep metadata there
   const getComment = async () => {
-    const size = Math.min(1024 * 64, file.size);
-    const tail = new Uint8Array(
-      await file.slice(file.size - size).arrayBuffer(),
-    );
+    const size = Math.min(1024 * 64, bytes.size);
+    const tail = await bytes.read(bytes.size - size, size);
     for (let i = tail.length - 22; i >= 0; i--) {
       if (
         tail[i] === 0x50 &&
@@ -204,19 +251,51 @@ async function makeZipLoader(file: File) {
   return { entries, loadText, loadBlob, getSize, getComment, sha1: undefined };
 }
 
-/** Open a book file, by its content (its name for the zip based formats). */
+/** The book closing the file read by parts too, with it. */
+function closingWith<T extends { destroy?(): void | Promise<void> }>(
+  book: T,
+  file: File | RangeBook,
+): T {
+  if (file instanceof Blob) return book;
+  const destroy = book.destroy?.bind(book);
+  book.destroy = async () => {
+    try {
+      await destroy?.();
+    } finally {
+      await file.close();
+    }
+  };
+  return book;
+}
+
+/**
+ * Open a book file, by its content (its name for the zip based formats). A
+ * zip based one (EPUB, CBZ) by parts if a RangeBook: the others read whole.
+ */
 export async function openBook(
-  file: File,
+  file: File | RangeBook,
 ): Promise<{ book: BookDoc; format: BookFormat }> {
-  if (!file.size) throw new Error("The book file is empty");
-  const name = file.name.toLowerCase();
-  if (await isZip(file)) {
-    const loader = await makeZipLoader(file);
-    if (
-      name.endsWith(".cbz") ||
-      file.type === "application/vnd.comicbook+zip"
-    ) {
+  try {
+    const opened = await openOf(file);
+    return { ...opened, book: closingWith(opened.book, file) };
+  } catch (e) {
+    if (!(file instanceof Blob)) await file.close();
+    throw e;
+  }
+}
+
+async function openOf(
+  source: File | RangeBook,
+): Promise<{ book: BookDoc; format: BookFormat }> {
+  if (!source.size) throw new Error("The book file is empty");
+  const name = source.name.toLowerCase();
+  const type = source instanceof Blob ? source.type : "";
+  if (await isZip(bytesOf(source))) {
+    const loader = await makeZipLoader(source);
+    if (name.endsWith(".cbz") || type === "application/vnd.comicbook+zip") {
       const { makeComicBook } = await import("foliate-js/comic-book.js");
+      const file =
+        source instanceof Blob ? source : new File([], source.name);
       return {
         book: (await makeComicBook(loader, file)) as unknown as BookDoc,
         format: "CBZ",
@@ -243,7 +322,16 @@ export async function openBook(
       format: "EPUB",
     };
   }
-  if (await isPDF(file)) {
+  // read whole: PDF, MOBI, FB2; the file by parts closed then
+  let file: File;
+  if (source instanceof Blob) {
+    file = source;
+  } else {
+    const data = await source.read(0, source.size);
+    await source.close();
+    file = new File([data as BlobPart], source.name);
+  }
+  if (await isPDF(bytesOf(file))) {
     const { makePDF } = await import("foliate-js/pdf.js");
     return { book: (await makePDF(file)) as unknown as BookDoc, format: "PDF" };
   }

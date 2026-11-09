@@ -4,6 +4,7 @@
 )]
 
 mod atomic;
+mod book_images;
 mod books;
 mod custom_plugins;
 mod db;
@@ -80,6 +81,7 @@ pub fn run() {
       feed::update_all_read_status,
       feed::add_starred_articles,
       feed::fetch_url,
+      feed::fetch_image,
       files::read_directory,
       files::is_dir,
       files::is_file,
@@ -123,6 +125,10 @@ pub fn run() {
       books::book_hash,
       books::read_file_bytes,
       books::read_file_range,
+      books::open_book_file,
+      books::read_book_file,
+      books::close_book_file,
+      books::shrink_book_images,
       books::write_file_bytes,
       books::write_file_raw,
       ebook::book_info,

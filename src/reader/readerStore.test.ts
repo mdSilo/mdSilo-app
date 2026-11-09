@@ -67,9 +67,11 @@ afterEach(() => {
 
 describe("readerStore", () => {
   test("reads a book file as binary", async () => {
+    // whole, not on the desktop
     const file = await readBookFile(BOOK);
+    expect(file).toBeInstanceOf(File);
     expect(file.name).toBe("A.epub");
-    expect(await file.text()).toBe("epub bytes");
+    expect(await (file as File).text()).toBe("epub bytes");
   });
 
   test("closed while it opens: not left open", async () => {

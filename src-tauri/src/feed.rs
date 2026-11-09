@@ -481,7 +481,30 @@ pub async fn fetch_url(
   url: String,
   max_bytes: Option<usize>,
 ) -> Result<tauri::ipc::Response, String> {
-  let parsed = reqwest::Url::parse(&url).map_err(|e| e.to_string())?;
+  Ok(tauri::ipc::Response::new(
+    fetch_bytes(&url, max_bytes).await?,
+  ))
+}
+
+/// The bytes of an image of an article, for a book of a feed (see
+/// src/feed/fullText.ts), made smaller if big (see book_images.rs): as a
+/// page shows it, not as big as the site has it.
+#[command]
+pub async fn fetch_image(url: String) -> Result<tauri::ipc::Response, String> {
+  let bytes = fetch_bytes(&url, None).await?;
+  let bytes = tauri::async_runtime::spawn_blocking(move || {
+    crate::book_images::shrink(&bytes, true).unwrap_or(bytes)
+  })
+  .await
+  .map_err(|e| e.to_string())?;
+  Ok(tauri::ipc::Response::new(bytes))
+}
+
+async fn fetch_bytes(
+  url: &str,
+  max_bytes: Option<usize>,
+) -> Result<Vec<u8>, String> {
+  let parsed = reqwest::Url::parse(url).map_err(|e| e.to_string())?;
   if !matches!(parsed.scheme(), "http" | "https") {
     return Err(format!("not a web url: {url}"));
   }
@@ -505,7 +528,7 @@ pub async fn fetch_url(
   if bytes.len() > max {
     return Err(format!("{url}: too big"));
   }
-  Ok(tauri::ipc::Response::new(bytes.to_vec()))
+  Ok(bytes.to_vec())
 }
 
 /// Starred articles synced from another device, see src/feed/feedSync.ts

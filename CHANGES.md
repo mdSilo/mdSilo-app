@@ -7,6 +7,8 @@
 - Improve: Wikipedia is one of the dictionaries, no longer a button of its own; Free Dictionary removed (it failed to load)
 - Feat: Look up the text selected in a note in the dictionaries, from the editor toolbar
 - Feat: A dictionary site added can have an API key (`%KEY%` in its url): looked up in the app when it answers as Merriam-Webster's APIs do
+- Performance: Big books open without being read into memory whole: the reader reads the parts it asks for, on the desktop and on the web
+- Performance: Feed books get smaller photos (at most 1600 px wide and 2.56 megapixels), in Rust on the desktop and in the browser on the web; a feed book made before gets them when it is updated. A 198 MB book became 63 MB, and its article of 53 photos opens about twice as fast
 
 ## app-v0.8.0 
 

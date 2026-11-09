@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { decodeText } from "@/reader/convert/text";
 import type { ArticleType } from "@/types/model";
+import { isTauri } from "@/workspace/util";
+import { shrinkImage } from "./shrinkImage";
 
 /**
  * The full text of a feed article. Many feeds give a summary only, or the
@@ -178,5 +180,19 @@ export async function fullTextOf(
   }
 }
 
-/** The bytes of an image of an article. */
-export const fetchImage = readBytes;
+/**
+ * The bytes of an image of an article, made smaller if big: in Rust on the
+ * desktop (src-tauri/src/book_images.rs), in the browser on the web
+ * (./shrinkImage.ts). A page shows no more, a book of photos as big as the
+ * site has them is slow to read.
+ */
+export const fetchImage = async (url: string) => {
+  const data = await invoke<ArrayBuffer | Uint8Array | number[]>(
+    "fetch_image",
+    { url },
+  );
+  const bytes =
+    data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+  if (isTauri) return bytes;
+  return (await shrinkImage(bytes, true)) ?? bytes;
+};

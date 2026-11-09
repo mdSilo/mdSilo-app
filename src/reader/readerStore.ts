@@ -4,7 +4,7 @@ import { store } from "@/state/store";
 import { getStrDate } from "@/lib/helper";
 import { flushSave } from "@/workspace/pendingSaves";
 import { openFilePaths } from "@/workspace/open";
-import { toWorkspacePath } from "@/workspace/util";
+import { isTauri, toWorkspacePath } from "@/workspace/util";
 import {
   annotationsPathOf,
   parseAnnotations,
@@ -13,7 +13,12 @@ import {
   type BookHeader,
   type BookNote,
 } from "./annotations/annotations";
-import { openBook, type BookDoc, type BookFormat } from "./document";
+import {
+  openBook,
+  type BookDoc,
+  type BookFormat,
+  type RangeBook,
+} from "./document";
 import {
   bookIdOf,
   bookMetaOf,
@@ -91,17 +96,40 @@ let compareCfi: ((a: string, b: string) => number) | undefined;
 
 const nameOf = (path: string) => path.split(/[\\/]/).pop() ?? path;
 
-/** Read a book file as a File, binary. */
-export async function readBookFile(path: string): Promise<File> {
+const toBytes = (data: ArrayBuffer | Uint8Array | number[]) =>
+  data instanceof Uint8Array
+    ? data
+    : new Uint8Array(data as ArrayBuffer | number[]);
+
+/**
+ * A book file to open, read by parts as the reader asks: a big book not all
+ * in memory. On the desktop the file open in Rust (read as it was, even
+ * moved or written again meanwhile); on the web the file as stored in
+ * IndexedDB, a Blob the browser reads by parts.
+ */
+export async function readBookFile(path: string): Promise<File | RangeBook> {
+  if (isTauri) {
+    const { id, size } = await invoke<{ id: number; size: number }>(
+      "open_book_file",
+      { filePath: path },
+    );
+    return {
+      name: nameOf(path),
+      size,
+      read: async (start, len) =>
+        toBytes(await invoke("read_book_file", { id, start, len })),
+      close: () => invoke("close_book_file", { id }),
+    };
+  }
+  const blob = await invoke<unknown>("read_file_blob", { filePath: path });
+  // of the Blob, not a copy of its bytes
+  if (blob instanceof Blob) return new File([blob], nameOf(path));
+  // not a Blob as stored (a fake IndexedDB in tests): its bytes
   const data = await invoke<ArrayBuffer | Uint8Array | number[]>(
     "read_file_bytes",
     { filePath: path },
   );
-  const bytes =
-    data instanceof ArrayBuffer || ArrayBuffer.isView(data)
-      ? data
-      : new Uint8Array(data);
-  return new File([bytes as BlobPart], nameOf(path));
+  return new File([toBytes(data) as BlobPart], nameOf(path));
 }
 
 async function writeNotes(path: string, header: BookHeader, notes: BookNote[]) {

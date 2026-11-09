@@ -132,6 +132,8 @@ export const commands: Record<string, Command> = {
   fetch_feed: ({ url }) => feed.fetchFeed(url),
   add_channel: ({ url, ty, title }) => feed.addChannel(url, ty, title ?? null),
   fetch_url: ({ url }) => feed.fetchUrl(url),
+  // made smaller by the caller on the web (src/feed/shrinkImage.ts), in Rust on the desktop
+  fetch_image: ({ url }) => feed.fetchUrl(url),
   import_channels: ({ list, urlList }) =>
     feed.importChannels(list ?? urlList ?? []),
   get_channels: () => feed.getChannels(),
@@ -234,6 +236,8 @@ export const commands: Record<string, Command> = {
       .catch(() => ""),
   read_file_bytes: async ({ filePath }) =>
     (await fs.readBlob(filePath)).arrayBuffer(),
+  // web only: the file as stored, read by parts as asked (a big book), see reader/readerStore.ts
+  read_file_blob: ({ filePath }) => fs.readBlob(filePath),
   read_file_range: async ({ filePath, start, len }) =>
     (await fs.readBlob(filePath))
       .slice(Number(start), Number(start) + Number(len))
