@@ -27,9 +27,11 @@ jobs:
           - name: linux-x86_64
             os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
+            args: '--verbose'
           - name: linux-aarch64
             os: ubuntu-22.04-arm
             target: aarch64-unknown-linux-gnu
+            args: '--verbose'
           - name: macos-x86_64
             os: macos-latest
             target: x86_64-apple-darwin
@@ -74,16 +76,23 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          # linuxdeploy's own strip fails on binaries of newer toolchains ("failed to run linuxdeploy");
+          # the binary is stripped by cargo already (profile.release strip = true)
+          echo "NO_STRIP=true" >> "$GITHUB_ENV"
       - name: install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build and Release app
+        id: build
+        # Linux bundling downloads linuxdeploy and its plugins from GitHub, which can time out (http 504):
+        # a failed Linux build is tried once more below
+        continue-on-error: ${{ startsWith(matrix.os, 'ubuntu') }}
         uses: tauri-apps/tauri-action@v1
-        env:
+        env: &tauri-env
           CI: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-        with:
+        with: &tauri-with
           projectPath: .
           args: ${{ matrix.args }}
           tagName: mdsilo-v__VERSION__
@@ -91,3 +100,11 @@ jobs:
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
+      - name: Wait before retry
+        if: steps.build.outcome == 'failure'
+        run: sleep 60
+      - name: Build and Release app (retry)
+        if: steps.build.outcome == 'failure'
+        uses: tauri-apps/tauri-action@v1
+        env: *tauri-env
+        with: *tauri-with
