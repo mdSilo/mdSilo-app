@@ -94,6 +94,18 @@ Appendix: [Reference](docs/manual/Reference.md)
 
 ## Get the app
 
+Install or update in one line; run it again to update. On Linux it picks the .deb, .rpm or AppImage for your distro, on macOS it puts the app in /Applications (options: `--version`, `--format`, `--uninstall`, see `--help`):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mdSilo/mdSilo-app/main/scripts/install.sh | sh
+```
+
+On Windows, in PowerShell (no admin needed; options `-Version`, `-Format msi`, `-Uninstall`, see [install.ps1](scripts/install.ps1)):
+
+```powershell
+irm https://raw.githubusercontent.com/mdSilo/mdSilo-app/main/scripts/install.ps1 | iex
+```
+
 You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/releases) or build from the source code: 
 
 - install Rust: https://www.rust-lang.org/tools/install 

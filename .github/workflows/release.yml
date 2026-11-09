@@ -6,34 +6,51 @@ on:
 permissions:
   contents: write
 
+# one release run at a time; a second run waits instead of racing on the same draft
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+# Assets per platform (all into one draft release):
+#   Linux x86_64 / aarch64: .deb, .rpm, .AppImage. Built on Ubuntu 22.04 (glibc 2.35),
+#     so they also run on older distros; arm64 builds natively on the free arm runner.
+#   macOS: universal .dmg/.app (Intel + Apple Silicon), plus per-arch builds (smaller downloads).
+#   Windows x64: setup .exe (NSIS) and .msi; Windows arm64: setup .exe only (WiX has no arm64),
+#     built natively on the arm runner so the C deps (aws-lc, ring, libgit2...) need no cross toolchain.
+# scripts/install.sh and scripts/install.ps1 pick from these assets by name.
 jobs:
   publish-mdsilo:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - build: linux
+          - name: linux-x86_64
             os: ubuntu-22.04
-            arch: x86_64
             target: x86_64-unknown-linux-gnu
-          - build: macos
+          - name: linux-aarch64
+            os: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+          - name: macos-x86_64
             os: macos-latest
-            arch: x86_64
             target: x86_64-apple-darwin
-          - build: macos
+            args: '--target x86_64-apple-darwin'
+          - name: macos-aarch64
             os: macos-latest
-            arch: aarch64
             target: aarch64-apple-darwin
-          - build: macos-uni
+            args: '--target aarch64-apple-darwin'
+          - name: macos-universal
             os: macos-latest
-            arch: aarch64
             target: x86_64-apple-darwin,aarch64-apple-darwin
             args: '--target universal-apple-darwin'
-          - build: windows
+          - name: windows-x86_64
             os: windows-latest
-            arch: x86_64
             target: x86_64-pc-windows-msvc
+          - name: windows-aarch64
+            os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            args: '--bundles nsis'
 
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -47,8 +64,13 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      - name: install webkit2gtk (ubuntu only)
-        if: matrix.os == 'ubuntu-22.04'
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+          key: ${{ matrix.name }}
+      - name: install webkit2gtk (linux only)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
