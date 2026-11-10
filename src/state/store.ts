@@ -165,6 +165,9 @@ export type Store = {
   // what failed or hangs opening a folder, shown in the explorer
   openProblem: string | undefined;
   setOpenProblem: Setter<string | undefined>;
+  // the folder being opened, shown in the explorer meanwhile
+  openingDir: string | undefined;
+  setOpeningDir: Setter<string | undefined>;
   // input end
   currentArticle: ArticleType | null; // feed article
   setCurrentArticle: Setter<ArticleType | null>;
@@ -352,6 +355,8 @@ export const store = createStore<Store>()(
       setCurrentDir: setter(set, "currentDir"),
       openProblem: undefined,
       setOpenProblem: setter(set, "openProblem"),
+      openingDir: undefined,
+      setOpeningDir: setter(set, "openingDir"),
       // input end
       currentArticle: null,
       setCurrentArticle: setter(set, "currentArticle"),

@@ -5,6 +5,7 @@ import { ciStringCompare } from "@/lib/helper";
 import { onOpenFile, onListDir, openWebWorkspace } from "@/workspace/useOpen";
 import { isWeb, normalizeSlash } from "@/workspace/util";
 import ErrorBoundary from "@/ui/ErrorBoundary";
+import { Spinner } from "@/ui/ui";
 import { useT } from "@/i18n";
 import SidebarNotesBar from "./SidebarNotesBar";
 import SidebarNotesTree, { NoteTreeRow } from "./SidebarNotesTree";
@@ -21,6 +22,7 @@ function SidebarNotes(props: SidebarNotesProps) {
 
   const currentDir = useStore((state) => state.currentDir);
   const openProblem = useStore((state) => state.openProblem);
+  const openingDir = useStore((state) => state.openingDir);
 
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
@@ -60,7 +62,23 @@ function SidebarNotes(props: SidebarNotesProps) {
           />
         ) : currentDir ? null : (
           <>
-            {openProblem ? <OpenProblem problem={openProblem} /> : null}
+            {openProblem ? (
+              <OpenProblem problem={openProblem} />
+            ) : openingDir ? (
+              <div
+                role="status"
+                className="flex items-center gap-2 mx-4 mt-4 text-sm text-base-content/70"
+              >
+                <Spinner size="xs" />
+                <span className="min-w-0 truncate" title={openingDir}>
+                  {t("Opening {name}…", {
+                    name:
+                      openingDir.split(/[\\/]/).filter(Boolean).pop() ??
+                      openingDir,
+                  })}
+                </span>
+              </div>
+            ) : null}
             <button className={btnClass} onClick={onListDir}>
               {t("Open Folder")}
             </button>
