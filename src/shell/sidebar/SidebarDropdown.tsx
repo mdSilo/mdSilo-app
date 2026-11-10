@@ -18,6 +18,7 @@ import { listDirPath } from "@/workspace/useOpen";
 import { dirRenameOptions, noteRenameOptions } from "@/workspace/renamePath";
 import { bookPathOfAnnotations } from "@/reader/annotations/annotations";
 import { bookRenameOptions, moveBook } from "@/reader/library/bookFile";
+import { useT } from "@/i18n";
 import RenameModal from "./RenameModal";
 
 type NoteProps = {
@@ -26,6 +27,7 @@ type NoteProps = {
 };
 
 const SidebarNoteLinkDropdown = (props: NoteProps) => {
+  const t = useT();
   const { noteId, className } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
@@ -68,11 +70,11 @@ const SidebarNoteLinkDropdown = (props: NoteProps) => {
                     <>
                       <DropdownItem onClick={onMoveToClick}>
                         <IconCornerDownRight size={18} className="mr-1" />
-                        <span>Move to</span>
+                        <span>{t("Move to")}</span>
                       </DropdownItem>
                       <DropdownItem onClick={() => setIsRenameModalOpen(true)}>
                         <IconId size={18} className="mr-1" />
-                        <span>Rename</span>
+                        <span>{t("Rename")}</span>
                       </DropdownItem>
                     </>
                   ) : null}
@@ -92,9 +94,9 @@ const SidebarNoteLinkDropdown = (props: NoteProps) => {
         <Portal>
           <RenameModal
             path={noteId}
-            title="Rename the note"
+            title={t("Rename the note")}
             keepExt
-            hint="The links to it by title are renamed with it."
+            hint={t("The links to it by title are renamed with it.")}
             options={noteRenameOptions(noteId)}
             isOpen={isRenameModalOpen}
             handleClose={() => setIsRenameModalOpen(false)}
@@ -115,6 +117,7 @@ type DirProps = {
 };
 
 const SidebarDirLinkDropdown = (props: DirProps) => {
+  const t = useT();
   const { dirPath, className = "", isOnBar = false, menuBtn } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
@@ -168,17 +171,17 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
                 >
                   <DropdownItem onClick={onNewDirClick}>
                     <IconPlus size={18} className="mr-1" />
-                    <span>New Subfolder</span>
+                    <span>{t("New Subfolder")}</span>
                   </DropdownItem>
                   {isOnBar ? null : (
                     <>
                       <DropdownItem onClick={() => listDirPath(dirPath, false)}>
                         <IconFolder size={18} className="mr-1" />
-                        <span>Open Folder Here</span>
+                        <span>{t("Open Folder Here")}</span>
                       </DropdownItem>
                       <DropdownItem onClick={onRenameDirClick}>
                         <IconId size={18} className="mr-1" />
-                        <span>Rename</span>
+                        <span>{t("Rename")}</span>
                       </DropdownItem>
                     </>
                   )}
@@ -201,7 +204,7 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
         <Portal>
           <RenameModal
             path={dirPath}
-            title="Rename the folder"
+            title={t("Rename the folder")}
             options={dirRenameOptions}
             isOpen={isRenameDirModalOpen}
             handleClose={() => setIsRenameDirModalOpen(false)}
@@ -220,6 +223,7 @@ type BookProps = {
 };
 
 const SidebarBookLinkDropdown = (props: BookProps) => {
+  const t = useT();
   const { bookPath, className } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
@@ -261,11 +265,11 @@ const SidebarBookLinkDropdown = (props: BookProps) => {
                 >
                   <DropdownItem onClick={() => setIsMoveToModalOpen(true)}>
                     <IconCornerDownRight size={18} className="mr-1" />
-                    <span>Move to</span>
+                    <span>{t("Move to")}</span>
                   </DropdownItem>
                   <DropdownItem onClick={() => setIsRenameModalOpen(true)}>
                     <IconId size={18} className="mr-1" />
-                    <span>Rename</span>
+                    <span>{t("Rename")}</span>
                   </DropdownItem>
                 </MenuItems>
               </Portal>
@@ -286,9 +290,11 @@ const SidebarBookLinkDropdown = (props: BookProps) => {
         <Portal>
           <RenameModal
             path={bookPath}
-            title="Rename the book file"
+            title={t("Rename the book file")}
             keepExt
-            hint="Its notes are renamed with it. The title, reading progress, highlights and links to the book stay as they are."
+            hint={t(
+              "Its notes are renamed with it. The title, reading progress, highlights and links to the book stay as they are.",
+            )}
             options={bookRenameOptions(bookPath)}
             isOpen={isRenameModalOpen}
             handleClose={() => setIsRenameModalOpen(false)}

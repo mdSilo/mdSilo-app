@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useStore } from "@/state/store";
 import { formatSize } from "@/workspace/syncSize";
 import { dataRoot } from "@/workspace/layout";
+import { t } from "@/i18n";
 import { wikipediaSearchUrl, type DictionaryResult } from "../lookup/lookup";
 import {
   DEFAULT_DICTIONARY_SETTINGS,
@@ -66,7 +67,7 @@ export function builtinSources(
       id: "wiktionary",
       label: "Wiktionary",
       kind: "web",
-      description: "Words of most languages, recordings of some",
+      description: t("Words of most languages, recordings of some"),
       lookup: lookupWiktionaryWithAudio,
       url: wiktionaryUrl,
     },
@@ -74,7 +75,7 @@ export function builtinSources(
       id: "wikipedia",
       label: "Wikipedia",
       kind: "web",
-      description: "The summary of the article, in the language of the book",
+      description: t("The summary of the article, in the language of the book"),
       lookup: lookupWikipediaEntry,
       url: (text, lang) => wikipediaSearchUrl(text, lang),
     },
@@ -82,7 +83,7 @@ export function builtinSources(
       id: "urban",
       label: "Urban Dictionary",
       kind: "web",
-      description: "English slang",
+      description: t("English slang"),
       lookup: (word) => lookupUrban(word),
       url: urbanUrl,
     },
@@ -92,7 +93,9 @@ export function builtinSources(
       kind: key ? "web" : "link",
       description: key
         ? "English, with pronunciations, by your API key"
-        : "Opens the site; with an API key (dictionaryapi.com), looked up here",
+        : t(
+            "Opens the site; with an API key (dictionaryapi.com), looked up here",
+          ),
       ...(key
         ? { lookup: (word: string) => lookupMerriamWebster(word, key) }
         : {}),
@@ -102,7 +105,7 @@ export function builtinSources(
       id: "google",
       label: "Google",
       kind: "link",
-      description: "Opens Google's definition of the word",
+      description: t("Opens Google's definition of the word"),
       url: (word) =>
         urlOfTemplate("https://www.google.com/search?q=define+%WORD%", word),
     },
@@ -140,7 +143,7 @@ export function localSources(
       label: dict.name,
       kind: "local",
       description: missing
-        ? "Not on this device: its files are not synced"
+        ? t("Not on this device: its files are not synced")
         : `MDict, ${formatSize(dict.size)}${dict.synced ? ", synced" : ""}`,
       dict,
       ...(missing

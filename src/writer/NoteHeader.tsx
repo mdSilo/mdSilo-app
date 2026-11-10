@@ -26,6 +26,7 @@ import NoteDelModal from "@/writer/NoteDelModal";
 import EditorSettings from "@/shell/settings/EditorSettings";
 import { usePluginNoteModes } from "@/plugins/PluginNoteMode";
 import { PluginIcon } from "@/plugins/PluginIcon";
+import { useT } from "@/i18n";
 
 /** the modes of plugins shown as buttons, each its own; more are in a list */
 const MAX_MODE_BUTTONS = 2;
@@ -35,6 +36,7 @@ export default function NoteHeader({
 }: {
   setShowBacklink: (show: boolean) => void;
 }) {
+  const t = useT();
   const currentNote = useCurrentMdContext();
   const note = useStore((state) => state.notes.get(currentNote.id));
 
@@ -74,21 +76,21 @@ export default function NoteHeader({
     >
       <div className="flex items-center" id="note-header-btns">
         <ViewMenu className="me-1" />
-        <Tooltip content="WYSIWYG">
+        <Tooltip content={t("WYSIWYG")}>
           <button className={switchClass} onClick={() => setRaw("wysiwyg")}>
             <IconFileText
               className={`${rawMode === "wysiwyg" ? "text-success" : iconClass}`}
             />
           </button>
         </Tooltip>
-        <Tooltip content="Markdown">
+        <Tooltip content={t("Markdown")}>
           <button className={switchClass} onClick={() => setRaw("raw")}>
             <IconMarkdown
               className={`${rawMode === "raw" ? "text-success" : iconClass}`}
             />
           </button>
         </Tooltip>
-        <Tooltip content="MindMap">
+        <Tooltip content={t("MindMap")}>
           <button className={switchClass} onClick={() => setRaw("mindmap")}>
             <IconTournament
               className={`rotate-180 ${rawMode === "mindmap" ? "text-success" : iconClass}`}
@@ -107,13 +109,13 @@ export default function NoteHeader({
                       : iconClass
                   }
                 />
-                <span className="sr-only">Modes of plugins</span>
+                <span className="sr-only">{t("Modes of plugins")}</span>
               </>
             }
             buttonClassName={`${switchClass} h-6 flex items-center`}
             itemsClassName="w-60"
             placement="bottom-start"
-            tooltipContent="Modes of plugins"
+            tooltipContent={t("Modes of plugins")}
           >
             {pluginModes.map(({ plugin, mode, name }) => (
               <DropdownItem key={name} onClick={() => void setRaw(name)}>
@@ -152,9 +154,9 @@ export default function NoteHeader({
       </div>
       <div className="flex items-center">
         <div className="relative">
-          <Tooltip content="Editor Settings">
+          <Tooltip content={t("Editor Settings")}>
             <button
-              aria-label="Editor Settings"
+              aria-label={t("Editor Settings")}
               className={`flex items-center justify-center w-8 h-8 ${buttonClassName}`}
               onClick={() => setSettingsOpen(!settingsOpen)}
             >
@@ -180,7 +182,7 @@ export default function NoteHeader({
           {({ open }) => (
             <>
               <MenuButton ref={menuButtonRef} className={buttonClassName}>
-                <Tooltip content="Options (Delete...)">
+                <Tooltip content={t("Options (Delete...)")}>
                   <span className="flex items-center justify-center w-8 h-8">
                     <IconDots size={18} className={iconClass} />
                   </span>
@@ -200,21 +202,21 @@ export default function NoteHeader({
                       className="border-t border-base-300"
                     >
                       <IconTrash className="mr-1" />
-                      <span>Delete Permanently</span>
+                      <span>{t("Delete Permanently")}</span>
                     </DropdownItem>
                     <DropdownItem
                       onClick={() => exportPdf(note?.title ?? "", darkMode)}
                       className="border-t border-base-300"
                     >
                       <IconFile className="mr-1" />
-                      <span>Export PDF</span>
+                      <span>{t("Export PDF")}</span>
                     </DropdownItem>
                     <DropdownItem
                       onClick={() => exportPng(currentNote.id)}
                       className="border-t border-base-300"
                     >
                       <IconPhoto className="mr-1" />
-                      <span>Export PNG</span>
+                      <span>{t("Export PNG")}</span>
                     </DropdownItem>
                     <NoteMetadata noteId={currentNote.id} />
                   </MenuItems>

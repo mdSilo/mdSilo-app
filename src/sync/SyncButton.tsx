@@ -2,6 +2,7 @@ import { useState } from "react";
 import { TbRefresh } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import { Tooltip } from "@/ui/ui";
+import { t, useT } from "@/i18n";
 import { isSyncAvailable } from "./api";
 import { useSyncState } from "./syncWorkspace";
 import SyncModal from "./SyncModal";
@@ -18,6 +19,7 @@ export default function SyncButton({
   iconClassName,
   tooltipPlacement,
 }: Props) {
+  const t = useT();
   const initDir = useStore((state) => state.initDir);
   const syncing = useSyncState((s) => s.syncing);
   const failed = useSyncState((s) => Boolean(s.error) && s.ws === initDir);
@@ -27,11 +29,13 @@ export default function SyncButton({
   return (
     <>
       <Tooltip
-        content={syncing ? "Syncing…" : failed ? "Sync failed" : "Sync"}
+        content={
+          syncing ? t("Syncing…") : failed ? t("Sync failed") : t("Sync")
+        }
         placement={tooltipPlacement}
       >
         <button
-          aria-label="Sync"
+          aria-label={t("Sync")}
           className={`${className} relative`}
           onClick={() => setIsOpen(true)}
         >

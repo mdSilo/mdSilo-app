@@ -11,6 +11,7 @@ import {
   textOf,
   type SelectionResult,
 } from "@/plugins/selection";
+import { useT } from "@/i18n";
 import { usePopups } from "../popups";
 import { annotateSelection } from "../actions";
 import { activeStore } from "../readerStore";
@@ -24,6 +25,7 @@ function PluginActionPopup({
 }: {
   rootRef: RefObject<HTMLDivElement | null>;
 }) {
+  const t = useT();
   const target = usePopups((state) => state.pluginAction);
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
@@ -98,8 +100,8 @@ function PluginActionPopup({
         </span>
         <button
           className="btn btn-ghost btn-xs"
-          title="Close"
-          aria-label="Close"
+          title={t("Close")}
+          aria-label={t("Close")}
           onClick={() => usePopups.getState().clear()}
         >
           <TbX />
@@ -127,10 +129,10 @@ function PluginActionPopup({
         <div className="flex justify-end mt-1">
           <button
             className="btn btn-ghost btn-xs"
-            title="Keep as the note of a highlight"
+            title={t("Keep as the note of a highlight")}
             onClick={() => keep(textOf(result))}
           >
-            <TbNote /> Keep as a note
+            <TbNote /> {t("Keep as a note")}
           </button>
         </div>
       ) : null}

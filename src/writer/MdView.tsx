@@ -1,8 +1,10 @@
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import Note from "@/writer/Note";
 import { useNoteReloads } from "@/workspace/noteReloads";
+import { useT } from "@/i18n";
 
 export default function NotePage() {
+  const t = useT();
   const currentView = useCurrentViewContext();
   const params = currentView.state.params;
   const noteId = params?.noteId || "";
@@ -13,7 +15,9 @@ export default function NotePage() {
   if (!noteId || typeof noteId !== "string") {
     return (
       <div className="flex flex-col items-center justify-center flex-1 h-screen p-4">
-        <p className="text-2xl text-center">This note does not exists!</p>
+        <p className="text-2xl text-center">
+          {t("This note does not exists!")}
+        </p>
       </div>
     );
   }

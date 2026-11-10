@@ -21,6 +21,7 @@ import BookIcon, { bookIconOf } from "@/reader/components/BookIcon";
 import { bookPathOfAnnotations } from "@/reader/annotations/annotations";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { viewersOf } from "@/plugins/registry";
+import { t, useT } from "@/i18n";
 import SidebarItem from "./SidebarItem";
 import {
   SidebarBookDropdown,
@@ -48,6 +49,7 @@ const SidebarNoteLink = (
   props: Props,
   forwardedRef: ForwardedRef<HTMLDivElement>,
 ) => {
+  const t = useT();
   const {
     node,
     isHighlighted,
@@ -76,8 +78,8 @@ const SidebarNoteLink = (
     if (!isDir || depth !== 0 || state.layout !== "workspace" || !state.initDir)
       return "";
     const id = normalizeSlash(node.id);
-    if (id === joinPath(state.initDir, READING_DIR)) return "Reading";
-    if (id === joinPath(state.initDir, WRITING_DIR)) return "Writing";
+    if (id === joinPath(state.initDir, READING_DIR)) return t("Reading");
+    if (id === joinPath(state.initDir, WRITING_DIR)) return t("Writing");
     return "";
   });
   // drag to move it, drop on a dir or a file of the dir to move into the dir
@@ -207,7 +209,7 @@ const SidebarNoteLink = (
                     {node.title}
                   </span>
                   <span className="ml-1 text-xs text-base-content/50">
-                    notes
+                    {t("notes")}
                   </span>
                 </>
               ) : (

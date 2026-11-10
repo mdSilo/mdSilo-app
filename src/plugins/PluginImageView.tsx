@@ -7,6 +7,7 @@ import {
   TbShare,
 } from "react-icons/tb";
 import { openUrl } from "@/workspace/open";
+import { t } from "@/i18n";
 import {
   canShareImage,
   copyImage,
@@ -88,16 +89,16 @@ export function PluginImageView({
         />
       ) : null}
       <div className="flex flex-col flex-1 gap-0.5 min-w-36">
-        {action(<TbCopy size={16} />, "Copy", async () => {
+        {action(<TbCopy size={16} />, t("Copy"), async () => {
           await copyImage(image);
-          return "Copied";
+          return t("Copied");
         })}
-        {action(<TbDeviceFloppy size={16} />, "Save…", async () => {
+        {action(<TbDeviceFloppy size={16} />, t("Save…"), async () => {
           const path = await saveImage(image);
           return path ? `Saved ${path}` : undefined;
         })}
         {canShareImage(image)
-          ? action(<TbShare size={16} />, "Share…", async () => {
+          ? action(<TbShare size={16} />, t("Share…"), async () => {
               await shareImage(image);
               return undefined;
             })
@@ -105,7 +106,7 @@ export function PluginImageView({
         {onInsert
           ? action(
               <TbPhotoPlus size={16} />,
-              "Insert in note",
+              t("Insert in note"),
               async () => {
                 await onInsert();
                 return undefined;

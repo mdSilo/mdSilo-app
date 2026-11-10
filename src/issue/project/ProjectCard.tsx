@@ -5,6 +5,7 @@ import {
   TbCheckbox as IconSubtasks,
   TbFlag as IconFlag,
 } from "react-icons/tb";
+import { useT } from "@/i18n";
 import { StateIcon } from "../common";
 import { isOverdue, subtaskProgress } from "../issueOps";
 import LabelChip from "../LabelChip";
@@ -28,6 +29,7 @@ export default function ProjectCard({
   onOpen,
   overlay = false,
 }: Props) {
+  const t = useT();
   const {
     setNodeRef,
     attributes,
@@ -76,7 +78,7 @@ export default function ProjectCard({
           {issue.dueOn ? (
             <span
               className={`flex items-center gap-1 text-xs ${isOverdue(issue) ? "text-error" : "text-base-content/60"}`}
-              title={isOverdue(issue) ? "Overdue" : "Due"}
+              title={isOverdue(issue) ? t("Overdue") : t("Due")}
               data-testid="card-due"
             >
               <IconCalendar size={12} />
@@ -86,7 +88,7 @@ export default function ProjectCard({
           {progress ? (
             <span
               className="flex items-center gap-1 text-xs text-base-content/60"
-              title="Sub-tasks done"
+              title={t("Sub-tasks done")}
               data-testid="card-subtasks"
             >
               <IconSubtasks size={12} />

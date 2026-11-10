@@ -8,6 +8,7 @@ import {
   TbX,
 } from "react-icons/tb";
 import { MdMinimize } from "react-icons/md";
+import { t, useT } from "@/i18n";
 import { usePlayer } from "./playerStore";
 
 export const RATES = [0.75, 1, 1.25, 1.5, 2];
@@ -57,6 +58,7 @@ const button = "btn btn-ghost btn-xs btn-circle";
 
 /** The controls of a source of the player, the same for each. */
 export default function MediaControls(props: Props) {
+  const t = useT();
   const {
     title,
     playing,
@@ -64,8 +66,8 @@ export default function MediaControls(props: Props) {
     onPause,
     onPrev,
     onNext,
-    prevTitle = "Previous",
-    nextTitle = "Next",
+    prevTitle = t("Previous"),
+    nextTitle = t("Next"),
     onStop,
     progress,
     rate,
@@ -81,13 +83,13 @@ export default function MediaControls(props: Props) {
         {children}
         <button
           className={button}
-          title="Hide"
+          title={t("Hide")}
           onClick={() => usePlayer.getState().setShown(false)}
         >
           <MdMinimize />
         </button>
         {onClose ? (
-          <button className={button} title="Close" onClick={onClose}>
+          <button className={button} title={t("Close")} onClick={onClose}>
             <TbX />
           </button>
         ) : null}
@@ -101,7 +103,7 @@ export default function MediaControls(props: Props) {
         {playing ? (
           <button
             className={`${button} btn-primary btn-soft`}
-            title="Pause"
+            title={t("Pause")}
             onClick={onPause}
           >
             <TbPlayerPause />
@@ -109,7 +111,7 @@ export default function MediaControls(props: Props) {
         ) : (
           <button
             className={`${button} btn-primary btn-soft`}
-            title="Play"
+            title={t("Play")}
             onClick={onPlay}
           >
             <TbPlayerPlay />
@@ -121,7 +123,7 @@ export default function MediaControls(props: Props) {
           </button>
         ) : null}
         {onStop ? (
-          <button className={button} title="Stop" onClick={onStop}>
+          <button className={button} title={t("Stop")} onClick={onStop}>
             <TbPlayerStop />
           </button>
         ) : null}
@@ -148,7 +150,7 @@ export default function MediaControls(props: Props) {
         <select
           className="w-16 select select-xs"
           value={rate}
-          aria-label="Speed"
+          aria-label={t("Speed")}
           onChange={(e) => onRate(Number(e.target.value))}
         >
           {RATES.map((r) => (

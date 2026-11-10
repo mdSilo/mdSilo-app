@@ -9,6 +9,7 @@ import { Select } from "@/ui/ui";
 import { BaseModal } from "@/ui/BaseModal";
 import { isTauri } from "@/workspace/util";
 import { allCustomThemes } from "@/custom/themes";
+import { LANGUAGES, SYSTEM_LANGUAGE, useT } from "@/i18n";
 import { ThemeSelect } from "./ThemeEditorModal";
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
@@ -30,6 +31,7 @@ type Props = {
  * have their own settings, in their views.
  */
 export default function SettingsModal({ isOpen, handleClose }: Props) {
+  const t = useT();
   const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
 
   const setThemeEditing = useStore((state) => state.setThemeEditing);
@@ -54,12 +56,22 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   );
   const openOnStartup = useStore((state) => state.openOnStartup);
   const setOpenOnStartup = useStore((state) => state.setOpenOnStartup);
+  const language = useStore((state) => state.language);
+  const setLanguage = useStore((state) => state.setLanguage);
   const startupView = useStore((state) => state.startupView);
   const setStartupView = useStore((state) => state.setStartupView);
 
   return (
-    <BaseModal title="Settings" isOpen={isOpen} handleClose={handleClose}>
+    <BaseModal title={t("Settings")} isOpen={isOpen} handleClose={handleClose}>
       <div className="flex flex-col flex-1 gap-3 p-3 text-sm bg-base-200">
+        <Select label={t("Language")} value={language} onChange={setLanguage}>
+          <option value={SYSTEM_LANGUAGE}>{t("Follow System")}</option>
+          {LANGUAGES.map(([code, name]) => (
+            <option key={code} value={code}>
+              {name}
+            </option>
+          ))}
+        </Select>
         <ThemeSelect />
         <div className="flex justify-end gap-2">
           {current ? (
@@ -68,7 +80,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
               className="btn btn-xs"
               onClick={() => editTheme(current.id)}
             >
-              Edit Theme
+              {t("Edit Theme")}
             </button>
           ) : null}
           <button
@@ -76,33 +88,33 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             className="btn btn-xs"
             onClick={() => editTheme("new")}
           >
-            New Theme
+            {t("New Theme")}
           </button>
         </div>
         <Select
-          label="Side Menu Orientation"
+          label={t("Side Menu Orientation")}
           value={sideMenuOrientation}
           onChange={(value) => {
             if (isSideMenuOrientation(value)) setSideMenuOrientation(value);
           }}
         >
-          <option value="auto">Auto (responsive)</option>
-          <option value="vertical">Vertical</option>
-          <option value="horizontal">Horizontal</option>
+          <option value="auto">{t("Auto (responsive)")}</option>
+          <option value="vertical">{t("Vertical")}</option>
+          <option value="horizontal">{t("Horizontal")}</option>
         </Select>
         <Select
-          label="Open on Startup"
+          label={t("Open on Startup")}
           value={openOnStartup}
           onChange={(value) => {
             if (isOpenOnStartup(value)) setOpenOnStartup(value);
           }}
         >
-          <option value="previous">Previous Folder</option>
-          <option value="pinned">Pinned Folder</option>
-          <option value="none">Nothing</option>
+          <option value="previous">{t("Previous Folder")}</option>
+          <option value="pinned">{t("Pinned Folder")}</option>
+          <option value="none">{t("Nothing")}</option>
         </Select>
         <Select
-          label="View on Startup"
+          label={t("View on Startup")}
           value={startupView}
           onChange={(value) => {
             if (isStartupView(value)) setStartupView(value);
@@ -110,21 +122,21 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
         >
           {STARTUP_VIEWS.map(([view, name]) => (
             <option key={view} value={view}>
-              {name}
+              {t(name)}
             </option>
           ))}
         </Select>
         <SettingsLink
-          label="Fonts"
-          action="Manage Fonts"
+          label={t("Fonts")}
+          action={t("Manage Fonts")}
           onClick={() => {
             handleClose();
             setIsFontsOpen(true);
           }}
         />
         <SettingsLink
-          label="Dictionaries"
-          action="Manage Dictionaries"
+          label={t("Dictionaries")}
+          action={t("Manage Dictionaries")}
           onClick={() => {
             handleClose();
             setIsDictionariesOpen(true);
@@ -132,8 +144,8 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
         />
         {isTauri ? (
           <SettingsLink
-            label="Plugins"
-            action="Manage Plugins"
+            label={t("Plugins")}
+            action={t("Manage Plugins")}
             onClick={() => {
               handleClose();
               setIsPluginsOpen(true);
@@ -141,8 +153,9 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           />
         ) : null}
         <p className="mt-2 text-xs text-center text-base-content/70">
-          The editor, the reader and the feed reader have their own settings, in
-          their views; the fonts added in Fonts show in their font lists.
+          {t(
+            "The editor, the reader and the feed reader have their own settings, in their views; the fonts added in Fonts show in their font lists.",
+          )}
         </p>
       </div>
     </BaseModal>

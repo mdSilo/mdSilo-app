@@ -373,6 +373,26 @@ describe("SidebarHistory", () => {
     expect(invoke).toHaveBeenCalledWith("index_open", { dir: "/home/me/last" });
   });
 
+  test("tells the folder being opened until it shows", async () => {
+    let listed = () => {};
+    mockInvoke(invoke, {
+      file_exist: false,
+      // the listing of the folder, done when released
+      list_directory: () => new Promise((r) => (listed = () => r(undefined))),
+    });
+    store.getState().setRecentDir(["/home/me/last"]);
+    await act(async () => {
+      renderWithView(<SidebarNotes />);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Opening last…");
+    await act(async () => listed());
+    await waitFor(() =>
+      expect(store.getState().currentDir).toBe("/home/me/last"),
+    );
+    expect(screen.queryByText("Opening last…")).not.toBeInTheDocument();
+    expect(store.getState().openingDir).toBeUndefined();
+  });
+
   test("opens the pinned folder, or nothing, on startup as set", async () => {
     mockInvoke(invoke, { file_exist: false });
     store.getState().setRecentDir(["/home/me/last"]);

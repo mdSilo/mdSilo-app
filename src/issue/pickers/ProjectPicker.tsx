@@ -1,5 +1,6 @@
 import { TbCheck as IconCheck } from "react-icons/tb";
 import { useCurrentViewContext } from "@/state/useCurrentView";
+import { useT } from "@/i18n";
 import { useIssueStore } from "../issueStore";
 import {
   addProjectItem,
@@ -18,12 +19,13 @@ export default function ProjectPicker({
   issue: Issue;
   data: IssueData;
 }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const { dispatch } = useCurrentViewContext();
   const inProjects = issueProjects(data, issue.number);
   return (
     <Picker
-      title="Projects"
+      title={t("Projects")}
       summary={
         inProjects.length ? (
           <ul className="space-y-1">
@@ -39,7 +41,7 @@ export default function ProjectPicker({
                   {project.title}
                 </button>
                 <select
-                  aria-label={`Status in ${project.title}`}
+                  aria-label={t("Status in {title}", { title: project.title })}
                   className="flex-1 py-0 pl-1 text-xs border-base-300 rounded-sm bg-base-100"
                   value={status?.id ?? ""}
                   onChange={(e) => {
@@ -62,13 +64,15 @@ export default function ProjectPicker({
             ))}
           </ul>
         ) : (
-          <span className="text-base-content/60">None yet</span>
+          <span className="text-base-content/60">{t("None yet")}</span>
         )
       }
     >
       {() =>
         data.projects.length === 0 ? (
-          <p className="px-3 py-2 text-sm text-base-content/60">No projects.</p>
+          <p className="px-3 py-2 text-sm text-base-content/60">
+            {t("No projects.")}
+          </p>
         ) : (
           data.projects.map((p) => {
             const checked = inProjects.some((x) => x.project.id === p.id);

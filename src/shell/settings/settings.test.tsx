@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
 import { BaseModal } from "@/ui/BaseModal";
+import { useLanguage } from "@/i18n/useLanguage";
+import { setLanguage } from "@/i18n";
 import SettingsModal from "./SettingsModal";
 import ThemeEditorModal from "./ThemeEditorModal";
 import FontsModal from "./FontsModal";
@@ -85,6 +87,32 @@ describe("SettingsModal", () => {
     expect(startupView).toHaveValue("notes");
     fireEvent.change(startupView, { target: { value: "library" } });
     expect(store.getState().startupView).toBe("library");
+  });
+
+  test("sets the language of the UI", async () => {
+    // as in App: the language of the settings applied
+    const WithLanguage = () => {
+      useLanguage();
+      return <SettingsModal isOpen handleClose={vi.fn()} />;
+    };
+    render(<WithLanguage />);
+    await screen.findByText("Settings");
+    const language = screen.getByLabelText("Language");
+    expect(language).toHaveValue("system");
+
+    fireEvent.change(language, { target: { value: "zh-CN" } });
+    expect(store.getState().language).toBe("zh-CN");
+    expect(await screen.findByText("设置")).toBeInTheDocument();
+    expect(screen.getByLabelText("语言")).toHaveValue("zh-CN");
+    expect(document.documentElement.lang).toBe("zh-CN");
+
+    fireEvent.change(screen.getByLabelText("语言"), {
+      target: { value: "es" },
+    });
+    expect(await screen.findByText("Ajustes")).toBeInTheDocument();
+
+    store.setState({ language: "system" });
+    await setLanguage("en");
   });
 
   test("has no editor settings", async () => {

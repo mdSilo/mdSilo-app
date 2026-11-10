@@ -8,6 +8,7 @@ import {
 } from "@/insight/activity";
 import { getStrDate } from "@/lib/helper";
 import { Note } from "@/types/model";
+import { t, tk, useT } from "@/i18n";
 
 type HeatMapProps = {
   noteList: readonly Note[];
@@ -21,9 +22,9 @@ type HeatMapProps = {
 export type HeatMapMode = "all" | "writing" | "reading";
 
 const MODES: Array<[HeatMapMode, string]> = [
-  ["all", "All"],
-  ["writing", "Writing"],
-  ["reading", "Reading"],
+  ["all", tk("All")],
+  ["writing", tk("Writing")],
+  ["reading", tk("Reading")],
 ];
 // the color of each kind of activity, as in the cells
 const MODE_DOT: Record<HeatMapMode, string> = {
@@ -33,6 +34,7 @@ const MODE_DOT: Record<HeatMapMode, string> = {
 };
 
 export default function HeatMap(props: HeatMapProps) {
+  const t = useT();
   const { noteList, reading, onClickCell } = props;
   const [mode, setMode] = useState<HeatMapMode>("all");
 
@@ -82,7 +84,7 @@ export default function HeatMap(props: HeatMapProps) {
                   className={`inline-block w-2 h-2 mr-1 rounded-xs ${MODE_DOT[value]}`}
                 />
               ) : null}
-              {label}
+              {t(label)}
             </button>
           ))}
         </div>
@@ -114,25 +116,25 @@ export default function HeatMap(props: HeatMapProps) {
             </text>
           ))}
           <text textAnchor="start" className="hidden" dx="-10" dy="8">
-            Sun
+            {t("Sun")}
           </text>
           <text textAnchor="start" className={hmLabelClass} dx="-10" dy="25">
-            M
+            {t("M")}
           </text>
           <text textAnchor="start" className="hidden" dx="-10" dy="42">
-            Tue
+            {t("Tue")}
           </text>
           <text textAnchor="start" className={hmLabelClass} dx="-10" dy="56">
-            W
+            {t("W")}
           </text>
           <text textAnchor="start" className="hidden" dx="-10" dy="72">
-            Thu
+            {t("Thu")}
           </text>
           <text textAnchor="start" className={hmLabelClass} dx="-10" dy="85">
-            F
+            {t("F")}
           </text>
           <text textAnchor="start" className="hidden" dx="-10" dy="98">
-            Sat
+            {t("Sat")}
           </text>
         </g>
       </svg>
@@ -270,18 +272,18 @@ const readingStyle = (units: number) =>
 function getMonthLabel(idx: number) {
   if (idx > 11) return;
   const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    t("Jan"),
+    t("Feb"),
+    t("Mar"),
+    t("Apr"),
+    t("May"),
+    t("Jun"),
+    t("Jul"),
+    t("Aug"),
+    t("Sep"),
+    t("Oct"),
+    t("Nov"),
+    t("Dec"),
   ];
   const nowMonth = new Date().getMonth();
   const monIdx = nowMonth + idx + 1;

@@ -4,6 +4,7 @@ import { openUrl } from "@/workspace/open";
 import { getLog, clearLog } from "@/state/storage";
 import { isWeb } from "@/workspace/util";
 import { BaseModal } from "@/ui/BaseModal";
+import { useT } from "@/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function AboutModal({ isOpen, handleClose }: Props) {
+  const t = useT();
   const [appVersion, setAppVersion] = useState("");
   const [tauriVersion, setTauriVersion] = useState("");
   const [hasVersion, setHasVersion] = useState(false);
@@ -34,14 +36,20 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
   }, [hasVersion]);
 
   return (
-    <BaseModal title="About" isOpen={isOpen} handleClose={handleClose}>
+    <BaseModal title={t("About")} isOpen={isOpen} handleClose={handleClose}>
       <div className="flex flex-col justify-center px-6">
-        <h1>{isWeb ? "mdSilo Web" : "mdSilo Desktop"}</h1>
-        <p className="mt-4 font-bold">App Version: {appVersion}</p>
+        <h1>{isWeb ? t("mdSilo Web") : t("mdSilo Desktop")}</h1>
+        <p className="mt-4 font-bold">
+          {t("App Version: {version}", { version: appVersion })}
+        </p>
         {isWeb ? (
-          <p className="mt-4">Notes are stored in this browser (IndexedDB).</p>
+          <p className="mt-4">
+            {t("Notes are stored in this browser (IndexedDB).")}
+          </p>
         ) : (
-          <p className="mt-4 font-bold">Tauri Version: {tauriVersion}</p>
+          <p className="mt-4 font-bold">
+            {t("Tauri Version: {version}", { version: tauriVersion })}
+          </p>
         )}
         <div className="flex justify-center px-2">
           <button
@@ -50,7 +58,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
               await clearLog();
             }}
           >
-            Clear Log
+            {t("Clear Log")}
           </button>
           <button
             className="ms-link m-2"
@@ -60,7 +68,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
               );
             }}
           >
-            Copy About
+            {t("Copy About")}
           </button>
           <button
             className="ms-link m-2"
@@ -70,7 +78,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
               await navigator.clipboard.writeText(JSON.stringify(log));
             }}
           >
-            Copy Log
+            {t("Copy Log")}
           </button>
         </div>
         <button
@@ -79,7 +87,7 @@ export default function AboutModal({ isOpen, handleClose }: Props) {
             await openUrl("https://github.com/mdSilo/mdSilo-app/releases");
           }}
         >
-          Check for Updates
+          {t("Check for Updates")}
         </button>
       </div>
     </BaseModal>

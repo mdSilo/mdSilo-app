@@ -1,6 +1,7 @@
 import { useMemo, useRef } from "react";
 import { useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
+import { useT } from "@/i18n";
 import type { PluginHost, PluginMethods } from "./host";
 import { useWorkspaceChanged } from "./changes";
 import { workspaceMethods } from "./workspaceApi";
@@ -10,6 +11,7 @@ import { useTrustedVersion } from "./trusted";
 
 /** A view of the workspace made by a plugin, opened from the side menu. */
 export default function PluginView() {
+  const t = useT();
   const { state, dispatch } = useCurrentViewContext();
   const { pluginId = "", pluginViewId = "" } = state;
   const plugin = useStore((s) =>
@@ -32,7 +34,10 @@ export default function PluginView() {
   if (!plugin || !view) {
     return (
       <div className="p-4 text-sm text-base-content/70">
-        The view {pluginViewId} of {pluginId} is not installed.
+        {t("The view {view} of {id} is not installed.", {
+          view: pluginViewId,
+          id: pluginId,
+        })}
       </div>
     );
   }

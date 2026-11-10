@@ -10,6 +10,7 @@ import {
 import { openUrl } from "@/workspace/open";
 import { store } from "@/state/store";
 import { Spinner } from "@/ui/ui";
+import { useT } from "@/i18n";
 import {
   definitionOf,
   pronunciationsOf,
@@ -80,6 +81,7 @@ export default function DictionaryLookup({
   /** where the text is, for a word added to the vocabulary */
   placeOf?: () => LookupPlace;
 }) {
+  const t = useT();
   const settings = useDictionarySettings();
   const local = useLocalSources(ws);
   const sources = useMemo(
@@ -165,8 +167,8 @@ export default function DictionaryLookup({
   const settingsButton = (
     <button
       className="btn btn-ghost btn-xs"
-      title="Dictionaries"
-      aria-label="Dictionary settings"
+      title={t("Dictionaries")}
+      aria-label={t("Dictionary settings")}
       onClick={() => store.getState().setIsDictionariesOpen(true)}
     >
       <TbSettings />
@@ -178,12 +180,14 @@ export default function DictionaryLookup({
       <div className="text-sm">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-semibold uppercase text-base-content/60">
-            Dictionary
+            {t("Dictionary")}
           </span>
           {settingsButton}
         </div>
         <p className="text-base-content/60">
-          No dictionary is turned on: turn one on in the dictionary settings.
+          {t(
+            "No dictionary is turned on: turn one on in the dictionary settings.",
+          )}
         </p>
       </div>
     );
@@ -207,8 +211,8 @@ export default function DictionaryLookup({
         {trail.length ? (
           <button
             className="btn btn-ghost btn-xs"
-            title="Back"
-            aria-label="Back"
+            title={t("Back")}
+            aria-label={t("Back")}
             onClick={() => setTrail((t) => t.slice(0, -1))}
           >
             <TbArrowLeft />
@@ -249,7 +253,7 @@ export default function DictionaryLookup({
         {webUrl ? (
           <button
             className="btn btn-ghost btn-xs"
-            title="Open on the web"
+            title={t("Open on the web")}
             onClick={() => void openUrl(webUrl)}
           >
             <TbExternalLink />
@@ -264,7 +268,9 @@ export default function DictionaryLookup({
         {!source.lookup || result?.linkOnly ? (
           <LinkOnly source={source} url={webUrl} word={word} />
         ) : current?.error ? (
-          <p className="text-error">Could not look it up: {current.error}</p>
+          <p className="text-error">
+            {t("Could not look it up:")} {current.error}
+          </p>
         ) : !result ? (
           <Spinner size="sm" className="mx-auto my-4" />
         ) : result.html && source.dict && ws ? (
@@ -301,10 +307,10 @@ export default function DictionaryLookup({
           {onKeep ? (
             <button
               className="btn btn-ghost btn-xs"
-              title="Highlight the text, with this as its note"
+              title={t("Highlight the text, with this as its note")}
               onClick={() => onKeep(dictionaryNote(result))}
             >
-              <TbNote /> Keep as note
+              <TbNote /> {t("Keep as note")}
             </button>
           ) : null}
         </div>
@@ -323,6 +329,7 @@ function LinkOnly({
   url?: string;
   word: string;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col items-start gap-2 py-2">
       <div className="font-semibold">{word}</div>
@@ -331,7 +338,7 @@ function LinkOnly({
           className="btn btn-sm btn-primary"
           onClick={() => void openUrl(url)}
         >
-          <TbExternalLink /> Open in {source.label}
+          <TbExternalLink /> {t("Open in {name}", { name: source.label })}
         </button>
       ) : null}
       {url ? (
@@ -342,9 +349,12 @@ function LinkOnly({
 }
 
 function Entries({ result }: { result: DictionaryResult }) {
+  const t = useT();
   if (result.entries.length === 0)
     return (
-      <p className="text-base-content/60">No definition of “{result.word}”</p>
+      <p className="text-base-content/60">
+        {t("No definition of “{word}”", { word: result.word })}
+      </p>
     );
   return (
     <>
@@ -392,6 +402,7 @@ function AddWord({
   selection: LookupTarget;
   placeOf?: () => LookupPlace;
 }) {
+  const t = useT();
   const vocabulary = useVocabulary((state) => state.entries);
   const vocabularyWs = useVocabulary((state) => state.ws);
   // the words kept, to tell if this one is
@@ -416,7 +427,7 @@ function AddWord({
         className="flex items-center gap-1 px-2 text-xs text-success"
         data-testid="word-kept"
       >
-        <TbCheck /> In vocabulary
+        <TbCheck /> {t("In vocabulary")}
       </span>
     );
   }
@@ -438,10 +449,10 @@ function AddWord({
   return (
     <button
       className="btn btn-ghost btn-xs"
-      title="Add the word to the vocabulary, to learn it"
+      title={t("Add the word to the vocabulary, to learn it")}
       onClick={add}
     >
-      <TbVocabulary /> Add to vocabulary
+      <TbVocabulary /> {t("Add to vocabulary")}
     </button>
   );
 }

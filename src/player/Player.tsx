@@ -6,6 +6,7 @@ import * as dataAgent from "@/feed/dataAgent";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { useEngines } from "@/speech/speech";
 import { useTTS } from "@/reader/tts/tts";
+import { useT } from "@/i18n";
 import { usePlayer } from "./playerStore";
 import TTSControls from "./TTSControls";
 import SpeechSettings from "./SpeechSettings";
@@ -46,6 +47,7 @@ function PodcastControls() {
  * podcast. Hidden, it keeps playing; shown or hidden by its side menu button.
  */
 function Player() {
+  const t = useT();
   const shown = usePlayer((state) => state.shown);
   const reading = useTTS((state) => state.active);
   const hasPod = useStore((state) => Boolean(state.currentPod));
@@ -66,18 +68,18 @@ function Player() {
         {!reading && !hasPod ? (
           <div className="flex items-center gap-2 text-xs text-base-content/60">
             <span className="flex-1">
-              Nothing playing: read a book aloud, or play a podcast
+              {t("Nothing playing: read a book aloud, or play a podcast")}
             </span>
             <button
               className="btn btn-ghost btn-xs btn-circle"
-              title="Speech engines"
+              title={t("Speech engines")}
               onClick={() => usePlayer.getState().setSettingsOpen(true)}
             >
               <TbSettings />
             </button>
             <button
               className="btn btn-ghost btn-xs btn-circle"
-              title="Hide"
+              title={t("Hide")}
               onClick={() => usePlayer.getState().setShown(false)}
             >
               <TbX />

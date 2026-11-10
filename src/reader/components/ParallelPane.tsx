@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { TbBookmark, TbBookmarkFilled, TbX } from "react-icons/tb";
 import { IconButton, Spinner } from "@/ui/ui";
 import { useStore } from "@/state/store";
+import { t, useT } from "@/i18n";
 import {
   findBookPath,
   readLibrary,
@@ -17,6 +18,7 @@ import FoliateViewer from "./FoliateViewer";
 
 /** The books to read beside the one read: any other of the library. */
 export function ParallelBooks({ onPick }: { onPick: () => void }) {
+  const t = useT();
   const ws = useReaderStore((s) => s.ws);
   const hash = useReaderStore((s) => s.hash);
   const current = useSideStore((s) => s.hash);
@@ -52,21 +54,21 @@ export function ParallelBooks({ onPick }: { onPick: () => void }) {
       useSideStore.setState({
         status: "error",
         entry: book,
-        error: "The book file is not on this device",
+        error: t("The book file is not on this device"),
       });
     }
   };
 
   return (
     <div className="w-72" data-testid="parallel-books">
-      <p className="px-3 pt-2 pb-1 text-xs opacity-60">Read beside</p>
+      <p className="px-3 pt-2 pb-1 text-xs opacity-60">{t("Read beside")}</p>
       {!books ? (
         <div className="flex justify-center p-3">
           <Spinner size="sm" />
         </div>
       ) : books.length === 0 ? (
         <p className="px-3 pb-3 text-sm opacity-60">
-          No other book in the library
+          {t("No other book in the library")}
         </p>
       ) : (
         <ul className="w-full p-1 overflow-y-auto menu menu-sm max-h-80">
@@ -97,6 +99,7 @@ export function ParallelBooks({ onPick }: { onPick: () => void }) {
 
 /** The book beside the one read, if any: read and annotated as it is. */
 export default function ParallelPane() {
+  const t = useT();
   const status = useSideStore((s) => s.status);
   const book = useSideStore((s) => s.book);
   const entry = useSideStore((s) => s.entry);
@@ -135,7 +138,7 @@ export default function ParallelPane() {
         ) : null}
         <IconButton
           size="xs"
-          title="Bookmark this page of the book beside"
+          title={t("Bookmark this page of the book beside")}
           disabled={!location}
           onClick={() => toggleBookmark("side")}
         >
@@ -147,7 +150,7 @@ export default function ParallelPane() {
         </IconButton>
         <IconButton
           size="xs"
-          title="Close the book beside"
+          title={t("Close the book beside")}
           onClick={() => void useSideStore.getState().close()}
         >
           <TbX size={16} />
@@ -158,7 +161,7 @@ export default function ParallelPane() {
           <FoliateViewer book={book} initialCfi={initialCfi} pane="side" />
         ) : status === "error" ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 p-8 text-center">
-            <p className="text-error">Could not open the book</p>
+            <p className="text-error">{t("Could not open the book")}</p>
             <p className="text-sm opacity-60">{error}</p>
           </div>
         ) : (

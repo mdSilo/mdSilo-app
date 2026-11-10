@@ -5,6 +5,7 @@ import {
   splitName,
   type RenameOptions,
 } from "@/workspace/renamePath";
+import { t, useT } from "@/i18n";
 
 type Props = {
   path: string;
@@ -20,6 +21,7 @@ type Props = {
 
 /** Rename a file or dir of the sidebar tree in its dir. */
 export default function RenameModal(props: Props) {
+  const t = useT();
   const { path, title, keepExt = false, hint, options, isOpen } = props;
   const { handleClose } = props;
   const [{ name: oldName, ext }] = useState(() => splitName(path, keepExt));
@@ -32,7 +34,7 @@ export default function RenameModal(props: Props) {
     const err = await renamePath(path, name, { ...options, ext }).catch(
       (e: unknown) => {
         console.error(`Failed to rename ${path}`, e);
-        return "Failed to rename";
+        return t("Failed to rename");
       },
     );
     setBusy(false);
@@ -54,8 +56,8 @@ export default function RenameModal(props: Props) {
           <input
             type="text"
             className="block flex-1 min-w-0 py-1 bg-base-200 border-base-300 rounded-sm"
-            placeholder="New name"
-            aria-label="New name"
+            placeholder={t("New name")}
+            aria-label={t("New name")}
             value={name}
             onChange={(e) => {
               setName(e.target.value);
@@ -77,7 +79,7 @@ export default function RenameModal(props: Props) {
           className="mt-4 font-bold pop-btn"
           disabled={busy}
         >
-          Rename
+          {t("Rename")}
         </button>
       </form>
     </BaseModal>

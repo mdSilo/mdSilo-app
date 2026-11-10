@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import Tree from "@/ui/Tree";
+import { t } from "@/i18n";
 import useBacklinks from "./useBacklinks";
 import type { Backlink, BacklinkMatch } from "./useBacklinks";
 import BacklinkBranch from "./BacklinkBranch";
@@ -63,12 +64,20 @@ const getTreeData = (
   return [
     {
       id: "linked-backlinks",
-      labelNode: <BacklinkBranch title={`${numOfLinkedMatches} BackLinks`} />,
+      labelNode: (
+        <BacklinkBranch
+          title={t("{count} BackLinks", { count: numOfLinkedMatches })}
+        />
+      ),
       children: linkedBacklinks.map(backlinkToTreeData(true)),
     },
     {
       id: "unlinked-backlinks",
-      labelNode: <BacklinkBranch title={`${numOfUnlinkedMatches} Mentions`} />,
+      labelNode: (
+        <BacklinkBranch
+          title={t("{count} Mentions", { count: numOfUnlinkedMatches })}
+        />
+      ),
       children: unlinkedBacklinks.map(backlinkToTreeData(false)),
     },
   ];

@@ -13,11 +13,13 @@ import {
   useSystemFonts,
   type CustomFont,
 } from "@/custom/fonts";
+import { useT } from "@/i18n";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /** The fonts added by the user: font files imported, or system fonts by name. */
 export default function FontsSetting() {
+  const t = useT();
   const customFonts = useFonts();
   const systemFonts = useSystemFonts();
   const initDir = useStore((state) => state.initDir);
@@ -56,13 +58,13 @@ export default function FontsSetting() {
   return (
     <div className="flex flex-col gap-2" data-testid="fonts-setting">
       <div className="flex items-center justify-between">
-        <span>Fonts</span>
+        <span>{t("Fonts")}</span>
         <button
           type="button"
           className="btn btn-xs"
           onClick={() => inputRef.current?.click()}
         >
-          Import Font Files
+          {t("Import Font Files")}
         </button>
         <input
           ref={inputRef}
@@ -70,7 +72,7 @@ export default function FontsSetting() {
           className="hidden"
           multiple
           accept={FONT_FILE_TYPES.map((t) => `.${t}`).join(",")}
-          aria-label="Font Files"
+          aria-label={t("Font Files")}
           onChange={(e) => void onFiles(e.target.files)}
         />
       </div>
@@ -83,8 +85,8 @@ export default function FontsSetting() {
       >
         <input
           className="flex-1 input input-xs"
-          placeholder="Installed font, e.g. Noto Serif"
-          aria-label="System Font Name"
+          placeholder={t("Installed font, e.g. Noto Serif")}
+          aria-label={t("System Font Name")}
           list={systemFonts.length > 0 ? "system-fonts" : undefined}
           value={systemFont}
           onChange={(e) => setSystemFont(e.target.value)}
@@ -94,7 +96,7 @@ export default function FontsSetting() {
           className="btn btn-xs"
           disabled={!systemFont.trim()}
         >
-          Add
+          {t("Add")}
         </button>
       </form>
       {systemFonts.length > 0 ? (
@@ -116,13 +118,15 @@ export default function FontsSetting() {
                 {f.family}
               </span>
               <span className="text-xs truncate text-base-content/60">
-                {f.fileName || "system"}
+                {f.fileName || t("system")}
               </span>
               <input
                 type="checkbox"
                 className="checkbox checkbox-xs"
-                aria-label={`Sync ${f.family} with workspace`}
-                title="Sync with workspace"
+                aria-label={t("Sync {family} with workspace", {
+                  family: f.family,
+                })}
+                title={t("Sync with workspace")}
                 checked={f.where === "workspace"}
                 disabled={f.where === "device" && !hasWorkspace}
                 onChange={(e) => onSync(f, e.target.checked)}
@@ -130,7 +134,7 @@ export default function FontsSetting() {
               <button
                 type="button"
                 className="btn btn-ghost btn-xs"
-                aria-label={`Remove ${f.family}`}
+                aria-label={t("Remove {family}", { family: f.family })}
                 onClick={() => void removeFont(f.id)}
               >
                 <IconTrash size={14} />
@@ -140,10 +144,9 @@ export default function FontsSetting() {
         </ul>
       ) : null}
       <p className="text-xs text-base-content/70">
-        Added fonts show in the editor and reader font lists, and so do the
-        fonts installed on this computer (System). Checked, a font is kept in
-        the workspace (.mdsilo/fonts/) and synced with it; otherwise it stays on
-        this device.
+        {t(
+          "Added fonts show in the editor and reader font lists, and so do the fonts installed on this computer (System). Checked, a font is kept in the workspace (.mdsilo/fonts/) and synced with it; otherwise it stays on this device.",
+        )}
       </p>
     </div>
   );

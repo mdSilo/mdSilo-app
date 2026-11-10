@@ -1,4 +1,4 @@
-/**
+import { t } from "@/i18n"; /**
  * Play the recording of a word: a web url, or one a dictionary file has
  * (`mdict:<id>:<path>`), read when played.
  */
@@ -56,10 +56,12 @@ const play = async (audio: HTMLAudioElement) => {
     console.warn("Failed to play the recording", e);
     throw new PlayError(
       name === "NotSupportedError"
-        ? "This sound cannot be played: its format is not supported, or it was not found"
+        ? t(
+            "This sound cannot be played: its format is not supported, or it was not found",
+          )
         : name === "NotAllowedError"
-          ? "Playing sounds is not allowed here"
-          : "This sound cannot be played",
+          ? t("Playing sounds is not allowed here")
+          : t("This sound cannot be played"),
     );
   }
 };

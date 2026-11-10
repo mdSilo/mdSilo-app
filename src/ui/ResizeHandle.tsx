@@ -1,4 +1,5 @@
 import { memo, useCallback, useRef, useState } from "react";
+import { useT } from "@/i18n";
 
 export type WidthBounds = {
   readonly min: number;
@@ -47,6 +48,7 @@ type Props = {
  * Double click to reset, arrow keys to resize by keyboard.
  */
 function ResizeHandle(props: Props) {
+  const t = useT();
   const { width, bounds, label, onResize, onResizeEnd, className = "" } = props;
   const dragRef = useRef<{
     startX: number;
@@ -115,7 +117,7 @@ function ResizeHandle(props: Props) {
       aria-valuemin={bounds.min}
       aria-valuemax={bounds.max}
       tabIndex={0}
-      title="Drag to resize, double click to reset"
+      title={t("Drag to resize, double click to reset")}
       className={`absolute top-0 bottom-0 z-10 w-1.5 -right-0.5 cursor-col-resize select-none hover:bg-secondary/50 active:bg-secondary/70 focus:outline-hidden focus-visible:bg-secondary/50 ${className}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

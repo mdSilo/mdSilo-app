@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ConfirmModal } from "@/ui/Dialogs";
+import { tn, useT } from "@/i18n";
 import { useIssueStore } from "./issueStore";
 import { createLabel, deleteLabel, updateLabel } from "./issueOps";
 import LabelChip, { ColorPicker, LABEL_COLORS } from "./LabelChip";
@@ -19,25 +20,30 @@ function LabelForm({
   onSubmit: (d: Draft) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState<Draft>(initial);
   return (
     <div className="flex flex-col gap-2 p-3 bg-base-200 rounded-sm">
       <LabelChip
-        label={{ id: "preview", ...draft, name: draft.name || "Label preview" }}
+        label={{
+          id: "preview", // i18n-ignore
+          ...draft,
+          name: draft.name || t("Label preview"),
+        }}
         className="self-start"
       />
       <div className="flex flex-wrap gap-2">
         <input
-          aria-label="Label name"
+          aria-label={t("Label name")}
           className={inputClass}
-          placeholder="Label name"
+          placeholder={t("Label name")}
           value={draft.name}
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
         />
         <input
-          aria-label="Label description"
+          aria-label={t("Label description")}
           className={`${inputClass} flex-1`}
-          placeholder="Description (optional)"
+          placeholder={t("Description (optional)")}
           value={draft.description ?? ""}
           onChange={(e) => setDraft({ ...draft, description: e.target.value })}
         />
@@ -48,7 +54,7 @@ function LabelForm({
       />
       <div className="flex justify-end gap-2">
         <button type="button" className={btnClass} onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="button"
@@ -70,6 +76,7 @@ export default function LabelManager({
   data: IssueData;
   onFilter?: (name: string) => void;
 }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   // color for the next new label, picked when opening the form
   const [creating, setCreating] = useState<string | null>(null);
@@ -85,7 +92,7 @@ export default function LabelManager({
     <div className="p-4">
       <div className="flex justify-between mb-3">
         <span className="text-base-content/60">
-          {data.labels.length} labels
+          {tn("{count} label", "{count} labels", data.labels.length)}
         </span>
         <button
           type="button"
@@ -96,13 +103,13 @@ export default function LabelManager({
             )
           }
         >
-          New label
+          {t("New label")}
         </button>
       </div>
       {creating ? (
         <LabelForm
           initial={{ name: "", color: creating, description: "" }}
-          submitText="Create label"
+          submitText={t("Create label")}
           onCancel={() => setCreating(null)}
           onSubmit={(d) => {
             apply((x) => createLabel(x, d));
@@ -119,7 +126,7 @@ export default function LabelManager({
             {editing === label.id ? (
               <LabelForm
                 initial={label}
-                submitText="Save changes"
+                submitText={t("Save changes")}
                 onCancel={() => setEditing(null)}
                 onSubmit={(d) => {
                   apply((x) => updateLabel(x, label.id, d));
@@ -138,14 +145,14 @@ export default function LabelManager({
                   {label.description}
                 </span>
                 <span className="text-xs text-base-content/60">
-                  {counts(label.id)} open
+                  {t("{count} open", { count: counts(label.id) })}
                 </span>
                 <button
                   type="button"
                   className="text-sm ms-link"
                   onClick={() => setEditing(label.id)}
                 >
-                  Edit
+                  {t("Edit")}
                 </button>
                 <button
                   type="button"
@@ -155,7 +162,7 @@ export default function LabelManager({
                     setDeleting(label);
                   }}
                 >
-                  Delete
+                  {t("Delete")}
                 </button>
               </div>
             )}
@@ -163,9 +170,9 @@ export default function LabelManager({
         ))}
       </ul>
       <ConfirmModal
-        title={`Delete label "${deleting?.name ?? ""}"?`}
-        message="It will be removed from all issues."
-        confirmLabel="Confirm delete"
+        title={t('Delete label "{name}"?', { name: deleting?.name ?? "" })}
+        message={t("It will be removed from all issues.")}
+        confirmLabel={t("Confirm delete")}
         danger
         isOpen={confirmOpen}
         onConfirm={() => {

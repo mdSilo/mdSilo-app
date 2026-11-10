@@ -6,6 +6,7 @@ import { useLibraryBooks } from "@/reader/library/books";
 import { linkedBookIds } from "@/reader/annotations/bookLinks";
 import { bookHref } from "@/reader/annotations/annotations";
 import { findBookPath, type BookEntry } from "@/reader/library/library";
+import { tr, useT } from "@/i18n";
 import { useIssueStore } from "../issueStore";
 import { updateIssue } from "../issueOps";
 import { inputClass } from "../common";
@@ -22,6 +23,7 @@ const bookLink = (book: BookEntry) =>
  * one here adds its link to the body.
  */
 export default function BookPicker({ issue }: { issue: Issue }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const books = useLibraryBooks();
   const { dispatch } = useCurrentViewContext();
@@ -49,7 +51,7 @@ export default function BookPicker({ issue }: { issue: Issue }) {
 
   return (
     <Picker
-      title="Books"
+      title={t("Books")}
       summary={
         linked.length ? (
           <ul className="space-y-1" data-testid="issue-books">
@@ -69,7 +71,9 @@ export default function BookPicker({ issue }: { issue: Issue }) {
           </ul>
         ) : (
           <span className="text-base-content/60">
-            None yet, type {"{{"} in the text to link one
+            {tr("None yet, type {mark} in the text to link one", {
+              mark: "{{",
+            })}
           </span>
         )
       }
@@ -79,7 +83,7 @@ export default function BookPicker({ issue }: { issue: Issue }) {
           <input
             autoFocus
             className={`${inputClass} w-full`}
-            placeholder="Search books"
+            placeholder={t("Search books")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

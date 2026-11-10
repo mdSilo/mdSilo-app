@@ -22,9 +22,11 @@ import IssueDetail from "@/issue/IssueDetail";
 import ViewMenu from "@/shell/ViewMenu";
 import ProjectBoard from "@/issue/project/ProjectBoard";
 import ProjectTable from "@/issue/project/ProjectTable";
+import { useT } from "@/i18n";
 import { parseIssueLabel } from "./refs";
 
 export default function ProjectView() {
+  const t = useT();
   const { data, isLoaded, initDir } = useIssueData();
   const apply = useIssueStore((s) => s.apply);
   const createIssue = useIssueStore((s) => s.createIssue);
@@ -35,11 +37,13 @@ export default function ProjectView() {
 
   if (!initDir) {
     return (
-      <p className="p-8 text-base-content/60">Open a folder to use projects.</p>
+      <p className="p-8 text-base-content/60">
+        {t("Open a folder to use projects.")}
+      </p>
     );
   }
   if (!isLoaded) {
-    return <p className="p-8 text-base-content/60">Loading projects…</p>;
+    return <p className="p-8 text-base-content/60">{t("Loading projects…")}</p>;
   }
 
   const project =
@@ -91,9 +95,9 @@ export default function ProjectView() {
             </button>
           ))}
           <input
-            aria-label="New project"
+            aria-label={t("New project")}
             className={inputClass}
-            placeholder="New project"
+            placeholder={t("New project")}
             value={newProject}
             onChange={(e) => setNewProject(e.target.value)}
             onKeyDown={(e) => {
@@ -102,7 +106,7 @@ export default function ProjectView() {
           />
           <button
             type="button"
-            aria-label="Create project"
+            aria-label={t("Create project")}
             className={btnClass}
             onClick={onCreateProject}
           >
@@ -114,7 +118,7 @@ export default function ProjectView() {
             className={btnClass}
             onClick={() => dispatch({ view: "issues" })}
           >
-            Issues
+            {t("Issues")}
           </button>
         </div>
 
@@ -127,20 +131,20 @@ export default function ProjectView() {
                 className="text-sm ms-link"
                 onClick={() => setDialog("rename")}
               >
-                Rename
+                {t("Rename")}
               </button>
               <button
                 type="button"
                 className="text-sm text-error hover:underline"
                 onClick={() => setDialog("delete")}
               >
-                Delete
+                {t("Delete")}
               </button>
               <span className="flex-1" />
               <div
                 className="flex overflow-hidden border border-base-300 rounded-sm"
                 role="group"
-                aria-label="Layout"
+                aria-label={t("Layout")}
               >
                 {(["board", "table"] as const).map((layout) => (
                   <button
@@ -157,7 +161,7 @@ export default function ProjectView() {
                     ) : (
                       <IconTable size={14} />
                     )}
-                    {layout === "board" ? "Board" : "Table"}
+                    {layout === "board" ? t("Board") : t("Table")}
                   </button>
                 ))}
               </div>
@@ -179,10 +183,10 @@ export default function ProjectView() {
               )}
             </div>
             <PromptModal
-              title="Rename project"
-              label="Project name"
+              title={t("Rename project")}
+              label={t("Project name")}
               initial={project.title}
-              submitLabel="Rename"
+              submitLabel={t("Rename")}
               isOpen={dialog === "rename"}
               onSubmit={(title) =>
                 apply((d) => updateProject(d, project.id, { title }))
@@ -190,9 +194,9 @@ export default function ProjectView() {
               handleClose={() => setDialog(null)}
             />
             <ConfirmModal
-              title={`Delete project "${project.title}"?`}
-              message="Its issues are kept."
-              confirmLabel="Confirm delete"
+              title={t('Delete project "{title}"?', { title: project.title })}
+              message={t("Its issues are kept.")}
+              confirmLabel={t("Confirm delete")}
               danger
               isOpen={dialog === "delete"}
               onConfirm={() => {
@@ -204,7 +208,7 @@ export default function ProjectView() {
           </>
         ) : (
           <p className="p-8 text-base-content/60">
-            No projects yet. Create one above.
+            {t("No projects yet. Create one above.")}
           </p>
         )}
 

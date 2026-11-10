@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArticleType } from "@/types/model";
 import { Spinner } from "@/ui/ui";
+import { t, useT } from "@/i18n";
 import {
   saveFeedBook,
   type FeedBookReport,
@@ -26,7 +27,7 @@ export const progressText = (
   stage: FeedBookStage,
 ) =>
   !total
-    ? "Saving…"
+    ? t("Saving…")
     : stage === "text"
       ? `Fetching the full text ${done}/${total}…`
       : `Fetching the images of the articles ${done}/${total}…`;
@@ -50,6 +51,7 @@ export const summaryOf = (r: FeedBookReport) => {
 
 /** Make a book of the articles, or add the new ones to it. */
 export function MakeBook(props: Props) {
+  const t = useT();
   const { defaultName, source, feedUrl, articles, onOpenBook, onClose } = props;
   const [name, setName] = useState(defaultName);
   const [progress, setProgress] = useState<string>();
@@ -89,10 +91,10 @@ export function MakeBook(props: Props) {
       <div className="flex flex-row items-center gap-2">
         <input
           type="text"
-          aria-label="Name of the book"
+          aria-label={t("Name of the book")}
           className="input input-sm input-bordered flex-1 min-w-0"
           value={name}
-          placeholder="Name of the book"
+          placeholder={t("Name of the book")}
           onChange={(e) => setName(e.target.value)}
           disabled={busy}
         />
@@ -102,7 +104,7 @@ export function MakeBook(props: Props) {
           onClick={make}
           disabled={busy || !name.trim()}
         >
-          {busy ? <Spinner size="xs" /> : "Make"}
+          {busy ? <Spinner size="xs" /> : t("Make")}
         </button>
         <button
           type="button"
@@ -110,14 +112,14 @@ export function MakeBook(props: Props) {
           onClick={onClose}
           disabled={busy}
         >
-          Cancel
+          {t("Cancel")}
         </button>
       </div>
       <p className="mt-1 text-base-content/60">
-        {articles.length} article(s), each a chapter of the book in reading/.
-        Made again, the book of this feed (or of this name) gets the new
-        articles at its end; the articles in it stay as they are, so do your
-        annotations.
+        {t(
+          "{count} article(s), each a chapter of the book in reading/. Made again, the book of this feed (or of this name) gets the new articles at its end; the articles in it stay as they are, so do your annotations.",
+          { count: articles.length },
+        )}
       </p>
       {progress && <p className="mt-1">{progress}</p>}
       {error && <p className="mt-1 text-error">{error}</p>}
@@ -130,7 +132,7 @@ export function MakeBook(props: Props) {
               className="btn btn-xs btn-outline"
               onClick={() => onOpenBook(report.path)}
             >
-              Open
+              {t("Open")}
             </button>
           )}
         </div>

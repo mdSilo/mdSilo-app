@@ -3,6 +3,7 @@ import { useStore } from "@/state/store";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { BaseModal } from "@/ui/BaseModal";
 import { Spinner } from "@/ui/ui";
+import { useT } from "@/i18n";
 import { markQuote } from "../quoteMark";
 import { importSharedBook, fileNameOf, sharedBookOf } from "./sharedBook";
 
@@ -24,6 +25,7 @@ export function SharedBookPrompt({
 }: {
   search?: string;
 }) {
+  const t = useT();
   const [shared, setShared] = useState(() => sharedBookOf(search));
   const ws = useStore((state) => state.initDir);
   const { dispatch } = useCurrentViewContext();
@@ -53,16 +55,19 @@ export function SharedBookPrompt({
   };
 
   return (
-    <BaseModal title="Open a shared book?" isOpen handleClose={close}>
+    <BaseModal title={t("Open a shared book?")} isOpen handleClose={close}>
       <p className="text-sm">
         <span className="font-semibold break-all">
           {fileNameOf(shared.url)}
         </span>{" "}
-        from {new URL(shared.url).host}
-        {shared.cfi ? ", at the place shared" : ""}.
+        {shared.cfi
+          ? t("from {host}, at the place shared.", {
+              host: new URL(shared.url).host,
+            })
+          : t("from {host}.", { host: new URL(shared.url).host })}
       </p>
       <p className="mt-1 text-xs text-base-content/60">
-        It is downloaded into reading/ of this workspace, to read here.
+        {t("It is downloaded into reading/ of this workspace, to read here.")}
       </p>
       {error ? <p className="mt-2 text-sm text-error">{error}</p> : null}
       <div className="flex justify-end gap-2 mt-4">
@@ -72,7 +77,7 @@ export function SharedBookPrompt({
           onClick={close}
           disabled={busy}
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="button"
@@ -80,7 +85,7 @@ export function SharedBookPrompt({
           onClick={() => void open()}
           disabled={busy}
         >
-          {busy ? <Spinner size="sm" /> : null} Open
+          {busy ? <Spinner size="sm" /> : null} {t("Open")}
         </button>
       </div>
     </BaseModal>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { TbFolderOpen } from "react-icons/tb";
 import { BaseModal } from "@/ui/BaseModal";
 import { openDirDilog } from "@/workspace/open";
+import { useT } from "@/i18n";
 import {
   FORMAT_GROUPS,
   withImportDefaults,
@@ -24,6 +25,7 @@ export default function ImportFolderDialog({
   onClose,
   onImport,
 }: Props) {
+  const t = useT();
   const [options, setOptions] = useState(() => withImportDefaults(initial));
   const [picking, setPicking] = useState(false);
   const set = (patch: Partial<FolderImportOptions>) =>
@@ -46,7 +48,7 @@ export default function ImportFolderDialog({
 
   return (
     <BaseModal
-      title="Import books from a folder"
+      title={t("Import books from a folder")}
       isOpen
       handleClose={onClose}
       panelClassName="max-w-md"
@@ -59,30 +61,32 @@ export default function ImportFolderDialog({
         }}
       >
         <div className="flex flex-col gap-1">
-          <span className="text-xs text-base-content/70">Folder</span>
+          <span className="text-xs text-base-content/70">{t("Folder")}</span>
           <button
             type="button"
             className="flex items-center w-full gap-2 px-3 py-2 text-sm text-left border rounded-lg border-base-300 bg-base-200/40 hover:bg-base-200"
             onClick={pick}
             disabled={picking}
-            title={options.dir || "Choose a folder"}
-            aria-label="Choose a folder"
+            title={options.dir || t("Choose a folder")}
+            aria-label={t("Choose a folder")}
           >
             <TbFolderOpen size={18} className="shrink-0 text-base-content/70" />
             <span
               className={`flex-1 min-w-0 truncate ${options.dir ? "" : "text-base-content/50"}`}
             >
-              {options.dir || "Choose a folder"}
+              {options.dir || t("Choose a folder")}
             </span>
           </button>
           <span className="text-xs text-base-content/60">
-            With its sub folders; the books are copied into the reading folder.
+            {t(
+              "With its sub folders; the books are copied into the reading folder.",
+            )}
           </span>
         </div>
 
         <fieldset className="flex flex-col gap-1">
           <legend className="mb-1 text-xs text-base-content/70">
-            File formats
+            {t("File formats")}
           </legend>
           <div className="grid grid-cols-2 gap-x-3 gap-y-1">
             {FORMAT_GROUPS.map((g) => (
@@ -109,14 +113,14 @@ export default function ImportFolderDialog({
         </fieldset>
 
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span>File size larger than</span>
+          <span>{t("File size larger than")}</span>
           <span className="flex items-center w-28 gap-1 input input-sm">
             <input
               type="number"
               min={0}
               step={1}
               className="w-full text-right"
-              aria-label="Minimum file size (KB)"
+              aria-label={t("Minimum file size (KB)")}
               value={options.minSizeKB}
               onChange={(e) => {
                 const v = Number.parseInt(e.target.value, 10);
@@ -128,7 +132,9 @@ export default function ImportFolderDialog({
         </label>
 
         <fieldset className="flex flex-col gap-1">
-          <legend className="mb-1 text-xs text-base-content/70">Groups</legend>
+          <legend className="mb-1 text-xs text-base-content/70">
+            {t("Groups")}
+          </legend>
           <label className="flex items-start gap-2 px-1 py-1 text-sm rounded-md cursor-pointer hover:bg-base-200/50">
             <input
               type="radio"
@@ -138,10 +144,14 @@ export default function ImportFolderDialog({
               onChange={() => set({ flatten: false })}
             />
             <span>
-              <span className="block">Groups from the folders</span>
+              <span className="block">{t("Groups from the folders")}</span>
               <span className="block text-xs text-base-content/60">
-                Each book in the group of its folder: e.g. {folderName},{" "}
-                {folderName}/Fiction.
+                {t(
+                  "Each book in the group of its folder: e.g. {folder}, {folder}/Fiction.",
+                  {
+                    folder: folderName,
+                  },
+                )}
               </span>
             </span>
           </label>
@@ -155,16 +165,19 @@ export default function ImportFolderDialog({
             />
             <span>
               <span className="block">
-                All in {group ? `the group ${group}` : "the library, no group"}
+                {group
+                  ? t("All in the group {group}", { group })
+                  : t("All in the library, no group")}
               </span>
               <span className="block text-xs text-base-content/60">
-                Every book found, whatever its folder.
+                {t("Every book found, whatever its folder.")}
               </span>
             </span>
           </label>
           <span className="text-xs text-base-content/60">
-            The books in the library already are not copied again, but go in the
-            group too.
+            {t(
+              "The books in the library already are not copied again, but go in the group too.",
+            )}
           </span>
         </fieldset>
 
@@ -174,14 +187,14 @@ export default function ImportFolderDialog({
             className="btn btn-sm btn-ghost"
             onClick={onClose}
           >
-            Cancel
+            {t("Cancel")}
           </button>
           <button
             type="submit"
             className="btn btn-sm btn-primary"
             disabled={!options.dir || options.formats.length === 0}
           >
-            Import
+            {t("Import")}
           </button>
         </div>
       </form>

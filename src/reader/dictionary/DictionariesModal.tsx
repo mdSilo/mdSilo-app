@@ -29,6 +29,7 @@ import { BaseModal } from "@/ui/BaseModal";
 import { Spinner } from "@/ui/ui";
 import { openFileDilog } from "@/workspace/open";
 import { isTauri } from "@/workspace/util";
+import { t, tk, tr, useT } from "@/i18n";
 import {
   addSite,
   forgetSource,
@@ -56,7 +57,7 @@ import {
   type PickedFile,
 } from "./local";
 
-const KIND_LABELS = { web: "Web", link: "Link", local: "File" };
+const KIND_LABELS = { web: tk("Web"), link: tk("Link"), local: tk("File") };
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -65,11 +66,12 @@ const save = (settings: DictionarySettings) =>
 
 /** The dictionaries to look words up in: which, in what order; sites and files added. */
 export default function DictionariesModal() {
+  const t = useT();
   const isOpen = useStore((state) => state.isDictionariesOpen);
   const setIsOpen = useStore((state) => state.setIsDictionariesOpen);
   return (
     <BaseModal
-      title="Dictionaries"
+      title={t("Dictionaries")}
       scrollBody
       isOpen={isOpen}
       handleClose={() => setIsOpen(false)}
@@ -82,6 +84,7 @@ export default function DictionariesModal() {
 }
 
 export function DictionariesSetting() {
+  const t = useT();
   const settings = useDictionarySettings();
   const ws = useDictionaryWorkspace();
   const sources = useDictionarySources(ws);
@@ -107,8 +110,9 @@ export function DictionariesSetting() {
     <div className="flex flex-col gap-4" data-testid="dictionaries-setting">
       <section className="flex flex-col gap-2">
         <p className="text-xs text-base-content/70">
-          A word is looked up in the dictionaries turned on, a tab for each in
-          this order: the first that has the word shows. Drag to reorder.
+          {t(
+            "A word is looked up in the dictionaries turned on, a tab for each in this order: the first that has the word shows. Drag to reorder.",
+          )}
         </p>
         <DndContext
           sensors={sensors}
@@ -119,7 +123,7 @@ export function DictionariesSetting() {
             items={sources.map((s) => s.id)}
             strategy={verticalListSortingStrategy}
           >
-            <ul className="flex flex-col gap-1" aria-label="Dictionaries">
+            <ul className="flex flex-col gap-1" aria-label={t("Dictionaries")}>
               {sources.map((source, i) => (
                 <SourceRow
                   key={source.id}
@@ -157,8 +161,16 @@ export function DictionariesSetting() {
 /** Remove a dictionary file, asked first: its files deleted. */
 async function remove(ws: string, dict: LocalDictionary) {
   const ok = await ask(
-    `Remove the dictionary “${dict.name}”? Its files are deleted from the workspace${dict.synced ? " (and from the other devices, once synced)" : ""}.`,
-    { title: "Remove dictionary", kind: "warning" },
+    dict.synced
+      ? t(
+          "Remove the dictionary “{name}”? Its files are deleted from the workspace (and from the other devices, once synced).",
+          { name: dict.name },
+        )
+      : t(
+          "Remove the dictionary “{name}”? Its files are deleted from the workspace.",
+          { name: dict.name },
+        ),
+    { title: t("Remove dictionary"), kind: "warning" },
   );
   if (!ok) return;
   await removeDictionary(ws, dict.id);
@@ -173,17 +185,20 @@ async function remove(ws: string, dict: LocalDictionary) {
 
 /** Sync the files of a dictionary with the workspace (git), or not; big ones asked first. */
 function SyncButton({ ws, dict }: { ws: string; dict: LocalDictionary }) {
+  const t = useT();
   return (
     <button
       type="button"
       className="btn btn-ghost btn-xs btn-square"
       title={
         dict.synced
-          ? "Its files are synced: stop syncing them"
-          : "Its files are not synced: sync them too"
+          ? t("Its files are synced: stop syncing them")
+          : t("Its files are not synced: sync them too")
       }
       aria-label={
-        dict.synced ? `Stop syncing ${dict.name}` : `Sync ${dict.name}`
+        dict.synced
+          ? t("Stop syncing {name}", { name: dict.name })
+          : t("Sync {name}", { name: dict.name })
       }
       aria-pressed={Boolean(dict.synced)}
       onClick={() => void setDictionarySynced(ws, dict, !dict.synced)}
@@ -195,6 +210,7 @@ function SyncButton({ ws, dict }: { ws: string; dict: LocalDictionary }) {
 
 /** Import dictionary files (MDict) into the workspace, not synced unless chosen. */
 function ImportFiles({ ws }: { ws?: string }) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ error: boolean; text: string }>();
@@ -248,14 +264,14 @@ function ImportFiles({ ws }: { ws?: string }) {
   return (
     <section className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="font-medium">Dictionary files</span>
+        <span className="font-medium">{t("Dictionary files")}</span>
         <button
           type="button"
           className="btn btn-sm"
           disabled={!ws || busy}
           onClick={() => void pick()}
         >
-          {busy ? <Spinner size="xs" /> : null} Import
+          {busy ? <Spinner size="xs" /> : null} {t("Import")}
         </button>
         <input
           ref={inputRef}
@@ -273,8 +289,12 @@ function ImportFiles({ ws }: { ws?: string }) {
       </div>
       <p className="text-xs text-base-content/70">
         {ws
-          ? "MDict: pick the .mdx with its .mdd (pictures, sounds) and .css. They are kept in the workspace, not synced unless you turn it on (the cloud of a dictionary)."
-          : "Open a workspace to import dictionary files: they are kept in it."}
+          ? t(
+              "MDict: pick the .mdx with its .mdd (pictures, sounds) and .css. They are kept in the workspace, not synced unless you turn it on (the cloud of a dictionary).",
+            )
+          : t(
+              "Open a workspace to import dictionary files: they are kept in it.",
+            )}
       </p>
       {message ? (
         <p
@@ -307,6 +327,7 @@ function SourceRow({
   onRemove?: () => void;
   extra?: ReactNode;
 }) {
+  const t = useT();
   const {
     attributes,
     listeners,
@@ -327,7 +348,7 @@ function SourceRow({
         type="button"
         ref={setActivatorNodeRef}
         className="cursor-grab text-base-content/50 touch-none"
-        aria-label={`Drag ${source.label}`}
+        aria-label={t("Drag {label}", { label: source.label })}
         {...attributes}
         {...listeners}
       >
@@ -337,17 +358,19 @@ function SourceRow({
         type="checkbox"
         className="toggle toggle-sm toggle-primary"
         checked={on}
-        aria-label={`Use ${source.label}`}
+        aria-label={t("Use {label}", { label: source.label })}
         onChange={(e) => onToggle(e.target.checked)}
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium truncate">{source.label}</span>
           <span className="badge badge-xs badge-ghost">
-            {KIND_LABELS[source.kind]}
+            {t(KIND_LABELS[source.kind])}
           </span>
           {source.missing ? (
-            <span className="badge badge-xs badge-warning">Not here</span>
+            <span className="badge badge-xs badge-warning">
+              {t("Not here")}
+            </span>
           ) : null}
         </div>
         {source.description ? (
@@ -359,7 +382,7 @@ function SourceRow({
       <button
         type="button"
         className="btn btn-ghost btn-xs btn-square"
-        aria-label={`Move ${source.label} up`}
+        aria-label={t("Move {label} up", { label: source.label })}
         disabled={first}
         onClick={() => onMove(-1)}
       >
@@ -368,7 +391,7 @@ function SourceRow({
       <button
         type="button"
         className="btn btn-ghost btn-xs btn-square"
-        aria-label={`Move ${source.label} down`}
+        aria-label={t("Move {label} down", { label: source.label })}
         disabled={last}
         onClick={() => onMove(1)}
       >
@@ -379,7 +402,7 @@ function SourceRow({
         <button
           type="button"
           className="btn btn-ghost btn-xs btn-square"
-          aria-label={`Remove ${source.label}`}
+          aria-label={t("Remove {label}", { label: source.label })}
           onClick={onRemove}
         >
           <TbTrash />
@@ -390,16 +413,17 @@ function SourceRow({
 }
 
 function MerriamWebsterKey({ settings }: { settings: DictionarySettings }) {
+  const t = useT();
   const [key, setKey] = useState(settings.merriamWebsterKey ?? "");
   return (
     <section className="flex flex-col gap-1">
       <label className="font-medium" htmlFor="mw-key">
-        Merriam-Webster API key
+        {t("Merriam-Webster API key")}
       </label>
       <p className="text-xs text-base-content/70">
-        With a key of the Collegiate Dictionary (free for non-commercial use at
-        dictionaryapi.com), Merriam-Webster is looked up here, with its
-        recordings; without one, it opens the site.
+        {t(
+          "With a key of the Collegiate Dictionary (free for non-commercial use at dictionaryapi.com), Merriam-Webster is looked up here, with its recordings; without one, it opens the site.",
+        )}
       </p>
       <input
         id="mw-key"
@@ -418,6 +442,7 @@ function MerriamWebsterKey({ settings }: { settings: DictionarySettings }) {
 }
 
 function AddSite({ settings }: { settings: DictionarySettings }) {
+  const t = useT();
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [key, setKey] = useState("");
@@ -435,19 +460,21 @@ function AddSite({ settings }: { settings: DictionarySettings }) {
   };
   return (
     <section className="flex flex-col gap-1">
-      <span className="font-medium">Add a site</span>
+      <span className="font-medium">{t("Add a site")}</span>
       <p className="text-xs text-base-content/70">
-        Any dictionary on the web, opened in the browser: its url with{" "}
-        <code>%WORD%</code> where the word goes, e.g.
+        {tr(
+          "Any dictionary on the web, opened in the browser: its url with {word} where the word goes, e.g.",
+          { word: <code>%WORD%</code> },
+        )}
       </p>
       <code className="text-xs break-all text-base-content/70">
         https://www.collinsdictionary.com/dictionary/english/%WORD%
       </code>
       <p className="text-xs text-base-content/70">
-        With an API key, optional: <code>%KEY%</code> where it goes in the url,
-        and the word is looked up here when the site answers as
-        Merriam-Webster&apos;s do (its Learner&apos;s, Medical… at
-        dictionaryapi.com); else the link opens. E.g.
+        {tr(
+          "With an API key, optional: {key} where it goes in the url, and the word is looked up here when the site answers as Merriam-Webster's do (its Learner's, Medical… at dictionaryapi.com); else the link opens. E.g.",
+          { key: <code>%KEY%</code> },
+        )}
       </p>
       <code className="text-xs break-all text-base-content/70">
         https://www.dictionaryapi.com/api/v3/references/learners/json/%WORD%?key=%KEY%
@@ -455,15 +482,15 @@ function AddSite({ settings }: { settings: DictionarySettings }) {
       <div className="flex flex-wrap gap-2">
         <input
           className="w-32 input input-sm input-bordered"
-          placeholder="Name"
-          aria-label="Site name"
+          placeholder={t("Name")}
+          aria-label={t("Site name")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <input
           className="flex-1 min-w-48 input input-sm input-bordered"
           placeholder="https://…%WORD%…"
-          aria-label="Site url"
+          aria-label={t("Site url")}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => {
@@ -474,8 +501,8 @@ function AddSite({ settings }: { settings: DictionarySettings }) {
           type="password"
           autoComplete="off"
           className="w-40 input input-sm input-bordered"
-          placeholder="API key (optional)"
-          aria-label="Site API key"
+          placeholder={t("API key (optional)")}
+          aria-label={t("Site API key")}
           value={key}
           onChange={(e) => setKey(e.target.value)}
           onKeyDown={(e) => {
@@ -488,7 +515,7 @@ function AddSite({ settings }: { settings: DictionarySettings }) {
           disabled={!url.trim()}
           onClick={add}
         >
-          Add
+          {t("Add")}
         </button>
       </div>
       {error ? <p className="text-xs text-error">{error}</p> : null}

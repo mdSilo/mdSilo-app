@@ -3,6 +3,7 @@
  * stands in for the native file dialog. Files or folders on the device can be
  * imported into the virtual file system as well.
  */
+import { t } from "@/i18n";
 import * as fs from "./fs";
 import {
   ROOT,
@@ -139,15 +140,15 @@ export function pick(options: PickOptions): Promise<string[] | null> {
       },
       options.title ||
         (mode === "dir"
-          ? "Open Folder"
+          ? t("Open Folder")
           : mode === "save"
-            ? "Save"
-            : "Open File"),
+            ? t("Save")
+            : t("Open File")),
     );
     const hint = el(
       "div",
       { padding: "0 16px 8px", fontSize: "12px", color: color.muted },
-      "Files are stored in this browser (IndexedDB).",
+      t("Files are stored in this browser (IndexedDB)."),
     );
 
     const toolbar = el("div", {
@@ -181,9 +182,9 @@ export function pick(options: PickOptions): Promise<string[] | null> {
       background: "transparent",
       color: color.fg,
     });
-    newDirInput.placeholder = "New folder name";
+    newDirInput.placeholder = t("New folder name");
     newDirInput.setAttribute("aria-label", "New folder name");
-    const createDirBtn = el("button", btnStyle, "Create");
+    const createDirBtn = el("button", btnStyle, t("Create"));
     newDirRow.append(newDirInput, createDirBtn);
 
     const list = el("div", {
@@ -210,9 +211,9 @@ export function pick(options: PickOptions): Promise<string[] | null> {
       background: "transparent",
       color: color.fg,
     });
-    nameInput.placeholder = "Name";
+    nameInput.placeholder = t("Name");
     nameInput.setAttribute("aria-label", "Name");
-    nameRow.append(el("span", {}, "Name:"), nameInput);
+    nameRow.append(el("span", {}, t("Name:")), nameInput);
 
     const footer = el("div", {
       display: "flex",
@@ -237,10 +238,10 @@ export function pick(options: PickOptions): Promise<string[] | null> {
     const uploadBtn = el(
       "button",
       { ...btnStyle, display: mode === "save" ? "none" : "" },
-      mode === "dir" ? "Import Folder…" : "Upload…",
+      mode === "dir" ? t("Import Folder…") : t("Upload…"),
     );
-    uploadBtn.title = "Import from your device into this browser";
-    const cancelBtn = el("button", btnStyle, "Cancel");
+    uploadBtn.title = t("Import from your device into this browser");
+    const cancelBtn = el("button", btnStyle, t("Cancel"));
     const okBtn = el(
       "button",
       {
@@ -249,7 +250,11 @@ export function pick(options: PickOptions): Promise<string[] | null> {
         borderColor: color.primary,
         color: "#fff",
       },
-      mode === "dir" ? "Select Folder" : mode === "save" ? "Save" : "Open",
+      mode === "dir"
+        ? t("Select Folder")
+        : mode === "save"
+          ? t("Save")
+          : t("Open"),
     );
     footer.append(uploadBtn, uploadInput, status, cancelBtn, okBtn);
 
@@ -338,7 +343,7 @@ export function pick(options: PickOptions): Promise<string[] | null> {
       list.replaceChildren();
       if (entries.length === 0) {
         list.appendChild(
-          el("div", { padding: "12px", color: color.muted }, "Empty folder"),
+          el("div", { padding: "12px", color: color.muted }, t("Empty folder")),
         );
       }
       for (const entry of entries) {

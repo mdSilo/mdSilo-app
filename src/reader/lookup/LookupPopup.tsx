@@ -4,6 +4,7 @@ import { openUrl } from "@/workspace/open";
 import { store, useStore } from "@/state/store";
 import { Spinner } from "@/ui/ui";
 import { HUMAN_LANGUAGES } from "@/lib/constants";
+import { useT } from "@/i18n";
 import { withDefaults, type ReaderSettings } from "../settings";
 import { usePopups } from "../popups";
 import { annotateSelection } from "../actions";
@@ -26,6 +27,7 @@ function LookupPopup({
 }: {
   rootRef: RefObject<HTMLDivElement | null>;
 }) {
+  const t = useT();
   const lookup = usePopups((state) => state.lookup);
   const translateTo = targetLanguage(
     useStore((state) => state.readerSettings?.translateTo),
@@ -99,12 +101,12 @@ function LookupPopup({
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-semibold uppercase text-base-content/60">
-          Translation
+          {t("Translation")}
         </span>
         <TranslateOptions translator={translator.name} to={translateTo} />
         <button
           className="btn btn-ghost btn-xs"
-          title="Open on the web"
+          title={t("Open on the web")}
           onClick={() => void openUrl(webUrl)}
         >
           <TbExternalLink />
@@ -115,7 +117,9 @@ function LookupPopup({
         onClick={openLinkOutside}
       >
         {error ? (
-          <p className="text-error">Could not look it up: {error}</p>
+          <p className="text-error">
+            {t("Could not look it up:")} {error}
+          </p>
         ) : !result ? (
           <Spinner size="sm" className="mx-auto my-4" />
         ) : (
@@ -129,10 +133,10 @@ function LookupPopup({
         <div className="flex justify-end gap-1 mt-1">
           <button
             className="btn btn-ghost btn-xs"
-            title="Highlight the text, with this as its note"
+            title={t("Highlight the text, with this as its note")}
             onClick={() => keep(result.text)}
           >
-            <TbNote /> Keep as note
+            <TbNote /> {t("Keep as note")}
           </button>
         </div>
       ) : null}
@@ -154,6 +158,7 @@ function TranslateOptions({
   translator: string;
   to: string;
 }) {
+  const t = useT();
   const update = (patch: Partial<ReaderSettings>) => {
     const { readerSettings, setReaderSettings } = store.getState();
     setReaderSettings({ ...withDefaults(readerSettings), ...patch });
@@ -164,7 +169,7 @@ function TranslateOptions({
       {TRANSLATORS.length > 1 ? (
         <select
           className={select}
-          aria-label="Translate by"
+          aria-label={t("Translate by")}
           value={translator}
           onChange={(e) => update({ translator: e.target.value })}
         >
@@ -177,7 +182,7 @@ function TranslateOptions({
       ) : null}
       <select
         className={select}
-        aria-label="Translate to"
+        aria-label={t("Translate to")}
         value={to}
         onChange={(e) => update({ translateTo: e.target.value })}
       >

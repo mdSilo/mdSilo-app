@@ -1,4 +1,5 @@
 import logo from "@/asset/logo.svg";
+import { useT } from "@/i18n";
 
 type Props = {
   width?: number;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export default function Logo(props: Props) {
+  const t = useT();
   const {
     width = 32,
     height = 32,

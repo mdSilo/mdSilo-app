@@ -9,6 +9,7 @@ import {
 import Dropdown, { DropdownItem } from "@/ui/Dropdown";
 import { useStore } from "@/state/store";
 import { canOpenBookWindow } from "@/shell/windows";
+import { t, tk, useT } from "@/i18n";
 import {
   withLibraryDefaults,
   type GroupBy,
@@ -19,31 +20,31 @@ import {
 } from "./shelf";
 
 const VIEWS: [ViewMode, string][] = [
-  ["grid", "Grid"],
-  ["list", "List"],
+  ["grid", tk("Grid")],
+  ["list", tk("List")],
 ];
 const GROUP_BYS: [GroupBy, string][] = [
-  ["none", "Books"],
-  ["group", "Groups"],
-  ["author", "Authors"],
-  ["series", "Series"],
-  ["status", "Status"],
+  ["none", tk("Books")],
+  ["group", tk("Groups")],
+  ["author", tk("Authors")],
+  ["series", tk("Series")],
+  ["status", tk("Status")],
 ];
 const SORT_BYS: [SortBy, string][] = [
-  ["title", "Title"],
-  ["author", "Author"],
-  ["format", "Format"],
-  ["series", "Series"],
-  ["read", "Date read"],
-  ["added", "Date added"],
-  ["published", "Date published"],
+  ["title", tk("Title")],
+  ["author", tk("Author")],
+  ["format", tk("Format")],
+  ["series", tk("Series")],
+  ["read", tk("Date read")],
+  ["added", tk("Date added")],
+  ["published", tk("Date published")],
 ];
 const ORDERS: [boolean, string][] = [
-  [true, "Ascending"],
-  [false, "Descending"],
+  [true, tk("Ascending")],
+  [false, tk("Descending")],
 ];
 const OPEN_INS: [OpenIn, string][] = [
-  ["here", "This window"],
+  ["here", tk("This window")],
   ["window", "A new window"],
 ];
 
@@ -64,6 +65,7 @@ export default function ViewMenu({
 }: {
   onGroupBy: (groupBy: GroupBy) => void;
 }) {
+  const t = useT();
   const [settings, update] = useLibrarySettings();
   const section = <T,>(
     title: string,
@@ -75,8 +77,10 @@ export default function ViewMenu({
       <div className="px-4 pt-2 pb-1 text-xs text-base-content/50">{title}</div>
       {options.map(([value, label]) => (
         <DropdownItem key={String(value)} onClick={() => choose(value)}>
-          <span className="flex-1">{label}</span>
-          {value === current ? <TbCheck size={14} aria-label="chosen" /> : null}
+          <span className="flex-1">{t(label)}</span>
+          {value === current ? (
+            <TbCheck size={14} aria-label={t("chosen")} />
+          ) : null}
         </DropdownItem>
       ))}
     </>
@@ -100,31 +104,31 @@ export default function ViewMenu({
       }
       tooltipContent={
         canOpenBookWindow
-          ? "View, open books in, group by, sort by"
-          : "View, group by, sort by"
+          ? t("View, open books in, group by, sort by")
+          : t("View, group by, sort by")
       }
       placement="bottom-end"
       // long: within the window, scrolled
       itemsClassName="py-1 max-h-[calc(100vh-6rem)] overflow-y-auto!"
     >
-      <div aria-label="View menu">
-        {section("View", VIEWS, settings.view, (view) => update({ view }))}
+      <div aria-label={t("View menu")}>
+        {section(t("View"), VIEWS, settings.view, (view) => update({ view }))}
         {canOpenBookWindow ? (
           <>
             <MenuSeparator className="my-1 border-t border-base-300" />
-            {section("Open books in", OPEN_INS, settings.openIn, (openIn) =>
+            {section(t("Open books in"), OPEN_INS, settings.openIn, (openIn) =>
               update({ openIn }),
             )}
           </>
         ) : null}
         <MenuSeparator className="my-1 border-t border-base-300" />
-        {section("Group by", GROUP_BYS, settings.groupBy, onGroupBy)}
+        {section(t("Group by"), GROUP_BYS, settings.groupBy, onGroupBy)}
         <MenuSeparator className="my-1 border-t border-base-300" />
-        {section("Sort by", SORT_BYS, settings.sortBy, (sortBy) =>
+        {section(t("Sort by"), SORT_BYS, settings.sortBy, (sortBy) =>
           update({ sortBy }),
         )}
         <MenuSeparator className="my-1 border-t border-base-300" />
-        {section("Order", ORDERS, settings.ascending, (ascending) =>
+        {section(t("Order"), ORDERS, settings.ascending, (ascending) =>
           update({ ascending }),
         )}
       </div>

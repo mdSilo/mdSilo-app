@@ -227,11 +227,9 @@ describe("HeatMap", () => {
   });
 
   test("merges stored activities and reports clicked dates", async () => {
-    store
-      .getState()
-      .setActivities({
-        [today()]: { activityNum: 7, createNum: 3, updateNum: 4 },
-      });
+    store.getState().setActivities({
+      [today()]: { activityNum: 7, createNum: 3, updateNum: 4 },
+    });
     const onClickCell = vi.fn();
     const { container } = render(
       <HeatMap noteList={[]} onClickCell={onClickCell} />,
@@ -331,7 +329,7 @@ describe("Chronicle", () => {
     });
     renderView(<Chronicle />);
     await act(async () => {
-      fireEvent.click(screen.getByText(`Today : ${today()}`));
+      fireEvent.click(screen.getByText(`Today: ${today()}`));
     });
     const id = `/root/daily/${today()}.md`;
     await waitFor(() =>
@@ -368,7 +366,7 @@ describe("Chronicle", () => {
     });
     renderView(<Chronicle />);
     await act(async () => {
-      fireEvent.click(screen.getByText(`Today : ${today()}`));
+      fireEvent.click(screen.getByText(`Today: ${today()}`));
     });
     await waitFor(() => expect(viewState().view).toBe("md"));
     expect(

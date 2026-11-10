@@ -3,6 +3,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { useIssueData } from "@/issue/issueStore";
 import { computeIssueRefs, issueLabel } from "@/issue/refs";
 import { StateIcon } from "@/issue/common";
+import { useT } from "@/i18n";
 
 type Props = {
   noteId: string;
@@ -12,6 +13,7 @@ type Props = {
 
 /** "Referenced by issues": issues linking this note, explicitly or via [[title]]. */
 export default function IssueRefs({ noteId, title, className = "" }: Props) {
+  const t = useT();
   const { data, isLoaded } = useIssueData();
   const { dispatch } = useCurrentViewContext();
   const refs = useMemo(
@@ -23,7 +25,7 @@ export default function IssueRefs({ noteId, title, className = "" }: Props) {
 
   return (
     <div className={`pt-2 ${className}`} data-testid="issue-refs">
-      <p className="p-1 text-base-content/70">Referenced by issues</p>
+      <p className="p-1 text-base-content/70">{t("Referenced by issues")}</p>
       <ul className="mx-4">
         {refs.map(({ issue, explicit }) => (
           <li key={issue.number} className="flex items-center gap-2 py-1">
@@ -36,7 +38,9 @@ export default function IssueRefs({ noteId, title, className = "" }: Props) {
               {issueLabel(issue.number)} {issue.title}
             </button>
             {explicit ? null : (
-              <span className="text-xs text-base-content/60">mentioned</span>
+              <span className="text-xs text-base-content/60">
+                {t("mentioned")}
+              </span>
             )}
           </li>
         ))}

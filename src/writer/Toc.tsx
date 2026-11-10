@@ -3,6 +3,7 @@ import {
   TbCaretRight as IconCaretRight,
   TbPoint as IconPoint,
 } from "react-icons/tb";
+import { useT } from "@/i18n";
 
 export type Heading = {
   title: string;
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export default function Toc(props: Props) {
+  const t = useT();
   const { headings, metaInfo = "", className = "" } = props;
   const [showTOC, setShowTOC] = useState<boolean>(false);
 
@@ -34,7 +36,7 @@ export default function Toc(props: Props) {
           size={16}
           fill="currentColor"
         />
-        Table of Contents {` ${metaInfo}`}
+        {t("Table of Contents")} {` ${metaInfo}`}
       </button>
       {showTOC && headings.length ? (
         <div className={`pb-4 border-b-2 border-base-300 ${className}`}>

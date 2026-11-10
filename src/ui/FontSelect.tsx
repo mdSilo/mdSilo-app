@@ -4,6 +4,7 @@ import {
   useFonts,
   useSystemFonts,
 } from "@/custom/fonts";
+import { useT } from "@/i18n";
 import { Select } from "./ui";
 
 type Props = {
@@ -23,6 +24,7 @@ export default function FontSelect({
   onChange,
   defaultOption,
 }: Props) {
+  const t = useT();
   const customFonts = useFonts();
   const systemFonts = useSystemFonts();
   // chosen before, the font is shown though it is not listed (yet, or any more)
@@ -38,14 +40,14 @@ export default function FontSelect({
       onChange={onChange}
     >
       <option value={defaultOption[0]}>{defaultOption[1]}</option>
-      <optgroup label="Generic">
+      <optgroup label={t("Generic")}>
         {GENERIC_FONTS.map((f) => (
           <option key={f.id} value={f.id}>
             {f.name}
           </option>
         ))}
       </optgroup>
-      <optgroup label="Bundled">
+      <optgroup label={t("Bundled")}>
         {BUNDLED_FONTS.map((f) => (
           <option key={f.id} value={f.id}>
             {f.name}
@@ -53,7 +55,7 @@ export default function FontSelect({
         ))}
       </optgroup>
       {customFonts.length > 0 ? (
-        <optgroup label="Added">
+        <optgroup label={t("Added")}>
           {customFonts.map((f) => (
             <option key={f.id} value={`custom:${f.id}`}>
               {f.family}
@@ -62,7 +64,7 @@ export default function FontSelect({
         </optgroup>
       ) : null}
       {systemFonts.length > 0 || missing ? (
-        <optgroup label="System">
+        <optgroup label={t("System")}>
           {missing ? <option value={value}>{missing}</option> : null}
           {systemFonts.map((family) => (
             <option key={family} value={`system:${family}`}>

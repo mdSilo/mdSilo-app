@@ -6,6 +6,7 @@ import { isTauri, joinPath } from "@/workspace/util";
 import { getFileExt } from "@/workspace/process";
 import { dataRoot } from "@/workspace/layout";
 import { defineKind, moveTo, workspaceData, type Where } from "@/custom/store";
+import { t } from "@/i18n";
 import {
   MANIFEST_FILE,
   parseManifest,
@@ -74,20 +75,26 @@ export function readPlugin(
     where: folder.where ?? "device",
     hash: folder.hash ?? "",
   };
-  if (!folder.manifest) return { ...plugin, error: `No ${MANIFEST_FILE}` };
+  if (!folder.manifest)
+    return { ...plugin, error: t("No {file}", { file: MANIFEST_FILE }) };
   try {
     const manifest = parseManifest(folder.manifest);
     if (manifest.id !== plugin.id)
       return {
         ...plugin,
         manifest,
-        error: `Installed as ${plugin.id}, but its id is ${manifest.id}`,
+        error: t("Installed as {installed}, but its id is {id}", {
+          installed: plugin.id,
+          id: manifest.id,
+        }),
       };
     if (appVersion && !supportsApp(manifest, appVersion)) {
       return {
         ...plugin,
         manifest,
-        error: `Needs mdSilo ${manifest.minAppVersion} or later`,
+        error: t("Needs mdSilo {version} or later", {
+          version: manifest.minAppVersion ?? "",
+        }),
       };
     }
     return { ...plugin, manifest };
@@ -257,7 +264,7 @@ export function enablePlugin(
   granted = plugin.manifest?.permissions ?? [],
 ) {
   if (!plugin.manifest || plugin.error)
-    throw new Error(plugin.error ?? "Not a plugin");
+    throw new Error(plugin.error ?? t("Not a plugin"));
   const asked = plugin.manifest.permissions;
   const { devSource, source } = store.getState().pluginStates[plugin.id] ?? {};
   setState(plugin.id, {

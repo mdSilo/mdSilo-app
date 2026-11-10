@@ -22,6 +22,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import tippy, { type Instance, type Props as TippyOptions } from "tippy.js";
+import { useT } from "@/i18n";
 
 /* Shared options */
 
@@ -410,6 +411,7 @@ export function Range({
   width?: string;
   ariaLabel?: string;
 }) {
+  const t = useT();
   const name = ariaLabel ?? (typeof label === "string" ? label : undefined);
   const shown = format ? format(value) : String(value);
   const go = (steps: number) => {
@@ -455,7 +457,7 @@ export function Range({
         <button
           type="button"
           className={button}
-          aria-label={name ? `Decrease ${name}` : "Decrease"}
+          aria-label={name ? t("Decrease {name}", { name }) : t("Decrease")}
           disabled={value <= min}
           onClick={() => go(-1)}
         >
@@ -464,7 +466,7 @@ export function Range({
         <button
           type="button"
           className={button}
-          aria-label={name ? `Increase ${name}` : "Increase"}
+          aria-label={name ? t("Increase {name}", { name }) : t("Increase")}
           disabled={value >= max}
           onClick={() => go(1)}
         >

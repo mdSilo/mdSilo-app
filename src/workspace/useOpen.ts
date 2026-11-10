@@ -22,6 +22,7 @@ import { writeAllFile, writeFile } from "@/workspace/write";
 import { rmFileNameExt } from "@/workspace/process";
 import { READING_DIR, WRITING_DIR, resolveLayout } from "@/workspace/layout";
 import { syncFeeds } from "@/feed/feedSync";
+import { t } from "@/i18n";
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(["md"], multi);
@@ -112,7 +113,12 @@ export async function reportOpening<T>(
   const slow = setTimeout(() => {
     void stuckOn().then((on) =>
       setOpenProblem(
-        `${label} is taking long${on ? `, waiting on ${on}` : ""}.`,
+        on
+          ? t("{action} is taking long, waiting on {on}.", {
+              action: label,
+              on,
+            })
+          : t("{action} is taking long.", { action: label }),
       ),
     );
   }, OPEN_SLOW_MS);
@@ -121,7 +127,9 @@ export async function reportOpening<T>(
     setOpenProblem(undefined);
     return result;
   } catch (e) {
-    setOpenProblem(`${label} failed: ${describeError(e)}`);
+    setOpenProblem(
+      t("{action} failed: {error}", { action: label, error: describeError(e) }),
+    );
     throw e;
   } finally {
     clearTimeout(slow);
@@ -136,11 +144,16 @@ export async function reportOpening<T>(
 export function reportSlowSettings(): { cancel: () => void } {
   const slow = setTimeout(() => {
     void stuckOn().then((on) =>
-      store
-        .getState()
-        .setOpenProblem(
-          `Loading the settings is taking long${on ? `, waiting on ${on}` : ""}.`,
-        ),
+      store.getState().setOpenProblem(
+        on
+          ? t("{action} is taking long, waiting on {on}.", {
+              action: t("Loading the settings"),
+              on,
+            })
+          : t("{action} is taking long.", {
+              action: t("Loading the settings"),
+            }),
+      ),
     );
   }, OPEN_SLOW_MS);
   return { cancel: () => clearTimeout(slow) };
@@ -173,8 +186,18 @@ async function stuckOn(): Promise<string> {
     .join(", ");
 }
 
-export const listInitDir = (dirPath: string) =>
-  reportOpening(`Opening ${dirPath}`, () => listInitDirNow(dirPath));
+export const listInitDir = async (dirPath: string) => {
+  // shown in the explorer until the folder shows, or fails
+  store.getState().setOpeningDir(dirPath);
+  try {
+    return await reportOpening(t("Opening {dir}", { dir: dirPath }), () =>
+      listInitDirNow(dirPath),
+    );
+  } finally {
+    if (store.getState().openingDir === dirPath)
+      store.getState().setOpeningDir(undefined);
+  }
+};
 
 const listInitDirNow = async (dirPath: string) => {
   try {
@@ -232,7 +255,7 @@ export const openWebWorkspace = async (): Promise<string | undefined> => {
   if (store.getState().currentDir || isWebWorkspaceOpening) return;
   isWebWorkspaceOpening = true;
   try {
-    return await reportOpening("Opening the workspace", retryOpening);
+    return await reportOpening(t("Opening the workspace"), retryOpening);
   } finally {
     isWebWorkspaceOpening = false;
   }

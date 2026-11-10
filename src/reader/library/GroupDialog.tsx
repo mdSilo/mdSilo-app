@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BaseModal } from "@/ui/BaseModal";
+import { useT } from "@/i18n";
 import { normalizeGroup, renameGroup } from "./library";
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 
 /** A group of the library renamed or moved (by its path), or ungrouped. */
 export default function GroupDialog({ ws, group, onClose, onDone }: Props) {
+  const t = useT();
   const [name, setName] = useState(group);
   const parent = group.includes("/")
     ? group.slice(0, group.lastIndexOf("/"))
@@ -23,7 +25,7 @@ export default function GroupDialog({ ws, group, onClose, onDone }: Props) {
   };
   return (
     <BaseModal
-      title="Group"
+      title={t("Group")}
       isOpen
       handleClose={onClose}
       panelClassName="max-w-md"
@@ -38,36 +40,42 @@ export default function GroupDialog({ ws, group, onClose, onDone }: Props) {
         }}
       >
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Name</span>
+          <span className="font-medium">{t("Name")}</span>
           <input
             className="input input-sm w-full"
             value={name}
-            aria-label="Group name"
+            aria-label={t("Group name")}
             onChange={(e) => setName(e.target.value)}
             autoFocus
           />
           <span className="text-xs text-base-content/60">
-            Nested by /, e.g. Fiction/Classics; its sub groups go with it.
+            {t(
+              "Nested by /, e.g. Fiction/Classics; its sub groups go with it.",
+            )}
           </span>
         </label>
         <div className="flex justify-end gap-2">
           <button
             type="button"
             className="btn btn-sm btn-ghost me-auto"
-            title={`The books go to ${parent || "no group"}`}
+            title={
+              parent
+                ? t("The books go to {group}", { group: parent })
+                : t("The books go to no group")
+            }
             onClick={() => apply("")}
           >
-            Ungroup
+            {t("Ungroup")}
           </button>
           <button
             type="button"
             className="btn btn-sm btn-ghost"
             onClick={onClose}
           >
-            Cancel
+            {t("Cancel")}
           </button>
           <button type="submit" className="btn btn-sm btn-primary">
-            Rename
+            {t("Rename")}
           </button>
         </div>
       </form>

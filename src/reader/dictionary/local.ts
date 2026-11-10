@@ -4,6 +4,7 @@ import { joinPath } from "@/workspace/util";
 import { DATA_DIR } from "@/workspace/layout";
 import { updateDictionariesGitignore } from "@/workspace/gitignore";
 import { confirmBigSync, fileSize } from "@/workspace/syncSize";
+import { t } from "@/i18n";
 
 /**
  * The dictionary files imported by the user (MDict: .mdx, with its .mdd of
@@ -242,7 +243,7 @@ export async function importDictionaries(
   const { groups, left } = groupDictionaryFiles(files);
   const failed = left.map((f) => ({
     name: f.name,
-    error: "No .mdx of the same name",
+    error: t("No .mdx of the same name"),
   }));
   const added: LocalDictionary[] = [];
   // not synced from the first file copied in

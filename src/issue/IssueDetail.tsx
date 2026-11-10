@@ -7,6 +7,7 @@ import useDebounce from "@/lib/hooks/useDebounce";
 import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import { ConfirmModal } from "@/ui/Dialogs";
+import { tn, tr, useT } from "@/i18n";
 import { useIssueData, useIssueStore } from "./issueStore";
 import {
   addComment,
@@ -43,23 +44,26 @@ type Props = {
 };
 
 export default function IssueDetail({ number, onClose }: Props) {
+  const t = useT();
   const { data, isLoaded } = useIssueData();
   const issue = getIssue(data, number);
   const { dispatch } = useCurrentViewContext();
 
   if (!isLoaded) {
-    return <p className="p-8 text-base-content/60">Loading issues…</p>;
+    return <p className="p-8 text-base-content/60">{t("Loading issues…")}</p>;
   }
   if (!issue) {
     return (
       <div className="p-8">
-        <p className="mb-4">Issue {issueLabel(number)} does not exist.</p>
+        <p className="mb-4">
+          {t("Issue {number} does not exist.", { number: issueLabel(number) })}
+        </p>
         <button
           type="button"
           className="ms-link"
           onClick={() => dispatch({ view: "issues" })}
         >
-          Back to issues
+          {t("Back to issues")}
         </button>
       </div>
     );
@@ -72,6 +76,7 @@ export default function IssueDetail({ number, onClose }: Props) {
 }
 
 function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
+  const t = useT();
   const { data } = useIssueData();
   const apply = useIssueStore((s) => s.apply);
   const { dispatch } = useCurrentViewContext();
@@ -111,7 +116,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
               className="flex items-center gap-1 text-sm ms-link"
               onClick={() => dispatch({ view: "issues" })}
             >
-              <IconBack size={14} /> Issues
+              <IconBack size={14} /> {t("Issues")}
             </button>
           </div>
         )}
@@ -120,7 +125,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
           {editingTitle ? (
             <div className="flex items-center gap-2">
               <input
-                aria-label="Issue title"
+                aria-label={t("Issue title")}
                 className={`${inputClass} flex-1 text-xl`}
                 value={titleDraft}
                 autoFocus
@@ -131,14 +136,14 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
                 }}
               />
               <button type="button" className={btnClass} onClick={saveTitle}>
-                Save
+                {t("Save")}
               </button>
               <button
                 type="button"
                 className={btnClass}
                 onClick={() => setEditingTitle(false)}
               >
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           ) : (
@@ -155,15 +160,17 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
                   setEditingTitle(true);
                 }}
               >
-                Edit
+                {t("Edit")}
               </button>
             </div>
           )}
           <div className="flex items-center gap-2 mt-2 text-sm text-base-content/60">
             <StateBadge state={issue.state} />
             <span>
-              opened <TimeAgo iso={issue.createdAt} /> · {comments} comment
-              {comments === 1 ? "" : "s"}
+              {tr("opened {time}", {
+                time: <TimeAgo iso={issue.createdAt} />,
+              })}{" "}
+              · {tn("{count} comment", "{count} comments", comments)}
             </span>
           </div>
         </div>
@@ -174,7 +181,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
             <div className="px-3 py-2 border border-base-300 rounded-sm">
               <IssueEditor
                 defaultValue={issue.body}
-                placeholder="Describe the issue… [[Note]] links a note"
+                placeholder={t("Describe the issue… [[Note]] links a note")}
                 onChange={(body) => apply((d) => updateIssue(d, num, { body }))}
               />
             </div>
@@ -187,7 +194,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
                 <IssueEditor
                   key={`new-comment-${commentKey}`}
                   defaultValue=""
-                  placeholder="Leave a comment"
+                  placeholder={t("Leave a comment")}
                   onChange={setComment}
                 />
               </div>
@@ -199,11 +206,11 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
                 >
                   {issue.state === "open"
                     ? comment.trim()
-                      ? "Close with comment"
-                      : "Close issue"
+                      ? t("Close with comment")
+                      : t("Close issue")
                     : comment.trim()
-                      ? "Reopen with comment"
-                      : "Reopen issue"}
+                      ? t("Reopen with comment")
+                      : t("Reopen issue")}
                 </button>
                 <button
                   type="button"
@@ -211,7 +218,7 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
                   disabled={!comment.trim()}
                   onClick={() => submitComment()}
                 >
-                  Comment
+                  {t("Comment")}
                 </button>
               </div>
             </div>
@@ -231,12 +238,12 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
               className="flex items-center gap-1 mt-4 text-sm text-error hover:underline"
               onClick={() => setConfirmDelete(true)}
             >
-              <IconTrash size={14} /> Delete issue
+              <IconTrash size={14} /> {t("Delete issue")}
             </button>
             <ConfirmModal
-              title={`Delete issue ${issueLabel(num)}?`}
-              message="This cannot be undone."
-              confirmLabel="Confirm delete"
+              title={t("Delete issue {number}?", { number: issueLabel(num) })}
+              message={t("This cannot be undone.")}
+              confirmLabel={t("Confirm delete")}
               danger
               isOpen={confirmDelete}
               onConfirm={() => {
@@ -255,17 +262,18 @@ function IssueBody({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
 
 /** The day the issue is due. */
 function DueDate({ issue }: { issue: Issue }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const num = issue.number;
   return (
     <div className="py-3 border-b border-base-300">
       <div className="mb-1 text-xs font-semibold text-base-content/60">
-        Due date
+        {t("Due date")}
       </div>
       <div className="flex items-center gap-2">
         <input
           type="date"
-          aria-label="Due date"
+          aria-label={t("Due date")}
           className={`${inputClass} flex-1 ${isOverdue(issue) ? "text-error" : ""}`}
           value={issue.dueOn ?? ""}
           onChange={(e) =>
@@ -278,7 +286,7 @@ function DueDate({ issue }: { issue: Issue }) {
             className="text-xs ms-link"
             onClick={() => apply((d) => setDueOn(d, num, undefined))}
           >
-            Clear
+            {t("Clear")}
           </button>
         ) : null}
       </div>
@@ -288,6 +296,7 @@ function DueDate({ issue }: { issue: Issue }) {
 
 /** Notes linking this issue with `issue:N`. */
 function NoteMentions({ num }: { num: number }) {
+  const t = useT();
   const [notes] = useDebounce(
     useStore((state) => state.notes),
     500,
@@ -297,7 +306,7 @@ function NoteMentions({ num }: { num: number }) {
   return (
     <div className="py-3 border-b border-base-300">
       <div className="mb-1 text-xs font-semibold text-base-content/60">
-        Mentioned in notes
+        {t("Mentioned in notes")}
       </div>
       {mentions.length ? (
         <ul className="space-y-1 text-sm">
@@ -314,7 +323,7 @@ function NoteMentions({ num }: { num: number }) {
           ))}
         </ul>
       ) : (
-        <span className="text-sm text-base-content/60">None</span>
+        <span className="text-sm text-base-content/60">{t("None")}</span>
       )}
     </div>
   );

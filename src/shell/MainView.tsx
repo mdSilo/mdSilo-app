@@ -11,6 +11,7 @@ import useStartupView from "@/state/useStartupView";
 import useFollowRenames from "@/state/useFollowRenames";
 import { useViewsOfBookWindows } from "@/shell/windows";
 import NotePage from "@/writer/MdView";
+import { useT } from "@/i18n";
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
 const Feed = lazy(() => import("@/feed/FeedView"));
@@ -81,12 +82,13 @@ function ViewLoading() {
 }
 
 function DefaultView() {
+  const t = useT();
   const darkMode = useStore((state) => state.darkMode);
   return (
     <ErrorBoundary>
       <div className="flex flex-col p-8 w-full h-full mx-auto bg-base-100 overflow-auto">
         <p className="text-2xl py-3 text-center text-primary">
-          Hello, welcome to mdSilo.
+          {t("Hello, welcome to mdSilo.")}
         </p>
         <MsEditor value={defaultValue} dark={darkMode} theme={EDITOR_THEME} />
       </div>

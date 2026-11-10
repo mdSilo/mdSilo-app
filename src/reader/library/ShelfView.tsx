@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { Virtuoso, VirtuosoGrid } from "react-virtuoso";
+import { useT } from "@/i18n";
 import { isGroup, type ShelfItem, type ViewMode } from "./shelf";
 
 /**
@@ -37,6 +38,7 @@ export default function Shelf({
   scroller,
   renderItem,
 }: Props) {
+  const t = useT();
   // a long shelf waits for the page: not drawn whole first
   if (virtual && !scroller) return null;
   if (!virtual || !scroller) {
@@ -44,7 +46,7 @@ export default function Shelf({
       <div
         className={mode === "grid" ? GRID : "flex flex-col"}
         role="list"
-        aria-label="Bookshelf"
+        aria-label={t("Bookshelf")}
       >
         {items.map((item) => (
           <Fragment key={keyOf(item)}>{renderItem(item)}</Fragment>
@@ -53,7 +55,7 @@ export default function Shelf({
     );
   }
   return (
-    <div role="list" aria-label="Bookshelf">
+    <div role="list" aria-label={t("Bookshelf")}>
       {mode === "grid" ? (
         <VirtuosoGrid
           customScrollParent={scroller}

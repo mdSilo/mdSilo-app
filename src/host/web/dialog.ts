@@ -1,6 +1,7 @@
 /**
  * Web stand-in of `@tauri-apps/plugin-dialog`, aliased in vite.web.config.ts.
  */
+import { t } from "@/i18n";
 import { initFs } from "./fs";
 import { dialogStyle, el, pick } from "./picker";
 
@@ -93,7 +94,7 @@ function messageBox(
       gap: "8px",
       marginTop: "16px",
     });
-    const cancelBtn = el("button", btnStyle, "Cancel");
+    const cancelBtn = el("button", btnStyle, t("Cancel"));
     const okBtn = el(
       "button",
       {

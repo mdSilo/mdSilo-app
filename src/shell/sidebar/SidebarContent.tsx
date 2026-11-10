@@ -7,6 +7,7 @@ import {
 import { Tooltip } from "@/ui/ui";
 import { SidebarTab as SidebarTabType, useStore } from "@/state/store";
 import SidebarPlaylist from "@/feed/Playlist";
+import { useT } from "@/i18n";
 import SidebarNotes from "./SidebarNotes";
 import SidebarSearch from "./SidebarSearch";
 import SidebarTab from "./SidebarTab";
@@ -40,32 +41,33 @@ type TabsProps = {
 };
 
 const Tabs = (props: TabsProps) => {
+  const t = useT();
   const { activeTab, setActiveTab } = props;
 
   return (
     <div className="flex">
-      <Tooltip content="Silo (Ctrl/⌘+Shift+D)">
+      <Tooltip content={t("Silo (Ctrl/⌘+Shift+D)")}>
         <SidebarTab
           isActive={activeTab === SidebarTabType.Silo}
           setActive={() => setActiveTab(SidebarTabType.Silo)}
           Icon={IconFolder}
         />
       </Tooltip>
-      <Tooltip content="Search (Ctrl/⌘+Shift+F)">
+      <Tooltip content={t("Search (Ctrl/⌘+Shift+F)")}>
         <SidebarTab
           isActive={activeTab === SidebarTabType.Search}
           setActive={() => setActiveTab(SidebarTabType.Search)}
           Icon={IconSearch}
         />
       </Tooltip>
-      <Tooltip content="Hashtags (Ctrl/⌘+Shift+H)">
+      <Tooltip content={t("Hashtags (Ctrl/⌘+Shift+H)")}>
         <SidebarTab
           isActive={activeTab === SidebarTabType.Hashtag}
           setActive={() => setActiveTab(SidebarTabType.Hashtag)}
           Icon={IconHash}
         />
       </Tooltip>
-      <Tooltip content="Playlist (Ctrl/⌘+Shift+P)">
+      <Tooltip content={t("Playlist (Ctrl/⌘+Shift+P)")}>
         <SidebarTab
           isActive={activeTab === SidebarTabType.Playlist}
           setActive={() => setActiveTab(SidebarTabType.Playlist)}

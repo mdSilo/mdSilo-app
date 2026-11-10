@@ -16,6 +16,7 @@ import {
   TbX,
 } from "react-icons/tb";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { useT } from "@/i18n";
 import type { Media } from "./media";
 
 /**
@@ -234,6 +235,7 @@ function Overlay({
   children: ReactNode;
   extra?: ReactNode;
 }) {
+  const t = useT();
   useEffect(() => containerRef.current?.focus(), [containerRef]);
   return createPortal(
     <div
@@ -265,32 +267,32 @@ function Overlay({
         <button
           className={`${ROUND} w-9 h-9`}
           onClick={onClose}
-          aria-label="Close"
-          title="Close (Esc)"
+          aria-label={t("Close")}
+          title={t("Close (Esc)")}
         >
           <TbX size={20} />
         </button>
         <button
           className={`${ROUND} w-9 h-9`}
           onClick={zoom.zoomIn}
-          aria-label="Zoom in"
-          title="Zoom in (Ctrl +)"
+          aria-label={t("Zoom in")}
+          title={t("Zoom in (Ctrl +)")}
         >
           <TbPlus size={20} />
         </button>
         <button
           className={`${ROUND} w-9 h-9`}
           onClick={zoom.zoomOut}
-          aria-label="Zoom out"
-          title="Zoom out (Ctrl -)"
+          aria-label={t("Zoom out")}
+          title={t("Zoom out (Ctrl -)")}
         >
           <TbMinus size={20} />
         </button>
         <button
           className={`${ROUND} w-9 h-9`}
           onClick={zoom.reset}
-          aria-label="Reset zoom"
-          title="Reset zoom (Ctrl 0)"
+          aria-label={t("Reset zoom")}
+          title={t("Reset zoom (Ctrl 0)")}
         >
           <TbMaximize size={20} />
         </button>
@@ -298,7 +300,7 @@ function Overlay({
       {zoom.labelShown ? (
         <div
           className="absolute px-3 py-1 text-sm text-white -translate-x-1/2 rounded-full pointer-events-none left-1/2 top-4 bg-black/50"
-          aria-label="Zoom level"
+          aria-label={t("Zoom level")}
         >
           {Math.round(zoom.scale * 100)}%
         </div>
@@ -319,6 +321,7 @@ export const ImageViewer = memo(function ImageViewer({
   start: number;
   onClose: () => void;
 }) {
+  const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const zoom = useZoom(containerRef);
   const [index, setIndex] = useState(start);
@@ -334,7 +337,7 @@ export const ImageViewer = memo(function ImageViewer({
 
   return (
     <Overlay
-      label="Image viewer"
+      label={t("Image viewer")}
       zoom={zoom}
       containerRef={containerRef}
       onClose={onClose}
@@ -355,8 +358,8 @@ export const ImageViewer = memo(function ImageViewer({
                 e.stopPropagation();
                 go(index - 1);
               }}
-              aria-label="Previous image"
-              title="Previous image (←)"
+              aria-label={t("Previous image")}
+              title={t("Previous image (←)")}
             >
               <TbChevronLeft size={26} />
             </button>
@@ -368,8 +371,8 @@ export const ImageViewer = memo(function ImageViewer({
                 e.stopPropagation();
                 go(index + 1);
               }}
-              aria-label="Next image"
-              title="Next image (→)"
+              aria-label={t("Next image")}
+              title={t("Next image (→)")}
             >
               <TbChevronRight size={26} />
             </button>
@@ -381,7 +384,7 @@ export const ImageViewer = memo(function ImageViewer({
       <div className="flex flex-col items-center justify-center w-full h-full gap-3 px-16 py-14 pointer-events-none">
         <img
           src={image.src}
-          alt={image.alt || "Zoomed"}
+          alt={image.alt || t("Zoomed")}
           title={image.alt || undefined}
           draggable={false}
           className="object-contain max-w-full min-h-0 max-h-full pointer-events-auto"
@@ -424,6 +427,7 @@ export const TableViewer = memo(function TableViewer({
   colors: { bg: string; fg: string };
   onClose: () => void;
 }) {
+  const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const zoom = useZoom(containerRef);
   // from the book: no scripts, handlers or styles that reach the app
@@ -432,7 +436,7 @@ export const TableViewer = memo(function TableViewer({
 
   return (
     <Overlay
-      label="Table viewer"
+      label={t("Table viewer")}
       zoom={zoom}
       containerRef={containerRef}
       onClose={onClose}

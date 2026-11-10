@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import "@/styles/styles.css";
 import "tippy.js/dist/tippy.css";
 import useTheme from "@/lib/hooks/useTheme";
+import { useLanguage } from "@/i18n/useLanguage";
 import { useCustomFonts } from "@/custom/fonts";
 import { useCustomThemes } from "@/custom/themes";
 import { onStoreHydrated, store } from "@/state/store";
@@ -30,6 +31,7 @@ const Reader = lazy(() => import("@/reader/components/ReaderView"));
  */
 export default function BookWindow(props: BookWindowParams) {
   useTheme();
+  useLanguage();
   useCustomFonts();
   useCustomThemes();
   const route = useMemo(() => routeBook(props.path), [props.path]);

@@ -1,4 +1,5 @@
 import { TbMessage as IconComment, TbFlag as IconFlag } from "react-icons/tb";
+import { tn, useT } from "@/i18n";
 import { commentCount } from "./issueOps";
 import { StateIcon, TimeAgo } from "./common";
 import LabelChip from "./LabelChip";
@@ -22,10 +23,11 @@ export default function IssueList({
   onClickMilestone,
   empty,
 }: Props) {
+  const t = useT();
   if (issues.length === 0) {
     return (
       <p className="p-8 text-center text-base-content/60">
-        {empty ?? "No results."}
+        {empty ?? t("No results.")}
       </p>
     );
   }
@@ -69,7 +71,7 @@ export default function IssueList({
               <div className="flex flex-wrap items-center gap-2 text-xs text-base-content/60">
                 <span>
                   {issueLabel(issue.number)}{" "}
-                  {issue.state === "open" ? "opened" : "closed"}{" "}
+                  {issue.state === "open" ? t("opened") : t("closed")}{" "}
                   <TimeAgo
                     iso={
                       issue.state === "closed" && issue.closedAt
@@ -89,14 +91,14 @@ export default function IssueList({
                   </button>
                 ) : null}
                 <span>
-                  updated <TimeAgo iso={issue.updatedAt} />
+                  {t("updated")} <TimeAgo iso={issue.updatedAt} />
                 </span>
               </div>
             </div>
             {comments > 0 ? (
               <span
                 className="flex items-center gap-1 text-sm text-base-content/60"
-                title={`${comments} comments`}
+                title={tn("{count} comment", "{count} comments", comments)}
               >
                 <IconComment size={16} />
                 {comments}

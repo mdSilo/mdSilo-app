@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import useHotkeys from "@/lib/hooks/useHotkeys";
 import useDeleteNote from "@/writer/hooks/useDeleteNote";
 import { BaseModal } from "@/ui/BaseModal";
+import { useT } from "@/i18n";
 
 type Props = {
   noteId: string;
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function NoteDelModal(props: Props) {
+  const t = useT();
   const { noteId, noteTitle, isOpen, handleClose } = props;
 
   const hotkeys = useMemo(
@@ -28,7 +30,7 @@ export default function NoteDelModal(props: Props) {
 
   return (
     <BaseModal
-      title="Delete This Work?"
+      title={t("Delete This Work?")}
       isOpen={isOpen}
       handleClose={handleClose}
     >
@@ -38,10 +40,10 @@ export default function NoteDelModal(props: Props) {
           className="mt-2 font-bold text-error pop-btn"
           onClick={onDeleteClick}
         >
-          Confirm Delete
+          {t("Confirm Delete")}
         </button>
         <button className="mt-4 font-bold pop-btn" onClick={handleClose}>
-          Cancel Delete
+          {t("Cancel Delete")}
         </button>
       </div>
     </BaseModal>

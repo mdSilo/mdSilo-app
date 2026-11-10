@@ -5,6 +5,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { useT } from "@/i18n";
 import { defaultHighlight } from "../actions";
 import { cornerAt, cornerTurner, type TurnHint } from "../pagination";
 import { boxOfRange, usePopups, type Box } from "../popups";
@@ -50,6 +51,7 @@ function Handle({
   onMove: (point: Point) => void;
   onUp: () => void;
 }) {
+  const t = useT();
   const start = end === "start";
   const left = vertical && start ? at.x - SIZE / 2 + STEM / 4 : at.x - SIZE / 2;
   const top = vertical
@@ -65,7 +67,7 @@ function Handle({
       className={`fixed z-40 cursor-grab touch-none active:cursor-grabbing ${hidden ? "hidden" : ""}`}
       style={{ left, top, width: SIZE, height: SIZE + STEM }}
       data-testid={`range-handle-${end}`}
-      aria-label={start ? "Move the start" : "Move the end"}
+      aria-label={start ? t("Move the start") : t("Move the end")}
       onPointerDown={(e) => {
         e.preventDefault();
         e.stopPropagation();

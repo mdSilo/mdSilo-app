@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
+import { useT } from "@/i18n";
 import { getView, type SearchMatch } from "../view";
 import { useReaderChrome } from "../chrome";
 
@@ -9,6 +10,7 @@ let requestRun = 0;
 
 /** Search in the book: the matches by chapter, highlighted in the pages. */
 function SearchView() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [matchCase, setMatchCase] = useState(false);
   const [wholeWords, setWholeWords] = useState(false);
@@ -88,10 +90,10 @@ function SearchView() {
       >
         <input
           className="input input-xs w-full"
-          placeholder="Search in the book"
+          placeholder={t("Search in the book")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          aria-label="Search in the book"
+          aria-label={t("Search in the book")}
         />
         <div className="flex items-center gap-3 text-xs">
           <label className="flex items-center gap-1">
@@ -101,7 +103,7 @@ function SearchView() {
               checked={matchCase}
               onChange={(e) => setMatchCase(e.target.checked)}
             />
-            Match case
+            {t("Match case")}
           </label>
           <label className="flex items-center gap-1">
             <input
@@ -110,7 +112,7 @@ function SearchView() {
               checked={wholeWords}
               onChange={(e) => setWholeWords(e.target.checked)}
             />
-            Whole words
+            {t("Whole words")}
           </label>
         </div>
       </form>
@@ -122,7 +124,7 @@ function SearchView() {
         />
       ) : searched ? (
         <p className="px-3 text-xs text-base-content/60">
-          {count === 0 ? "Nothing found" : `${count} found`}
+          {count === 0 ? t("Nothing found") : t("{count} found", { count })}
         </p>
       ) : null}
       <ul className="flex-1 overflow-y-auto text-sm">

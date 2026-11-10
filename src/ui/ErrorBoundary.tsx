@@ -1,5 +1,6 @@
 import { Component, ReactNode } from "react";
 import { setLog } from "@/state/storage";
+import { t } from "@/i18n";
 
 type Props = {
   children: ReactNode;
@@ -23,7 +24,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error) {
     // sentry? TODO
     setLog(
-      "Error",
+      t("Error"),
       `${error.name}: ${error.message}, ${error.cause}, ${error.stack}`,
     );
   }
@@ -35,7 +36,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         fallback ?? (
           <div className="flex items-center justify-center flex-1 shrink-0 w-full h-full">
-            <p>An unexpected error occurred.</p>
+            <p>{t("An unexpected error occurred.")}</p>
           </div>
         )
       );

@@ -4,6 +4,7 @@ import useLoadNotes from "@/lib/hooks/useLoadNotes";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import useDebounce from "@/lib/hooks/useDebounce";
 import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
+import { tn, tr, useT } from "@/i18n";
 import { useIssueStore } from "./issueStore";
 import {
   createIssueFromTask,
@@ -30,6 +31,7 @@ type Filter = "all" | TaskTag;
  * note and can be turned into an issue linked to that note.
  */
 export default function NoteTaskList({ data }: { data: IssueData }) {
+  const t = useT();
   useLoadNotes();
 
   const [notes] = useDebounce(
@@ -69,11 +71,16 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
   return (
     <div data-testid="note-tasks">
       <p className="mb-3 text-sm text-base-content/60">
-        Tasks written in notes with <code>#todo#</code>, <code>#doing#</code>,{" "}
-        <code>#done#</code> or as checkboxes (<code>- [ ]</code>,{" "}
-        <code>- [x]</code>). Create an issue from a task to track it here: the
-        issue links back to its note and follows the task when it changes or is
-        removed.
+        {tr(
+          "Tasks written in notes with {todo}, {doing}, {done} or as checkboxes ({open}, {checked}). Create an issue from a task to track it here: the issue links back to its note and follows the task when it changes or is removed.",
+          {
+            todo: <code>#todo#</code>,
+            doing: <code>#doing#</code>,
+            done: <code>#done#</code>,
+            open: <code>- [ ]</code>,
+            checked: <code>- [x]</code>,
+          },
+        )}
       </p>
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {(["all", ...TASK_TAGS] as Filter[]).map((f) => (
@@ -84,7 +91,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
             className={`px-2 py-1 text-sm rounded-sm ${filter === f ? "bg-base-300 font-semibold" : "hover:bg-base-content/5"}`}
             onClick={() => setFilter(f)}
           >
-            {f === "all" ? "All" : f[0].toUpperCase() + f.slice(1)}{" "}
+            {f === "all" ? t("All") : f[0].toUpperCase() + f.slice(1)}{" "}
             <span className="text-xs text-base-content/60">{count(f)}</span>
           </button>
         ))}
@@ -94,7 +101,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
             checked={withoutIssue}
             onChange={(e) => setWithoutIssue(e.target.checked)}
           />
-          Without issue only
+          {t("Without issue only")}
         </label>
         <span className="flex-1" />
         <button
@@ -103,13 +110,16 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
           disabled={toConvert.length === 0}
           onClick={() => convertAll(toConvert)}
         >
-          Create issues for {toConvert.length} task
-          {toConvert.length === 1 ? "" : "s"}
+          {tn(
+            "Create issues for {count} task",
+            "Create issues for {count} tasks",
+            toConvert.length,
+          )}
         </button>
       </div>
       {shown.length === 0 ? (
         <p className="p-8 text-center text-base-content/60">
-          No tasks in notes.
+          {t("No tasks in notes.")}
         </p>
       ) : (
         <ul className="border border-base-300 rounded-sm">
@@ -133,7 +143,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
                 <div className="flex-1 min-w-0">
                   <div className="wrap-break-word">
                     {task.text || (
-                      <i className="text-base-content/60">(no text)</i>
+                      <i className="text-base-content/60">{t("(no text)")}</i>
                     )}
                   </div>
                   <button
@@ -162,7 +172,7 @@ export default function NoteTaskList({ data }: { data: IssueData }) {
                     className={btnClass}
                     onClick={() => apply((d) => createIssueFromTask(d, task))}
                   >
-                    Create issue
+                    {t("Create issue")}
                   </button>
                 )}
               </li>

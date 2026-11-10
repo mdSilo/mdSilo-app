@@ -69,6 +69,7 @@ import { getFileExt } from "@/workspace/process";
 import { useWritingRoot } from "@/workspace/useWorkspace";
 import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
 import { isLookupText } from "@/reader/dictionary/dictionary";
+import { useT } from "@/i18n";
 import { setEditor } from "./editors";
 import NoteHeader from "./NoteHeader";
 import Backlinks from "./backlinks/Backlinks";
@@ -92,6 +93,7 @@ type Props = {
 };
 
 function Note(props: Props) {
+  const t = useT();
   const { noteId, className } = props;
   // console.log("loading",noteId)
   const [showBacklink, setShowBacklink] = useState(false);
@@ -451,7 +453,9 @@ function Note(props: Props) {
   if (!isNoteExists) {
     return (
       <div className={errorContainerClassName}>
-        <p>The note does not exist: {noteId}</p>
+        <p>
+          {t("The note does not exist:")} {noteId}
+        </p>
       </div>
     );
   }
@@ -460,7 +464,7 @@ function Note(props: Props) {
     <ErrorBoundary
       fallback={
         <div className={errorContainerClassName}>
-          <p>An unexpected error occurred when rendering this note.</p>
+          <p>{t("An unexpected error occurred when rendering this note.")}</p>
         </div>
       }
     >
@@ -583,7 +587,7 @@ function Note(props: Props) {
                   size={16}
                   fill="currentColor"
                 />
-                BackLinks
+                {t("BackLinks")}
               </button>
               <div className="pt-2 border-t-2 border-base-300">
                 {showBacklink ? (

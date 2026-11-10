@@ -5,6 +5,7 @@ import { Sort } from "@/state/userSettings";
 import { Tooltip } from "@/ui/ui";
 import { getParentDir } from "@/workspace/util";
 import { listDirPath } from "@/workspace/useOpen";
+import { t } from "@/i18n";
 import SidebarNotesSortDropdown from "./SidebarNotesSortDropdown";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 
@@ -32,7 +33,7 @@ function SidebarNotesBar(props: Props) {
       <div className="flex-1 min-w-0 my-1">
         <WorkspaceSwitcher count={numOfNotes} />
       </div>
-      <Tooltip content={checkInit ? "" : "Go Upper Folder"}>
+      <Tooltip content={checkInit ? "" : t("Go Upper Folder")}>
         <button
           className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
           onClick={async (e) => {

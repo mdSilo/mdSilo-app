@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { TbHeadphones, TbRefresh, TbRss, TbSettings, TbStar } from "react-icons/tb";
+import {
+  TbHeadphones,
+  TbRefresh,
+  TbRss,
+  TbSettings,
+  TbStar,
+} from "react-icons/tb";
 import { ImLibrary, ImBooks } from "react-icons/im";
 import { getFavicon } from "@/lib/helper";
 import { Spinner, Tooltip } from "@/ui/ui";
 import { ChannelType } from "@/types/model";
+import { useT } from "@/i18n";
 
 type Props = {
   channelList: ChannelType[];
@@ -16,6 +23,7 @@ type Props = {
 };
 
 export function ChannelList(props: Props) {
+  const t = useT();
   const {
     channelList,
     refreshList,
@@ -38,7 +46,7 @@ export function ChannelList(props: Props) {
       <div className="mb-2 pb-1 border-b border-base-300">
         <div className="flex flex-row items-center p-1">
           <ImLibrary size={18} className="m-1" />
-          <span className="m-1">Catalogs</span>
+          <span className="m-1">{t("Catalogs")}</span>
         </div>
         {catalogs.map((channel: ChannelType, idx: number) => {
           const { title, link } = channel;
@@ -108,14 +116,17 @@ export function ChannelList(props: Props) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-none items-center justify-between bg-base-300 p-1">
-        <span className="px-1 font-bold truncate">Channels</span>
+        <span className="px-1 font-bold truncate">{t("Channels")}</span>
         <div className="flex flex-end">
-          <Tooltip content="Refresh All" placement="bottom">
+          <Tooltip content={t("Refresh All")} placement="bottom">
             <button className="cursor-pointer" onClick={refreshList}>
               <TbRefresh size={24} className="m-1" />
             </button>
           </Tooltip>
-          <Tooltip content="Manage Channels and Settings" placement="bottom">
+          <Tooltip
+            content={t("Manage Channels and Settings")}
+            placement="bottom"
+          >
             <button className="cursor-pointer" onClick={onShowManager}>
               <TbSettings size={24} className="m-1" />
             </button>
@@ -141,7 +152,7 @@ export function ChannelList(props: Props) {
           >
             <div className="flex flex-row items-center justify-start">
               <TbStar size={18} className="m-1 fill-warning text-warning" />
-              <span className="m-1">Starred</span>
+              <span className="m-1">{t("Starred")}</span>
             </div>
           </div>
           {renderFeedList()}

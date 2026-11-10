@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useStore } from "@/state/store";
+import { useT } from "@/i18n";
 import {
   appStyle,
   createHost,
@@ -39,6 +40,7 @@ export default function PluginFrame({
   className = "",
   autoFocus = false,
 }: Props) {
+  const t = useT();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const pluginStates = useStore((state) => state.pluginStates);
   const font = useStore((state) => state.font);
@@ -78,7 +80,9 @@ export default function PluginFrame({
   if (!enabled) {
     return (
       <div className="p-4 text-sm text-base-content/70">
-        {plugin.manifest?.name ?? plugin.id} is not enabled.
+        {t("{name} is not enabled.", {
+          name: plugin.manifest?.name ?? plugin.id,
+        })}
       </div>
     );
   }
@@ -130,6 +134,7 @@ function TrustedPage({
   onHost: { current: ((host: PluginHost | null) => void) | undefined };
   className: string;
 }) {
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   // the module draws its pages once it is loaded
   useTrustedVersion();
@@ -166,7 +171,10 @@ function TrustedPage({
         <p className="p-4 text-sm text-error">{error}</p>
       ) : !mount ? (
         <p className="p-4 text-sm text-base-content/70">
-          {plugin.manifest?.name ?? plugin.id} has no page {page}.
+          {t("{name} has no page {page}.", {
+            name: plugin.manifest?.name ?? plugin.id,
+            page,
+          })}
         </p>
       ) : null}
       {/* the module's own, React leaves it alone */}

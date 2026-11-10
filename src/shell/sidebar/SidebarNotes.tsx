@@ -5,6 +5,8 @@ import { ciStringCompare } from "@/lib/helper";
 import { onOpenFile, onListDir, openWebWorkspace } from "@/workspace/useOpen";
 import { isWeb, normalizeSlash } from "@/workspace/util";
 import ErrorBoundary from "@/ui/ErrorBoundary";
+import { Spinner } from "@/ui/ui";
+import { useT } from "@/i18n";
 import SidebarNotesBar from "./SidebarNotesBar";
 import SidebarNotesTree, { NoteTreeRow } from "./SidebarNotesTree";
 import SidebarHistory from "./SidebarHistory";
@@ -15,10 +17,12 @@ type SidebarNotesProps = {
 };
 
 function SidebarNotes(props: SidebarNotesProps) {
+  const t = useT();
   const { className = "" } = props;
 
   const currentDir = useStore((state) => state.currentDir);
   const openProblem = useStore((state) => state.openProblem);
+  const openingDir = useStore((state) => state.openingDir);
 
   const noteTree = useStore((state) => state.noteTree);
   const noteSort = useStore((state) => state.noteSort);
@@ -58,12 +62,28 @@ function SidebarNotes(props: SidebarNotesProps) {
           />
         ) : currentDir ? null : (
           <>
-            {openProblem ? <OpenProblem problem={openProblem} /> : null}
+            {openProblem ? (
+              <OpenProblem problem={openProblem} />
+            ) : openingDir ? (
+              <div
+                role="status"
+                className="flex items-center gap-2 mx-4 mt-4 text-sm text-base-content/70"
+              >
+                <Spinner size="xs" />
+                <span className="min-w-0 truncate" title={openingDir}>
+                  {t("Opening {name}…", {
+                    name:
+                      openingDir.split(/[\\/]/).filter(Boolean).pop() ??
+                      openingDir,
+                  })}
+                </span>
+              </div>
+            ) : null}
             <button className={btnClass} onClick={onListDir}>
-              Open Folder
+              {t("Open Folder")}
             </button>
             <button className={btnClass} onClick={onOpenFile}>
-              Open File
+              {t("Open File")}
             </button>
             <SidebarHistory />
           </>
@@ -75,6 +95,7 @@ function SidebarNotes(props: SidebarNotesProps) {
 
 /** What failed or hangs opening a folder: on a phone, no console to look at. */
 function OpenProblem({ problem }: { problem: string }) {
+  const t = useT();
   const btn = "px-2 py-0.5 rounded-sm bg-base-200 hover:bg-base-300";
   return (
     <div
@@ -91,7 +112,7 @@ function OpenProblem({ problem }: { problem: string }) {
               .catch((e) => console.error("Failed to copy:", e))
           }
         >
-          Copy
+          {t("Copy")}
         </button>
         {isWeb ? (
           <button
@@ -102,11 +123,11 @@ function OpenProblem({ problem }: { problem: string }) {
               )
             }
           >
-            Try again
+            {t("Try again")}
           </button>
         ) : null}
         <button className={btn} onClick={() => window.location.reload()}>
-          Reload
+          {t("Reload")}
         </button>
       </div>
     </div>

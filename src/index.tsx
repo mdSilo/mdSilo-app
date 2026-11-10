@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "./styles/index.css";
 import App from "@/App";
 import { bookWindowParams } from "@/state/windowKind";
+import { initI18n } from "@/i18n";
 
 // a window of one book, see shell/windows
 const BookWindow = lazy(() => import("@/shell/BookWindow"));
@@ -11,7 +12,8 @@ const book = bookWindowParams();
 
 const root = document.getElementById("root");
 
-if (root) {
+// the language last used, not to show English first
+const render = (root: HTMLElement) =>
   createRoot(root).render(
     <React.StrictMode>
       {book ? (
@@ -23,4 +25,7 @@ if (root) {
       )}
     </React.StrictMode>,
   );
+
+if (root) {
+  void initI18n().finally(() => render(root));
 }

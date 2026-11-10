@@ -48,6 +48,17 @@ Please follow these guidelines when contributing code to mdSilo:
 - Tests sit next to the code they test (`foo.ts` and `foo.test.ts`), fixtures in a `__fixtures__` folder nearby. Tests of a package in `packages/` stay in that package. `pnpm test` runs them all with Vitest (jsdom, setup in `src/setupTests.ts`).
 - Import across folders of `src/` with the `@/` alias (`@/lib/helper`), within a folder with relative paths.
 
+### Translations
+
+The UI text is in English in the code, wrapped in `t()` from `@/i18n`; the English text is the key, and `src/i18n/locales/<lang>.json` maps it to a translation (empty: shown in English).
+
+- In a component, `const t = useT();` re-renders it when the language changes. Out of React, import `t`.
+- Values go in braces: `t("Saved as {name}", { name })`. Counts with `tn("{count} note", "{count} notes", n)`. Elements in a sentence with `tr("Type {mark} to link", { mark: <code>{"{{"}</code> })`, so the sentence stays whole.
+- Text in a constant out of a component: mark it with `tk("Grid")` and show it with `t(label)`.
+- Keep a sentence in one key: not `t("Delete")} {name}`, but `t("Delete {name}", { name })`.
+- `pnpm i18n:find` lists the UI text not wrapped yet (`// i18n-ignore` on or above a line skips it). `pnpm i18n:sync` adds the new keys to the locale files and drops the unused ones; `pnpm i18n:sync --check` fails if a key is not translated.
+- A new language: add `src/i18n/locales/<code>.json` (`{}`), add it to `LANGUAGES` in `src/i18n/index.ts`, and run `pnpm i18n:sync`.
+
 ### Source layout
 
 | Folder | Content |
@@ -65,6 +76,7 @@ Please follow these guidelines when contributing code to mdSilo:
 | `src/sync` | git sync of the workspace (the git side is `src-tauri/src/sync`) |
 | `src/publish` | the static site: what to publish, export, push to GitHub Pages; the generator is `packages/publish` |
 | `src/insight` | views across features: graph, chronicle, heatmap, tags, journals |
+| `src/i18n` | translation of the UI: `t()` and the locale files |
 
 Inside `src/reader`, the reading engine (opening books, the view, store, settings, styles, page turning) and the reading view's components (`components/`) are at the top; each feature has its own folder with its logic, components and tests: `library`, `annotations` (notes, links, range handles), `lookup`, `vocabulary`, `translation`, `tts`, `media`, `ruler` (the reading ruler), `convert` (files and feed articles made EPUBs). A feature's main module is named after its folder (`tts/tts.ts`, imported as `@/reader/tts/tts`).
 

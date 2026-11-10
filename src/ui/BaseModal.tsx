@@ -6,8 +6,15 @@ MIT License Copyright (c) 2022 Hannah Park
 */
 
 import { Fragment } from "react";
-import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
 import { TbX as IconX } from "react-icons/tb";
+import { useT } from "@/i18n";
 
 type Props = {
   title: string;
@@ -31,6 +38,7 @@ export const BaseModal = ({
   panelClassName = "max-w-sm",
   scrollBody = false,
 }: Props) => {
+  const t = useT();
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog
@@ -76,7 +84,7 @@ export const BaseModal = ({
             >
               <button
                 className="absolute right-4 top-4"
-                aria-label="Close"
+                aria-label={t("Close")}
                 onClick={() => handleClose()}
               >
                 <IconX size={20} className="text-base-content/60" />

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TbVolume, TbVolumeOff } from "react-icons/tb";
+import { useT } from "@/i18n";
 import type { Pronunciation } from "../lookup/lookup";
 import { playRecording } from "./audio";
 import { useLocalDictionaries } from "./local";
@@ -19,6 +20,7 @@ export default function Pronunciations({
   list?: Pronunciation[];
   className?: string;
 }) {
+  const t = useT();
   const here = useLocalDictionaries((state) => state.here);
   // a recording that could not be played: why
   const [error, setError] = useState("");
@@ -42,10 +44,10 @@ export default function Pronunciations({
             className="h-auto min-h-0 px-1 py-0 font-normal btn btn-ghost btn-xs"
             title={
               away
-                ? "Its dictionary file is not on this device"
-                : `Play${label}`
+                ? t("Its dictionary file is not on this device")
+                : t("Play") + label
             }
-            aria-label={`Play the pronunciation${label}`}
+            aria-label={t("Play the pronunciation{label}", { label })}
             disabled={away}
             onClick={(e) => {
               e.stopPropagation();

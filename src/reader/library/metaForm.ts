@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type { BookEntry, BookMeta } from "./library";
 
 /** The metadata of a book edited in a form, as text. */
@@ -52,14 +53,14 @@ export function validateMeta(form: Form): Partial<Record<keyof Form, string>> {
       form.published.trim(),
     )
   ) {
-    errors.published = "As YYYY, YYYY-MM or YYYY-MM-DD";
+    errors.published = t("As YYYY, YYYY-MM or YYYY-MM-DD");
   }
   if (
     list(form.language).some(
       (code) => !/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(code),
     )
   ) {
-    errors.language = "Language codes, e.g. en, zh-CN";
+    errors.language = t("Language codes, e.g. en, zh-CN");
   }
   for (const field of ["seriesIndex", "seriesTotal"] as const) {
     if (form[field].trim() && number(form[field]) === undefined)

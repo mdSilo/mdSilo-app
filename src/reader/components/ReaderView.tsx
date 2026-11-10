@@ -40,6 +40,7 @@ import { selectionActionsIn } from "@/plugins/selection";
 import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { PluginIcon } from "@/plugins/PluginIcon";
 import { ReaderPanelHost, ReaderPanelsButton } from "@/plugins/ReaderPanels";
+import { t, tk, useT } from "@/i18n";
 import { annotationsPathOf } from "../annotations/annotations";
 import { useActiveStore, useReaderStore, useSideStore } from "../readerStore";
 import { bookmarkAt, toggleBookmark } from "../actions";
@@ -94,6 +95,7 @@ export function Reader({
   headerButtons,
   overlay,
 }: Props) {
+  const t = useT();
   const { state, dispatch } = useCurrentViewContext();
   const path = state.bookPath;
   const cfi = state.bookCfi;
@@ -194,7 +196,7 @@ export function Reader({
   const tabs: SidebarTab[] = [
     {
       id: "toc",
-      label: "Table of Contents",
+      label: t("Table of Contents"),
       icon: <FaList size={18} />,
       render: () => (
         <TocView
@@ -206,7 +208,9 @@ export function Reader({
     },
     {
       id: "notes",
-      label: `Notes${panelNotes.length ? ` ${panelNotes.length}` : ""}`,
+      label: panelNotes.length
+        ? t("Notes {count}", { count: panelNotes.length })
+        : t("Notes"),
       icon: <CgNotes size={18} />,
       render: () => (
         <NotesView
@@ -227,7 +231,7 @@ export function Reader({
     },
     {
       id: "links",
-      label: "Links",
+      label: t("Links"),
       icon: <VscReferences size={18} />,
       render: () => (
         <LinksView
@@ -241,7 +245,7 @@ export function Reader({
     },
     {
       id: "search",
-      label: "Search",
+      label: t("Search"),
       icon: <FaSearch size={18} />,
       render: () => <SearchView />,
     },
@@ -352,7 +356,7 @@ export function Reader({
               <ResizeHandle
                 width={sidebarCol.width}
                 bounds={READER_SIDEBAR_WIDTH}
-                label="Resize contents"
+                label={t("Resize contents")}
                 onResize={sidebarCol.onResize}
                 onResizeEnd={sidebarCol.onResizeEnd}
               />
@@ -376,7 +380,7 @@ export function Reader({
               <FoliateViewer book={book} initialCfi={initialCfi} />
             ) : status === "error" ? (
               <div className="flex flex-col items-center justify-center h-full gap-2 p-8 text-center">
-                <p className="text-error">Could not open the book</p>
+                <p className="text-error">{t("Could not open the book")}</p>
                 <p className="text-sm opacity-60">{error}</p>
               </div>
             ) : (
@@ -440,20 +444,20 @@ export function Reader({
             >
               <ViewMenu />
               <IconButton
-                title="Library"
+                title={t("Library")}
                 onClick={() => dispatch({ view: "library" })}
               >
                 <TbArrowLeft size={18} />
               </IconButton>
               <IconButton
-                title="Contents and notes"
+                title={t("Contents and notes")}
                 active={showSidebar}
                 onClick={() => toggleSidebar(!showSidebar)}
               >
                 <TbLayoutSidebar size={18} />
               </IconButton>
               <IconButton
-                title="Bookmark this page"
+                title={t("Bookmark this page")}
                 onClick={() => toggleBookmark("main")}
                 disabled={!location}
               >
@@ -471,7 +475,7 @@ export function Reader({
                 {/* a book beside, e.g. its translation: not on a phone */}
                 {!mobile && format ? (
                   <IconButton
-                    title="Parallel reading"
+                    title={t("Parallel reading")}
                     active={menu === "parallel" || parallelOpen}
                     onClick={() =>
                       setMenu(menu === "parallel" ? undefined : "parallel")
@@ -481,7 +485,7 @@ export function Reader({
                   </IconButton>
                 ) : null}
                 <IconButton
-                  title="Font and layout"
+                  title={t("Font and layout")}
                   active={settingsOpen}
                   onClick={() => setMenu(settingsOpen ? undefined : "settings")}
                 >
@@ -509,16 +513,16 @@ export function Reader({
               <>
                 <button
                   className="absolute z-20 flex items-center justify-center w-12 h-12 -translate-y-1/2 rounded-full shadow-lg left-3 top-1/2 bg-base-100/90 text-base-content active:scale-95"
-                  title="Previous page"
-                  aria-label="Previous page"
+                  title={t("Previous page")}
+                  aria-label={t("Previous page")}
                   onClick={() => void turn(getView("main"), "left")}
                 >
                   <TbChevronLeft size={20} />
                 </button>
                 <button
                   className="absolute z-20 flex items-center justify-center w-12 h-12 -translate-y-1/2 rounded-full shadow-lg right-3 top-1/2 bg-base-100/90 text-base-content active:scale-95"
-                  title="Next page"
-                  aria-label="Next page"
+                  title={t("Next page")}
+                  aria-label={t("Next page")}
                   onClick={() => void turn(getView("main"), "right")}
                 >
                   <TbChevronRight size={20} />
@@ -544,6 +548,7 @@ type FooterBarProps = {
 
 /** The bar below the book: back and forward, the chapters, the pages, the progress. */
 function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
+  const t = useT();
   const location = useReaderStore((s) => s.location);
   const fraction = location?.fraction ?? 0;
   // the place dragged to, before the book goes there
@@ -565,21 +570,21 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
       data-testid="reader-footer"
     >
       <IconButton
-        title="Go back"
+        title={t("Go back")}
         disabled={!view?.history?.canGoBack}
         onClick={() => view?.history.back()}
       >
         <TbArrowBackUp size={18} />
       </IconButton>
       <IconButton
-        title="Go forward"
+        title={t("Go forward")}
         disabled={!view?.history?.canGoForward}
         onClick={() => view?.history.forward()}
       >
         <TbArrowForwardUp size={18} />
       </IconButton>
       <IconButton
-        title="Previous chapter"
+        title={t("Previous chapter")}
         onClick={() => void turn(getView("main"), "left", "section")}
       >
         <TbChevronsLeft size={18} />
@@ -600,7 +605,7 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
               setDragged(undefined);
             }, 150);
           }}
-          aria-label="Progress"
+          aria-label={t("Progress")}
           title={left}
           disabled={!location}
         />
@@ -614,7 +619,7 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
         ) : null}
       </div>
       <IconButton
-        title="Next chapter"
+        title={t("Next chapter")}
         onClick={() => void turn(getView("main"), "right", "section")}
       >
         <TbChevronsRight size={18} />
@@ -624,7 +629,9 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
         data-testid="reader-progress"
         title={left}
       >
-        {location?.pageLabel ? `p. ${location.pageLabel} · ` : ""}
+        {location?.pageLabel
+          ? `${t("p. {page}", { page: location.pageLabel })} · `
+          : ""}
         {Math.round(fraction * 100)}%
       </span>
     </div>
@@ -632,8 +639,12 @@ function FooterBar({ visible, onLeave, fixedLayout }: FooterBarProps) {
 }
 
 const LOOKUPS = [
-  { kind: "translate", icon: <TbLanguage size={18} />, title: "Translate" },
-  { kind: "dictionary", icon: <TbVocabulary size={18} />, title: "Dictionary" },
+  { kind: "translate", icon: <TbLanguage size={18} />, title: tk("Translate") },
+  {
+    kind: "dictionary",
+    icon: <TbVocabulary size={18} />,
+    title: tk("Dictionary"),
+  },
 ] as const;
 
 /** The tools on the text selected: search, look up, translate, read aloud. */
@@ -642,7 +653,7 @@ function lookupTools(selection: TextSelection): Tool[] {
   return [
     {
       id: "search",
-      title: "Search it in the book",
+      title: t("Search it in the book"),
       icon: <TbSearch size={18} />,
       onClick: () => {
         usePopups.getState().clear();
@@ -651,7 +662,7 @@ function lookupTools(selection: TextSelection): Tool[] {
     },
     ...LOOKUPS.map((l) => ({
       id: l.kind,
-      title: l.title,
+      title: t(l.title),
       icon: l.icon,
       hidden: l.kind === "dictionary" && !isLookupText(selection.text),
       onClick: () =>
@@ -660,7 +671,7 @@ function lookupTools(selection: TextSelection): Tool[] {
     // the actions of plugins: in a menu under one button
     {
       id: "plugins",
-      title: "Plugins",
+      title: t("Plugins"),
       icon: <TbPuzzle size={18} />,
       hidden: !pluginActions.length,
       menu: pluginActions.map(({ plugin, action }) => ({
@@ -679,7 +690,7 @@ function lookupTools(selection: TextSelection): Tool[] {
     },
     {
       id: "tts",
-      title: "Read aloud from here",
+      title: t("Read aloud from here"),
       icon: <TbVolume size={18} />,
       hidden: !canReadAloud() || !selection.range,
       onClick: () => {
@@ -691,6 +702,7 @@ function lookupTools(selection: TextSelection): Tool[] {
 }
 
 export default function ReaderView() {
+  const t = useT();
   const canRead = useCanReadAloud();
   return (
     <Reader
@@ -700,7 +712,7 @@ export default function ReaderView() {
           <ReaderPanelsButton />
           {canRead ? (
             <IconButton
-              title="Read aloud"
+              title={t("Read aloud")}
               onClick={() => void readAloud(undefined, "main")}
             >
               <TbVolume size={18} />

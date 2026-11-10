@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
+import { t } from "@/i18n";
 import { flushSave } from "./pendingSaves";
 import { followRename, titleOfPath } from "./renames";
 import { normalizeSlash, renameFile } from "./util";
@@ -9,7 +10,7 @@ export const BAD_NAME = /[\\/:*?"<>|]/;
 
 /** Why the name can not be used, if so: a name only, not a path */
 export const invalidName = (name: string): string | undefined => {
-  if (!name) return "Enter a name";
+  if (!name) return t("Enter a name");
   if (BAD_NAME.test(name)) return 'A name can not contain \\ / : * ? " < > |';
   // hidden, never listed; or `.` and `..`
   if (name.startsWith(".")) return "A name can not start with .";
@@ -59,7 +60,7 @@ export async function renamePath(
   const refused = await check?.(to);
   if (refused) return refused;
   await before?.();
-  if (!(await renameFile(src, to))) return "Failed to rename";
+  if (!(await renameFile(src, to))) return t("Failed to rename");
   // the watcher follows it too, then nothing is left to do
   await followRename(src, to);
   return undefined;

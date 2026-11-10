@@ -3,6 +3,7 @@ import type { RenameOptions } from "@/workspace/renamePath";
 import { followRename } from "@/workspace/renames";
 import { joinPath, normalizeSlash } from "@/workspace/util";
 import { canMoveTo, moveIntoDir } from "@/shell/sidebar/treeMove";
+import { t } from "@/i18n";
 import { useReaderStore, useSideStore } from "../readerStore";
 import { annotationsPathOf } from "../annotations/annotations";
 
@@ -45,7 +46,7 @@ export async function moveBook(
   );
   const refused = await bookRenameOptions(src).check?.(to);
   if (refused) {
-    await invoke("msg_dialog", { title: "Move", msg: refused });
+    await invoke("msg_dialog", { title: t("Move"), msg: refused });
     return;
   }
   await bookRenameOptions(src).before?.();

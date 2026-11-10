@@ -12,6 +12,7 @@ import {
   TbCalendar as IconCalendar,
 } from "react-icons/tb";
 import { ConfirmModal } from "@/ui/Dialogs";
+import { useT } from "@/i18n";
 import { useIssueStore } from "./issueStore";
 import { deleteComment, editComment } from "./issueOps";
 import { TimeAgo, btnClass, primaryBtnClass } from "./common";
@@ -85,6 +86,7 @@ function EventRow({ item }: { item: EventItem }) {
 }
 
 function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.body);
@@ -98,16 +100,16 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
     >
       <div className="flex items-center justify-between px-3 py-1 text-xs text-base-content/60 bg-base-200">
         <span>
-          commented <TimeAgo iso={item.createdAt} />
+          {t("commented")} <TimeAgo iso={item.createdAt} />
           {item.updatedAt ? (
-            <span title={item.updatedAt}> · edited</span>
+            <span title={item.updatedAt}> {t("· edited")}</span>
           ) : null}
         </span>
         {editing ? null : (
           <span className="flex gap-2">
             <button
               type="button"
-              aria-label="Edit comment"
+              aria-label={t("Edit comment")}
               className="hover:text-primary/75"
               onClick={() => {
                 setDraft(item.body);
@@ -118,15 +120,15 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
             </button>
             <button
               type="button"
-              aria-label="Delete comment"
+              aria-label={t("Delete comment")}
               className="hover:text-error/80"
               onClick={() => setConfirmDelete(true)}
             >
               <IconTrash size={14} />
             </button>
             <ConfirmModal
-              title="Delete this comment?"
-              confirmLabel="Confirm delete"
+              title={t("Delete this comment?")}
+              confirmLabel={t("Confirm delete")}
               danger
               isOpen={confirmDelete}
               onConfirm={() =>
@@ -152,7 +154,7 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
                 className={btnClass}
                 onClick={() => setEditing(false)}
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="button"
@@ -164,7 +166,7 @@ function CommentRow({ issue, item }: { issue: Issue; item: CommentItem }) {
                   setVersion((v) => v + 1);
                 }}
               >
-                Update comment
+                {t("Update comment")}
               </button>
             </div>
           </>

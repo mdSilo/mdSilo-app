@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { BaseModal } from "@/ui/BaseModal";
 import { configureEngine, useEngines, type Engine } from "@/speech/speech";
+import { t, useT } from "@/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -10,6 +11,7 @@ type Props = {
 
 /** The settings of an engine: a key left empty is kept, cleared by its button. */
 function EngineSettings({ engine }: { engine: Engine }) {
+  const t = useT();
   const [values, setValues] = useState<Record<string, string>>(engine.config);
   const [message, setMessage] = useState("");
   useEffect(() => setValues(engine.config), [engine.config]);
@@ -18,7 +20,7 @@ function EngineSettings({ engine }: { engine: Engine }) {
     setMessage("");
     try {
       await configureEngine(engine.id, changes);
-      setMessage("Saved");
+      setMessage(t("Saved"));
     } catch (e) {
       setMessage(String(e));
     }
@@ -41,12 +43,12 @@ function EngineSettings({ engine }: { engine: Engine }) {
         <span
           className={`ml-2 badge badge-xs ${engine.available ? "badge-success" : "badge-ghost"}`}
         >
-          {engine.available ? "ready" : "not set up"}
+          {engine.available ? t("ready") : t("not set up")}
         </span>
       </legend>
       {engine.online ? (
         <p className="mb-1 text-xs text-base-content/70">
-          The text read is sent to the service.
+          {t("The text read is sent to the service.")}
         </p>
       ) : null}
       {engine.fields.map((f) => (
@@ -58,7 +60,7 @@ function EngineSettings({ engine }: { engine: Engine }) {
             value={values[f.name] ?? ""}
             placeholder={
               f.secret && engine.config[f.name] !== undefined
-                ? "saved, type to change"
+                ? t("saved, type to change")
                 : f.placeholder
             }
             onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
@@ -68,7 +70,7 @@ function EngineSettings({ engine }: { engine: Engine }) {
               className="btn btn-ghost btn-xs"
               onClick={() => void save({ [f.name]: "" })}
             >
-              Clear
+              {t("Clear")}
             </button>
           ) : null}
         </label>
@@ -78,7 +80,7 @@ function EngineSettings({ engine }: { engine: Engine }) {
           className="btn btn-primary btn-xs"
           onClick={() => void save(changes())}
         >
-          Save
+          {t("Save")}
         </button>
         {message ? (
           <span className="text-xs text-base-content/70">{message}</span>
@@ -90,17 +92,22 @@ function EngineSettings({ engine }: { engine: Engine }) {
 
 /** The engines to read aloud and their settings. */
 export default function SpeechSettings({ isOpen, handleClose }: Props) {
+  const t = useT();
   const engines = useEngines((state) => state.engines);
   const [cleared, setCleared] = useState(false);
   return (
-    <BaseModal title="Speech engines" isOpen={isOpen} handleClose={handleClose}>
+    <BaseModal
+      title={t("Speech engines")}
+      isOpen={isOpen}
+      handleClose={handleClose}
+    >
       <div className="flex flex-col gap-3 p-3 text-sm bg-base-200">
         <ul className="text-xs">
           {engines
             .filter((e) => e.fields.length === 0)
             .map((e) => (
               <li key={e.id}>
-                {e.name}: {e.available ? "ready" : "not available here"}
+                {e.name}: {e.available ? t("ready") : t("not available here")}
               </li>
             ))}
         </ul>
@@ -116,7 +123,7 @@ export default function SpeechSettings({ isOpen, handleClose }: Props) {
               void invoke("tts_clear_cache").then(() => setCleared(true))
             }
           >
-            {cleared ? "Audio made cleared" : "Clear the audio made"}
+            {cleared ? t("Audio made cleared") : t("Clear the audio made")}
           </button>
         ) : null}
       </div>

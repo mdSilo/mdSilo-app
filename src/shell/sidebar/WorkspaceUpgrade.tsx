@@ -1,12 +1,14 @@
 import { memo, useState } from "react";
 import { useStore } from "@/state/store";
 import { reopenWorkspace } from "@/workspace/useOpen";
+import { tr, useT } from "@/i18n";
 
 /**
  * On a legacy workspace: offer to move it into the workspace layout
  * (reading/, writing/, .mdsilo/), see workspace/migrate.
  */
 function WorkspaceUpgrade() {
+  const t = useT();
   const initDir = useStore((state) => state.initDir);
   const layout = useStore((state) => state.layout);
   const [confirming, setConfirming] = useState(false);
@@ -44,8 +46,14 @@ function WorkspaceUpgrade() {
       {confirming ? (
         <>
           <p className="mb-2">
-            Notes move into <b>writing/</b>, clips into <b>reading/</b>, and the
-            issues into <b>.mdsilo/</b>. Links keep working.
+            {tr(
+              "Notes move into {writing}, clips into {reading}, and the issues into {data}. Links keep working.",
+              {
+                writing: <b>writing/</b>,
+                reading: <b>reading/</b>,
+                data: <b>.mdsilo/</b>,
+              },
+            )}
           </p>
           <div className="flex gap-2">
             <button
@@ -53,27 +61,27 @@ function WorkspaceUpgrade() {
               onClick={upgrade}
               disabled={busy}
             >
-              {busy ? "Upgrading..." : "Upgrade"}
+              {busy ? t("Upgrading...") : t("Upgrade")}
             </button>
             <button
               className="btn btn-xs"
               onClick={() => setConfirming(false)}
               disabled={busy}
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </>
       ) : (
         <div className="flex items-center justify-between gap-2">
           <span className="text-base-content/70">
-            Folder without reading and writing
+            {t("Folder without reading and writing")}
           </span>
           <button
             className="btn btn-xs btn-outline"
             onClick={() => setConfirming(true)}
           >
-            Upgrade
+            {t("Upgrade")}
           </button>
         </div>
       )}

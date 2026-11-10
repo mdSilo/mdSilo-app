@@ -6,6 +6,7 @@ import {
   TbEdit,
   TbTrash,
 } from "react-icons/tb";
+import { useT } from "@/i18n";
 import { HIGHLIGHT_CSS } from "../styles";
 import { useActiveStore } from "../readerStore";
 import { copyQuote, issueOfNote } from "../actions";
@@ -15,6 +16,7 @@ import { noteText, type BookNote } from "./annotations";
 
 /** The annotations and bookmarks of the book, in the order of the book. */
 function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
+  const t = useT();
   const notes = useActiveStore((state) => state.notes);
   const [filter, setFilter] = useState("");
   const term = filter.trim().toLowerCase();
@@ -31,7 +33,7 @@ function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
       <div className="flex items-center gap-2 p-2">
         <input
           className="input input-xs flex-1"
-          placeholder="Filter notes"
+          placeholder={t("Filter notes")}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
@@ -39,7 +41,7 @@ function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
           <button
             className="btn btn-xs btn-ghost"
             onClick={onOpenFile}
-            title="Open the notes as a note"
+            title={t("Open the notes as a note")}
           >
             .md
           </button>
@@ -47,7 +49,7 @@ function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
       </div>
       {notes.length === 0 ? (
         <p className="p-4 text-sm text-base-content/60">
-          Select text to highlight it or to write a note on it.
+          {t("Select text to highlight it or to write a note on it.")}
         </p>
       ) : (
         <ul className="flex-1 overflow-y-auto">
@@ -61,6 +63,7 @@ function NotesView({ onOpenFile }: { onOpenFile?: () => void }) {
 }
 
 function NoteItem({ note }: { note: BookNote }) {
+  const t = useT();
   const updateNote = useActiveStore((state) => state.updateNote);
   const removeNote = useActiveStore((state) => state.removeNote);
   const [editing, setEditing] = useState(false);
@@ -84,7 +87,7 @@ function NoteItem({ note }: { note: BookNote }) {
         ) : null}
         {note.type === "bookmark" ? (
           <div className="flex items-center gap-1 text-sm">
-            <TbBookmark className="text-primary" /> Bookmark
+            <TbBookmark className="text-primary" /> {t("Bookmark")}
           </div>
         ) : (
           <blockquote
@@ -121,7 +124,7 @@ function NoteItem({ note }: { note: BookNote }) {
       <div className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
         <button
           className="btn btn-ghost btn-xs"
-          title="Edit the note"
+          title={t("Edit the note")}
           onClick={() => {
             setDraft(note.note);
             setEditing(true);
@@ -132,7 +135,7 @@ function NoteItem({ note }: { note: BookNote }) {
         {note.text ? (
           <button
             className="btn btn-ghost btn-xs"
-            title="Copy as a quote with a link"
+            title={t("Copy as a quote with a link")}
             onClick={() => copyQuote(note.text!, note.cfi)}
           >
             <TbCopy />
@@ -140,14 +143,14 @@ function NoteItem({ note }: { note: BookNote }) {
         ) : null}
         <button
           className="btn btn-ghost btn-xs"
-          title="New issue of it"
+          title={t("New issue of it")}
           onClick={() => void issueOfNote(note)}
         >
           <TbCircleDot />
         </button>
         <button
           className="btn btn-ghost btn-xs"
-          title="Delete"
+          title={t("Delete")}
           onClick={() => removeNote(note.id)}
         >
           <TbTrash />

@@ -6,6 +6,7 @@ import { withDefaults } from "@/reader/settings";
 import { stopTTS, ttsView, useTTS } from "@/reader/tts/tts";
 import { readerAloud, ttsEngine } from "@/reader/tts/readAloud";
 import { getView } from "@/reader/view";
+import { t, useT } from "@/i18n";
 import MediaControls from "./MediaControls";
 import { usePlayer } from "./playerStore";
 
@@ -27,6 +28,7 @@ function useFraction(view: ReturnType<typeof getView>) {
 
 /** The controls of a book read aloud: the engine, the voice, the rate, where in the book. */
 function TTSControls() {
+  const t = useT();
   const status = useTTS((state) => state.status);
   const error = useTTS((state) => state.error);
   const book = useTTS((state) => state.book);
@@ -69,7 +71,7 @@ function TTSControls() {
   return (
     <div className="flex flex-col w-full gap-0.5" data-testid="tts-bar">
       <MediaControls
-        title={book ? `Read aloud: ${book}` : "Read aloud"}
+        title={book ? t("Read aloud: {book}", { book }) : t("Read aloud")}
         playing={status === "playing"}
         onPlay={() =>
           void (status === "paused" ? tts()?.resume() : tts()?.start())
@@ -77,8 +79,8 @@ function TTSControls() {
         onPause={() => tts()?.pause()}
         onPrev={status !== "idle" ? () => void tts()?.skip(false) : undefined}
         onNext={status !== "idle" ? () => void tts()?.skip(true) : undefined}
-        prevTitle="Previous paragraph"
-        nextTitle="Next paragraph"
+        prevTitle={t("Previous paragraph")}
+        nextTitle={t("Next paragraph")}
         onStop={status !== "idle" ? () => tts()?.stop() : undefined}
         progress={
           view
@@ -86,7 +88,7 @@ function TTSControls() {
                 value: fraction,
                 max: 1,
                 label: `${Math.round(fraction * 100)}%`,
-                title: "Where in the book",
+                title: t("Where in the book"),
                 onSeek: (value) => {
                   const playing = status === "playing";
                   if (playing) tts()?.pause();
@@ -105,7 +107,7 @@ function TTSControls() {
           <select
             className="select select-xs w-32"
             value={engine?.id ?? ""}
-            aria-label="Engine"
+            aria-label={t("Engine")}
             onChange={(e) => {
               setReaderSettings({ ...settings, ttsEngine: e.target.value });
               restart();
@@ -122,7 +124,7 @@ function TTSControls() {
           <select
             className="select select-xs w-32"
             value={settings.ttsVoices[engine.id] ?? ""}
-            aria-label="Voice"
+            aria-label={t("Voice")}
             onChange={(e) =>
               setReaderSettings({
                 ...settings,
@@ -133,7 +135,7 @@ function TTSControls() {
               })
             }
           >
-            <option value="">Default voice</option>
+            <option value="">{t("Default voice")}</option>
             {shown.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name}
@@ -143,7 +145,7 @@ function TTSControls() {
         ) : null}
         <button
           className="btn btn-ghost btn-xs btn-circle"
-          title="Speech engines"
+          title={t("Speech engines")}
           onClick={() => usePlayer.getState().setSettingsOpen(true)}
         >
           <TbSettings />

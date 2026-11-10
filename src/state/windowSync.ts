@@ -15,6 +15,7 @@ const SHARED_KEYS = [
   "readerSidebarWidth",
   "librarySettings",
   "lastBooks",
+  "language",
 ] as const;
 type Shared = Partial<Pick<Store, (typeof SHARED_KEYS)[number]>>;
 
