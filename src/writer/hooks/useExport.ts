@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauri } from "@/workspace/util";
+import { t } from "@/i18n";
 
 /** the copy of the note that is printed, see `@media print` in styles.css */
 export const PRINT_ROOT_ID = "print-root";
@@ -117,13 +118,13 @@ export async function exportPng(notePath: string) {
       blob: bytes,
     });
     await invoke("msg_dialog", {
-      title: "Export",
+      title: t("Export"),
       msg: ok ? `Saved to ${filePath}` : `Failed to save ${filePath}`,
     });
   } catch (e) {
     console.error("export png", e);
     if (isTauri) {
-      await invoke("msg_dialog", { title: "Export", msg: `Failed: ${e}` });
+      await invoke("msg_dialog", { title: t("Export"), msg: `Failed: ${e}` });
     }
   }
 }

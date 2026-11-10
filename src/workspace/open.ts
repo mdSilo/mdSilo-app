@@ -4,6 +4,7 @@ import { NoteMap, Notes, store } from "@/state/store";
 import { defaultNote, Note } from "@/types/model";
 import type { Parsed } from "@/lib/parseNote";
 import { regDateStr } from "@/lib/helper";
+import { t } from "@/i18n";
 import DirectoryAPI from "./directory";
 import FileAPI from "./files";
 import { processJson, processFiles, processDirs } from "./process";
@@ -33,7 +34,7 @@ export const openDirDilog = async () => {
   // no filters on a folder dialog, and no empty default path:
   // either makes the dialog crash the app on macOS
   const dirPath = await dialog.open({
-    title: `Open Folder`,
+    title: t("Open Folder"),
     directory: true,
     multiple: false,
     defaultPath: getRecentDirPath() || undefined,
@@ -153,7 +154,7 @@ export const openDir = async (dir: string, toListen = true): Promise<void> => {
  */
 export const openFileDilog = async (ty: string[], multi = true) => {
   const filePaths = await dialog.open({
-    title: `Open ${ty} File`,
+    title: t("Open {type} File", { type: String(ty) }),
     directory: false,
     multiple: multi,
     // an empty default path makes the dialog crash the app on macOS
@@ -430,7 +431,7 @@ export const saveDilog = async (fname?: string) => {
       ? await joinPaths(recentDirPath, [fname])
       : recentDirPath || fname;
   const dirPath = await dialog.save({
-    title: "Select Folder to Save Data",
+    title: t("Select Folder to Save Data"),
     // an empty default path makes the dialog crash the app on macOS
     defaultPath: saveToPath || undefined,
   });

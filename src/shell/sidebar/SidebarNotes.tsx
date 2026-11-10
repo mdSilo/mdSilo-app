@@ -5,6 +5,7 @@ import { ciStringCompare } from "@/lib/helper";
 import { onOpenFile, onListDir, openWebWorkspace } from "@/workspace/useOpen";
 import { isWeb, normalizeSlash } from "@/workspace/util";
 import ErrorBoundary from "@/ui/ErrorBoundary";
+import { useT } from "@/i18n";
 import SidebarNotesBar from "./SidebarNotesBar";
 import SidebarNotesTree, { NoteTreeRow } from "./SidebarNotesTree";
 import SidebarHistory from "./SidebarHistory";
@@ -15,6 +16,7 @@ type SidebarNotesProps = {
 };
 
 function SidebarNotes(props: SidebarNotesProps) {
+  const t = useT();
   const { className = "" } = props;
 
   const currentDir = useStore((state) => state.currentDir);
@@ -60,10 +62,10 @@ function SidebarNotes(props: SidebarNotesProps) {
           <>
             {openProblem ? <OpenProblem problem={openProblem} /> : null}
             <button className={btnClass} onClick={onListDir}>
-              Open Folder
+              {t("Open Folder")}
             </button>
             <button className={btnClass} onClick={onOpenFile}>
-              Open File
+              {t("Open File")}
             </button>
             <SidebarHistory />
           </>
@@ -75,6 +77,7 @@ function SidebarNotes(props: SidebarNotesProps) {
 
 /** What failed or hangs opening a folder: on a phone, no console to look at. */
 function OpenProblem({ problem }: { problem: string }) {
+  const t = useT();
   const btn = "px-2 py-0.5 rounded-sm bg-base-200 hover:bg-base-300";
   return (
     <div
@@ -91,7 +94,7 @@ function OpenProblem({ problem }: { problem: string }) {
               .catch((e) => console.error("Failed to copy:", e))
           }
         >
-          Copy
+          {t("Copy")}
         </button>
         {isWeb ? (
           <button
@@ -102,11 +105,11 @@ function OpenProblem({ problem }: { problem: string }) {
               )
             }
           >
-            Try again
+            {t("Try again")}
           </button>
         ) : null}
         <button className={btn} onClick={() => window.location.reload()}>
-          Reload
+          {t("Reload")}
         </button>
       </div>
     </div>

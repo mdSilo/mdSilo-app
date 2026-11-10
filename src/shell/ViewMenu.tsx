@@ -28,6 +28,7 @@ import { isSyncAvailable } from "@/sync/api";
 import { useSyncState } from "@/sync/syncWorkspace";
 import SyncModal from "@/sync/SyncModal";
 import { AppMenuItems, FileDrop, PluginMenuItems } from "@/shell/SideMenu";
+import { useT } from "@/i18n";
 
 /**
  * A phone, the side menu left to "auto": no side menu, its buttons are in a
@@ -78,6 +79,7 @@ const isRtl = () =>
 const iconClass = "shrink-0 text-base-content/70";
 
 function ViewMenuDropdown({ className = "" }: { className?: string }) {
+  const t = useT();
   const { state, dispatch } = useCurrentViewContext();
   const viewTy = state.view;
 
@@ -122,7 +124,7 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
         <div className="max-h-[80vh] overflow-y-auto" data-testid="view-menu">
           <div className="grid grid-cols-4 gap-1 p-2">
             <Tile
-              label="Explorer"
+              label={t("Explorer")}
               active={isSidebarOpen}
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
@@ -130,7 +132,7 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
             </Tile>
             {currentDir ? (
               <Tile
-                label="New"
+                label={t("New")}
                 onClick={() => {
                   setIsSidebarOpen(false);
                   setIsFindOrCreateModalOpen((isOpen) => !isOpen);
@@ -140,7 +142,7 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
               </Tile>
             ) : null}
             <Tile
-              label="Feed"
+              label={t("Feed")}
               active={viewTy === "feed"}
               onClick={() => go({ view: "feed" })}
             >
@@ -148,7 +150,7 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
             </Tile>
             {hasReading ? (
               <Tile
-                label="Library"
+                label={t("Library")}
                 active={viewTy === "library" || viewTy === "vocabulary"}
                 onClick={() => go({ view: "library" })}
               >
@@ -157,7 +159,7 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
             ) : null}
             {hasReading && lastBook ? (
               <Tile
-                label="Last Book"
+                label={t("Last Book")}
                 active={viewTy === "book"}
                 onClick={() => go({ view: "book", path: lastBook })}
               >
@@ -167,28 +169,28 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
             {currentDir ? (
               <>
                 <Tile
-                  label="Issues"
+                  label={t("Issues")}
                   active={viewTy === "issues" || viewTy === "issue"}
                   onClick={() => go({ view: "issues" })}
                 >
                   <TbCircleDot size={22} className={iconClass} />
                 </Tile>
                 <Tile
-                  label="Projects"
+                  label={t("Projects")}
                   active={viewTy === "project"}
                   onClick={() => go({ view: "project" })}
                 >
                   <TbLayoutKanban size={22} className={iconClass} />
                 </Tile>
                 <Tile
-                  label="Chronicle"
+                  label={t("Chronicle")}
                   active={viewTy === "chronicle"}
                   onClick={() => go({ view: "chronicle" })}
                 >
                   <TbCalendar size={22} className={iconClass} />
                 </Tile>
                 <Tile
-                  label="Graph"
+                  label={t("Graph")}
                   active={viewTy === "graph"}
                   onClick={() => go({ view: "graph" })}
                 >
@@ -197,7 +199,7 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
               </>
             ) : null}
             <Tile
-              label="Player"
+              label={t("Player")}
               active={playerShown}
               onClick={() => usePlayer.getState().setShown(!playerShown)}
             >
@@ -209,7 +211,7 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
               />
             </Tile>
             {hasSync ? (
-              <Tile label="Sync" onClick={() => setIsSyncOpen(true)}>
+              <Tile label={t("Sync")} onClick={() => setIsSyncOpen(true)}>
                 <span className="relative">
                   <TbRefresh
                     size={22}
@@ -221,7 +223,7 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
                 </span>
               </Tile>
             ) : null}
-            <Tile label="Settings" onClick={() => setIsSettingsOpen(true)}>
+            <Tile label={t("Settings")} onClick={() => setIsSettingsOpen(true)}>
               <TbSettings size={22} className={iconClass} />
             </Tile>
           </div>

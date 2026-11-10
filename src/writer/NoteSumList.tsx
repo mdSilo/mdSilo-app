@@ -6,6 +6,7 @@ import Tree from "@/ui/Tree";
 import { Tooltip } from "@/ui/ui";
 import { openFilePath } from "@/workspace/open";
 import { useNoteContent } from "@/lib/contentCache";
+import { useT } from "@/i18n";
 
 type Props = {
   anchor: string;
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default function NoteSumList(props: Props) {
+  const t = useT();
   const { anchor, notes, className, isDate, onClick } = props;
   const currentView = useCurrentViewContext();
   const dispatch = currentView.dispatch;
@@ -27,7 +29,7 @@ export default function NoteSumList(props: Props) {
         <div className="flex w-full mt-2 p-1 bg-base-200">
           <span className="py-1 text-xl text-base-content">{anchor}</span>
           {isDate ? (
-            <Tooltip content={`Recap: ${anchor}`}>
+            <Tooltip content={t("Recap: {date}", { date: anchor })}>
               <button
                 className="px-2"
                 onClick={onClick ? () => onClick(anchor) : undefined}

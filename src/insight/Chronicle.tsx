@@ -13,8 +13,10 @@ import useLoadNotes from "@/lib/hooks/useLoadNotes";
 import { checkFileIsMd } from "@/workspace/process";
 import { useWritingRoot } from "@/workspace/useWorkspace";
 import { readingTimeByDay } from "@/reader/library/stats";
+import { useT } from "@/i18n";
 
 export default function Chronicle() {
+  const t = useT();
   useLoadNotes();
   const initDir = useStore((state) => state.initDir);
   // daily notes are in writing/daily in the workspace layout
@@ -41,7 +43,7 @@ export default function Chronicle() {
         const newDailyDir: Note = {
           ...defaultNote,
           id: dailyDir,
-          title: "daily",
+          title: "daily", // i18n-ignore: the folder name
           file_path: dailyDir,
           is_dir: true,
         };
@@ -71,13 +73,13 @@ export default function Chronicle() {
             onClick={() => dispatch({ view: "journal" })}
             className="ms-link text-2xl"
           >
-            Journals
+            {t("Journals")}
           </button>
           <button
             className="ms-link w-full mt-2"
             onClick={() => onNewDailyNote(today)}
           >
-            Today : {today}
+            {t("Today: {date}", { date: today })}
           </button>
         </div>
         <HeatMapAndList onNewDailyNote={onNewDailyNote} />

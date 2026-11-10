@@ -8,6 +8,7 @@ import {
 import { Spinner, Tooltip } from "@/ui/ui";
 import { fmtDatetime, dateCompare } from "@/lib/helper";
 import { ArticleType, ChannelType } from "@/types/model";
+import { t, useT } from "@/i18n";
 import { MakeBook } from "./MakeBook";
 
 type Props = {
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export function Channel(props: Props) {
+  const t = useT();
   const {
     channel,
     starChannel,
@@ -51,17 +53,19 @@ export function Channel(props: Props) {
     <div className="flex flex-col items-between justify-center">
       <div className="flex flex-row items-center justify-between p-2 bg-base-300 rounded-sm">
         <div className="font-bold">
-          {channel?.title || (starChannel ? "Starred" : "")}
+          {channel?.title || (starChannel ? t("Starred") : "")}
         </div>
         <div className="flex flex-row items-center justify-end">
           {articles.length > 0 && (
             <Tooltip
-              content="Make a book of the articles, or add the new ones to it"
+              content={t(
+                "Make a book of the articles, or add the new ones to it",
+              )}
               placement="bottom"
             >
               <button
                 className=""
-                aria-label="Make a book"
+                aria-label={t("Make a book")}
                 onClick={() => setMakingBook((v) => !v)}
               >
                 <IconBook size={18} className="m-1" />
@@ -70,7 +74,7 @@ export function Channel(props: Props) {
           )}
           {channel && (
             <>
-              <Tooltip content="Mark All Read" placement="bottom">
+              <Tooltip content={t("Mark All Read")} placement="bottom">
                 <button
                   className=""
                   onClick={async () =>
@@ -80,7 +84,7 @@ export function Channel(props: Props) {
                   <IconCircleCheck size={18} className="m-1" />
                 </button>
               </Tooltip>
-              <Tooltip content="Refresh Channel" placement="bottom">
+              <Tooltip content={t("Refresh Channel")} placement="bottom">
                 <button className="" onClick={handleRefresh}>
                   <IconRefresh size={18} className="m-1" />
                 </button>
@@ -91,7 +95,7 @@ export function Channel(props: Props) {
       </div>
       {makingBook && (
         <MakeBook
-          defaultName={channel?.title || "Starred"}
+          defaultName={channel?.title || t("Starred")}
           source={channel?.title}
           feedUrl={channel?.link}
           articles={articles}

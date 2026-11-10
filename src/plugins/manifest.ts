@@ -11,6 +11,7 @@ import {
   type Contributes,
   type SelectionPlace,
 } from "@mdsilo/plugin-api";
+import { tk } from "@/i18n";
 
 // the types are of @mdsilo/plugin-api, for the app and the authors of plugins alike
 export { PERMISSIONS };
@@ -30,14 +31,14 @@ export type {
 
 /** What a permission lets a plugin do, to show the user */
 export const PERMISSION_LABELS: Record<Permission, string> = {
-  "file:read": "Read the file it opens",
-  "file:write": "Change the file it opens",
-  "notes:read": "Read your notes",
-  "notes:write": "Change your notes",
-  "books:read": "Read your library",
-  "issues:read": "Read your issues",
-  "reader:read": "Read the book open, where you are in it, and move in it",
-  net: "Reach the internet",
+  "file:read": tk("Read the file it opens"),
+  "file:write": tk("Change the file it opens"),
+  "notes:read": tk("Read your notes"),
+  "notes:write": tk("Change your notes"),
+  "books:read": tk("Read your library"),
+  "issues:read": tk("Read your issues"),
+  "reader:read": tk("Read the book open, where you are in it, and move in it"),
+  net: tk("Reach the internet"),
 };
 
 export const MANIFEST_FILE = "manifest.json";

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { TbArrowsSort as IconSort } from "react-icons/tb";
+import { tk, useT } from "@/i18n";
 import { useIssueStore } from "../issueStore";
 import {
   isOverdue,
@@ -17,12 +18,12 @@ type Col =
   "number" | "title" | "status" | "labels" | "milestone" | "due" | "updated";
 const COLS: { key: Col; name: string }[] = [
   { key: "number", name: "@" },
-  { key: "title", name: "Title" },
-  { key: "status", name: "Status" },
-  { key: "labels", name: "Labels" },
-  { key: "milestone", name: "Milestone" },
-  { key: "due", name: "Due" },
-  { key: "updated", name: "Updated" },
+  { key: "title", name: tk("Title") },
+  { key: "status", name: tk("Status") },
+  { key: "labels", name: tk("Labels") },
+  { key: "milestone", name: tk("Milestone") },
+  { key: "due", name: tk("Due") },
+  { key: "updated", name: tk("Updated") },
 ];
 
 type Row = {
@@ -39,6 +40,7 @@ type Props = {
 };
 
 export default function ProjectTable({ project, data, onOpen }: Props) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: Col; asc: boolean }>({
@@ -100,9 +102,9 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
   return (
     <div className="p-4" data-testid="project-table">
       <input
-        aria-label="Filter items"
+        aria-label={t("Filter items")}
         className={`${inputClass} w-full mb-3`}
-        placeholder="Filter: is:open label:bug …"
+        placeholder={t("Filter: is:open label:bug …")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
@@ -122,7 +124,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                       })
                     }
                   >
-                    {c.name}
+                    {t(c.name)}
                     <IconSort
                       size={12}
                       className={
@@ -144,7 +146,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                   colSpan={8}
                   className="p-4 text-center text-base-content/60"
                 >
-                  No items.
+                  {t("No items.")}
                 </td>
               </tr>
             ) : (
@@ -171,7 +173,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                     {subtaskProgress(issue) ? (
                       <span
                         className="ml-2 text-xs text-base-content/60"
-                        title="Sub-tasks done"
+                        title={t("Sub-tasks done")}
                       >
                         {subtaskProgress(issue)!.done}/
                         {subtaskProgress(issue)!.total}
@@ -180,7 +182,9 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                   </td>
                   <td className="px-2 py-1">
                     <select
-                      aria-label={`Status of ${issueLabel(issue.number)}`}
+                      aria-label={t("Status of {number}", {
+                        number: issueLabel(issue.number),
+                      })}
                       className="py-0 pl-1 text-sm border-base-300 rounded-sm bg-base-100"
                       value={status}
                       onChange={(e) => {
@@ -229,7 +233,9 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                   <td className="px-2 py-1">
                     <button
                       type="button"
-                      aria-label={`Remove ${issueLabel(issue.number)} from project`}
+                      aria-label={t("Remove {number} from project", {
+                        number: issueLabel(issue.number),
+                      })}
                       className="text-xs text-base-content/50 hover:text-error/80"
                       onClick={() =>
                         apply((d) =>
@@ -237,7 +243,7 @@ export default function ProjectTable({ project, data, onOpen }: Props) {
                         )
                       }
                     >
-                      Remove
+                      {t("Remove")}
                     </button>
                   </td>
                 </tr>

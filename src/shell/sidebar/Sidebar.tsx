@@ -4,6 +4,7 @@ import useIsMobile from "@/lib/hooks/useIsMobile";
 import { useStore } from "@/state/store";
 import { SIDEBAR_WIDTH } from "@/state/userSettings";
 import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
+import { useT } from "@/i18n";
 import SidebarContent from "./SidebarContent";
 
 const SPRING_CONFIG: SpringConfig = {
@@ -18,6 +19,7 @@ type Props = {
 };
 
 function Sidebar(props: Props) {
+  const t = useT();
   const { className = "" } = props;
 
   const isSidebarOpen = useStore((state) => state.isSidebarOpen);
@@ -113,7 +115,7 @@ function Sidebar(props: Props) {
               <ResizeHandle
                 width={width}
                 bounds={SIDEBAR_WIDTH}
-                label="Resize sidebar"
+                label={t("Resize sidebar")}
                 onResize={onResize}
                 onResizeEnd={onResizeEnd}
               />

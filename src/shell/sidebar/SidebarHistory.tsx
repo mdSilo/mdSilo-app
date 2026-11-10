@@ -4,12 +4,14 @@ import { useStore } from "@/state/store";
 import { Tooltip } from "@/ui/ui";
 import { listInitDir, startupDir } from "@/workspace/useOpen";
 import { isWeb } from "@/workspace/util";
+import { useT } from "@/i18n";
 
 type Props = {
   className?: string;
 };
 
 function SidebarHistory(props: Props) {
+  const t = useT();
   const { className = "" } = props;
 
   const history: string[] = useStore((state) => state.recentDir);
@@ -48,7 +50,7 @@ function SidebarHistory(props: Props) {
 
   return (
     <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
-      <b className="text-xl text-center mt-4 mx-2">Pinned Folder</b>
+      <b className="text-xl text-center mt-4 mx-2">{t("Pinned Folder")}</b>
       {pinnedDir ? (
         <div
           role="button"
@@ -62,9 +64,11 @@ function SidebarHistory(props: Props) {
           </Tooltip>
         </div>
       ) : (
-        <p className="text-base-content/60 text-center">No Pinned Folder</p>
+        <p className="text-base-content/60 text-center">
+          {t("No Pinned Folder")}
+        </p>
       )}
-      <b className="text-center m-2">Recent History</b>
+      <b className="text-center m-2">{t("Recent History")}</b>
       {[...history].reverse().map((item, idx) => (
         <HistoryItem
           key={`${item}-${idx}`}
@@ -78,7 +82,7 @@ function SidebarHistory(props: Props) {
         className="p-1 m-4 rounded-sm text-base-content/60 hover:text-error/80"
         onClick={() => setRecentDir([])}
       >
-        Clear History
+        {t("Clear History")}
       </button>
     </div>
   );
@@ -97,11 +101,12 @@ type ItemProps = {
 };
 
 function HistoryItem(props: ItemProps) {
+  const t = useT();
   const { setPinnedDir, deleteRecentDir, openRecentDir, dir } = props;
 
   return (
     <div className="flex items-center justify-between p-1 border-t border-base-300">
-      <Tooltip content="Pin">
+      <Tooltip content={t("Pin")}>
         <button
           className="mx-1 rounded-sm hover:bg-base-content/10"
           onClick={async (e) => {
@@ -123,7 +128,7 @@ function HistoryItem(props: ItemProps) {
           </span>
         </Tooltip>
       </div>
-      <Tooltip content="Delete">
+      <Tooltip content={t("Delete")}>
         <button
           className="mx-1 rounded-sm hover:bg-base-content/10"
           onClick={async (e) => {

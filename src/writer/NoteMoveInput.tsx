@@ -14,6 +14,7 @@ import { followRename } from "@/workspace/renames";
 import { moveIntoDir } from "@/shell/sidebar/treeMove";
 import useLoadNotes from "@/lib/hooks/useLoadNotes";
 import { createDirRecursive, joinPaths } from "@/workspace/util";
+import { t, useT } from "@/i18n";
 
 enum OptionType {
   DIR,
@@ -37,6 +38,7 @@ type Props = {
 };
 
 function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
+  const t = useT();
   const {
     noteId,
     onMove,
@@ -64,7 +66,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       result.push({
         id: "root",
         type: OptionType.ROOT,
-        text: "Move to root",
+        text: t("Move to root"),
         icon: IconChevronsUp,
       });
       result.push(
@@ -83,7 +85,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       result.push({
         id: "NEW_FOLDER",
         type: OptionType.NEW,
-        text: `New Folder: ${inputTxt}`,
+        text: t("New Folder: {name}", { name: inputTxt }),
         icon: IconFolderPlus,
       });
       result.push(
@@ -97,7 +99,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       );
     }
     return result;
-  }, [searchResults, noteId, inputTxt, noteTree]);
+  }, [searchResults, noteId, inputTxt, noteTree, t]);
 
   const onOptionClick = useCallback(
     async (option: Option) => {
@@ -157,7 +159,7 @@ function MoveToInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           className={`w-full py-4 px-2 text-xl border-none rounded-tl rounded-tr focus:ring-0 bg-base-200 ${
             options.length <= 0 ? "rounded-bl rounded-br" : ""
           }`}
-          placeholder="Search to move to"
+          placeholder={t("Search to move to")}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={onKeyDown}

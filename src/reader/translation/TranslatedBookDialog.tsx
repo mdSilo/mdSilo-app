@@ -3,6 +3,7 @@ import { BaseModal } from "@/ui/BaseModal";
 import { Spinner } from "@/ui/ui";
 import { useStore } from "@/state/store";
 import { HUMAN_LANGUAGES } from "@/lib/constants";
+import { useT } from "@/i18n";
 import { useReaderChrome } from "../chrome";
 import { readBytes } from "../library/library";
 import { targetLanguage, translatorOf } from "../lookup/lookup";
@@ -25,6 +26,7 @@ type Count = { total: number; done: number; missing: string[] };
  * be refused by the service), or left as they are.
  */
 export default function TranslatedBookDialog() {
+  const t = useT();
   const close = () => useReaderChrome.getState().setTranslatedBook(false);
   const ws = useActiveStore((state) => state.ws);
   const hash = useActiveStore((state) => state.hash);
@@ -130,7 +132,7 @@ export default function TranslatedBookDialog() {
   const translating = progress !== undefined;
   return (
     <BaseModal
-      title="Translated book"
+      title={t("Translated book")}
       isOpen
       handleClose={close}
       panelClassName="max-w-md"
@@ -145,10 +147,17 @@ export default function TranslatedBookDialog() {
           )
         ) : (
           <p>
-            {count.done} of {count.total} paragraphs translated into {language}{" "}
-            by {translator.label}.
+            {t(
+              "{done} of {total} paragraphs translated into {language} by {translator}.",
+              {
+                done: count.done,
+                total: count.total,
+                language,
+                translator: translator.label,
+              },
+            )}
             {count.missing.length
-              ? " The others stay as they are in the book."
+              ? t(" The others stay as they are in the book.")
               : ""}
           </p>
         )}
@@ -166,31 +175,37 @@ export default function TranslatedBookDialog() {
               className="btn btn-ghost btn-xs"
               onClick={() => abort.current?.abort()}
             >
-              Stop
+              {t("Stop")}
             </button>
           </div>
         ) : null}
         <p className="text-xs text-base-content/60">
           {only
-            ? "The translation in place of the text"
-            : "The translation under each paragraph"}{" "}
-          (as the book is shown now), saved beside the book as a new EPUB, in
-          the library; the book itself is left as it is.
+            ? t(
+                "The translation in place of the text (as the book is shown now), saved beside the book as a new EPUB, in the library; the book itself is left as it is.",
+              )
+            : t(
+                "The translation under each paragraph (as the book is shown now), saved beside the book as a new EPUB, in the library; the book itself is left as it is.",
+              )}
           {epub
             ? ""
-            : " Made of the pages as shown here: some formatting of the book may differ."}
+            : t(
+                " Made of the pages as shown here: some formatting of the book may differ.",
+              )}
         </p>
         {error ? <p className="text-error">{error}</p> : null}
-        {made ? <p className="text-success">Saved as {made}</p> : null}
+        {made ? (
+          <p className="text-success">{t("Saved as {name}", { name: made })}</p>
+        ) : null}
         <div className="flex justify-end gap-2">
           {count?.missing.length ? (
             <button
               className="btn btn-sm"
               disabled={translating || busy}
               onClick={() => void translateRest()}
-              title="Translate them now: slow, a few at a time"
+              title={t("Translate them now: slow, a few at a time")}
             >
-              Translate the rest
+              {t("Translate the rest")}
             </button>
           ) : null}
           <button
@@ -198,7 +213,7 @@ export default function TranslatedBookDialog() {
             disabled={!count?.done || translating || busy}
             onClick={() => void make()}
           >
-            {busy ? <Spinner size="xs" /> : null} Make the book
+            {busy ? <Spinner size="xs" /> : null} {t("Make the book")}
           </button>
         </div>
       </div>

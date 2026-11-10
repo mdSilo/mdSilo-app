@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TbTrash as IconTrash } from "react-icons/tb";
+import { useT } from "@/i18n";
 import { useIssueStore } from "./issueStore";
 import {
   addSubtask,
@@ -12,6 +13,7 @@ import type { Issue } from "./types";
 
 /** The sub-tasks of an issue: a checklist, done one by one. */
 export default function Subtasks({ issue }: { issue: Issue }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const [text, setText] = useState("");
   const [editing, setEditing] = useState<
@@ -34,7 +36,7 @@ export default function Subtasks({ issue }: { issue: Issue }) {
   return (
     <div className="mt-4" data-testid="subtasks">
       <div className="flex items-center gap-2 mb-1 text-sm font-semibold text-base-content/70">
-        Sub-tasks
+        {t("Sub-tasks")}
         {progress ? (
           <>
             <progress
@@ -55,7 +57,7 @@ export default function Subtasks({ issue }: { issue: Issue }) {
               type="checkbox"
               className="checkbox checkbox-sm"
               checked={task.done}
-              aria-label={`Done: ${task.text}`}
+              aria-label={t("Done: {text}", { text: task.text })}
               onChange={(e) =>
                 apply((d) =>
                   updateSubtask(d, num, task.id, { done: e.target.checked }),
@@ -67,7 +69,7 @@ export default function Subtasks({ issue }: { issue: Issue }) {
                 className={`${inputClass} flex-1`}
                 value={editing.text}
                 autoFocus
-                aria-label="Sub-task"
+                aria-label={t("Sub-task")}
                 onChange={(e) =>
                   setEditing({ id: task.id, text: e.target.value })
                 }
@@ -89,7 +91,7 @@ export default function Subtasks({ issue }: { issue: Issue }) {
             <button
               type="button"
               className="opacity-0 text-base-content/50 hover:text-error group-hover:opacity-100 focus:opacity-100"
-              aria-label={`Delete the sub-task ${task.text}`}
+              aria-label={t("Delete the sub-task {text}", { text: task.text })}
               onClick={() => apply((d) => removeSubtask(d, num, task.id))}
             >
               <IconTrash size={14} />
@@ -99,8 +101,8 @@ export default function Subtasks({ issue }: { issue: Issue }) {
       </ul>
       <input
         className={`${inputClass} w-full mt-1`}
-        placeholder="Add a sub-task, Enter"
-        aria-label="Add a sub-task"
+        placeholder={t("Add a sub-task, Enter")}
+        aria-label={t("Add a sub-task")}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {

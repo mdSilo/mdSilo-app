@@ -19,6 +19,7 @@ import { Spinner } from "@/ui/ui";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { useStore } from "@/state/store";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { t, useT } from "@/i18n";
 import { findBookPath } from "../library/library";
 import { openLinkOutside, targetLanguage } from "../lookup/lookup";
 import Pronunciations from "../dictionary/Pronunciations";
@@ -49,6 +50,7 @@ export const sourceNameOf = (entry: VocabularyEntry) =>
  * one made of its definition (or translation) shown when none is written.
  */
 function GlossEditor({ entry }: { entry: VocabularyEntry }) {
+  const t = useT();
   const ws = useStore((state) => state.initDir);
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const lang =
@@ -71,10 +73,10 @@ function GlossEditor({ entry }: { entry: VocabularyEntry }) {
       className="flex items-center gap-2 mt-2 text-xs"
       onClick={(e) => e.stopPropagation()}
     >
-      <span className="opacity-60 shrink-0">Gloss</span>
+      <span className="opacity-60 shrink-0">{t("Gloss")}</span>
       <input
         className="flex-1 min-w-0 input input-xs input-bordered"
-        aria-label={`The gloss of ${entry.word} in the books`}
+        aria-label={t("The gloss of {word} in the books", { word: entry.word })}
         placeholder={glossOf({ ...entry, gloss: undefined }, lang)}
         maxLength={MAX_GLOSS}
         value={text}
@@ -95,10 +97,11 @@ function GlossEditor({ entry }: { entry: VocabularyEntry }) {
 
 /** The dictionary of a word, a line under it. */
 function Source({ entry }: { entry: VocabularyEntry }) {
+  const t = useT();
   const name = sourceNameOf(entry);
   return name ? (
     <div className="mt-2 text-xs opacity-50" data-testid="vocabulary-source">
-      From {name}
+      {t("From {name}", { name })}
     </div>
   ) : null;
 }
@@ -131,6 +134,7 @@ function Definition({
 
 /** The sentence the word was met in, and a link back to it in the book. */
 function Context({ entry }: { entry: VocabularyEntry }) {
+  const t = useT();
   const { dispatch } = useCurrentViewContext();
   const ws = useStore((state) => state.initDir);
   const { sentence, book, title, cfi } = entry.context ?? {};
@@ -148,14 +152,14 @@ function Context({ entry }: { entry: VocabularyEntry }) {
       {book ? (
         <button
           className="mt-1 text-xs link link-hover opacity-70"
-          title="Open the book there"
+          title={t("Open the book there")}
           onClick={(e) => {
             e.stopPropagation();
             void open();
           }}
         >
           <TbBook className="inline mr-1" />
-          {title || "The book"}
+          {title || t("The book")}
         </button>
       ) : null}
     </div>
@@ -200,6 +204,7 @@ function StudyCard({
   flipped: boolean;
   onFlip: () => void;
 }) {
+  const t = useT();
   return (
     <div
       className="w-full h-80"
@@ -224,10 +229,9 @@ function StudyCard({
             tabIndex={flipped ? -1 : 0}
           >
             <span className="mb-4 text-xs opacity-60">
-              Click or press space to see the meaning
               {entry.pronunciations?.some((p) => p.audio)
-                ? ", P to hear it"
-                : ""}
+                ? t("Click or press space to see the meaning, P to hear it")
+                : t("Click or press space to see the meaning")}
             </span>
             <span className="text-4xl font-bold break-words">{entry.word}</span>
             {entry.language ? (
@@ -266,6 +270,7 @@ function StudyCard({
 
 /** The vocabulary: words to learn, by cards or all at once; */
 export default function Vocabulary() {
+  const t = useT();
   const { dispatch } = useCurrentViewContext();
   const ws = useStore((state) => state.initDir);
   const entries = useVocabulary((state) => state.entries);
@@ -363,14 +368,14 @@ export default function Vocabulary() {
           <ViewMenu />
           <button
             className="btn btn-ghost btn-xs"
-            title="Library"
-            aria-label="Library"
+            title={t("Library")}
+            aria-label={t("Library")}
             onClick={() => dispatch({ view: "library" })}
           >
             <TbArrowLeft size={18} />
           </button>
           <h1 className="flex-1 text-lg font-semibold">
-            Vocabulary{" "}
+            {t("Vocabulary")}{" "}
             {entries.length ? (
               <span className="font-normal opacity-60">({entries.length})</span>
             ) : null}
@@ -385,14 +390,18 @@ export default function Vocabulary() {
                     setSelected(new Set());
                   }}
                 >
-                  <TbTrash /> Delete {selected.size}
+                  <TbTrash /> {t("Delete {count}", { count: selected.size })}
                 </button>
               ) : null}
-              {modeButton("study", "Study the cards", <TbCards size={16} />)}
-              {modeButton("grid", "All the words", <TbLayoutGrid size={16} />)}
+              {modeButton("study", t("Study the cards"), <TbCards size={16} />)}
+              {modeButton(
+                "grid",
+                t("All the words"),
+                <TbLayoutGrid size={16} />,
+              )}
               {modeButton(
                 "select",
-                "Select words to delete",
+                t("Select words to delete"),
                 <TbListCheck size={16} />,
               )}
             </>
@@ -401,7 +410,7 @@ export default function Vocabulary() {
 
         {!ws ? (
           <p className="p-8 text-center opacity-60">
-            Open a workspace to keep a vocabulary.
+            {t("Open a workspace to keep a vocabulary.")}
           </p>
         ) : !loaded ? (
           <div className="flex items-center justify-center flex-1">
@@ -410,16 +419,17 @@ export default function Vocabulary() {
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 gap-3 px-4 text-center">
             <TbCards size={48} className="opacity-40" />
-            <h2 className="text-xl font-semibold">No words yet</h2>
+            <h2 className="text-xl font-semibold">{t("No words yet")}</h2>
             <p className="max-w-sm opacity-60">
-              Look up a word in a book (select it, then the dictionary) and add
-              it to the vocabulary to learn it here.
+              {t(
+                "Look up a word in a book (select it, then the dictionary) and add it to the vocabulary to learn it here.",
+              )}
             </p>
             <button
               className="btn btn-primary btn-sm"
               onClick={() => dispatch({ view: "library" })}
             >
-              Back to the library
+              {t("Back to the library")}
             </button>
           </div>
         ) : mode === "select" ? (
@@ -472,8 +482,8 @@ export default function Vocabulary() {
               >
                 <button
                   className="absolute opacity-0 top-2 right-2 btn btn-ghost btn-xs text-error group-hover:opacity-100"
-                  title="Delete"
-                  aria-label={`Delete ${entry.word}`}
+                  title={t("Delete")}
+                  aria-label={t("Delete {word}", { word: entry.word })}
                   onClick={(e) => {
                     e.stopPropagation();
                     remove([entry.id]);
@@ -495,7 +505,7 @@ export default function Vocabulary() {
                 <Source entry={entry} />
                 {entry.reviewCount ? (
                   <div className="mt-2 text-xs opacity-50">
-                    Reviewed {entry.reviewCount}×
+                    {t("Reviewed {count}×", { count: entry.reviewCount })}
                   </div>
                 ) : null}
               </div>
@@ -507,8 +517,8 @@ export default function Vocabulary() {
               <div className="flex justify-end mb-1">
                 <button
                   className="btn btn-ghost btn-xs text-error"
-                  title="Delete the word"
-                  aria-label="Delete the word"
+                  title={t("Delete the word")}
+                  aria-label={t("Delete the word")}
                   onClick={() => remove([current.id])}
                 >
                   <TbTrash />
@@ -541,20 +551,24 @@ export default function Vocabulary() {
                   disabled={index === 0}
                   onClick={() => go(index - 1)}
                 >
-                  Previous
+                  {t("Previous")}
                 </button>
                 <button className="btn btn-sm btn-primary" onClick={next}>
-                  {index === entries.length - 1 ? "Done" : "Next"}
+                  {index === entries.length - 1 ? t("Done") : t("Next")}
                 </button>
               </div>
               <div className="mt-6 space-y-1 text-xs text-center opacity-50">
                 {current.reviewCount ? (
                   <div>
-                    Reviewed {current.reviewCount}× · last{" "}
-                    {dateOf(current.lastReviewedAt)}
+                    {t("Reviewed {count}× · last {date}", {
+                      count: current.reviewCount,
+                      date: dateOf(current.lastReviewedAt),
+                    })}
                   </div>
                 ) : null}
-                <div>Added {dateOf(current.addedAt)}</div>
+                <div>
+                  {t("Added {date}", { date: dateOf(current.addedAt) })}
+                </div>
               </div>
             </div>
           </div>

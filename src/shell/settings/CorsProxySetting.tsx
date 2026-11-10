@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { get, set } from "@/state/storage";
+import { tr, useT } from "@/i18n";
 
 /** storage key, read by the web feed fetcher: src/host/web/feed.ts */
 export const CORS_PROXY_KEY = "cors_proxy";
@@ -8,6 +9,7 @@ export const CORS_PROXY_KEY = "cors_proxy";
  * CORS proxy to fetch RSS feeds on web, browser blocks most feeds w/o it.
  */
 export function CorsProxySetting() {
+  const t = useT();
   const [proxy, setProxy] = useState("");
   const [saved, setSaved] = useState("");
 
@@ -36,18 +38,17 @@ export function CorsProxySetting() {
   return (
     <div className="flex flex-col items-center mb-2">
       <div className="mb-2 text-center">
-        <h1 className="text-base font-semibold">RSS CORS Proxy</h1>
+        <h1 className="text-base font-semibold">{t("RSS CORS Proxy")}</h1>
         <p className="mt-1 text-sm text-base-content/80">
-          Used when a feed can not be fetched directly. <code>{"{url}"}</code>{" "}
-          is replaced by the feed url, or the url is appended. <code>none</code>{" "}
-          to disable. Empty for default: the proxy of this site if any,
-          otherwise a public proxy (api.allorigins.win) which can see the feed
-          urls.
+          {tr(
+            "Used when a feed can not be fetched directly. {url} is replaced by the feed url, or the url is appended. {none} to disable. Empty for default: the proxy of this site if any, otherwise a public proxy (api.allorigins.win) which can see the feed urls.",
+            { url: <code>{"{url}"}</code>, none: <code>none</code> },
+          )}
         </p>
       </div>
       <input
         type="text"
-        aria-label="RSS CORS Proxy"
+        aria-label={t("RSS CORS Proxy")}
         className="w-full p-1 rounded-sm border-none outline-hidden text-sm"
         style={{ maxWidth: "24em" }}
         placeholder="https://proxy.example.com/?url={url}"

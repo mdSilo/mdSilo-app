@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { ask } from "@tauri-apps/plugin-dialog";
+import { t } from "@/i18n";
 
 /**
  * Big files chosen to sync (git): a reminder first. Git hosts limit the size
@@ -42,14 +43,24 @@ export function bigSyncMessage(items: SyncItem[]): string | undefined {
     .slice(0, 5)
     .map((item) => `${item.name} (${formatSize(item.size)})`)
     .join(", ");
-  const more = big.length > 5 ? ` and ${big.length - 5} more` : "";
+  const files =
+    big.length > 5
+      ? t("{names} and {count} more", { names, count: big.length - 5 })
+      : names;
   const over = big.some((item) => item.size > HOST_LIMIT_BYTES);
   return (
-    `Big files to sync: ${names}${more}.\n\n` +
+    t("Big files to sync: {files}.", { files }) +
+    "\n\n" +
     (over
-      ? "GitHub refuses a file over 100 MB, and other hosts have limits too: the sync may fail. "
+      ? t(
+          "GitHub refuses a file over 100 MB, and other hosts have limits too: the sync may fail.",
+        ) + " "
       : "") +
-    "Every version of a file synced stays in the history, on each device, and makes the syncs slow.\n\nSync anyway?"
+    t(
+      "Every version of a file synced stays in the history, on each device, and makes the syncs slow.",
+    ) +
+    "\n\n" +
+    t("Sync anyway?")
   );
 }
 
@@ -57,5 +68,5 @@ export function bigSyncMessage(items: SyncItem[]): string | undefined {
 export async function confirmBigSync(items: SyncItem[]): Promise<boolean> {
   const message = bigSyncMessage(items);
   if (!message) return true;
-  return ask(message, { title: "Sync big files?", kind: "warning" });
+  return ask(message, { title: t("Sync big files?"), kind: "warning" });
 }

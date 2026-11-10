@@ -1,4 +1,5 @@
 import { TbX as IconX } from "react-icons/tb";
+import { useT } from "@/i18n";
 import type { Label } from "./types";
 
 /** Black or white, whichever reads better on the given hex color. */
@@ -31,6 +32,7 @@ export default function LabelChip({
   onClick,
   className = "",
 }: Props) {
+  const t = useT();
   const style = {
     backgroundColor: label.color,
     color: textColorFor(label.color),
@@ -42,7 +44,7 @@ export default function LabelChip({
       {onRemove ? (
         <span
           role="button"
-          aria-label={`Remove label ${label.name}`}
+          aria-label={t("Remove label {name}", { name: label.name })}
           className="ml-1 opacity-70 hover:opacity-100 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
@@ -91,13 +93,14 @@ type ColorProps = {
 
 /** Palette plus a free color input. */
 export function ColorPicker({ value, onChange }: ColorProps) {
+  const t = useT();
   return (
     <div className="flex flex-wrap items-center gap-1">
       {LABEL_COLORS.map((c) => (
         <button
           type="button"
           key={c}
-          aria-label={`color ${c}`}
+          aria-label={t("color {color}", { color: c })}
           className={`w-5 h-5 rounded-full border-2 ${c === value ? "border-base-content" : "border-transparent"}`}
           style={{ backgroundColor: c }}
           onClick={() => onChange(c)}
@@ -105,7 +108,7 @@ export function ColorPicker({ value, onChange }: ColorProps) {
       ))}
       <input
         type="color"
-        aria-label="custom color"
+        aria-label={t("custom color")}
         className="w-8 h-6 p-0 border-none bg-transparent"
         value={value}
         onChange={(e) => onChange(e.target.value)}

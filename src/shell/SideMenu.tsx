@@ -68,6 +68,7 @@ import { pluginCommands, runCommand } from "@/plugins/commands";
 import { useTrustedVersion } from "@/plugins/trusted";
 import { installApp, isIos, isStandalone, usePwa } from "@/host/web/pwa";
 import { showMessage } from "@/host/web/browser";
+import { t, useT } from "@/i18n";
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>("auto");
 
@@ -220,6 +221,7 @@ export default function SideMenu() {
 }
 
 const LogoMenu = () => {
+  const t = useT();
   const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
 
@@ -251,6 +253,7 @@ async function reloadApp() {
 
 /** The items of the logo menu: settings, about the app, install it. */
 export function AppMenuItems({ settings = true }: { settings?: boolean }) {
+  const t = useT();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
@@ -270,7 +273,7 @@ export function AppMenuItems({ settings = true }: { settings?: boolean }) {
           }}
         >
           <TbSettings size={18} className="mr-1" />
-          <span>Settings</span>
+          <span>{t("Settings")}</span>
         </DropdownItem>
       ) : null}
       <DropdownItem
@@ -279,7 +282,7 @@ export function AppMenuItems({ settings = true }: { settings?: boolean }) {
         href="https://mdsilo.com"
       >
         <TbBrowser size={18} className="mr-1" />
-        <span>Website</span>
+        <span>{t("Website")}</span>
       </DropdownItem>
       <DropdownItem
         className="border-t border-base-300"
@@ -287,15 +290,15 @@ export function AppMenuItems({ settings = true }: { settings?: boolean }) {
         href="https://mdsilo.com/helpus"
       >
         <TbPizza size={18} className="mr-1" />
-        <span>Help Us</span>
+        <span>{t("Help Us")}</span>
       </DropdownItem>
       <DropdownItem onClick={() => setIsAboutOpen(true)}>
         <TbInfoCircle size={18} className="mr-1" />
-        <span>About</span>
+        <span>{t("About")}</span>
       </DropdownItem>
       <DropdownItem onClick={reloadApp}>
         <TbRefresh size={18} className="mr-1" />
-        <span>Reload App</span>
+        <span>{t("Reload App")}</span>
       </DropdownItem>
       {isWeb && canInstall ? (
         <DropdownItem
@@ -303,7 +306,7 @@ export function AppMenuItems({ settings = true }: { settings?: boolean }) {
           onClick={() => void installApp()}
         >
           <TbDeviceMobileDown size={18} className="mr-1" />
-          <span>Install App</span>
+          <span>{t("Install App")}</span>
         </DropdownItem>
       ) : null}
       {iosHint ? (
@@ -311,13 +314,15 @@ export function AppMenuItems({ settings = true }: { settings?: boolean }) {
           className="border-t border-base-300"
           onClick={() =>
             showMessage(
-              "Install mdSilo",
-              "In Safari, tap Share, then Add to Home Screen. It opens as an app, works offline, and Safari keeps its files.",
+              t("Install mdSilo"),
+              t(
+                "In Safari, tap Share, then Add to Home Screen. It opens as an app, works offline, and Safari keeps its files.",
+              ),
             )
           }
         >
           <TbDeviceMobileDown size={18} className="mr-1" />
-          <span>Add to Home Screen</span>
+          <span>{t("Add to Home Screen")}</span>
         </DropdownItem>
       ) : null}
       {!isWeb && (
@@ -328,7 +333,7 @@ export function AppMenuItems({ settings = true }: { settings?: boolean }) {
           }}
         >
           <TbCurrentLocation size={18} className="mr-1" />
-          <span>Local mdsilo</span>
+          <span>{t("Local mdsilo")}</span>
         </DropdownItem>
       )}
     </>
@@ -362,15 +367,16 @@ const MenuItem = ({ isHighlighted, onClick, children }: MenuItemProps) => {
 };
 
 const OpenButton = () => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const isSidebarOpen: boolean = useStore((state) => state.isSidebarOpen);
 
   return (
     <MenuItem isHighlighted={isSidebarOpen}>
-      <Tooltip content="Explorer (Alt+X)" placement={tooltipPlacement}>
+      <Tooltip content={t("Explorer (Alt+X)")} placement={tooltipPlacement}>
         <button
-          aria-label="Explorer"
+          aria-label={t("Explorer")}
           className={btnClass}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
@@ -382,6 +388,7 @@ const OpenButton = () => {
 };
 
 const NewButton = () => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const setIsFindOrCreateModalOpen = useStore(
@@ -400,7 +407,7 @@ const NewButton = () => {
 
   return (
     <MenuItem isHighlighted={isFindOrCreateModalOpen}>
-      <Tooltip content="New Writing" placement={tooltipPlacement}>
+      <Tooltip content={t("New Writing")} placement={tooltipPlacement}>
         <button className={btnClass} onClick={onCreateNoteClick}>
           <TbFeather size={22} className="shrink-0 mx-px text-primary" />
         </button>
@@ -416,6 +423,7 @@ type ButtonProps = {
 };
 
 const FeedButton = (props: ButtonProps) => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
@@ -429,7 +437,7 @@ const FeedButton = (props: ButtonProps) => {
   return (
     <MenuItem isHighlighted={viewTy === "feed"} onClick={onClick}>
       <Tooltip
-        content="Feed Reader (Ctrl/⌘+Shift+R)"
+        content={t("Feed Reader (Ctrl/⌘+Shift+R)")}
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onViewFeed}>
@@ -441,6 +449,7 @@ const FeedButton = (props: ButtonProps) => {
 };
 
 const LibraryButton = (props: ButtonProps) => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
@@ -449,7 +458,10 @@ const LibraryButton = (props: ButtonProps) => {
       isHighlighted={viewTy === "library" || viewTy === "vocabulary"}
       onClick={onClick}
     >
-      <Tooltip content="Library (Ctrl/⌘+Shift+L)" placement={tooltipPlacement}>
+      <Tooltip
+        content={t("Library (Ctrl/⌘+Shift+L)")}
+        placement={tooltipPlacement}
+      >
         <button className={btnClass} onClick={onDispatch}>
           <TbBooks size={22} className="shrink-0 mx-px text-base-content/70" />
         </button>
@@ -460,6 +472,7 @@ const LibraryButton = (props: ButtonProps) => {
 
 /** Back to the book last read, where it was left. */
 const BookButton = (props: ButtonProps & { path: string }) => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, path, onClick, onDispatch } = props;
   const name = path.split("/").pop() ?? path;
@@ -467,11 +480,12 @@ const BookButton = (props: ButtonProps & { path: string }) => {
   return (
     <MenuItem isHighlighted={viewTy === "book"} onClick={onClick}>
       <Tooltip
+        // i18n-ignore: the name of the book
         content={`${name} (Ctrl/⌘+Shift+B)`}
         placement={tooltipPlacement}
       >
         <button
-          aria-label="Last Book"
+          aria-label={t("Last Book")}
           className={btnClass}
           onClick={onDispatch}
         >
@@ -483,13 +497,14 @@ const BookButton = (props: ButtonProps & { path: string }) => {
 };
 
 const GraphButton = (props: ButtonProps) => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
     <MenuItem isHighlighted={viewTy === "graph"} onClick={onClick}>
       <Tooltip
-        content="Graph View (Ctrl/⌘+Shift+G)"
+        content={t("Graph View (Ctrl/⌘+Shift+G)")}
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onDispatch}>
@@ -501,13 +516,14 @@ const GraphButton = (props: ButtonProps) => {
 };
 
 const ChronButton = (props: ButtonProps) => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
     <MenuItem isHighlighted={viewTy === "chronicle"} onClick={onClick}>
       <Tooltip
-        content="Chronicle View (Ctrl/⌘+Shift+C)"
+        content={t("Chronicle View (Ctrl/⌘+Shift+C)")}
         placement={tooltipPlacement}
       >
         <button className={btnClass} onClick={onDispatch}>
@@ -519,6 +535,7 @@ const ChronButton = (props: ButtonProps) => {
 };
 
 const IssuesButton = (props: ButtonProps) => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
@@ -528,10 +545,14 @@ const IssuesButton = (props: ButtonProps) => {
       onClick={onClick}
     >
       <Tooltip
-        content="Issues (Ctrl/⌘+Shift+I), Tasks (Ctrl/⌘+Shift+T)"
+        content={t("Issues (Ctrl/⌘+Shift+I), Tasks (Ctrl/⌘+Shift+T)")}
         placement={tooltipPlacement}
       >
-        <button aria-label="Issues" className={btnClass} onClick={onDispatch}>
+        <button
+          aria-label={t("Issues")}
+          className={btnClass}
+          onClick={onDispatch}
+        >
           <TbCircleDot size={22} className={btnIconClass} />
         </button>
       </Tooltip>
@@ -540,13 +561,21 @@ const IssuesButton = (props: ButtonProps) => {
 };
 
 const ProjectButton = (props: ButtonProps) => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const { viewTy, onClick, onDispatch } = props;
 
   return (
     <MenuItem isHighlighted={viewTy === "project"} onClick={onClick}>
-      <Tooltip content="Projects (Ctrl/⌘+Shift+K)" placement={tooltipPlacement}>
-        <button aria-label="Projects" className={btnClass} onClick={onDispatch}>
+      <Tooltip
+        content={t("Projects (Ctrl/⌘+Shift+K)")}
+        placement={tooltipPlacement}
+      >
+        <button
+          aria-label={t("Projects")}
+          className={btnClass}
+          onClick={onDispatch}
+        >
           <TbLayoutKanban size={22} className={btnIconClass} />
         </button>
       </Tooltip>
@@ -564,6 +593,7 @@ const PluginsButton = ({
   hasWorkspace: boolean;
   onDispatch: (view: ViewAction) => void;
 }) => {
+  const t = useT();
   const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
 
@@ -573,13 +603,13 @@ const PluginsButton = ({
         buttonChildren={
           <>
             <TbPuzzle size={22} className={btnIconClass} />
-            <span className="sr-only">Plugins</span>
+            <span className="sr-only">{t("Plugins")}</span>
           </>
         }
         buttonClassName={btnClass}
         itemsClassName="w-56"
         placement={isHorizontal ? "bottom-start" : "right-start"}
-        tooltipContent="Plugins"
+        tooltipContent={t("Plugins")}
         tooltipPlacement={tooltipPlacement}
       >
         <PluginMenuItems hasWorkspace={hasWorkspace} onDispatch={onDispatch} />
@@ -596,6 +626,7 @@ export function PluginMenuItems({
   hasWorkspace: boolean;
   onDispatch: (view: ViewAction) => void;
 }) {
+  const t = useT();
   const installedPlugins = useStore((state) => state.installedPlugins);
   const pluginStates = useStore((state) => state.pluginStates);
   const setIsPluginsOpen = useStore((state) => state.setIsPluginsOpen);
@@ -642,13 +673,14 @@ export function PluginMenuItems({
         onClick={() => setIsPluginsOpen(true)}
       >
         <TbSettings size={18} className="mr-1" />
-        <span>Manage Plugins</span>
+        <span>{t("Manage Plugins")}</span>
       </DropdownItem>
     </>
   );
 }
 
 export function FileDrop() {
+  const t = useT();
   const initDir = useStore((state) => state.initDir);
   // the web version starts with a demo: the manual, a book and some issues
   const [hasDemo, setHasDemo] = useState(false);
@@ -660,9 +692,10 @@ export function FileDrop() {
   }, []);
   const onRemoveDemo = useCallback(async () => {
     const ok = await ask(
-      "Remove the demo: the manual, the sample book with its highlight, and the sample issues and project? " +
-        "What you added is kept. This cannot be undone.",
-      { title: "Remove demo" },
+      t(
+        "Remove the demo: the manual, the sample book with its highlight, and the sample issues and project? ",
+      ) + t("What you added is kept. This cannot be undone."),
+      { title: t("Remove demo") },
     );
     if (!ok) return;
     try {
@@ -672,26 +705,26 @@ export function FileDrop() {
     } catch (e) {
       console.error("Failed to remove the demo:", e);
     }
-  }, []);
+  }, [t]);
 
   return (
     <>
       <DropdownItem onClick={onListDir}>
         <TbFolderPlus size={18} className="mr-1" />
-        <Tooltip content="Open Folder">
-          <span>Open Folder</span>
+        <Tooltip content={t("Open Folder")}>
+          <span>{t("Open Folder")}</span>
         </Tooltip>
       </DropdownItem>
       <DropdownItem onClick={onOpenFile}>
         <TbFileText size={18} className="mr-1" />
-        <Tooltip content="Open .md">
-          <span>Open File</span>
+        <Tooltip content={t("Open .md")}>
+          <span>{t("Open File")}</span>
         </Tooltip>
       </DropdownItem>
       <DropdownItem onClick={openJsonFile}>
         <TbFileImport size={18} className="mr-1" />
-        <Tooltip content="Open JSON">
-          <span>Import JSON</span>
+        <Tooltip content={t("Open JSON")}>
+          <span>{t("Import JSON")}</span>
         </Tooltip>
       </DropdownItem>
       {isWeb && (
@@ -706,16 +739,18 @@ export function FileDrop() {
           }}
         >
           <TbDatabaseExport size={18} className="mr-1" />
-          <Tooltip content="Export Backup">
-            <span>Backup</span>
+          <Tooltip content={t("Export Backup")}>
+            <span>{t("Backup")}</span>
           </Tooltip>
         </DropdownItem>
       )}
       {isWeb && hasDemo && (
         <DropdownItem onClick={onRemoveDemo}>
           <TbEraser size={18} className="mr-1" />
-          <Tooltip content="Remove the manual, sample book and sample issues">
-            <span>Remove demo</span>
+          <Tooltip
+            content={t("Remove the manual, sample book and sample issues")}
+          >
+            <span>{t("Remove demo")}</span>
           </Tooltip>
         </DropdownItem>
       )}
@@ -725,15 +760,15 @@ export function FileDrop() {
           onClick={() => usePublishUi.setState({ isOpen: true })}
         >
           <TbWorldUpload size={18} className="mr-1" />
-          <Tooltip content="Publish the notes as a static site">
-            <span>Publish</span>
+          <Tooltip content={t("Publish the notes as a static site")}>
+            <span>{t("Publish")}</span>
           </Tooltip>
         </DropdownItem>
       )}
       <DropdownItem onClick={onSave} className="border-t-2 border-base-300">
         <TbDeviceFloppy size={18} className="mr-1" />
-        <Tooltip content="Save All Data">
-          <span>Save</span>
+        <Tooltip content={t("Save All Data")}>
+          <span>{t("Save")}</span>
         </Tooltip>
       </DropdownItem>
     </>
@@ -741,6 +776,7 @@ export function FileDrop() {
 }
 
 const FileButton = () => {
+  const t = useT();
   const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
   const btnRef = useRef<HTMLButtonElement | null>(null);
@@ -754,7 +790,7 @@ const FileButton = () => {
       {({ open }) => (
         <>
           <MenuButton ref={btnRef} className="hover:bg-base-content/10">
-            <Tooltip content="File Menu" placement={tooltipPlacement}>
+            <Tooltip content={t("File Menu")} placement={tooltipPlacement}>
               <span className={btnClass}>
                 <MdFolderOpen size={22} className={btnIconClass} />
               </span>
@@ -797,6 +833,7 @@ const BottomSection = () => {
 
 /** Show or hide the player; colored while something is in it. */
 const PlayerButton = () => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const shown = usePlayer((state) => state.shown);
   const reading = useTTS((state) => state.active);
@@ -813,9 +850,12 @@ const PlayerButton = () => {
 
   return (
     <MenuItem isHighlighted={shown}>
-      <Tooltip content={`${shown ? "Hide" : "Show"} The Player`} placement={tooltipPlacement}>
+      <Tooltip
+        content={shown ? t("Hide The Player") : t("Show The Player")}
+        placement={tooltipPlacement}
+      >
         <button
-          aria-label="Player"
+          aria-label={t("Player")}
           className={btnClass}
           onClick={() => usePlayer.getState().setShown(!shown)}
         >
@@ -832,11 +872,12 @@ const PlayerButton = () => {
 };
 
 const SettingsButton = () => {
+  const t = useT();
   const tooltipPlacement = useTooltipPlacement();
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
 
   return (
-    <Tooltip content="Preferences" placement={tooltipPlacement}>
+    <Tooltip content={t("Preferences")} placement={tooltipPlacement}>
       <button className={btnClass} onClick={() => setIsSettingsOpen(true)}>
         <TbSettings size={22} className={btnIconClass} />
       </button>

@@ -4,6 +4,7 @@ import { Tooltip } from "@/ui/ui";
 import { CorsProxySetting } from "@/shell/settings/CorsProxySetting";
 import { isWeb } from "@/workspace/util";
 import { ChannelType } from "@/types/model";
+import { t, useT } from "@/i18n";
 import * as dataAgent from "./dataAgent";
 import { loadCatalog } from "./opds";
 
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function FeedManager(props: Props) {
+  const t = useT();
   const { channelList, handleAddFeed, handleDelete } = props;
 
   const [realList, setRealList] = useState<ChannelType[]>(channelList);
@@ -43,7 +45,7 @@ export function FeedManager(props: Props) {
         setFeedTitle(catalog.title);
         setDescription(catalog.subtitle);
       } catch {
-        setDescription("Cannot find an OPDS catalog, please check the URL");
+        setDescription(t("Cannot find an OPDS catalog, please check the URL"));
       }
       setLoading(false);
       return;
@@ -51,7 +53,7 @@ export function FeedManager(props: Props) {
     const res = await dataAgent.fetchFeed(feedUrl);
     // console.log("res from rust", res);
     if (!res) {
-      setDescription("Cannot find any feed, please check the URL");
+      setDescription(t("Cannot find any feed, please check the URL"));
       setLoading(false);
       return;
     }
@@ -92,12 +94,12 @@ export function FeedManager(props: Props) {
       {showAdd && (
         <div className="flex flex-col w-full p-4 outline-solid outline-2 outline-offset-2 outline-primary">
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="mr-2">URL</div>
+            <div className="mr-2">{t("URL")}</div>
             <div className="w-full">
               <input
                 type="text"
                 className="w-full p-1 mx-2 bg-base-200 border-base-300 rounded-sm"
-                placeholder="Feed URL"
+                placeholder={t("Feed URL")}
                 value={feedUrl}
                 onChange={(e) => setFeedUrl(e.target.value)}
                 autoFocus
@@ -105,12 +107,12 @@ export function FeedManager(props: Props) {
             </div>
           </div>
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="mr-2">Title</div>
+            <div className="mr-2">{t("Title")}</div>
             <div className="w-full">
               <input
                 type="text"
                 className="w-full p-1 m-2 bg-base-200 border-base-300 rounded-sm"
-                placeholder="Feed Title"
+                placeholder={t("Feed Title")}
                 value={feedTitle}
                 onChange={(e) => setFeedTitle(e.target.value)}
                 autoFocus
@@ -118,7 +120,7 @@ export function FeedManager(props: Props) {
             </div>
           </div>
           <div className="flex flex-row items-center justify-start w-full">
-            <div className="mr-2">Type</div>
+            <div className="mr-2">{t("Type")}</div>
             <div className="w-full flex flex-row items-center justify-start">
               <input
                 type="radio"
@@ -129,9 +131,9 @@ export function FeedManager(props: Props) {
                 checked={feedType === "rss"}
                 onChange={() => setFeedType("rss")}
               />
-              <Tooltip content="RSS, Atom or JSON Feed" placement="top">
+              <Tooltip content={t("RSS, Atom or JSON Feed")} placement="top">
                 <label className="mr-4 text-sm" htmlFor="feedType1">
-                  RSS
+                  {t("RSS")}
                 </label>
               </Tooltip>
               <input
@@ -144,7 +146,7 @@ export function FeedManager(props: Props) {
                 onChange={() => setFeedType("podcast")}
               />
               <label className="mr-4 text-sm" htmlFor="feedType2">
-                Podcast
+                {t("Podcast")}
               </label>
               <input
                 type="radio"
@@ -156,11 +158,13 @@ export function FeedManager(props: Props) {
                 onChange={() => setFeedType("opds")}
               />
               <Tooltip
-                content="A catalog of books, to browse, search and download them"
+                content={t(
+                  "A catalog of books, to browse, search and download them",
+                )}
                 placement="top"
               >
                 <label className="text-sm" htmlFor="feedType3">
-                  OPDS
+                  {t("OPDS")}
                 </label>
               </Tooltip>
             </div>
@@ -168,19 +172,19 @@ export function FeedManager(props: Props) {
           <div className="w-full m-1">{description}</div>
           <div className="my-1 flex flex-row items-center justify-center">
             <button className="mr-3 m-btn0" onClick={handleLoad}>
-              {loading ? "Loading..." : "Load"}
+              {loading ? t("Loading...") : t("Load")}
             </button>
             <button className="mx-3 m-btn1" onClick={handleCancel}>
-              Cancel
+              {t("Cancel")}
             </button>
             <button className="mx-3 m-btn2" onClick={handleSave}>
-              {confirming ? "Saving.." : "Add"}
+              {confirming ? t("Saving..") : t("Add")}
             </button>
           </div>
         </div>
       )}
       <div className="flex flex-row items-center justify-between w-full mt-2">
-        <Tooltip content="Add Feed" placement="bottom">
+        <Tooltip content={t("Add Feed")} placement="bottom">
           <button
             className="px-2 py-1 text-sm text-base-content rounded-sm bg-primary/25 hover:bg-primary/15"
             onClick={() => setShowAdd(!showAdd)}
@@ -192,7 +196,7 @@ export function FeedManager(props: Props) {
           <input
             type="text"
             className="p-1 m-1 bg-base-200 border-base-300 rounded-xs"
-            placeholder="Search Feed"
+            placeholder={t("Search Feed")}
             value={searchText}
             onChange={(e) => {
               setSearchText(e.target.value);

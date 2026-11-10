@@ -177,6 +177,7 @@ type PersistedState = Pick<
   Store,
   | "userId"
   | "theme"
+  | "language"
   | "customThemes"
   | "darkMode"
   | "codeFont"
@@ -403,6 +404,7 @@ export const store = createStore<Store>()(
         // user setting related
         userId: state.userId,
         theme: state.theme,
+        language: state.language,
         customThemes: state.customThemes,
         darkMode: state.darkMode,
         font: state.font,

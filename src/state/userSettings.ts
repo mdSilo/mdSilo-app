@@ -16,6 +16,7 @@ import {
 import type { CustomFont } from "@/custom/fonts";
 import type { CustomTheme } from "@/custom/themes";
 import type { InstalledPlugin, PluginState } from "@/plugins/registry";
+import { tk } from "@/i18n";
 import { setter, Setter, Store } from "./store";
 
 export enum Sort {
@@ -45,15 +46,15 @@ export type StartupView =
   | "journal";
 
 export const STARTUP_VIEWS: [StartupView, string][] = [
-  ["notes", "Explorer"],
-  ["library", "Library"],
-  ["book", "Last Book"],
-  ["feed", "Feed Reader"],
-  ["issues", "Issues"],
-  ["project", "Projects"],
-  ["chronicle", "Chronicle"],
-  ["graph", "Graph"],
-  ["journal", "Journals"],
+  ["notes", tk("Explorer")],
+  ["library", tk("Library")],
+  ["book", tk("Last Book")],
+  ["feed", tk("Feed Reader")],
+  ["issues", tk("Issues")],
+  ["project", tk("Projects")],
+  ["chronicle", tk("Chronicle")],
+  ["graph", tk("Graph")],
+  ["journal", tk("Journals")],
 ];
 
 /** automatic sync of the workspace (see sync/), where sync is set up */
@@ -70,12 +71,12 @@ export const DEFAULT_SYNC_SETTINGS: SyncSettings = {
 };
 
 export const ReadableNameBySort = {
-  [Sort.TitleAscending]: "Title (A-Z)",
-  [Sort.TitleDescending]: "Title (Z-A)",
-  [Sort.DateModifiedAscending]: "Modified (old)",
-  [Sort.DateModifiedDescending]: "Modified (new)",
-  [Sort.DateCreatedAscending]: "Created (old)",
-  [Sort.DateCreatedDescending]: "Created (new)",
+  [Sort.TitleAscending]: tk("Title (A-Z)"),
+  [Sort.TitleDescending]: tk("Title (Z-A)"),
+  [Sort.DateModifiedAscending]: tk("Modified (old)"),
+  [Sort.DateModifiedDescending]: tk("Modified (new)"),
+  [Sort.DateCreatedAscending]: tk("Created (old)"),
+  [Sort.DateCreatedDescending]: tk("Created (new)"),
 } as const;
 
 export type UserSettings = {
@@ -83,6 +84,9 @@ export type UserSettings = {
   setUserId: Setter<string>;
   theme: string; // daisyUI theme name, or 'system'
   setTheme: Setter<string>;
+  /** the language of the UI, a code of i18n/LANGUAGES or 'system' */
+  language: string;
+  setLanguage: Setter<string>;
   customThemes: CustomTheme[]; // themes made by the user, kept on this device
   setCustomThemes: Setter<CustomTheme[]>;
   workspaceThemes: CustomTheme[]; // themes of the workspace, not persisted
@@ -193,6 +197,8 @@ const userSettingsSlice = (
   setUserId: setter(set, "userId"),
   theme: SYSTEM_THEME,
   setTheme: setter(set, "theme"),
+  language: "system",
+  setLanguage: setter(set, "language"),
   customThemes: [],
   setCustomThemes: setter(set, "customThemes"),
   workspaceThemes: [],

@@ -3,27 +3,30 @@ import {
   TbCircleCheck as IconClosed,
 } from "react-icons/tb";
 import { fmtDatetime } from "@/lib/helper";
+import { getLocale, t, useT } from "@/i18n";
 import type { IssueState } from "./types";
 
 type IconProps = { state: IssueState; size?: number; className?: string };
 
 export function StateIcon({ state, size = 18, className }: IconProps) {
+  const t = useT();
   return state === "open" ? (
     <IconOpen
       size={size}
       className={`shrink-0 ${className ?? "text-success"}`}
-      aria-label="open"
+      aria-label={t("open")}
     />
   ) : (
     <IconClosed
       size={size}
       className={`shrink-0 ${className ?? "text-secondary"}`}
-      aria-label="closed"
+      aria-label={t("closed")}
     />
   );
 }
 
 export function StateBadge({ state }: { state: IssueState }) {
+  const t = useT();
   const cls =
     state === "open"
       ? "bg-success text-success-content"
@@ -33,31 +36,33 @@ export function StateBadge({ state }: { state: IssueState }) {
       className={`inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full ${cls}`}
     >
       <StateIcon state={state} size={16} className="text-current" />
-      <span>{state === "open" ? "Open" : "Closed"}</span>
+      <span>{state === "open" ? t("Open") : t("Closed")}</span>
     </span>
   );
 }
 
 /** "3 minutes ago", "2 days ago"... falls back to a date after 30 days. */
 export function timeAgo(iso: string, now = Date.now()) {
-  const t = new Date(iso).getTime();
-  if (Number.isNaN(t)) return "";
-  const sec = Math.max(0, Math.round((now - t) / 1000));
-  const units: [number, string][] = [
+  const time = new Date(iso).getTime();
+  if (Number.isNaN(time)) return "";
+  const sec = Math.max(0, Math.round((now - time) / 1000));
+  const units: [number, Intl.RelativeTimeFormatUnit][] = [
     [60, "second"],
     [60, "minute"],
     [24, "hour"],
     [30, "day"],
   ];
+  // in the language of the UI
+  const locale = getLocale();
   let v = sec;
-  for (const [size, name] of units) {
+  for (const [size, unit] of units) {
     if (v < size)
-      return v === 0 && name === "second"
-        ? "just now"
-        : `${v} ${name}${v === 1 ? "" : "s"} ago`;
+      return v === 0 && unit === "second"
+        ? t("just now")
+        : new Intl.RelativeTimeFormat(locale).format(-v, unit);
     v = Math.floor(v / size);
   }
-  return `on ${new Date(t).toLocaleDateString()}`;
+  return t("on {date}", { date: new Date(time).toLocaleDateString(locale) });
 }
 
 export function TimeAgo({ iso }: { iso: string }) {

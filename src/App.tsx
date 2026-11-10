@@ -6,6 +6,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ProvideCurrentView } from "@/state/useCurrentView";
 import useHotkeys from "@/lib/hooks/useHotkeys";
 import useTheme from "@/lib/hooks/useTheme";
+import { useLanguage } from "@/i18n/useLanguage";
 import useViewportReset from "@/lib/hooks/useViewportReset";
 import { useCustomFonts } from "@/custom/fonts";
 import { useCustomThemes } from "@/custom/themes";
@@ -46,6 +47,7 @@ const App = () => {
   );
 
   useTheme();
+  useLanguage();
   useViewportReset();
   useCustomFonts();
   useCustomThemes();

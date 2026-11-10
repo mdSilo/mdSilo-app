@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ConfirmModal } from "@/ui/Dialogs";
+import { useT } from "@/i18n";
 import { useIssueStore } from "./issueStore";
 import {
   createMilestone,
@@ -23,19 +24,20 @@ function MilestoneForm({
   onSubmit: (d: Draft) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState<Draft>(initial);
   return (
     <div className="flex flex-col gap-2 p-3 bg-base-200 rounded-sm">
       <div className="flex flex-wrap gap-2">
         <input
-          aria-label="Milestone title"
+          aria-label={t("Milestone title")}
           className={`${inputClass} flex-1`}
-          placeholder="Title"
+          placeholder={t("Title")}
           value={draft.title}
           onChange={(e) => setDraft({ ...draft, title: e.target.value })}
         />
         <input
-          aria-label="Due date"
+          aria-label={t("Due date")}
           type="date"
           className={inputClass}
           value={draft.dueOn ?? ""}
@@ -43,15 +45,15 @@ function MilestoneForm({
         />
       </div>
       <textarea
-        aria-label="Milestone description"
+        aria-label={t("Milestone description")}
         className={inputClass}
-        placeholder="Description (optional)"
+        placeholder={t("Description (optional)")}
         value={draft.description ?? ""}
         onChange={(e) => setDraft({ ...draft, description: e.target.value })}
       />
       <div className="flex justify-end gap-2">
         <button type="button" className={btnClass} onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="button"
@@ -78,6 +80,7 @@ export default function MilestoneManager({
   data: IssueData;
   onFilter?: (title: string) => void;
 }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -100,7 +103,7 @@ export default function MilestoneManager({
               className={tab === s ? "font-semibold" : "text-base-content/60"}
               onClick={() => setTab(s)}
             >
-              {count(s)} {s === "open" ? "Open" : "Closed"}
+              {count(s)} {s === "open" ? t("Open") : t("Closed")}
             </button>
           ))}
         </div>
@@ -109,13 +112,13 @@ export default function MilestoneManager({
           className={primaryBtnClass}
           onClick={() => setCreating(true)}
         >
-          New milestone
+          {t("New milestone")}
         </button>
       </div>
       {creating ? (
         <MilestoneForm
           initial={{ title: "" }}
-          submitText="Create milestone"
+          submitText={t("Create milestone")}
           onCancel={() => setCreating(false)}
           onSubmit={(d) => {
             apply((x) => createMilestone(x, d));
@@ -126,7 +129,9 @@ export default function MilestoneManager({
       <ul className="mt-2 border border-base-300 rounded-sm">
         {shown.length === 0 ? (
           <li className="p-4 text-center text-base-content/60">
-            No {tab} milestones.
+            {tab === "open"
+              ? t("No open milestones.")
+              : t("No closed milestones.")}
           </li>
         ) : null}
         {shown.map((m) => {
@@ -140,7 +145,7 @@ export default function MilestoneManager({
               {editing === m.id ? (
                 <MilestoneForm
                   initial={m}
-                  submitText="Save changes"
+                  submitText={t("Save changes")}
                   onCancel={() => setEditing(null)}
                   onSubmit={(d) => {
                     apply((x) => updateMilestone(x, m.id, d));
@@ -161,8 +166,10 @@ export default function MilestoneManager({
                       className={`text-xs ${isOverdue(m) ? "text-error" : "text-base-content/60"}`}
                     >
                       {m.dueOn
-                        ? `${isOverdue(m) ? "Past due by" : "Due by"} ${m.dueOn}`
-                        : "No due date"}
+                        ? isOverdue(m)
+                          ? t("Past due by {date}", { date: m.dueOn })
+                          : t("Due by {date}", { date: m.dueOn })
+                        : t("No due date")}
                     </div>
                     {m.description ? (
                       <p className="mt-1 text-sm text-base-content/70">
@@ -184,9 +191,11 @@ export default function MilestoneManager({
                       />
                     </div>
                     <div className="flex gap-3 mt-1 text-xs text-base-content/60">
-                      <span>{p.percent}% complete</span>
-                      <span>{p.open} open</span>
-                      <span>{p.closed} closed</span>
+                      <span>
+                        {t("{percent}% complete", { percent: p.percent })}
+                      </span>
+                      <span>{t("{count} open", { count: p.open })}</span>
+                      <span>{t("{count} closed", { count: p.closed })}</span>
                     </div>
                     <div className="flex gap-3 mt-1 text-sm">
                       <button
@@ -194,7 +203,7 @@ export default function MilestoneManager({
                         className="ms-link"
                         onClick={() => setEditing(m.id)}
                       >
-                        Edit
+                        {t("Edit")}
                       </button>
                       <button
                         type="button"
@@ -207,7 +216,7 @@ export default function MilestoneManager({
                           )
                         }
                       >
-                        {m.state === "open" ? "Close" : "Reopen"}
+                        {m.state === "open" ? t("Close") : t("Reopen")}
                       </button>
                       <button
                         type="button"
@@ -217,7 +226,7 @@ export default function MilestoneManager({
                           setDeleting(m);
                         }}
                       >
-                        Delete
+                        {t("Delete")}
                       </button>
                     </div>
                   </div>
@@ -228,9 +237,11 @@ export default function MilestoneManager({
         })}
       </ul>
       <ConfirmModal
-        title={`Delete milestone "${deleting?.title ?? ""}"?`}
-        message="Its issues are kept."
-        confirmLabel="Confirm delete"
+        title={t('Delete milestone "{title}"?', {
+          title: deleting?.title ?? "",
+        })}
+        message={t("Its issues are kept.")}
+        confirmLabel={t("Confirm delete")}
         danger
         isOpen={confirmOpen}
         onConfirm={() => {

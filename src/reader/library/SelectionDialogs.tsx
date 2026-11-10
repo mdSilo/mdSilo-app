@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
 import { BaseModal } from "@/ui/BaseModal";
+import { tn, useT } from "@/i18n";
 import { deleteCovers } from "./covers";
 import { allGroups, type ShelfBook } from "./shelf";
 import { deleteBooks, normalizeGroup, setBooksGroup } from "./library";
-
-const booksOf = (n: number) => `${n} book${n === 1 ? "" : "s"}`;
 
 /** The books selected put in a group, typed or chosen; empty for none. */
 export function MoveDialog({
@@ -24,12 +23,13 @@ export function MoveDialog({
   onClose: () => void;
   onDone: (group: string) => void;
 }) {
+  const t = useT();
   const [group, setGroup] = useState(initial);
   const [busy, setBusy] = useState(false);
   const groups = useMemo(() => allGroups(all), [all]);
   return (
     <BaseModal
-      title="Move to group"
+      title={t("Move to group")}
       isOpen
       handleClose={onClose}
       panelClassName="max-w-md"
@@ -50,14 +50,18 @@ export function MoveDialog({
       >
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">
-            Group of the {booksOf(books.length)} selected
+            {tn(
+              "Group of the {count} book selected",
+              "Group of the {count} books selected",
+              books.length,
+            )}
           </span>
           <input
             className="input input-sm w-full"
             list="library-move-groups"
             value={group}
-            aria-label="Group"
-            placeholder="e.g. Fiction/Classics, empty for none"
+            aria-label={t("Group")}
+            placeholder={t("e.g. Fiction/Classics, empty for none")}
             onChange={(e) => setGroup(e.target.value)}
             autoFocus
           />
@@ -67,7 +71,7 @@ export function MoveDialog({
             ))}
           </datalist>
           <span className="text-xs text-base-content/60">
-            A new group is made if there is none of this name.
+            {t("A new group is made if there is none of this name.")}
           </span>
         </label>
         <div className="flex justify-end gap-2">
@@ -76,14 +80,14 @@ export function MoveDialog({
             className="btn btn-sm btn-ghost"
             onClick={onClose}
           >
-            Cancel
+            {t("Cancel")}
           </button>
           <button
             type="submit"
             className="btn btn-sm btn-primary"
             disabled={busy}
           >
-            {normalizeGroup(group) ? "Move" : "Ungroup"}
+            {normalizeGroup(group) ? t("Move") : t("Ungroup")}
           </button>
         </div>
       </form>
@@ -103,22 +107,28 @@ export function DeleteDialog({
   onClose: () => void;
   onDone: () => void;
 }) {
+  const t = useT();
   const [withNotes, setWithNotes] = useState(false);
   const [busy, setBusy] = useState(false);
   const synced = books.filter((b) => b.synced).length;
   return (
     <BaseModal
-      title="Delete books"
+      title={t("Delete books")}
       isOpen
       handleClose={onClose}
       panelClassName="max-w-md"
     >
       <div className="flex flex-col gap-3 text-left">
         <p>
-          Delete the {booksOf(books.length)} selected: the book files, their
-          reading progress and covers, from the workspace
+          {tn(
+            "Delete the {count} book selected: the book file, its reading progress and cover, from the workspace",
+            "Delete the {count} books selected: the book files, their reading progress and covers, from the workspace",
+            books.length,
+          )}
           {synced
-            ? ` (${synced} synced: from the other devices too, once synced)`
+            ? t(" ({synced} synced: from the other devices too, once synced)", {
+                synced,
+              })
             : ""}
           ?
         </p>
@@ -134,11 +144,11 @@ export function DeleteDialog({
             checked={withNotes}
             onChange={(e) => setWithNotes(e.target.checked)}
           />
-          Delete their notes too (the .md next to each book)
+          {t("Delete their notes too (the .md next to each book)")}
         </label>
         <div className="flex justify-end gap-2">
           <button className="btn btn-sm btn-ghost" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </button>
           <button
             className="btn btn-sm btn-error"
@@ -151,7 +161,7 @@ export function DeleteDialog({
               onDone();
             }}
           >
-            Delete {booksOf(books.length)}
+            {tn("Delete {count} book", "Delete {count} books", books.length)}
           </button>
         </div>
       </div>

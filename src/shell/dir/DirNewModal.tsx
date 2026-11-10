@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BaseModal } from "@/ui/BaseModal";
 import { createDirRecursive, joinPaths } from "@/workspace/util";
+import { useT } from "@/i18n";
 
 type Props = {
   dirPath: string;
@@ -9,12 +10,13 @@ type Props = {
 };
 
 export default function DirNewModal(props: Props) {
+  const t = useT();
   const { dirPath, isOpen, handleClose } = props;
   const [inputText, setInputText] = useState("");
 
   return (
     <BaseModal
-      title="Create New Subfolder"
+      title={t("Create New Subfolder")}
       isOpen={isOpen}
       handleClose={handleClose}
     >
@@ -24,7 +26,7 @@ export default function DirNewModal(props: Props) {
           <input
             type="text"
             className="block py-1 mx-4 my-2 bg-base-200 border-base-300 rounded-sm"
-            placeholder="New subfolder name"
+            placeholder={t("New subfolder name")}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             autoFocus
@@ -39,7 +41,7 @@ export default function DirNewModal(props: Props) {
             handleClose();
           }}
         >
-          Create Subfolder
+          {t("Create Subfolder")}
         </button>
       </div>
     </BaseModal>

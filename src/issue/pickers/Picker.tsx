@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { TbSettings as IconSettings } from "react-icons/tb";
+import { useT } from "@/i18n";
 
 type Props = {
   title: string;
@@ -10,6 +11,7 @@ type Props = {
 
 /** A sidebar section with a gear button that opens a small popover menu. */
 export default function Picker({ title, summary, children }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -34,7 +36,7 @@ export default function Picker({ title, summary, children }: Props) {
     <div ref={ref} className="relative py-3 border-b border-base-300">
       <button
         type="button"
-        aria-label={`Edit ${title}`}
+        aria-label={t("Edit {title}", { title })}
         aria-expanded={open}
         className="flex items-center justify-between w-full mb-1 text-xs font-semibold text-base-content/60 hover:text-primary/75"
         onClick={() => setOpen(!open)}

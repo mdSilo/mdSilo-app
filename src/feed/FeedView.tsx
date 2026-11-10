@@ -14,11 +14,13 @@ import * as dataAgent from "@/feed/dataAgent";
 import ViewMenu, { useMenuInView } from "@/shell/ViewMenu";
 import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
 import { FEED_ARTICLE_WIDTH, FEED_CHANNEL_WIDTH } from "@/state/userSettings";
+import { t, useT } from "@/i18n";
 
 /** the pane shown on a phone */
 type MobilePane = "channels" | "articles" | "article" | "manager" | "catalog";
 
 export default function Feed() {
+  const t = useT();
   const dispatch = useCurrentViewContext().dispatch;
   const openNote = useCallback(
     (noteId: string) => dispatch({ view: "md", params: { noteId } }),
@@ -212,7 +214,7 @@ export default function Feed() {
         {menuInView ? (
           <div className="flex items-center shrink-0 gap-1 px-1 border-b border-base-300">
             <ViewMenu />
-            <span className="text-sm font-semibold truncate">Feeds</span>
+            <span className="text-sm font-semibold truncate">{t("Feeds")}</span>
           </div>
         ) : null}
         <div className="flex-1 min-h-0 p-1 overflow-y-auto">
@@ -249,7 +251,7 @@ export default function Feed() {
     if (mobilePane === "manager" && showManager) {
       pane = (
         <>
-          {back("Channels", "channels")}
+          {back(t("Channels"), "channels")}
           <div className="flex-1 min-h-0 p-2 overflow-y-auto">
             <FeedManager
               channelList={channelList}
@@ -262,7 +264,7 @@ export default function Feed() {
     } else if (mobilePane === "catalog" && currentCatalog) {
       pane = (
         <>
-          {back("Channels", "channels")}
+          {back(t("Channels"), "channels")}
           <div className="flex-1 min-h-0 p-1">
             <OpdsBrowser
               key={currentCatalog.link}
@@ -275,7 +277,7 @@ export default function Feed() {
     } else if (mobilePane === "article" && article) {
       pane = (
         <>
-          {back(currentChannel?.title || "Articles", "articles")}
+          {back(currentChannel?.title || t("Articles"), "articles")}
           <div className="flex-1 min-h-0 overflow-y-auto">
             <ArticleView
               article={article}
@@ -289,7 +291,7 @@ export default function Feed() {
     } else if (mobilePane === "articles" || mobilePane === "article") {
       pane = (
         <>
-          {back("Channels", "channels")}
+          {back(t("Channels"), "channels")}
           <div className="flex-1 min-h-0 p-1 overflow-x-hidden overflow-y-auto">
             <Channel
               channel={currentChannel}
@@ -336,7 +338,7 @@ export default function Feed() {
           <ResizeHandle
             width={channelCol.width}
             bounds={FEED_CHANNEL_WIDTH}
-            label="Resize channel list"
+            label={t("Resize channel list")}
             onResize={channelCol.onResize}
             onResizeEnd={channelCol.onResizeEnd}
           />
@@ -379,7 +381,7 @@ export default function Feed() {
               <ResizeHandle
                 width={articleCol.width}
                 bounds={FEED_ARTICLE_WIDTH}
-                label="Resize article list"
+                label={t("Resize article list")}
                 onResize={articleCol.onResize}
                 onResizeEnd={articleCol.onResizeEnd}
               />

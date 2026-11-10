@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TbCaretRight as IconCaretRight } from "react-icons/tb";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+import { useT } from "@/i18n";
 import type { TOCItem } from "../document";
 import { getView } from "../view";
 
@@ -59,6 +60,7 @@ export function tocRows(
  * it. A page turned draws again only the rows it changes.
  */
 function TocView({ toc, current, scroller }: Props) {
+  const t = useT();
   const treeRef = useRef<HTMLDivElement>(null);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const path = useMemo(
@@ -119,7 +121,9 @@ function TocView({ toc, current, scroller }: Props) {
 
   if (toc.length === 0) {
     return (
-      <p className="p-4 text-sm text-base-content/60">No table of contents</p>
+      <p className="p-4 text-sm text-base-content/60">
+        {t("No table of contents")}
+      </p>
     );
   }
   const row = ({ item, depth }: TocRow) => (
@@ -135,7 +139,7 @@ function TocView({ toc, current, scroller }: Props) {
     <div
       ref={treeRef}
       role="tree"
-      aria-label="Table of contents"
+      aria-label={t("Table of contents")}
       className="py-2 text-sm"
       data-testid="reader-toc"
     >
@@ -167,6 +171,7 @@ const TocItem = memo(function TocItem({
   open: boolean;
   onToggle: (item: TOCItem) => void;
 }) {
+  const t = useT();
   const hasChildren = Boolean(item.subitems?.length);
   return (
     <div
@@ -182,7 +187,7 @@ const TocItem = memo(function TocItem({
         <button
           className="p-1 rounded-sm hover:bg-base-content/15"
           onClick={() => onToggle(item)}
-          aria-label={open ? "Collapse" : "Expand"}
+          aria-label={open ? t("Collapse") : t("Expand")}
         >
           <IconCaretRight
             size={14}

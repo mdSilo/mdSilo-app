@@ -24,6 +24,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { canOpenBookWindow, readBook } from "@/shell/windows";
 import { renamePath } from "@/workspace/renamePath";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { t, tk, tr, useT } from "@/i18n";
 import { annotationsPathOf, bookHref } from "../annotations/annotations";
 import { COVER_EXTS, coverUrl, deleteCovers, setCustomCover } from "./covers";
 import { formOf, metaOfForm, validateMeta, type Form } from "./metaForm";
@@ -65,11 +66,11 @@ export default function BookDetails({
 }: Props) {
   const [mode, setMode] = useState<Mode>("view");
   const title = {
-    view: "Book details",
-    edit: "Edit metadata",
-    mark: "Group and status",
-    rename: "Rename the file",
-    delete: "Delete the book",
+    view: t("Book details"),
+    edit: t("Edit metadata"),
+    mark: t("Group and status"),
+    rename: t("Rename the file"),
+    delete: t("Delete the book"),
   }[mode];
   const done = () => {
     setMode("view");
@@ -145,6 +146,7 @@ function ViewBook({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  const t = useT();
   const { dispatch } = useCurrentViewContext();
   const [{ openIn }] = useLibrarySettings();
   const read = (inWindow: boolean) => {
@@ -160,7 +162,7 @@ function ViewBook({
   const [updated, setUpdated] = useState<{ text: string; error?: boolean }>();
   const updateFromFeed = async () => {
     setUpdating(true);
-    setProgress("Fetching the feed…");
+    setProgress(t("Fetching the feed…"));
     setUpdated(undefined);
     try {
       // the feed code loaded only when used
@@ -197,22 +199,22 @@ function ViewBook({
 
   const seconds = totalSeconds(book.state?.time);
   const fields: [string, ReactNode][] = [
-    ["Publisher", book.publisher],
-    ["Published", book.published],
-    ["Language", book.language?.join(", ")],
-    ["Identifier", book.identifier],
-    ["Format", book.format],
-    ["File size", size !== undefined ? formatBytes(size) : undefined],
+    [t("Publisher"), book.publisher],
+    [t("Published"), book.published],
+    [t("Language"), book.language?.join(", ")],
+    [t("Identifier"), book.identifier],
+    [t("Format"), book.format],
+    [t("File size"), size !== undefined ? formatBytes(size) : undefined],
     [
-      "Progress",
+      t("Progress"),
       book.state?.fraction
         ? `${Math.round(book.state.fraction * 100)}%`
         : undefined,
     ],
-    ["Reading time", seconds > 0 ? formatDuration(seconds) : undefined],
-    ["Last read", formatDate(book.state?.updatedAt)],
-    ["Added", formatDate(book.addedAt)],
-    ["Subjects", book.subjects?.join(", ")],
+    [t("Reading time"), seconds > 0 ? formatDuration(seconds) : undefined],
+    [t("Last read"), formatDate(book.state?.updatedAt)],
+    [t("Added"), formatDate(book.addedAt)],
+    [t("Subjects"), book.subjects?.join(", ")],
   ];
 
   return (
@@ -223,7 +225,7 @@ function ViewBook({
         </div>
         <div className="flex flex-col min-w-0 gap-0.5">
           <div className="text-lg font-bold break-words line-clamp-2">
-            {book.title || "Untitled"}
+            {book.title || t("Untitled")}
           </div>
           {book.subtitle ? (
             <div className="text-base-content/70 line-clamp-1">
@@ -236,7 +238,7 @@ function ViewBook({
             </div>
           ) : null}
           <div className="text-base-content/70 line-clamp-1">
-            {book.author || "Unknown author"}
+            {book.author || t("Unknown author")}
           </div>
           <div className="flex flex-wrap gap-1 mt-1">
             {book.group ? (
@@ -249,13 +251,16 @@ function ViewBook({
             ) : null}
             {!book.here ? (
               <span className="badge badge-sm badge-warning badge-soft">
-                Not on this device
+                {t("Not on this device")}
               </span>
             ) : null}
           </div>
           <div className="flex flex-wrap gap-1 mt-auto">
             {book.here ? (
-              <Action title="Read" onClick={() => read(openIn === "window")}>
+              <Action
+                title={t("Read")}
+                onClick={() => read(openIn === "window")}
+              >
                 <TbBook size={16} />
               </Action>
             ) : null}
@@ -263,28 +268,34 @@ function ViewBook({
               <Action
                 title={
                   openIn === "window"
-                    ? "Read in this window"
-                    : "Read in a new window"
+                    ? t("Read in this window")
+                    : t("Read in a new window")
                 }
                 onClick={() => read(openIn !== "window")}
               >
                 <TbAppWindow size={16} />
               </Action>
             ) : null}
-            <Action title="Edit metadata" onClick={() => onMode("edit")}>
+            <Action title={t("Edit metadata")} onClick={() => onMode("edit")}>
               <TbPencil size={16} />
             </Action>
-            <Action title="Group and status" onClick={() => onMode("mark")}>
+            <Action
+              title={t("Group and status")}
+              onClick={() => onMode("mark")}
+            >
               <TbBookmarks size={16} />
             </Action>
             {book.here ? (
-              <Action title="Rename the file" onClick={() => onMode("rename")}>
+              <Action
+                title={t("Rename the file")}
+                onClick={() => onMode("rename")}
+              >
                 <TbFilePencil size={16} />
               </Action>
             ) : null}
             {book.here && book.feed && book.feedUrl ? (
               <Action
-                title="Add the new articles from the feed"
+                title={t("Add the new articles from the feed")}
                 onClick={updateFromFeed}
                 disabled={updating}
               >
@@ -294,8 +305,8 @@ function ViewBook({
             <Action
               title={
                 book.synced
-                  ? "Stop syncing the book file"
-                  : "Sync the book file too"
+                  ? t("Stop syncing the book file")
+                  : t("Sync the book file too")
               }
               onClick={async () => {
                 if (!book.synced && !(await confirmBooksSync([book]))) return;
@@ -306,7 +317,7 @@ function ViewBook({
               {book.synced ? <TbCloud size={16} /> : <TbCloudOff size={16} />}
             </Action>
             <Action
-              title={copied ? "Copied" : "Copy a link to the book"}
+              title={copied ? t("Copied") : t("Copy a link to the book")}
               onClick={() => {
                 copy(`[${book.title}](${bookHref(book.hash)})`);
                 setCopied(true);
@@ -316,7 +327,7 @@ function ViewBook({
             </Action>
             {hasNotes ? (
               <Action
-                title="Open the notes"
+                title={t("Open the notes")}
                 onClick={async () => {
                   onClose();
                   await openFilePath(notesPath, true);
@@ -326,7 +337,7 @@ function ViewBook({
                 <TbNotes size={16} />
               </Action>
             ) : null}
-            <Action title="Delete" onClick={() => onMode("delete")} danger>
+            <Action title={t("Delete")} onClick={() => onMode("delete")} danger>
               <TbTrash size={16} />
             </Action>
           </div>
@@ -345,25 +356,25 @@ function ViewBook({
           <div key={label} className="min-w-0">
             <dt className="text-sm font-semibold">{label}</dt>
             <dd className="text-sm break-words text-base-content/70 line-clamp-3">
-              {value || "Unknown"}
+              {value || t("Unknown")}
             </dd>
           </div>
         ))}
       </dl>
       <div className="mb-2">
-        <div className="text-sm font-semibold">File</div>
+        <div className="text-sm font-semibold">{t("File")}</div>
         <div className="text-sm break-all text-base-content/70">
           {book.file}
         </div>
       </div>
       <div>
-        <div className="text-sm font-semibold">Description</div>
+        <div className="text-sm font-semibold">{t("Description")}</div>
         <div
           className="text-sm text-base-content/70 max-h-48 overflow-y-auto [&_p]:my-1"
           dangerouslySetInnerHTML={{
             __html: book.description
               ? sanitizeHtml(book.description)
-              : "No description",
+              : t("No description"),
           }}
         />
       </div>
@@ -378,37 +389,37 @@ const FIELDS: {
   wide?: boolean;
   area?: boolean;
 }[] = [
-  { field: "title", label: "Title *", wide: true },
-  { field: "subtitle", label: "Subtitle", wide: true },
+  { field: "title", label: "Title *", wide: true }, // i18n-ignore: t("Title") when shown
+  { field: "subtitle", label: tk("Subtitle"), wide: true },
   {
     field: "author",
-    label: "Author",
-    placeholder: "Jane Doe, John Roe",
+    label: tk("Author"),
+    placeholder: tk("Jane Doe, John Roe"),
     wide: true,
   },
-  { field: "series", label: "Series" },
-  { field: "seriesIndex", label: "Series index", placeholder: "1" },
-  { field: "seriesTotal", label: "Total in series" },
-  { field: "publisher", label: "Publisher" },
+  { field: "series", label: tk("Series") },
+  { field: "seriesIndex", label: tk("Series index"), placeholder: "1" },
+  { field: "seriesTotal", label: tk("Total in series") },
+  { field: "publisher", label: tk("Publisher") },
   {
     field: "published",
-    label: "Publication date",
-    placeholder: "YYYY or YYYY-MM-DD",
+    label: tk("Publication date"),
+    placeholder: tk("YYYY or YYYY-MM-DD"),
   },
-  { field: "language", label: "Language", placeholder: "en, zh, fr" },
+  { field: "language", label: tk("Language"), placeholder: "en, zh, fr" }, // i18n-ignore: codes
   {
     field: "identifier",
-    label: "Identifier",
+    label: tk("Identifier"),
     placeholder: "978-0123456789",
     wide: true,
   },
   {
     field: "subjects",
-    label: "Subjects",
-    placeholder: "Fiction, Science, History",
+    label: tk("Subjects"),
+    placeholder: tk("Fiction, Science, History"),
     wide: true,
   },
-  { field: "description", label: "Description", wide: true, area: true },
+  { field: "description", label: tk("Description"), wide: true, area: true },
 ];
 
 /** The cover as edited: as it is, an image chosen, the one of the book, none. */
@@ -431,6 +442,7 @@ function EditMeta({
   onCancel: () => void;
   onSaved: () => void;
 }) {
+  const t = useT();
   const [form, setForm] = useState<Form>(() => formOf(book));
   const [coverEdit, setCoverEdit] = useState<CoverEdit>({ kind: "keep" });
   const [bookCover, setBookCover] = useState<string | undefined>();
@@ -523,7 +535,7 @@ function EditMeta({
             type="button"
             className="aspect-28/41"
             onClick={chooseImage}
-            title="Choose an image"
+            title={t("Choose an image")}
           >
             <BookCover
               book={{ title: form.title, author: form.author }}
@@ -531,17 +543,17 @@ function EditMeta({
             />
           </button>
           <div className="flex justify-between">
-            <Action title="Choose an image" onClick={chooseImage}>
+            <Action title={t("Choose an image")} onClick={chooseImage}>
               <TbPhoto size={16} />
             </Action>
             <Action
-              title="The cover of the book"
+              title={t("The cover of the book")}
               onClick={() => setCoverEdit({ kind: "book" })}
             >
               <TbRestore size={16} />
             </Action>
             <Action
-              title="No cover"
+              title={t("No cover")}
               onClick={() => setCoverEdit({ kind: "none" })}
               danger
             >
@@ -573,7 +585,9 @@ function EditMeta({
         ))}
       </div>
       <p className="mt-2 text-xs text-base-content/60">
-        Once saved, the metadata is not taken from the book file any more.
+        {t(
+          "Once saved, the metadata is not taken from the book file any more.",
+        )}
       </p>
       {error ? <p className="mt-2 text-sm text-error">{error}</p> : null}
       <div className="flex justify-end gap-2 mt-4">
@@ -582,7 +596,7 @@ function EditMeta({
           className="btn btn-sm btn-ghost"
           onClick={onCancel}
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="button"
@@ -592,14 +606,14 @@ function EditMeta({
             setCoverEdit({ kind: "keep" });
           }}
         >
-          Reset
+          {t("Reset")}
         </button>
         <button
           type="submit"
           className="btn btn-sm btn-primary"
           disabled={saving || Object.keys(errors).length > 0}
         >
-          Save
+          {t("Save")}
         </button>
       </div>
     </form>
@@ -622,8 +636,8 @@ function Field({
 }) {
   const props = {
     value: form[field],
-    placeholder,
-    "aria-label": label.replace(" *", ""),
+    placeholder: placeholder && t(placeholder),
+    "aria-label": t(label.replace(" *", "")),
     "aria-invalid": error ? true : undefined,
     onChange: (e: { target: { value: string } }) =>
       setForm((f) => ({ ...f, [field]: e.target.value })),
@@ -632,7 +646,9 @@ function Field({
     <label
       className={`flex flex-col gap-1 text-sm ${wide ? "sm:col-span-2" : ""}`}
     >
-      <span className="font-medium">{label}</span>
+      <span className="font-medium">
+        {label.endsWith(" *") ? `${t(label.replace(" *", ""))} *` : t(label)}
+      </span>
       {area ? (
         <textarea
           className={`textarea textarea-sm w-full ${error ? "textarea-error" : ""}`}
@@ -663,6 +679,7 @@ function MarkBook({
   onCancel: () => void;
   onSaved: () => void;
 }) {
+  const t = useT();
   const [group, setGroup] = useState(book.group ?? "");
   const [status, setStatus] = useState(book.status ?? "");
   const groups = useMemo(() => allGroups(books), [books]);
@@ -680,13 +697,13 @@ function MarkBook({
       }}
     >
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium">Group</span>
+        <span className="font-medium">{t("Group")}</span>
         <input
           className="input input-sm w-full"
           list="library-groups"
           value={group}
-          aria-label="Group"
-          placeholder="e.g. Fiction/Classics, empty for none"
+          aria-label={t("Group")}
+          placeholder={t("e.g. Fiction/Classics, empty for none")}
           onChange={(e) => setGroup(e.target.value)}
         />
         <datalist id="library-groups">
@@ -696,13 +713,13 @@ function MarkBook({
         </datalist>
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium">Status</span>
+        <span className="font-medium">{t("Status")}</span>
         <input
           className="input input-sm w-full"
           list="library-statuses"
           value={status}
-          aria-label="Status"
-          placeholder="Todo, Doing, Done, ..."
+          aria-label={t("Status")}
+          placeholder={t("Todo, Doing, Done, ...")}
           onChange={(e) => setStatus(e.target.value)}
         />
         <datalist id="library-statuses">
@@ -717,10 +734,10 @@ function MarkBook({
           className="btn btn-sm btn-ghost"
           onClick={onCancel}
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button type="submit" className="btn btn-sm btn-primary">
-          Save
+          {t("Save")}
         </button>
       </div>
     </form>
@@ -740,6 +757,7 @@ function RenameBook({
   onCancel: () => void;
   onRenamed: () => void;
 }) {
+  const t = useT();
   const slash = book.path.lastIndexOf("/");
   const fileName = book.path.slice(slash + 1);
   const dot = fileName.lastIndexOf(".");
@@ -768,13 +786,13 @@ function RenameBook({
       }}
     >
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-semibold">File name</span>
+        <span className="font-semibold">{t("File name")}</span>
         <div className="join w-full">
           <input
             className="input input-sm join-item w-full"
             value={name}
             autoFocus
-            aria-label="File name"
+            aria-label={t("File name")}
             onChange={(e) => {
               setName(e.target.value);
               setError("");
@@ -788,8 +806,10 @@ function RenameBook({
         </div>
       </label>
       <p className="text-sm text-base-content/70">
-        Its notes ({fileName}.md) are renamed with it. The title, reading
-        progress, highlights and links to the book stay as they are.
+        {t(
+          "Its notes ({file}) are renamed with it. The title, reading progress, highlights and links to the book stay as they are.",
+          { file: `${fileName}.md` },
+        )}
       </p>
       {error ? <p className="text-sm text-error">{error}</p> : null}
       <div className="flex justify-end gap-2">
@@ -798,14 +818,14 @@ function RenameBook({
           className="btn btn-sm btn-ghost"
           onClick={onCancel}
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="submit"
           className="btn btn-sm btn-primary"
           disabled={busy}
         >
-          Rename
+          {t("Rename")}
         </button>
       </div>
     </form>
@@ -823,14 +843,21 @@ function DeleteBook({
   onCancel: () => void;
   onDeleted: () => void;
 }) {
+  const t = useT();
   const [withNotes, setWithNotes] = useState(false);
   const [busy, setBusy] = useState(false);
   return (
     <div className="flex flex-col gap-3">
       <p>
-        Delete <b>{book.title}</b>: the book file, its reading progress and
-        covers, from the workspace
-        {book.synced ? " (and from the other devices once synced)" : ""}?
+        {book.synced
+          ? tr(
+              "Delete {title}: the book file, its reading progress and covers, from the workspace (and from the other devices once synced)?",
+              { title: <b>{book.title}</b> },
+            )
+          : tr(
+              "Delete {title}: the book file, its reading progress and covers, from the workspace?",
+              { title: <b>{book.title}</b> },
+            )}
       </p>
       <label className="flex items-center gap-2 text-sm">
         <input
@@ -839,11 +866,13 @@ function DeleteBook({
           checked={withNotes}
           onChange={(e) => setWithNotes(e.target.checked)}
         />
-        Delete its notes too ({annotationsPathOf(book.file).split("/").pop()})
+        {t("Delete its notes too ({file})", {
+          file: annotationsPathOf(book.file).split("/").pop() ?? "",
+        })}
       </label>
       <div className="flex justify-end gap-2">
         <button className="btn btn-sm btn-ghost" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           className="btn btn-sm btn-error"
@@ -855,7 +884,7 @@ function DeleteBook({
             onDeleted();
           }}
         >
-          Delete
+          {t("Delete")}
         </button>
       </div>
     </div>

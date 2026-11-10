@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { joinPath, normalizeSlash, renameFile } from "@/workspace/util";
 import { flushSave } from "@/workspace/pendingSaves";
+import { t } from "@/i18n";
 
 /** Parent dir of the path, by the path only. */
 export const parentOf = (path: string): string => {
@@ -34,7 +35,7 @@ export const moveIntoDir = async (
   const tarPath = joinPath(normalizeSlash(tarDir), name);
   if (await invoke<boolean>("file_exist", { filePath: tarPath })) {
     await invoke("msg_dialog", {
-      title: "Move",
+      title: t("Move"),
       msg: `${name} already exists in ${tarDir}`,
     });
     return;

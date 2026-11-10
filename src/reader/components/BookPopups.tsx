@@ -18,6 +18,7 @@ import {
 import copy from "copy-to-clipboard";
 import { useStore } from "@/state/store";
 import { IconButton } from "@/ui/ui";
+import { t, useT } from "@/i18n";
 import {
   HIGHLIGHT_COLORS,
   noteText,
@@ -323,6 +324,7 @@ export function HighlightOptions({
   /** more on the line, between the styles and the colors */
   children?: ReactNode;
 }) {
+  const t = useT();
   const updateNote = useActiveStore((state) => state.updateNote);
   const colors = withDefaults(
     useStore((state) => state.readerSettings),
@@ -339,8 +341,8 @@ export function HighlightOptions({
           <button
             key={s}
             className={`flex items-center justify-center rounded-full w-7 h-7 bg-base-300 shadow ${s === style ? "ring-2 ring-base-content/50" : ""}`}
-            title={`Style: ${s}`}
-            aria-label={`Style ${s}`}
+            title={t("Style: {s}", { s })}
+            aria-label={t("Style {style}", { style: s })}
             aria-pressed={s === style}
             onClick={() => {
               const next = s === style ? color : colors[s];
@@ -362,8 +364,8 @@ export function HighlightOptions({
             key={c}
             className="flex items-center justify-center w-4 h-4 rounded-full"
             style={{ backgroundColor: HIGHLIGHT_CSS[c] }}
-            title={`Highlight ${c}`}
-            aria-label={`Highlight ${c}`}
+            title={t("Highlight {color}", { color: c })}
+            aria-label={t("Highlight {color}", { color: c })}
             aria-pressed={c === color}
             onClick={() => {
               updateNote(note.id, { color: c });
@@ -391,6 +393,7 @@ function NoteEditor({
   onSave: (note: string) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState(value);
   return (
     <div
@@ -400,7 +403,7 @@ function NoteEditor({
       <textarea
         className="w-full textarea textarea-sm"
         rows={4}
-        placeholder="A note, [[links]] to notes work"
+        placeholder={t("A note, [[links]] to notes work")}
         autoFocus
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
@@ -415,13 +418,13 @@ function NoteEditor({
       />
       <div className="flex justify-end gap-1">
         <button className="btn btn-ghost btn-xs" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           className="btn btn-primary btn-xs"
           onClick={() => onSave(draft)}
         >
-          Save
+          {t("Save")}
         </button>
       </div>
     </div>
@@ -430,6 +433,7 @@ function NoteEditor({
 
 /** The note of an annotation, shown with the toolbar. */
 function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
+  const t = useT();
   return (
     <div
       className="flex gap-2 p-2 text-sm border rounded-lg shadow-xl bg-base-100 border-base-300"
@@ -441,7 +445,7 @@ function NoteCard({ note, onEdit }: { note: BookNote; onEdit: () => void }) {
       <IconButton
         size="xs"
         className="self-start"
-        title="Edit the note"
+        title={t("Edit the note")}
         onClick={onEdit}
       >
         <TbBallpen />
@@ -521,7 +525,7 @@ function BookPopups({
     const list: Tool[] = [
       {
         id: "copy",
-        title: "Copy",
+        title: t("Copy"),
         icon: <TbCopy size={18} />,
         onClick: () => {
           copy(text, { format: "text/plain" });
@@ -530,7 +534,7 @@ function BookPopups({
       },
       {
         id: "highlight",
-        title: highlighted ? "Delete the highlight" : "Highlight",
+        title: highlighted ? t("Delete the highlight") : t("Highlight"),
         icon: highlighted ? (
           <TbHighlightOff size={18} />
         ) : (
@@ -540,46 +544,42 @@ function BookPopups({
       },
       {
         id: "note",
-        title: "Write a note",
+        title: t("Write a note"),
         icon: <TbBallpen size={18} />,
         onClick: () => {
           const created = annotateSelection(selection);
-          usePopups
-            .getState()
-            .setAnnotation({
-              id: created.id,
-              box: selection.box,
-              edit: highlighted ? "existing" : "new",
-            });
+          usePopups.getState().setAnnotation({
+            id: created.id,
+            box: selection.box,
+            edit: highlighted ? "existing" : "new",
+          });
         },
       },
       ...(tools?.(selection) ?? []),
       {
         id: "quote",
-        title: "Copy as a quote with a link to here, to paste in a note",
+        title: t("Copy as a quote with a link to here, to paste in a note"),
         icon: <TbQuote size={18} />,
         onClick: () => copyQuote(text, cfi),
       },
       {
         id: "issue",
-        title: "New issue of it",
+        title: t("New issue of it"),
         icon: <TbCircleDot size={18} />,
         // highlighted, the issue made of it: shown on the highlight, to open it
         onClick: async () => {
           const created = annotateSelection(selection);
-          usePopups
-            .getState()
-            .setAnnotation({
-              id: created.id,
-              box: selection.box,
-              range: selection.range,
-            });
+          usePopups.getState().setAnnotation({
+            id: created.id,
+            box: selection.box,
+            range: selection.range,
+          });
           await issueOfNote(created);
         },
       },
       {
         id: "link",
-        title: "Copy a link to here",
+        title: t("Copy a link to here"),
         icon: <TbLink size={18} />,
         onClick: () => copyLink(cfi),
       },
@@ -675,7 +675,7 @@ function BookPopups({
   const list: Tool[] = [
     {
       id: "copy",
-      title: "Copy",
+      title: t("Copy"),
       icon: <TbCopy size={18} />,
       hidden: !note.text,
       onClick: () => {
@@ -685,7 +685,7 @@ function BookPopups({
     },
     {
       id: "highlight",
-      title: "Delete the highlight",
+      title: t("Delete the highlight"),
       icon: <TbHighlightOff size={18} />,
       onClick: () => {
         activeStore().getState().removeNote(note.id);
@@ -694,27 +694,27 @@ function BookPopups({
     },
     {
       id: "note",
-      title: note.note ? "Edit the note" : "Write a note",
+      title: note.note ? t("Edit the note") : t("Write a note"),
       icon: <TbBallpen size={18} />,
       onClick: edit,
     },
     ...(asSelection ? (tools?.(asSelection) ?? []) : []),
     {
       id: "quote",
-      title: "Copy as a quote with a link to here",
+      title: t("Copy as a quote with a link to here"),
       icon: <TbQuote size={18} />,
       hidden: !note.text,
       onClick: () => copyQuote(note.text ?? "", note.cfi),
     },
     {
       id: "issue",
-      title: "New issue of it",
+      title: t("New issue of it"),
       icon: <TbCircleDot size={18} />,
       onClick: () => void issueOfNote(note),
     },
     {
       id: "link",
-      title: "Copy a link to here",
+      title: t("Copy a link to here"),
       icon: <TbLink size={18} />,
       onClick: () => copyLink(note.cfi),
     },

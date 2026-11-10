@@ -14,6 +14,7 @@ import { writeFile } from "@/workspace/write";
 import { Notes, store, useStore } from "@/state/store";
 import { defaultNote } from "@/types/model";
 import { newNoteDir } from "@/workspace/layout";
+import { useT } from "@/i18n";
 
 enum OptionType {
   NOTE,
@@ -33,6 +34,7 @@ type Props = {
 };
 
 function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
+  const t = useT();
   const { onOptionClick: onOptionClickCallback, className = "" } = props;
 
   const currentView = useCurrentViewContext();
@@ -58,7 +60,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       result.push({
         id: "NEW_NOTE",
         type: OptionType.NEW_NOTE,
-        text: `New: ${inputTxt}`,
+        text: t("New: {name}", { name: inputTxt }),
         icon: IconFilePlus,
       });
     }
@@ -71,7 +73,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       })),
     );
     return result;
-  }, [searchResults, inputTxt]);
+  }, [searchResults, inputTxt, t]);
 
   const onOptionClick = useCallback(
     async (option: Option) => {
@@ -139,7 +141,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
           className={`w-full py-4 px-2 text-xl border-none rounded-tl rounded-tr focus:ring-0 bg-base-200 ${
             options.length <= 0 ? "rounded-bl rounded-br" : ""
           }`}
-          placeholder="new or find"
+          placeholder={t("new or find")}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={onKeyDown}

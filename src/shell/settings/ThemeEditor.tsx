@@ -19,6 +19,7 @@ import {
 } from "@/custom/themes";
 import { dataRoot } from "@/workspace/layout";
 import { Range, Toggle } from "@/ui/ui";
+import { t, tk, useT } from "@/i18n";
 
 type Props = {
   /** the theme to edit, or undefined for a new one */
@@ -36,26 +37,26 @@ const SLIDERS: {
 }[] = [
   {
     key: "--radius-box",
-    label: "Box Radius",
+    label: tk("Box Radius"),
     max: 2,
     step: 0.1,
     unit: "rem",
   },
   {
     key: "--radius-field",
-    label: "Field Radius",
+    label: tk("Field Radius"),
     max: 2,
     step: 0.1,
     unit: "rem",
   },
   {
     key: "--radius-selector",
-    label: "Selector Radius",
+    label: tk("Selector Radius"),
     max: 2,
     step: 0.1,
     unit: "rem",
   },
-  { key: "--border", label: "Border", max: 3, step: 0.5, unit: "px" },
+  { key: "--border", label: tk("Border"), max: 3, step: 0.5, unit: "px" },
 ];
 
 /** A new theme from the theme applied now. */
@@ -64,7 +65,7 @@ function newTheme(): CustomTheme {
   const applied = document.documentElement.dataset.theme || LIGHT_THEME.name;
   return {
     id: crypto.randomUUID(),
-    name: "My Theme",
+    name: t("My Theme"),
     dark: darkMode,
     vars: themeVarsOf(applied),
     where: dataRoot() ? "workspace" : "device",
@@ -77,6 +78,7 @@ function newTheme(): CustomTheme {
  * shown in the preview, the app keeps its theme until saved.
  */
 export default function ThemeEditor({ theme, onDone }: Props) {
+  const t = useT();
   const customThemes = useStore((state) => state.customThemes);
   const workspaceThemes = useStore((state) => state.workspaceThemes);
   const [draft, setDraft] = useState<CustomTheme>(() => theme ?? newTheme());
@@ -123,7 +125,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
 
   const onSave = async () => {
     try {
-      const saved = { ...draft, name: draft.name.trim() || "My Theme" };
+      const saved = { ...draft, name: draft.name.trim() || t("My Theme") };
       await saveTheme(saved);
       store.getState().setTheme(themeName(saved));
       onDone();
@@ -142,18 +144,18 @@ export default function ThemeEditor({ theme, onDone }: Props) {
       <div className="flex items-center gap-2">
         <input
           className="flex-1 input input-xs"
-          aria-label="Theme Name"
+          aria-label={t("Theme Name")}
           value={draft.name}
           onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
         />
         <select
           className="w-32 select select-xs"
-          aria-label="Start From"
+          aria-label={t("Start From")}
           value=""
           onChange={(e) => startFrom(e.target.value)}
         >
           <option value="" disabled>
-            Start from…
+            {t("Start from…")}
           </option>
           {THEMES.map((t) => (
             <option key={t.name} value={t.name}>
@@ -163,7 +165,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
         </select>
       </div>
       <Toggle
-        label="Dark"
+        label={t("Dark")}
         checked={draft.dark}
         onChange={(dark) => setDraft((d) => ({ ...d, dark }))}
       />
@@ -193,10 +195,16 @@ export default function ThemeEditor({ theme, onDone }: Props) {
           role="status"
           className="flex flex-col gap-0.5 p-2 text-xs rounded-box bg-warning/15"
         >
-          <span>Hard to read (below {MIN_CONTRAST}:1):</span>
+          <span>
+            {t("Hard to read (below {ratio}:1):", { ratio: MIN_CONTRAST })}
+          </span>
           {lowPairs.map(({ bg, fg, ratio }) => (
             <span key={bg}>
-              {fg} on {bg}: {ratio.toFixed(1)}:1
+              {t("{fg} on {bg}: {ratio}:1", {
+                fg,
+                bg,
+                ratio: ratio.toFixed(1),
+              })}
             </span>
           ))}
         </div>
@@ -206,7 +214,7 @@ export default function ThemeEditor({ theme, onDone }: Props) {
         {SLIDERS.map(({ key, label, max, step, unit }) => (
           <Range
             key={key}
-            label={label}
+            label={t(label)}
             min={0}
             max={max}
             step={step}
@@ -220,48 +228,48 @@ export default function ThemeEditor({ theme, onDone }: Props) {
       <div
         data-theme={themeName(preview)}
         className="flex flex-col gap-1 p-1 border rounded bg-base-100 text-base-content"
-        aria-label="Theme Preview"
+        aria-label={t("Theme Preview")}
       >
         <div className="flex justify-center items-center gap-2 p-2 rounded-box bg-base-200">
-          <span className="text-sm">Text on base</span>
-          <span className="text-sm text-base-content/60">muted</span>
+          <span className="text-sm">{t("Text on base")}</span>
+          <span className="text-sm text-base-content/60">{t("muted")}</span>
         </div>
         <div className="flex flex-wrap justify-center items-center gap-1">
           <button type="button" className="btn btn-xs btn-primary">
-            Primary
+            {t("Primary")}
           </button>
           <button type="button" className="btn btn-xs btn-secondary">
-            Secondary
+            {t("Secondary")}
           </button>
           <button type="button" className="btn btn-xs btn-accent">
-            Accent
+            {t("Accent")}
           </button>
           <button type="button" className="btn btn-xs btn-neutral">
-            Neutral
+            {t("Neutral")}
           </button>
         </div>
         <div className="flex flex-wrap justify-center items-center gap-1">
-          <span className="badge badge-info badge-sm">info</span>
-          <span className="badge badge-success badge-sm">success</span>
-          <span className="badge badge-warning badge-sm">warning</span>
-          <span className="badge badge-error badge-sm">error</span>
+          <span className="badge badge-info badge-sm">{t("info")}</span>
+          <span className="badge badge-success badge-sm">{t("success")}</span>
+          <span className="badge badge-warning badge-sm">{t("warning")}</span>
+          <span className="badge badge-error badge-sm">{t("error")}</span>
         </div>
         <div className="flex items-center gap-2">
           <input
             className="flex-1 input input-xs"
-            placeholder="A field"
-            aria-label="Preview Field"
+            placeholder={t("A field")}
+            aria-label={t("Preview Field")}
           />
           <input
             type="checkbox"
             className="checkbox checkbox-xs checkbox-primary"
-            aria-label="Preview Checkbox"
+            aria-label={t("Preview Checkbox")}
             defaultChecked
           />
           <input
             type="checkbox"
             className="toggle toggle-xs toggle-primary"
-            aria-label="Preview Toggle"
+            aria-label={t("Preview Toggle")}
             defaultChecked
           />
         </div>
@@ -270,8 +278,8 @@ export default function ThemeEditor({ theme, onDone }: Props) {
       <div className="flex flex-col gap-1">
         <textarea
           className="w-full h-16 font-mono textarea textarea-xs"
-          placeholder="Paste a daisyUI theme (CSS) to import it"
-          aria-label="Theme CSS"
+          placeholder={t("Paste a daisyUI theme (CSS) to import it")}
+          aria-label={t("Theme CSS")}
           value={cssText}
           onChange={(e) => setCssText(e.target.value)}
         />
@@ -282,20 +290,20 @@ export default function ThemeEditor({ theme, onDone }: Props) {
             disabled={!cssText.trim()}
             onClick={importCss}
           >
-            Import
+            {t("Import")}
           </button>
           <button
             type="button"
             className="btn btn-xs"
             onClick={() => copy(themeCss([draft]))}
           >
-            Copy as CSS
+            {t("Copy as CSS")}
           </button>
         </div>
       </div>
 
       <Toggle
-        label="Sync with workspace"
+        label={t("Sync with workspace")}
         checked={draft.where === "workspace"}
         onChange={(sync) =>
           setDraft((d) => ({
@@ -312,18 +320,18 @@ export default function ThemeEditor({ theme, onDone }: Props) {
             className="mr-auto btn btn-xs btn-error btn-outline"
             onClick={() => void onDelete()}
           >
-            Delete
+            {t("Delete")}
           </button>
         ) : null}
         <button type="button" className="btn btn-xs" onClick={onDone}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="button"
           className="btn btn-xs btn-primary"
           onClick={() => void onSave()}
         >
-          Save
+          {t("Save")}
         </button>
       </div>
     </div>

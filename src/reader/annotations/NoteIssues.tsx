@@ -2,6 +2,7 @@ import { TbCircleDot } from "react-icons/tb";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { issueLinks } from "@/lib/parseNote";
 import { issueLabel } from "@/issue/refs";
+import { useT } from "@/i18n";
 import { activeStore } from "../readerStore";
 import type { BookNote } from "./annotations";
 
@@ -13,6 +14,7 @@ export default function NoteIssues({
   note: BookNote;
   className?: string;
 }) {
+  const t = useT();
   const { dispatch } = useCurrentViewContext();
   const issues = issueLinks(note.note);
   if (!issues.length) return null;
@@ -29,7 +31,7 @@ export default function NoteIssues({
         <button
           key={num}
           className="badge badge-sm badge-ghost gap-1"
-          title="Open the issue"
+          title={t("Open the issue")}
           onClick={() => void open(num)}
         >
           <TbCircleDot /> {issueLabel(num)}

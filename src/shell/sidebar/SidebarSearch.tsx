@@ -15,6 +15,7 @@ import { isMobileWidth } from "@/lib/hooks/useIsMobile";
 import { openFilePath } from "@/workspace/open";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import VirtualTree from "@/ui/VirtualTree";
+import { useT } from "@/i18n";
 
 const DEBOUNCE_MS = 500;
 
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export default function SidebarSearch(props: Props) {
+  const t = useT();
   const { className = "" } = props;
   const inputText = useStore((state) => state.sidebarSearchQuery);
   const setInputText = useStore((state) => state.setSidebarSearchQuery);
@@ -38,7 +40,7 @@ export default function SidebarSearch(props: Props) {
         <input
           type="text"
           className="block py-1 mx-4 my-2 bg-base-200 border-base-300 rounded-sm"
-          placeholder="Search..."
+          placeholder={t("Search...")}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={(e) => {
@@ -64,6 +66,7 @@ type SearchTreeProps = {
 const NOTHING: ContentSearch = { notes: [], books: [] };
 
 export function SearchTree(props: SearchTreeProps) {
+  const t = useT();
   const { keyword, ty } = props;
   useLoadNotes();
   const notes = useStore((state) => state.notes);
@@ -138,7 +141,7 @@ export function SearchTree(props: SearchTreeProps) {
       {!keyword || searching || searchResultsData.length > 0 ? (
         <VirtualTree className="flex-1 min-h-0 px-1" data={searchResultsData} />
       ) : (
-        <p className="px-4 text-base-content/70">No results found.</p>
+        <p className="px-4 text-base-content/70">{t("No results found.")}</p>
       )}
     </>
   );

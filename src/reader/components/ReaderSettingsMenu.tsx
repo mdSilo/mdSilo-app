@@ -3,6 +3,7 @@ import { useStore } from "@/state/store";
 import { Range, Segmented, Select, Toggle } from "@/ui/ui";
 import FontSelect from "@/ui/FontSelect";
 import { CODE_LANGUAGES, HUMAN_LANGUAGES } from "@/lib/constants";
+import { t, tk, useT } from "@/i18n";
 import {
   DEFAULT_READER_SETTINGS,
   KEPT_ON_RESET,
@@ -27,16 +28,16 @@ const languageName = (code: string) =>
 import { RULER_COLORS, RULER_SWATCHES } from "../ruler/ruler";
 
 const PAGE_THEMES: [PageTheme, string][] = [
-  ["auto", "As the app"],
-  ["light", "White"],
-  ["sepia", "Sepia"],
-  ["gray", "Gray"],
-  ["dark", "Dark"],
+  ["auto", tk("As the app")],
+  ["light", tk("White")],
+  ["sepia", tk("Sepia")],
+  ["gray", tk("Gray")],
+  ["dark", tk("Dark")],
 ];
 
 const WRITING_MODES: [WritingMode, string][] = [
-  ["auto", "As the book"],
-  ["horizontal-tb", "Horizontal"],
+  ["auto", tk("As the book")],
+  ["horizontal-tb", tk("Horizontal")],
   ["vertical-rl", "Vertical, right to left"],
   ["vertical-lr", "Vertical, left to right"],
   ["horizontal-rtl", "Horizontal, right to left"],
@@ -44,6 +45,7 @@ const WRITING_MODES: [WritingMode, string][] = [
 
 /** How the books show: font, spacing, layout. */
 function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
+  const t = useT();
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const darkMode = useStore((state) => state.darkMode);
   const setReaderSettings = useStore((state) => state.setReaderSettings);
@@ -63,7 +65,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       data-testid="reader-settings"
     >
       <div className="flex items-center justify-between gap-2">
-        <span>Page</span>
+        <span>{t("Page")}</span>
         <div className="flex gap-1.5">
           {PAGE_THEMES.map(([theme, name]) => {
             const colors = themeColors(darkMode, theme);
@@ -72,8 +74,8 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
                 key={theme}
                 className={`w-7 h-7 text-xs font-semibold rounded-full border ${settings.pageTheme === theme ? "ring-2 ring-primary" : "border-base-300"}`}
                 style={{ background: colors.bg, color: colors.fg }}
-                title={name}
-                aria-label={`Page ${name}`}
+                title={t(name)}
+                aria-label={t("Page {name}", { name: t(name) })}
                 aria-pressed={settings.pageTheme === theme}
                 onClick={() => update({ pageTheme: theme })}
               >
@@ -84,14 +86,14 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
         </div>
       </div>
       <Toggle
-        label="Invert image colors"
+        label={t("Invert image colors")}
         checked={settings.invertImages}
         onChange={(invertImages) => update({ invertImages })}
       />
       <div className="divider my-0" />
       {fixedLayout ? (
         <Segmented
-          label="Layout"
+          label={t("Layout")}
           value={
             settings.flow === "paginated"
               ? "paginated"
@@ -99,9 +101,9 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           }
           options={
             [
-              ["paginated", "Pages"],
-              ["vertical", "Vertical"],
-              ["horizontal", "Horizontal"],
+              ["paginated", t("Pages")],
+              ["vertical", t("Vertical")],
+              ["horizontal", t("Horizontal")],
             ] as const
           }
           onChange={(layout) =>
@@ -119,12 +121,12 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
         />
       ) : (
         <Segmented
-          label="Layout"
+          label={t("Layout")}
           value={settings.flow}
           options={
             [
-              ["paginated", "Pages"],
-              ["scrolled", "Scroll"],
+              ["paginated", t("Pages")],
+              ["scrolled", t("Scroll")],
             ] as const
           }
           onChange={(flow) => update({ flow })}
@@ -133,12 +135,12 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       {fixedLayout ? (
         <>
           <div className="flex items-center justify-between gap-2">
-            <span>Zoom</span>
-            <div className="join" role="group" aria-label="Zoom">
+            <span>{t("Zoom")}</span>
+            <div className="join" role="group" aria-label={t("Zoom")}>
               <button
                 className="join-item btn btn-xs"
-                aria-label="Zoom out"
-                title="Zoom out (Ctrl -)"
+                aria-label={t("Zoom out")}
+                title={t("Zoom out (Ctrl -)")}
                 disabled={settings.zoomLevel <= MIN_ZOOM}
                 onClick={() =>
                   update({ zoomLevel: zoomBy(settings.zoomLevel, -1) })
@@ -148,8 +150,8 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
               </button>
               <button
                 className="join-item btn btn-xs w-14"
-                aria-label="Reset zoom"
-                title="Reset zoom (Ctrl 0)"
+                aria-label={t("Reset zoom")}
+                title={t("Reset zoom (Ctrl 0)")}
                 onClick={() =>
                   update({ zoomLevel: DEFAULT_READER_SETTINGS.zoomLevel })
                 }
@@ -158,8 +160,8 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
               </button>
               <button
                 className="join-item btn btn-xs"
-                aria-label="Zoom in"
-                title="Zoom in (Ctrl +)"
+                aria-label={t("Zoom in")}
+                title={t("Zoom in (Ctrl +)")}
                 disabled={settings.zoomLevel >= MAX_ZOOM}
                 onClick={() =>
                   update({ zoomLevel: zoomBy(settings.zoomLevel, 1) })
@@ -173,30 +175,30 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             <>
               {/* scrolled, the pages fit the width of the strip down, the height of the strip across */}
               <Segmented
-                label="Fit"
+                label={t("Fit")}
                 value={settings.zoomMode}
                 options={
                   [
-                    ["fit-page", "Page"],
-                    ["fit-width", "Width"],
+                    ["fit-page", t("Page")],
+                    ["fit-width", t("Width")],
                   ] as const
                 }
                 onChange={(zoomMode) => update({ zoomMode })}
               />
               <Segmented
-                label="Spread"
+                label={t("Spread")}
                 value={settings.spreadMode}
                 options={
                   [
-                    ["none", "One page"],
-                    ["auto", "Two pages"],
+                    ["none", t("One page")],
+                    ["auto", t("Two pages")],
                   ] as const
                 }
                 onChange={(spreadMode) => update({ spreadMode })}
               />
               {settings.spreadMode === "auto" ? (
                 <Toggle
-                  label="Cover page alone"
+                  label={t("Cover page alone")}
                   checked={settings.separateCover}
                   onChange={(separateCover) => update({ separateCover })}
                 />
@@ -205,7 +207,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           ) : settings.scrollDirection === "vertical" ? (
             // a webtoon fills the width: not zoomed, no page cut off
             <Toggle
-              label="Webtoon (no gaps)"
+              label={t("Webtoon (no gaps)")}
               checked={settings.webtoon}
               onChange={(webtoon) =>
                 update(
@@ -220,7 +222,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           {settings.flow === "scrolled" &&
           settings.scrollDirection === "horizontal" ? null : (
             <Toggle
-              label="Lock horizontal panning"
+              label={t("Lock horizontal panning")}
               checked={settings.lockPanX}
               onChange={(lockPanX) => update({ lockPanX })}
             />
@@ -228,7 +230,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           {/* of the book read, e.g. a manga in a CBZ, which does not say so */}
           {book ? (
             <Toggle
-              label="Right-to-left pages"
+              label={t("Right-to-left pages")}
               checked={
                 pagesDirection(writingMode) === "auto"
                   ? bookDir(book) === "rtl"
@@ -245,7 +247,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       ) : (
         <>
           <Range
-            label="Font size"
+            label={t("Font size")}
             min={12}
             max={32}
             value={settings.fontSize}
@@ -253,7 +255,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             onChange={(fontSize) => update({ fontSize })}
           />
           <Range
-            label="Line height"
+            label={t("Line height")}
             min={1}
             max={2.4}
             step={0.1}
@@ -262,20 +264,20 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             onChange={(lineHeight) => update({ lineHeight })}
           />
           <FontSelect
-            label="Font"
+            label={t("Font")}
             value={settings.font}
             onChange={(font) => update({ font })}
-            defaultOption={["book", "Of the book"]}
+            defaultOption={["book", t("Of the book")]}
           />
           <FontSelect
-            label="CJK font"
+            label={t("CJK font")}
             value={settings.cjkFont}
             onChange={(cjkFont) => update({ cjkFont })}
-            defaultOption={["", "None"]}
+            defaultOption={["", t("None")]}
           />
           {hasBook ? (
             <Select
-              label="Writing Mode"
+              label={t("Writing Mode")}
               value={writingMode}
               onChange={(mode) =>
                 useReaderStore.getState().setWritingMode(mode as WritingMode)
@@ -283,21 +285,21 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             >
               {WRITING_MODES.map(([mode, name]) => (
                 <option key={mode} value={mode}>
-                  {name}
+                  {t(name)}
                 </option>
               ))}
             </Select>
           ) : null}
           {vertical ? (
             <Toggle
-              label="Double border"
+              label={t("Double border")}
               checked={settings.doubleBorder}
               onChange={(doubleBorder) => update({ doubleBorder })}
             />
           ) : null}
           <div className="divider my-0" />
           <Segmented
-            label="Columns"
+            label={t("Columns")}
             value={settings.maxColumns}
             options={[
               [1, "1"],
@@ -306,8 +308,8 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             onChange={(maxColumns) => update({ maxColumns })}
           />
           <Range
-            label="Width"
-            ariaLabel="Column width"
+            label={t("Width")}
+            ariaLabel={t("Column width")}
             min={400}
             max={1200}
             step={20}
@@ -316,7 +318,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             onChange={(maxInlineSize) => update({ maxInlineSize })}
           />
           <Range
-            label="Margins"
+            label={t("Margins")}
             min={16}
             max={96}
             step={4}
@@ -325,38 +327,38 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             onChange={(margin) => update({ margin })}
           />
           <Toggle
-            label="Justify"
+            label={t("Justify")}
             checked={settings.justify}
             onChange={(justify) => update({ justify })}
           />
           <Toggle
-            label="Hyphenate"
+            label={t("Hyphenate")}
             checked={settings.hyphenate}
             onChange={(hyphenate) => update({ hyphenate })}
           />
           <Toggle
-            label="Chapter above"
+            label={t("Chapter above")}
             checked={settings.showHeader}
             onChange={(showHeader) => update({ showHeader })}
           />
           <Toggle
-            label="Progress below"
+            label={t("Progress below")}
             checked={settings.showFooter}
             onChange={(showFooter) => update({ showFooter })}
           />
           <Toggle
-            label="Image descriptions attached"
+            label={t("Image descriptions attached")}
             checked={settings.imageCaptions}
             onChange={(imageCaptions) => update({ imageCaptions })}
           />
           <Toggle
-            label="Highlight code"
+            label={t("Highlight code")}
             checked={settings.codeHighlight}
             onChange={(codeHighlight) => update({ codeHighlight })}
           />
           {settings.codeHighlight ? (
             <Select
-              label="Code language"
+              label={t("Code language")}
               value={settings.codeLanguage}
               onChange={(lang) =>
                 update({ codeLanguage: lang as CodeLanguage })
@@ -364,25 +366,26 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
             >
               {CODE_LANGUAGES.map((lang) => (
                 <option key={lang} value={lang}>
-                  {lang === "auto" ? "Detect" : lang}
+                  {lang === "auto" ? t("Detect") : lang}
                 </option>
               ))}
             </Select>
           ) : null}
           <Toggle
-            label="Word lens"
+            label={t("Word lens")}
             checked={settings.wordLens}
             onChange={(wordLens) => update({ wordLens })}
           />
           {settings.wordLens ? (
             <p className="-mt-1 text-xs text-base-content/60">
-              The words of your vocabulary with a short meaning under them;
-              click one to look it up.
+              {t(
+                "The words of your vocabulary with a short meaning under them; click one to look it up.",
+              )}
             </p>
           ) : null}
           {settings.wordLens ? (
             <Select
-              label="Gloss"
+              label={t("Gloss")}
               value={settings.lensGloss}
               onChange={(value) =>
                 update({
@@ -391,17 +394,18 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
                 })
               }
             >
-              <option value="definition">Definition</option>
+              <option value="definition">{t("Definition")}</option>
               <option value="translation">
-                Translation (
-                {languageName(targetLanguage(settings.translateTo))})
+                {t("Translation ({language})", {
+                  language: languageName(targetLanguage(settings.translateTo)),
+                })}
               </option>
             </Select>
           ) : null}
           {settings.wordLens ? (
             <>
               <Range
-                label="Gloss size"
+                label={t("Gloss size")}
                 min={LENS_SIZE.min}
                 max={LENS_SIZE.max}
                 step={0.05}
@@ -410,15 +414,17 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
                 onChange={(lensSize) => update({ lensSize })}
               />
               <div className="flex items-center justify-between gap-2">
-                <span>Gloss color</span>
+                <span>{t("Gloss color")}</span>
                 <div className="flex gap-1.5">
                   {LENS_COLORS.map((color) => (
                     <button
                       key={color}
                       className={`w-5 h-5 rounded-full border border-base-300 ${settings.lensColor === color ? "ring-2 ring-primary" : ""}`}
                       style={{ background: lensColorOf(color, pageColors) }}
-                      title={color === "accent" ? "Accent of the page" : color}
-                      aria-label={`Gloss ${color}`}
+                      title={
+                        color === "accent" ? t("Accent of the page") : color
+                      }
+                      aria-label={t("Gloss {color}", { color })}
                       aria-pressed={settings.lensColor === color}
                       onClick={() => update({ lensColor: color })}
                     />
@@ -431,18 +437,18 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       )}
       <div className="divider my-0" />
       <Toggle
-        label="Page turn animation"
+        label={t("Page turn animation")}
         checked={settings.animated}
         onChange={(animated) => update({ animated })}
       />
       <Toggle
-        label="Click the sides to turn pages"
+        label={t("Click the sides to turn pages")}
         checked={settings.clickToTurn}
         onChange={(clickToTurn) => update({ clickToTurn })}
       />
       {settings.clickToTurn ? (
         <Toggle
-          label="Click left to go forward"
+          label={t("Click left to go forward")}
           checked={settings.swapClickArea}
           onChange={(swapClickArea) => update({ swapClickArea })}
         />
@@ -450,14 +456,14 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       {fixedLayout ? null : (
         <>
           <Toggle
-            label="Reading ruler"
+            label={t("Reading ruler")}
             checked={settings.readingRuler}
             onChange={(readingRuler) => update({ readingRuler })}
           />
           {settings.readingRuler ? (
             <>
               <Range
-                label="Ruler lines"
+                label={t("Ruler lines")}
                 min={1}
                 max={6}
                 value={settings.rulerLines}
@@ -465,7 +471,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
                 onChange={(rulerLines) => update({ rulerLines })}
               />
               <Range
-                label="Opacity"
+                label={t("Opacity")}
                 min={0.1}
                 max={0.9}
                 step={0.1}
@@ -474,15 +480,17 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
                 onChange={(rulerOpacity) => update({ rulerOpacity })}
               />
               <div className="flex items-center justify-between gap-2">
-                <span>Ruler color</span>
+                <span>{t("Ruler color")}</span>
                 <div className="flex gap-1.5">
                   {RULER_COLORS.map((color) => (
                     <button
                       key={color}
                       className={`w-5 h-5 rounded-full border border-base-300 ${settings.rulerColor === color ? "ring-2 ring-primary" : ""}`}
                       style={{ background: RULER_SWATCHES[color] }}
-                      title={color === "transparent" ? "None" : color}
-                      aria-label={`Ruler ${color === "transparent" ? "no color" : color}`}
+                      title={color === "transparent" ? t("None") : color}
+                      aria-label={t("Ruler {color}", {
+                        color: color === "transparent" ? t("no color") : color,
+                      })}
                       aria-pressed={settings.rulerColor === color}
                       onClick={() => update({ rulerColor: color })}
                     />
@@ -495,11 +503,11 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
       )}
       {!fixedLayout && (
         <Select
-          label="Translate to"
+          label={t("Translate to")}
           value={settings.translateTo}
           onChange={(translateTo) => update({ translateTo })}
         >
-          <option value="">Default</option>
+          <option value="">{t("Default")}</option>
           {HUMAN_LANGUAGES.map(([code, name]) => (
             <option key={code} value={code}>
               {name}
@@ -520,7 +528,7 @@ function ReaderSettingsMenu({ fixedLayout }: { fixedLayout: boolean }) {
           })
         }
       >
-        Reset
+        {t("Reset")}
       </button>
     </div>
   );

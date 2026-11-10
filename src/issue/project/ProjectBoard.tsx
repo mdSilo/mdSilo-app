@@ -23,6 +23,7 @@ import {
 import { createPortal } from "react-dom";
 import { TbPlus as IconPlus } from "react-icons/tb";
 import { PromptModal } from "@/ui/Dialogs";
+import { useT } from "@/i18n";
 import { useIssueStore } from "../issueStore";
 import {
   addStatus,
@@ -145,6 +146,7 @@ export default function ProjectBoard({
   onOpen,
   onAddItem,
 }: Props) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [activeColumn, setActiveColumn] = useState<string | null>(null);
@@ -251,14 +253,14 @@ export default function ProjectBoard({
             className="flex items-center gap-1 px-3 py-2 text-sm text-base-content/60 bg-base-200 rounded-sm hover:bg-base-content/10"
             onClick={() => setAddingColumn(true)}
           >
-            <IconPlus size={14} /> Add column
+            <IconPlus size={14} /> {t("Add column")}
           </button>
         </div>
         <PromptModal
-          title="Add column"
-          label="New column name"
+          title={t("Add column")}
+          label={t("New column name")}
           initial={`Column ${project.statuses.length + 1}`}
-          submitLabel="Add column"
+          submitLabel={t("Add column")}
           isOpen={addingColumn}
           onSubmit={(name) => apply((d) => addStatus(d, project.id, name))}
           handleClose={() => setAddingColumn(false)}

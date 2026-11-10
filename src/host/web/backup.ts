@@ -2,6 +2,7 @@
  * Back up the notes (the virtual file system in IndexedDB) to a zip file.
  * To restore: unzip it, then import the folder via Open Folder > Import Folder.
  */
+import { t } from "@/i18n";
 import * as fs from "./fs";
 import { ROOT, normalize, parent } from "./path";
 import { createZip, ZipEntry } from "./zip";
@@ -51,6 +52,6 @@ export function backupFileName(now = new Date()): string {
 export async function exportBackup(dir = ROOT): Promise<number> {
   const { blob, count } = await buildBackup(dir);
   downloadBlob(blob, backupFileName());
-  showMessage("Backup", `${count} file(s) exported`);
+  showMessage(t("Backup"), `${count} file(s) exported`);
   return count;
 }

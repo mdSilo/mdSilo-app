@@ -6,6 +6,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { normalizeSlash, toWorkspacePath } from "@/workspace/util";
 import { getFileExt } from "@/workspace/process";
 import { readBytes, writeBytes } from "@/reader/library/library";
+import { useT } from "@/i18n";
 import type { PluginHost, PluginMethods } from "./host";
 import PluginFrame from "./PluginFrame";
 import { contributesOf } from "./registry";
@@ -125,6 +126,7 @@ function useFileChanged(
 
 /** A file opened by the plugin that views files of its kind. */
 export default function PluginFileView() {
+  const t = useT();
   const { state } = useCurrentViewContext();
   const { pluginId = "", filePath = "" } = state;
   const plugin = useStore((s) =>
@@ -144,7 +146,7 @@ export default function PluginFileView() {
   if (!plugin) {
     return (
       <div className="p-4 text-sm text-base-content/70">
-        The plugin {pluginId} is not installed.
+        {t("The plugin {id} is not installed.", { id: pluginId })}
       </div>
     );
   }

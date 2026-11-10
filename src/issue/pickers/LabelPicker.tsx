@@ -1,4 +1,5 @@
 import { TbCheck as IconCheck } from "react-icons/tb";
+import { useT } from "@/i18n";
 import { useIssueStore } from "../issueStore";
 import { addLabel, removeLabel } from "../issueOps";
 import LabelChip from "../LabelChip";
@@ -12,11 +13,12 @@ export default function LabelPicker({
   issue: Issue;
   labels: Label[];
 }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const current = labels.filter((l) => issue.labels.includes(l.id));
   return (
     <Picker
-      title="Labels"
+      title={t("Labels")}
       summary={
         current.length ? (
           <div className="flex flex-wrap gap-1">
@@ -31,14 +33,14 @@ export default function LabelPicker({
             ))}
           </div>
         ) : (
-          <span className="text-base-content/60">None yet</span>
+          <span className="text-base-content/60">{t("None yet")}</span>
         )
       }
     >
       {() =>
         labels.length === 0 ? (
           <p className="px-3 py-2 text-sm text-base-content/60">
-            No labels. Create some in Issues &gt; Labels.
+            {t("No labels. Create some in Issues > Labels.")}
           </p>
         ) : (
           labels.map((l) => {

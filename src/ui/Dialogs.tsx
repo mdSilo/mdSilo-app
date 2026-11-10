@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BaseModal } from "@/ui/BaseModal";
+import { t, useT } from "@/i18n";
 
 type ConfirmProps = {
   title: string;
@@ -13,10 +14,11 @@ type ConfirmProps = {
 
 /** In-app stand-in for `window.confirm`. */
 export function ConfirmModal(props: ConfirmProps) {
+  const t = useT();
   const {
     title,
     message,
-    confirmLabel = "Confirm",
+    confirmLabel = t("Confirm"),
     danger = false,
     isOpen,
     onConfirm,
@@ -43,7 +45,7 @@ export function ConfirmModal(props: ConfirmProps) {
           className="mt-2 font-bold pop-btn"
           onClick={handleClose}
         >
-          Cancel
+          {t("Cancel")}
         </button>
       </div>
     </BaseModal>
@@ -63,11 +65,12 @@ type PromptProps = {
 
 /** In-app stand-in for `window.prompt`. */
 export function PromptModal(props: PromptProps) {
+  const t = useT();
   const {
     title,
     label,
     initial = "",
-    submitLabel = "Save",
+    submitLabel = t("Save"),
     isOpen,
     onSubmit,
     handleClose,
@@ -112,7 +115,7 @@ export function PromptModal(props: PromptProps) {
           className="mt-2 font-bold pop-btn"
           onClick={handleClose}
         >
-          Cancel
+          {t("Cancel")}
         </button>
       </form>
     </BaseModal>

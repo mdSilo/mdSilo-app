@@ -16,6 +16,8 @@
     "lint-ignore": "pnpm lint || true",
     "fix": "prettier --write src",
     "tc": "pnpm --filter mdsmirror build && tsc",
+    "i18n:find": "node scripts/i18n.mjs find",
+    "i18n:sync": "node scripts/i18n.mjs sync",
     "tauri": "tauri"
   },
   "dependencies": {

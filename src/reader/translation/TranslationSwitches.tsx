@@ -1,5 +1,6 @@
 import { store, useStore } from "@/state/store";
 import { Toggle } from "@/ui/ui";
+import { useT } from "@/i18n";
 import { useReaderChrome } from "../chrome";
 import { activeStore, useActiveStore } from "../readerStore";
 import { withDefaults } from "../settings";
@@ -14,6 +15,7 @@ export default function TranslationSwitches({
 }: {
   className?: string;
 }) {
+  const t = useT();
   const settings = withDefaults(useStore((state) => state.readerSettings));
   const on = useActiveStore((state) => Boolean(state.entry?.translate));
   const hasEntry = useActiveStore((state) => Boolean(state.entry));
@@ -27,13 +29,13 @@ export default function TranslationSwitches({
       data-testid="translation-switches"
     >
       <Toggle
-        label="Translate the book"
+        label={t("Translate the book")}
         checked={on}
         onChange={(v) => activeStore().getState().setTranslating(v)}
       />
       {on ? (
         <Toggle
-          label="Translation only"
+          label={t("Translation only")}
           checked={settings.translationOnly}
           onChange={(translationOnly) =>
             store.getState().setReaderSettings({ ...settings, translationOnly })
@@ -45,7 +47,7 @@ export default function TranslationSwitches({
           className="self-start btn btn-ghost btn-xs"
           onClick={() => useReaderChrome.getState().setTranslatedBook(true)}
         >
-          Make the translated book…
+          {t("Make the translated book…")}
         </button>
       ) : null}
     </div>

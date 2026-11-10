@@ -1,4 +1,5 @@
 import { TbCheck as IconCheck } from "react-icons/tb";
+import { useT } from "@/i18n";
 import { useIssueStore } from "../issueStore";
 import { milestoneProgress, setMilestone } from "../issueOps";
 import type { Issue, IssueData } from "../types";
@@ -11,6 +12,7 @@ export default function MilestonePicker({
   issue: Issue;
   data: IssueData;
 }) {
+  const t = useT();
   const apply = useIssueStore((s) => s.apply);
   const current = data.milestones.find((m) => m.id === issue.milestone);
   const progress = current ? milestoneProgress(data, current.id) : undefined;
@@ -19,7 +21,7 @@ export default function MilestonePicker({
   );
   return (
     <Picker
-      title="Milestone"
+      title={t("Milestone")}
       summary={
         current && progress ? (
           <div>
@@ -32,7 +34,7 @@ export default function MilestonePicker({
             </div>
           </div>
         ) : (
-          <span className="text-base-content/60">No milestone</span>
+          <span className="text-base-content/60">{t("No milestone")}</span>
         )
       }
     >
@@ -40,7 +42,7 @@ export default function MilestonePicker({
         <>
           {choices.length === 0 ? (
             <p className="px-3 py-2 text-sm text-base-content/60">
-              No open milestones.
+              {t("No open milestones.")}
             </p>
           ) : (
             choices.map((m) => (
@@ -82,7 +84,7 @@ export default function MilestonePicker({
                 close();
               }}
             >
-              Clear milestone
+              {t("Clear milestone")}
             </button>
           ) : null}
         </>

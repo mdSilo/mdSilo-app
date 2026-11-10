@@ -22,6 +22,7 @@ import { writeAllFile, writeFile } from "@/workspace/write";
 import { rmFileNameExt } from "@/workspace/process";
 import { READING_DIR, WRITING_DIR, resolveLayout } from "@/workspace/layout";
 import { syncFeeds } from "@/feed/feedSync";
+import { t } from "@/i18n";
 
 const openFiles = async (multi = true) => {
   const filePaths = await openFileDilog(["md"], multi);
@@ -232,7 +233,7 @@ export const openWebWorkspace = async (): Promise<string | undefined> => {
   if (store.getState().currentDir || isWebWorkspaceOpening) return;
   isWebWorkspaceOpening = true;
   try {
-    return await reportOpening("Opening the workspace", retryOpening);
+    return await reportOpening(t("Opening the workspace"), retryOpening);
   } finally {
     isWebWorkspaceOpening = false;
   }

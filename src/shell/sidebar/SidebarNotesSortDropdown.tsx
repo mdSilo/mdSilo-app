@@ -8,6 +8,7 @@ import { usePopper } from "react-popper";
 import { ReadableNameBySort, Sort } from "@/state/userSettings";
 import { Tooltip } from "@/ui/ui";
 import Portal from "@/ui/Portal";
+import { useT } from "@/i18n";
 
 type Props = {
   currentSort: Sort;
@@ -15,6 +16,7 @@ type Props = {
 };
 
 const SidebarNotesSortDropdown = (props: Props) => {
+  const t = useT();
   const { currentSort, setCurrentSort } = props;
 
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -31,7 +33,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
             className="rounded-sm hover:bg-base-content/10 active:bg-base-content/15"
             ref={buttonRef}
           >
-            <Tooltip content="Sort">
+            <Tooltip content={t("Sort")}>
               <span className="flex items-center justify-center w-6 h-6">
                 <IconSortDescending
                   size={16}
@@ -65,7 +67,7 @@ const SidebarNotesSortDropdown = (props: Props) => {
                           <span
                             className={isActive ? "text-primary" : undefined}
                           >
-                            {ReadableNameBySort[sort]}
+                            {t(ReadableNameBySort[sort])}
                           </span>
                           {isActive ? (
                             <IconCheck

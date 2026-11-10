@@ -43,6 +43,7 @@ import { useStore } from "@/state/store";
 import { onAnnounce } from "@/state/windowSync";
 import { READING_DIR } from "@/workspace/layout";
 import { onRenamed } from "@/workspace/renames";
+import { t, tk, tn, useT } from "@/i18n";
 import { BOOK_EXTS, CONVERTIBLE_EXTS } from "../document";
 import {
   breadcrumbs,
@@ -90,11 +91,11 @@ import {
 } from "./library";
 
 const GROUP_LABELS: Record<GroupBy, string> = {
-  none: "Books",
-  group: "Group",
-  author: "Author",
-  series: "Series",
-  status: "Status",
+  none: tk("Books"),
+  group: tk("Group"),
+  author: tk("Author"),
+  series: tk("Series"),
+  status: tk("Status"),
 };
 
 // the group opened, kept while a book is read
@@ -107,6 +108,7 @@ let lastOpened = { groupBy: "group" as GroupBy, key: "" };
  * and metadata of a book edited; books added, dropped from the device too.
  */
 export default function Library() {
+  const t = useT();
   const { dispatch } = useCurrentViewContext();
   const initDir = useStore((state) => state.initDir);
   const layout = useStore((state) => state.layout);
@@ -313,7 +315,7 @@ export default function Library() {
       const found = await scanFolder(options);
       if (found.length === 0) {
         setMessage(
-          "No books found in the folder, of the formats and size chosen.",
+          t("No books found in the folder, of the formats and size chosen."),
         );
         return;
       }
@@ -461,8 +463,9 @@ export default function Library() {
   if (layout !== "workspace") {
     return (
       <div className="p-8 text-center text-base-content/70">
-        Books are read in a workspace with a reading folder: upgrade the folder
-        in the sidebar first.
+        {t(
+          "Books are read in a workspace with a reading folder: upgrade the folder in the sidebar first.",
+        )}
       </div>
     );
   }
@@ -487,7 +490,7 @@ export default function Library() {
         >
           <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 p-2 bg-base-100">
             <AppMenu />
-            <h1 className="text-xl font-semibold me-2">Library</h1>
+            <h1 className="text-xl font-semibold me-2">{t("Library")}</h1>
             <label className="relative flex items-center flex-1 min-w-40 max-w-md">
               <TbSearch
                 size={14}
@@ -496,9 +499,11 @@ export default function Library() {
               <input
                 className="w-full rounded-full input input-sm ps-8 pe-8"
                 placeholder={
-                  count > 1 ? `Search in ${count} books` : "Search books"
+                  count > 1
+                    ? t("Search in {count} books", { count })
+                    : t("Search books")
                 }
-                aria-label="Search books"
+                aria-label={t("Search books")}
                 value={query}
                 spellCheck={false}
                 onChange={(e) => setQuery(e.target.value)}
@@ -506,7 +511,7 @@ export default function Library() {
               {query ? (
                 <button
                   className="absolute right-2 text-base-content/50"
-                  aria-label="Clear the search"
+                  aria-label={t("Clear the search")}
                   onClick={() => setQuery("")}
                 >
                   <TbX size={14} />
@@ -517,14 +522,14 @@ export default function Library() {
             <button
               className={`btn btn-sm btn-ghost ${selecting ? "btn-active" : ""}`}
               onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
-              title="Select Books"
+              title={t("Select Books")}
             >
               <TbChecks size={18} />
             </button>
             <button
               className="btn btn-sm btn-ghost"
               onClick={() => dispatch({ view: "vocabulary" })}
-              title="Vocabulary"
+              title={t("Vocabulary")}
             >
               <TbVocabulary size={18} />
             </button>
@@ -532,7 +537,7 @@ export default function Library() {
               className="btn btn-sm btn-ghost"
               onClick={() => setFolderDialog(true)}
               disabled={busy}
-              title="Import from folder"
+              title={t("Import from folder")}
             >
               <TbFolderPlus size={18} />
             </button>
@@ -541,7 +546,7 @@ export default function Library() {
               onClick={onAdd}
               disabled={busy}
             >
-              <TbBookUpload size={18} /> Import
+              <TbBookUpload size={18} /> {t("Import")}
             </button>
           </div>
           <DndContext
@@ -553,9 +558,9 @@ export default function Library() {
               groupBy === "group" ? (
                 <nav
                   className="flex flex-wrap items-center gap-1 px-6 pb-2"
-                  aria-label="Groups"
+                  aria-label={t("Groups")}
                 >
-                  <Crumb path="" label="All" onOpen={setOpened} />
+                  <Crumb path="" label={t("All")} onOpen={setOpened} />
                   {breadcrumbs(opened).map((crumb, i, all) => (
                     <Fragment key={crumb.path}>
                       <TbChevronRight
@@ -577,7 +582,7 @@ export default function Library() {
                   ))}
                   <IconButton
                     size="xs"
-                    title="Rename the group"
+                    title={t("Rename the group")}
                     onClick={() => setEditGroup(true)}
                   >
                     <TbPencil size={16} />
@@ -586,13 +591,13 @@ export default function Library() {
               ) : (
                 <div className="flex items-center gap-2 px-6 pb-2">
                   <IconButton
-                    title="Back to the library"
+                    title={t("Back to the library")}
                     onClick={() => setOpened("")}
                   >
                     <TbArrowLeft size={18} />
                   </IconButton>
                   <span className="text-sm text-base-content/60">
-                    {GROUP_LABELS[groupBy]}:
+                    {t(GROUP_LABELS[groupBy])}:
                   </span>
                   <span className="font-medium truncate">{opened}</span>
                 </div>
@@ -601,13 +606,17 @@ export default function Library() {
             {selecting ? (
               <div
                 role="toolbar"
-                aria-label="Selected books"
+                aria-label={t("Selected books")}
                 className="flex flex-wrap items-center gap-2 px-3 py-1.5 mx-6 mb-2 text-sm rounded-md bg-base-200"
               >
                 <span className="me-auto">
-                  {chosen.length} selected
+                  {t("{count} selected", { count: chosen.length })}
                   {chosen.length
-                    ? ` · ${chosen.filter((b) => b.synced).length} file${chosen.filter((b) => b.synced).length === 1 ? "" : "s"} synced`
+                    ? tn(
+                        " · {count} file synced",
+                        " · {count} files synced",
+                        chosen.filter((b) => b.synced).length,
+                      )
                     : ""}
                 </span>
                 <button
@@ -621,13 +630,15 @@ export default function Library() {
                 >
                   {shownHashes.length &&
                   shownHashes.every((h) => selected.has(h))
-                    ? "Unselect all"
-                    : "Select all"}
+                    ? t("Unselect all")
+                    : t("Select all")}
                 </button>
                 <button
                   className="btn btn-xs btn-ghost"
                   disabled={chosen.length === 0}
-                  title="Sync the files of the books selected with the workspace (git)"
+                  title={t(
+                    "Sync the files of the books selected with the workspace (git)",
+                  )}
                   onClick={() =>
                     void sync(
                       chosen.map((b) => b.hash),
@@ -635,12 +646,14 @@ export default function Library() {
                     )
                   }
                 >
-                  <TbCloud size={14} /> Sync files
+                  <TbCloud size={14} /> {t("Sync files")}
                 </button>
                 <button
                   className="btn btn-xs btn-ghost"
                   disabled={chosen.length === 0}
-                  title="Only the notes and progress of the books selected synced"
+                  title={t(
+                    "Only the notes and progress of the books selected synced",
+                  )}
                   onClick={() =>
                     void sync(
                       chosen.map((b) => b.hash),
@@ -648,29 +661,29 @@ export default function Library() {
                     )
                   }
                 >
-                  <TbCloudOff size={14} /> Stop syncing
+                  <TbCloudOff size={14} /> {t("Stop syncing")}
                 </button>
                 <button
                   className="btn btn-xs btn-ghost"
                   disabled={chosen.length === 0}
-                  title="Put the books selected in a group, or in none"
+                  title={t("Put the books selected in a group, or in none")}
                   onClick={() => setBulk("move")}
                 >
-                  <TbFolderShare size={14} /> Move to group
+                  <TbFolderShare size={14} /> {t("Move to group")}
                 </button>
                 <button
                   className="btn btn-xs btn-ghost text-error"
                   disabled={chosen.length === 0}
-                  title="Delete the books selected"
+                  title={t("Delete the books selected")}
                   onClick={() => setBulk("delete")}
                 >
-                  <TbTrash size={14} /> Delete
+                  <TbTrash size={14} /> {t("Delete")}
                 </button>
                 <button
                   className="btn btn-xs btn-ghost"
                   onClick={stopSelecting}
                 >
-                  Done
+                  {t("Done")}
                 </button>
               </div>
             ) : null}
@@ -680,7 +693,7 @@ export default function Library() {
                 className={`flex items-center gap-2 px-3 py-2 mx-6 mb-2 text-sm rounded-md ${message.warn ? "bg-warning/15" : "bg-base-200"}`}
               >
                 <span className="flex-1">{message.text}</span>
-                <button aria-label="Close" onClick={() => setMessage("")}>
+                <button aria-label={t("Close")} onClick={() => setMessage("")}>
                   <TbX size={14} />
                 </button>
               </div>
@@ -691,8 +704,10 @@ export default function Library() {
               ) : items.length === 0 ? (
                 <p className="px-2 text-base-content/60">
                   {rows.length === 0
-                    ? "No books yet. Add EPUB, PDF, MOBI, AZW3, FB2 or CBZ files, drop them here, or put them in the reading folder."
-                    : "No books found."}
+                    ? t(
+                        "No books yet. Add EPUB, PDF, MOBI, AZW3, FB2 or CBZ files, drop them here, or put them in the reading folder.",
+                      )
+                    : t("No books found.")}
                 </p>
               ) : (
                 <Shelf
@@ -707,8 +722,9 @@ export default function Library() {
           </DndContext>
           {draggingFiles ? (
             <div className="fixed inset-x-0 bottom-6 z-20 mx-auto w-fit px-4 py-2 rounded-full shadow-lg bg-primary text-primary-content pointer-events-none">
-              Drop the books to add them
-              {groupBy === "group" && opened ? ` to ${opened}` : ""}
+              {groupBy === "group" && opened
+                ? t("Drop the books to add them to {group}", { group: opened })
+                : t("Drop the books to add them")}
             </div>
           ) : null}
           {busy ? <Spinner className="fixed bottom-6 right-6" /> : null}
@@ -787,6 +803,7 @@ function Crumb({
   label: string;
   onOpen: (path: string) => void;
 }) {
+  const t = useT();
   const { setNodeRef, isOver } = useDroppable({ id: `crumb:${path}` });
   return (
     <button
@@ -794,8 +811,8 @@ function Crumb({
       className={`px-2 py-1 rounded truncate hover:bg-base-200 text-base-content/80 ${isOver ? "ring-2 ring-primary bg-primary/10" : ""}`}
       title={
         path
-          ? `Open ${path}; drop a book here to move it`
-          : "All the books; drop a book here to ungroup it"
+          ? t("Open {path}; drop a book here to move it", { path })
+          : t("All the books; drop a book here to ungroup it")
       }
       onClick={() => onOpen(path)}
     >

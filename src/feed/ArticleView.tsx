@@ -1,10 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
-import { TbColumns, TbHeadphones, TbLink,TbStar, TbClipboardText } from "react-icons/tb";
+import {
+  TbColumns,
+  TbHeadphones,
+  TbLink,
+  TbStar,
+  TbClipboardText,
+} from "react-icons/tb";
 import { useStore } from "@/state/store";
 import { getFavicon, fmtDatetime } from "@/lib/helper";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ArticleType } from "@/types/model";
 import { Tooltip } from "@/ui/ui";
+import { t, useT } from "@/i18n";
 import { clipArticle } from "./clip";
 
 type ViewProps = {
@@ -27,6 +34,7 @@ function selectionHtmlIn(el: HTMLElement | null): string | undefined {
 }
 
 export function ArticleView(props: ViewProps) {
+  const t = useT();
   const { article, starArticle, hideChannelCol, onOpenNote } = props;
   const contentRef = useRef<HTMLDivElement>(null);
   const [clipMsg, setClipMsg] = useState("");
@@ -71,7 +79,9 @@ export function ArticleView(props: ViewProps) {
               <img src={ico} alt="#" />
             </span>
           </Tooltip>
-          <span className="m-1 text-xs truncate">{fmtDatetime(published || "")}</span>
+          <span className="m-1 text-xs truncate">
+            {fmtDatetime(published || "")}
+          </span>
           <span className="m-1 text-xs truncate">{author}</span>
           <a className="m-1" target="_blank" rel="noreferrer" href={url}>
             <TbLink size={20} />
@@ -89,12 +99,12 @@ export function ArticleView(props: ViewProps) {
             />
           </span>
           <Tooltip
-            content="Save as a note, or add the selected text to it"
+            content={t("Save as a note, or add the selected text to it")}
             placement="top"
           >
             <button
               type="button"
-              aria-label="Clip"
+              aria-label={t("Clip")}
               className="m-1"
               // keep the selection in the article
               onMouseDown={(e) => e.preventDefault()}
@@ -102,7 +112,7 @@ export function ArticleView(props: ViewProps) {
                 const selection = selectionHtmlIn(contentRef.current);
                 const notePath = await clipArticle(article, selection);
                 if (!notePath) {
-                  setClipMsg("Open a folder to save clips");
+                  setClipMsg(t("Open a folder to save clips"));
                 } else if (selection === undefined) {
                   onOpenNote?.(notePath);
                 } else {

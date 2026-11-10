@@ -16,6 +16,7 @@ import Portal from "@/ui/Portal";
 import DirNewModal from "@/shell/dir/DirNewModal";
 import { onListDir, reopenWorkspace } from "@/workspace/useOpen";
 import { normalizeSlash } from "@/workspace/util";
+import { useT } from "@/i18n";
 
 const baseName = (dir: string) => normalizeSlash(dir).split("/").pop() || dir;
 
@@ -25,6 +26,7 @@ const baseName = (dir: string) => normalizeSlash(dir).split("/").pop() || dir;
  * without closing the one open first, and makes a subfolder.
  */
 function WorkspaceSwitcher({ count }: { count?: number }) {
+  const t = useT();
   // the workspace, or the folder of a file opened alone (Open File)
   const initDir = useStore((state) => state.initDir || state.currentDir);
   // the workspace, or a folder of it (Open Folder Here)
@@ -87,7 +89,7 @@ function WorkspaceSwitcher({ count }: { count?: number }) {
           data-testid="workspace-list"
         >
           <div className="px-4 pt-2 pb-1 text-xs text-base-content/60">
-            Folders
+            {t("Folders")}
           </div>
           {dirs.map((dir) => {
             const isCurrent = dir === initDir;
@@ -115,9 +117,11 @@ function WorkspaceSwitcher({ count }: { count?: number }) {
                     </span>
                     <button
                       type="button"
-                      aria-label={isPinned ? "Unpin" : "Pin"}
+                      aria-label={isPinned ? t("Unpin") : t("Pin")}
                       title={
-                        isPinned ? "Unpin" : "Pin: open on startup if so set"
+                        isPinned
+                          ? t("Unpin")
+                          : t("Pin: open on startup if so set")
                       }
                       className={`p-0.5 rounded-sm hover:bg-base-content/15 ${isPinned ? "" : "[@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus:opacity-100"}`}
                       onClick={(e) =>
@@ -135,8 +139,8 @@ function WorkspaceSwitcher({ count }: { count?: number }) {
                     ) : (
                       <button
                         type="button"
-                        aria-label="Remove from Recent"
-                        title="Remove from Recent"
+                        aria-label={t("Remove from Recent")}
+                        title={t("Remove from Recent")}
                         className="p-0.5 rounded-sm [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-base-content/15"
                         onClick={(e) => stop(e, () => deleteRecentDir(dir))}
                       >
@@ -154,11 +158,11 @@ function WorkspaceSwitcher({ count }: { count?: number }) {
           onClick={() => setIsNewDirOpen(true)}
         >
           <TbPlus size={16} className="me-1" />
-          <span>New Subfolder</span>
+          <span>{t("New Subfolder")}</span>
         </DropdownItem>
         <DropdownItem onClick={onListDir}>
           <TbFolderPlus size={16} className="me-1" />
-          <span>Open Folder…</span>
+          <span>{t("Open Folder…")}</span>
         </DropdownItem>
         {dirs.length > 1 ? (
           <DropdownItem
@@ -166,7 +170,7 @@ function WorkspaceSwitcher({ count }: { count?: number }) {
             onClick={() => setRecentDir([initDir])}
           >
             <TbX size={16} className="me-1" />
-            <span>Clear Recent</span>
+            <span>{t("Clear Recent")}</span>
           </DropdownItem>
         ) : null}
       </Dropdown>

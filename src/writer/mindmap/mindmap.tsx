@@ -5,6 +5,7 @@ import { writeFile } from "@/workspace/write";
 import { normalizeSlash } from "@/workspace/util";
 import { saveDilog } from "@/workspace/open";
 import "./mindmap.css";
+import { useT } from "@/i18n";
 
 type Props = {
   title: string;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function Mindmap(props: Props) {
+  const t = useT();
   const { title, mdValue, initDir, className = "" } = props;
 
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -78,7 +80,7 @@ export function Mindmap(props: Props) {
       />
       <div className="flex items-center justify-center mt-2">
         <button className="text-xs hover:bg-base-content/15" onClick={saveSVG}>
-          SAVE RAW SVG
+          {t("SAVE RAW SVG")}
         </button>
       </div>
     </div>

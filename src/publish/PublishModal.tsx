@@ -8,6 +8,7 @@ import { Spinner, Toggle } from "@/ui/ui";
 import { checkFileIsMd } from "@/workspace/process";
 import { syncInfo } from "@/sync/api";
 import { useIssueStore } from "@/issue/issueStore";
+import { t, tk, tn, tr, useT } from "@/i18n";
 import {
   buildSiteTo,
   noteFolders,
@@ -33,28 +34,33 @@ type Kind =
   | "smiles";
 
 const CONTENT: [Kind, string, string][] = [
-  ["backlinks", "Backlinks", "the published notes linking to a note"],
-  ["graph", "Graph", "the links between the pages"],
-  ["tags", "Tag pages", "a page per #tag#"],
-  ["journals", "Journals", "the daily notes, on the home page"],
+  ["backlinks", tk("Backlinks"), tk("the published notes linking to a note")],
+  ["graph", tk("Graph"), tk("the links between the pages")],
+  ["tags", tk("Tag pages"), tk("a page per #tag#")],
+  ["journals", tk("Journals"), tk("the daily notes, on the home page")],
   [
     "books",
-    "Book annotations",
-    "the highlights and notes of every annotated book, not the books",
+    tk("Book annotations"),
+    tk("the highlights and notes of every annotated book, not the books"),
   ],
-  ["issues", "Issues", "with their timeline, milestones and project boards"],
+  [
+    "issues",
+    tk("Issues"),
+    tk("with their timeline, milestones and project boards"),
+  ],
 ];
 
 /** Drawn when publishing, so the site loads no library. */
 const DRAWN: [Kind, string, string][] = [
-  ["math", "Math", "$...$ and $$...$$, as MathML"],
-  ["mermaid", "Mermaid", "diagrams, as pictures"],
-  ["echarts", "ECharts", "charts, as pictures"],
-  ["smiles", "SMILES", "chemical structures, as pictures"],
+  ["math", tk("Math"), tk("$...$ and $$...$$, as MathML")],
+  ["mermaid", tk("Mermaid"), tk("diagrams, as pictures")],
+  ["echarts", tk("ECharts"), tk("charts, as pictures")],
+  ["smiles", tk("SMILES"), tk("chemical structures, as pictures")],
 ];
 
 /** Choose what to publish, then export the site or push it to GitHub Pages. */
 export default function PublishModal() {
+  const t = useT();
   const isOpen = usePublishUi((s) => s.isOpen);
   const ws = useStore((state) => state.initDir);
   const notes = useStore((state) => state.notes);
@@ -119,7 +125,7 @@ export default function PublishModal() {
       if (kind === "export") {
         const target = await open({
           directory: true,
-          title: "Export the site to",
+          title: t("Export the site to"),
         });
         if (typeof target !== "string") return;
         setBusy(kind);
@@ -137,7 +143,7 @@ export default function PublishModal() {
 
   return (
     <BaseModal
-      title="Publish"
+      title={t("Publish")}
       isOpen={isOpen}
       handleClose={handleClose}
       panelClassName="max-w-md"
@@ -145,13 +151,16 @@ export default function PublishModal() {
       {options ? (
         <div className="flex flex-col gap-3 p-3 text-sm text-left bg-base-200">
           <p className="text-base-content/80">
-            A static site of the notes in the folders ticked. A note can opt out
-            with <code>publish: false</code> in its front matter, or in from
-            elsewhere with <code>publish: true</code>. Links to notes not
-            published show as plain text.
+            {tr(
+              "A static site of the notes in the folders ticked. A note can opt out with {off} in its front matter, or in from elsewhere with {on}. Links to notes not published show as plain text.",
+              {
+                off: <code>publish: false</code>,
+                on: <code>publish: true</code>,
+              },
+            )}
           </p>
           <label className="flex flex-col gap-1">
-            <span>Site title</span>
+            <span>{t("Site title")}</span>
             <input
               className="input input-sm w-full"
               value={options.title}
@@ -164,8 +173,10 @@ export default function PublishModal() {
 
           <div className="flex flex-col gap-1">
             <span>
-              Folders{" "}
-              <span className="text-base-content/70">({count} notes)</span>
+              {t("Folders")}{" "}
+              <span className="text-base-content/70">
+                ({tn("{count} note", "{count} notes", count)})
+              </span>
             </span>
             <div className="flex flex-col max-h-48 overflow-y-auto p-2 rounded-sm bg-base-100">
               {folders.length ? (
@@ -193,24 +204,26 @@ export default function PublishModal() {
                 })
               ) : (
                 <span className="text-base-content/70">
-                  No folders of notes
+                  {t("No folders of notes")}
                 </span>
               )}
             </div>
           </div>
 
           <div className="flex flex-col gap-1">
-            <span>With</span>
+            <span>{t("With")}</span>
             {CONTENT.map(([kind, name, hint]) => (
               <Toggle
                 key={kind}
                 label={
                   <span>
-                    {name}{" "}
-                    <span className="text-xs text-base-content/70">{hint}</span>
+                    {t(name)}{" "}
+                    <span className="text-xs text-base-content/70">
+                      {t(hint)}
+                    </span>
                   </span>
                 }
-                ariaLabel={name}
+                ariaLabel={t(name)}
                 checked={options[kind] as boolean}
                 onChange={(on) => update({ ...options, [kind]: on })}
               />
@@ -220,9 +233,9 @@ export default function PublishModal() {
           {options.issues && labels.length ? (
             <div className="flex flex-col gap-1">
               <span>
-                Only the issues labeled{" "}
+                {t("Only the issues labeled")}{" "}
                 <span className="text-base-content/70">
-                  (none ticked: all issues)
+                  {t("(none ticked: all issues)")}
                 </span>
               </span>
               <div className="flex flex-wrap gap-x-3 gap-y-1">
@@ -252,17 +265,19 @@ export default function PublishModal() {
           ) : null}
 
           <div className="flex flex-col gap-1">
-            <span>Draw</span>
+            <span>{t("Draw")}</span>
             {DRAWN.map(([kind, name, hint]) => (
               <Toggle
                 key={kind}
                 label={
                   <span>
-                    {name}{" "}
-                    <span className="text-xs text-base-content/70">{hint}</span>
+                    {t(name)}{" "}
+                    <span className="text-xs text-base-content/70">
+                      {t(hint)}
+                    </span>
                   </span>
                 }
-                ariaLabel={name}
+                ariaLabel={t(name)}
                 checked={options[kind] as boolean}
                 onChange={(on) => update({ ...options, [kind]: on })}
               />
@@ -283,7 +298,7 @@ export default function PublishModal() {
               onClick={() => void run("export")}
             >
               {busy === "export" ? <Spinner size="xs" color="neutral" /> : null}
-              Export to folder…
+              {t("Export to folder…")}
             </button>
             <button
               className="btn btn-sm btn-primary"
@@ -291,20 +306,21 @@ export default function PublishModal() {
               title={
                 canPush
                   ? undefined
-                  : "Set up the sync first: the site goes to its remote"
+                  : t("Set up the sync first: the site goes to its remote")
               }
               onClick={() => void run("publish")}
             >
               {busy === "publish" ? (
                 <Spinner size="xs" color="neutral" />
               ) : null}
-              Publish to GitHub Pages
+              {t("Publish to GitHub Pages")}
             </button>
           </div>
           {!canPush ? (
             <p className="text-xs text-base-content/70">
-              To publish, set up the sync: the site goes to the gh-pages branch
-              of its remote.
+              {t(
+                "To publish, set up the sync: the site goes to the gh-pages branch of its remote.",
+              )}
             </p>
           ) : null}
         </div>
@@ -322,13 +338,23 @@ function Result({
 }: {
   result: Built & Partial<Pushed> & { target?: string };
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-1">
       <span className="text-success">
-        {result.pages} pages{" "}
         {result.branch
-          ? `pushed to ${result.branch}`
-          : `written to ${result.target}`}
+          ? tn(
+              "{count} page pushed to {branch}",
+              "{count} pages pushed to {branch}",
+              result.pages,
+              { branch: result.branch },
+            )
+          : tn(
+              "{count} page written to {target}",
+              "{count} pages written to {target}",
+              result.pages,
+              { target: result.target ?? "" },
+            )}
       </span>
       {result.url ? (
         <span>
@@ -339,14 +365,15 @@ function Result({
             {result.url}
           </button>
           <span className="block text-xs text-base-content/70">
-            Once: in the repository settings, Pages, deploy from the branch
-            gh-pages. Then it may take a minute.
+            {t(
+              "Once: in the repository settings, Pages, deploy from the branch gh-pages. Then it may take a minute.",
+            )}
           </span>
         </span>
       ) : null}
       {result.missing.length ? (
         <span className="text-xs text-warning">
-          Not found, left out: {result.missing.join(", ")}
+          {t("Not found, left out:")} {result.missing.join(", ")}
         </span>
       ) : null}
     </div>

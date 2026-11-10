@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import copy from "copy-to-clipboard";
 import { BaseModal } from "@/ui/BaseModal";
+import { useT } from "@/i18n";
 import { textOf, type SelectionResult } from "./selection";
 import { saveImageToAssets } from "./image";
 import { PluginImageView } from "./PluginImageView";
@@ -49,6 +50,7 @@ export const showAnswer = (
 
 /** The dialog of the answers of plugins, once in the app */
 export function PluginAnswerModal() {
+  const t = useT();
   const shown = useShown((state) => state.shown);
   if (!shown) return null;
   const { title, answer, canInsert, done } = shown;
@@ -93,7 +95,7 @@ export function PluginAnswerModal() {
             done();
           }}
         >
-          Copy
+          {t("Copy")}
         </button>
         {canInsert ? (
           <button
@@ -102,7 +104,7 @@ export function PluginAnswerModal() {
             disabled={!text}
             onClick={() => done(text)}
           >
-            Insert after
+            {t("Insert after")}
           </button>
         ) : null}
       </div>

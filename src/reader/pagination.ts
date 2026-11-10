@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type { FoliateView } from "./view";
 import type { Box } from "./popups";
 
@@ -488,7 +489,7 @@ export function formatProgress(
       left:
         left > 0
           ? `${left} ${left === 1 ? "page" : "pages"} left`
-          : "Last page",
+          : t("Last page"),
       right: `${p.section.current + 1} / ${p.section.total} · ${percent}`,
     };
   }

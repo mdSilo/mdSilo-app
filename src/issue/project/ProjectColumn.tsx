@@ -11,6 +11,7 @@ import {
   TbCircleCheck as IconCloses,
 } from "react-icons/tb";
 import { ConfirmModal } from "@/ui/Dialogs";
+import { useT } from "@/i18n";
 import { inputClass } from "../common";
 import type { Issue, IssueData, ProjectStatus } from "../types";
 import { issueLabel } from "../refs";
@@ -36,6 +37,7 @@ type Props = {
 export const columnDndId = (id: string) => `status-${id}`;
 
 export default function ProjectColumn(props: Props) {
+  const t = useT();
   const {
     status,
     issues,
@@ -96,7 +98,7 @@ export default function ProjectColumn(props: Props) {
       >
         {editing ? (
           <input
-            aria-label="Column name"
+            aria-label={t("Column name")}
             className={`${inputClass} flex-1`}
             value={name}
             autoFocus
@@ -110,7 +112,7 @@ export default function ProjectColumn(props: Props) {
           <button
             type="button"
             className="font-semibold text-left"
-            title="Rename"
+            title={t("Rename")}
             onClick={() => setEditing(true)}
           >
             {status.name}
@@ -120,12 +122,20 @@ export default function ProjectColumn(props: Props) {
         <span className="flex-1" />
         <button
           type="button"
-          aria-label={`Moving here closes issues: ${status.closes ? "on" : "off"}`}
+          aria-label={
+            status.closes
+              ? t("Moving here closes issues: on")
+              : t("Moving here closes issues: off")
+          }
           aria-pressed={!!status.closes}
           title={
             status.closes
-              ? "Done column: items moved here are closed, and closed issues move here. Click to turn off."
-              : "Make this a Done column: items moved here are closed, and closed issues move here"
+              ? t(
+                  "Done column: items moved here are closed, and closed issues move here. Click to turn off.",
+                )
+              : t(
+                  "Make this a Done column: items moved here are closed, and closed issues move here",
+                )
           }
           className={`flex items-center gap-1 text-xs ${
             status.closes
@@ -138,7 +148,7 @@ export default function ProjectColumn(props: Props) {
         </button>
         <button
           type="button"
-          aria-label={`Delete column ${status.name}`}
+          aria-label={t("Delete column {name}", { name: status.name })}
           className="text-base-content/50 opacity-0 group-hover:opacity-100 hover:text-error/80"
           onClick={() => setConfirmDelete(true)}
         >
@@ -146,9 +156,9 @@ export default function ProjectColumn(props: Props) {
         </button>
       </div>
       <ConfirmModal
-        title={`Delete column "${status.name}"?`}
-        message="Its items move to the first column."
-        confirmLabel="Confirm delete"
+        title={t('Delete column "{name}"?', { name: status.name })}
+        message={t("Its items move to the first column.")}
+        confirmLabel={t("Confirm delete")}
         danger
         isOpen={confirmDelete}
         onConfirm={onDelete}
@@ -171,10 +181,10 @@ export default function ProjectColumn(props: Props) {
         {adding ? (
           <>
             <input
-              aria-label={`Add item to ${status.name}`}
+              aria-label={t("Add item to {name}", { name: status.name })}
               list={`candidates-${status.id}`}
               className={`${inputClass} w-full`}
-              placeholder="New issue title, or #number"
+              placeholder={t("New issue title, or #number")}
               value={text}
               autoFocus
               onChange={(e) => setText(e.target.value)}
@@ -200,7 +210,7 @@ export default function ProjectColumn(props: Props) {
             className="flex items-center w-full gap-1 px-2 py-1 text-sm text-base-content/60 rounded-sm hover:bg-base-content/10"
             onClick={() => setAdding(true)}
           >
-            <IconPlus size={14} /> Add item
+            <IconPlus size={14} /> {t("Add item")}
           </button>
         )}
       </div>

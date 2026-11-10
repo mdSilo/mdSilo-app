@@ -15,6 +15,7 @@ import {
   TbCloudOff,
 } from "react-icons/tb";
 import { IconButton } from "@/ui/ui";
+import { t, tn, useT } from "@/i18n";
 import BookIcon from "../components/BookIcon";
 import { formatDuration, totalSeconds } from "./stats";
 import {
@@ -162,12 +163,13 @@ function SelectBox({
   selected?: Set<string>;
   onSelect?: Props["onSelect"];
 }) {
+  const t = useT();
   const state = share(books, (b) => Boolean(selected?.has(b.hash)));
   return (
     <input
       type="checkbox"
       className="absolute z-10 checkbox checkbox-sm checkbox-primary top-3 left-3"
-      aria-label={`Select ${label}`}
+      aria-label={t("Select {label}", { label })}
       checked={state === "all"}
       ref={(el) => {
         if (el) el.indeterminate = state === "some";
@@ -197,8 +199,10 @@ function SyncButton({
   const synced = books.filter((b) => b.synced).length;
   const title = one
     ? state === "all"
-      ? "The book file is synced with the workspace (git): click to stop"
-      : "Only the notes and progress are synced: click to sync the book file too"
+      ? t("The book file is synced with the workspace (git): click to stop")
+      : t(
+          "Only the notes and progress are synced: click to sync the book file too",
+        )
     : state === "all"
       ? `All ${books.length} book files synced with the workspace (git): click to stop`
       : `${synced} of ${books.length} book files synced: click to sync them all`;
@@ -228,6 +232,7 @@ function BookItem({
   onDetails,
   onSync,
 }: Omit<ContentProps, "item"> & { book: ShelfBook }) {
+  const t = useT();
   const percent = Math.round((book.state?.fraction ?? 0) * 100);
   const seconds = totalSeconds(book.state?.time);
   const series = formatSeries(book);
@@ -244,7 +249,7 @@ function BookItem({
       ) : null}
       <SyncButton books={[book]} onSync={onSync} />
       <ShelfButton
-        title={`Book details - ${book.format}`}
+        title={t("Book details - {format}", { format: book.format })}
         onClick={() => onDetails(book)}
       >
         <BookIcon path={book.path} size={14} />
@@ -258,7 +263,7 @@ function BookItem({
   );
   const title = book.here
     ? book.file
-    : "Not on this device: the book file is not synced";
+    : t("Not on this device: the book file is not synced");
 
   if (mode === "grid") {
     return (
@@ -313,9 +318,12 @@ function GroupItem({
   covers,
   onSync,
 }: Omit<ContentProps, "item"> & { group: ShelfGroup }) {
+  const t = useT();
   const count = (
     <div className="flex items-center gap-1 text-xs text-base-content/60">
-      <span className="flex-1">{`${group.books.length} book${group.books.length === 1 ? "" : "s"}`}</span>
+      <span className="flex-1">
+        {tn("{count} book", "{count} books", group.books.length)}
+      </span>
       <SyncButton books={group.books} onSync={onSync} />
     </div>
   );
@@ -362,6 +370,7 @@ function CoverRow({
   group: ShelfGroup;
   covers: Record<string, string>;
 }) {
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState({ left: false, right: false });
   const check = useCallback(() => {
@@ -391,7 +400,7 @@ function CoverRow({
     >
       <button
         className={`absolute -translate-y-1/2 top-1/2 btn btn-circle btn-xs pointer-events-auto bg-base-100 shadow-sm ${dir < 0 ? "left-1" : "right-1"}`}
-        aria-label={dir < 0 ? "Scroll left" : "Scroll right"}
+        aria-label={dir < 0 ? t("Scroll left") : t("Scroll right")}
         // not a drag of the item, not opening the group
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}

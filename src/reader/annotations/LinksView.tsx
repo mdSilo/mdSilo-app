@@ -5,6 +5,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { openFilePath } from "@/workspace/open";
 import { useIssueData } from "@/issue/issueStore";
 import { issueLabel } from "@/issue/refs";
+import { tr, useT } from "@/i18n";
 import { useActiveStore } from "../readerStore";
 import { useLibraryBooks } from "../library/books";
 import { issuesLinkingBook, notesLinkingBook } from "./bookLinks";
@@ -15,6 +16,7 @@ const itemClass =
 
 /** The notes and the issues linking to the book: its backlinks. */
 function LinksView({ flush }: { flush: () => Promise<void> }) {
+  const t = useT();
   const hash = useActiveStore((s) => s.hash);
   const path = useActiveStore((s) => s.path);
   const notes = useStore((state) => state.notes);
@@ -42,8 +44,10 @@ function LinksView({ flush }: { flush: () => Promise<void> }) {
         className="p-4 text-sm text-base-content/60"
         data-testid="reader-links"
       >
-        No note or issue links to this book yet. Type {"{{"} in a note or an
-        issue to link it, or make an issue of an annotation.
+        {tr(
+          "No note or issue links to this book yet. Type {mark} in a note or an issue to link it, or make an issue of an annotation.",
+          { mark: "{{" },
+        )}
       </p>
     );
   }
@@ -53,7 +57,7 @@ function LinksView({ flush }: { flush: () => Promise<void> }) {
       {linkingNotes.length ? (
         <section>
           <h3 className="px-3 pt-2 text-xs font-semibold text-base-content/60">
-            Notes
+            {t("Notes")}
           </h3>
           {linkingNotes.map((note) => (
             <button
@@ -75,7 +79,7 @@ function LinksView({ flush }: { flush: () => Promise<void> }) {
       {linkingIssues.length ? (
         <section>
           <h3 className="px-3 pt-2 text-xs font-semibold text-base-content/60">
-            Issues
+            {t("Issues")}
           </h3>
           {linkingIssues.map((issue) => (
             <button

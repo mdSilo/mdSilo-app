@@ -31,11 +31,13 @@ import {
 import type { IssueState } from "@/issue/types";
 
 import type { IssuesTab as Tab } from "@/state/viewReducer";
+import { t, useT } from "@/i18n";
 
 const selectClass =
   "py-1 pl-2 pr-8 text-sm bg-transparent border-base-300 rounded-sm";
 
 export default function Issues() {
+  const t = useT();
   const { data, isLoaded, initDir } = useIssueData();
   const createIssue = useIssueStore((s) => s.createIssue);
   const { state, dispatch } = useCurrentViewContext();
@@ -81,7 +83,9 @@ export default function Issues() {
 
   if (!initDir) {
     return (
-      <p className="p-8 text-base-content/60">Open a folder to track issues.</p>
+      <p className="p-8 text-base-content/60">
+        {t("Open a folder to track issues.")}
+      </p>
     );
   }
 
@@ -99,21 +103,21 @@ export default function Issues() {
               className={tabClass("issues")}
               onClick={() => setTab("issues")}
             >
-              <IconIssue size={16} /> Issues
+              <IconIssue size={16} /> {t("Issues")}
             </button>
             <button
               type="button"
               className={tabClass("tasks")}
               onClick={() => setTab("tasks")}
             >
-              <IconTasks size={16} /> Tasks
+              <IconTasks size={16} /> {t("Tasks")}
             </button>
             <button
               type="button"
               className={tabClass("labels")}
               onClick={() => setTab("labels")}
             >
-              <IconTag size={16} /> Labels{" "}
+              <IconTag size={16} /> {t("Labels")}{" "}
               <span className="text-xs text-base-content/60">
                 {data.labels.length}
               </span>
@@ -123,7 +127,7 @@ export default function Issues() {
               className={tabClass("milestones")}
               onClick={() => setTab("milestones")}
             >
-              <IconFlag size={16} /> Milestones{" "}
+              <IconFlag size={16} /> {t("Milestones")}{" "}
               <span className="text-xs text-base-content/60">
                 {data.milestones.length}
               </span>
@@ -134,7 +138,7 @@ export default function Issues() {
               className={btnClass}
               onClick={() => dispatch({ view: "project" })}
             >
-              Projects
+              {t("Projects")}
             </button>
             <button
               type="button"
@@ -144,12 +148,12 @@ export default function Issues() {
                 setCreating(true);
               }}
             >
-              New issue
+              {t("New issue")}
             </button>
           </div>
 
           {!isLoaded ? (
-            <p className="text-base-content/60">Loading issues…</p>
+            <p className="text-base-content/60">{t("Loading issues…")}</p>
           ) : tab === "tasks" ? (
             <NoteTaskList data={data} />
           ) : tab === "labels" ? (
@@ -170,9 +174,9 @@ export default function Issues() {
                   data-testid="new-issue-form"
                 >
                   <input
-                    aria-label="New issue title"
+                    aria-label={t("New issue title")}
                     className={`${inputClass} w-full mb-2 text-lg`}
-                    placeholder="Title"
+                    placeholder={t("Title")}
                     value={newTitle}
                     autoFocus
                     onChange={(e) => setNewTitle(e.target.value)}
@@ -183,7 +187,9 @@ export default function Issues() {
                   <div className="px-2 py-1 border border-base-300 rounded-sm min-h-24">
                     <IssueEditor
                       defaultValue=""
-                      placeholder="Add a description… [[Note]] links a note"
+                      placeholder={t(
+                        "Add a description… [[Note]] links a note",
+                      )}
                       onChange={setNewBody}
                     />
                   </div>
@@ -193,7 +199,7 @@ export default function Issues() {
                       className={btnClass}
                       onClick={() => setCreating(false)}
                     >
-                      Cancel
+                      {t("Cancel")}
                     </button>
                     <button
                       type="button"
@@ -201,16 +207,18 @@ export default function Issues() {
                       disabled={!newTitle.trim()}
                       onClick={submitNew}
                     >
-                      Submit new issue
+                      {t("Submit new issue")}
                     </button>
                   </div>
                 </div>
               ) : null}
 
               <input
-                aria-label="Filter issues"
+                aria-label={t("Filter issues")}
                 className={`${inputClass} w-full mb-3`}
-                placeholder='is:open label:bug milestone:"v1" no:milestone sort:updated-desc'
+                placeholder={t(
+                  'is:open label:bug milestone:"v1" no:milestone sort:updated-desc',
+                )}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -228,12 +236,12 @@ export default function Issues() {
                       }
                     >
                       <StateIcon state={s} size={16} />
-                      {counts[s]} {s === "open" ? "Open" : "Closed"}
+                      {counts[s]} {s === "open" ? t("Open") : t("Closed")}
                     </button>
                   ))}
                   <span className="flex-1" />
                   <select
-                    aria-label="Filter by label"
+                    aria-label={t("Filter by label")}
                     className={selectClass}
                     value=""
                     onChange={(e) => {
@@ -243,9 +251,10 @@ export default function Issues() {
                       else if (v) toggleLabel(v);
                     }}
                   >
-                    <option value="">Labels</option>
+                    <option value="">{t("Labels")}</option>
                     <option value="__none">
-                      {parsed.noLabel ? "✓ " : ""}Unlabeled
+                      {parsed.noLabel ? "✓ " : ""}
+                      {t("Unlabeled")}
                     </option>
                     {data.labels.map((l) => (
                       <option key={l.id} value={l.name}>
@@ -255,7 +264,7 @@ export default function Issues() {
                     ))}
                   </select>
                   <select
-                    aria-label="Filter by milestone"
+                    aria-label={t("Filter by milestone")}
                     className={selectClass}
                     value=""
                     onChange={(e) => {
@@ -267,9 +276,9 @@ export default function Issues() {
                       else if (v) update({ milestone: v, noMilestone: false });
                     }}
                   >
-                    <option value="">Milestones</option>
-                    <option value="__any">Any milestone</option>
-                    <option value="__none">No milestone</option>
+                    <option value="">{t("Milestones")}</option>
+                    <option value="__any">{t("Any milestone")}</option>
+                    <option value="__none">{t("No milestone")}</option>
                     {data.milestones.map((m) => (
                       <option key={m.id} value={m.title}>
                         {parsed.milestone === m.title ? "✓ " : ""}
@@ -278,7 +287,7 @@ export default function Issues() {
                     ))}
                   </select>
                   <select
-                    aria-label="Sort issues"
+                    aria-label={t("Sort issues")}
                     className={selectClass}
                     value={`${parsed.sort.key}-${parsed.sort.dir}`}
                     onChange={(e) => {
@@ -304,8 +313,8 @@ export default function Issues() {
                   onClickMilestone={filterMilestone}
                   empty={
                     data.issues.length === 0
-                      ? 'No issues yet. Create one with "New issue".'
-                      : "No issues match this filter."
+                      ? t('No issues yet. Create one with "New issue".')
+                      : t("No issues match this filter.")
                   }
                 />
               </div>

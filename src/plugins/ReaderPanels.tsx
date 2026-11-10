@@ -4,6 +4,7 @@ import { TbCheck, TbPuzzle, TbX } from "react-icons/tb";
 import { useStore } from "@/state/store";
 import Dropdown, { DropdownItem } from "@/ui/Dropdown";
 import { IconButton } from "@/ui/ui";
+import { useT } from "@/i18n";
 import type { PluginHost, PluginMethods } from "./host";
 import PluginFrame from "./PluginFrame";
 import { PluginIcon } from "./PluginIcon";
@@ -45,6 +46,7 @@ const MAX_PANEL_BUTTONS = 1;
 
 /** The buttons of the panels in the header of the reader: a few, or a list */
 export function ReaderPanelsButton() {
+  const t = useT();
   const panels = usePanels();
   const open = useReaderPanel((state) => state.open);
   if (!panels.length) return null;
@@ -76,13 +78,13 @@ export function ReaderPanelsButton() {
       buttonChildren={
         <>
           <TbPuzzle size={18} />
-          <span className="sr-only">Plugin panels</span>
+          <span className="sr-only">{t("Plugin panels")}</span>
         </>
       }
       buttonClassName="btn btn-ghost btn-sm btn-square"
       itemsClassName="w-60"
       placement="bottom-end"
-      tooltipContent="Plugin panels"
+      tooltipContent={t("Plugin panels")}
     >
       {panels.map((p) => (
         <DropdownItem
@@ -129,6 +131,7 @@ function PanelFrame({
   plugin: InstalledPlugin;
   panel: ReaderPanelContribution;
 }) {
+  const t = useT();
   const host = useRef<PluginHost | null>(null);
   const methods = useMemo<PluginMethods>(
     () => ({
@@ -176,8 +179,8 @@ function PanelFrame({
         <button
           type="button"
           className="btn btn-ghost btn-xs"
-          title="Close"
-          aria-label="Close"
+          title={t("Close")}
+          aria-label={t("Close")}
           onClick={closeReaderPanel}
         >
           <TbX size={16} />

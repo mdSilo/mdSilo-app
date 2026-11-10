@@ -19,6 +19,7 @@ import * as dataAgent from "@/feed/dataAgent";
 import ErrorBoundary from "@/ui/ErrorBoundary";
 import { Tooltip } from "@/ui/ui";
 import SidebarItem from "@/shell/sidebar/SidebarItem";
+import { useT } from "@/i18n";
 
 type SidebarPlaylistProps = {
   className?: string;
@@ -66,6 +67,7 @@ type TreeProps = {
 };
 
 function Playlist(props: TreeProps) {
+  const t = useT();
   const { data, currentPod, className = "" } = props;
   const [podSort, setPodSort] = useState(Sort.DateCreatedDescending);
   const [scroller, scrollerRef] = useScroller();
@@ -96,7 +98,7 @@ function Playlist(props: TreeProps) {
     <ErrorBoundary>
       <div className={`flex flex-col flex-1 overflow-x-hidden ${className}`}>
         <div className="flex items-center justify-between border-t border-base-300">
-          <Tooltip content="Title: A-Z">
+          <Tooltip content={t("Title: A-Z")}>
             <button
               className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.TitleAscending)}
@@ -104,11 +106,11 @@ function Playlist(props: TreeProps) {
               <span
                 className={`text-xs ${podSort === Sort.TitleAscending ? "text-primary" : ""}`}
               >
-                A-Z
+                {t("A-Z")}
               </span>
             </button>
           </Tooltip>
-          <Tooltip content="Title: Z-A">
+          <Tooltip content={t("Title: Z-A")}>
             <button
               className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.TitleDescending)}
@@ -116,11 +118,11 @@ function Playlist(props: TreeProps) {
               <span
                 className={`text-xs ${podSort === Sort.TitleDescending ? "text-primary" : ""}`}
               >
-                Z-A
+                {t("Z-A")}
               </span>
             </button>
           </Tooltip>
-          <Tooltip content="Publish: Old-New">
+          <Tooltip content={t("Publish: Old-New")}>
             <button
               className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.DateCreatedAscending)}
@@ -128,11 +130,11 @@ function Playlist(props: TreeProps) {
               <span
                 className={`text-xs ${podSort === Sort.DateCreatedAscending ? "text-primary" : ""}`}
               >
-                Old
+                {t("Old")}
               </span>
             </button>
           </Tooltip>
-          <Tooltip content="Publish: New-Old">
+          <Tooltip content={t("Publish: New-Old")}>
             <button
               className="p-1 mx-2 rounded-sm hover:bg-base-content/10"
               onClick={() => setPodSort(Sort.DateCreatedDescending)}
@@ -140,7 +142,7 @@ function Playlist(props: TreeProps) {
               <span
                 className={`text-xs ${podSort === Sort.DateCreatedDescending ? "text-primary" : ""}`}
               >
-                New
+                {t("New")}
               </span>
             </button>
           </Tooltip>

@@ -38,6 +38,7 @@ import { noteTitleMap } from "@/lib/mdlink";
 import { indexOf } from "@/lib/linkIndex";
 import { openFilePath } from "@/workspace/open";
 import { checkFileIsMd } from "@/workspace/process";
+import { t } from "@/i18n";
 
 type GraphColors = {
   note: string;
@@ -715,7 +716,7 @@ export function buildGraphData(
     const book = books[nodeId.slice(BOOK_NODE_PREFIX.length)];
     data.nodes.push({
       id: nodeId,
-      name: book?.title || "Untitled book",
+      name: book?.title || t("Untitled book"),
       radius: getRadius(noteIds.size + (issueLinksTo.get(nodeId) ?? 0)),
       ty: "book",
     });

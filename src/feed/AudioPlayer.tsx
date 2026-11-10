@@ -11,6 +11,7 @@ import { PodType } from "@/types/model";
 import { computePlaylist } from "@/feed/Playlist";
 import { onPauseRequest, playing } from "@/player/playerStore";
 import MediaControls, { formatTime } from "@/player/MediaControls";
+import { t, useT } from "@/i18n";
 
 type Props = {
   currentPod: PodType | null;
@@ -21,6 +22,7 @@ type Props = {
 
 /** The podcast of the player: its audio, played by the controls of the player. */
 export default function AudioPlayer(props: Props) {
+  const t = useT();
   const { currentPod, title, className = "" } = props;
   const [playlist, setPlaylist] = useState<PodType[]>([]);
   const [currentTrack, setCurrentTrack] = useState(currentPod);
@@ -65,7 +67,7 @@ export default function AudioPlayer(props: Props) {
   };
 
   if (!currentTrack) {
-    return <div className="mx-1 text-sm">no player</div>;
+    return <div className="mx-1 text-sm">{t("no player")}</div>;
   }
 
   const index = playlist.findIndex((item) => item.url === currentTrack.url);
@@ -101,13 +103,13 @@ export default function AudioPlayer(props: Props) {
             ? () => playTrack(1)
             : undefined
         }
-        prevTitle="Previous episode"
-        nextTitle="Next episode"
+        prevTitle={t("Previous episode")}
+        nextTitle={t("Next episode")}
         progress={{
           value: time,
           max: Number.isFinite(duration) ? duration : 0,
           label: `${formatTime(time)} / ${formatTime(duration)}`,
-          title: "Position",
+          title: t("Position"),
           onSeek: (value) => {
             if (audioRef.current) audioRef.current.currentTime = value;
             setTime(value);
@@ -125,7 +127,7 @@ export default function AudioPlayer(props: Props) {
       >
         <button
           className="btn btn-ghost btn-xs btn-circle"
-          title="Playlist"
+          title={t("Playlist")}
           onClick={TriggerPlaylist}
         >
           <IconPlaylist />

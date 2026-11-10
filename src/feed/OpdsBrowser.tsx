@@ -16,6 +16,7 @@ import {
 import { Spinner, Tooltip } from "@/ui/ui";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ChannelType } from "@/types/model";
+import { useT } from "@/i18n";
 import {
   downloadBook,
   downloadedBooks,
@@ -38,6 +39,7 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /** Browse, search an OPDS catalog and download its books. */
 export function OpdsBrowser(props: Props) {
+  const t = useT();
   const { channel, onOpenBook } = props;
   // the pages gone through, the last one shown
   const [pages, setPages] = useState<Page[]>([{ url: channel.link }]);
@@ -103,20 +105,20 @@ export function OpdsBrowser(props: Props) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-none flex-row flex-wrap items-center gap-1 p-2 bg-base-300 rounded-sm">
-        <Tooltip content="Back" placement="bottom">
+        <Tooltip content={t("Back")} placement="bottom">
           <button
             className="btn btn-ghost btn-xs"
-            aria-label="Back"
+            aria-label={t("Back")}
             disabled={pages.length < 2}
             onClick={back}
           >
             <IconBack size={18} />
           </button>
         </Tooltip>
-        <Tooltip content="Catalog home" placement="bottom">
+        <Tooltip content={t("Catalog home")} placement="bottom">
           <button
             className="btn btn-ghost btn-xs"
-            aria-label="Catalog home"
+            aria-label={t("Catalog home")}
             onClick={home}
           >
             <IconHome size={18} />
@@ -135,25 +137,25 @@ export function OpdsBrowser(props: Props) {
           >
             <input
               type="search"
-              aria-label="Search the catalog"
+              aria-label={t("Search the catalog")}
               className="input input-xs input-bordered w-40"
-              placeholder="Search books"
+              placeholder={t("Search books")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
             <button
               type="submit"
               className="btn btn-ghost btn-xs"
-              aria-label="Search"
+              aria-label={t("Search")}
             >
               <IconSearch size={18} />
             </button>
           </form>
         )}
-        <Tooltip content="Reload" placement="bottom">
+        <Tooltip content={t("Reload")} placement="bottom">
           <button
             className="btn btn-ghost btn-xs"
-            aria-label="Reload"
+            aria-label={t("Reload")}
             onClick={() => {
               void load(page);
               refreshDownloaded();
@@ -176,7 +178,7 @@ export function OpdsBrowser(props: Props) {
               <div className="p-2 text-sm opacity-70">{feed.subtitle}</div>
             )}
             {feed.entries.length === 0 && (
-              <div className="p-4 text-sm opacity-70">Nothing here</div>
+              <div className="p-4 text-sm opacity-70">{t("Nothing here")}</div>
             )}
             {feed.entries.map((entry, idx) => (
               <div key={`${entry.id}-${idx}`}>
@@ -205,14 +207,14 @@ export function OpdsBrowser(props: Props) {
                   disabled={!feed.prev}
                   onClick={() => feed.prev && go(feed.prev)}
                 >
-                  <IconPrev size={16} /> Previous
+                  <IconPrev size={16} /> {t("Previous")}
                 </button>
                 <button
                   className="btn btn-sm"
                   disabled={!feed.next}
                   onClick={() => feed.next && go(feed.next)}
                 >
-                  Next <IconNext size={16} />
+                  {t("Next")} <IconNext size={16} />
                 </button>
               </div>
             )}
@@ -253,6 +255,7 @@ type BookProps = {
 };
 
 function BookItem(props: BookProps) {
+  const t = useT();
   const { entry, downloadedPath, onDownloaded, onOpenBook } = props;
   const [busy, setBusy] = useState<string>();
   const [error, setError] = useState("");
@@ -304,14 +307,14 @@ function BookItem(props: BookProps) {
           {downloadedPath && (
             <>
               <span className="badge badge-success badge-sm gap-1">
-                <IconDownloaded size={12} /> Downloaded
+                <IconDownloaded size={12} /> {t("Downloaded")}
               </span>
               {onOpenBook && (
                 <button
                   className="btn btn-primary btn-xs"
                   onClick={() => onOpenBook(downloadedPath)}
                 >
-                  <IconBook size={14} /> Open
+                  <IconBook size={14} /> {t("Open")}
                 </button>
               )}
             </>
@@ -320,7 +323,10 @@ function BookItem(props: BookProps) {
             <Tooltip
               key={acq.href}
               content={
-                acq.title || `Download ${acq.ext.toUpperCase()} to reading/`
+                acq.title ||
+                t("Download {format} to reading/", {
+                  format: acq.ext.toUpperCase(),
+                })
               }
               placement="top"
             >
@@ -347,7 +353,7 @@ function BookItem(props: BookProps) {
                 target="_blank"
                 rel="noreferrer"
               >
-                <IconExternal size={14} /> {link.title || "Get it"}
+                <IconExternal size={14} /> {link.title || t("Get it")}
               </a>
             ))}
         </div>
