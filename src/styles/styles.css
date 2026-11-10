@@ -469,3 +469,63 @@ body {
   background-color: color-mix(in srgb, var(--table-border) 30%, transparent);
   font-weight: 600;
 }
+
+/*
+  Export PDF (writer/hooks/useExport.ts): a copy of the note, put in #print-root
+  under <body>, is all that is printed, out of the fixed, scrolling app, so it
+  runs on over the pages; the system's print dialog saves it as a PDF of text.
+*/
+#print-root {
+  display: none;
+}
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body > :not(#print-root) {
+    display: none !important;
+  }
+  #print-root {
+    display: block;
+    background: #fff;
+    color: var(--color-base-content);
+  }
+  #print-root .print-title {
+    font-size: 2em;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 0.75em;
+  }
+  #print-root .print-raw {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  #print-root :is(h1, h2, h3, h4, h5, h6) {
+    break-after: avoid;
+  }
+  #print-root :is(img, svg, figure, tr, blockquote) {
+    break-inside: avoid;
+  }
+  #print-root :is(img, svg) {
+    max-width: 100%;
+  }
+  /* the dark theme's colors of the editor are light: printed in ink */
+  #print-root.print-ink,
+  #print-root.print-ink * {
+    color: #000 !important;
+    background-color: transparent !important;
+    border-color: #ccc !important;
+  }
+  #print-root.print-ink a,
+  #print-root.print-ink a * {
+    color: #0645ad !important;
+  }
+}

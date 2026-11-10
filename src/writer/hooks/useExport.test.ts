@@ -1,89 +1,111 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { invoke } from "@tauri-apps/api/core";
-import html2canvas from "html2canvas";
-import { ExportAs } from "./useExport";
+import html2canvas from "html2canvas-pro";
 
-const pdf = vi.hoisted(() => ({
-  addImage: vi.fn(),
-  ctor: vi.fn(),
-  output: vi.fn(),
-}));
+vi.mock("html2canvas-pro", () => ({ default: vi.fn() }));
+vi.mock("@/workspace/util", () => ({ isTauri: true }));
 
-vi.mock("html2canvas", () => ({ default: vi.fn() }));
-vi.mock("jspdf", () => ({
-  jsPDF: class {
-    internal = { pageSize: { getWidth: () => 200, getHeight: () => 100 } };
-    addImage = pdf.addImage;
-    output = pdf.output;
-    constructor(...args: unknown[]) {
-      pdf.ctor(...args);
-    }
-  },
-}));
+import { exportPdf, exportPng, PRINT_ROOT_ID } from "./useExport";
 
-describe("ExportAs", () => {
+const printRoot = () => document.getElementById(PRINT_ROOT_ID);
+
+beforeEach(() => {
+  vi.mocked(invoke).mockReset();
+  const el = document.createElement("div");
+  el.id = "note-content";
+  el.innerHTML = '<div contenteditable="true"><p>Hello</p></div>';
+  document.body.appendChild(el);
+});
+
+afterEach(() => {
+  document.getElementById("note-content")?.remove();
+  printRoot()?.remove();
+});
+
+describe("exportPdf", () => {
+  test("does nothing without note content", async () => {
+    document.getElementById("note-content")?.remove();
+    await exportPdf("Title", false);
+    expect(invoke).not.toHaveBeenCalled();
+    expect(printRoot()).toBeNull();
+  });
+
+  test("prints a copy of the note, with its title, as text", async () => {
+    await exportPdf("My Note", false);
+    expect(invoke).toHaveBeenCalledWith("print_page");
+    const root = printRoot()!;
+    expect(root.parentElement).toBe(document.body);
+    expect(root.getAttribute("data-theme")).toBe("mdsilo-light");
+    expect(root.classList.contains("print-ink")).toBe(false);
+    expect(root.querySelector(".print-title")?.textContent).toBe("My Note");
+    expect(root.querySelector("p")?.textContent).toBe("Hello");
+    // a copy: not a second #note-content, not editable
+    expect(document.querySelectorAll("#note-content")).toHaveLength(1);
+    expect(
+      root.querySelector("[contenteditable]")?.getAttribute("contenteditable"),
+    ).toBe("false");
+  });
+
+  test("prints in ink from a dark theme", async () => {
+    await exportPdf("", true);
+    const root = printRoot()!;
+    expect(root.classList.contains("print-ink")).toBe(true);
+    expect(root.querySelector(".print-title")).toBeNull();
+  });
+
+  test("the copy is gone after printing, one at a time", async () => {
+    await exportPdf("a", false);
+    await exportPdf("b", false);
+    expect(document.querySelectorAll(`#${PRINT_ROOT_ID}`)).toHaveLength(1);
+    window.dispatchEvent(new Event("afterprint"));
+    expect(printRoot()).toBeNull();
+  });
+
+  test("the copy is gone when printing fails", async () => {
+    vi.mocked(invoke).mockRejectedValueOnce(new Error("no printer"));
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    await exportPdf("a", false);
+    expect(printRoot()).toBeNull();
+    err.mockRestore();
+  });
+});
+
+describe("exportPng", () => {
   beforeEach(() => {
     const canvas = {
-      width: 400,
-      height: 200,
-      toDataURL: () => "data:image/png;base64,AAEC",
+      toBlob: (cb: (b: Blob) => void) =>
+        cb(new Blob([new Uint8Array([0, 1, 2])], { type: "image/png" })),
     };
     vi.mocked(html2canvas).mockResolvedValue(
       canvas as unknown as HTMLCanvasElement,
     );
-    const el = document.createElement("div");
-    el.id = "note-content";
-    document.body.appendChild(el);
   });
 
-  afterEach(() => {
+  test("does nothing without note content", async () => {
     document.getElementById("note-content")?.remove();
-  });
-
-  test("does nothing without note content", () => {
-    document.getElementById("note-content")?.remove();
-    ExportAs("png", "/out.png");
+    await exportPng("/notes/a.md");
     expect(html2canvas).not.toHaveBeenCalled();
   });
 
-  test("exports an image as raw bytes", async () => {
-    ExportAs("png", "/out.png");
-    await vi.waitFor(() =>
-      expect(invoke).toHaveBeenCalledWith("download_file", {
-        filePath: "/out.png",
-        blob: [0, 1, 2],
-      }),
-    );
-    expect(invoke).toHaveBeenCalledWith("msg_dialog", {
+  test("saves the image beside the note, then says so", async () => {
+    vi.mocked(invoke).mockResolvedValueOnce(true);
+    await exportPng("/notes/a.md");
+    expect(invoke).toHaveBeenNthCalledWith(1, "download_file", {
+      filePath: "/notes/a.png",
+      blob: [0, 1, 2],
+    });
+    expect(invoke).toHaveBeenNthCalledWith(2, "msg_dialog", {
       title: "Export",
-      msg: "/out.png",
+      msg: "Saved to /notes/a.png",
     });
   });
 
-  test("exports a pdf sized to the canvas", async () => {
-    pdf.output.mockReturnValue(new Uint8Array([7, 8, 9]).buffer);
-    ExportAs("pdf", "/out.pdf");
-    await vi.waitFor(() =>
-      expect(invoke).toHaveBeenCalledWith("download_file", {
-        filePath: "/out.pdf",
-        blob: [7, 8, 9],
-      }),
-    );
-    const ratio = window.devicePixelRatio;
-    expect(pdf.ctor).toHaveBeenCalledWith("l", "pt", [
-      400 / ratio,
-      200 / ratio,
-    ]);
-    expect(pdf.addImage).toHaveBeenCalledWith(
-      "data:image/png;base64,AAEC",
-      "PNG",
-      0,
-      0,
-      200,
-      100,
-      "",
-      "FAST",
-    );
-    expect(pdf.output).toHaveBeenCalledWith("arraybuffer");
+  test("says when the image is not saved", async () => {
+    vi.mocked(invoke).mockResolvedValueOnce(false);
+    await exportPng("/notes/a.md");
+    expect(invoke).toHaveBeenLastCalledWith("msg_dialog", {
+      title: "Export",
+      msg: "Failed to save /notes/a.png",
+    });
   });
 });

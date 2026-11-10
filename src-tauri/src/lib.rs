@@ -67,6 +67,7 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       close_splashscreen,
       window::msg_dialog,
+      window::print_page,
       feed::fetch_feed,
       feed::add_channel,
       feed::import_channels,

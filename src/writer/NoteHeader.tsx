@@ -15,7 +15,7 @@ import {
 import { usePopper } from "react-popper";
 import ViewMenu from "@/shell/ViewMenu";
 import { useCurrentMdContext } from "@/writer/useCurrentMd";
-import { ExportAs } from "@/writer/hooks/useExport";
+import { exportPdf, exportPng } from "@/writer/hooks/useExport";
 import { useStore } from "@/state/store";
 import { openFilePath } from "@/workspace/open";
 import { Tooltip } from "@/ui/ui";
@@ -47,6 +47,7 @@ export default function NoteHeader({
   );
 
   const rawMode = useStore((state) => state.rawMode);
+  const darkMode = useStore((state) => state.darkMode);
   const setRawMode = useStore((state) => state.setRawMode);
   const pluginModes = usePluginNoteModes();
   const setRaw = useCallback(
@@ -202,14 +203,14 @@ export default function NoteHeader({
                       <span>Delete Permanently</span>
                     </DropdownItem>
                     <DropdownItem
-                      onClick={() => ExportAs("pdf", `${currentNote.id}.pdf`)}
+                      onClick={() => exportPdf(note?.title ?? "", darkMode)}
                       className="border-t border-base-300"
                     >
                       <IconFile className="mr-1" />
                       <span>Export PDF</span>
                     </DropdownItem>
                     <DropdownItem
-                      onClick={() => ExportAs("png", `${currentNote.id}.png`)}
+                      onClick={() => exportPng(currentNote.id)}
                       className="border-t border-base-300"
                     >
                       <IconPhoto className="mr-1" />
