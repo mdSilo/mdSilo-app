@@ -109,7 +109,7 @@ mdSilo keeps what you read, what you think and what you write in one local works
   - 🔍 Full-text search over notes, annotations and books.  
   - 🔄 Sync with git (GitHub, Gitea...) and publish chosen notes as a website, in the desktop app.  
   - 🛠️ Plugins and customization: make mdSilo your own.  
-  - ✨ Windows, macOS, Linux and Web; local plain files, no account.  
+  - ✨ Windows, macOS, Linux and Web(PWA on mobile); local plain files, no account.  
 
 For a human brain, reading and writing are the I/O. mdSilo is here to boost it: tiny yet powerful, free for everyone.
 

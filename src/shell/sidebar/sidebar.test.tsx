@@ -1050,10 +1050,8 @@ describe("SideMenu", () => {
 
     const logoButton = screen.getByRole("button", { name: "mdSilo" });
     await userEvent.click(logoButton);
-    expect(screen.getByText("Website").closest("a")).toHaveAttribute(
-      "href",
-      "https://mdsilo.com",
-    );
+    expect(screen.queryByText("Website")).not.toBeInTheDocument();
+    expect(screen.queryByText("Help Us")).not.toBeInTheDocument();
     await userEvent.click(screen.getByText("Settings"));
     expect(store.getState().isSettingsOpen).toBe(true);
 

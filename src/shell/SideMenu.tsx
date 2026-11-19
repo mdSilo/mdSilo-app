@@ -23,8 +23,6 @@ import {
   TbSettings,
   TbLayoutKanban,
   TbCircleDot,
-  TbBrowser,
-  TbPizza,
   TbInfoCircle,
   TbHeadphones,
   TbCurrentLocation,
@@ -278,21 +276,8 @@ export function AppMenuItems({ settings = true }: { settings?: boolean }) {
       ) : null}
       <DropdownItem
         className={settings ? "border-t border-base-300" : ""}
-        as="link"
-        href="https://mdsilo.com"
+        onClick={() => setIsAboutOpen(true)}
       >
-        <TbBrowser size={18} className="mr-1" />
-        <span>{t("Website")}</span>
-      </DropdownItem>
-      <DropdownItem
-        className="border-t border-base-300"
-        as="link"
-        href="https://mdsilo.com/helpus"
-      >
-        <TbPizza size={18} className="mr-1" />
-        <span>{t("Help Us")}</span>
-      </DropdownItem>
-      <DropdownItem onClick={() => setIsAboutOpen(true)}>
         <TbInfoCircle size={18} className="mr-1" />
         <span>{t("About")}</span>
       </DropdownItem>
