@@ -75,7 +75,7 @@ A *tip* notice, for shortcuts.
 
 ### Diagrams
 
-A code block with the language `mermaid`, `echarts` or `abcjs` is drawn as a diagram, and you can still edit its source.
+A code block with the language `mermaid`, `echarts` or `abcjs` is drawn as a diagram, and you can still edit its source. Music written in `abcjs` (ABC notation) can be played, and each drawing (diagram, music, molecule) can be saved as SVG.
 
 ```mermaid
 sequenceDiagram

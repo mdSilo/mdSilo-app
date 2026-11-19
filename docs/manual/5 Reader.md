@@ -34,9 +34,27 @@ Open a book and the page fills the window. The bars appear when you move the mou
 - **A book in its own window** (desktop): in the Library's view menu, *Open books in* → *A new window*; or *Read in a new window* in a book's details. The window has the reader only: notes, issues and the Library open in the main window. Opening the book again brings its window to the front.
 - **Bottom bar**: back and forward in your reading history, previous and next chapter, a progress slider, and the time left in the book.
 - **Contents and notes** (the side panel): the table of contents, your annotations, the in-book search, and the **Links** tab.
-- **Font and layout** (the numbers set with − and +): font, a font for CJK text (used for the characters the font has not, or where the book sets no font), size, spacing, margins, page colour (follow the app, white, sepia, grey, dark), paging or scrolling, animation, which header and footer to show, image options, code highlighting and the word lens.
+- **Font and layout** (the numbers set with − and +): font, a font for CJK text (used for the characters the font has not, or where the book sets no font), size, spacing, the writing mode, columns, width, margins, page colour (follow the app, white, sepia, grey, dark), paging or scrolling, animation, which header and footer to show, clicking the sides to turn pages (or the left side to go forward), image options, code highlighting, the reading ruler, the word lens and translation.
 - Click an **image** or a **table** in the page to zoom it. Footnotes open in a small popup instead of jumping away.
+- **Reading ruler** (in *Font and layout*): a band over one to six lines, to keep your place. Drag it where you read; the keys that turn pages move it on by its lines first, and turn the page past the last lines. Its colour tints the text in it (or, with no colour, outlines it), and the opacity is yours.
 - Your place and the time you spend are saved per book. They feed the heat map in [[8 Insight|Insight]].
+
+### Writing mode: vertical books
+
+Chinese, Japanese and Korean books are often set top to bottom. *Writing Mode* in *Font and layout* sets it for the book open (each book keeps its own): *As the book* (what the book says), *Horizontal*, *Vertical, right to left* (columns read from the right, as in a traditional Chinese book), *Vertical, left to right*, or *Horizontal, right to left*. Written right to left, the book goes forward to the left. *Double border* frames a vertical page with the double rule of an old printed book. With *Width* at its largest a line runs the full height of the page.
+
+Try it with the TXT of a Chinese novel: drop it into the Library, where it becomes an EPUB with its chapters found by their headings (第一回, 第一章, Chapter 1…), open it and choose *Vertical, right to left*.
+
+### Comics and PDFs
+
+Books with fixed pages (PDF, CBZ comics, fixed-layout EPUB) have their own *Font and layout*:
+
+- **Layout**: *Pages*, or a strip scrolled *Vertical* or *Horizontal*.
+- **Zoom** with − and + (or `Ctrl/Cmd -`, `Ctrl/Cmd +`, `Ctrl/Cmd 0` to reset); **Fit** the page or the width.
+- **Spread**: one page, or two side by side, with *Cover page alone* to keep the pairs of a printed book.
+- **Webtoon (no gaps)**: a vertical strip without gaps between the pages, filling the width.
+- **Lock horizontal panning**: a zoomed page moves only up and down.
+- **Right-to-left pages**: for a manga, which a CBZ cannot say; kept for the book.
 
 ## Highlights and notes
 
@@ -68,6 +86,8 @@ Opening line. The whole book is a dream about curiosity.
 
 The comment keeps the position so that the highlight is drawn again on the page; the editor keeps it as it is. Clicking a highlight in the page shows its note and the issues linked to it.
 
+- **Change the range**: the selection and a highlight clicked have a handle at each end; drag them to take in more or less text.
+- **Notes stay out of the way**: a highlight with a note gets a small note mark beside its line; the note shows when you point at the mark or click it.
 ## From the book to the rest of the workspace
 
 - **Link to the book** from any note with `{{`. Link to a highlight to jump to the sentence. See [[4 Linking|Linking]].
@@ -104,6 +124,8 @@ Dictionary files are kept in the workspace (`.mdsilo/dictionaries/`) and are **n
 **Word lens** (in *Font and layout*): the words of your vocabulary, met in a book, get a short meaning under them — their forms too (*rabbits*, *taking*), phrases (*take after*) and CJK words. Click one to look the word up. The gloss comes from the definition kept, or, with *Gloss: Translation*, is the word translated into the language chosen for translations (kept in the vocabulary, asked once). Write your own on the back of the word's card in the Vocabulary. *Gloss size* (of the text) and *Gloss color* (the accent of the page, gray, or a color, lighter on dark pages) set their look; the lines get room under them for a gloss of that size, added to your line height. Not for fixed layouts (PDF, comics).
 
 In a dark theme, the colors a dictionary file gives its entries (made for a white page) are turned light where they would be hard to read.
+
+**Translate.** *Translate* on a selection shows it in the language chosen (*Translate to* in *Font and layout*); the popup lets you change the service and the language. To read a whole book in translation, turn on *Translate the book* in *Font and layout*: the pages are translated as you read them, a paragraph's translation under it, or in its place with *Translation only*. Translations are kept, so a page read again is not sent again. *Make the translated book…* translates the rest (slowly, a few paragraphs at a time; stop it when you like, what was done is kept) and saves an EPUB beside the book, in the Library: `Foo.epub` gets `Foo.fr.epub`.
 
 ## Read aloud
 

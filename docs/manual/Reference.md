@@ -50,12 +50,15 @@ The **Search** tab of the sidebar searches the full text of the workspace: notes
 
 The gear at the bottom of the side menu opens the global settings:
 
+- **Language** of the interface: English, Español, 简体中文 or 繁體中文, or follow the system.
 - **Theme**: mdSilo light and dark, or follow the system, plus eight built-in themes and the themes you make. The theme editor sets each color and the color of its content (it warns when the content is hard to read on its color, below 4.5:1), the radius of boxes, fields and selectors and the border width; it imports and copies daisyUI theme CSS.
 - **Dictionaries**: the dictionaries words are looked up in, their order, sites and dictionary files you add (see [[5 Reader|Reader]]).
 - **Fonts**: import font files or add an installed font by name; they show in the editor and reader font lists. In the app (not the web version) the fonts installed on the device are listed there too (*System*).
 - **Sync with workspace** (themes, fonts, plugins): kept in the workspace and synced, or on this device only (see [[9 Sync and Publish|Sync and Publish]]).
 - **Side menu orientation**: auto, vertical or horizontal. Auto: on the side, but on a phone the side menu is folded into the logo at the start of the bar of each page; tap it for the views, the File Menu, sync and settings.
 - **Open on startup**: the last folder, a fixed folder, or none; and the **view on startup**, e.g. the Library or the last book read in that folder.
+- **Check for Updates on Startup** (desktop): see *The desktop app* below.
+- **Plugins**: *Manage Plugins*, see *Plugins* below.
 
 Settings of one area are kept where you use them: the editor's in the gear of a note (font, size, line height, weight, spell check, attachment folder), the reader's in *Font and layout* of the top bar, the feed's in *Manage Channels and Settings*.
 
@@ -80,6 +83,20 @@ The web version at the same address as this manual is the same app. Differences:
 ## The desktop app
 
 Available for Windows, macOS and Linux. Your workspace is a real folder: sync it with the built-in git sync (see [[9 Sync and Publish|Sync and Publish]]), or with Dropbox, Syncthing; edit the files with another editor and the changes appear in mdSilo.
+
+**Updates.** On startup the app asks GitHub for a newer release and offers to install it and restart; turn this off with *Check for Updates on Startup* in Settings, and check at any time with *About → Check for Updates*. The download is signed, and the app checks the signature before installing. To install the app, or update it from a terminal, see the README of the repository.
+
+## Plugins
+
+Plugins add to mdSilo: a viewer for a type of file (open a `.csv` as a table), a view of the whole workspace in the Plugins menu of the side menu, actions on the text selected in the reader and the editor, commands, modes of a note beside WYSIWYG, Markdown and MindMap, panels of the reader, and code blocks they draw (in the editor and in the published site).
+
+- **Install** from *Settings → Manage Plugins* (or the Plugins button of the side menu): *Install Folder* or *Install .zip*. Then enable it and choose what it may do: read or write the file it opens, read or write notes, read books and issues, read the book open, use the network. You can grant less than it asks.
+- **Sandboxed** by default: a plugin runs in a frame of its own and can only do what you allowed. A *trusted* plugin runs inside the app, for deeper changes, and asks you to confirm.
+- **Update** reinstalls a plugin from where it came from; **Develop** watches a folder and reloads the plugin when its files change.
+- A plugin is kept on this device, or, with *Sync with workspace*, in the workspace; a plugin that comes in by a sync is never enabled by it.
+- A partial compatibility layer lets some Obsidian plugins run.
+
+Samples to try, and how to write one, are in `examples/plugins` of the repository.
 
 ## Plain files, for good
 

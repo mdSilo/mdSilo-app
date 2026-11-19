@@ -6,7 +6,7 @@ mdSilo is a local-first workspace where what you *read*, what you *think* and wh
 
 [Try it in your browser](https://mdsilo.github.io/mdSilo-app/) · [User manual](docs/manual/0%20Start%20Here.md) · [Discord](https://discord.gg/EXYSEHRTFt) · [Bluesky](https://bsky.app/profile/mdsilo.com)
 
-![reader](docs/images/reader.png)
+![Parallel reading: an English book beside a Chinese one in vertical writing mode](docs/images/parallel.png)
 
 ## Why mdSilo
 
@@ -28,13 +28,24 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 
 ### 📖 Read: the input
 
-- **Book reader** for EPUB, PDF, MOBI/AZW3, FB2 and CBZ; TXT, Markdown and HTML are converted on import. Paging or scrolling, themes, fonts, margins, footnotes, image and table viewer
-- **Highlight, write notes, bookmark**: kept as a Markdown file next to the book (`Foo.epub.md`), a note like any other: editable, searchable, linkable
-- **Look up as you read**: your dictionaries in your order (Wiktionary, Wikipedia, Urban Dictionary, Merriam-Webster, sites you add, MDict files), with pronunciations, in books and notes; translation, read aloud
+- **Book reader** for EPUB, PDF, MOBI/AZW3, FB2 and CBZ; TXT, Markdown and HTML are converted to EPUB on import. Paging or scrolling, page colors, your own fonts (and a CJK font), margins, footnotes, image and table viewer, a reading ruler
+- **Vertical writing**: read Chinese, Japanese or Korean top to bottom, right to left, with a classic double border; or set any book horizontal, right to left
+- **Comics and PDFs**: zoom, one or two pages, a webtoon strip, right-to-left pages for manga
+- **Highlight, write notes, bookmark**: a toolbar on the text you select (highlight, note, look up, translate, read aloud, quote, link, new issue), handles to change the range; all kept as a Markdown file next to the book (`Foo.epub.md`), a note like any other: editable, searchable, linkable
+- **Look up as you read**: your dictionaries in your order (Wiktionary, Wikipedia, Urban Dictionary, Merriam-Webster, sites you add, MDict files), with pronunciations, in books and notes
+- **Translate and listen**: translate a selection, or the whole book as you read (beside the text or in its place) and save it as a translated EPUB; read aloud with the voices of your system, Piper, Azure or an OpenAI-like service
 - **Vocabulary**: words kept with their pronunciation and the sentence they came from, studied as flash cards; the **word lens** shows their meaning under them in the books
-- **Parallel reading**: two books side by side, each with its own notes
+- **Parallel reading**: two books side by side, each with its own notes: a translation and its original, a text and its commentary
 - **Library**: covers, groups, status, search, drag and drop; books are identified by content, so a renamed book is still the same book
-- **Feeds & podcasts**: RSS/Atom/JSON Feed client with full text, starred articles, clipping to notes and a podcast player; turn a channel into an EPUB and read a month of news as a book
+- **Feeds & podcasts**: RSS/Atom/JSON Feed client with full text, starred articles, clipping to notes and a podcast player; turn a channel into an EPUB and read a month of news as a book; browse and download from OPDS catalogs
+
+![The toolbar on the text selected in a book](docs/images/annotation.png)
+
+![三国演义 in vertical writing mode, with its chapters](docs/images/vertical.png)
+
+![A word looked up in Wiktionary as you read, with its pronunciation](docs/images/dictionary.png)
+
+![A card of the vocabulary: the word, its gloss and the sentence of the book it came from](docs/images/vocabulary.png)
 
 ### 🧩 Process: Issue
 
@@ -49,12 +60,16 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 
 ### ✍️ Write: the output
 
-![editor](docs/images/editor.png)
+![Chemical structures from SMILES, math and music in a note](docs/images/editor.png)
 
 - **All-in-one editor**: WYSIWYG, raw Markdown and Mind Map views of the same file
-- **Markdown and more**: tables, task lists, `==highlight==`, math and chemistry (KaTeX), notices, mermaid / echarts / abc music, chemical structures (SMILES), code highlighting, embeds, attachments
-- **Slash commands**, a hovering toolbar and hotkeys: never leave the keyboard
+- **Markdown and more**: tables, task lists, `==highlight==`, sub- and superscript, math and chemistry (KaTeX), notices, diagrams (mermaid, echarts), music notation you can play (abc), chemical structures (SMILES), code highlighting, embeds, attachments; each drawing can be saved as SVG
+- **Slash commands**, a hovering toolbar and hotkeys: never leave the keyboard. The toolbar on the text selected also copies it, looks it up in your dictionaries and makes an issue of it
 - **Export** to PDF and PNG
+
+![The toolbar on the text selected in a note](docs/images/editor-toolbar.png)
+
+![Music notation, a mermaid diagram and highlighted code](docs/images/editor-blocks.png)
 
 ### 🔗 Link and see
 
@@ -64,7 +79,7 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 - **Graph**: notes, books, issues and tags in one network
 - **Chronicle**: daily journals and a GitHub-like activity heat map of your writing *and* reading
 - **Full-text search** over notes, annotations and the text of your books, Chinese included
-- **Dark and light**, 10 themes; Windows, macOS, Linux and Web; free and open source
+- **Dark and light**, 10 themes and the ones you make; English, Spanish, Simplified and Traditional Chinese; Windows, macOS, Linux and Web (installable on a phone); free and open source
 
 ### 🔄 Sync and publish
 
@@ -74,7 +89,16 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 
 ### 🛠️ Plugins and customization
 
-Make mdSilo your own: add your own fonts for reading and writing, define a color theme, and extend the app with plugins. some plugins here you can try out: https://github.com/mdSilo/mdSilo-app/tree/main/examples/plugins
+Make mdSilo your own:
+
+- **Themes**: pick one of 10, or make your own in the theme editor: every color with a live preview and a warning when text gets hard to read, the corner radius and border width; import and copy daisyUI theme CSS. Themes sync with the workspace
+- **Fonts**: import font files or use the fonts installed on your device, for the editor, its code, the reader, and CJK text
+- **Plugins**: viewers for new file types, workspace views, actions on the text selected, commands, note modes, reader panels and code block renderers; sandboxed by default, with the permissions you grant. Try the [example plugins](examples/plugins)
+- **Language** of the interface: English, Español, 简体中文, 繁體中文
+
+![The same workspace in four themes: a custom one, Nord, Retro and Dracula](docs/images/themes.png)
+
+![The theme editor](docs/images/theme-editor.png)
 
 ## Learn more
 
@@ -154,7 +178,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 ### Input
 
 - [X] RSS, Atom, JSON Feed and podcasts
-- [X] Read and annotate EPUB, PDF, MOBI, FB2, CBZ; library, parallel reading, dictionaries (web and MDict), vocabulary, word lens, read aloud
+- [X] Read and annotate EPUB, PDF, MOBI, FB2, CBZ; library, parallel reading, vertical writing, comics and manga, dictionaries (web and MDict), vocabulary, word lens, read aloud, whole-book translation
 - [X] Feeds into books
 - [X] OPDS catalogs
 - [ ] AI helpers
@@ -170,7 +194,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 ### Output
 
 - [X] Markdown: style, link, image, headings and TOC, lists, tables, quotes
-- [X] Extensions: mark, underline, sup, highlighted code, math and chemistry, notices, wikilink `[[]]`, hashtag `#tag#`, diagrams (mermaid, echarts, abc), chemical structures (SMILES), embeds, attached PDF
+- [X] Extensions: mark, underline, sup and sub, highlighted code, math and chemistry, notices, wikilink `[[]]`, hashtag `#tag#`, diagrams (mermaid, echarts, abc), chemical structures (SMILES), embeds, attached PDF
 - [X] WYSIWYG, Markdown and Mind Map; slash commands, hovering toolbar, hotkeys
 - [X] Export as PDF and PNG
 - [ ] Drawing
@@ -187,8 +211,9 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 ### Extension
 
 - [X] Plugin, some examples: https://github.com/mdSilo/mdSilo-app/tree/main/examples/plugins
-- [X] Customize theme 
-- [X] Dictionary: .mdx/.mdd mdict dictionary files   
+- [X] Custom themes and fonts
+- [X] Dictionary: .mdx/.mdd mdict dictionary files
+- [X] Interface in English, Spanish, Simplified and Traditional Chinese
 
 ### Cross-platform
 
