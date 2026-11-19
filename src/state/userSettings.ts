@@ -143,6 +143,9 @@ export type UserSettings = {
   setIsCheckSpellOn: Setter<boolean>;
   openOnStartup: OpenOnStartup;
   setOpenOnStartup: Setter<OpenOnStartup>;
+  /** ask GitHub for a new version on startup, desktop only; see shell/updater */
+  checkForUpdates: boolean;
+  setCheckForUpdates: Setter<boolean>;
   startupView: StartupView;
   setStartupView: Setter<StartupView>;
   /** the book last read in each workspace, by the folder of the workspace */
@@ -251,6 +254,8 @@ const userSettingsSlice = (
   setIsCheckSpellOn: setter(set, "isCheckSpellOn"),
   openOnStartup: "previous" as OpenOnStartup,
   setOpenOnStartup: setter(set, "openOnStartup"),
+  checkForUpdates: true,
+  setCheckForUpdates: setter(set, "checkForUpdates"),
   startupView: "notes" as StartupView,
   setStartupView: setter(set, "startupView"),
   lastBooks: {},

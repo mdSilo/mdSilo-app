@@ -25,6 +25,7 @@ mod system_fonts;
 mod tests;
 mod tray;
 mod tts;
+mod updater;
 mod window;
 mod wsfs;
 
@@ -57,14 +58,19 @@ pub fn run() {
     .run_pending_migrations(MIGRATIONS)
     .expect("Error on migrating");
 
-  tauri::Builder::default()
+  let builder = tauri::Builder::default();
+  // the self updater, see updater.rs
+  #[cfg(desktop)]
+  let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+  builder
     .plugin(tauri_plugin_dialog::init())
+    .manage(updater::PendingUpdate::default())
     .register_uri_scheme_protocol(plugin_scheme::SCHEME, |_ctx, request| {
       plugin_scheme::handle(&request)
     })
-    // the updater, see Cargo.toml to bring it back
-    // .plugin(tauri_plugin_updater::Builder::new().build())
     .invoke_handler(tauri::generate_handler![
+      updater::update_check,
+      updater::update_install,
       close_splashscreen,
       window::msg_dialog,
       window::print_page,

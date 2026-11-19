@@ -75,5 +75,12 @@
       },
     "createUpdaterArtifacts": false
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/mdSilo/mdSilo-app/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI0NkRCQ0ZCREMxMjI1M0IKUldRN0pSTGMrN3h0Sk5XRElwRWM1ampTWDBMR1JCVERqQjhUd3lRSzkzL3g5QkMrRUp3L2taSVAK"
+    }
+  }
 }

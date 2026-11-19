@@ -12,6 +12,8 @@
 - Editor: A `~` in text is saved as typed, e.g. `~/notes`, not `\~/notes`, unless it could be read as subscript or strikethrough
 - Fix: Typing right after subscript, superscript, strikethrough, highlight, a hashtag or a placeholder no longer goes into it; bold, italic and underline still carry on, as in word processors
 - Fix: Pressing play on a video in a book jumped to the start of the chapter, on a page with nothing but the video
+- i18n: support Espanol, Simplified Chinese, Traditional Chinese.
+- Desktop: The app updates itself from the GitHub releases: on startup it offers a new version, installed with a click and a restart; Settings → Check for Updates on Startup, About → Check for Updates
 
 ## app-v0.8.0 
 

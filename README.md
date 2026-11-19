@@ -106,6 +106,8 @@ On Windows, in PowerShell (no admin needed; options `-Version`, `-Format msi`, `
 irm https://raw.githubusercontent.com/mdSilo/mdSilo-app/main/scripts/install.ps1 | iex
 ```
 
+Once installed, the desktop app updates itself: on startup it asks GitHub for a newer release and offers to install it and restart (turn this off in Settings; About → Check for Updates asks at any time). The downloads are signed, and the app checks the signature before installing.
+
 You can get the app on [release page](https://github.com/mdSilo/mdSilo-app/releases) or build from the source code: 
 
 - install Rust: https://www.rust-lang.org/tools/install 

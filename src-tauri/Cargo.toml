@@ -23,14 +23,6 @@ serde_json = "1.0.154"
 serde = { version = "1.0.229", features = ["derive"] }
 tauri = { version = "2.12.5", features = ["tray-icon", "protocol-asset"] }
 tauri-plugin-dialog = "2.8.4"
-# the updater, not used yet (see lib.rs). To bring it back: uncomment this,
-# the `.plugin(...)` line in lib.rs, add "updater:default" to the permissions
-# of capabilities/default.json, set "createUpdaterArtifacts": true in
-# tauri.conf.json (bundle) and add to its "plugins":
-#   "updater": { "active": false, "dialog": false,
-#     "endpoints": ["https://mdSilo.github.io/mdSilo-app/install.json"],
-#     "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVBRkUxMUMwNTU0QjcyM0MKUldROGNrdFZ3QkgrNm1xWFpmb3FpK3ExV1NWWjk0TFRmSm42UHVqQk9PZmdYa0JhZlpsRzFHZm8K" }
-# tauri-plugin-updater = "2.13.1"
 dirs = "7.0.0"
 trash = "5.3.0"
 notify = "8.2.2"
@@ -73,6 +65,11 @@ libsqlite3-sys = { version = "0.38.2", features = ["bundled"] }
 # git sync, see sync/: libgit2 built in, no OpenSSL or SSH; HTTPS goes through
 # reqwest (sync/http.rs), which builds for mobile as it is
 git2 = { version = "0.21.0", default-features = false, features = ["vendored-libgit2"] }
+
+# the self updater, desktop only, see updater.rs: the versions are on the
+# GitHub releases (latest.json, made by tauri-action in release.yml)
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2.14.1"
 
 # read aloud, in process: WinRT speech on Windows, AVSpeechSynthesizer on
 # macOS, see tts/winrt.rs, tts/avspeech.rs

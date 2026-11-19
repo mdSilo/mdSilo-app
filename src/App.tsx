@@ -23,7 +23,7 @@ import EditorLookupPopup from "@/writer/LookupPopup";
 import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
 import { hasWindows, shareSettings } from "@/state/windowSync";
 import { flushAll } from "@/shell/flushAll";
-import { isWeb } from "@/workspace/util";
+import { isTauri, isWeb } from "@/workspace/util";
 import { openWebWorkspace, reportSlowSettings } from "@/workspace/useOpen";
 import FindOrCreateModal from "@/writer/NoteNewModal";
 import SideMenu from "@/shell/SideMenu";
@@ -37,6 +37,7 @@ import MainView from "@/shell/MainView";
 import SettingsModal from "@/shell/settings/SettingsModal";
 import AboutModal from "@/shell/settings/AboutModal";
 import PwaPrompts from "@/shell/PwaPrompts";
+import UpdatePrompt from "@/shell/UpdatePrompt";
 
 const App = () => {
   const isFindOrCreateModalOpen = useStore(
@@ -186,6 +187,7 @@ const App = () => {
           <TrustedPlugins />
           <PluginDev />
           {isWeb ? <PwaPrompts /> : null}
+          {isTauri && !isWeb ? <UpdatePrompt /> : null}
           {isWeb ? <SharedBookPrompt /> : null}
         </div>
       </div>

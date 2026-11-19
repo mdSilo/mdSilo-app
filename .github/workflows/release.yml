@@ -18,6 +18,10 @@ concurrency:
 #   Windows x64: setup .exe (NSIS) and .msi; Windows arm64: setup .exe only (WiX has no arm64),
 #     built natively on the arm runner so the C deps (aws-lc, ring, libgit2...) need no cross toolchain.
 # scripts/install.sh and scripts/install.ps1 pick from these assets by name.
+# The builds are signed for the self updater (src-tauri/src/updater.rs): each
+# installer gets a .sig, made with the TAURI_PRIVATE_KEY secret; the job
+# updater-json then adds latest.json, which the app reads from the latest
+# published release.
 jobs:
   publish-mdsilo:
     strategy:
@@ -94,7 +98,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with: &tauri-with
           projectPath: .
-          args: ${{ matrix.args }}
+          # the .sig files of the updater; on here only, a local build has no key to sign
+          args: ${{ matrix.args }} --config '{"bundle":{"createUpdaterArtifacts":true}}'
+          # made once by the job updater-json: builds ending together lose entries
+          uploadUpdaterJson: false
           tagName: mdsilo-v__VERSION__
           releaseName: 'mdSilo Desktop v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
@@ -108,3 +115,23 @@ jobs:
         uses: tauri-apps/tauri-action@v1
         env: *tauri-env
         with: *tauri-with
+
+  # latest.json for the self updater, from the .sig files of all the builds,
+  # see scripts/updater-json.mjs; made of what was built if a build failed
+  updater-json:
+    needs: publish-mdsilo
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Add latest.json to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(jq -r .version src-tauri/tauri.conf.json)
+          tag="mdsilo-v$version"
+          mkdir sigs
+          gh release download "$tag" --pattern '*.sig' --dir sigs
+          node scripts/updater-json.mjs sigs "$GITHUB_REPOSITORY" "$tag" "$version" > latest.json
+          cat latest.json
+          gh release upload "$tag" latest.json --clobber

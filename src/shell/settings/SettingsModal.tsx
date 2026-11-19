@@ -5,9 +5,9 @@ import {
   type SideMenuOrientation,
   type StartupView,
 } from "@/state/userSettings";
-import { Select } from "@/ui/ui";
+import { Select, Toggle } from "@/ui/ui";
 import { BaseModal } from "@/ui/BaseModal";
-import { isTauri } from "@/workspace/util";
+import { isTauri, isWeb } from "@/workspace/util";
 import { allCustomThemes } from "@/custom/themes";
 import { LANGUAGES, SYSTEM_LANGUAGE, useT } from "@/i18n";
 import { ThemeSelect } from "./ThemeEditorModal";
@@ -60,6 +60,8 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   const setLanguage = useStore((state) => state.setLanguage);
   const startupView = useStore((state) => state.startupView);
   const setStartupView = useStore((state) => state.setStartupView);
+  const checkForUpdates = useStore((state) => state.checkForUpdates);
+  const setCheckForUpdates = useStore((state) => state.setCheckForUpdates);
 
   return (
     <BaseModal title={t("Settings")} isOpen={isOpen} handleClose={handleClose}>
@@ -126,6 +128,13 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             </option>
           ))}
         </Select>
+        {isTauri && !isWeb ? (
+          <Toggle
+            label={t("Check for Updates on Startup")}
+            checked={checkForUpdates}
+            onChange={setCheckForUpdates}
+          />
+        ) : null}
         <SettingsLink
           label={t("Fonts")}
           action={t("Manage Fonts")}

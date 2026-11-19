@@ -194,6 +194,7 @@ type PersistedState = Pick<
   | "isRTL"
   | "isCheckSpellOn"
   | "openOnStartup"
+  | "checkForUpdates"
   | "startupView"
   | "lastBooks"
   | "noteSort"
@@ -423,6 +424,7 @@ export const store = createStore<Store>()(
         isRTL: state.isRTL,
         isCheckSpellOn: state.isCheckSpellOn,
         openOnStartup: state.openOnStartup,
+        checkForUpdates: state.checkForUpdates,
         startupView: state.startupView,
         lastBooks: state.lastBooks,
         noteSort: state.noteSort,
