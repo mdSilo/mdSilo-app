@@ -1,8 +1,12 @@
 # Changelog 
 
-## app-v0.8.1
+## app-v0.8.2
 
 2026-XX-XX
+
+## app-v0.8.1
+
+2026-11-18
 
 - Performance: Big books open without being read into memory whole: the reader reads the parts it asks for, on the desktop and on the web; PDF, MOBI, AZW and AZW3 too
 - Performance: Importing MOBI, AZW and AZW3 books reads only what their metadata, cover and text need, not their images; a book dropped in on the web is written as it is, not read into memory first

@@ -1,6 +1,6 @@
 [package]
 name = "mdsilo"
-version = "0.8.1"
+version = "0.8.2"
 description = "mdSilo"
 authors = ["dloh"]
 license = "AGPL-3.0-or-later"
@@ -16,25 +16,25 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.7.4", features = [] }
+tauri-build = { version = "2.7.6", features = [] }
 
 [dependencies]
 serde_json = "1.0.154"
 serde = { version = "1.0.229", features = ["derive"] }
-tauri = { version = "2.12.5", features = ["tray-icon", "protocol-asset"] }
+tauri = { version = "2.12.7", features = ["tray-icon", "protocol-asset"] }
 tauri-plugin-dialog = "2.8.4"
 dirs = "7.0.0"
-trash = "5.3.0"
+trash = "5.4.0"
 notify = "8.2.2"
 open = "5.4.5"
 bincode = { version = "2.0.1", features = ["serde"] }
-chrono = "0.4.41"
+chrono = "0.4.45"
 whatlang = "0.18.0"
 # book ids, see books.rs
 md5 = { package = "md-5", version = "0.11.0" }
 # the index of a workspace, see index/
-fancy-regex = "0.20.0"
-regex = "1"
+fancy-regex = "0.20.2"
+regex = "1.13.2"
 percent-encoding = "2.3.2"
 tantivy = "0.27.0"
 tantivy-jieba = "0.21.0"
@@ -42,12 +42,12 @@ tantivy-jieba = "0.21.0"
 # the fontconfig settings itself on Linux
 fontdb = "0.24.0"
 # plugins installed from a .zip, see custom_plugins.rs
-zip = { version = "9.2.2", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+zip = { version = "9.7.1", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 # the books read for their metadata, cover and text, see ebook/; all pure
 # Rust, quick-xml, html5ever (by dom_query), url and encoding_rs are in the
 # tree already
 quick-xml = { version = "0.42.0", features = ["escape-html"] }
-dom_query = { version = "0.28.0", default-features = false }
+dom_query = { version = "0.29.0", default-features = false }
 url = "2.5.8"
 encoding_rs = "0.8.44"
 base64 = "0.23.1"
@@ -58,10 +58,10 @@ ignore = "0.4.34"
 reqwest = { version = "0.13.5", features = ["json", "socks", "blocking"] }
 rss = { version = "2.0.12", features = ["serde"] }
 atom_syndication = "0.12.7"
-bytes = "1.10.1"
-diesel = { version = "2.3.14", features = ["sqlite", "chrono"] }
-diesel_migrations = { version = "2.3.2", features = ["sqlite"] }
-libsqlite3-sys = { version = "0.38.2", features = ["bundled"] }
+bytes = "1.12.2"
+diesel = { version = "2.4.0", features = ["sqlite", "chrono"] }
+diesel_migrations = { version = "2.4.0", features = ["sqlite"] }
+libsqlite3-sys = { version = "0.40.0", features = ["bundled"] }
 # git sync, see sync/: libgit2 built in, no OpenSSL or SSH; HTTPS goes through
 # reqwest (sync/http.rs), which builds for mobile as it is
 git2 = { version = "0.21.0", default-features = false, features = ["vendored-libgit2"] }
