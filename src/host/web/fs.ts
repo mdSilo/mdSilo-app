@@ -89,7 +89,15 @@ export function initFs(): Promise<void> {
   if (!initialized) {
     initialized = (async () => {
       const root = await get<FsEntry>(FILES, ROOT);
-      if (root) return;
+      if (root) {
+        // the book of the demo, if it could not be fetched then; once this
+        // init is done (it uses the files), not waited for
+        if (import.meta.env.MODE !== "test")
+          void import("./demoBook")
+            .then((m) => m.addMissingDemoBook())
+            .catch(() => undefined);
+        return;
+      }
       // the demo of the first run: the manual, a book and some issues; not in tests
       const demo =
         import.meta.env.MODE === "test" ? [] : await loadDemo().catch(() => []);
