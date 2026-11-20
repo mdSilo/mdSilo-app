@@ -4,6 +4,8 @@
 
 2026-XX-XX
 
+- Fix: math drawn with the CSS of KaTeX 0.19; diagrams drawn again when the theme changes
+
 ## app-v0.8.1
 
 2026-11-18

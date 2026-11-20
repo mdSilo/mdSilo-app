@@ -53,8 +53,8 @@
       "externalBin": [],
       "copyright": "GNU Affero General Public License v3.0",
       "category": "Productivity",
-      "shortDescription": "",
-      "longDescription": "",
+      "shortDescription": "From reading to knowledge.",
+      "longDescription": "mdSilo: From reading to knowledge.",
       "linux": {
         "deb": {
           "depends": []
