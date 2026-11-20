@@ -49,7 +49,7 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 - **Look up as you read**: your dictionaries in your order (Wiktionary, Wikipedia, Urban Dictionary, Merriam-Webster, sites you add, MDict files), with pronunciations, in books and notes
 - **Translate and listen**: translate a selection, or the whole book as you read (beside the text or in its place) and save it as a translated EPUB; read aloud with the voices of your system, Piper, Azure or an OpenAI-like service
 - **Vocabulary**: words kept with their pronunciation and the sentence they came from, studied as flash cards; the **word lens** shows their meaning under them in the books
-- **Parallel reading**: two books side by side, each with its own notes: a translation and its original, a text and its commentary
+- **Parallel reading and writing**: two books side by side, each with its own notes: a translation and its original, a text and its commentary; or a note beside the book, the text dragged into it as a quote with a link back; or two notes side by side
 - **Library**: covers, groups, status, search, drag and drop; books are identified by content, so a renamed book is still the same book
 - **Feeds & podcasts**: RSS/Atom/JSON Feed client with full text, starred articles, clipping to notes and a podcast player; turn a channel into an EPUB and read a month of news as a book; browse and download from OPDS catalogs
 

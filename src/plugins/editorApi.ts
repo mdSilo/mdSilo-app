@@ -3,6 +3,7 @@ import { parser, textBlocksOf, type BlockMark } from "mdsmirror";
 import type { MarkColor } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
 import { editorOf } from "@/writer/editors";
+import { focusedNoteId } from "@/writer/beside";
 import { HIGHLIGHT_COLORS } from "@/reader/annotations/annotations";
 import { HIGHLIGHT_CSS } from "@/reader/styles";
 import type { PluginMethods } from "./host";
@@ -45,7 +46,7 @@ export const markdownBlocks = (markdown: string) =>
   }));
 
 function openEditor() {
-  const noteId = store.getState().currentNoteId;
+  const noteId = focusedNoteId();
   const editor = noteId ? editorOf(noteId) : undefined;
   if (!noteId || !editor) throw new Error("No note is open in the editor");
   return { noteId, editor };
@@ -76,7 +77,7 @@ export const editorMethods = (plugin: InstalledPlugin): PluginMethods => ({
   "editor.info": {
     permission: "notes:read",
     handler: () => {
-      const noteId = store.getState().currentNoteId;
+      const noteId = focusedNoteId();
       const editor = noteId ? editorOf(noteId) : undefined;
       if (!noteId || !editor) return null;
       const note = noteInfo(noteId);

@@ -5,7 +5,11 @@ import { t } from "@/i18n";
 /** the copy of the note that is printed, see `@media print` in styles.css */
 export const PRINT_ROOT_ID = "print-root";
 
-const noteContent = () => document.getElementById("note-content");
+/** the element of the text of a note: of the note shown, or of the one beside */
+export const noteContentId = (beside = false) =>
+  beside ? "note-content-beside" : "note-content";
+const noteContent = (beside = false) =>
+  document.getElementById(noteContentId(beside));
 
 /**
  * Export the note as a PDF of text (selectable, searchable, with its links and
@@ -13,8 +17,8 @@ const noteContent = () => document.getElementById("note-content");
  * The note is copied out of the scrolling app into a page of its own, which is
  * all that is printed, so it runs on over as many pages as it needs.
  */
-export async function exportPdf(title: string, dark: boolean) {
-  const note = noteContent();
+export async function exportPdf(title: string, dark: boolean, beside = false) {
+  const note = noteContent(beside);
   if (!note) return;
 
   document.getElementById(PRINT_ROOT_ID)?.remove();
@@ -91,8 +95,8 @@ async function printCopy(note: HTMLElement) {
 // html2canvas is big: loaded on export, not on start
 
 /** Export the note as a PNG image, the file name as the note's */
-export async function exportPng(notePath: string) {
-  const note = noteContent();
+export async function exportPng(notePath: string, beside = false) {
+  const note = noteContent(beside);
   if (!note) return;
 
   const filePath = notePath.replace(/\.[^./\\]*$/, "") + ".png";

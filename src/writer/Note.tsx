@@ -71,6 +71,8 @@ import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
 import { isLookupText } from "@/reader/dictionary/dictionary";
 import { useT } from "@/i18n";
 import { setEditor } from "./editors";
+import { QUOTE_MIME } from "./beside";
+import { noteContentId } from "./hooks/useExport";
 import NoteHeader from "./NoteHeader";
 import Backlinks from "./backlinks/Backlinks";
 import IssueRefs from "./IssueRefs";
@@ -90,11 +92,13 @@ type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   highlightedPath?: any; // TODO
   className?: string;
+  /** the note beside the note or book shown, see beside.ts */
+  beside?: boolean;
 };
 
 function Note(props: Props) {
   const t = useT();
-  const { noteId, className } = props;
+  const { noteId, className, beside = false } = props;
   // console.log("loading",noteId)
   const [showBacklink, setShowBacklink] = useState(false);
   const [headings, setHeadings] = useState<Heading[]>([]);
@@ -185,8 +189,8 @@ function Note(props: Props) {
   const state = currentView.state;
   const dispatch = currentView.dispatch;
   const currentNoteValue = useMemo(
-    () => ({ ty: "note", id: noteId, state, dispatch }),
-    [dispatch, noteId, state],
+    () => ({ ty: "note", id: noteId, state, dispatch, beside }),
+    [dispatch, noteId, state, beside],
   );
 
   // note action
@@ -249,10 +253,9 @@ function Note(props: Props) {
     [notePath],
   );
 
-  setWindowTitle(
-    `${title} - mdSilo`,
-    useStore((state) => state.isLoading),
-  );
+  const isLoading = useStore((state) => state.isLoading);
+  // the window is of the note or book shown, not of the note beside
+  if (!beside) setWindowTitle(`${title} - mdSilo`, isLoading);
   // update locally
   const onTitleChange = useCallback(
     async (newtitle: string) => {
@@ -495,8 +498,25 @@ function Note(props: Props) {
               ) : null}
               <div
                 className="flex-1 px-2 pt-2 pb-8"
-                id="note-content"
+                id={noteContentId(beside)}
                 spellCheck={isCheckSpellOn}
+                // a quote dragged from a book: put where dropped
+                onDragOverCapture={(e) => {
+                  if (!e.dataTransfer.types.includes(QUOTE_MIME)) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                }}
+                onDropCapture={(e) => {
+                  const md = e.dataTransfer.getData(QUOTE_MIME);
+                  const editor = editorInstance.current;
+                  if (!md || !editor || rawMode !== "wysiwyg") return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  editor.insertMarkdown(md, {
+                    left: e.clientX,
+                    top: e.clientY,
+                  });
+                }}
               >
                 <Suspense fallback={<Spinner className="mx-auto" />}>
                   {pluginMode ? (

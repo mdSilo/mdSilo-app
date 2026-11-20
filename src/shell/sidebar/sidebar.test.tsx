@@ -430,6 +430,29 @@ describe("SidebarNoteLink", () => {
     await waitFor(() => expect(viewState().params?.noteId).toBe("/n/a.md"));
   });
 
+  test("with Ctrl: opens a note beside the note shown, the view stays", async () => {
+    mockInvoke(invoke, {
+      file_exist: true,
+      get_file_meta: makeFileMeta({ file_path: "/n/a.md", file_name: "a.md" }),
+      get_parent_dir: "/n",
+    });
+    store.getState().setCurrentNoteId("/n/shown.md");
+    renderWithView(
+      withContainer(
+        <>
+          <SidebarNoteLink node={treeItem("/n/a.md", "a")} />
+          <ViewProbe />
+        </>,
+      ),
+    );
+    const user = userEvent.setup();
+    await user.keyboard("{Control>}");
+    await user.click(screen.getByText("a"));
+    await user.keyboard("{/Control}");
+    await waitFor(() => expect(store.getState().besideNoteId).toBe("/n/a.md"));
+    expect(viewState().view).toBe("default");
+  });
+
   test("opens other files externally", async () => {
     renderWithView(
       <SidebarNoteLink node={treeItem("/n/pic.png", "pic.png")} />,

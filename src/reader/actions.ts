@@ -4,6 +4,7 @@ import { store } from "@/state/store";
 import { issueStore } from "@/issue/issueStore";
 import { issueHref, issueLabel } from "@/issue/refs";
 import { oneLine } from "@/issue/issueOfText";
+import { editorOf } from "@/writer/editors";
 import {
   bookHref,
   newNoteId,
@@ -147,6 +148,27 @@ export function copyQuote(text: string, cfi: string) {
   usePopups.getState().clear();
 }
 
+/**
+ * Put the text in the note written beside the book, as a quote with a link
+ * back to it: after the block of its cursor. In the Markdown mode (no
+ * WYSIWYG editor), copied to paste instead.
+ * @returns true if put in the note
+ */
+export function quoteBeside(
+  text: string,
+  cfi: string,
+  reader = activeStore(),
+): boolean {
+  const markdown = quoteMarkdown(text, cfi, reader);
+  const noteId = store.getState().besideNoteId;
+  const editor = noteId ? editorOf(noteId) : undefined;
+  const done = Boolean(editor?.insertMarkdown(markdown));
+  if (!done) copy(markdown, { format: "text/plain" });
+  usePopups.getState().clear();
+  getView()?.deselect();
+  return done;
+}
+
 /** A link to a place of a book: of the book last used, or of a pane. */
 export function copyLink(cfi: string, pane?: Pane) {
   const { hash } = (pane ? storeOf(pane) : activeStore()).getState();
@@ -183,10 +205,8 @@ export async function issueOfNote(
     ),
     body: [place, body].filter(Boolean).join("\n\n"),
   });
-  reader
-    .getState()
-    .updateNote(note.id, {
-      note: `${body}${body ? "\n\n" : ""}[${issueLabel(num)}](${issueHref(num)})`,
-    });
+  reader.getState().updateNote(note.id, {
+    note: `${body}${body ? "\n\n" : ""}[${issueLabel(num)}](${issueHref(num)})`,
+  });
   return num;
 }

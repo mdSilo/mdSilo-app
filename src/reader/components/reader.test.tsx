@@ -21,6 +21,8 @@ import MainView from "@/shell/MainView";
 import useLinkHandlers from "@/writer/hooks/useLinkHandlers";
 import { writeFile } from "@/host/web/fs";
 import { renamePath } from "@/workspace/renamePath";
+import { openFilePath } from "@/workspace/open";
+import { editorOf } from "@/writer/editors";
 import { followRename } from "@/workspace/renames";
 import { issueStore, resetIssueStore } from "@/issue/issueStore";
 import { useWebFs, waitForView } from "../../testUtils";
@@ -713,6 +715,90 @@ describe("parallel reading", () => {
     expect(screen.getByTestId("reader-sidebar-book")).toHaveTextContent(
       "Tiny Book",
     );
+  });
+
+  test("a note written beside the book: quotes put in it, a book beside closed", async () => {
+    const NOTE = `${WS}/writing/Thoughts.md`;
+    await writeFile(NOTE, "my thoughts\n");
+    await writeBook(OTHER, makeEpub("Other Book"));
+    await openFilePath(NOTE, false);
+    renderMain();
+    await go({ view: "book", path: BOOK });
+    await waitFor(() =>
+      expect(screen.getByTestId("foliate-viewer")).toBeInTheDocument(),
+    );
+    await act(() => useSideStore.getState().open(OTHER));
+    expect(screen.getByTestId("parallel-pane")).toBeInTheDocument();
+
+    // no quote to the note beside while there is none
+    act(() =>
+      usePopups.getState().setSelection({
+        text: "down the rabbit hole",
+        cfi: "epubcfi(/6/4!/4/4,/1:0,/1:20)",
+        index: 1,
+        box: { left: 10, top: 10, right: 100, bottom: 20 },
+      }),
+    );
+    expect(await screen.findByLabelText("Highlight")).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Quote in the note beside, with a link to here"),
+    ).not.toBeInTheDocument();
+    act(() => usePopups.getState().clear());
+
+    fireEvent.click(screen.getByTitle("Parallel reading"));
+    const menu = await screen.findByTestId("parallel-books");
+    fireEvent.click(within(menu).getByRole("tab", { name: "Write beside" }));
+    fireEvent.click(await within(menu).findByText("Thoughts"));
+    const pane = await screen.findByTestId("beside-note");
+    // in place of the book beside
+    await waitFor(() => expect(useSideStore.getState().status).toBe("idle"));
+    expect(screen.queryByTestId("parallel-pane")).not.toBeInTheDocument();
+    await waitFor(() => expect(editorOf(NOTE)).toBeDefined());
+    expect(pane).toHaveTextContent("my thoughts");
+
+    // the text selected in the book read: quoted in the note, with a link back
+    act(() => {
+      setActivePane("main");
+      usePopups.getState().setSelection({
+        text: "down the rabbit hole",
+        cfi: "epubcfi(/6/4!/4/4,/1:0,/1:20)",
+        index: 1,
+        box: { left: 10, top: 10, right: 100, bottom: 20 },
+      });
+    });
+    fireEvent.click(
+      await screen.findByLabelText(
+        "Quote in the note beside, with a link to here",
+      ),
+    );
+    const hash = useReaderStore.getState().hash!;
+    const text = editorOf(NOTE)!.text();
+    expect(text).toContain("my thoughts");
+    expect(text).toContain("> down the rabbit hole");
+    expect(text).toContain(`](book:${hash}#epubcfi`);
+    expect(usePopups.getState().selection).toBeUndefined();
+    // as typed: to the note (to its file once the typing pauses)
+    await waitFor(() =>
+      expect(store.getState().notes.get(NOTE)?.content).toContain(
+        "> down the rabbit hole",
+      ),
+    );
+
+    // the note to the left of the book
+    fireEvent.click(within(pane).getByLabelText("Swap sides"));
+    expect(pane.parentElement?.className).toContain("flex-row-reverse");
+    act(() => store.getState().setBesideOnLeft(false));
+
+    // a book beside again: no note beside then
+    fireEvent.click(screen.getByTitle("Parallel reading"));
+    const menu2 = await screen.findByTestId("parallel-books");
+    // a note beside: the menu on its notes, the books a tab away
+    fireEvent.click(within(menu2).getByRole("tab", { name: "Read beside" }));
+    fireEvent.click(await within(menu2).findByText("Other Book"));
+    await waitFor(() =>
+      expect(screen.getByTestId("parallel-pane")).toBeInTheDocument(),
+    );
+    expect(store.getState().besideNoteId).toBe("");
   });
 
   test("closed with the book read", async () => {

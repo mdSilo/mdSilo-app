@@ -11,6 +11,7 @@ import { NoteTreeItem, store, useStore } from "@/state/store";
 import { isMobileWidth } from "@/lib/hooks/useIsMobile";
 import { imageExtensions } from "@/lib/file-extensions";
 import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
+import { openBeside } from "@/writer/beside";
 import { Tooltip } from "@/ui/ui";
 import { checkFileIsMd, getFileExt } from "@/workspace/process";
 import { listDir, openUrl } from "@/workspace/open";
@@ -120,7 +121,18 @@ const SidebarNoteLink = (
         }
         toggleExpandedDir(dirPath, !isExpanded);
         return;
-      } else if (isBook) {
+      }
+      // with Ctrl, ⌘ or Alt: beside the note shown (parallel writing)
+      const beside = (e.ctrlKey || e.metaKey || e.altKey) && !isMobileWidth();
+      if (beside && isBook) {
+        // the book shown, the note shown beside it
+        const shown = store.getState().currentNoteId;
+        dispatch({ view: "book", path: node.id });
+        if (shown) await openBeside(shown);
+        return;
+      }
+      if (beside && !isNonMd && (await openBeside(node.id))) return;
+      if (isBook) {
         dispatch({ view: "book", path: node.id });
       } else if (isNonMd) {
         // a plugin opens it, or the app of the system

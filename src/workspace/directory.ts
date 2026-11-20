@@ -155,10 +155,10 @@ class DirectoryAPI {
         // console.log("event kind: ", event);
         // console.log("file paths: ", filePaths);
         if (event === "write" || event === "close_write") {
-          const currentNoteId = store.getState().currentNoteId;
-          // console.log("write: ", event, filePaths, currentNoteId)
-          // any change on current note will not be loaded
-          const wrotePaths = filePaths.filter((f) => f !== currentNoteId);
+          // the notes open (shown, beside): their changes not loaded under the editor
+          const { currentNoteId, besideNoteId } = store.getState();
+          const open = [currentNoteId, besideNoteId];
+          const wrotePaths = filePaths.filter((f) => !open.includes(f));
           if (wrotePaths.length > 0) await openFilePaths(wrotePaths);
         } else if (event === "renameFrom" || event === "remove") {
           // The file is gone from the path already (on Linux, delete is
@@ -174,6 +174,12 @@ class DirectoryAPI {
               continue;
             }
             store.getState().deleteNote(filePath);
+            const beside = store.getState().besideNoteId;
+            if (
+              beside &&
+              (filePath === beside || beside.startsWith(`${filePath}/`))
+            )
+              store.setState({ besideNoteId: "", notePane: "main" });
             if (
               filePath === currentNoteId ||
               currentNoteId.startsWith(`${filePath}/`)

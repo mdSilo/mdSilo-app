@@ -3,6 +3,7 @@ import { openUrl } from "@/workspace/open";
 import { allFonts, useFonts, useFontsVersion } from "@/custom/fonts";
 import { trustedReaderCss, useTrustedVersion } from "@/plugins/trusted";
 import { store, useStore } from "@/state/store";
+import { QUOTE_MIME, setNotePane } from "@/writer/beside";
 import {
   DEFAULT_READER_SETTINGS,
   lookKey,
@@ -21,6 +22,7 @@ import {
   themeColors,
 } from "../styles";
 import { storeOf } from "../readerStore";
+import { quoteMarkdown } from "../actions";
 import { boxOfRange, isPopupShown, usePopups, type Box } from "../popups";
 import {
   activePane,
@@ -408,6 +410,8 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
     const onPointerDown = () => {
       bookStore.getState().touch();
       setActivePane(pane);
+      // a note beside: the book used now, not the note
+      setNotePane("main");
       downAt = Date.now();
       pressed = true;
       const popups = usePopups.getState();
@@ -776,6 +780,24 @@ function FoliateViewer({ book, initialCfi, pane = "main" }: Props) {
         }, 0);
       };
       doc.addEventListener("pointerup", reportSelection);
+      // the text selected dragged to a note: a quote with a link back to it
+      doc.addEventListener("dragstart", (ev) => {
+        const sel = doc.getSelection();
+        const view = viewRef.current;
+        if (!ev.dataTransfer || !view || !sel || sel.isCollapsed) return;
+        const text = sel.toString().trim();
+        if (!text) return;
+        const md = quoteMarkdown(
+          text,
+          view.getCFI(index, sel.getRangeAt(0)),
+          bookStore,
+        );
+        ev.dataTransfer.setData(QUOTE_MIME, md);
+        // the markdown also, for the Markdown mode, or another app
+        ev.dataTransfer.setData("text/plain", md);
+        ev.dataTransfer.effectAllowed = "copy";
+        usePopups.getState().clear();
+      });
       // reading: for the time read, see readerStore
       doc.addEventListener("pointerdown", onPointerDown);
       doc.addEventListener("pointerup", onPointerUp);

@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
-import { TbBookmark, TbBookmarkFilled, TbX } from "react-icons/tb";
+import {
+  TbArrowsLeftRight,
+  TbBookmark,
+  TbBookmarkFilled,
+  TbX,
+} from "react-icons/tb";
 import { IconButton, Spinner } from "@/ui/ui";
 import { useStore } from "@/state/store";
 import { t, useT } from "@/i18n";
+import FindOrCreateInput from "@/writer/NoteNewInput";
+import {
+  closeBeside,
+  isBookNotes,
+  openBeside,
+  swapBeside,
+} from "@/writer/beside";
 import {
   findBookPath,
   readLibrary,
@@ -16,12 +28,23 @@ import { themeColors } from "../styles";
 import { setActivePane } from "../view";
 import FoliateViewer from "./FoliateViewer";
 
-/** The books to read beside the one read: any other of the library. */
-export function ParallelBooks({ onPick }: { onPick: () => void }) {
+type BookChoicesProps = {
+  ws?: string;
+  /** a book not to offer: the book read */
+  exclude?: string;
+  /** the book open beside, marked */
+  current?: string;
+  onPick: (book: BookEntry) => void;
+};
+
+/** The books of the library, to pick one. */
+export function BookChoices({
+  ws,
+  exclude,
+  current,
+  onPick,
+}: BookChoicesProps) {
   const t = useT();
-  const ws = useReaderStore((s) => s.ws);
-  const hash = useReaderStore((s) => s.hash);
-  const current = useSideStore((s) => s.hash);
   const [books, setBooks] = useState<BookEntry[]>();
 
   useEffect(() => {
@@ -31,7 +54,7 @@ export function ParallelBooks({ onPick }: { onPick: () => void }) {
       .then((lib) =>
         Object.values(lib.books)
           // not the book read: its annotations written by one store only
-          .filter((b) => b.hash !== hash)
+          .filter((b) => b.hash !== exclude)
           .sort((a, b) => (a.title || a.file).localeCompare(b.title || b.file)),
       )
       .catch(() => [])
@@ -41,10 +64,55 @@ export function ParallelBooks({ onPick }: { onPick: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, [ws, hash]);
+  }, [ws, exclude]);
+
+  return !books ? (
+    <div className="flex justify-center p-3">
+      <Spinner size="sm" />
+    </div>
+  ) : books.length === 0 ? (
+    <p className="px-3 pb-3 text-sm opacity-60">
+      {t("No other book in the library")}
+    </p>
+  ) : (
+    <ul className="w-full p-1 overflow-y-auto menu menu-sm max-h-80">
+      {books.map((book) => (
+        <li key={book.hash}>
+          <button
+            className={book.hash === current ? "menu-active" : ""}
+            onClick={() => onPick(book)}
+          >
+            <span className="flex flex-col min-w-0 text-left">
+              <span className="truncate">
+                {book.title || titleOfFile(book.file)}
+              </span>
+              {book.author ? (
+                <span className="text-xs truncate opacity-60">
+                  {book.author}
+                </span>
+              ) : null}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** What to open beside the book read: another book, or a note to write. */
+export function ParallelBooks({ onPick }: { onPick: () => void }) {
+  const t = useT();
+  const ws = useReaderStore((s) => s.ws);
+  const hash = useReaderStore((s) => s.hash);
+  const current = useSideStore((s) => s.hash);
+  const besideNote = useStore((s) => s.besideNoteId);
+  const [tab, setTab] = useState<"books" | "notes">(
+    besideNote ? "notes" : "books",
+  );
 
   const pick = async (book: BookEntry) => {
     onPick();
+    closeBeside();
     if (!ws) return;
     const path = await findBookPath(ws, book.hash);
     if (path) {
@@ -61,37 +129,39 @@ export function ParallelBooks({ onPick }: { onPick: () => void }) {
 
   return (
     <div className="w-72" data-testid="parallel-books">
-      <p className="px-3 pt-2 pb-1 text-xs opacity-60">{t("Read beside")}</p>
-      {!books ? (
-        <div className="flex justify-center p-3">
-          <Spinner size="sm" />
-        </div>
-      ) : books.length === 0 ? (
-        <p className="px-3 pb-3 text-sm opacity-60">
-          {t("No other book in the library")}
-        </p>
+      <div role="tablist" className="tabs tabs-border tabs-sm px-1">
+        <button
+          role="tab"
+          className={`tab ${tab === "books" ? "tab-active" : ""}`}
+          onClick={() => setTab("books")}
+        >
+          {t("Read beside")}
+        </button>
+        <button
+          role="tab"
+          className={`tab ${tab === "notes" ? "tab-active" : ""}`}
+          onClick={() => setTab("notes")}
+        >
+          {t("Write beside")}
+        </button>
+      </div>
+      {tab === "books" ? (
+        <BookChoices
+          ws={ws}
+          exclude={hash}
+          current={current}
+          onPick={(book) => void pick(book)}
+        />
       ) : (
-        <ul className="w-full p-1 overflow-y-auto menu menu-sm max-h-80">
-          {books.map((book) => (
-            <li key={book.hash}>
-              <button
-                className={book.hash === current ? "menu-active" : ""}
-                onClick={() => void pick(book)}
-              >
-                <span className="flex flex-col min-w-0 text-left">
-                  <span className="truncate">
-                    {book.title || titleOfFile(book.file)}
-                  </span>
-                  {book.author ? (
-                    <span className="text-xs truncate opacity-60">
-                      {book.author}
-                    </span>
-                  ) : null}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <FindOrCreateInput
+          compact
+          className="pt-1"
+          exclude={isBookNotes}
+          onPick={(noteId) => {
+            onPick();
+            void openBeside(noteId);
+          }}
+        />
       )}
     </div>
   );
@@ -110,6 +180,7 @@ export default function ParallelPane() {
   const notes = useSideStore((s) => s.notes);
   const settings = withDefaults(useStore((s) => s.readerSettings));
   const darkMode = useStore((s) => s.darkMode);
+  const onLeft = useStore((s) => s.besideOnLeft);
   if (status === "idle") return null;
   const paper =
     settings.pageTheme === "auto"
@@ -122,7 +193,7 @@ export default function ParallelPane() {
 
   return (
     <div
-      className="flex flex-col flex-1 min-w-0 border-l border-base-300"
+      className={`flex flex-col flex-1 min-w-0 border-base-300 ${onLeft ? "border-r" : "border-l"}`}
       style={paper ? { background: paper.bg, color: paper.fg } : undefined}
       data-testid="parallel-pane"
       onPointerDown={() => setActivePane("side")}
@@ -147,6 +218,9 @@ export default function ParallelPane() {
           ) : (
             <TbBookmark size={16} />
           )}
+        </IconButton>
+        <IconButton size="xs" title={t("Swap sides")} onClick={swapBeside}>
+          <TbArrowsLeftRight size={16} />
         </IconButton>
         <IconButton
           size="xs"

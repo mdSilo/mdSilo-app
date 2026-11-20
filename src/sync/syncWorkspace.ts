@@ -93,7 +93,8 @@ export async function applyPulled(ws: string, pulled: string[]) {
     }
   }
   if (present.length > 0) await openFilePaths(present);
-  if (notes.includes(store.getState().currentNoteId)) {
+  const { currentNoteId, besideNoteId } = store.getState();
+  if (notes.includes(currentNoteId) || notes.includes(besideNoteId)) {
     reloadOpenNote();
   }
 }

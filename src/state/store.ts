@@ -137,8 +137,16 @@ export type Store = {
   deleteNote: (noteId: string) => void;
   currentNoteId: string;
   setCurrentNoteId: Setter<string>;
-  currentNote: Notes; // one record only
-  setCurrentNote: Setter<Notes>;
+  /** the notes open: the note shown, and the note beside it if any */
+  currentNote: Notes;
+  /** the note to show; the ones shown (the note and the one beside) are kept */
+  setCurrentNote: (notes: Notes) => void;
+  /** the note open beside the note or book shown (parallel writing), or "" */
+  besideNoteId: string;
+  setBesideNoteId: Setter<string>;
+  /** the note last used: the one shown, or the one beside */
+  notePane: "main" | "side";
+  setNotePane: Setter<"main" | "side">;
   noteTree: NoteTree;
   setNoteTree: Setter<NoteTree>;
   expandedDirs: Record<string, boolean>; // dir path -> expanded in sidebar tree
@@ -206,6 +214,7 @@ type PersistedState = Pick<
   | "feedArticleWidth"
   | "readerSidebarWidth"
   | "useAsset"
+  | "besideOnLeft"
   | "activities"
   | "readerSettings"
   | "librarySettings"
@@ -316,7 +325,20 @@ export const store = createStore<Store>()(
       currentNoteId: "",
       setCurrentNoteId: setter(set, "currentNoteId"),
       currentNote: {},
-      setCurrentNote: setter(set, "currentNote"),
+      // the other notes open keep their record: the editors show them
+      setCurrentNote: (notes: Notes) =>
+        set((state) => {
+          const kept: Notes = {};
+          for (const id of [state.currentNoteId, state.besideNoteId]) {
+            const note = id ? state.currentNote[id] : undefined;
+            if (note) kept[id] = note;
+          }
+          state.currentNote = { ...kept, ...notes };
+        }),
+      besideNoteId: "",
+      setBesideNoteId: setter(set, "besideNoteId"),
+      notePane: "main",
+      setNotePane: setter(set, "notePane"),
       // The tree of notes visible in the sidebar
       noteTree: {},
       setNoteTree: setter(set, "noteTree"),
@@ -436,6 +458,7 @@ export const store = createStore<Store>()(
         feedArticleWidth: state.feedArticleWidth,
         readerSidebarWidth: state.readerSidebarWidth,
         useAsset: state.useAsset,
+        besideOnLeft: state.besideOnLeft,
         activities: state.activities,
         readerSettings: state.readerSettings,
         librarySettings: state.librarySettings,

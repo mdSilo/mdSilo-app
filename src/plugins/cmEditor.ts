@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { StateField, type Extension } from "@codemirror/state";
 import { EditorView, ViewPlugin } from "@codemirror/view";
+import { store } from "@/state/store";
+import { noteContentId } from "@/writer/hooks/useExport";
 
 // The CodeMirror of the Markdown mode of notes (writer/md/Markdown.tsx), for
 // trusted plugins: the extensions they add (Obsidian's editor extensions are
@@ -65,6 +67,13 @@ export const cmTracker: Extension = [
   editorInfoField,
 ];
 
-/** The view of the Markdown mode open, if one is */
-export const activeCmView = (): EditorView | undefined =>
-  views.findLast((view) => view.dom.isConnected) ?? views.at(-1);
+/** The view of the Markdown mode open, if one is: of the note used last */
+export const activeCmView = (): EditorView | undefined => {
+  const { notePane, besideNoteId } = store.getState();
+  const pane = `#${noteContentId(notePane === "side" && Boolean(besideNoteId))}`;
+  return (
+    views.findLast((view) => view.dom.isConnected && view.dom.closest(pane)) ??
+    views.findLast((view) => view.dom.isConnected) ??
+    views.at(-1)
+  );
+};

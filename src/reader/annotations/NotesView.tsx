@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import {
+  TbBlockquote,
   TbBookmark,
   TbCircleDot,
   TbCopy,
@@ -7,9 +8,11 @@ import {
   TbTrash,
 } from "react-icons/tb";
 import { useT } from "@/i18n";
+import { useStore } from "@/state/store";
+import { QUOTE_MIME } from "@/writer/beside";
 import { HIGHLIGHT_CSS } from "../styles";
 import { useActiveStore } from "../readerStore";
-import { copyQuote, issueOfNote } from "../actions";
+import { copyQuote, issueOfNote, quoteBeside, quoteMarkdown } from "../actions";
 import { getView } from "../view";
 import NoteIssues from "./NoteIssues";
 import { noteText, type BookNote } from "./annotations";
@@ -74,8 +77,22 @@ function NoteItem({ note }: { note: BookNote }) {
     if (draft !== note.note) updateNote(note.id, { note: draft });
   };
 
+  // a note written beside the book: the highlight dragged or put in it
+  const besideNote = useStore((state) => Boolean(state.besideNoteId));
+  const quotable = Boolean(note.text) && !editing;
+
   return (
-    <li className="px-3 py-2 border-b border-base-300 group">
+    <li
+      className="px-3 py-2 border-b border-base-300 group"
+      draggable={quotable}
+      onDragStart={(e) => {
+        if (!quotable) return;
+        const md = quoteMarkdown(note.text!, note.cfi);
+        e.dataTransfer.setData(QUOTE_MIME, md);
+        e.dataTransfer.setData("text/plain", md);
+        e.dataTransfer.effectAllowed = "copy";
+      }}
+    >
       <button
         className="block w-full text-left"
         onClick={() => void getView()?.goTo(note.cfi)}
@@ -139,6 +156,15 @@ function NoteItem({ note }: { note: BookNote }) {
             onClick={() => copyQuote(note.text!, note.cfi)}
           >
             <TbCopy />
+          </button>
+        ) : null}
+        {note.text && besideNote ? (
+          <button
+            className="btn btn-ghost btn-xs"
+            title={t("Quote in the note beside, with a link to here")}
+            onClick={() => quoteBeside(note.text!, note.cfi)}
+          >
+            <TbBlockquote />
           </button>
         ) : null}
         <button

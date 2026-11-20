@@ -12,6 +12,7 @@ import { noteContent } from "@/lib/contentCache";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { fromWorkspacePath, joinPath, toWorkspacePath } from "@/workspace/util";
 import { reloadOpenNote } from "@/workspace/noteReloads";
+import { focusedNoteId } from "@/writer/beside";
 import { dispatchView } from "../trusted";
 import type { InstalledPlugin } from "../registry";
 import { pluginUrl } from "../registry";
@@ -421,7 +422,8 @@ export class Workspace extends Source {
     return noteEditor(this.app, this.plugin)?.view ?? null;
   }
   getActiveFile(): TFile | null {
-    const { currentNoteId, initDir } = store.getState();
+    const { initDir } = store.getState();
+    const currentNoteId = focusedNoteId();
     if (!currentNoteId || !initDir) return null;
     const path = toWorkspacePath(initDir, currentNoteId);
     return this.app.vault.getAbstractFileByPath(path);
@@ -711,7 +713,8 @@ export class MarkdownView extends ItemView {
 function noteEditor(app: App, plugin: string) {
   const file = app.workspace.getActiveFile();
   if (!file) return null;
-  const { notes, currentNoteId } = store.getState();
+  const { notes } = store.getState();
+  const currentNoteId = focusedNoteId();
   const cm = activeCmView();
   const editor = cm
     ? new CmEditor(cm)
@@ -1541,7 +1544,11 @@ export function obsidianActivate(run: CommonJs, plugin: InstalledPlugin) {
     });
     // what the app changes, as Obsidian tells of it
     const unsubscribe = store.subscribe((state, prev) => {
-      if (state.currentNoteId !== prev.currentNoteId)
+      if (
+        state.currentNoteId !== prev.currentNoteId ||
+        state.besideNoteId !== prev.besideNoteId ||
+        state.notePane !== prev.notePane
+      )
         app.workspace.trigger("file-open", app.workspace.getActiveFile());
       if (state.notes !== prev.notes)
         void app.vault

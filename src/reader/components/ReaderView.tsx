@@ -41,6 +41,7 @@ import OverlayScroll, { useScroller } from "@/ui/OverlayScroll";
 import { PluginIcon } from "@/plugins/PluginIcon";
 import { ReaderPanelHost, ReaderPanelsButton } from "@/plugins/ReaderPanels";
 import { t, tk, useT } from "@/i18n";
+import BesideNote from "@/writer/BesideNote";
 import { annotationsPathOf } from "../annotations/annotations";
 import { useActiveStore, useReaderStore, useSideStore } from "../readerStore";
 import { bookmarkAt, toggleBookmark } from "../actions";
@@ -121,7 +122,11 @@ export function Reader({
   const [menu, setMenu] = useState<"settings" | "parallel">();
   const settingsOpen = menu === "settings";
   const closeMenu = () => setMenu(undefined);
-  const parallelOpen = useSideStore((s) => s.status !== "idle");
+  const sideBookOpen = useSideStore((s) => s.status !== "idle");
+  // a note beside the book (parallel writing), in place of a book
+  const besideNote = useStore((s) => s.besideNoteId);
+  const besideOnLeft = useStore((s) => s.besideOnLeft);
+  const parallelOpen = sideBookOpen || Boolean(besideNote);
   // the sidebar: of the book last used, of the two read side by side
   const activePane = usePane((s) => s.active);
   const panelBook = useActiveStore((s) => s.book);
@@ -151,6 +156,11 @@ export function Reader({
   useEffect(() => {
     if (path) void useReaderStore.getState().open(path, cfi);
   }, [path, cfi]);
+
+  // a note beside: no book beside then
+  useEffect(() => {
+    if (besideNote) void useSideStore.getState().close();
+  }, [besideNote]);
 
   // the book is closed when another view shows
   useEffect(
@@ -262,7 +272,7 @@ export function Reader({
       ? undefined
       : themeColors(darkMode, settings.pageTheme);
   const title = entry?.title ?? path?.split("/").pop();
-  const sideTitle = parallelOpen ? panelTitle : title;
+  const sideTitle = sideBookOpen ? panelTitle : title;
   const showBars = barsVisible || menuOpen;
   // written down the page: the chapter on the right, the progress on the left, written down too
   // (their px- padding is inline, so above and below)
@@ -366,7 +376,7 @@ export function Reader({
 
         <div
           ref={booksRef}
-          className="relative flex flex-1 min-w-0"
+          className={`relative flex flex-1 min-w-0 ${besideOnLeft ? "flex-row-reverse" : ""}`}
           onPointerDown={() => usePopups.getState().clear()}
         >
           <div
@@ -530,7 +540,7 @@ export function Reader({
               </>
             ) : null}
           </div>
-          <ParallelPane />
+          {besideNote && !mobile ? <BesideNote /> : <ParallelPane />}
           <BookPopups rootRef={booksRef} tools={tools} />
           {overlay?.(booksRef)}
           {translatedBook ? <TranslatedBookDialog /> : null}
