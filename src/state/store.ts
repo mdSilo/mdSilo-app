@@ -215,6 +215,7 @@ type PersistedState = Pick<
   | "readerSidebarWidth"
   | "useAsset"
   | "besideOnLeft"
+  | "besideWidth"
   | "activities"
   | "readerSettings"
   | "librarySettings"
@@ -459,6 +460,7 @@ export const store = createStore<Store>()(
         readerSidebarWidth: state.readerSidebarWidth,
         useAsset: state.useAsset,
         besideOnLeft: state.besideOnLeft,
+        besideWidth: state.besideWidth,
         activities: state.activities,
         readerSettings: state.readerSettings,
         librarySettings: state.librarySettings,

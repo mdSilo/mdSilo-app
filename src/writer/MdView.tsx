@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useCurrentViewContext } from "@/state/useCurrentView";
 import { useStore } from "@/state/store";
 import Note from "@/writer/Note";
@@ -6,6 +6,7 @@ import BesideNote from "@/writer/BesideNote";
 import { closeBeside, setNotePane } from "@/writer/beside";
 import { useNoteReloads } from "@/workspace/noteReloads";
 import useIsMobile from "@/lib/hooks/useIsMobile";
+import SplitHandle from "@/ui/SplitHandle";
 import { useT } from "@/i18n";
 
 export default function NotePage() {
@@ -20,6 +21,8 @@ export default function NotePage() {
   const beside = useStore((s) => s.besideNoteId);
   const onLeft = useStore((s) => s.besideOnLeft);
   const mobile = useIsMobile();
+  // the two notes: the line between them shares the width
+  const panesRef = useRef<HTMLDivElement>(null);
   // the note beside opened here: one editor of it only, this one
   useEffect(() => {
     if (beside && beside === noteId) closeBeside();
@@ -38,6 +41,7 @@ export default function NotePage() {
 
   return (
     <div
+      ref={panesRef}
       className={`flex flex-1 min-w-0 overflow-x-auto ${showBeside && onLeft ? "flex-row-reverse" : ""}`}
     >
       <div
@@ -47,7 +51,12 @@ export default function NotePage() {
       >
         <Note key={`${noteId}#${reloads}`} noteId={noteId} />
       </div>
-      {showBeside ? <BesideNote /> : null}
+      {showBeside ? (
+        <>
+          <SplitHandle containerRef={panesRef} />
+          <BesideNote />
+        </>
+      ) : null}
     </div>
   );
 }

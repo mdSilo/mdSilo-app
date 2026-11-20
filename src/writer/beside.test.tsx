@@ -180,11 +180,14 @@ describe("the note beside", () => {
     const pane = screen.getByTestId("beside-note");
     expect(within(pane).getByTestId("ms-editor")).toHaveTextContent("side");
     expect(screen.getAllByTestId("ms-editor")).toHaveLength(2);
-    // the window title stays of the note shown: one ViewMenu only
-    expect(pane.className).toContain("border-l");
+    // on the right, the line between them
+    expect(pane.parentElement!.className).not.toContain("flex-row-reverse");
+    expect(pane.previousElementSibling).toBe(screen.getByTestId("split-handle"));
     await userEvent.click(within(pane).getByLabelText("Swap sides"));
     expect(store.getState().besideOnLeft).toBe(true);
-    expect(screen.getByTestId("beside-note").className).toContain("border-r");
+    expect(
+      screen.getByTestId("beside-note").parentElement!.className,
+    ).toContain("flex-row-reverse");
     await userEvent.click(
       within(screen.getByTestId("beside-note")).getByLabelText(
         "Close the note beside",
@@ -192,6 +195,46 @@ describe("the note beside", () => {
     );
     expect(screen.queryByTestId("beside-note")).not.toBeInTheDocument();
     expect(store.getState().besideNoteId).toBe("");
+  });
+
+  test("the width of the two sides: dragged, reset, by the keys", async () => {
+    await renderApp();
+    await act(async () => {
+      await openBeside(side.id);
+    });
+    const pane = screen.getByTestId("beside-note");
+    expect(pane.style.flex).toBe("0 0 50%");
+    const handle = screen.getByTestId("split-handle");
+    // the two panes: 1000px from x = 100
+    vi.spyOn(handle.parentElement!, "getBoundingClientRect").mockReturnValue({
+      left: 100,
+      right: 1100,
+      width: 1000,
+      top: 0,
+      bottom: 800,
+      height: 800,
+    } as DOMRect);
+    // the line dragged to x = 800: the note beside (right) 30% wide
+    fireEvent.pointerDown(handle, { button: 0, clientX: 600 });
+    fireEvent.pointerMove(handle, { clientX: 800 });
+    fireEvent.pointerUp(handle, { clientX: 800 });
+    expect(store.getState().besideWidth).toBe(30);
+    expect(pane.style.flex).toBe("0 0 30%");
+    // not past four fifths
+    fireEvent.pointerDown(handle, { button: 0, clientX: 800 });
+    fireEvent.pointerUp(handle, { clientX: 110 });
+    expect(store.getState().besideWidth).toBe(80);
+    // half and half again
+    fireEvent.doubleClick(handle);
+    expect(store.getState().besideWidth).toBe(50);
+    // the line moved left: the pane on the right wider
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+    expect(store.getState().besideWidth).toBe(52);
+    // on the left, the same drag: the pane on the left 70% wide
+    act(() => store.getState().setBesideOnLeft(true));
+    fireEvent.pointerDown(handle, { button: 0, clientX: 600 });
+    fireEvent.pointerUp(handle, { clientX: 800 });
+    expect(store.getState().besideWidth).toBe(70);
   });
 
   test("its links open in it; the view stays", async () => {

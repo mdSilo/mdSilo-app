@@ -779,6 +779,7 @@
   "Resize channel list": "调整频道列表宽度",
   "Resize contents": "调整目录宽度",
   "Resize sidebar": "调整侧边栏宽度",
+  "Resize the two sides": "调整两边的宽度",
   "Restore {count} file(s) from {name}? Files at the same paths are replaced, the others are kept.": "从 {name} 恢复 {count} 个文件？相同路径的文件会被替换，其他文件保留。",
   "Restore a backup zip": "恢复备份 zip",
   "Restore Backup": "恢复备份",

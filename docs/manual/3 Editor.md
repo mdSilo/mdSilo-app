@@ -121,7 +121,7 @@ Paste a YouTube or Figma link on its own line and it becomes an embedded player 
 
 ## Two notes side by side
 
-The *Open beside* button (two columns, top right of a note) opens another note beside it: one written lately, any note found by its title, or a new one. Ctrl-, ⌘- or Alt-click a note in the sidebar does the same. Both can be edited; links clicked in the note beside open in it, and plugins act on the note you used last. *Swap sides* puts it on the left, the cross closes it. The note beside stays when you open another note, or a book: write beside a book with the *Read beside* tab of the same menu (see [[5 Reader|Reader]]). A note cannot be open on both sides: opened in the main pane, it leaves the side one. Not on a phone.
+The *Open beside* button (two columns, top right of a note) opens another note beside it: one written lately, any note found by its title, or a new one. Ctrl-, ⌘- or Alt-click a note in the sidebar does the same. Both can be edited; links clicked in the note beside open in it, and plugins act on the note you used last. *Swap sides* puts it on the left, the cross closes it; drag the line between the two to share the width (double-click it for half and half). The note beside stays when you open another note, or a book: write beside a book with the *Read beside* tab of the same menu (see [[5 Reader|Reader]]). A note cannot be open on both sides: opened in the main pane, it leaves the side one. Not on a phone.
 
 ## Export
 

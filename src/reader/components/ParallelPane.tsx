@@ -6,6 +6,7 @@ import {
   TbX,
 } from "react-icons/tb";
 import { IconButton, Spinner } from "@/ui/ui";
+import { besideStyle, useBesideWidth } from "@/ui/SplitHandle";
 import { useStore } from "@/state/store";
 import { t, useT } from "@/i18n";
 import FindOrCreateInput from "@/writer/NoteNewInput";
@@ -180,7 +181,7 @@ export default function ParallelPane() {
   const notes = useSideStore((s) => s.notes);
   const settings = withDefaults(useStore((s) => s.readerSettings));
   const darkMode = useStore((s) => s.darkMode);
-  const onLeft = useStore((s) => s.besideOnLeft);
+  const width = useBesideWidth();
   if (status === "idle") return null;
   const paper =
     settings.pageTheme === "auto"
@@ -193,8 +194,11 @@ export default function ParallelPane() {
 
   return (
     <div
-      className={`flex flex-col flex-1 min-w-0 border-base-300 ${onLeft ? "border-r" : "border-l"}`}
-      style={paper ? { background: paper.bg, color: paper.fg } : undefined}
+      className="flex flex-col min-w-0"
+      style={{
+        ...besideStyle(width),
+        ...(paper ? { background: paper.bg, color: paper.fg } : null),
+      }}
       data-testid="parallel-pane"
       onPointerDown={() => setActivePane("side")}
     >

@@ -779,6 +779,7 @@
   "Resize channel list": "調整頻道清單寬度",
   "Resize contents": "調整目錄寬度",
   "Resize sidebar": "調整側邊欄寬度",
+  "Resize the two sides": "調整兩邊的寬度",
   "Restore {count} file(s) from {name}? Files at the same paths are replaced, the others are kept.": "從 {name} 還原 {count} 個檔案？相同路徑的檔案會被取代，其他檔案保留。",
   "Restore a backup zip": "還原備份 zip",
   "Restore Backup": "還原備份",

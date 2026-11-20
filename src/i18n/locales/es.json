@@ -779,6 +779,7 @@
   "Resize channel list": "Cambiar tamaño de la lista de canales",
   "Resize contents": "Cambiar tamaño del índice",
   "Resize sidebar": "Cambiar tamaño de la barra lateral",
+  "Resize the two sides": "Cambiar el ancho de los dos lados",
   "Restore {count} file(s) from {name}? Files at the same paths are replaced, the others are kept.": "¿Restaurar {count} archivo(s) de {name}? Los archivos en las mismas rutas se reemplazan; los demás se conservan.",
   "Restore a backup zip": "Restaurar una copia zip",
   "Restore Backup": "Restaurar copia",

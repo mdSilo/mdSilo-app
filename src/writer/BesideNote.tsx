@@ -6,6 +6,7 @@ import {
 import type { ViewAction } from "@/state/viewReducer";
 import { useStore } from "@/state/store";
 import { useNoteReloads } from "@/workspace/noteReloads";
+import { besideStyle, useBesideWidth } from "@/ui/SplitHandle";
 import Note from "./Note";
 import { closeBookKeepNote, openBeside, setNotePane } from "./beside";
 
@@ -15,7 +16,7 @@ import { closeBookKeepNote, openBeside, setNotePane } from "./beside";
  */
 export default function BesideNote() {
   const noteId = useStore((s) => s.besideNoteId);
-  const onLeft = useStore((s) => s.besideOnLeft);
+  const width = useBesideWidth();
   // mounted again when the note changed on disk, e.g. by a sync
   const reloads = useNoteReloads((s) => s.seq);
   const { state, dispatch } = useCurrentViewContext();
@@ -38,7 +39,8 @@ export default function BesideNote() {
   if (!noteId) return null;
   return (
     <div
-      className={`flex flex-1 min-w-0 border-base-300 ${onLeft ? "border-r" : "border-l"}`}
+      className="flex min-w-0"
+      style={besideStyle(width)}
       data-testid="beside-note"
       onPointerDownCapture={() => setNotePane("side")}
       onFocusCapture={() => setNotePane("side")}

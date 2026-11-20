@@ -645,6 +645,11 @@ describe("parallel reading", () => {
     );
     expect(useSideStore.getState().path).toBe(OTHER);
     const pane = screen.getByTestId("parallel-pane");
+    // the line between the two books, to share the width
+    expect(pane.previousElementSibling).toBe(
+      screen.getByTestId("split-handle"),
+    );
+    expect(pane.style.flex).toBe("0 0 50%");
     // the title, with the chapter after it
     expect(within(pane).getByTitle("Other Book")).toHaveTextContent(
       /^Other Book §/,
@@ -712,6 +717,7 @@ describe("parallel reading", () => {
     await waitFor(() =>
       expect(screen.queryByTestId("parallel-pane")).not.toBeInTheDocument(),
     );
+    expect(screen.queryByTestId("split-handle")).not.toBeInTheDocument();
     // the sidebar: of the book read again
     expect(screen.getByTestId("reader-sidebar-book")).toHaveTextContent(
       "Tiny Book",

@@ -43,6 +43,7 @@ import { PluginIcon } from "@/plugins/PluginIcon";
 import { ReaderPanelHost, ReaderPanelsButton } from "@/plugins/ReaderPanels";
 import { t, tk, useT } from "@/i18n";
 import BesideNote from "@/writer/BesideNote";
+import SplitHandle from "@/ui/SplitHandle";
 import { closeBookKeepNote } from "@/writer/beside";
 import { annotationsPathOf } from "../annotations/annotations";
 import { useActiveStore, useReaderStore, useSideStore } from "../readerStore";
@@ -551,6 +552,9 @@ export function Reader({
               </>
             ) : null}
           </div>
+          {parallelOpen && !mobile ? (
+            <SplitHandle containerRef={booksRef} />
+          ) : null}
           {besideNote && !mobile ? <BesideNote /> : <ParallelPane />}
           <BookPopups rootRef={booksRef} tools={tools} />
           {overlay?.(booksRef)}

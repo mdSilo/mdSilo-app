@@ -99,7 +99,7 @@ Try it on {{Alice's Adventures in Wonderland}}: it is in your Library, with one 
 
 ## Parallel reading
 
-*Parallel reading* in the top bar opens a second book in a pane on the right. Each book turns pages on its own, and both can be highlighted and noted. Use it to compare a translation with the original, or a text with its commentary. The same book cannot be opened in both panes.
+*Parallel reading* in the top bar opens a second book in a pane on the right. Each book turns pages on its own, and both can be highlighted and noted. Use it to compare a translation with the original, or a text with its commentary. The same book cannot be opened in both panes. Drag the line between the two panes to share the width (double-click it for half and half); the width is kept, for books and notes alike.
 
 **Write beside the book.** The *Write beside* tab of the same menu opens a note in that pane instead: one written lately, any note found by its title, or a new one. Then:
 
