@@ -1397,24 +1397,28 @@ export const StyledEditor = styled("div")<{
     display: block;
   }
 
+  /* KaTeX 0.19.1 (katex/dist/katex.css, without the @font-face rules: see src/styles/index.css of the app) */
   .katex {
-    font: normal 1.21em KaTeX_Main, Times New Roman, serif;
+    font: normal 1.21em KaTeX_Main, math, Times New Roman, serif;
     line-height: 1.2;
+    position: relative;
     text-indent: 0;
     text-rendering: auto;
   }
   .katex * {
     -ms-high-contrast-adjust: none !important;
+  }
+  .katex * {
     border-color: currentColor;
   }
   .katex .katex-version::after {
-    content: "0.15.3";
+    content: "0.19.1";
   }
   .katex .katex-mathml {
-    /* Accessibility hack to only show to screen readers
-          Found at: http://a11yproject.com/posts/how-to-hide-content/ */
+
     position: absolute;
-    clip: rect(1px, 1px, 1px, 1px);
+    -webkit-clip-path: inset(50%);
+            clip-path: inset(50%);
     padding: 0;
     border: 0;
     height: 1px;
@@ -1422,12 +1426,12 @@ export const StyledEditor = styled("div")<{
     overflow: hidden;
   }
   .katex .katex-html {
-    /* newline is an empty block at top level, between .base elements */
+
   }
-  .katex .katex-html > .newline {
+  .katex .katex-html > .katex-newline {
     display: block;
   }
-  .katex .base {
+  .katex .katex-base {
     position: relative;
     display: inline-block;
     white-space: nowrap;
@@ -1435,7 +1439,7 @@ export const StyledEditor = styled("div")<{
     width: -moz-min-content;
     width: min-content;
   }
-  .katex .strut {
+  .katex .katex-strut {
     display: inline-block;
   }
   .katex .textbf {
@@ -1487,6 +1491,11 @@ export const StyledEditor = styled("div")<{
   .katex .textfrak {
     font-family: KaTeX_Fraktur;
   }
+  .katex .mathboldfrak,
+  .katex .textboldfrak {
+    font-family: KaTeX_Fraktur;
+    font-weight: bold;
+  }
   .katex .mathtt {
     font-family: KaTeX_Typewriter;
   }
@@ -1503,6 +1512,7 @@ export const StyledEditor = styled("div")<{
     font-family: KaTeX_SansSerif;
     font-weight: bold;
   }
+  .katex .mathsfit,
   .katex .mathitsf,
   .katex .textitsf {
     font-family: KaTeX_SansSerif;
@@ -1547,17 +1557,12 @@ export const StyledEditor = styled("div")<{
     width: 2px;
     min-width: 2px;
   }
-  .katex .vbox {
+  .katex .katex-vbox {
     display: inline-flex;
     flex-direction: column;
     align-items: baseline;
   }
-  .katex .hbox {
-    display: inline-flex;
-    flex-direction: row;
-    width: 100%;
-  }
-  .katex .thinbox {
+  .katex .katex-thinbox {
     display: inline-flex;
     flex-direction: row;
     width: 0;
@@ -1575,15 +1580,19 @@ export const StyledEditor = styled("div")<{
     border-bottom-style: solid;
   }
   .katex .mfrac .frac-line,
-  .katex .overline .overline-line,
-  .katex .underline .underline-line,
-  .katex .hline,
-  .katex .hdashline,
-  .katex .rule {
+  .katex .katex-overline .overline-line,
+  .katex .katex-underline .underline-line,
+  .katex .katex-hline,
+  .katex .katex-hdashline,
+  .katex .katex-rule {
     min-height: 1px;
   }
   .katex .mspace {
     display: inline-block;
+  }
+  .katex .katex-smash {
+    display: inline;
+    line-height: 0;
   }
   .katex .llap,
   .katex .rlap,
@@ -1591,531 +1600,653 @@ export const StyledEditor = styled("div")<{
     width: 0;
     position: relative;
   }
-  .katex .llap > .inner,
-  .katex .rlap > .inner,
-  .katex .clap > .inner {
+  .katex .llap > .katex-inner,
+  .katex .rlap > .katex-inner,
+  .katex .clap > .katex-inner {
     position: absolute;
   }
-  .katex .llap > .fix,
-  .katex .rlap > .fix,
-  .katex .clap > .fix {
+  .katex .llap > .katex-fix,
+  .katex .rlap > .katex-fix,
+  .katex .clap > .katex-fix {
     display: inline-block;
   }
-  .katex .llap > .inner {
+  .katex .llap > .katex-inner {
     right: 0;
   }
-  .katex .rlap > .inner,
-  .katex .clap > .inner {
+  .katex .rlap > .katex-inner,
+  .katex .clap > .katex-inner {
     left: 0;
   }
-  .katex .clap > .inner > span {
+  .katex .clap > .katex-inner > span {
     margin-left: -50%;
     margin-right: 50%;
   }
-  .katex .rule {
+  .katex .katex-rule {
     display: inline-block;
     border: solid 0;
     position: relative;
   }
-  .katex .overline .overline-line,
-  .katex .underline .underline-line,
-  .katex .hline {
+  .katex .katex-overline .overline-line,
+  .katex .katex-underline .underline-line,
+  .katex .katex-hline {
     display: inline-block;
     width: 100%;
     border-bottom-style: solid;
   }
-  .katex .hdashline {
+  .katex .katex-hdashline {
     display: inline-block;
     width: 100%;
     border-bottom-style: dashed;
   }
-  .katex .sqrt > .root {
-    /* These values are taken from the definition of \r@@t,\mkern 5mu and \mkern -10mu. */
-    margin-left: 0.27777778em;
-    margin-right: -0.55555556em;
+  .katex .sqrt > .katex-root {
+
+    margin-left: 0.2777777778em;
+
+    margin-right: -0.5555555556em;
   }
-  .katex .sizing.reset-size1.size1,
+  .katex .katex-sizing.reset-size1.size1,
   .katex .fontsize-ensurer.reset-size1.size1 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size1.size2,
+  .katex .katex-sizing.reset-size1.size2,
   .katex .fontsize-ensurer.reset-size1.size2 {
+
     font-size: 1.2em;
   }
-  .katex .sizing.reset-size1.size3,
+  .katex .katex-sizing.reset-size1.size3,
   .katex .fontsize-ensurer.reset-size1.size3 {
+
     font-size: 1.4em;
   }
-  .katex .sizing.reset-size1.size4,
+  .katex .katex-sizing.reset-size1.size4,
   .katex .fontsize-ensurer.reset-size1.size4 {
+
     font-size: 1.6em;
   }
-  .katex .sizing.reset-size1.size5,
+  .katex .katex-sizing.reset-size1.size5,
   .katex .fontsize-ensurer.reset-size1.size5 {
+
     font-size: 1.8em;
   }
-  .katex .sizing.reset-size1.size6,
+  .katex .katex-sizing.reset-size1.size6,
   .katex .fontsize-ensurer.reset-size1.size6 {
+
     font-size: 2em;
   }
-  .katex .sizing.reset-size1.size7,
+  .katex .katex-sizing.reset-size1.size7,
   .katex .fontsize-ensurer.reset-size1.size7 {
+
     font-size: 2.4em;
   }
-  .katex .sizing.reset-size1.size8,
+  .katex .katex-sizing.reset-size1.size8,
   .katex .fontsize-ensurer.reset-size1.size8 {
+
     font-size: 2.88em;
   }
-  .katex .sizing.reset-size1.size9,
+  .katex .katex-sizing.reset-size1.size9,
   .katex .fontsize-ensurer.reset-size1.size9 {
+
     font-size: 3.456em;
   }
-  .katex .sizing.reset-size1.size10,
+  .katex .katex-sizing.reset-size1.size10,
   .katex .fontsize-ensurer.reset-size1.size10 {
+
     font-size: 4.148em;
   }
-  .katex .sizing.reset-size1.size11,
+  .katex .katex-sizing.reset-size1.size11,
   .katex .fontsize-ensurer.reset-size1.size11 {
+
     font-size: 4.976em;
   }
-  .katex .sizing.reset-size2.size1,
+  .katex .katex-sizing.reset-size2.size1,
   .katex .fontsize-ensurer.reset-size2.size1 {
-    font-size: 0.83333333em;
+
+    font-size: 0.8333333333em;
   }
-  .katex .sizing.reset-size2.size2,
+  .katex .katex-sizing.reset-size2.size2,
   .katex .fontsize-ensurer.reset-size2.size2 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size2.size3,
+  .katex .katex-sizing.reset-size2.size3,
   .katex .fontsize-ensurer.reset-size2.size3 {
-    font-size: 1.16666667em;
+
+    font-size: 1.1666666667em;
   }
-  .katex .sizing.reset-size2.size4,
+  .katex .katex-sizing.reset-size2.size4,
   .katex .fontsize-ensurer.reset-size2.size4 {
-    font-size: 1.33333333em;
+
+    font-size: 1.3333333333em;
   }
-  .katex .sizing.reset-size2.size5,
+  .katex .katex-sizing.reset-size2.size5,
   .katex .fontsize-ensurer.reset-size2.size5 {
+
     font-size: 1.5em;
   }
-  .katex .sizing.reset-size2.size6,
+  .katex .katex-sizing.reset-size2.size6,
   .katex .fontsize-ensurer.reset-size2.size6 {
-    font-size: 1.66666667em;
+
+    font-size: 1.6666666667em;
   }
-  .katex .sizing.reset-size2.size7,
+  .katex .katex-sizing.reset-size2.size7,
   .katex .fontsize-ensurer.reset-size2.size7 {
+
     font-size: 2em;
   }
-  .katex .sizing.reset-size2.size8,
+  .katex .katex-sizing.reset-size2.size8,
   .katex .fontsize-ensurer.reset-size2.size8 {
+
     font-size: 2.4em;
   }
-  .katex .sizing.reset-size2.size9,
+  .katex .katex-sizing.reset-size2.size9,
   .katex .fontsize-ensurer.reset-size2.size9 {
+
     font-size: 2.88em;
   }
-  .katex .sizing.reset-size2.size10,
+  .katex .katex-sizing.reset-size2.size10,
   .katex .fontsize-ensurer.reset-size2.size10 {
-    font-size: 3.45666667em;
+
+    font-size: 3.4566666667em;
   }
-  .katex .sizing.reset-size2.size11,
+  .katex .katex-sizing.reset-size2.size11,
   .katex .fontsize-ensurer.reset-size2.size11 {
-    font-size: 4.14666667em;
+
+    font-size: 4.1466666667em;
   }
-  .katex .sizing.reset-size3.size1,
+  .katex .katex-sizing.reset-size3.size1,
   .katex .fontsize-ensurer.reset-size3.size1 {
-    font-size: 0.71428571em;
+
+    font-size: 0.7142857143em;
   }
-  .katex .sizing.reset-size3.size2,
+  .katex .katex-sizing.reset-size3.size2,
   .katex .fontsize-ensurer.reset-size3.size2 {
-    font-size: 0.85714286em;
+
+    font-size: 0.8571428571em;
   }
-  .katex .sizing.reset-size3.size3,
+  .katex .katex-sizing.reset-size3.size3,
   .katex .fontsize-ensurer.reset-size3.size3 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size3.size4,
+  .katex .katex-sizing.reset-size3.size4,
   .katex .fontsize-ensurer.reset-size3.size4 {
-    font-size: 1.14285714em;
+
+    font-size: 1.1428571429em;
   }
-  .katex .sizing.reset-size3.size5,
+  .katex .katex-sizing.reset-size3.size5,
   .katex .fontsize-ensurer.reset-size3.size5 {
-    font-size: 1.28571429em;
+
+    font-size: 1.2857142857em;
   }
-  .katex .sizing.reset-size3.size6,
+  .katex .katex-sizing.reset-size3.size6,
   .katex .fontsize-ensurer.reset-size3.size6 {
-    font-size: 1.42857143em;
+
+    font-size: 1.4285714286em;
   }
-  .katex .sizing.reset-size3.size7,
+  .katex .katex-sizing.reset-size3.size7,
   .katex .fontsize-ensurer.reset-size3.size7 {
-    font-size: 1.71428571em;
+
+    font-size: 1.7142857143em;
   }
-  .katex .sizing.reset-size3.size8,
+  .katex .katex-sizing.reset-size3.size8,
   .katex .fontsize-ensurer.reset-size3.size8 {
-    font-size: 2.05714286em;
+
+    font-size: 2.0571428571em;
   }
-  .katex .sizing.reset-size3.size9,
+  .katex .katex-sizing.reset-size3.size9,
   .katex .fontsize-ensurer.reset-size3.size9 {
-    font-size: 2.46857143em;
+
+    font-size: 2.4685714286em;
   }
-  .katex .sizing.reset-size3.size10,
+  .katex .katex-sizing.reset-size3.size10,
   .katex .fontsize-ensurer.reset-size3.size10 {
-    font-size: 2.96285714em;
+
+    font-size: 2.9628571429em;
   }
-  .katex .sizing.reset-size3.size11,
+  .katex .katex-sizing.reset-size3.size11,
   .katex .fontsize-ensurer.reset-size3.size11 {
-    font-size: 3.55428571em;
+
+    font-size: 3.5542857143em;
   }
-  .katex .sizing.reset-size4.size1,
+  .katex .katex-sizing.reset-size4.size1,
   .katex .fontsize-ensurer.reset-size4.size1 {
+
     font-size: 0.625em;
   }
-  .katex .sizing.reset-size4.size2,
+  .katex .katex-sizing.reset-size4.size2,
   .katex .fontsize-ensurer.reset-size4.size2 {
+
     font-size: 0.75em;
   }
-  .katex .sizing.reset-size4.size3,
+  .katex .katex-sizing.reset-size4.size3,
   .katex .fontsize-ensurer.reset-size4.size3 {
+
     font-size: 0.875em;
   }
-  .katex .sizing.reset-size4.size4,
+  .katex .katex-sizing.reset-size4.size4,
   .katex .fontsize-ensurer.reset-size4.size4 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size4.size5,
+  .katex .katex-sizing.reset-size4.size5,
   .katex .fontsize-ensurer.reset-size4.size5 {
+
     font-size: 1.125em;
   }
-  .katex .sizing.reset-size4.size6,
+  .katex .katex-sizing.reset-size4.size6,
   .katex .fontsize-ensurer.reset-size4.size6 {
+
     font-size: 1.25em;
   }
-  .katex .sizing.reset-size4.size7,
+  .katex .katex-sizing.reset-size4.size7,
   .katex .fontsize-ensurer.reset-size4.size7 {
+
     font-size: 1.5em;
   }
-  .katex .sizing.reset-size4.size8,
+  .katex .katex-sizing.reset-size4.size8,
   .katex .fontsize-ensurer.reset-size4.size8 {
+
     font-size: 1.8em;
   }
-  .katex .sizing.reset-size4.size9,
+  .katex .katex-sizing.reset-size4.size9,
   .katex .fontsize-ensurer.reset-size4.size9 {
+
     font-size: 2.16em;
   }
-  .katex .sizing.reset-size4.size10,
+  .katex .katex-sizing.reset-size4.size10,
   .katex .fontsize-ensurer.reset-size4.size10 {
+
     font-size: 2.5925em;
   }
-  .katex .sizing.reset-size4.size11,
+  .katex .katex-sizing.reset-size4.size11,
   .katex .fontsize-ensurer.reset-size4.size11 {
+
     font-size: 3.11em;
   }
-  .katex .sizing.reset-size5.size1,
+  .katex .katex-sizing.reset-size5.size1,
   .katex .fontsize-ensurer.reset-size5.size1 {
-    font-size: 0.55555556em;
+
+    font-size: 0.5555555556em;
   }
-  .katex .sizing.reset-size5.size2,
+  .katex .katex-sizing.reset-size5.size2,
   .katex .fontsize-ensurer.reset-size5.size2 {
-    font-size: 0.66666667em;
+
+    font-size: 0.6666666667em;
   }
-  .katex .sizing.reset-size5.size3,
+  .katex .katex-sizing.reset-size5.size3,
   .katex .fontsize-ensurer.reset-size5.size3 {
-    font-size: 0.77777778em;
+
+    font-size: 0.7777777778em;
   }
-  .katex .sizing.reset-size5.size4,
+  .katex .katex-sizing.reset-size5.size4,
   .katex .fontsize-ensurer.reset-size5.size4 {
-    font-size: 0.88888889em;
+
+    font-size: 0.8888888889em;
   }
-  .katex .sizing.reset-size5.size5,
+  .katex .katex-sizing.reset-size5.size5,
   .katex .fontsize-ensurer.reset-size5.size5 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size5.size6,
+  .katex .katex-sizing.reset-size5.size6,
   .katex .fontsize-ensurer.reset-size5.size6 {
-    font-size: 1.11111111em;
+
+    font-size: 1.1111111111em;
   }
-  .katex .sizing.reset-size5.size7,
+  .katex .katex-sizing.reset-size5.size7,
   .katex .fontsize-ensurer.reset-size5.size7 {
-    font-size: 1.33333333em;
+
+    font-size: 1.3333333333em;
   }
-  .katex .sizing.reset-size5.size8,
+  .katex .katex-sizing.reset-size5.size8,
   .katex .fontsize-ensurer.reset-size5.size8 {
+
     font-size: 1.6em;
   }
-  .katex .sizing.reset-size5.size9,
+  .katex .katex-sizing.reset-size5.size9,
   .katex .fontsize-ensurer.reset-size5.size9 {
+
     font-size: 1.92em;
   }
-  .katex .sizing.reset-size5.size10,
+  .katex .katex-sizing.reset-size5.size10,
   .katex .fontsize-ensurer.reset-size5.size10 {
-    font-size: 2.30444444em;
+
+    font-size: 2.3044444444em;
   }
-  .katex .sizing.reset-size5.size11,
+  .katex .katex-sizing.reset-size5.size11,
   .katex .fontsize-ensurer.reset-size5.size11 {
-    font-size: 2.76444444em;
+
+    font-size: 2.7644444444em;
   }
-  .katex .sizing.reset-size6.size1,
+  .katex .katex-sizing.reset-size6.size1,
   .katex .fontsize-ensurer.reset-size6.size1 {
+
     font-size: 0.5em;
   }
-  .katex .sizing.reset-size6.size2,
+  .katex .katex-sizing.reset-size6.size2,
   .katex .fontsize-ensurer.reset-size6.size2 {
+
     font-size: 0.6em;
   }
-  .katex .sizing.reset-size6.size3,
+  .katex .katex-sizing.reset-size6.size3,
   .katex .fontsize-ensurer.reset-size6.size3 {
+
     font-size: 0.7em;
   }
-  .katex .sizing.reset-size6.size4,
+  .katex .katex-sizing.reset-size6.size4,
   .katex .fontsize-ensurer.reset-size6.size4 {
+
     font-size: 0.8em;
   }
-  .katex .sizing.reset-size6.size5,
+  .katex .katex-sizing.reset-size6.size5,
   .katex .fontsize-ensurer.reset-size6.size5 {
+
     font-size: 0.9em;
   }
-  .katex .sizing.reset-size6.size6,
+  .katex .katex-sizing.reset-size6.size6,
   .katex .fontsize-ensurer.reset-size6.size6 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size6.size7,
+  .katex .katex-sizing.reset-size6.size7,
   .katex .fontsize-ensurer.reset-size6.size7 {
+
     font-size: 1.2em;
   }
-  .katex .sizing.reset-size6.size8,
+  .katex .katex-sizing.reset-size6.size8,
   .katex .fontsize-ensurer.reset-size6.size8 {
+
     font-size: 1.44em;
   }
-  .katex .sizing.reset-size6.size9,
+  .katex .katex-sizing.reset-size6.size9,
   .katex .fontsize-ensurer.reset-size6.size9 {
+
     font-size: 1.728em;
   }
-  .katex .sizing.reset-size6.size10,
+  .katex .katex-sizing.reset-size6.size10,
   .katex .fontsize-ensurer.reset-size6.size10 {
+
     font-size: 2.074em;
   }
-  .katex .sizing.reset-size6.size11,
+  .katex .katex-sizing.reset-size6.size11,
   .katex .fontsize-ensurer.reset-size6.size11 {
+
     font-size: 2.488em;
   }
-  .katex .sizing.reset-size7.size1,
+  .katex .katex-sizing.reset-size7.size1,
   .katex .fontsize-ensurer.reset-size7.size1 {
-    font-size: 0.41666667em;
+
+    font-size: 0.4166666667em;
   }
-  .katex .sizing.reset-size7.size2,
+  .katex .katex-sizing.reset-size7.size2,
   .katex .fontsize-ensurer.reset-size7.size2 {
+
     font-size: 0.5em;
   }
-  .katex .sizing.reset-size7.size3,
+  .katex .katex-sizing.reset-size7.size3,
   .katex .fontsize-ensurer.reset-size7.size3 {
-    font-size: 0.58333333em;
+
+    font-size: 0.5833333333em;
   }
-  .katex .sizing.reset-size7.size4,
+  .katex .katex-sizing.reset-size7.size4,
   .katex .fontsize-ensurer.reset-size7.size4 {
-    font-size: 0.66666667em;
+
+    font-size: 0.6666666667em;
   }
-  .katex .sizing.reset-size7.size5,
+  .katex .katex-sizing.reset-size7.size5,
   .katex .fontsize-ensurer.reset-size7.size5 {
+
     font-size: 0.75em;
   }
-  .katex .sizing.reset-size7.size6,
+  .katex .katex-sizing.reset-size7.size6,
   .katex .fontsize-ensurer.reset-size7.size6 {
-    font-size: 0.83333333em;
+
+    font-size: 0.8333333333em;
   }
-  .katex .sizing.reset-size7.size7,
+  .katex .katex-sizing.reset-size7.size7,
   .katex .fontsize-ensurer.reset-size7.size7 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size7.size8,
+  .katex .katex-sizing.reset-size7.size8,
   .katex .fontsize-ensurer.reset-size7.size8 {
+
     font-size: 1.2em;
   }
-  .katex .sizing.reset-size7.size9,
+  .katex .katex-sizing.reset-size7.size9,
   .katex .fontsize-ensurer.reset-size7.size9 {
+
     font-size: 1.44em;
   }
-  .katex .sizing.reset-size7.size10,
+  .katex .katex-sizing.reset-size7.size10,
   .katex .fontsize-ensurer.reset-size7.size10 {
-    font-size: 1.72833333em;
+
+    font-size: 1.7283333333em;
   }
-  .katex .sizing.reset-size7.size11,
+  .katex .katex-sizing.reset-size7.size11,
   .katex .fontsize-ensurer.reset-size7.size11 {
-    font-size: 2.07333333em;
+
+    font-size: 2.0733333333em;
   }
-  .katex .sizing.reset-size8.size1,
+  .katex .katex-sizing.reset-size8.size1,
   .katex .fontsize-ensurer.reset-size8.size1 {
-    font-size: 0.34722222em;
+
+    font-size: 0.3472222222em;
   }
-  .katex .sizing.reset-size8.size2,
+  .katex .katex-sizing.reset-size8.size2,
   .katex .fontsize-ensurer.reset-size8.size2 {
-    font-size: 0.41666667em;
+
+    font-size: 0.4166666667em;
   }
-  .katex .sizing.reset-size8.size3,
+  .katex .katex-sizing.reset-size8.size3,
   .katex .fontsize-ensurer.reset-size8.size3 {
-    font-size: 0.48611111em;
+
+    font-size: 0.4861111111em;
   }
-  .katex .sizing.reset-size8.size4,
+  .katex .katex-sizing.reset-size8.size4,
   .katex .fontsize-ensurer.reset-size8.size4 {
-    font-size: 0.55555556em;
+
+    font-size: 0.5555555556em;
   }
-  .katex .sizing.reset-size8.size5,
+  .katex .katex-sizing.reset-size8.size5,
   .katex .fontsize-ensurer.reset-size8.size5 {
+
     font-size: 0.625em;
   }
-  .katex .sizing.reset-size8.size6,
+  .katex .katex-sizing.reset-size8.size6,
   .katex .fontsize-ensurer.reset-size8.size6 {
-    font-size: 0.69444444em;
+
+    font-size: 0.6944444444em;
   }
-  .katex .sizing.reset-size8.size7,
+  .katex .katex-sizing.reset-size8.size7,
   .katex .fontsize-ensurer.reset-size8.size7 {
-    font-size: 0.83333333em;
+
+    font-size: 0.8333333333em;
   }
-  .katex .sizing.reset-size8.size8,
+  .katex .katex-sizing.reset-size8.size8,
   .katex .fontsize-ensurer.reset-size8.size8 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size8.size9,
+  .katex .katex-sizing.reset-size8.size9,
   .katex .fontsize-ensurer.reset-size8.size9 {
+
     font-size: 1.2em;
   }
-  .katex .sizing.reset-size8.size10,
+  .katex .katex-sizing.reset-size8.size10,
   .katex .fontsize-ensurer.reset-size8.size10 {
-    font-size: 1.44027778em;
+
+    font-size: 1.4402777778em;
   }
-  .katex .sizing.reset-size8.size11,
+  .katex .katex-sizing.reset-size8.size11,
   .katex .fontsize-ensurer.reset-size8.size11 {
-    font-size: 1.72777778em;
+
+    font-size: 1.7277777778em;
   }
-  .katex .sizing.reset-size9.size1,
+  .katex .katex-sizing.reset-size9.size1,
   .katex .fontsize-ensurer.reset-size9.size1 {
-    font-size: 0.28935185em;
+
+    font-size: 0.2893518519em;
   }
-  .katex .sizing.reset-size9.size2,
+  .katex .katex-sizing.reset-size9.size2,
   .katex .fontsize-ensurer.reset-size9.size2 {
-    font-size: 0.34722222em;
+
+    font-size: 0.3472222222em;
   }
-  .katex .sizing.reset-size9.size3,
+  .katex .katex-sizing.reset-size9.size3,
   .katex .fontsize-ensurer.reset-size9.size3 {
-    font-size: 0.40509259em;
+
+    font-size: 0.4050925926em;
   }
-  .katex .sizing.reset-size9.size4,
+  .katex .katex-sizing.reset-size9.size4,
   .katex .fontsize-ensurer.reset-size9.size4 {
-    font-size: 0.46296296em;
+
+    font-size: 0.462962963em;
   }
-  .katex .sizing.reset-size9.size5,
+  .katex .katex-sizing.reset-size9.size5,
   .katex .fontsize-ensurer.reset-size9.size5 {
-    font-size: 0.52083333em;
+
+    font-size: 0.5208333333em;
   }
-  .katex .sizing.reset-size9.size6,
+  .katex .katex-sizing.reset-size9.size6,
   .katex .fontsize-ensurer.reset-size9.size6 {
-    font-size: 0.5787037em;
+
+    font-size: 0.5787037037em;
   }
-  .katex .sizing.reset-size9.size7,
+  .katex .katex-sizing.reset-size9.size7,
   .katex .fontsize-ensurer.reset-size9.size7 {
-    font-size: 0.69444444em;
+
+    font-size: 0.6944444444em;
   }
-  .katex .sizing.reset-size9.size8,
+  .katex .katex-sizing.reset-size9.size8,
   .katex .fontsize-ensurer.reset-size9.size8 {
-    font-size: 0.83333333em;
+
+    font-size: 0.8333333333em;
   }
-  .katex .sizing.reset-size9.size9,
+  .katex .katex-sizing.reset-size9.size9,
   .katex .fontsize-ensurer.reset-size9.size9 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size9.size10,
+  .katex .katex-sizing.reset-size9.size10,
   .katex .fontsize-ensurer.reset-size9.size10 {
-    font-size: 1.20023148em;
+
+    font-size: 1.2002314815em;
   }
-  .katex .sizing.reset-size9.size11,
+  .katex .katex-sizing.reset-size9.size11,
   .katex .fontsize-ensurer.reset-size9.size11 {
-    font-size: 1.43981481em;
+
+    font-size: 1.4398148148em;
   }
-  .katex .sizing.reset-size10.size1,
+  .katex .katex-sizing.reset-size10.size1,
   .katex .fontsize-ensurer.reset-size10.size1 {
-    font-size: 0.24108004em;
+
+    font-size: 0.2410800386em;
   }
-  .katex .sizing.reset-size10.size2,
+  .katex .katex-sizing.reset-size10.size2,
   .katex .fontsize-ensurer.reset-size10.size2 {
-    font-size: 0.28929605em;
+
+    font-size: 0.2892960463em;
   }
-  .katex .sizing.reset-size10.size3,
+  .katex .katex-sizing.reset-size10.size3,
   .katex .fontsize-ensurer.reset-size10.size3 {
-    font-size: 0.33751205em;
+
+    font-size: 0.337512054em;
   }
-  .katex .sizing.reset-size10.size4,
+  .katex .katex-sizing.reset-size10.size4,
   .katex .fontsize-ensurer.reset-size10.size4 {
-    font-size: 0.38572806em;
+
+    font-size: 0.3857280617em;
   }
-  .katex .sizing.reset-size10.size5,
+  .katex .katex-sizing.reset-size10.size5,
   .katex .fontsize-ensurer.reset-size10.size5 {
-    font-size: 0.43394407em;
+
+    font-size: 0.4339440694em;
   }
-  .katex .sizing.reset-size10.size6,
+  .katex .katex-sizing.reset-size10.size6,
   .katex .fontsize-ensurer.reset-size10.size6 {
-    font-size: 0.48216008em;
+
+    font-size: 0.4821600771em;
   }
-  .katex .sizing.reset-size10.size7,
+  .katex .katex-sizing.reset-size10.size7,
   .katex .fontsize-ensurer.reset-size10.size7 {
-    font-size: 0.57859209em;
+
+    font-size: 0.5785920926em;
   }
-  .katex .sizing.reset-size10.size8,
+  .katex .katex-sizing.reset-size10.size8,
   .katex .fontsize-ensurer.reset-size10.size8 {
-    font-size: 0.69431051em;
+
+    font-size: 0.6943105111em;
   }
-  .katex .sizing.reset-size10.size9,
+  .katex .katex-sizing.reset-size10.size9,
   .katex .fontsize-ensurer.reset-size10.size9 {
-    font-size: 0.83317261em;
+
+    font-size: 0.8331726133em;
   }
-  .katex .sizing.reset-size10.size10,
+  .katex .katex-sizing.reset-size10.size10,
   .katex .fontsize-ensurer.reset-size10.size10 {
+
     font-size: 1em;
   }
-  .katex .sizing.reset-size10.size11,
+  .katex .katex-sizing.reset-size10.size11,
   .katex .fontsize-ensurer.reset-size10.size11 {
-    font-size: 1.19961427em;
+
+    font-size: 1.1996142719em;
   }
-  .katex .sizing.reset-size11.size1,
+  .katex .katex-sizing.reset-size11.size1,
   .katex .fontsize-ensurer.reset-size11.size1 {
-    font-size: 0.20096463em;
+
+    font-size: 0.2009646302em;
   }
-  .katex .sizing.reset-size11.size2,
+  .katex .katex-sizing.reset-size11.size2,
   .katex .fontsize-ensurer.reset-size11.size2 {
-    font-size: 0.24115756em;
+
+    font-size: 0.2411575563em;
   }
-  .katex .sizing.reset-size11.size3,
+  .katex .katex-sizing.reset-size11.size3,
   .katex .fontsize-ensurer.reset-size11.size3 {
-    font-size: 0.28135048em;
+
+    font-size: 0.2813504823em;
   }
-  .katex .sizing.reset-size11.size4,
+  .katex .katex-sizing.reset-size11.size4,
   .katex .fontsize-ensurer.reset-size11.size4 {
-    font-size: 0.32154341em;
+
+    font-size: 0.3215434084em;
   }
-  .katex .sizing.reset-size11.size5,
+  .katex .katex-sizing.reset-size11.size5,
   .katex .fontsize-ensurer.reset-size11.size5 {
-    font-size: 0.36173633em;
+
+    font-size: 0.3617363344em;
   }
-  .katex .sizing.reset-size11.size6,
+  .katex .katex-sizing.reset-size11.size6,
   .katex .fontsize-ensurer.reset-size11.size6 {
-    font-size: 0.40192926em;
+
+    font-size: 0.4019292605em;
   }
-  .katex .sizing.reset-size11.size7,
+  .katex .katex-sizing.reset-size11.size7,
   .katex .fontsize-ensurer.reset-size11.size7 {
-    font-size: 0.48231511em;
+
+    font-size: 0.4823151125em;
   }
-  .katex .sizing.reset-size11.size8,
+  .katex .katex-sizing.reset-size11.size8,
   .katex .fontsize-ensurer.reset-size11.size8 {
-    font-size: 0.57877814em;
+
+    font-size: 0.578778135em;
   }
-  .katex .sizing.reset-size11.size9,
+  .katex .katex-sizing.reset-size11.size9,
   .katex .fontsize-ensurer.reset-size11.size9 {
-    font-size: 0.69453376em;
+
+    font-size: 0.6945337621em;
   }
-  .katex .sizing.reset-size11.size10,
+  .katex .katex-sizing.reset-size11.size10,
   .katex .fontsize-ensurer.reset-size11.size10 {
-    font-size: 0.83360129em;
+
+    font-size: 0.8336012862em;
   }
-  .katex .sizing.reset-size11.size11,
+  .katex .katex-sizing.reset-size11.size11,
   .katex .fontsize-ensurer.reset-size11.size11 {
+
     font-size: 1em;
   }
   .katex .delimsizing.size1 {
@@ -2155,16 +2286,16 @@ export const StyledEditor = styled("div")<{
   .katex .op-limits > .vlist-t {
     text-align: center;
   }
-  .katex .accent > .vlist-t {
+  .katex .katex-accent > .vlist-t {
     text-align: center;
   }
-  .katex .accent .accent-body {
+  .katex .katex-accent .accent-body {
     position: relative;
   }
-  .katex .accent .accent-body:not(.accent-full) {
+  .katex .katex-accent .accent-body:not(.accent-full) {
     width: 0;
   }
-  .katex .overlay {
+  .katex .katex-overlay {
     display: block;
   }
   .katex .mtable .vertical-separator {
@@ -2193,6 +2324,11 @@ export const StyledEditor = styled("div")<{
     height: inherit;
     fill: currentColor;
     stroke: currentColor;
+  }
+  .katex svg path {
+    stroke: none;
+  }
+  .katex svg {
     fill-rule: nonzero;
     fill-opacity: 1;
     stroke-width: 1;
@@ -2203,9 +2339,6 @@ export const StyledEditor = styled("div")<{
     stroke-dashoffset: 0;
     stroke-opacity: 1;
   }
-  .katex svg path {
-    stroke: none;
-  }
   .katex img {
     border-style: none;
     min-width: 0;
@@ -2213,14 +2346,13 @@ export const StyledEditor = styled("div")<{
     max-width: none;
     max-height: none;
   }
-  .katex .stretchy {
+  .katex .katex-stretchy {
     width: 100%;
     display: block;
     position: relative;
     overflow: hidden;
   }
-  .katex .stretchy::before,
-  .katex .stretchy::after {
+  .katex .katex-stretchy::before, .katex .katex-stretchy::after {
     content: "";
   }
   .katex .hide-tail {
@@ -2284,7 +2416,7 @@ export const StyledEditor = styled("div")<{
     margin-left: -0.2em;
     margin-right: -0.2em;
   }
-  .katex .sout {
+  .katex .katex-sout {
     border-bottom-style: solid;
     border-bottom-width: 0.08em;
   }
@@ -2296,6 +2428,10 @@ export const StyledEditor = styled("div")<{
   }
   .katex .anglpad {
     padding: 0 0.03889em;
+  }
+  .katex .reflectbox {
+    display: inline-block;
+    transform: scaleX(-1);
   }
   .katex .eqn-num::before {
     counter-increment: katexEqnNo;
@@ -2324,6 +2460,7 @@ export const StyledEditor = styled("div")<{
     left: calc(50% + 0.3em);
     text-align: right;
   }
+
   .katex-display {
     display: block;
     margin: 1em 0;
@@ -2338,14 +2475,16 @@ export const StyledEditor = styled("div")<{
     display: block;
     position: relative;
   }
-  .katex-display > .katex > .katex-html > .tag {
+  .katex-display > .katex > .katex-html > .katex-tag {
     position: absolute;
     right: 0;
   }
-  .katex-display.leqno > .katex > .katex-html > .tag {
+
+  .katex-display.leqno > .katex > .katex-html > .katex-tag {
     left: 0;
     right: auto;
   }
+
   .katex-display.fleqn > .katex {
     text-align: left;
     padding-left: 2em;

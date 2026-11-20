@@ -103,7 +103,7 @@ import SmartText from "./plugins/SmartText";
 import QuickAction from "./plugins/QuickAction";
 import TrailingNode from "./plugins/TrailingNode";
 import PasteHandler from "./plugins/PasteHandler";
-import type { CodeRenderer } from "./plugins/Diagram";
+import { DIAGRAM_DARK, type CodeRenderer } from "./plugins/Diagram";
 import type { SelectionAction } from "./components/SelectionToolbar";
 import { resolveImageSrc } from "./lib/resolveImageSrc";
 import { firstStrongDir } from "./lib/textDirection";
@@ -387,6 +387,13 @@ class MsEditor extends React.PureComponent<Props, State> {
 
     if (prevProps.dir !== this.props.dir) {
       this.calculateDir();
+    }
+
+    // the diagrams, drawn in the colors of the theme, drawn again
+    if (Boolean(prevProps.dark) !== Boolean(this.props.dark)) {
+      this.view.dispatch(
+        this.view.state.tr.setMeta(DIAGRAM_DARK, Boolean(this.props.dark))
+      );
     }
 
     if (

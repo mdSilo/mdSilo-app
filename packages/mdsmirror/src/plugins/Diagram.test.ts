@@ -1,7 +1,7 @@
 import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { parser } from "../server";
-import Diagram from "./Diagram";
+import Diagram, { DIAGRAM_DARK } from "./Diagram";
 
 const render = vi.fn(async (id: string) => ({ svg: `<svg id="${id}"></svg>` }));
 vi.mock("mermaid", () => ({
@@ -138,6 +138,28 @@ describe("Diagram drawn by a renderer given", () => {
     expect(renderer).toHaveBeenCalledWith("A -> B", true);
     const box = view.dom.querySelector(".rendered-diagram-wrapper");
     expect(box?.querySelector("svg")?.getAttribute("data-code")).toBe("A -> B");
+    view.destroy();
+  });
+
+  test("draws again in the colors of a theme changed", async () => {
+    const renderer = vi.fn(
+      async (_: string, dark: boolean) => `<svg data-dark="${dark}"></svg>`
+    );
+    const view = mount(renderer);
+    await settle();
+    expect(renderer).toHaveBeenLastCalledWith("A -> B", true);
+
+    view.dispatch(view.state.tr.setMeta(DIAGRAM_DARK, false));
+    await settle();
+    expect(renderer).toHaveBeenLastCalledWith("A -> B", false);
+    const svgs = view.dom.querySelectorAll(".rendered-diagram-wrapper svg");
+    expect(svgs).toHaveLength(1);
+    expect(svgs[0].getAttribute("data-dark")).toBe("false");
+
+    // the same theme told again: nothing drawn
+    view.dispatch(view.state.tr.setMeta(DIAGRAM_DARK, false));
+    await settle();
+    expect(renderer).toHaveBeenCalledTimes(2);
     view.destroy();
   });
 

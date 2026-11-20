@@ -14,6 +14,12 @@ type SaveDiagram = (svg: string, ty: string) => void;
 /** Draws a code block of a language not drawn here, as SVG or HTML, safe to insert */
 export type CodeRenderer = (code: string, dark: boolean) => Promise<string>;
 
+/**
+ * The meta of a transaction telling the diagrams the theme is now dark
+ * (true) or light (false): they are drawn again in its colors.
+ */
+export const DIAGRAM_DARK = "diagramDark";
+
 // the libraries are loaded on the first diagram of their kind, once
 let mermaidModule: Promise<typeof import("mermaid")> | undefined;
 let echartsModule: Promise<typeof import("echarts")> | undefined;
@@ -83,8 +89,9 @@ function getNewState({
       {
         diagramId,
         // what the widget is drawn from: keep the drawn diagram while it is
-        // the same, instead of drawing all of them again on every edit
-        key: `${diagramId}:${visible}:${block.node.textContent}`,
+        // the same, instead of drawing all of them again on every edit; drawn
+        // again in the colors of a theme of the other kind
+        key: `${diagramId}:${visible}:${dark ? "dark" : "light"}:${block.node.textContent}`,
         // kept with its code block: a block inserted right after it, like the
         // trailing paragraph at the end of the note, goes below the diagram
         side: -1,
@@ -440,6 +447,8 @@ export default function Diagram({
   render,
 }: PluginProps) {
   let diagramShown = false;
+  // the theme changes after the plugin is made: told by a transaction
+  let isDark = dark;
 
   return new Plugin<PluginState>({
     key: new PluginKey(pluginKey),
@@ -470,12 +479,23 @@ export default function Diagram({
             !pluginState.diagramVisibility[diagramMeta.toggleDiagram];
         }
 
-        if (!diagramShown || codeBlockChanged || diagramToggled || ySyncEdit) {
+        const darkMeta = transaction.getMeta(DIAGRAM_DARK);
+        const themeChanged =
+          typeof darkMeta === "boolean" && darkMeta !== isDark;
+        if (themeChanged) isDark = darkMeta;
+
+        if (
+          !diagramShown ||
+          codeBlockChanged ||
+          diagramToggled ||
+          ySyncEdit ||
+          themeChanged
+        ) {
           diagramShown = true;
           return getNewState({
             doc: transaction.doc,
             name,
-            dark,
+            dark: isDark,
             pluginState,
             pluginKey,
             onSave,
