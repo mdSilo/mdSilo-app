@@ -1,4 +1,5 @@
 import { store } from "@/state/store";
+import type { ViewAction } from "@/state/viewReducer";
 import { openFilePath } from "@/workspace/open";
 import { flushSave } from "@/workspace/pendingSaves";
 import { onRenamed } from "@/workspace/renames";
@@ -46,6 +47,21 @@ export async function openBeside(noteId: string): Promise<boolean> {
     return { currentNote, besideNoteId: note.id, notePane: "side" as const };
   });
   return true;
+}
+
+/**
+ * The book read closed, the note beside it shown alone in its place.
+ * @param dispatch of the view shown (the book), not of the note beside
+ */
+export async function closeBookKeepNote(
+  dispatch: (action: ViewAction) => void,
+) {
+  const { besideNoteId } = store.getState();
+  if (!besideNoteId) return;
+  await flushSave(besideNoteId);
+  await openFilePath(besideNoteId, true);
+  // shown in the view: the pane beside closes then (see MdView)
+  dispatch({ view: "md", params: { noteId: besideNoteId } });
 }
 
 /** Close the note beside, if any. */

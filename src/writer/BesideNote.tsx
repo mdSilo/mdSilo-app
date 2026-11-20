@@ -7,7 +7,7 @@ import type { ViewAction } from "@/state/viewReducer";
 import { useStore } from "@/state/store";
 import { useNoteReloads } from "@/workspace/noteReloads";
 import Note from "./Note";
-import { openBeside, setNotePane } from "./beside";
+import { closeBookKeepNote, openBeside, setNotePane } from "./beside";
 
 /**
  * The note beside the note shown or the book read (parallel writing). Its
@@ -18,7 +18,13 @@ export default function BesideNote() {
   const onLeft = useStore((s) => s.besideOnLeft);
   // mounted again when the note changed on disk, e.g. by a sync
   const reloads = useNoteReloads((s) => s.seq);
-  const { dispatch } = useCurrentViewContext();
+  const { state, dispatch } = useCurrentViewContext();
+  // beside a book: it can be closed from here too, the reader's bar is hidden
+  const inBook = state.view === "book";
+  const closeBook = useMemo(
+    () => (inBook ? () => void closeBookKeepNote(dispatch) : undefined),
+    [inBook, dispatch],
+  );
   const inner = useMemo(
     () => ({
       state: { view: "md", params: { noteId } },
@@ -38,7 +44,12 @@ export default function BesideNote() {
       onFocusCapture={() => setNotePane("side")}
     >
       <ProvideInnerView value={inner}>
-        <Note key={`${noteId}#${reloads}`} noteId={noteId} beside />
+        <Note
+          key={`${noteId}#${reloads}`}
+          noteId={noteId}
+          beside
+          closeBook={closeBook}
+        />
       </ProvideInnerView>
     </div>
   );

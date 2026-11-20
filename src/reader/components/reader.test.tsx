@@ -23,6 +23,7 @@ import { writeFile } from "@/host/web/fs";
 import { renamePath } from "@/workspace/renamePath";
 import { openFilePath } from "@/workspace/open";
 import { editorOf } from "@/writer/editors";
+import { openBeside } from "@/writer/beside";
 import { followRename } from "@/workspace/renames";
 import { issueStore, resetIssueStore } from "@/issue/issueStore";
 import { useWebFs, waitForView } from "../../testUtils";
@@ -799,6 +800,29 @@ describe("parallel reading", () => {
       expect(screen.getByTestId("parallel-pane")).toBeInTheDocument(),
     );
     expect(store.getState().besideNoteId).toBe("");
+  });
+
+  test("the book closed, the note beside it shown alone", async () => {
+    const NOTE = `${WS}/writing/Thoughts.md`;
+    await writeFile(NOTE, "my thoughts\n");
+    await openFilePath(NOTE, false);
+    renderMain();
+    await go({ view: "book", path: BOOK });
+    await waitFor(() =>
+      expect(screen.getByTestId("foliate-viewer")).toBeInTheDocument(),
+    );
+    await act(() => openBeside(NOTE));
+    const pane = await screen.findByTestId("beside-note");
+    // from the note: the bar of the reader shows only on hover
+    fireEvent.click(
+      within(pane).getByLabelText("Close the book, keep writing"),
+    );
+    await waitFor(() => expect(viewState().view).toBe("md"));
+    expect(viewState().params.noteId).toBe(NOTE);
+    await waitFor(() => expect(useReaderStore.getState().status).toBe("idle"));
+    expect(store.getState().besideNoteId).toBe("");
+    expect(screen.queryByTestId("beside-note")).not.toBeInTheDocument();
+    expect(await screen.findByText("my thoughts")).toBeInTheDocument();
   });
 
   test("closed with the book read", async () => {

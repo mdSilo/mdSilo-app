@@ -18,6 +18,7 @@ import {
   TbLanguage,
   TbLayoutSidebar,
   TbSearch,
+  TbBookOff,
   TbColumns2,
   TbTypography,
   TbVocabulary,
@@ -42,6 +43,7 @@ import { PluginIcon } from "@/plugins/PluginIcon";
 import { ReaderPanelHost, ReaderPanelsButton } from "@/plugins/ReaderPanels";
 import { t, tk, useT } from "@/i18n";
 import BesideNote from "@/writer/BesideNote";
+import { closeBookKeepNote } from "@/writer/beside";
 import { annotationsPathOf } from "../annotations/annotations";
 import { useActiveStore, useReaderStore, useSideStore } from "../readerStore";
 import { bookmarkAt, toggleBookmark } from "../actions";
@@ -492,6 +494,15 @@ export function Reader({
                     }
                   >
                     <TbColumns2 size={18} />
+                  </IconButton>
+                ) : null}
+                {/* a note beside: the book closed, the note shown alone */}
+                {besideNote && !mobile ? (
+                  <IconButton
+                    title={t("Close the book, keep writing")}
+                    onClick={() => void closeBookKeepNote(dispatch)}
+                  >
+                    <TbBookOff size={18} />
                   </IconButton>
                 ) : null}
                 <IconButton

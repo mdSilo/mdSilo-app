@@ -94,11 +94,13 @@ type Props = {
   className?: string;
   /** the note beside the note or book shown, see beside.ts */
   beside?: boolean;
+  /** beside a book: close the book, this note shown alone */
+  closeBook?: () => void;
 };
 
 function Note(props: Props) {
   const t = useT();
-  const { noteId, className, beside = false } = props;
+  const { noteId, className, beside = false, closeBook } = props;
   // console.log("loading",noteId)
   const [showBacklink, setShowBacklink] = useState(false);
   const [headings, setHeadings] = useState<Heading[]>([]);
@@ -189,8 +191,8 @@ function Note(props: Props) {
   const state = currentView.state;
   const dispatch = currentView.dispatch;
   const currentNoteValue = useMemo(
-    () => ({ ty: "note", id: noteId, state, dispatch, beside }),
-    [dispatch, noteId, state, beside],
+    () => ({ ty: "note", id: noteId, state, dispatch, beside, closeBook }),
+    [dispatch, noteId, state, beside, closeBook],
   );
 
   // note action

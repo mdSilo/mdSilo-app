@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import {
   TbArrowsLeftRight as IconSwap,
+  TbBookOff as IconBookOff,
   TbCheck as IconCheck,
   TbColumns2 as IconColumns,
   TbDots as IconDots,
@@ -170,6 +171,17 @@ export default function NoteHeader({
       <div className="flex items-center">
         {beside ? (
           <>
+            {currentNote.closeBook ? (
+              <Tooltip content={t("Close the book, keep writing")}>
+                <button
+                  aria-label={t("Close the book, keep writing")}
+                  className={`flex items-center justify-center w-8 h-8 ${buttonClassName}`}
+                  onClick={currentNote.closeBook}
+                >
+                  <IconBookOff size={18} className={iconClass} />
+                </button>
+              </Tooltip>
+            ) : null}
             <Tooltip content={t("Swap sides")}>
               <button
                 aria-label={t("Swap sides")}
