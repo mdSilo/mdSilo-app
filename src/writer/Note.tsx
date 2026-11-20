@@ -518,6 +518,9 @@ function Note(props: Props) {
                     left: e.clientX,
                     top: e.clientY,
                   });
+                  // the drop not seen by the editor: its drop cursor taken
+                  // away as at the end of a drag (the drag ends in the book)
+                  editor.view.dom.dispatchEvent(new Event("dragend"));
                 }}
               >
                 <Suspense fallback={<Spinner className="mx-auto" />}>

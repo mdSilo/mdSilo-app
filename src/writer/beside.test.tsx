@@ -30,6 +30,8 @@ type EditorProps = Record<string, (...args: never[]) => unknown> & {
 const editors = vi.hoisted(() => ({
   props: new Map<string, EditorProps>(),
   inserted: [] as { value: string; markdown: string; at?: unknown }[],
+  // the element of the editors: the drag ends on it
+  dom: new EventTarget(),
 }));
 
 vi.mock("mdsmirror", async (importOriginal) => {
@@ -41,6 +43,7 @@ vi.mock("mdsmirror", async (importOriginal) => {
     editors.props.set(props.value as string, props as EditorProps);
     useImperativeHandle(ref, () => ({
       getHeadings: () => [],
+      view: { dom: editors.dom },
       insertMarkdown: (markdown: string, at?: unknown) => {
         editors.inserted.push({ value: props.value as string, markdown, at });
         return true;
@@ -250,7 +253,11 @@ describe("the note beside", () => {
     };
     fireEvent.dragOver(target, { dataTransfer });
     expect(dataTransfer.dropEffect).toBe("copy");
+    const dragEnded = vi.fn();
+    editors.dom.addEventListener("dragend", dragEnded);
     fireEvent.drop(target, { dataTransfer, clientX: 10, clientY: 20 });
+    // the drop cursor of the editor taken away: the drag ended for it
+    expect(dragEnded).toHaveBeenCalled();
     // (jsdom has no DragEvent: no point of the drop)
     expect(editors.inserted).toEqual([
       expect.objectContaining({

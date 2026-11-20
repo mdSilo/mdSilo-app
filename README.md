@@ -55,6 +55,8 @@ Everything is a plain file in a folder you choose: Markdown for notes and annota
 
 ![The toolbar on the text selected in a book](docs/images/annotation.png)
 
+![Writing beside a book: a sentence dragged from the page lands in the note as a quote with a link back](docs/images/parallel-writing.png)
+
 ![三国演义 in vertical writing mode, with its chapters](docs/images/vertical.png)
 
 ![A word looked up in Wiktionary as you read, with its pronunciation](docs/images/dictionary.png)
