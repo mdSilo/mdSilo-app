@@ -137,6 +137,9 @@ importers:
       js-mdict:
         specifier: workspace:*
         version: link:packages/js-mdict
+      katex:
+        specifier: ^0.19.1
+        version: 0.19.1
       markmap-common:
         specifier: ^0.18.9
         version: 0.18.9
