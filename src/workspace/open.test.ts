@@ -317,6 +317,8 @@ describe("open (tauri)", () => {
   });
 
   test("openFilePaths upserts files and dirs under their parent", async () => {
+    // the dir listed already (shown in the tree)
+    tStore.getState().setNoteTree({ "/notes": [] });
     const opened = await tOpen.openFilePaths([
       "/notes/a.md",
       "/notes/sub",
@@ -338,6 +340,7 @@ describe("open (tauri)", () => {
   });
 
   test("openFilePath can set the current note", async () => {
+    tStore.getState().setNoteTree({ "/notes": [] });
     const note = await tOpen.openFilePath("/notes/a.md", true);
     expect(note?.title).toBe("a");
     expect(tStore.getState().currentNote).toEqual({ "/notes/a.md": note });
@@ -350,6 +353,10 @@ describe("open (tauri)", () => {
       file_name: "deep.md",
     });
     tStore.getState().setInitDir("/root");
+    // the dirs listed already
+    tStore
+      .getState()
+      .setNoteTree({ "/root": [], "/root/x": [], "/root/x/y": [] });
     await tOpen.openFilePath("/root/x/y/deep.md", false);
     await new Promise((r) => setTimeout(r, 0));
     const tree = tStore.getState().noteTree;
@@ -357,6 +364,25 @@ describe("open (tauri)", () => {
     expect(tree["/root/x"].map((i) => i.id)).toEqual(["/root/x/y"]);
     expect(tree["/root"].map((i) => i.id)).toEqual(["/root/x"]);
     expect(tree["/"]).toBeUndefined();
+  });
+
+  test("openFilePath leaves a dir not listed yet to be listed whole", async () => {
+    metaByPath["/root/x/y/deep.md"] = makeFileMeta({
+      file_path: "/root/x/y/deep.md",
+      file_name: "deep.md",
+    });
+    tStore.getState().setInitDir("/root");
+    tStore.getState().setNoteTree({ "/root": [] });
+    // e.g. a note opened beside, from a dir collapsed: not the only one in it
+    const note = await tOpen.openFilePath("/root/x/y/deep.md", false);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(note?.id).toBe("/root/x/y/deep.md");
+    expect(tStore.getState().notes.has("/root/x/y/deep.md")).toBe(true);
+    const tree = tStore.getState().noteTree;
+    expect(tree["/root/x/y"]).toBeUndefined();
+    expect(tree["/root/x"]).toBeUndefined();
+    // in the dir listed: its sub dir, shown collapsed
+    expect(tree["/root"].map((i) => i.id)).toEqual(["/root/x"]);
   });
 
   test("openJSONFilePath reads and parses the file", async () => {

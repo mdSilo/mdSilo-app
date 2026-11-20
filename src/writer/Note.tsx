@@ -51,6 +51,7 @@ import FileAPI from "@/workspace/files";
 import { writeFile, deleteFile } from "@/workspace/write";
 import { scheduleSave, flushSave } from "@/workspace/pendingSaves";
 import {
+  addToListedDir,
   openFileDilog,
   openFilePath,
   openFilePaths,
@@ -198,7 +199,6 @@ function Note(props: Props) {
   // note action
   const deleteNote = useStore((state) => state.deleteNote);
   const upsertNote = useStore((state) => state.upsertNote);
-  const upsertTree = useStore((state) => state.upsertTree);
 
   // Keep the note content in the store fresh too (tasks, issue sync,
   // backlinks and search read it), debounced to not re-render on each key.
@@ -294,23 +294,14 @@ function Note(props: Props) {
           file_path: newPath,
         };
         upsertNote(newNote);
-        upsertTree(dirPath, [newNote]);
+        addToListedDir(dirPath, [newNote]);
         await updateIssueNoteLinks(oldPath, newPath, title, newTitle);
         // 5- nav to renamed note
         await openFilePath(newPath, true);
         dispatch({ view: "md", params: { noteId: newPath } });
       }
     },
-    [
-      noteId,
-      storeNotes,
-      title,
-      mdContent,
-      deleteNote,
-      upsertNote,
-      upsertTree,
-      dispatch,
-    ],
+    [noteId, storeNotes, title, mdContent, deleteNote, upsertNote, dispatch],
   );
 
   // Search
@@ -659,7 +650,7 @@ const createNewNote = async (parentDir: string, title: string) => {
     is_daily: regDateStr.test(title),
   };
   store.getState().upsertNote(newNote);
-  store.getState().upsertTree(parentDir, [newNote]);
+  addToListedDir(parentDir, [newNote]);
   await writeFile(notePath, " ");
 
   return notePath;

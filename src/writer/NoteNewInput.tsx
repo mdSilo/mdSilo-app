@@ -9,7 +9,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import useNoteSearch from "@/lib/hooks/useNoteSearch";
 import { ciStringEqual, regDateStr } from "@/lib/helper";
 import { joinPaths } from "@/workspace/util";
-import { openFilePath } from "@/workspace/open";
+import { addToListedDir, openFilePath } from "@/workspace/open";
 import { writeFile } from "@/workspace/write";
 import { Notes, store, useStore } from "@/state/store";
 import { defaultNote } from "@/types/model";
@@ -131,7 +131,7 @@ function FindOrCreateInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         };
         await writeFile(notePath, " ");
         store.getState().upsertNote(note);
-        store.getState().upsertTree(noteDir, [note]);
+        addToListedDir(noteDir, [note]);
         if (onPick) {
           onPick(note.id);
           return;

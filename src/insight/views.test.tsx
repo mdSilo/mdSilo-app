@@ -321,6 +321,8 @@ describe("Chronicle", () => {
 
   test("creates today's daily note when missing", async () => {
     store.getState().setInitDir("/root");
+    // the workspace listed in the tree
+    store.getState().setNoteTree({ "/root": [] });
     store.getState().setIsLoaded(true);
     mockInvoke(invoke, {
       join_paths: ({ root, parts }: Record<string, unknown>) =>

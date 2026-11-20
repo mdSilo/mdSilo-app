@@ -8,7 +8,7 @@ import HeatMap from "@/insight/HeatMap";
 import { dateCompare, getStrDate, regDateStr } from "@/lib/helper";
 import { joinPaths } from "@/workspace/util";
 import { defaultNote, Note } from "@/types/model";
-import { openFilePath } from "@/workspace/open";
+import { addToListedDir, openFilePath } from "@/workspace/open";
 import useLoadNotes from "@/lib/hooks/useLoadNotes";
 import { checkFileIsMd } from "@/workspace/process";
 import { useWritingRoot } from "@/workspace/useWorkspace";
@@ -47,8 +47,8 @@ export default function Chronicle() {
           file_path: dailyDir,
           is_dir: true,
         };
-        store.getState().upsertTree(notesRoot, [newDailyDir]);
-        store.getState().upsertTree(dailyDir, [newNote]);
+        addToListedDir(notesRoot, [newDailyDir]);
+        addToListedDir(dailyDir, [newNote]);
         const cNote: Notes = {};
         cNote[noteId] = newNote;
         store.getState().setCurrentNote(cNote);
