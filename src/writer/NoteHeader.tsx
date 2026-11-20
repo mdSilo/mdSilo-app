@@ -1,7 +1,10 @@
-import { useCallback, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import {
+  TbArrowsLeftRight as IconSwap,
+  TbBookOff as IconBookOff,
   TbCheck as IconCheck,
+  TbColumns2 as IconColumns,
   TbDots as IconDots,
   TbFile as IconFile,
   TbFileText as IconFileText,
@@ -11,14 +14,17 @@ import {
   TbSettings as IconSettings,
   TbTournament as IconTournament,
   TbTrash as IconTrash,
+  TbX as IconX,
 } from "react-icons/tb";
 import { usePopper } from "react-popper";
 import ViewMenu from "@/shell/ViewMenu";
 import { useCurrentMdContext } from "@/writer/useCurrentMd";
 import { exportPdf, exportPng } from "@/writer/hooks/useExport";
-import { useStore } from "@/state/store";
+import { store, useStore } from "@/state/store";
+import useIsMobile from "@/lib/hooks/useIsMobile";
+import { closeBeside, reloadBeside, swapBeside } from "@/writer/beside";
 import { openFilePath } from "@/workspace/open";
-import { Tooltip } from "@/ui/ui";
+import { Spinner, Tooltip } from "@/ui/ui";
 import Portal from "@/ui/Portal";
 import Dropdown, { DropdownItem } from "@/ui/Dropdown";
 import NoteMetadata from "@/writer/NoteMetadata";
@@ -27,6 +33,9 @@ import EditorSettings from "@/shell/settings/EditorSettings";
 import { usePluginNoteModes } from "@/plugins/PluginNoteMode";
 import { PluginIcon } from "@/plugins/PluginIcon";
 import { useT } from "@/i18n";
+
+// what to open beside: its list of books is of the reader, loaded on use
+const BesideMenu = lazy(() => import("@/writer/BesideMenu"));
 
 /** the modes of plugins shown as buttons, each its own; more are in a list */
 const MAX_MODE_BUTTONS = 2;
@@ -49,17 +58,24 @@ export default function NoteHeader({
   );
 
   const rawMode = useStore((state) => state.rawMode);
+  const besideOpen = useStore((state) => Boolean(state.besideNoteId));
   const darkMode = useStore((state) => state.darkMode);
   const setRawMode = useStore((state) => state.setRawMode);
   const pluginModes = usePluginNoteModes();
+  // the mode is of all the notes: the ones shown read again, as saved
   const setRaw = useCallback(
     async (mode: string) => {
-      await openFilePath(currentNote.id, true);
+      const shown = store.getState().currentNoteId;
+      if (shown) await openFilePath(shown, true);
+      await reloadBeside();
       setRawMode(mode);
       setShowBacklink(false);
     },
-    [currentNote.id, setRawMode, setShowBacklink],
+    [setRawMode, setShowBacklink],
   );
+  const beside = Boolean(currentNote.beside);
+  const mobile = useIsMobile();
+  const [besideMenu, setBesideMenu] = useState(false);
 
   const [isNoteDelModalOpen, setIsNoteDelModalOpen] = useState(false);
   const onDelClick = useCallback(() => setIsNoteDelModalOpen(true), []);
@@ -75,7 +91,7 @@ export default function NoteHeader({
       className={`flex items-center justify-between w-full px-2 py-1 mb-2 text-right`}
     >
       <div className="flex items-center" id="note-header-btns">
-        <ViewMenu className="me-1" />
+        {beside ? null : <ViewMenu className="me-1" />}
         <Tooltip content={t("WYSIWYG")}>
           <button className={switchClass} onClick={() => setRaw("wysiwyg")}>
             <IconFileText
@@ -153,6 +169,72 @@ export default function NoteHeader({
         )}
       </div>
       <div className="flex items-center">
+        {beside ? (
+          <>
+            {currentNote.closeBook ? (
+              <Tooltip content={t("Close the book, keep writing")}>
+                <button
+                  aria-label={t("Close the book, keep writing")}
+                  className={`flex items-center justify-center w-8 h-8 ${buttonClassName}`}
+                  onClick={currentNote.closeBook}
+                >
+                  <IconBookOff size={18} className={iconClass} />
+                </button>
+              </Tooltip>
+            ) : null}
+            <Tooltip content={t("Swap sides")}>
+              <button
+                aria-label={t("Swap sides")}
+                className={`flex items-center justify-center w-8 h-8 ${buttonClassName}`}
+                onClick={swapBeside}
+              >
+                <IconSwap size={18} className={iconClass} />
+              </button>
+            </Tooltip>
+            <Tooltip content={t("Close the note beside")}>
+              <button
+                aria-label={t("Close the note beside")}
+                className={`flex items-center justify-center w-8 h-8 ${buttonClassName}`}
+                onClick={closeBeside}
+              >
+                <IconX size={18} className={iconClass} />
+              </button>
+            </Tooltip>
+          </>
+        ) : mobile ? null : (
+          <div className="relative">
+            <Tooltip content={t("Open beside")}>
+              <button
+                aria-label={t("Open beside")}
+                className={`flex items-center justify-center w-8 h-8 ${buttonClassName}`}
+                onClick={() => setBesideMenu(!besideMenu)}
+              >
+                <IconColumns
+                  size={18}
+                  className={
+                    besideMenu || besideOpen ? "text-primary" : iconClass
+                  }
+                />
+              </button>
+            </Tooltip>
+            {besideMenu ? (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setBesideMenu(false)}
+                />
+                <div className="absolute right-0 z-40 mt-1 text-left border rounded-md shadow-lg bg-base-100 border-base-300">
+                  <Suspense fallback={<Spinner className="m-3" />}>
+                    <BesideMenu
+                      noteId={currentNote.id}
+                      onDone={() => setBesideMenu(false)}
+                    />
+                  </Suspense>
+                </div>
+              </>
+            ) : null}
+          </div>
+        )}
         <div className="relative">
           <Tooltip content={t("Editor Settings")}>
             <button
@@ -205,14 +287,16 @@ export default function NoteHeader({
                       <span>{t("Delete Permanently")}</span>
                     </DropdownItem>
                     <DropdownItem
-                      onClick={() => exportPdf(note?.title ?? "", darkMode)}
+                      onClick={() =>
+                        exportPdf(note?.title ?? "", darkMode, beside)
+                      }
                       className="border-t border-base-300"
                     >
                       <IconFile className="mr-1" />
                       <span>{t("Export PDF")}</span>
                     </DropdownItem>
                     <DropdownItem
-                      onClick={() => exportPng(currentNote.id)}
+                      onClick={() => exportPng(currentNote.id, beside)}
                       className="border-t border-base-300"
                     >
                       <IconPhoto className="mr-1" />

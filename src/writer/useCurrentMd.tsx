@@ -7,6 +7,10 @@ type CurrentMd = {
   id: string;
   state: ViewState;
   dispatch: Dispatch<ViewAction>;
+  /** the note beside the note or book shown, see beside.ts */
+  beside?: boolean;
+  /** beside a book: close the book, this note shown alone */
+  closeBook?: () => void;
 };
 
 const CurrContext = createContext<CurrentMd | undefined>(undefined);

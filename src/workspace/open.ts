@@ -173,6 +173,17 @@ export const openFileDilog = async (ty: string[], multi = true) => {
 const withContent = (note: Note): Note => ({ ...note, parsed: undefined });
 
 /**
+ * Show notes or dirs in the tree of their dir, if it is listed already. A dir
+ * not listed yet (collapsed, never opened) is listed whole once expanded:
+ * an entry made here with only these would keep it from being listed, and
+ * it would show these alone (a note opened beside, by a link, a search).
+ */
+export function addToListedDir(dir: string, items: Note[]) {
+  if (!store.getState().noteTree[dir]) return;
+  store.getState().upsertTree(dir, items);
+}
+
+/**
  * Open and process files or dirs, upsert note and tree to store
  * @param filePaths
  * @returns Promise<boolean>
@@ -194,16 +205,15 @@ export async function openFilePaths(filePaths: string[]) {
   }
 
   const upsertNote = store.getState().upsertNote;
-  const upsertTree = store.getState().upsertTree;
   // The filePaths maybe not in same dir(even though it is same in most cases),
-  // so need to upsertTree in the for-loop
+  // so need to add them to the tree in the for-loop
   // process md files, read: their content is known
   const processeds = processFiles(files);
   const processedNotes = processeds[0].map(withContent);
   for (const md of processedNotes) {
     upsertNote(md);
     const parentDir = await getParentDir(md.file_path);
-    upsertTree(parentDir, [md]);
+    addToListedDir(parentDir, [md]);
     upsertTreeRecursively(parentDir);
   }
   // process non-md files
@@ -213,7 +223,7 @@ export async function openFilePaths(filePaths: string[]) {
       continue;
     }
     const parentDir = await getParentDir(non.id);
-    upsertTree(parentDir, [non]);
+    addToListedDir(parentDir, [non]);
     upsertTreeRecursively(parentDir);
   }
   // process dirs
@@ -221,7 +231,7 @@ export async function openFilePaths(filePaths: string[]) {
   for (const dir of processedDirs) {
     upsertNote(dir);
     const parentDir = await getParentDir(dir.file_path);
-    upsertTree(parentDir, [dir]);
+    addToListedDir(parentDir, [dir]);
     upsertTreeRecursively(parentDir);
   }
 
@@ -266,7 +276,7 @@ export async function openFilePath(filePath: string, setCurrent: boolean) {
   if (note) {
     store.getState().upsertNote(note);
     const parentDir = await getParentDir(note.file_path);
-    store.getState().upsertTree(parentDir, [note]);
+    addToListedDir(parentDir, [note]);
     upsertTreeRecursively(parentDir);
     if (setCurrent) {
       const cNote: Notes = {};
@@ -301,9 +311,8 @@ async function upsertTreeRecursively(dirPath: string) {
     is_dir: true,
   };
 
-  const upsertTree = store.getState().upsertTree;
   const parentDir = await getParentDir(dirPath);
-  upsertTree(parentDir, [newDir]);
+  addToListedDir(parentDir, [newDir]);
   // then recursively
   upsertTreeRecursively(parentDir);
 

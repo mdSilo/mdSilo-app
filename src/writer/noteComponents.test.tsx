@@ -201,6 +201,8 @@ describe("FindOrCreateInput", () => {
     const b = makeNote({ id: "/n/apricot.md", title: "apricot" });
     store.getState().setNotes(NoteMap.from({ [a.id]: a, [b.id]: b }));
     store.getState().setCurrentDir("/n");
+    // the dir listed in the tree
+    store.getState().setNoteTree({ "/n": [] });
   };
 
   test("offers to create a new note when no exact match", async () => {
@@ -429,6 +431,8 @@ describe("moveNoteTreeItem", () => {
     const note = makeNote({ id: "/a/x.md", title: "x" });
     store.getState().setNotes(NoteMap.from({ [note.id]: note }));
     store.getState().upsertTree("/a", [note]);
+    // the dir moved to: listed in the tree
+    store.getState().upsertTree("/b", []);
     moveNoteTreeItem("/a/x.md", "/b", "/b/x.md", note);
     expect(store.getState().notes.keys()).toEqual(["/b/x.md"]);
     expect(store.getState().notes.get("/b/x.md")).toMatchObject({

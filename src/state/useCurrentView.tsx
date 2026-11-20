@@ -46,6 +46,24 @@ export function ProvideCurrentView({ children, route }: Props) {
   );
 }
 
+/**
+ * A view inside the view, e.g. the note beside the note shown: its own state,
+ * and its own dispatch (to keep some views in it, the others sent on).
+ */
+export function ProvideInnerView({
+  children,
+  value,
+}: {
+  children: ReactNode;
+  value: CurrentView;
+}) {
+  return (
+    <CurrentViewContext.Provider value={value}>
+      {children}
+    </CurrentViewContext.Provider>
+  );
+}
+
 export const useCurrentViewContext = () => {
   const context = useContext(CurrentViewContext);
   if (context === undefined) {

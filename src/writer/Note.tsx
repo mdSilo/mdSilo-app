@@ -51,6 +51,7 @@ import FileAPI from "@/workspace/files";
 import { writeFile, deleteFile } from "@/workspace/write";
 import { scheduleSave, flushSave } from "@/workspace/pendingSaves";
 import {
+  addToListedDir,
   openFileDilog,
   openFilePath,
   openFilePaths,
@@ -71,6 +72,8 @@ import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
 import { isLookupText } from "@/reader/dictionary/dictionary";
 import { useT } from "@/i18n";
 import { setEditor } from "./editors";
+import { QUOTE_MIME } from "./beside";
+import { noteContentId } from "./hooks/useExport";
 import NoteHeader from "./NoteHeader";
 import Backlinks from "./backlinks/Backlinks";
 import IssueRefs from "./IssueRefs";
@@ -90,11 +93,15 @@ type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   highlightedPath?: any; // TODO
   className?: string;
+  /** the note beside the note or book shown, see beside.ts */
+  beside?: boolean;
+  /** beside a book: close the book, this note shown alone */
+  closeBook?: () => void;
 };
 
 function Note(props: Props) {
   const t = useT();
-  const { noteId, className } = props;
+  const { noteId, className, beside = false, closeBook } = props;
   // console.log("loading",noteId)
   const [showBacklink, setShowBacklink] = useState(false);
   const [headings, setHeadings] = useState<Heading[]>([]);
@@ -185,14 +192,13 @@ function Note(props: Props) {
   const state = currentView.state;
   const dispatch = currentView.dispatch;
   const currentNoteValue = useMemo(
-    () => ({ ty: "note", id: noteId, state, dispatch }),
-    [dispatch, noteId, state],
+    () => ({ ty: "note", id: noteId, state, dispatch, beside, closeBook }),
+    [dispatch, noteId, state, beside, closeBook],
   );
 
   // note action
   const deleteNote = useStore((state) => state.deleteNote);
   const upsertNote = useStore((state) => state.upsertNote);
-  const upsertTree = useStore((state) => state.upsertTree);
 
   // Keep the note content in the store fresh too (tasks, issue sync,
   // backlinks and search read it), debounced to not re-render on each key.
@@ -249,10 +255,9 @@ function Note(props: Props) {
     [notePath],
   );
 
-  setWindowTitle(
-    `${title} - mdSilo`,
-    useStore((state) => state.isLoading),
-  );
+  const isLoading = useStore((state) => state.isLoading);
+  // the window is of the note or book shown, not of the note beside
+  if (!beside) setWindowTitle(`${title} - mdSilo`, isLoading);
   // update locally
   const onTitleChange = useCallback(
     async (newtitle: string) => {
@@ -289,23 +294,14 @@ function Note(props: Props) {
           file_path: newPath,
         };
         upsertNote(newNote);
-        upsertTree(dirPath, [newNote]);
+        addToListedDir(dirPath, [newNote]);
         await updateIssueNoteLinks(oldPath, newPath, title, newTitle);
         // 5- nav to renamed note
         await openFilePath(newPath, true);
         dispatch({ view: "md", params: { noteId: newPath } });
       }
     },
-    [
-      noteId,
-      storeNotes,
-      title,
-      mdContent,
-      deleteNote,
-      upsertNote,
-      upsertTree,
-      dispatch,
-    ],
+    [noteId, storeNotes, title, mdContent, deleteNote, upsertNote, dispatch],
   );
 
   // Search
@@ -495,8 +491,28 @@ function Note(props: Props) {
               ) : null}
               <div
                 className="flex-1 px-2 pt-2 pb-8"
-                id="note-content"
+                id={noteContentId(beside)}
                 spellCheck={isCheckSpellOn}
+                // a quote dragged from a book: put where dropped
+                onDragOverCapture={(e) => {
+                  if (!e.dataTransfer.types.includes(QUOTE_MIME)) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                }}
+                onDropCapture={(e) => {
+                  const md = e.dataTransfer.getData(QUOTE_MIME);
+                  const editor = editorInstance.current;
+                  if (!md || !editor || rawMode !== "wysiwyg") return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  editor.insertMarkdown(md, {
+                    left: e.clientX,
+                    top: e.clientY,
+                  });
+                  // the drop not seen by the editor: its drop cursor taken
+                  // away as at the end of a drag (the drag ends in the book)
+                  editor.view.dom.dispatchEvent(new Event("dragend"));
+                }}
               >
                 <Suspense fallback={<Spinner className="mx-auto" />}>
                   {pluginMode ? (
@@ -634,7 +650,7 @@ const createNewNote = async (parentDir: string, title: string) => {
     is_daily: regDateStr.test(title),
   };
   store.getState().upsertNote(newNote);
-  store.getState().upsertTree(parentDir, [newNote]);
+  addToListedDir(parentDir, [newNote]);
   await writeFile(notePath, " ");
 
   return notePath;

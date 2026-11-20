@@ -101,7 +101,7 @@ const TEXT = {
 };
 
 const BOOK_URL = "demo/alice.epub";
-const BOOK_FILE = "reading/Alice in Wonderland.epub";
+export const BOOK_FILE = "reading/Alice in Wonderland.epub";
 const BOOK_TITLE = "Alice's Adventures in Wonderland";
 
 const NOW = () => new Date().toISOString();
@@ -245,8 +245,12 @@ const annotationsOf = (
 ${TEXT[lang].note}
 `;
 
+/** The language of a demo, by the folder of its manual. */
+export const langOfNotes = (notes: string): DemoLang =>
+  notes === TEXT.zh.notes ? "zh" : "en";
+
 /** The book of the demo, none if it is not available (offline). */
-async function loadBook(
+export async function loadBook(
   lang: DemoLang,
 ): Promise<{ files: DemoFile[]; hash?: string }> {
   try {

@@ -99,7 +99,15 @@ Try it on {{Alice's Adventures in Wonderland}}: it is in your Library, with one 
 
 ## Parallel reading
 
-*Parallel reading* in the top bar opens a second book in a pane on the right. Each book turns pages on its own, and both can be highlighted and noted. Use it to compare a translation with the original, or a text with its commentary. The same book cannot be opened in both panes.
+*Parallel reading* in the top bar opens a second book in a pane on the right. Each book turns pages on its own, and both can be highlighted and noted. Use it to compare a translation with the original, or a text with its commentary. The same book cannot be opened in both panes. Drag the line between the two panes to share the width (double-click it for half and half); the width is kept, for books and notes alike.
+
+**Write beside the book.** The *Write beside* tab of the same menu opens a note in that pane instead: one written lately, any note found by its title, or a new one. Then:
+
+- drag selected text from the page into the note: it lands as a quote with a link back to its place, below the paragraph you drop it on;
+- or click *Quote in the note beside* on the selection toolbar (or on a highlight): the quote goes below the paragraph of the note's cursor, ready for your comment;
+- an annotation in the *Notes* list can be dragged into the note too.
+
+The book's own notes file (`Foo.epub.md`) is not offered: the reader writes it again on each highlight. The arrows in the pane's header (*Swap sides*) put the note or the second book on the left. From a note, the *Open beside* button (two columns, top right) has a *Read beside* tab: it opens a book with the note beside it. *Close the book, keep writing* (in the note's header, or the reader's top bar) closes the book and shows the note alone. Not on a phone.
 
 ## Dictionary, vocabulary and translation
 

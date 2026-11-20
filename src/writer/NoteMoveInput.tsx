@@ -14,6 +14,7 @@ import { followRename } from "@/workspace/renames";
 import { moveIntoDir } from "@/shell/sidebar/treeMove";
 import useLoadNotes from "@/lib/hooks/useLoadNotes";
 import { createDirRecursive, joinPaths } from "@/workspace/util";
+import { addToListedDir } from "@/workspace/open";
 import { t, useT } from "@/i18n";
 
 enum OptionType {
@@ -243,6 +244,6 @@ export const moveNoteTreeItem = (
   };
   store.getState().deleteNote(srcPath);
   store.getState().upsertNote(newNote);
-  store.getState().upsertTree(tarDir, [newNote]);
+  addToListedDir(tarDir, [newNote]);
   // console.log("move item: ", srcPath, tarPath);
 };

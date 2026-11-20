@@ -157,6 +157,12 @@ export type UserSettings = {
   setRawMode: Setter<string>;
   useAsset: boolean;
   setUseAsset: Setter<boolean>;
+  /** the pane beside (a note or a book) on the left of the one shown */
+  besideOnLeft: boolean;
+  setBesideOnLeft: Setter<boolean>;
+  /** the width of the pane beside, in % of the two */
+  besideWidth: number;
+  setBesideWidth: Setter<number>;
   recentDir: string[];
   setRecentDir: Setter<string[]>;
   upsertRecentDir: (dir: string) => void;
@@ -270,6 +276,10 @@ const userSettingsSlice = (
   setRawMode: setter(set, "rawMode"),
   useAsset: true,
   setUseAsset: setter(set, "useAsset"),
+  besideOnLeft: false,
+  setBesideOnLeft: setter(set, "besideOnLeft"),
+  besideWidth: 50,
+  setBesideWidth: setter(set, "besideWidth"),
   recentDir: [],
   setRecentDir: setter(set, "recentDir"),
   upsertRecentDir: (dir: string) => {

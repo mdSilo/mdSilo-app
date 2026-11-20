@@ -917,6 +917,48 @@ class MsEditor extends React.PureComponent<Props, State> {
     return true;
   };
 
+  /**
+   * Insert markdown as blocks: after the top block at a point of the window
+   * (a drop), or else at the cursor; an empty paragraph there is replaced.
+   * The cursor goes after it, shown. False if read only, or not parsed.
+   */
+  insertMarkdown = (markdown: string, at?: { left: number; top: number }) => {
+    const { view } = this;
+    if (!view.editable) return false;
+    const { state } = view;
+    const pos =
+      (at ? view.posAtCoords(at)?.pos : undefined) ?? state.selection.to;
+    let content;
+    try {
+      content = this.parseMarkdown(markdown).content;
+    } catch {
+      return false;
+    }
+    const $pos = state.doc.resolve(pos);
+    const top = $pos.depth ? $pos.node(1) : undefined;
+    const tr = state.tr;
+    let end: number;
+    if (top?.isTextblock && top.content.size === 0) {
+      const from = $pos.before(1);
+      tr.replaceWith(from, $pos.after(1), content);
+      end = from + content.size;
+    } else {
+      const from = $pos.depth ? $pos.after(1) : pos;
+      tr.insert(from, content);
+      end = from + content.size;
+    }
+    // to write on below it: in an empty paragraph after it
+    const next = tr.doc.resolve(end).nodeAfter;
+    const paragraph = state.schema.nodes.paragraph;
+    if (!(next?.type === paragraph && next.content.size === 0)) {
+      tr.insert(end, paragraph.create());
+    }
+    tr.setSelection(Selection.near(tr.doc.resolve(end + 1))).scrollIntoView();
+    view.dispatch(tr);
+    view.focus();
+    return true;
+  };
+
   /** Marks blocks of text: these, in place of those before */
   setBlockMarks = (marks: BlockMark[]) => {
     this.view.dispatch(setBlockMarks(this.view.state, marks));

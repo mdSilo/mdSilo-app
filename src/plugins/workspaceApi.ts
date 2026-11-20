@@ -12,7 +12,7 @@ import { indexOf } from "@/lib/linkIndex";
 import { linkTitlesOf, noteTitleMap } from "@/lib/mdlink";
 import { noteContent } from "@/lib/contentCache";
 import { searchContent } from "@/lib/hooks/useNoteSearch";
-import { openFilePath } from "@/workspace/open";
+import { addToListedDir, openFilePath } from "@/workspace/open";
 import {
   createDirRecursive,
   fromWorkspacePath,
@@ -161,7 +161,7 @@ export async function writeNote(params: unknown) {
     throw new Error(`Could not write ${toWorkspacePath(workspace(), note.id)}`);
   if (isNew) {
     store.getState().upsertNote({ ...note, content: text });
-    store.getState().upsertTree(await getDirPath(note.id), [note]);
+    addToListedDir(await getDirPath(note.id), [note]);
   } else store.getState().updateNote({ id: note.id, content: text });
   return true;
 }

@@ -14,6 +14,7 @@ import {
   TbLink,
   TbBallpen,
   TbQuote,
+  TbBlockquote,
 } from "react-icons/tb";
 import copy from "copy-to-clipboard";
 import { useStore } from "@/state/store";
@@ -34,6 +35,7 @@ import {
   annotateSelection,
   copyLink,
   copyQuote,
+  quoteBeside,
   issueOfNote,
   rememberHighlight,
 } from "../actions";
@@ -483,6 +485,8 @@ function BookPopups({
   const annotation = usePopups((state) => state.annotation);
   const adjusting = usePopups((state) => state.adjusting);
   const notes = useActiveStore((state) => state.notes);
+  // a note written beside the book: quotes put in it
+  const besideNote = useStore((state) => Boolean(state.besideNoteId));
   const note = annotation
     ? notes.find((n) => n.id === annotation.id)
     : undefined;
@@ -561,6 +565,13 @@ function BookPopups({
         title: t("Copy as a quote with a link to here, to paste in a note"),
         icon: <TbQuote size={18} />,
         onClick: () => copyQuote(text, cfi),
+      },
+      {
+        id: "quote-beside",
+        title: t("Quote in the note beside, with a link to here"),
+        icon: <TbBlockquote size={18} />,
+        hidden: !besideNote,
+        onClick: () => quoteBeside(text, cfi),
       },
       {
         id: "issue",
@@ -705,6 +716,13 @@ function BookPopups({
       icon: <TbQuote size={18} />,
       hidden: !note.text,
       onClick: () => copyQuote(note.text ?? "", note.cfi),
+    },
+    {
+      id: "quote-beside",
+      title: t("Quote in the note beside, with a link to here"),
+      icon: <TbBlockquote size={18} />,
+      hidden: !note.text || !besideNote,
+      onClick: () => quoteBeside(note.text ?? "", note.cfi),
     },
     {
       id: "issue",
