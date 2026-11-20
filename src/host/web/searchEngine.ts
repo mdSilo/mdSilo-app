@@ -85,16 +85,50 @@ export function snippetOf(body: string, words: string[], size = 160): string {
     .join("");
 }
 
+const OPTIONS = {
+  fields: ["title", "body"],
+  storeFields: ["kind", "title", "label", "body"],
+  tokenize,
+  processTerm: (term: string) => term.toLowerCase(),
+  searchOptions: {
+    boost: { title: 2 },
+    combineWith: "AND" as const,
+    prefix: true,
+  },
+};
+
+/** The index as saved: the version of the format, the ids, MiniSearch's JSON. */
+type Dump = { v: number; ids: string[]; index: string };
+const DUMP_VERSION = 1;
+
 export class SearchEngine {
-  private index = new MiniSearch<SearchDoc>({
-    fields: ["title", "body"],
-    storeFields: ["kind", "title", "label", "body"],
-    tokenize,
-    processTerm: (term) => term.toLowerCase(),
-    searchOptions: { boost: { title: 2 }, combineWith: "AND", prefix: true },
-  });
+  private index = new MiniSearch<SearchDoc>(OPTIONS);
 
   private docIds = new Set<string>();
+
+  /** The index as a string, to be loaded again by load(). */
+  dump(): string {
+    const dump: Dump = {
+      v: DUMP_VERSION,
+      ids: [...this.docIds],
+      index: JSON.stringify(this.index),
+    };
+    return JSON.stringify(dump);
+  }
+
+  /** Load an index of dump(); false (and empty) if it can not be read. */
+  load(text: string): boolean {
+    try {
+      const dump = JSON.parse(text) as Dump;
+      if (dump.v !== DUMP_VERSION || !Array.isArray(dump.ids)) throw 0;
+      this.index = MiniSearch.loadJSON<SearchDoc>(dump.index, OPTIONS);
+      this.docIds = new Set(dump.ids);
+      return true;
+    } catch {
+      this.clear();
+      return false;
+    }
+  }
 
   put(doc: SearchDoc) {
     if (this.docIds.has(doc.id)) this.index.discard(doc.id);

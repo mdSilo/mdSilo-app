@@ -324,8 +324,7 @@ export function pick(options: PickOptions): Promise<string[] | null> {
       pathLabel.textContent = cwd;
       upBtn.disabled = cwd === ROOT;
       upBtn.style.opacity = upBtn.disabled ? "0.5" : "1";
-      const entries = (await fs.readDir(cwd))
-        .filter((e) => !e.name.startsWith("."))
+      const entries = (await fs.readDir(cwd, true))
         .filter(
           (e) =>
             e.is_dir ||

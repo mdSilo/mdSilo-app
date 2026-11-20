@@ -12,6 +12,8 @@ export type SearchRequest =
   | { id: number; op: "delete"; ids: string[] }
   | { id: number; op: "deletePrefix"; prefix: string }
   | { id: number; op: "clear" }
+  | { id: number; op: "dump" }
+  | { id: number; op: "load"; text: string }
   | { id: number; op: "search"; query: string; kind?: string; limit: number };
 
 self.onmessage = (e: MessageEvent<SearchRequest>) => {
@@ -30,6 +32,12 @@ self.onmessage = (e: MessageEvent<SearchRequest>) => {
         break;
       case "clear":
         engine.clear();
+        break;
+      case "dump":
+        result = engine.dump();
+        break;
+      case "load":
+        result = engine.load(req.text);
         break;
       case "search":
         result = engine.search(req.query, req.kind, req.limit);

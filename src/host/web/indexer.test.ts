@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useWebFs } from "../../testUtils";
-import { indexSettled, resetIndexer } from "./indexer";
+import { SNAPSHOT_KEY, indexSave, indexSettled, resetIndexer } from "./indexer";
+import { KV, get, put } from "./idb";
 import { SearchEngine, snippetOf, tokenize } from "./searchEngine";
 
 type Indexed = {
@@ -176,5 +177,117 @@ describe("index of the web version", () => {
     expect(hits).toMatchObject([
       { id: "book:h#/6/2", path: "", kind: "book", label: "One" },
     ]);
+  });
+
+  test("saved, and on the next open only the changes are indexed", async () => {
+    await write("/mdSilo/writing/keep.md", "apple #fruit");
+    await write("/mdSilo/writing/edit.md", "old words");
+    await write("/mdSilo/writing/gone.md", "zebra");
+    await invoke("index_open", { dir: "/mdSilo" });
+    await invoke("index_book", {
+      hash: "h",
+      title: "A Book",
+      sections: [{ cfi: "/6/2", label: "One", text: "whales at sea" }],
+    });
+    await indexSave();
+    // what the saved index says of the note not changed is what is used
+    type Snap = { notes: Indexed[] };
+    const snap = (await get<Snap>(KV, SNAPSHOT_KEY))!;
+    snap.notes.find((n) => n.id === "/mdSilo/writing/keep.md")!.tags = [
+      "saved",
+    ];
+    await put(KV, snap, SNAPSHOT_KEY);
+
+    // the app closed: changes meanwhile
+    resetIndexer();
+    await write("/mdSilo/writing/edit.md", "new words");
+    await invoke("delete_files", { paths: ["/mdSilo/writing/gone.md"] });
+
+    const notes = await invoke<Indexed[]>("index_open", { dir: "/mdSilo" });
+    const byId = (id: string) => notes.find((n) => n.id === id);
+    expect(byId("/mdSilo/writing/keep.md")?.tags).toEqual(["saved"]);
+    expect(byId("/mdSilo/writing/gone.md")).toBeUndefined();
+    const search = (query: string) =>
+      invoke<Hit[]>("index_search", { query, kind: null, limit: 10 });
+    expect((await search("apple")).map((h) => h.path)).toEqual([
+      "/mdSilo/writing/keep.md",
+    ]);
+    expect(await search("old")).toEqual([]);
+    expect((await search("new")).length).toBe(1);
+    expect(await search("zebra")).toEqual([]);
+    // no library file: the book is kept
+    expect(await invoke("index_book_indexed", { hash: "h" })).toBe(true);
+    expect((await search("whales")).length).toBe(1);
+  });
+
+  test("the books gone from the library are out of the saved index", async () => {
+    await write(
+      "/mdSilo/.mdsilo/books.json",
+      JSON.stringify({ books: { h: {} } }),
+    );
+    await invoke("index_open", { dir: "/mdSilo" });
+    await invoke("index_book", {
+      hash: "h",
+      title: "A Book",
+      sections: [{ cfi: "/6/2", label: "One", text: "whales at sea" }],
+    });
+    await indexSave();
+    resetIndexer();
+    await write("/mdSilo/.mdsilo/books.json", JSON.stringify({ books: {} }));
+    await invoke("index_open", { dir: "/mdSilo" });
+    expect(await invoke("index_book_indexed", { hash: "h" })).toBe(false);
+    expect(
+      await invoke<Hit[]>("index_search", {
+        query: "whales",
+        kind: null,
+        limit: 10,
+      }),
+    ).toEqual([]);
+  });
+
+  test("a saved index of another folder, or broken, is not used", async () => {
+    await write("/mdSilo/writing/a.md", "apple");
+    await invoke("index_open", { dir: "/mdSilo" });
+    await indexSave();
+    resetIndexer();
+    await put(
+      KV,
+      { ...(await get<object>(KV, SNAPSHOT_KEY)), search: "{" },
+      SNAPSHOT_KEY,
+    );
+    await invoke("index_open", { dir: "/mdSilo" });
+    expect(
+      (
+        await invoke<Hit[]>("index_search", {
+          query: "apple",
+          kind: null,
+          limit: 10,
+        })
+      ).length,
+    ).toBe(1);
+    resetIndexer();
+    await write("/other/b.md", "banana");
+    await invoke("index_open", { dir: "/other" });
+    expect(
+      await invoke<Hit[]>("index_search", {
+        query: "apple",
+        kind: null,
+        limit: 10,
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("search engine dump", () => {
+  test("loads what it dumped", () => {
+    const engine = new SearchEngine();
+    engine.put({ id: "a", kind: "note", title: "T", label: "", body: "kiwi" });
+    const copy = new SearchEngine();
+    expect(copy.load(engine.dump())).toBe(true);
+    expect(copy.search("kiwi", undefined, 10).map((h) => h.id)).toEqual(["a"]);
+    copy.delete("a");
+    expect(copy.search("kiwi", undefined, 10)).toEqual([]);
+    expect(copy.load("not json")).toBe(false);
+    expect(copy.ids()).toEqual([]);
   });
 });

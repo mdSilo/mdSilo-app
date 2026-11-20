@@ -13,8 +13,24 @@ import {
   resetBuiltinProxy,
   PUBLIC_CORS_PROXY,
 } from "./feed";
-import { buildBackup, backupFileName } from "./backup";
-import { crc32 } from "./zip";
+import {
+  buildBackup,
+  backupFileName,
+  lastBackup,
+  restoreBackup,
+  writeToFolder,
+  LAST_BACKUP_KEY,
+} from "./backup";
+import { crc32, crc32Blob, createZipOfBlobs } from "./zip";
+import * as fs from "./fs";
+import { KV, get, isQuotaError, put } from "./idb";
+import {
+  BACKUP_SNOOZE_KEY,
+  backupReminderDue,
+  clearAllData,
+  formatBytes,
+  reportQuotaError,
+} from "./siteData";
 import { ask, message, open } from "./dialog";
 
 beforeEach(async () => {
@@ -588,8 +604,63 @@ async function readZip(blob: Blob): Promise<Record<string, string>> {
 }
 
 describe("backup", () => {
-  it("computes crc32", () => {
-    expect(crc32(new TextEncoder().encode("123456789"))).toBe(0xcbf43926);
+  it("computes crc32", async () => {
+    const bytes = new TextEncoder().encode("123456789");
+    expect(crc32(bytes)).toBe(0xcbf43926);
+    // by parts, as of a Blob
+    expect(crc32(bytes.slice(4), crc32(bytes.slice(0, 4)))).toBe(0xcbf43926);
+    expect(await crc32Blob(new Blob([bytes]))).toBe(0xcbf43926);
+  });
+
+  it("zips Blobs as they are", async () => {
+    const blob = await createZipOfBlobs([
+      { name: "d/" },
+      { name: "d/a.txt", data: "text" },
+      { name: "d/b.bin", data: new Blob(["bytes"]) },
+    ]);
+    expect(await readZip(blob)).toEqual({
+      "d/": "",
+      "d/a.txt": "text",
+      "d/b.bin": "bytes",
+    });
+  });
+
+  it("restores a backup", async () => {
+    await invoke("write_file", { filePath: "/w/a.md", text: "# A" });
+    // text only: fake-indexeddb gives Blobs back as plain objects
+    await invoke("write_file", { filePath: "/w/b/c.txt", text: "c" });
+    const { blob } = await buildBackup();
+    await invoke("write_file", { filePath: "/w/a.md", text: "changed" });
+    await invoke("delete_files", { paths: ["/w/b"] });
+    await invoke("write_file", { filePath: "/w/new.md", text: "kept" });
+    await invoke("create_dir_recursive", { dirPath: "/gone" });
+    await invoke("delete_files", { paths: ["/gone"] });
+
+    expect(await restoreBackup(blob)).toBe(5);
+    expect(await fs.readText("/w/a.md")).toBe("# A");
+    expect(await fs.readText("/w/new.md")).toBe("kept");
+    expect(await fs.readText("/w/b/c.txt")).toBe("c");
+  });
+
+  it("writes to a folder of the device", async () => {
+    await invoke("write_file", { filePath: "/w/a/b.md", text: "b" });
+    type Fake = { dirs: Record<string, Fake>; files: Record<string, string> };
+    const handle = (node: Fake, name = "out"): unknown => ({
+      name,
+      getDirectoryHandle: async (n: string) =>
+        handle((node.dirs[n] ??= { dirs: {}, files: {} }), n),
+      getFileHandle: async (n: string) => ({
+        createWritable: async () => ({
+          write: async (data: Blob | string) => {
+            node.files[n] = typeof data === "string" ? data : await data.text();
+          },
+          close: async () => undefined,
+        }),
+      }),
+    });
+    const root: Fake = { dirs: {}, files: {} };
+    expect(await writeToFolder(handle(root) as never, "/w")).toBe(1);
+    expect(root.dirs.w.dirs.a.files["b.md"]).toBe("b");
   });
 
   it("zips all files", async () => {
@@ -633,13 +704,78 @@ describe("backup", () => {
     const click = vi
       .spyOn(HTMLAnchorElement.prototype, "click")
       .mockImplementation(() => undefined);
+    expect(await lastBackup()).toBeUndefined();
     expect(await invoke("export_backup")).toBe(3);
+    expect(await lastBackup()).toBeGreaterThan(0);
     expect(createObjectURL).toHaveBeenCalledTimes(1);
     expect(click).toHaveBeenCalledTimes(1);
     expect(backupFileName(new Date(2026, 0, 2, 3, 4, 5))).toBe(
       "mdsilo-backup-20260102-030405.zip",
     );
     vi.unstubAllGlobals();
+  });
+});
+
+describe("listing by keys", () => {
+  it("leaves the hidden ones out, unread", async () => {
+    await invoke("write_file", { filePath: "/w/a.md", text: "a" });
+    await invoke("write_file", { filePath: "/w/.h/b.md", text: "b" });
+    await invoke("write_file", { filePath: "/w/.c.md", text: "c" });
+    expect((await fs.readDir("/w", true)).map((e) => e.path)).toEqual([
+      "/w/a.md",
+    ]);
+    expect((await fs.readDir("/w")).length).toBe(3);
+    expect(await fs.listPaths("/w")).toEqual(["/w/.c.md", "/w/.h", "/w/a.md"]);
+    expect((await fs.walk("/w", true)).map((e) => e.path)).toEqual(["/w/a.md"]);
+    expect(await fs.exists("/w/.h/b.md")).toBe(true);
+    expect(await fs.exists("/w/none")).toBe(false);
+  });
+});
+
+describe("site data", () => {
+  it("formats sizes", () => {
+    expect(formatBytes(512)).toBe("512 B");
+    expect(formatBytes(1536)).toBe("1.5 KB");
+    expect(formatBytes(300 * 1024 * 1024)).toBe("300 MB");
+  });
+
+  it("knows a full storage, and says so", async () => {
+    const full = new DOMException("full", "QuotaExceededError");
+    expect(isQuotaError(full)).toBe(true);
+    expect(isQuotaError(new Error("x", { cause: full }))).toBe(true);
+    expect(isQuotaError(new Error("x"))).toBe(false);
+    expect(await reportQuotaError(new Error("x"))).toBe(false);
+    expect(await reportQuotaError(full)).toBe(true);
+    expect(document.body.textContent).toContain(
+      "storage of this browser is full",
+    );
+  });
+
+  it("reminds of a backup after a while, files changed", async () => {
+    await fs.initFs();
+    const day = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    // the first run only now: not yet
+    expect(await backupReminderDue(now)).toBe(false);
+    await put(KV, now - 20 * day, LAST_BACKUP_KEY);
+    // nothing changed since
+    await invoke("write_file", { filePath: "/w/a.md", text: "a" });
+    expect(await backupReminderDue(now)).toBe(true);
+    await put(KV, now + day, BACKUP_SNOOZE_KEY);
+    expect(await backupReminderDue(now)).toBe(false);
+    await put(KV, now - 1, LAST_BACKUP_KEY);
+    await put(KV, 0, BACKUP_SNOOZE_KEY);
+    expect(await backupReminderDue(now + 20 * day)).toBe(false);
+  });
+
+  it("clears it all", async () => {
+    await invoke("write_file", { filePath: "/w/a.md", text: "a" });
+    localStorage.setItem("lang", "es");
+    await clearAllData();
+    resetFsInit();
+    expect(localStorage.getItem("lang")).toBeNull();
+    expect(await fs.exists("/w/a.md")).toBe(false);
+    expect(await get(KV, LAST_BACKUP_KEY)).toBeUndefined();
   });
 });
 

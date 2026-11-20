@@ -2,7 +2,16 @@
  * Virtual file system on IndexedDB for the web version.
  * Every file or directory is a record in the `files` store keyed by its path.
  */
-import { FILES, getAll, get, reqToPromise, tx } from "./idb";
+import {
+  FILES,
+  getAll,
+  getAllKeys,
+  getMany,
+  get,
+  hasKey,
+  reqToPromise,
+  tx,
+} from "./idb";
 import {
   ROOT,
   basename,
@@ -138,7 +147,9 @@ export async function stat(path: string): Promise<FsEntry | undefined> {
 }
 
 export async function exists(path: string): Promise<boolean> {
-  return Boolean(await stat(path));
+  await initFs();
+  // the key only: the content of a large file is not read
+  return hasKey(FILES, normalize(path));
 }
 
 export async function isDir(path: string): Promise<boolean> {
@@ -150,11 +161,31 @@ export async function isFile(path: string): Promise<boolean> {
   return Boolean(entry && !entry.is_dir);
 }
 
-/** direct children of dir */
-export async function readDir(dir: string): Promise<FsEntry[]> {
+/**
+ * direct children of dir; with skipHidden, the hidden ones are left out by
+ * their path, never read
+ */
+export async function readDir(
+  dir: string,
+  skipHidden = false,
+): Promise<FsEntry[]> {
   await initFs();
-  const entries = await getAll<FsEntry>(FILES, normalize(dir), "parent");
-  return entries.filter((e) => e.path !== ROOT);
+  const d = normalize(dir);
+  if (!skipHidden) {
+    const entries = await getAll<FsEntry>(FILES, d, "parent");
+    return entries.filter((e) => e.path !== ROOT);
+  }
+  const paths = (await listPaths(d)).filter(
+    (p) => !basename(p).startsWith("."),
+  );
+  return getMany<FsEntry>(FILES, paths);
+}
+
+/** the paths of the direct children of dir, no record read */
+export async function listPaths(dir: string): Promise<string[]> {
+  await initFs();
+  const keys = await getAllKeys(FILES, normalize(dir), "parent");
+  return (keys as string[]).filter((p) => p !== ROOT);
 }
 
 /** all descendants of dir, recursively */
@@ -164,17 +195,19 @@ export async function walk(
 ): Promise<FsEntry[]> {
   await initFs();
   const d = normalize(dir);
-  const all = await getAll<FsEntry>(FILES, descendantsRange(d));
-  if (!skipHidden) return all;
-  // skip hidden entries and everything inside a hidden dir
+  if (!skipHidden) return getAll<FsEntry>(FILES, descendantsRange(d));
+  // skip hidden entries and everything inside a hidden dir, by their keys:
+  // the content under them (e.g. `.mdsilo`) is never read
   const base = d === ROOT ? 0 : d.length;
-  return all.filter(
-    (e) =>
-      !e.path
+  const keys = (await getAllKeys(FILES, descendantsRange(d))) as string[];
+  const visible = keys.filter(
+    (p) =>
+      !p
         .slice(base)
         .split("/")
         .some((seg) => seg.startsWith(".")),
   );
+  return getMany<FsEntry>(FILES, visible);
 }
 
 export async function readText(path: string): Promise<string> {

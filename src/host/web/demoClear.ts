@@ -6,6 +6,7 @@
 import * as fs from "./fs";
 import { DEFAULT_DIR } from "./fs";
 import { DEMO_MARKER, type DemoMarker } from "./demo";
+import { basename } from "./path";
 
 const at = (path: string) => `${DEFAULT_DIR}/${path}`;
 
@@ -91,12 +92,14 @@ async function removeBook(book: NonNullable<DemoMarker["book"]>) {
   const { hash } = book;
   const covers = ".mdsilo/local/covers";
   const cached = (await fs.isDir(at(covers)))
-    ? (await fs.readDir(at(covers))).filter((e) => e.name.startsWith(hash))
+    ? (await fs.listPaths(at(covers))).filter((p) =>
+        basename(p).startsWith(hash),
+      )
     : [];
   await fs.remove([
     ...book.files.map(at),
     at(`.mdsilo/books/${hash}.json`),
-    ...cached.map((e) => e.path),
+    ...cached,
   ]);
   const library = await readJson<{ books?: Record<string, unknown> }>(
     ".mdsilo/books.json",

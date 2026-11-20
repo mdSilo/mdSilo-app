@@ -73,7 +73,9 @@ The web version at the same address as this manual is the same app. Differences:
 - **Install it as an app**, on a phone too: the logo menu > **Install App** (Chrome, Edge, Android), or in Safari on iPhone and iPad: Share > **Add to Home Screen**. It then opens in a window of its own and works offline; feeds and catalogs still need the network. On a phone the side menu is a dropdown of the logo, at the start of the bar of each page, and Feed shows one pane at a time. When a new version is out, a prompt offers to reload into it.
 
 :::warning
-**Back up.** Clearing the site data of your browser deletes your notes. Use the **File Menu** (the folder icon at the bottom of the side menu) > **Backup** to download everything as a zip. To restore, unzip it and import the folder with *Open Folder*.
+**Back up.** Clearing the site data of your browser deletes your notes. Use the **File Menu** (the folder icon at the bottom of the side menu) > **Backup** to download everything as a zip, and **File Menu > Restore Backup** to put a zip back: the files at the same paths are replaced, the others are kept. After 14 days of changes without a backup, the app reminds you.
+
+**Settings > Storage** shows how much space your workspace takes and whether the browser keeps it when it is short of space. If not, **Keep My Data** asks the browser to; installing the app helps too, and on iPhone and iPad it is what stops Safari from clearing the data of a site not visited for 7 days. There you can also back up, back up to a folder of your computer (Chrome, Edge), restore, and **Clear All Data**. When the storage is full, a change can not be saved: the message says how much is used.
 :::
 
 :::info

@@ -158,10 +158,9 @@ export const commands: Record<string, Command> = {
     return { files, number_of_files: files.length };
   },
   list_directory: async ({ dir }) => {
-    const entries = await fs.readDir(dir);
-    return entries
-      .filter((e) => !e.name.startsWith("."))
-      .map((e) => fs.toMeta(e, false));
+    // the hidden ones (e.g. `.mdsilo`) left out by their names, never read
+    const entries = await fs.readDir(dir, true);
+    return entries.map((e) => fs.toMeta(e, false));
   },
   is_dir: ({ path }) => fs.isDir(path),
   is_file: ({ path }) => fs.isFile(path),

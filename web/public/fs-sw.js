@@ -120,24 +120,54 @@ async function fromCache(request) {
 
 // ---- the files in IndexedDB ----
 
-function getEntry(path) {
-  return new Promise((resolve) => {
+// one connection for all requests (a page of many images), opened on first
+// use; forgotten when the browser closes it or the app upgrades / deletes the db
+let dbPromise = null;
+
+function openDb() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve) => {
     const req = indexedDB.open(DB_NAME);
     // never create the db here, let the app create it with the right schema
     req.onupgradeneeded = () => req.transaction.abort();
-    req.onerror = () => resolve(undefined);
+    req.onerror = () => {
+      dbPromise = null;
+      resolve(null);
+    };
     req.onsuccess = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) {
         db.close();
-        resolve(undefined);
+        dbPromise = null;
+        resolve(null);
         return;
       }
-      const get = db.transaction(STORE, 'readonly').objectStore(STORE).get(path);
-      get.onsuccess = () => { db.close(); resolve(get.result); };
-      get.onerror = () => { db.close(); resolve(undefined); };
+      const forget = () => {
+        db.close();
+        dbPromise = null;
+      };
+      db.onversionchange = forget;
+      db.onclose = () => { dbPromise = null; };
+      resolve(db);
     };
   });
+  return dbPromise;
+}
+
+async function getEntry(path, retry = true) {
+  const db = await openDb();
+  if (!db) return undefined;
+  try {
+    return await new Promise((resolve) => {
+      const get = db.transaction(STORE, 'readonly').objectStore(STORE).get(path);
+      get.onsuccess = () => resolve(get.result);
+      get.onerror = () => resolve(undefined);
+    });
+  } catch (e) {
+    // closed by the browser and not told: open it again, once
+    dbPromise = null;
+    return retry ? getEntry(path, false) : undefined;
+  }
 }
 
 function normalize(path) {

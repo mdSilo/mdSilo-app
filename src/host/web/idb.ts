@@ -159,6 +159,54 @@ export async function getAll<T>(
   });
 }
 
+/** the keys only, no value is read: cheap for records with large content */
+export async function getAllKeys(
+  store: StoreName,
+  query?: IDBKeyRange | IDBValidKey,
+  index?: string,
+): Promise<IDBValidKey[]> {
+  return tx(store, "readonly", (t) => {
+    const s = t.objectStore(store);
+    const src = index ? s.index(index) : s;
+    // on an index, the primary keys of the records
+    return reqToPromise<IDBValidKey[]>(src.getAllKeys(query));
+  });
+}
+
+/** the records of the keys, in one transaction; missing ones left out */
+export async function getMany<T>(
+  store: StoreName,
+  keys: IDBValidKey[],
+): Promise<T[]> {
+  if (keys.length === 0) return [];
+  return tx(store, "readonly", async (t) => {
+    const s = t.objectStore(store);
+    const values: (T | undefined)[] = await Promise.all(
+      keys.map((key) => reqToPromise<T | undefined>(s.get(key))),
+    );
+    return values.filter((v) => v !== undefined) as T[];
+  });
+}
+
+/** whether a record of the key exists, its value not read */
+export async function hasKey(store: StoreName, key: IDBValidKey) {
+  return tx(store, "readonly", async (t) => {
+    const found = await reqToPromise(t.objectStore(store).getKey(key));
+    return found !== undefined;
+  });
+}
+
+/** The browser is out of the space it gives the site. */
+export function isQuotaError(e: unknown): boolean {
+  for (let err = e, depth = 0; err && depth < 5; depth++) {
+    const name = (err as { name?: string }).name;
+    if (name === "QuotaExceededError" || name === "NS_ERROR_DOM_QUOTA_REACHED")
+      return true;
+    err = (err as { cause?: unknown }).cause;
+  }
+  return false;
+}
+
 export async function put<T>(
   store: StoreName,
   value: T,

@@ -27,6 +27,7 @@ import {
   TbHeadphones,
   TbCurrentLocation,
   TbDatabaseExport,
+  TbDatabaseImport,
   TbBook,
   TbBooks,
   TbEraser,
@@ -66,6 +67,7 @@ import { pluginCommands, runCommand } from "@/plugins/commands";
 import { useTrustedVersion } from "@/plugins/trusted";
 import { installApp, isIos, isStandalone, usePwa } from "@/host/web/pwa";
 import { showMessage } from "@/host/web/browser";
+import { chooseAndRestoreBackup } from "@/host/web/backup";
 import { t, useT } from "@/i18n";
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>("auto");
@@ -726,6 +728,24 @@ export function FileDrop() {
           <TbDatabaseExport size={18} className="mr-1" />
           <Tooltip content={t("Export Backup")}>
             <span>{t("Backup")}</span>
+          </Tooltip>
+        </DropdownItem>
+      )}
+      {isWeb && (
+        <DropdownItem
+          onClick={async () => {
+            try {
+              const count = await chooseAndRestoreBackup();
+              // the notes, issues and the library are loaded again
+              if (count !== null) window.location.reload();
+            } catch (e) {
+              console.error("Failed to restore backup:", e);
+            }
+          }}
+        >
+          <TbDatabaseImport size={18} className="mr-1" />
+          <Tooltip content={t("Restore a backup zip")}>
+            <span>{t("Restore Backup")}</span>
           </Tooltip>
         </DropdownItem>
       )}

@@ -6,11 +6,13 @@ import { store } from "@/state/store";
 import { BaseModal } from "@/ui/BaseModal";
 import { useLanguage } from "@/i18n/useLanguage";
 import { setLanguage } from "@/i18n";
+import { useWebFs } from "@/testUtils";
 import SettingsModal from "./SettingsModal";
 import ThemeEditorModal from "./ThemeEditorModal";
 import FontsModal from "./FontsModal";
 import EditorSettings from "./EditorSettings";
 import AboutModal from "./AboutModal";
+import { StorageSetting } from "./StorageSetting";
 
 describe("BaseModal", () => {
   test("renders title and children when open", async () => {
@@ -323,5 +325,33 @@ describe("custom themes", () => {
       "--radius-box": "1.5rem",
       "--border": "2px",
     });
+  });
+});
+
+describe("StorageSetting", () => {
+  test("shows the space used, and asks the browser to keep the data", async () => {
+    await useWebFs();
+    let kept = false;
+    const persist = vi.fn(async () => (kept = true));
+    Object.defineProperty(navigator, "storage", {
+      configurable: true,
+      value: {
+        persist,
+        persisted: async () => kept,
+        estimate: async () => ({ usage: 1536, quota: 1024 * 1024 * 1024 }),
+      },
+    });
+    render(<StorageSetting />);
+    expect(
+      await screen.findByText("Used 1.5 KB of 1.0 GB"),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Never backed up.")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Keep My Data"));
+    await waitFor(() => expect(persist).toHaveBeenCalled());
+    expect(
+      await screen.findByText(/Kept: the browser does not clear it/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Keep My Data")).toBeNull();
+    Reflect.deleteProperty(navigator, "storage");
   });
 });

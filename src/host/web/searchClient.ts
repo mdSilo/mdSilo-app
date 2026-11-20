@@ -10,6 +10,10 @@ export interface SearchApi {
   delete(ids: string[]): Promise<void>;
   deletePrefix(prefix: string): Promise<void>;
   clear(): Promise<void>;
+  /** the index as a string, for load() */
+  dump(): Promise<string>;
+  /** false (and empty) if the string can not be loaded */
+  load(text: string): Promise<boolean>;
   search(
     query: string,
     kind: string | undefined,
@@ -50,6 +54,8 @@ function workerSearch(worker: Worker): SearchApi {
     delete: (ids) => call({ op: "delete", ids }),
     deletePrefix: (prefix) => call({ op: "deletePrefix", prefix }),
     clear: () => call({ op: "clear" }),
+    dump: () => call({ op: "dump" }),
+    load: (text) => call({ op: "load", text }),
     search: (query, kind, limit) => call({ op: "search", query, kind, limit }),
   };
 }
@@ -61,6 +67,8 @@ function pageSearch(): SearchApi {
     delete: async (ids) => ids.forEach((id) => engine.delete(id)),
     deletePrefix: async (prefix) => engine.deletePrefix(prefix),
     clear: async () => engine.clear(),
+    dump: async () => engine.dump(),
+    load: async (text) => engine.load(text),
     search: async (query, kind, limit) => engine.search(query, kind, limit),
   };
 }

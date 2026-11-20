@@ -11,6 +11,7 @@ import { isTauri, isWeb } from "@/workspace/util";
 import { allCustomThemes } from "@/custom/themes";
 import { LANGUAGES, SYSTEM_LANGUAGE, useT } from "@/i18n";
 import { ThemeSelect } from "./ThemeEditorModal";
+import { StorageSetting } from "./StorageSetting";
 
 const isSideMenuOrientation = (value: string): value is SideMenuOrientation =>
   value === "auto" || value === "vertical" || value === "horizontal";
@@ -161,6 +162,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             }}
           />
         ) : null}
+        {isWeb ? <StorageSetting /> : null}
         <p className="mt-2 text-xs text-center text-base-content/70">
           {t(
             "The editor, the reader and the feed reader have their own settings, in their views; the fonts added in Fonts show in their font lists.",

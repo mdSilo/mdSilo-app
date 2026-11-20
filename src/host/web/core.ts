@@ -5,6 +5,7 @@
 import { commands } from "./commands";
 import { initFs } from "./fs";
 import { fileUrl, registerFsServiceWorker } from "./browser";
+import { reportQuotaError } from "./siteData";
 
 void registerFsServiceWorker();
 
@@ -36,6 +37,10 @@ export async function invoke<T>(
   try {
     await initFs();
     return (await command(args ?? {})) as T;
+  } catch (e) {
+    // the browser is out of space: say so, whoever made the change
+    void reportQuotaError(e).catch(() => undefined);
+    throw e;
   } finally {
     running.delete(id);
   }

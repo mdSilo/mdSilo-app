@@ -6,6 +6,20 @@ mdSilo is a local-first workspace where what you *read*, what you *think* and wh
 
 [Try it in your browser](https://mdsilo.github.io/mdSilo-app/) · [User manual](docs/manual/0%20Start%20Here.md) · [Discord](https://discord.gg/EXYSEHRTFt) · [Bluesky](https://bsky.app/profile/mdsilo.com)
 
+Install or Update Desktop App in one line command: 
+
+On Linux it picks the .deb, .rpm or AppImage for your distro, on macOS it puts the app in /Applications (options: `--version`, `--format`, `--uninstall`, see `--help`):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mdSilo/mdSilo-app/main/scripts/install.sh | sh
+```
+
+On Windows, in PowerShell (no admin needed; options `-Version`, `-Format msi`, `-Uninstall`:
+
+```powershell
+irm https://raw.githubusercontent.com/mdSilo/mdSilo-app/main/scripts/install.ps1 | iex
+```
+
 ![Parallel reading: an English book beside a Chinese one in vertical writing mode](docs/images/parallel.png)
 
 ## Why mdSilo
@@ -151,7 +165,7 @@ The web version shares the frontend code in `./src` with the desktop app, files 
 
 How it works: `vite.web.config.mts` replaces the Tauri APIs (`@tauri-apps/api/*`, `@tauri-apps/plugin-dialog`) with the stand-ins in `./src/host/web`, which handle the same commands as the Rust end (`src-tauri/src/lib.rs`) on a virtual file system in IndexedDB. A service worker (`./web/public/fs-sw.js`) serves the stored files by URL, so images and attachments can be displayed. It also makes the web version an installable app (PWA, `web/public/manifest.webmanifest`): the build writes its files into the worker (`web/pwa-precache.mjs`), which keeps them for offline use; a new build installs as an update the app offers to reload into. Folders and files on your device can be imported via the Open Folder / Open File dialog, exported files are downloaded by the browser.
 
-Backup: clearing the site data of the browser deletes the notes, so back up regularly via the **File Menu** (the folder icon of the side menu) > **Backup**, which downloads all files as a zip. To restore, unzip it and import the folder via Open Folder > Import Folder.
+Backup: clearing the site data of the browser deletes the notes, so back up regularly via the **File Menu** (the folder icon of the side menu) > **Backup**, which downloads all files as a zip (made of the stored files themselves, so large books are not copied into memory), and restore it via **File Menu > Restore Backup**. **Settings > Storage** shows the space used, whether the browser keeps the data when short of space (and asks it to), the last backup, backs up to a folder of the device where the browser can write one (Chromium), and clears all data. A full storage is reported with the space used; the app reminds you to back up after 14 days of changes without one. The search index is saved in IndexedDB too: on the next open only the notes changed since are indexed again.
 
 RSS feeds: browsers block most feeds by CORS, so a feed is fetched directly first, then via a CORS proxy. The proxy in use, in order:
 
