@@ -197,6 +197,20 @@ export async function translate(
 /** The services to translate by, chosen in the popup of a translation; the first by default. */
 export const TRANSLATORS: Translator[] = [
   { name: "google", label: "Google", translate, url: translateUrl },
+  {
+    // the AI provider of quick tasks, see docs/ai.md; loaded when used
+    name: "ai",
+    label: "AI",
+    translate: async (text, to) => {
+      const { aiTranslate } = await import("@/ai/translate");
+      return {
+        text: await aiTranslate(text, to),
+        to,
+        url: translateUrl(text, to),
+      };
+    },
+    url: translateUrl,
+  },
 ];
 
 /** The service of a name, as chosen last; the first if none or no longer offered. */

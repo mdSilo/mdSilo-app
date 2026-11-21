@@ -51,6 +51,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   const setIsDictionariesOpen = useStore(
     (state) => state.setIsDictionariesOpen,
   );
+  const setIsAiSettingsOpen = useStore((state) => state.setIsAiSettingsOpen);
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
   const setSideMenuOrientation = useStore(
     (state) => state.setSideMenuOrientation,
@@ -150,6 +151,14 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           onClick={() => {
             handleClose();
             setIsDictionariesOpen(true);
+          }}
+        />
+        <SettingsLink
+          label={t("AI")}
+          action={t("Manage AI Providers")}
+          onClick={() => {
+            handleClose();
+            setIsAiSettingsOpen(true);
           }}
         />
         {isTauri ? (

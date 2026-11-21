@@ -49,3 +49,11 @@ export async function invoke<T>(
 export function convertFileSrc(filePath: string): string {
   return fileUrl(filePath);
 }
+
+/**
+ * Stand-in of the `Channel` of Tauri, which streams the messages of a
+ * command: no command of the web streams (src/ai/transport.ts fetches itself).
+ */
+export class Channel<T = unknown> {
+  onmessage: (message: T) => void = () => undefined;
+}

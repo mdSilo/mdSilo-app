@@ -70,6 +70,25 @@ export const DEFAULT_SYNC_SETTINGS: SyncSettings = {
   onExit: false,
 };
 
+/** tokens used of a provider in a month, see ai/usage */
+export type AiUsage = { input: number; output: number; requests: number };
+
+/** AI (see docs/ai.md): the provider of each role and the tokens used */
+export type AiSettings = {
+  /** the provider to chat with, by id; the first if none */
+  chatProvider: string;
+  /** the provider of quick tasks (translation…), by id; the chat one if none */
+  fastProvider: string;
+  /** by month (YYYY-MM), then provider id */
+  usage: Record<string, Record<string, AiUsage>>;
+};
+
+export const DEFAULT_AI_SETTINGS: AiSettings = {
+  chatProvider: "",
+  fastProvider: "",
+  usage: {},
+};
+
 export const ReadableNameBySort = {
   [Sort.TitleAscending]: tk("Title (A-Z)"),
   [Sort.TitleDescending]: tk("Title (Z-A)"),
@@ -187,6 +206,11 @@ export type UserSettings = {
   setLibrarySettings: Setter<LibrarySettings>;
   syncSettings: SyncSettings;
   setSyncSettings: Setter<SyncSettings>;
+  aiSettings: AiSettings;
+  setAiSettings: Setter<AiSettings>;
+  /** the dialog of the AI providers, opened from the settings; not persisted */
+  isAiSettingsOpen: boolean;
+  setIsAiSettingsOpen: Setter<boolean>;
 };
 
 // resizable panel widths in px
@@ -323,6 +347,10 @@ const userSettingsSlice = (
   setLibrarySettings: setter(set, "librarySettings"),
   syncSettings: DEFAULT_SYNC_SETTINGS,
   setSyncSettings: setter(set, "syncSettings"),
+  aiSettings: DEFAULT_AI_SETTINGS,
+  setAiSettings: setter(set, "aiSettings"),
+  isAiSettingsOpen: false,
+  setIsAiSettingsOpen: setter(set, "isAiSettingsOpen"),
 });
 
 export default userSettingsSlice;

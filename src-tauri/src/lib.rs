@@ -3,6 +3,7 @@
   windows_subsystem = "windows"
 )]
 
+mod ai;
 mod atomic;
 mod book_images;
 mod books;
@@ -159,6 +160,12 @@ pub fn run() {
       tts::tts_stop,
       tts::tts_configure,
       tts::tts_clear_cache,
+      ai::ai_providers,
+      ai::ai_save_provider,
+      ai::ai_delete_provider,
+      ai::ai_fetch,
+      ai::ai_stream,
+      ai::ai_cancel,
     ])
     // the main window gone, the app quits, other windows too
     .on_window_event(|window, event| {
