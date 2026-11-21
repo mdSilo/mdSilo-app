@@ -70,6 +70,38 @@ export const DEFAULT_SYNC_SETTINGS: SyncSettings = {
   onExit: false,
 };
 
+/** tokens used of a provider in a month, see ai/usage */
+export type AiUsage = { input: number; output: number; requests: number };
+
+/** AI (see docs/ai.md): the provider of each role and the tokens used */
+export type AiSettings = {
+  /** the provider to chat with, by id; the first if none */
+  chatProvider: string;
+  /** the provider of quick tasks (translation…), by id; the chat one if none */
+  fastProvider: string;
+  /** by month (YYYY-MM), then provider id */
+  usage: Record<string, Record<string, AiUsage>>;
+  /** folders of the workspace (relative paths) the AI never reads, see ai/chat/privacy */
+  excluded?: string[];
+  /** the chat with all the notes searches the books too (their text, by the index), see ai/chat/tools */
+  myselfBooks?: boolean;
+  /** search by meaning too: the notes embedded, see ai/embeddings (opt-in) */
+  embeddings?: boolean;
+  /** links suggested to notes on the same ideas, by the embeddings (opt-in) */
+  linkSuggestions?: boolean;
+  /** a digest of the feeds made once a day, see ai/digest */
+  digest?: boolean;
+  /** the day (YYYY-MM-DD) of the last digest */
+  lastDigest?: string;
+};
+
+export const DEFAULT_AI_SETTINGS: AiSettings = {
+  chatProvider: "",
+  fastProvider: "",
+  usage: {},
+  excluded: [],
+};
+
 export const ReadableNameBySort = {
   [Sort.TitleAscending]: tk("Title (A-Z)"),
   [Sort.TitleDescending]: tk("Title (Z-A)"),
@@ -187,12 +219,26 @@ export type UserSettings = {
   setLibrarySettings: Setter<LibrarySettings>;
   syncSettings: SyncSettings;
   setSyncSettings: Setter<SyncSettings>;
+  aiSettings: AiSettings;
+  setAiSettings: Setter<AiSettings>;
+  /** the chat with the AI shown beside the view, see ai/chat */
+  isChatOpen: boolean;
+  setIsChatOpen: Setter<boolean>;
+  chatWidth: number;
+  setChatWidth: Setter<number>;
+  /** the dialog of the AI providers, opened from the settings; not persisted */
+  isAiSettingsOpen: boolean;
+  setIsAiSettingsOpen: Setter<boolean>;
+  /** the dialog of the CORS proxy (web), opened from the settings; not persisted */
+  isCorsProxyOpen: boolean;
+  setIsCorsProxyOpen: Setter<boolean>;
 };
 
 // resizable panel widths in px
 export const SIDEBAR_WIDTH = { min: 160, max: 640, default: 256 } as const;
 export const FEED_CHANNEL_WIDTH = { min: 120, max: 480, default: 192 } as const;
 export const FEED_ARTICLE_WIDTH = { min: 200, max: 720, default: 288 } as const;
+export const CHAT_WIDTH = { min: 280, max: 800, default: 380 } as const;
 export const READER_SIDEBAR_WIDTH = {
   min: 180,
   max: 560,
@@ -323,6 +369,16 @@ const userSettingsSlice = (
   setLibrarySettings: setter(set, "librarySettings"),
   syncSettings: DEFAULT_SYNC_SETTINGS,
   setSyncSettings: setter(set, "syncSettings"),
+  aiSettings: DEFAULT_AI_SETTINGS,
+  setAiSettings: setter(set, "aiSettings"),
+  isChatOpen: false,
+  setIsChatOpen: setter(set, "isChatOpen"),
+  chatWidth: CHAT_WIDTH.default as number,
+  setChatWidth: setter(set, "chatWidth"),
+  isAiSettingsOpen: false,
+  setIsAiSettingsOpen: setter(set, "isAiSettingsOpen"),
+  isCorsProxyOpen: false,
+  setIsCorsProxyOpen: setter(set, "isCorsProxyOpen"),
 });
 
 export default userSettingsSlice;

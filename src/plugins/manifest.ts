@@ -39,6 +39,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "issues:read": tk("Read your issues"),
   "reader:read": tk("Read the book open, where you are in it, and move in it"),
   net: tk("Reach the internet"),
+  ai: tk("Ask the AI you set up (it may cost you tokens)"),
 };
 
 export const MANIFEST_FILE = "manifest.json";

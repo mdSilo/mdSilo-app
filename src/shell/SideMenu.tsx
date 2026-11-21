@@ -13,6 +13,7 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import {
   TbMenu2,
   TbDna,
+  TbSparkles,
   TbCalendar,
   TbFeather,
   TbFolderPlus,
@@ -203,6 +204,7 @@ export default function SideMenu() {
               />
             </>
           ) : null}
+          <ChatButton />
           {isTauri ? (
             <PluginsButton
               viewTy={viewTy}
@@ -477,6 +479,27 @@ const BookButton = (props: ButtonProps & { path: string }) => {
           onClick={onDispatch}
         >
           <TbBook size={22} className="shrink-0 mx-px text-primary" />
+        </button>
+      </Tooltip>
+    </MenuItem>
+  );
+};
+
+/** The chat with the AI beside the view, see ai/chat */
+const ChatButton = () => {
+  const t = useT();
+  const tooltipPlacement = useTooltipPlacement();
+  const isChatOpen = useStore((state) => state.isChatOpen);
+  const setIsChatOpen = useStore((state) => state.setIsChatOpen);
+  return (
+    <MenuItem isHighlighted={isChatOpen}>
+      <Tooltip content={t("AI Chat (Ctrl/⌘+J)")} placement={tooltipPlacement}>
+        <button
+          className={btnClass}
+          aria-label={t("AI Chat (Ctrl/⌘+J)")}
+          onClick={() => setIsChatOpen(!isChatOpen)}
+        >
+          <TbSparkles size={22} className={btnIconClass} />
         </button>
       </Tooltip>
     </MenuItem>

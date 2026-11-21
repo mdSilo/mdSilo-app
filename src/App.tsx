@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useMemo, useEffect } from "react";
+import { lazy, Suspense, useMemo, useEffect } from "react";
 import "@/styles/styles.css";
 import "tippy.js/dist/tippy.css";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -18,9 +18,15 @@ import { SharedBookPrompt } from "@/reader/library/SharedBookPrompt";
 import { PluginDev } from "@/plugins/dev";
 import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
+import AiSettingsModal from "@/ai/AiSettingsModal";
+import ProfileModal from "@/ai/ProfileModal";
+import CorsProxyModal from "@/shell/settings/CorsProxySetting";
+
+// loaded when first opened
+const ChatPane = lazy(() => import("@/ai/chat/ChatPane"));
 import DictionariesModal from "@/reader/dictionary/DictionariesModal";
 import EditorLookupPopup from "@/writer/LookupPopup";
-import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
+import { store, useStore, onStoreHydrated, SidebarTab } from "@/state/store";
 import { hasWindows, shareSettings } from "@/state/windowSync";
 import { flushAll } from "@/shell/flushAll";
 import { isTauri, isWeb } from "@/workspace/util";
@@ -59,6 +65,8 @@ const App = () => {
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const isChatOpen = useStore((state) => state.isChatOpen);
+  const setIsChatOpen = useStore((state) => state.setIsChatOpen);
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   const isSettingsOpen = useStore((state) => state.isSettingsOpen);
   const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
@@ -73,6 +81,10 @@ const App = () => {
       {
         hotkey: "alt+x",
         callback: () => setIsSidebarOpen((isOpen) => !isOpen),
+      },
+      {
+        hotkey: "mod+j",
+        callback: () => setIsChatOpen((isOpen) => !isOpen),
       },
       {
         hotkey: "mod+s",
@@ -97,7 +109,12 @@ const App = () => {
         callback: () => setSidebarTab(SidebarTab.Playlist),
       },
     ],
-    [setIsFindOrCreateModalOpen, setIsSidebarOpen, setSidebarTab],
+    [
+      setIsFindOrCreateModalOpen,
+      setIsSidebarOpen,
+      setIsChatOpen,
+      setSidebarTab,
+    ],
   );
   useHotkeys(hotkeys);
 
@@ -122,6 +139,30 @@ const App = () => {
 
   // sync every few minutes and on exit, if set
   useAutoSync();
+
+  // the digest of the feeds, once a day if set: a while after the start,
+  // the feeds fetched by then
+  const initDir = useStore((state) => state.initDir);
+  useEffect(() => {
+    if (!initDir) return;
+    const timer = setTimeout(
+      () => void import("@/ai/digest").then((m) => m.digestIfDue()),
+      60_000,
+    );
+    // the index of search by meaning (opt-in), brought up to date quietly
+    const embedTimer = setTimeout(() => {
+      if (!store.getState().aiSettings.embeddings) return;
+      void import("@/ai/embeddings")
+        .then((m) => m.updateIndex())
+        .catch((e: unknown) =>
+          console.warn("The index by meaning was not updated", e),
+        );
+    }, 120_000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(embedTimer);
+    };
+  }, [initDir]);
 
   // closing the window (or quitting from the tray) leaves no time for the
   // timers of the saves: written first, as in a book window
@@ -164,6 +205,11 @@ const App = () => {
             <div className="relative flex flex-1 flex-col min-w-0 overflow-y-auto">
               <MainView />
             </div>
+            {isChatOpen ? (
+              <Suspense fallback={null}>
+                <ChatPane />
+              </Suspense>
+            ) : null}
             <Player />
           </div>
           {isFindOrCreateModalOpen ? (
@@ -181,6 +227,9 @@ const App = () => {
           <PluginsModal />
           <ThemeEditorModal />
           <FontsModal />
+          <AiSettingsModal />
+          <ProfileModal />
+          {isWeb ? <CorsProxyModal /> : null}
           <DictionariesModal />
           <EditorLookupPopup />
           <PluginAnswerModal />

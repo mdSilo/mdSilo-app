@@ -1625,8 +1625,10 @@ describe("reader, the second part", () => {
       translator: "google",
       translateTo: "zh-CN",
     });
-    // one service so far: no choice of it shown
-    expect(screen.queryByLabelText("Translate by")).not.toBeInTheDocument();
+    // the services to translate by: Google, and the AI provider set up
+    const services = screen.getByLabelText<HTMLSelectElement>("Translate by");
+    expect([...services.options].map((o) => o.value)).toEqual(["google", "ai"]);
+    expect(services.value).toBe("google");
     // the book translated as it is read: switched on from here, kept with the book
     expect(screen.queryByLabelText("Translation only")).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText("Translate the book"));

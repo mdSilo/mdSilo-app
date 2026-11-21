@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import { useStore } from "@/state/store";
+import { AlphaBadge } from "@/ai/AiSettingsModal";
 import {
   STARTUP_VIEWS,
   type OpenOnStartup,
@@ -51,6 +53,8 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
   const setIsDictionariesOpen = useStore(
     (state) => state.setIsDictionariesOpen,
   );
+  const setIsAiSettingsOpen = useStore((state) => state.setIsAiSettingsOpen);
+  const setIsCorsProxyOpen = useStore((state) => state.setIsCorsProxyOpen);
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
   const setSideMenuOrientation = useStore(
     (state) => state.setSideMenuOrientation,
@@ -152,6 +156,19 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             setIsDictionariesOpen(true);
           }}
         />
+        <SettingsLink
+          label={
+            <span className="flex items-center gap-1">
+              {t("AI")}
+              <AlphaBadge />
+            </span>
+          }
+          action={t("Manage AI Providers")}
+          onClick={() => {
+            handleClose();
+            setIsAiSettingsOpen(true);
+          }}
+        />
         {isTauri ? (
           <SettingsLink
             label={t("Plugins")}
@@ -159,6 +176,16 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             onClick={() => {
               handleClose();
               setIsPluginsOpen(true);
+            }}
+          />
+        ) : null}
+        {isWeb ? (
+          <SettingsLink
+            label={t("CORS Proxy")}
+            action={t("Set Proxy")}
+            onClick={() => {
+              handleClose();
+              setIsCorsProxyOpen(true);
             }}
           />
         ) : null}
@@ -179,7 +206,7 @@ function SettingsLink({
   action,
   onClick,
 }: {
-  label: string;
+  label: ReactNode;
   action: string;
   onClick: () => void;
 }) {

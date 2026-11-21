@@ -34,7 +34,7 @@ const BLOCK_TAGS = [
 const BLOCKS = BLOCK_TAGS.join(",");
 
 /** The text of an element: words of <br> lines apart, spaces as one */
-function textOf(el: Element): string {
+export function textOf(el: Element): string {
   let out = "";
   const walk = (node: Node) => {
     for (const child of node.childNodes) {
@@ -139,4 +139,22 @@ export async function readBlocks(
         ? reader.getCFI(index)
         : undefined;
   return next ? { blocks: found, next } : { blocks: found };
+}
+
+/**
+ * The blocks of text of a section (a chapter, as written), each with its
+ * CFI; none if the section has no document, e.g. not linear.
+ */
+export async function sectionBlocks(
+  reader: BlockReader,
+  index: number,
+): Promise<TextBlock[]> {
+  const section = reader.book.sections[index];
+  if (!section?.createDocument) return [];
+  const doc = await section.createDocument();
+  return blocksOf(doc).map((el) => {
+    const range = doc.createRange();
+    range.selectNodeContents(el);
+    return { cfi: reader.getCFI(index, range), text: textOf(el) };
+  });
 }

@@ -14,12 +14,14 @@ import {
   TbLink,
   TbBallpen,
   TbQuote,
+  TbSparkles,
   TbBlockquote,
 } from "react-icons/tb";
 import copy from "copy-to-clipboard";
 import { useStore } from "@/state/store";
 import { IconButton } from "@/ui/ui";
 import { t, useT } from "@/i18n";
+import { askAi } from "@/ai/chat/chatStore";
 import {
   HIGHLIGHT_COLORS,
   noteText,
@@ -40,6 +42,8 @@ import {
   rememberHighlight,
 } from "../actions";
 import NoteIssues from "../annotations/NoteIssues";
+import { bookHref } from "../annotations/annotations";
+import { titleOfFile } from "../library/library";
 
 /** Where to show a popup for a box: under it, or above if no room. */
 export function placeOf(
@@ -557,6 +561,20 @@ function BookPopups({
             box: selection.box,
             edit: highlighted ? "existing" : "new",
           });
+        },
+      },
+      {
+        id: "ai",
+        title: t("Ask AI about it"),
+        icon: <TbSparkles size={18} />,
+        onClick: () => {
+          const { hash, entry, path } = activeStore().getState();
+          askAi(undefined, {
+            text,
+            from: entry?.title || (path ? titleOfFile(path) : undefined),
+            ...(hash ? { href: bookHref(hash, cfi) } : {}),
+          });
+          clear();
         },
       },
       ...(tools?.(selection) ?? []),

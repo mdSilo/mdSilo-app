@@ -221,6 +221,9 @@ type PersistedState = Pick<
   | "librarySettings"
   | "dictionarySettings"
   | "syncSettings"
+  | "aiSettings"
+  | "isChatOpen"
+  | "chatWidth"
 >;
 
 type FunctionPropertyNames<T> = {
@@ -466,6 +469,9 @@ export const store = createStore<Store>()(
         librarySettings: state.librarySettings,
         dictionarySettings: state.dictionarySettings,
         syncSettings: state.syncSettings,
+        aiSettings: state.aiSettings,
+        isChatOpen: state.isChatOpen,
+        chatWidth: state.chatWidth,
       }),
     },
   ),

@@ -1093,7 +1093,8 @@ describe("SideMenu", () => {
 
   test("shows view buttons only with a dir and dispatches views", async () => {
     const { unmount } = renderWithView(withContainer(<SideMenu />));
-    expect(document.querySelectorAll("#side-menu-btns button")).toHaveLength(4);
+    // logo, toggle, feed, AI chat, file
+    expect(document.querySelectorAll("#side-menu-btns button")).toHaveLength(5);
     unmount();
 
     store.getState().setCurrentDir("/n");
@@ -1108,8 +1109,10 @@ describe("SideMenu", () => {
     const btns = Array.from(
       document.querySelectorAll("#side-menu-btns button"),
     ) as HTMLElement[];
-    // logo, toggle, feed, new, issues, projects, chronicle, graph, file
-    expect(btns).toHaveLength(9);
+    // logo, toggle, feed, new, issues, projects, chronicle, graph, AI chat, file
+    expect(btns).toHaveLength(10);
+    await userEvent.click(btns[8]);
+    expect(store.getState().isChatOpen).toBe(true);
     await userEvent.click(screen.getByRole("button", { name: "Explorer" }));
     expect(store.getState().isSidebarOpen).toBe(false);
     await userEvent.click(btns[2]);

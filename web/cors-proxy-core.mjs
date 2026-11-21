@@ -5,6 +5,14 @@
  * Only standard web APIs (fetch, URL, Response) are used here.
  *
  * API: GET <proxy>?url=<encoded url>
+ *
+ * And a relay for the AI of the web version (src/ai/transport.ts), for the
+ * providers that do not answer browsers: POST <proxy>?url=<encoded url>,
+ * the request (its body, and only the headers of RELAY_HEADERS: the key, the
+ * version of the API…) sent on to the url, by the method of the
+ * `x-mdsilo-method` header (POST by default, GET), the answer streamed back.
+ * Only to the hosts of DEFAULT_RELAY_HOSTS and those added (`RELAY_HOSTS`,
+ * comma separated): not an open relay of keys.
  */
 
 export const MAX_BYTES = 10 * 1024 * 1024;
@@ -70,10 +78,39 @@ export async function assertPublicUrl(raw, resolve) {
   return url;
 }
 
+/** the headers of a request relayed to an AI provider, the others dropped */
+export const RELAY_HEADERS = [
+  'authorization',
+  'x-api-key',
+  'anthropic-version',
+  'anthropic-beta',
+  'x-subscription-token',
+  'content-type',
+  'accept',
+  'x-mdsilo-method',
+];
+
+/** the hosts requests are relayed to: the AI and search services the app knows */
+export const DEFAULT_RELAY_HOSTS = [
+  'api.anthropic.com',
+  'api.openai.com',
+  'openrouter.ai',
+  'api.groq.com',
+  'api.deepseek.com',
+  'api.mistral.ai',
+  'api.together.xyz',
+  'api.search.brave.com',
+  'api.tavily.com',
+];
+
+/** a request relayed at most, as its body */
+export const MAX_RELAY_BYTES = 30 * 1024 * 1024;
+
 export function corsHeaders(allowOrigin = '*') {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': RELAY_HEADERS.join(', '),
     'Access-Control-Expose-Headers': PROXY_HEADER,
     Vary: 'Origin',
     [PROXY_HEADER]: '1',
@@ -139,5 +176,72 @@ export async function handleProxy(req, options = {}) {
       : { status: 502, headers, body: 'Bad Gateway' };
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/** The hosts to relay to: the default ones and those added, comma separated. */
+export function relayHostsOf(added = '') {
+  return [
+    ...DEFAULT_RELAY_HOSTS,
+    ...added
+      .split(',')
+      .map((h) => h.trim().toLowerCase())
+      .filter(Boolean),
+  ];
+}
+
+const hostAllowed = (host, hosts) =>
+  hosts.some((h) => host === h || host.endsWith(`.${h}`));
+
+/**
+ * Relay a request to an AI provider, its answer streamed back.
+ * @param {{ url: string, headers: Headers | Record<string, string | string[] | undefined>, body: BodyInit | null }} req
+ * @param {{ allowOrigin?: string, relayHosts?: string[], resolve?: (host: string) => Promise<string[]> }} options
+ * @returns {Promise<{ status: number, headers: Record<string, string>, body: ReadableStream | string | null }>}
+ */
+export async function handleRelay(req, options = {}) {
+  const headers = corsHeaders(options.allowOrigin);
+  const target = new URL(req.url, 'http://localhost').searchParams.get('url');
+  if (!target) return { status: 400, headers, body: 'Missing url' };
+  const get = (name) => {
+    const value = req.headers instanceof Headers ? req.headers.get(name) : req.headers[name];
+    return Array.isArray(value) ? value.join(', ') : value ?? undefined;
+  };
+  try {
+    const url = await assertPublicUrl(target, options.resolve);
+    const host = url.hostname.toLowerCase();
+    if (!hostAllowed(host, options.relayHosts ?? DEFAULT_RELAY_HOSTS)) {
+      return { status: 403, headers, body: `Not relayed to ${host}: add it to RELAY_HOSTS` };
+    }
+    const sent = {};
+    for (const name of RELAY_HEADERS) {
+      const value = get(name);
+      if (value && name !== 'x-mdsilo-method') sent[name] = value;
+    }
+    const method = get('x-mdsilo-method') === 'GET' ? 'GET' : 'POST';
+    const resp = await fetch(url, {
+      method,
+      headers: sent,
+      body: method === 'GET' ? undefined : req.body,
+      redirect: 'manual',
+      // a stream as the body: sent as it comes
+      ...(req.body && typeof req.body === 'object' && 'getReader' in req.body ? { duplex: 'half' } : {}),
+    });
+    if (resp.status >= 300 && resp.status < 400) {
+      return { status: 502, headers, body: 'Redirects are not relayed' };
+    }
+    return {
+      status: resp.status,
+      headers: {
+        ...headers,
+        'Content-Type': resp.headers.get('content-type') || 'application/octet-stream',
+        'Cache-Control': 'no-store',
+      },
+      body: resp.body,
+    };
+  } catch (e) {
+    return e instanceof ProxyError
+      ? { status: e.status, headers, body: e.message }
+      : { status: 502, headers, body: 'Bad Gateway' };
   }
 }

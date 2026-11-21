@@ -2,11 +2,11 @@ import copy from "copy-to-clipboard";
 import { some } from "lodash";
 import { NodeSelection, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
-import type { Node as ProsemirrorNode } from "prosemirror-model";
+import { Slice, type Node as ProsemirrorNode } from "prosemirror-model";
 import { CellSelection } from "prosemirror-tables";
 import * as React from "react";
 import styled from "styled-components";
-import { TbPuzzle } from "react-icons/tb";
+import { TbPuzzle, TbSparkles } from "react-icons/tb";
 import createAndInsertLink from "../core/commands/createAndInsertLink";
 import { CommandFactory } from "../core/Extension";
 import type { MarkdownSerializer } from "../core/mdSerializer";
@@ -40,6 +40,8 @@ export type SelectionActionResult = {
   insert?: string;
   /** Markdown after the block of the text selected, e.g. an image */
   insertMarkdown?: string;
+  /** Markdown in place of the text selected, e.g. the text rewritten */
+  replaceMarkdown?: string;
 };
 
 /** What else is known of the text selected, for an action on it */
@@ -67,6 +69,10 @@ export type SelectionAction = {
 
 /** the button of the list of the actions */
 const ACTIONS_MENU = "action:menu";
+/** the button of the list of the actions of the AI */
+const AI_MENU = "action:ai";
+
+type OpenMenu = typeof ACTIONS_MENU | typeof AI_MENU | null;
 
 type Props = {
   dictionary: typeof baseDictionary;
@@ -92,6 +98,8 @@ type Props = {
   onOpenLink?: (href: string) => void;
   onShowToast?: (msg: string, code: string) => void;
   selectionActions?: SelectionAction[];
+  /** the actions of an AI on the text selected: under a button of their own */
+  aiActions?: SelectionAction[];
   /** to give actions the text selected as Markdown */
   serializer?: MarkdownSerializer;
   /** to put the Markdown of an action in the note */
@@ -131,19 +139,19 @@ function isVisible(props: Props) {
 
 export default class SelectionToolbar extends React.Component<
   Props,
-  { actionsOpen: boolean; running: boolean }
+  { openMenu: OpenMenu; running: boolean }
 > {
   isActive = false;
   menuRef = React.createRef<HTMLDivElement>();
   // running: an action on the text, maybe with its answer in a dialog of the
   // app, which the toolbar (above all) would cover
-  state = { actionsOpen: false, running: false };
+  state = { openMenu: null as OpenMenu, running: false };
 
   componentDidUpdate(): void {
     const visible = isVisible(this.props);
     if (this.isActive && !visible) {
       this.isActive = false;
-      if (this.state.actionsOpen) this.setState({ actionsOpen: false });
+      if (this.state.openMenu) this.setState({ openMenu: null });
       this.props.onClose();
     }
     if (!this.isActive && visible) {
@@ -290,7 +298,26 @@ export default class SelectionToolbar extends React.Component<
     const { from, to } = state.selection;
     // the text selected changed meanwhile: nothing to replace
     if (state.doc.textBetween(from, to) !== text) return;
-    if (typeof result.replace === "string") {
+    if (
+      typeof result.replaceMarkdown === "string" &&
+      this.props.parseMarkdown
+    ) {
+      try {
+        const doc = this.props.parseMarkdown(result.replaceMarkdown);
+        const only = doc.childCount === 1 ? doc.firstChild : null;
+        // one paragraph: its text in place, in the block of the text selected
+        const tr =
+          only?.type.name === "paragraph"
+            ? state.tr.replaceWith(from, to, only.content)
+            : state.tr.replaceRange(from, to, new Slice(doc.content, 0, 0));
+        dispatch(tr);
+      } catch (e) {
+        onShowToast?.(
+          `${action.title}: ${(e as Error)?.message ?? e}`,
+          ToastType.Error
+        );
+      }
+    } else if (typeof result.replace === "string") {
       dispatch(state.tr.insertText(result.replace, from, to));
     } else if (typeof result.insert === "string") {
       dispatch(state.tr.insertText(` ${result.insert}`, to));
@@ -322,6 +349,7 @@ export default class SelectionToolbar extends React.Component<
       onLookUpText,
       canLookUpText,
       selectionActions,
+      aiActions,
       isTemplate,
       rtl,
       ...rest
@@ -380,16 +408,23 @@ export default class SelectionToolbar extends React.Component<
           !!selectionText.trim() &&
           (canLookUpText?.(selectionText) ?? true)
       );
+      if (aiActions?.length || selectionActions?.length)
+        items.push({ name: "separator" });
+      if (aiActions?.length) {
+        items.push({
+          name: AI_MENU,
+          tooltip: dictionary.ai,
+          icon: TbSparkles,
+          active: () => this.state.openMenu === AI_MENU,
+        });
+      }
       if (selectionActions?.length) {
-        items.push(
-          { name: "separator" },
-          {
-            name: ACTIONS_MENU,
-            tooltip: dictionary.plugins,
-            icon: TbPuzzle,
-            active: () => this.state.actionsOpen,
-          }
-        );
+        items.push({
+          name: ACTIONS_MENU,
+          tooltip: dictionary.plugins,
+          icon: TbPuzzle,
+          active: () => this.state.openMenu === ACTIONS_MENU,
+        });
       }
       isTextSelection = true;
     }
@@ -437,8 +472,18 @@ export default class SelectionToolbar extends React.Component<
           this.menuRef.current?.getBoundingClientRect()
         ),
     };
-    actions[ACTIONS_MENU] = () =>
-      this.setState(({ actionsOpen }) => ({ actionsOpen: !actionsOpen }));
+    const toggle = (menu: OpenMenu) => () =>
+      this.setState(({ openMenu }) => ({
+        openMenu: openMenu === menu ? null : menu,
+      }));
+    actions[ACTIONS_MENU] = toggle(ACTIONS_MENU);
+    actions[AI_MENU] = toggle(AI_MENU);
+    const menuActions =
+      this.state.openMenu === AI_MENU
+        ? aiActions
+        : this.state.openMenu === ACTIONS_MENU
+          ? selectionActions
+          : undefined;
 
     return (
       <FloatingToolbar
@@ -459,16 +504,16 @@ export default class SelectionToolbar extends React.Component<
         ) : (
           <ToolbarMenu items={items} actions={actions} {...rest} />
         )}
-        {this.state.actionsOpen && selectionActions?.length && !isLink ? (
+        {menuActions?.length && !isLink ? (
           <ActionsList role="menu">
-            {selectionActions.map((action) => (
+            {menuActions.map((action) => (
               <ActionItem
                 key={action.id}
                 type="button"
                 role="menuitem"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
-                  this.setState({ actionsOpen: false });
+                  this.setState({ openMenu: null });
                   void this.handleSelectionAction(action, selectionText);
                 }}
               >

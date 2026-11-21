@@ -17,7 +17,7 @@ import { TbX as IconX } from "react-icons/tb";
 import { useT } from "@/i18n";
 
 type Props = {
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
   isOpen: boolean;
   handleClose: () => void;

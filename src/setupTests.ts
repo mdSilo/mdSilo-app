@@ -16,6 +16,9 @@ configure({ asyncUtilTimeout: 5000 });
 // imported and rendered; individual tests override the return values.
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(async () => undefined),
+  Channel: class<T = unknown> {
+    onmessage: (message: T) => void = () => undefined;
+  },
   convertFileSrc: vi.fn(
     (path: string) => `asset://localhost/${encodeURIComponent(path)}`,
   ),

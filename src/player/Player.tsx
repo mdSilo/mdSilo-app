@@ -7,6 +7,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import { useEngines } from "@/speech/speech";
 import { useTTS } from "@/reader/tts/tts";
 import { useT } from "@/i18n";
+import TranscriptPanel from "@/ai/TranscriptPanel";
 import { usePlayer } from "./playerStore";
 import TTSControls from "./TTSControls";
 import SpeechSettings from "./SpeechSettings";
@@ -38,7 +39,10 @@ function PodcastControls() {
   );
   // again for another pod: it plays the pod given
   return (
-    <AudioPlayer key={currentPod.url} currentPod={currentPod} title={title} />
+    <>
+      <AudioPlayer key={currentPod.url} currentPod={currentPod} title={title} />
+      <TranscriptPanel pod={currentPod} />
+    </>
   );
 }
 

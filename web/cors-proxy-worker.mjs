@@ -6,12 +6,14 @@
  *     --compatibility-date 2024-09-01 --var ALLOW_ORIGIN:https://<user>.github.io
  *
  * Then use `https://mdsilo-cors-proxy.<subdomain>.workers.dev/?url={url}` as the proxy.
+ * It relays the AI of the web version too (POST, see handleRelay), to the AI
+ * hosts it knows and those of `--var RELAY_HOSTS:host1,host2`.
  * .github/workflows/deploy-web.yml deploys it automatically if Cloudflare secrets are set.
  *
  * Workers fetch from Cloudflare edge and can not reach private networks, so only
  * the hostname is checked here.
  */
-import { handleProxy } from './cors-proxy-core.mjs';
+import { handleProxy, handleRelay, relayHostsOf } from './cors-proxy-core.mjs';
 
 export default {
   /**
@@ -19,10 +21,15 @@ export default {
    * @param {{ ALLOW_ORIGIN?: string }} env
    */
   async fetch(request, env) {
-    const result = await handleProxy(
-      { method: request.method, url: request.url },
-      { allowOrigin: env.ALLOW_ORIGIN || '*' },
-    );
+    const allowOrigin = env.ALLOW_ORIGIN || '*';
+    // the AI of the web version: relayed to the hosts allowed, streamed
+    const result =
+      request.method === 'POST'
+        ? await handleRelay(
+            { url: request.url, headers: request.headers, body: request.body },
+            { allowOrigin, relayHosts: relayHostsOf(env.RELAY_HOSTS) },
+          )
+        : await handleProxy({ method: request.method, url: request.url }, { allowOrigin });
     return new Response(result.body, { status: result.status, headers: result.headers });
   },
 };

@@ -171,15 +171,17 @@ Backup: clearing the site data of the browser deletes the notes, so back up regu
 
 RSS feeds: browsers block most feeds by CORS, so a feed is fetched directly first, then via a CORS proxy. The proxy in use, in order:
 
-1. Settings > RSS CORS Proxy, e.g. `https://proxy.example.com/?url={url}` (`{url}` is replaced by the encoded feed url, otherwise the url is appended); `none` to disable
+1. Settings > **CORS Proxy** (its dialog says which proxy is in use, and whether the site has one of its own), e.g. `https://proxy.example.com/?url={url}` (`{url}` is replaced by the encoded feed url, otherwise the url is appended); `none` to disable
 2. build time default: `MDSILO_WEB_CORS_PROXY=https://proxy.example.com/?url={url} pnpm build:web`
 3. the built-in proxy `/__cors_proxy__` of `pnpm start:web` / `pnpm preview:web`, if detected
 4. a public proxy ([allorigins](https://allorigins.win)) on static hosting, which can see the feed urls
 
-To run your own proxy (same API, GET to public http(s) addresses only):
+AI on the web: a provider that does not answer browsers is reached through the same proxy, as a relay: `POST <proxy>?url=<target>`, only the API headers (key, version, content type) sent on, the answer streamed back, and only to the AI and search hosts it knows (Anthropic, OpenAI, OpenRouter, Groq, DeepSeek, Mistral, Together, Brave, Tavily) plus `RELAY_HOSTS`. Your keys pass through it, so it is used only with 1–3 above, **never the public proxy**.
 
-- Node: `node web/cors-proxy.mjs` (no dependencies; env `PORT`, default 8787, `HOST`, `ALLOW_ORIGIN`)
-- Cloudflare Workers, for static hosting w/o a server (free tier is enough): `npx wrangler deploy web/cors-proxy-worker.mjs --name mdsilo-cors-proxy --compatibility-date 2024-09-01 --var ALLOW_ORIGIN:https://<your site origin>`
+To run your own proxy (same API: GET to public http(s) addresses, and the AI relay):
+
+- Node: `node web/cors-proxy.mjs` (no dependencies; env `PORT`, default 8787, `HOST`, `ALLOW_ORIGIN`, `RELAY_HOSTS=host1,host2` for more AI hosts)
+- Cloudflare Workers, for static hosting w/o a server (free tier is enough): `npx wrangler deploy web/cors-proxy-worker.mjs --name mdsilo-cors-proxy --compatibility-date 2024-09-01 --var ALLOW_ORIGIN:https://<your site origin>` (add `--var RELAY_HOSTS:host1,host2` for more AI hosts)
 
 Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on push to `main` (or run it manually). Enable it in repo Settings > Pages > Source: **GitHub Actions**. With repo secrets `CLOUDFLARE_API_TOKEN` (Workers edit permission) and `CLOUDFLARE_ACCOUNT_ID`, it also deploys the Cloudflare Worker proxy and builds it in as the default; or set repo variable `MDSILO_WEB_CORS_PROXY` to use an existing proxy. Other variables: `MDSILO_WEB_BASE` (default `/<repo name>/`, use `/` for a custom domain), `MDSILO_WEB_ORIGIN` (origin allowed by the proxy, default `https://<owner>.github.io`), `MDSILO_CORS_WORKER_NAME`.
 

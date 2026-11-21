@@ -20,6 +20,7 @@ import { downloadBlob, fileUrl, showMessage } from "./browser";
 import { exportBackup } from "./backup";
 import { hasDemo, removeDemo } from "./demoClear";
 import * as indexer from "./indexer";
+import * as ai from "./ai";
 
 type Args = Record<string, any>;
 type Command = (args: Args) => unknown;
@@ -128,6 +129,10 @@ async function downloadFile(
 export const commands: Record<string, Command> = {
   close_splashscreen: () => undefined,
   msg_dialog: ({ title, msg }) => showMessage(title, msg),
+  // AI providers, src-tauri/src/ai; requests are sent by src/ai/transport.ts
+  ai_providers: () => ai.aiProviders(),
+  ai_save_provider: ({ provider }) => ai.saveProvider(provider),
+  ai_delete_provider: ({ id }) => ai.deleteProvider(id),
   // feed
   fetch_feed: ({ url }) => feed.fetchFeed(url),
   add_channel: ({ url, ty, title }) => feed.addChannel(url, ty, title ?? null),

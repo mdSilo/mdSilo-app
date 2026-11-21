@@ -62,7 +62,8 @@ Samples here:
   selected. A puzzle piece if none.
 - `permissions`: `file:read`, `file:write` (the file the plugin opens), `notes:read`, `notes:write`,
   `books:read`, `issues:read`, `reader:read` (the book open: where the reader is, its text, go to a
-  place, mark text), `net` (`https:` and `wss:` from the page). The user can grant fewer.
+  place, mark text), `net` (`https:` and `wss:` from the page), `ai` (`ai.complete`: the AI the
+  user set up, in their usage). The user can grant fewer.
 - `contributes.viewers`: `[{ "extensions": ["csv"], "title": "Table", "page": "table.html" }]`, the
   plugin opens files of these extensions (not notes or books); `page` is the main page by default.
 - `contributes.views`: `[{ "id": "stats", "title": "Reading Stats", "page": "stats.html" }]`, views of the
@@ -105,6 +106,7 @@ parent.postMessage({ mdsilo: 1, id: 1, method: 'file.read' }, '*');
 | `app.style` | | `{ theme, dark, vars, font }`: the daisyUI variables of the theme and the editor font |
 | `app.openUrl` `{ url }` | | `true`; opens an `http:` or `https:` page in the browser, one a second at most; the hidden main page may only while it answers an action or a command |
 | `markdown.render` `{ text }` | | the HTML of the Markdown, as the app reads it; sanitized (no scripts, styles or forms) |
+| `ai.complete` `{ prompt?, system?, messages?, role?, maxTokens? }` | `ai` | `{ text }`: the answer of the AI the user set up in Settings > AI (counted in their usage), to `prompt` or to `messages` (`[{ role, content }]`); `role: "fast"` for the model of quick tasks; one request at a time, 20 a minute at most |
 | `file.info` | | `{ name, ext, path }` of the file opened; `path` relative to the workspace, if in it |
 | `file.read` | `file:read` | the text of the file |
 | `file.write` `{ text }` | `file:write` | `true` |

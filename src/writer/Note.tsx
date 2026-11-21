@@ -71,6 +71,9 @@ import { useWritingRoot } from "@/workspace/useWorkspace";
 import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
 import { isLookupText } from "@/reader/dictionary/dictionary";
 import { useT } from "@/i18n";
+import { useAiSelectionActions } from "@/ai/chat/editorActions";
+
+const SuggestedLinks = lazy(() => import("@/ai/SuggestedLinks"));
 import { setEditor } from "./editors";
 import { QUOTE_MIME } from "./beside";
 import { noteContentId } from "./hooks/useExport";
@@ -110,6 +113,11 @@ function Note(props: Props) {
   const { codeRenderers, key: codeRenderersKey } = useCodeRenderers();
   // buttons of plugins on the text selected
   const selectionActions = useEditorSelectionActions(noteId);
+  const aiActions = useAiSelectionActions(noteId);
+  // links to notes on the same ideas, by the embeddings (opt-in)
+  const suggestLinks = useStore((state) =>
+    Boolean(state.aiSettings.embeddings && state.aiSettings.linkSuggestions),
+  );
   // read when the editor is made: a new one when trusted plugins change them
   useTrustedVersion();
   const extensionsKey = trustedExtensionsKey();
@@ -578,6 +586,7 @@ function Note(props: Props) {
                       onSaveDiagram={onSaveDiagram}
                       codeRenderers={codeRenderers}
                       selectionActions={selectionActions}
+                      aiActions={aiActions}
                       onLookUpText={useEditorLookup.getState().show}
                       canLookUpText={isLookupText}
                       onCopyHash={onCopyHash}
@@ -610,6 +619,11 @@ function Note(props: Props) {
                   <Backlinks className="mx-4 mb-8" isCollapse={false} />
                 ) : null}
               </div>
+              {suggestLinks ? (
+                <Suspense fallback={null}>
+                  <SuggestedLinks noteId={noteId} />
+                </Suspense>
+              ) : null}
               <IssueRefs noteId={noteId} title={title} className="mb-8" />
             </div>
           </div>

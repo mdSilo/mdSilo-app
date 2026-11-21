@@ -73,7 +73,7 @@ async function searchItems(text: string): Promise<LinkSearchResult[]> {
 /**
  * Link handlers shared by every MsEditor: the note editor and the issue
  * body/comment editors. Links can be URLs, note titles, `issue:N`,
- * `book:<id>#<cfi>` or `book:<title>`.
+ * `book:<id>#<cfi>`, `book:<title>` or `podcast:<audio>#t=<seconds>`.
  */
 export default function useLinkHandlers({
   numOfResults = 10,
@@ -102,6 +102,13 @@ export default function useLinkHandlers({
       const issueNum = parseIssueHref(href);
       if (issueNum !== undefined) {
         dispatch({ view: "issue", number: issueNum });
+        return;
+      }
+      // a time of a podcast, e.g. of its transcript: played from there
+      if (/^podcast:/i.test(href.trim())) {
+        const { parsePodcastHref, playAt } = await import("@/ai/transcript");
+        const at = parsePodcastHref(href);
+        if (at) await playAt(at.audio, at.seconds);
         return;
       }
       if (/^book:/i.test(href.trim())) {
