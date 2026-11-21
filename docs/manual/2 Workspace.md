@@ -10,11 +10,13 @@ A **workspace** is a folder. mdSilo shows it in the sidebar, indexes it, and kee
 my-workspace/
 ├── reading/        books, their annotations (Foo.epub.md), clips
 ├── writing/        notes, attachments, daily notes
+├── drawing/        drawings (Foo.excalidraw) and their pictures (Foo.svg)
 └── .mdsilo/        data: books.json, issues, feeds.json, vocabulary, dictionaries
     └── local/      this device only, never synced: search index, caches
 ```
 
 - **writing/** holds your notes. A note is a Markdown file; its title is its file name. Folders can be nested as deep as you like.
+- **drawing/** holds your drawings: each is a `.excalidraw` file (what you draw, as Excalidraw saves it) with an `.svg` picture next to it, written on each change. Notes show the picture; see [[3 Editor|Editor]]. Made when you first draw.
 - **reading/** holds the books you read and the Markdown file of annotations that sits next to each book (`Foo.epub` → `Foo.epub.md`). Clipped web articles go to `reading/clips/`.
 - **.mdsilo/** holds what is not meant to be read by hand: the library, reading progress, issues, feed subscriptions, the vocabulary. All of it is plain JSON, but the dictionary files you import (`.mdsilo/dictionaries/`).
 
@@ -36,6 +38,7 @@ The narrow bar at the edge of the window switches between views.
 | RSS | Feeds and podcasts, see [[6 Feeds\|Feeds]] | `Ctrl/Cmd + Shift + R` |
 | Books | Library, see [[5 Reader\|Reader]] | `Ctrl/Cmd + Shift + L` |
 | Pen | New writing | `Ctrl/Cmd + N` |
+| Brush | New drawing: beside the note or book shown, else alone; Ctrl/⌘-click: in a window of its own (desktop) | |
 | Circle dot | Issues, see [[7 Issues\|Issues]] | `Ctrl/Cmd + Shift + I` |
 | Board | Projects | `Ctrl/Cmd + Shift + K` |
 | Calendar | Chronicle | `Ctrl/Cmd + Shift + C` |

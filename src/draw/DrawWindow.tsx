@@ -8,6 +8,9 @@ import { useCustomFonts } from "@/custom/fonts";
 import { useCustomThemes } from "@/custom/themes";
 import { onStoreHydrated, store } from "@/state/store";
 import type { DrawingWindowParams } from "@/state/windowKind";
+import { ProvideCurrentView } from "@/state/useCurrentView";
+import { showInMain } from "@/shell/windows";
+import { loadDir } from "@/workspace/open";
 import { hasWindows, shareSettings } from "@/state/windowSync";
 import { resolveLayout } from "@/workspace/layout";
 import { flushSave } from "@/workspace/pendingSaves";
@@ -17,7 +20,10 @@ import { flushDrawings } from "./save";
 
 const DrawCanvas = lazy(() => import("./DrawCanvas"));
 
-/** A window of one drawing (see window.ts): the canvas only. */
+/**
+ * A window of one drawing (see window.ts): the canvas only. The views its
+ * links ask for show in the main window.
+ */
 export default function DrawWindow({ path, ws }: DrawingWindowParams) {
   useTheme();
   useLanguage();
@@ -36,6 +42,8 @@ export default function DrawWindow({ path, ws }: DrawingWindowParams) {
           store.getState().setLayout(layout);
           store.getState().setInitDir(ws);
           setReady(true);
+          // the notes, for the links of the drawing to them
+          void loadDir(ws);
         })
         .catch((e) =>
           console.error("Failed to open the workspace of the drawing:", e),
@@ -67,16 +75,18 @@ export default function DrawWindow({ path, ws }: DrawingWindowParams) {
     </div>
   );
   return (
-    <div id="app-container" className="flex h-screen bg-base-100">
-      <ErrorBoundary>
-        {ready ? (
-          <Suspense fallback={loading}>
-            <DrawCanvas path={path} />
-          </Suspense>
-        ) : (
-          loading
-        )}
-      </ErrorBoundary>
-    </div>
+    <ProvideCurrentView route={showInMain}>
+      <div id="app-container" className="flex h-screen bg-base-100">
+        <ErrorBoundary>
+          {ready ? (
+            <Suspense fallback={loading}>
+              <DrawCanvas path={path} />
+            </Suspense>
+          ) : (
+            loading
+          )}
+        </ErrorBoundary>
+      </div>
+    </ProvideCurrentView>
   );
 }
