@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TbBooks, TbHeadphones, TbPlus, TbRss, TbX } from "react-icons/tb";
 import { Tooltip } from "@/ui/ui";
 import { CorsProxySetting } from "@/shell/settings/CorsProxySetting";
+import DigestSetting from "@/ai/DigestSetting";
 import { isWeb } from "@/workspace/util";
 import { ChannelType } from "@/types/model";
 import { t, useT } from "@/i18n";
@@ -242,11 +243,10 @@ export function FeedManager(props: Props) {
         })}
       </div>
       {/* the settings of the feed reader */}
-      {isWeb ? (
-        <div className="w-full pt-4 border-t-2 border-base-content/40">
-          <CorsProxySetting />
-        </div>
-      ) : null}
+      <div className="w-full pt-4 border-t-2 border-base-content/40">
+        {isWeb ? <CorsProxySetting /> : null}
+        <DigestSetting />
+      </div>
     </div>
   );
 }

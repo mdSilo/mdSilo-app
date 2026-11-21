@@ -501,7 +501,6 @@ export default function AiSettingsModal() {
           </label>
         ) : null}
         <MeaningSearch />
-        <DigestSettings />
         <ExcludedFolders />
         <p className="text-xs text-base-content/70" data-testid="ai-usage">
           {t(
@@ -762,70 +761,6 @@ function PromptPresets() {
           onClick={() => void onSave()}
         >
           {t("Save")}
-        </button>
-        {message ? (
-          <span className="text-xs text-base-content/70">{message}</span>
-        ) : null}
-      </div>
-    </fieldset>
-  );
-}
-
-/** The digest of the feeds: made each day if set, or now. */
-function DigestSettings() {
-  const t = useT();
-  const aiSettings = useStore((state) => state.aiSettings);
-  const setAiSettings = useStore((state) => state.setAiSettings);
-  const ws = useStore((state) => state.initDir);
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
-  if (!ws) return null;
-  const now = async () => {
-    setBusy(true);
-    setMessage("");
-    try {
-      const { makeDigest } = await import("./digest");
-      const id = await makeDigest();
-      setMessage(
-        id
-          ? t("Made: {note}", { note: id.split(/[\\/]/).pop() ?? id })
-          : t("No new unread articles"),
-      );
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <fieldset
-      className="p-2 border rounded border-base-300"
-      data-testid="ai-digest"
-    >
-      <legend className="px-1 font-semibold">{t("Digest of the feeds")}</legend>
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          className="checkbox checkbox-xs"
-          checked={Boolean(aiSettings.digest)}
-          onChange={(e) =>
-            setAiSettings({ ...aiSettings, digest: e.target.checked })
-          }
-        />
-        <span>
-          {t(
-            "Each day, summarize the new unread articles into a note in chats/",
-          )}
-        </span>
-      </label>
-      <div className="flex items-center gap-2 mt-1">
-        <button
-          type="button"
-          className="btn btn-xs"
-          disabled={busy}
-          onClick={() => void now()}
-        >
-          {busy ? t("Making…") : t("Make today's digest now")}
         </button>
         {message ? (
           <span className="text-xs text-base-content/70">{message}</span>

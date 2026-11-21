@@ -27,6 +27,7 @@ import TranscriptPanel, {
   quoteOfParagraph,
 } from "./TranscriptPanel";
 import DictateButton from "./DictateButton";
+import DigestSetting from "./DigestSetting";
 import { dayOf, digestIfDue, makeDigest, newArticles } from "./digest";
 
 const whisper: AiProvider = {
@@ -353,5 +354,40 @@ describe("digest", () => {
     vi.mocked(invoke).mockClear();
     await digestIfDue(now);
     expect(invoke).not.toHaveBeenCalledWith("get_articles", expect.anything());
+  });
+});
+
+describe("the digest among the settings of the feed reader", () => {
+  test("without an AI provider: off, and offers to set one up", async () => {
+    store.getState().setInitDir("/ws");
+    vi.mocked(invoke).mockImplementation(async (cmd) =>
+      cmd === "ai_providers" ? [] : undefined,
+    );
+    renderWithView(<DigestSetting />);
+    fireEvent.click(await screen.findByText("Set up AI"));
+    expect(store.getState().isAiSettingsOpen).toBe(true);
+    expect(screen.getByRole("checkbox")).toBeDisabled();
+  });
+
+  test("with one: turned on, made now", async () => {
+    store.getState().setInitDir("/ws");
+    vi.mocked(invoke).mockImplementation(async (cmd) =>
+      cmd === "ai_providers"
+        ? [whisper]
+        : cmd === "get_articles"
+          ? []
+          : undefined,
+    );
+    renderWithView(<DigestSetting />);
+    const box = await screen.findByRole("checkbox");
+    await waitFor(() => expect(box).toBeEnabled());
+    fireEvent.click(box);
+    expect(store.getState().aiSettings.digest).toBe(true);
+    await act(async () => {
+      fireEvent.click(screen.getByText("Make today's digest now"));
+    });
+    expect(
+      await screen.findByText("No new unread articles"),
+    ).toBeInTheDocument();
   });
 });

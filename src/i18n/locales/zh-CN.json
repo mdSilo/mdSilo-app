@@ -482,6 +482,7 @@
   "Issues": "议题",
   "Issues (Ctrl/⌘+Shift+I), Tasks (Ctrl/⌘+Shift+T)": "议题（Ctrl/⌘+Shift+I），任务（Ctrl/⌘+Shift+T）",
   "It is downloaded into reading/ of this workspace, to read here.": "它会下载到这个工作区的 reading/ 中，在这里阅读。",
+  "It needs an AI provider.": "需要一个 AI 服务。",
   "It will be removed from all issues.": "它会从所有议题中移除。",
   "its author": "其作者",
   "Its dictionary file is not on this device": "它的词典文件不在本设备上",
