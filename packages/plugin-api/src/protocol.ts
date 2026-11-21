@@ -33,6 +33,17 @@ export type NoteInfo = {
   links: string[];
 };
 
+/** A drawing of `drawing/`: what Excalidraw saves, with its picture */
+export type DrawingInfo = {
+  /** the drawing, `drawing/Foo.excalidraw`, relative to the workspace */
+  path: string;
+  /** its picture, `drawing/Foo.svg`, as the notes show it */
+  picture: string;
+  name: string;
+  /** when it was last changed, ISO 8601 */
+  updated: string;
+};
+
 export type BookInfo = {
   /** the book file, relative to the workspace */
   path: string;
@@ -205,9 +216,38 @@ export type Methods = {
   >;
   "notes.graph": Method<void, NoteGraph, "notes:read">;
   "books.list": Method<void, BookInfo[], "books:read">;
+  /** the drawings of `drawing/` and its folders, last changed first */
+  "drawings.list": Method<void, DrawingInfo[], "drawings:read">;
+  /**
+   * a drawing: its scene, as Excalidraw saves it (JSON text, `.excalidraw`),
+   * and its picture (SVG text), as the notes show it
+   */
+  "drawings.read": Method<
+    { path: string },
+    { scene: string; svg: string },
+    "drawings:read"
+  >;
+  /**
+   * writes the scene of a drawing (`{ type: "excalidraw", elements, appState?,
+   * files? }`: elements as Excalidraw saves them, or skeletons `{ type, x, y,
+   * text?, label?… }` as `convertToExcalidrawElements` takes them, drawn on
+   * top); the app
+   * draws its picture again. With `create`, a new drawing if there is none at
+   * the path. Only `.excalidraw` files in `drawing/`. A drawing open in a
+   * canvas is shown again with it.
+   */
+  "drawings.write": Method<
+    { path: string; scene: string; create?: boolean },
+    true,
+    "drawings:write"
+  >;
   "issues.list": Method<void, IssueInfo[], "issues:read">;
+  /** shows a note, a book, an issue, or a drawing (beside a note or book) */
   "app.open": Method<
-    { note: string } | { book: string } | { issue: number },
+    | { note: string }
+    | { book: string }
+    | { issue: number }
+    | { drawing: string },
     true
   >;
   // the book open in the reader: in a panel of the reader, an action, a command

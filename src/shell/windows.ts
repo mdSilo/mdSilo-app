@@ -105,15 +105,20 @@ export function routeMain(action: ViewAction): boolean {
   return action.view === "book" && focusBookWindow(action.path, action.cfi);
 }
 
+/** Another window: the views it asks for are shown in the main window. */
+export function showInMain(action: ViewAction): true {
+  void emitTo(MAIN_WIN, VIEW_EVENT, action).catch((e) =>
+    console.error("Failed to show the view:", e),
+  );
+  return true;
+}
+
 /** Book window: the views other than its book are shown in the main window. */
 export const routeBook =
   (path: string) =>
   (action: ViewAction): boolean => {
     if (action.view === "book" && action.path === path) return false;
-    void emitTo(MAIN_WIN, VIEW_EVENT, action).catch((e) =>
-      console.error("Failed to show the view:", e),
-    );
-    return true;
+    return showInMain(action);
   };
 
 /** Main window: show the views asked by the book windows. */

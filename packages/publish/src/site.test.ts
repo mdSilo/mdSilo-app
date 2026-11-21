@@ -115,6 +115,14 @@ describe('the site', () => {
     expect(hello).not.toContain('passwd');
   });
 
+  test('the picture of a drawing, in drawing/ at the root, copied', async () => {
+    const drawn = [note('writing/Blog/Drawn.md', '![Plan](../../drawing/Plan%20A.svg)')];
+    const files = await buildSite(input(drawn));
+    const copied = files.find((f) => 'copy' in f && f.copy === 'drawing/Plan A.svg');
+    expect(copied).toBeTruthy();
+    expect(text(files, 'notes/Blog/Drawn.html')).toContain(`src="../../${copied?.path}"`);
+  });
+
   test('backlinks from the published notes only', async () => {
     const files = await buildSite(input(notes));
     const hello = text(files, 'notes/Blog/Hello-World.html');

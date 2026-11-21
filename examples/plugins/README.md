@@ -61,7 +61,7 @@ Samples here:
   at 16 to 24 px); in Manage Plugins, the Plugins menu, and the list of actions on the text
   selected. A puzzle piece if none.
 - `permissions`: `file:read`, `file:write` (the file the plugin opens), `notes:read`, `notes:write`,
-  `books:read`, `issues:read`, `reader:read` (the book open: where the reader is, its text, go to a
+  `books:read`, `drawings:read`, `drawings:write` (the drawings of `drawing/`), `issues:read`, `reader:read` (the book open: where the reader is, its text, go to a
   place, mark text), `net` (`https:` and `wss:` from the page), `ai` (`ai.complete`: the AI the
   user set up, in their usage). The user can grant fewer.
 - `contributes.viewers`: `[{ "extensions": ["csv"], "title": "Table", "page": "table.html" }]`, the
@@ -127,7 +127,10 @@ knows can be read or written, not other files:
 | `notes.graph` | `notes:read` | `{ nodes: [{ path, title, tags }], links: [{ from, to }], unresolved: [{ from, title }] }`: the links between notes, resolved by title as the Graph does |
 | `books.list` | `books:read` | `[{ path, title, author, format, added, group, status, language, subjects }]` |
 | `issues.list` | `issues:read` | `[{ number, title, body, state, labels, milestone, due, created, updated, closed, notes }]` |
-| `app.open` `{ note }`, `{ book }` or `{ issue }` | | opens it in the app |
+| `drawings.list` | `drawings:read` | `[{ path, picture, name, updated }]`: the drawings of `drawing/` and its folders (`drawing/Foo.excalidraw`, its picture `drawing/Foo.svg`), last changed first |
+| `drawings.read` `{ path }` | `drawings:read` | `{ scene, svg }`: the drawing as Excalidraw saves it (JSON text), and its picture (SVG text); what is drawn in a canvas is saved first |
+| `drawings.write` `{ path, scene, create? }` | `drawings:write` | `true`; `scene` is JSON text, `{ type: "excalidraw", elements, appState?, files? }`, its elements either as Excalidraw saves them or skeletons (`{ type, x, y, width?, height?, text?, label?, strokeColor?… }`, as `convertToExcalidrawElements` takes them, drawn on top, their `id` kept); the app draws the picture again, the canvases open and the notes show it. Only `.excalidraw` files in `drawing/`; with `create: true` a new drawing (folders as needed, not over a picture of that name) |
+| `app.open` `{ note }`, `{ book }`, `{ issue }` or `{ drawing }` | | opens it in the app; a drawing beside the note or book shown, else alone |
 
 Note modes have, for the note open only, and `app.open` as views:
 

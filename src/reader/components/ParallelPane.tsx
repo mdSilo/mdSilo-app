@@ -10,6 +10,9 @@ import { besideStyle, useBesideWidth } from "@/ui/SplitHandle";
 import { useStore } from "@/state/store";
 import { t, useT } from "@/i18n";
 import FindOrCreateInput from "@/writer/NoteNewInput";
+import { useCurrentViewContext } from "@/state/useCurrentView";
+import DrawingChoices from "@/draw/DrawingChoices";
+import { newDrawing, openDrawing } from "@/draw/open";
 import {
   closeBeside,
   isBookNotes,
@@ -100,15 +103,20 @@ export function BookChoices({
   );
 }
 
-/** What to open beside the book read: another book, or a note to write. */
+/**
+ * What to open beside the book read: another book, a note to write, or a
+ * drawing.
+ */
 export function ParallelBooks({ onPick }: { onPick: () => void }) {
   const t = useT();
   const ws = useReaderStore((s) => s.ws);
   const hash = useReaderStore((s) => s.hash);
   const current = useSideStore((s) => s.hash);
   const besideNote = useStore((s) => s.besideNoteId);
-  const [tab, setTab] = useState<"books" | "notes">(
-    besideNote ? "notes" : "books",
+  const besideDrawing = useStore((s) => s.besideDrawing);
+  const { dispatch } = useCurrentViewContext();
+  const [tab, setTab] = useState<"books" | "notes" | "draw">(
+    besideDrawing ? "draw" : besideNote ? "notes" : "books",
   );
 
   const pick = async (book: BookEntry) => {
@@ -129,8 +137,8 @@ export function ParallelBooks({ onPick }: { onPick: () => void }) {
   };
 
   return (
-    <div className="w-72" data-testid="parallel-books">
-      <div role="tablist" className="tabs tabs-border tabs-sm px-1">
+    <div className="w-80" data-testid="parallel-books">
+      <div role="tablist" className="tabs tabs-border tabs-sm px-1 flex-nowrap">
         <button
           role="tab"
           className={`tab ${tab === "books" ? "tab-active" : ""}`}
@@ -145,8 +153,26 @@ export function ParallelBooks({ onPick }: { onPick: () => void }) {
         >
           {t("Write beside")}
         </button>
+        <button
+          role="tab"
+          className={`tab ${tab === "draw" ? "tab-active" : ""}`}
+          onClick={() => setTab("draw")}
+        >
+          {t("Draw beside")}
+        </button>
       </div>
-      {tab === "books" ? (
+      {tab === "draw" ? (
+        <DrawingChoices
+          onPick={(path) => {
+            onPick();
+            void openDrawing(path, dispatch, "beside");
+          }}
+          onNew={() => {
+            onPick();
+            void newDrawing(dispatch, "beside");
+          }}
+        />
+      ) : tab === "books" ? (
         <BookChoices
           ws={ws}
           exclude={hash}

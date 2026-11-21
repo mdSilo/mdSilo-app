@@ -1109,7 +1109,8 @@ describe("SideMenu", () => {
     const btns = Array.from(
       document.querySelectorAll("#side-menu-btns button"),
     ) as HTMLElement[];
-    // logo, toggle, feed, new, issues, projects, chronicle, graph, AI chat, file
+    // logo, toggle, feed, new (writing or drawing), issues, projects,
+    // chronicle, graph, AI chat, file
     expect(btns).toHaveLength(10);
     await userEvent.click(btns[8]);
     expect(store.getState().isChatOpen).toBe(true);
@@ -1117,7 +1118,15 @@ describe("SideMenu", () => {
     expect(store.getState().isSidebarOpen).toBe(false);
     await userEvent.click(btns[2]);
     expect(viewState().view).toBe("feed");
+    // New: a menu of a writing or a drawing (no window in the browser)
     await userEvent.click(btns[3]);
+    expect(
+      screen.getByRole("menuitem", { name: /^New Drawing/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /in a Window/ })).toBeNull();
+    await userEvent.click(
+      screen.getByRole("menuitem", { name: /New Writing/ }),
+    );
     expect(store.getState().isFindOrCreateModalOpen).toBe(true);
     for (const [i, view] of [
       [4, "issues"],
@@ -1128,6 +1137,38 @@ describe("SideMenu", () => {
       await userEvent.click(btns[i]);
       expect(viewState().view).toBe(view);
     }
+  });
+
+  test("Alt+N makes a new drawing, in a workspace only", async () => {
+    mockInvoke(invoke, {
+      file_exist: false,
+      write_file: undefined,
+      create_dir_recursive: true,
+    });
+    act(() => store.getState().setInitDir("/ws"));
+    renderWithView(
+      withContainer(
+        <>
+          <SideMenu />
+          <ViewProbe />
+        </>,
+      ),
+    );
+    const altN = () =>
+      fireEvent.keyDown(document, {
+        key: "n",
+        keyCode: 78,
+        which: 78,
+        altKey: true,
+      });
+    altN();
+    expect(viewState().view).not.toBe("drawing");
+    act(() => store.getState().setCurrentDir("/ws"));
+    altN();
+    await waitFor(() => expect(viewState().view).toBe("drawing"));
+    expect(viewState().drawingPath).toMatch(
+      /^\/ws\/drawing\/Drawing .*\.excalidraw$/,
+    );
   });
 
   test("goes back to the book last read in the workspace", async () => {

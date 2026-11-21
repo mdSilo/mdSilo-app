@@ -9,6 +9,7 @@ import { updateGitignore } from "./gitignore";
  *   <workspace>/
  *     reading/    books, their annotations (Foo.epub.md), clips
  *     writing/    notes, assets, daily notes
+ *     drawing/    drawings (Foo.excalidraw) and their pictures (Foo.svg)
  *     .mdsilo/    data: workspace.json, issues/, feeds.json, books.json
  *       local/    this device only, never synced: index.db, caches
  *
@@ -17,6 +18,8 @@ import { updateGitignore } from "./gitignore";
  */
 export const READING_DIR = "reading";
 export const WRITING_DIR = "writing";
+/** the drawings, at the root of legacy workspaces too, see draw/ */
+export const DRAWING_DIR = "drawing";
 export const DATA_DIR = ".mdsilo";
 export const LOCAL_DIR = "local";
 /** the clipped feed articles, in reading/ (the root of legacy workspaces) */
@@ -109,7 +112,12 @@ export function localRoot(state: Roots = roots()): string | undefined {
 }
 
 /** Top level entries of a workspace, never moved into writing/ on migration. */
-export const LAYOUT_ENTRIES = new Set([READING_DIR, WRITING_DIR, DATA_DIR]);
+export const LAYOUT_ENTRIES = new Set([
+  READING_DIR,
+  WRITING_DIR,
+  DRAWING_DIR,
+  DATA_DIR,
+]);
 
 /**
  * The layout of a folder being opened. An empty folder becomes a workspace;

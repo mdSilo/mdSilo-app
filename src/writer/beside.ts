@@ -44,7 +44,13 @@ export async function openBeside(noteId: string): Promise<boolean> {
     const currentNote = { ...state.currentNote, [note.id]: note };
     if (besideNoteId && besideNoteId !== state.currentNoteId)
       delete currentNote[besideNoteId];
-    return { currentNote, besideNoteId: note.id, notePane: "side" as const };
+    // one pane beside: the drawing there leaves it (see draw/)
+    return {
+      currentNote,
+      besideNoteId: note.id,
+      besideDrawing: "",
+      notePane: "side" as const,
+    };
   });
   return true;
 }

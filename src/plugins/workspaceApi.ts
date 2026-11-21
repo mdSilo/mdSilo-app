@@ -272,14 +272,15 @@ export async function listIssues(): Promise<IssueInfo[]> {
 }
 
 /**
- * Opens a note, a book or an issue in the app, leaving the view of the
- * plugin: `{ note: path }`, `{ book: path }` or `{ issue: number }`.
+ * Opens a note, a book, an issue or a drawing in the app, leaving the view
+ * of the plugin: `{ note: path }`, `{ book: path }`, `{ issue: number }` or
+ * `{ drawing: path }` (beside the note or book shown, else alone).
  */
 export async function openInApp(
   params: unknown,
   dispatch: (action: ViewAction) => void,
 ) {
-  const { note, book, issue } = asObject(params);
+  const { note, book, issue, drawing } = asObject(params);
   if (typeof issue === "number" && Number.isInteger(issue) && issue > 0) {
     dispatch({ view: "issue", number: issue });
     return true;
@@ -297,7 +298,15 @@ export async function openInApp(
     dispatch({ view: "md", params: { noteId: opened.id } });
     return true;
   }
-  throw new Error("app.open wants { note }, { book } or { issue }");
+  if (drawing !== undefined) {
+    const { drawingAt } = await import("@/draw/pluginApi");
+    const { openDrawing } = await import("@/draw/open");
+    await openDrawing(drawingAt(drawing), dispatch, "auto");
+    return true;
+  }
+  throw new Error(
+    "app.open wants { note }, { book }, { issue } or { drawing }",
+  );
 }
 
 /** The methods of the workspace, for the views of plugins */
@@ -312,5 +321,19 @@ export const workspaceMethods = (
   "notes.graph": { permission: "notes:read", handler: noteGraph },
   "books.list": { permission: "books:read", handler: listBooks },
   "issues.list": { permission: "issues:read", handler: listIssues },
+  "drawings.list": {
+    permission: "drawings:read",
+    handler: async () => (await import("@/draw/pluginApi")).listDrawingInfos(),
+  },
+  "drawings.read": {
+    permission: "drawings:read",
+    handler: async (params) =>
+      (await import("@/draw/pluginApi")).readDrawingFiles(params),
+  },
+  "drawings.write": {
+    permission: "drawings:write",
+    handler: async (params) =>
+      (await import("@/draw/pluginApi")).writeDrawingFiles(params),
+  },
   "app.open": { handler: (params) => openInApp(params, dispatch) },
 });
