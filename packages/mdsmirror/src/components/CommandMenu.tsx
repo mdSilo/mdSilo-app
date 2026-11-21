@@ -7,7 +7,7 @@ import styled from "styled-components";
 import { CommandFactory } from "../core/Extension";
 import getDataTransferFiles from "../core/queries/getDataTransferFiles";
 import insertFiles from "../core/commands/insertFiles";
-import attachFiles, { Attach } from "../core/commands/attachFiles";
+import attachFiles, { Attach, insertNode } from "../core/commands/attachFiles";
 import filterExcessSeparators from "./filterExcessSeparators";
 import { EmbedDescriptor, MenuItem } from "./types";
 import { ToastType } from "../types";
@@ -31,6 +31,8 @@ export type Props<T extends MenuItem = MenuItem> = {
   search: string;
   isSlash: boolean;
   attachFile?: (accept: string) => Promise<Attach[]>;
+  /** make a new drawing: the picture of it to insert */
+  onCreateDrawing?: () => Promise<{ src: string; alt?: string } | undefined>;
   handleSrc?: (src: string) => string;
   uploadFile?: (file: File) => Promise<string>;
   onFileUploadStart?: () => void;
@@ -189,6 +191,8 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<
         return this.triggerFilePick("image/*");
       case "attachment":
         return this.triggerFilePick("*");
+      case "drawing":
+        return this.createDrawing();
       case "embed":
         return this.triggerLinkInput(item);
       case "link": {
@@ -286,6 +290,23 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<
       }
       this.inputRef.current.click();
     }
+  };
+
+  createDrawing = () => {
+    const { view, onCreateDrawing } = this.props;
+    this.clearSearch();
+    this.props.onClose();
+    onCreateDrawing?.()
+      .then((picture) => {
+        if (picture)
+          insertNode(
+            view,
+            "image",
+            { src: picture.src, alt: picture.alt ?? null },
+            false
+          );
+      })
+      .catch((error) => console.error("Failed to make a drawing:", error));
   };
 
   triggerLinkInput = (item: EmbedDescriptor) => {
@@ -435,6 +456,7 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<
       search = "",
       uploadFile,
       attachFile,
+      onCreateDrawing,
       commands,
       filterable = true,
     } = this.props;
@@ -457,8 +479,11 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<
         return true;
       }
 
-      // Some extensions may be disabled, remove corresponding menu items
-      if (
+      // a drawing is made by the app, if it can
+      if (item.name === "drawing") {
+        if (!onCreateDrawing) return false;
+      } else if (
+        // Some extensions may be disabled, remove corresponding menu items
         item.name &&
         !commands[item.name] &&
         !commands[`create${capitalize(item.name)}`]

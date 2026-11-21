@@ -20,7 +20,7 @@ Switching is lossless: it is the same file. The gear next to the modes opens **E
 
 Type `/` on an empty line to open the command menu, then keep typing to filter. Press Enter to insert.
 
-- Image, File (attach a local file; PDFs are shown inline)
+- Image, File (attach a local file; PDFs are shown inline), Drawing (see below)
 - Date, Time, Date and time
 - Big, medium and small heading
 - Task list, bulleted list, ordered list
@@ -122,6 +122,18 @@ Paste a YouTube or Figma link on its own line and it becomes an embedded player 
 ## Two notes side by side
 
 The *Open beside* button (two columns, top right of a note) opens another note beside it: one written lately, any note found by its title, or a new one. Ctrl-, ⌘- or Alt-click a note in the sidebar does the same. Both can be edited; links clicked in the note beside open in it, and plugins act on the note you used last. *Swap sides* puts it on the left, the cross closes it; drag the line between the two to share the width (double-click it for half and half). The note beside stays when you open another note, or a book: write beside a book with the *Read beside* tab of the same menu (see [[5 Reader|Reader]]). A note cannot be open on both sides: opened in the main pane, it leaves the side one. Not on a phone.
+
+## Drawing
+
+Draw with [Excalidraw](https://excalidraw.com): shapes, arrows, free hand, text, images. A drawing is a file in `drawing/` (see [[2 Workspace|Workspace]]), saved as you draw, with its picture, an SVG, beside it.
+
+- **Make one**: *New Drawing* under the pen of the side menu (`Alt + N`), *Drawing* in the slash menu of a note (its picture goes in the note, at the cursor), or click a `.excalidraw` file in the sidebar to open it.
+- **Beside a note or book**: the *Draw beside* tab of *Open beside* (a note) or of *Parallel reading* (a book) offers a new drawing or one of `drawing/`, last changed first.
+- **Where it opens**: beside the note or book shown, as a note beside does (drag the line between them for the width); over the page on a phone; alone otherwise. Its bar has *Insert into the note* (the picture, at the cursor), *Open alone*, *Open in a window* (desktop) and close. *New Drawing in a Window* under the same pen opens a new one in a window of its own (desktop); Ctrl/⌘/Alt-click a drawing in the sidebar to open it beside.
+- **In a note** it is a plain picture, `![Plan](../drawing/Plan.svg)`, so it shows anywhere Markdown does, on GitHub too, and is published with the note. Double-click it, or select it and press the pencil of its toolbar, to change the drawing beside the note; the picture follows once you stop drawing. In the dark theme the picture is shown inverted, as Excalidraw does.
+- **Rename** a drawing by clicking its name in the bar of the canvas (Enter to rename, Escape to keep the name), **or move** it from its menu in the sidebar (the dots of either file), or drag it to another folder: its picture goes with it, and the pictures in the notes and the drawing open follow. The same when one of the two is renamed or moved outside the app. Not over another file of that name.
+- **From a book**: drag a highlight or text of a book onto a drawing beside it: it becomes a text, linked back to the place in the book.
+- **Links**: the link of a shape (Ctrl/⌘ + K in Excalidraw) can be a note title, `book:`, `issue:N` or a URL, opened as from a note.
 
 ## Export
 

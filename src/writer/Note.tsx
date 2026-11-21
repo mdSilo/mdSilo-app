@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { invoke, convertFileSrc } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import copy from "copy-to-clipboard";
 import { TbCaretRight as IconCaretRight } from "react-icons/tb";
 import MsEditor, {
@@ -17,6 +17,7 @@ import MsEditor, {
   theme as baseTheme,
   type Extension,
 } from "mdsmirror";
+import { fileSrcOf, useNoteDrawings } from "@/draw/noteDrawings";
 import { useCodeRenderers } from "@/plugins/codeBlocks";
 import { useEditorSelectionActions } from "@/plugins/EditorSelectionActions";
 import PluginNoteMode, { usePluginNoteModes } from "@/plugins/PluginNoteMode";
@@ -198,6 +199,12 @@ function Note(props: Props) {
   // for context
   const currentView = useCurrentViewContext();
   const state = currentView.state;
+  // the pictures of drawings: made, edited from here (see draw/)
+  const drawingProps = useNoteDrawings(
+    noteDir,
+    notesRoot,
+    currentView.dispatch,
+  );
   const dispatch = currentView.dispatch;
   const currentNoteValue = useMemo(
     () => ({ ty: "note", id: noteId, state, dispatch, beside, closeBook }),
@@ -584,6 +591,7 @@ function Note(props: Props) {
                       attachFile={onAttachFile}
                       onClickAttachment={onClickAttachment}
                       onSaveDiagram={onSaveDiagram}
+                      {...drawingProps}
                       codeRenderers={codeRenderers}
                       selectionActions={selectionActions}
                       aiActions={aiActions}
@@ -595,7 +603,7 @@ function Note(props: Props) {
                       rootPath={notesRoot}
                       docPath={noteDir}
                       protocol={protocol}
-                      resolveSrc={convertFileSrc}
+                      resolveSrc={fileSrcOf}
                     />
                   )}
                 </Suspense>

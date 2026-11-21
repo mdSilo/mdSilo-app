@@ -177,6 +177,13 @@ export default class Image extends Node {
       view.dispatch(transaction);
     };
 
+  /** a double click edits the image, if it can be: a drawing */
+  editOf = (src: string) => {
+    const { isEditableImage, onEditImage } = this.editor.props;
+    if (!src || !onEditImage || !isEditableImage?.(src)) return undefined;
+    return () => onEditImage(src);
+  };
+
   handleMouseDown = (ev: React.MouseEvent<HTMLParagraphElement>) => {
     if (document.activeElement !== ev.currentTarget) {
       ev.preventDefault();
@@ -191,6 +198,8 @@ export default class Image extends Node {
         {...props}
         onClick={this.handleSelect(props)}
         onSrc={this.editor.handleSrc}
+        onEdit={this.editOf(props.node.attrs.src)}
+        editTitle={this.options.dictionary.editImage}
       >
         <Caption
           onKeyDown={this.handleKeyDown(props)}
@@ -381,6 +390,8 @@ const ImageComponent = (
   props: ComponentProps & {
     onClick: (event: React.MouseEvent<HTMLDivElement>) => void;
     onSrc: (src: string) => string;
+    onEdit?: () => void;
+    editTitle?: string;
     children: React.ReactNode;
   }
 ) => {
@@ -395,6 +406,9 @@ const ImageComponent = (
       <ImageWrapper
         className={isSelected ? "ProseMirror-selectednode" : ""}
         onClick={props.onClick}
+        onDoubleClick={props.onEdit}
+        data-editable={props.onEdit ? "true" : undefined}
+        title={props.onEdit ? props.editTitle : undefined}
       >
         <img alt={alt} src={newSrc} />
       </ImageWrapper>

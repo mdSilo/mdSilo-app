@@ -15,9 +15,14 @@ import MoveToModal from "@/writer/NoteMoveModal";
 import NoteMetadata from "@/writer/NoteMetadata";
 import DirNewModal from "@/shell/dir/DirNewModal";
 import { listDirPath } from "@/workspace/useOpen";
-import { dirRenameOptions, noteRenameOptions } from "@/workspace/renamePath";
+import {
+  dirRenameOptions,
+  noteRenameOptions,
+  type RenameOptions,
+} from "@/workspace/renamePath";
 import { bookPathOfAnnotations } from "@/reader/annotations/annotations";
 import { bookRenameOptions, moveBook } from "@/reader/library/bookFile";
+import { drawingRenameOptions, moveDrawing } from "@/draw/rename";
 import { useT } from "@/i18n";
 import RenameModal from "./RenameModal";
 
@@ -217,14 +222,24 @@ const SidebarDirLinkDropdown = (props: DirProps) => {
 
 export const SidebarDirDropdown = memo(SidebarDirLinkDropdown);
 
-type BookProps = {
-  bookPath: string;
+type FileProps = {
+  path: string;
   className?: string;
 };
 
-const SidebarBookLinkDropdown = (props: BookProps) => {
+type FileMenuProps = FileProps & {
+  /** the title of the rename dialog */
+  renameTitle: string;
+  /** what goes with the file */
+  renameHint: string;
+  options: RenameOptions;
+  onMove: (tarDir: string) => Promise<unknown>;
+};
+
+/** Move or rename a file that others go with: a book, a drawing. */
+const FileMenu = (props: FileMenuProps) => {
   const t = useT();
-  const { bookPath, className } = props;
+  const { path, className, renameTitle, renameHint, options, onMove } = props;
 
   const containerRef = useRef<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLElement | null>(null);
@@ -236,10 +251,6 @@ const SidebarBookLinkDropdown = (props: BookProps) => {
 
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [isMoveToModalOpen, setIsMoveToModalOpen] = useState(false);
-  const onMove = useCallback(
-    (tarDir: string) => moveBook(bookPath, tarDir),
-    [bookPath],
-  );
 
   return (
     <>
@@ -280,7 +291,7 @@ const SidebarBookLinkDropdown = (props: BookProps) => {
       {isMoveToModalOpen ? (
         <Portal>
           <MoveToModal
-            noteId={bookPath}
+            noteId={path}
             onMove={onMove}
             setIsOpen={setIsMoveToModalOpen}
           />
@@ -289,13 +300,11 @@ const SidebarBookLinkDropdown = (props: BookProps) => {
       {isRenameModalOpen ? (
         <Portal>
           <RenameModal
-            path={bookPath}
-            title={t("Rename the book file")}
+            path={path}
+            title={renameTitle}
             keepExt
-            hint={t(
-              "Its notes are renamed with it. The title, reading progress, highlights and links to the book stay as they are.",
-            )}
-            options={bookRenameOptions(bookPath)}
+            hint={renameHint}
+            options={options}
             isOpen={isRenameModalOpen}
             handleClose={() => setIsRenameModalOpen(false)}
           />
@@ -305,4 +314,53 @@ const SidebarBookLinkDropdown = (props: BookProps) => {
   );
 };
 
+const SidebarBookLinkDropdown = ({
+  bookPath,
+  className,
+}: {
+  bookPath: string;
+  className?: string;
+}) => {
+  const t = useT();
+  const onMove = useCallback(
+    (tarDir: string) => moveBook(bookPath, tarDir),
+    [bookPath],
+  );
+  return (
+    <FileMenu
+      path={bookPath}
+      className={className}
+      renameTitle={t("Rename the book file")}
+      renameHint={t(
+        "Its notes are renamed with it. The title, reading progress, highlights and links to the book stay as they are.",
+      )}
+      options={bookRenameOptions(bookPath)}
+      onMove={onMove}
+    />
+  );
+};
+
 export const SidebarBookDropdown = memo(SidebarBookLinkDropdown);
+
+/** A drawing, or its picture: the other file goes with it. */
+const SidebarDrawingLinkDropdown = ({ path, className }: FileProps) => {
+  const t = useT();
+  const onMove = useCallback(
+    (tarDir: string) => moveDrawing(path, tarDir),
+    [path],
+  );
+  return (
+    <FileMenu
+      path={path}
+      className={className}
+      renameTitle={t("Rename the drawing")}
+      renameHint={t(
+        "Its picture (or its drawing) is renamed with it, and the pictures in the notes follow.",
+      )}
+      options={drawingRenameOptions(path)}
+      onMove={onMove}
+    />
+  );
+};
+
+export const SidebarDrawingDropdown = memo(SidebarDrawingLinkDropdown);

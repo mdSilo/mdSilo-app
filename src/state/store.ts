@@ -144,6 +144,9 @@ export type Store = {
   /** the note open beside the note or book shown (parallel writing), or "" */
   besideNoteId: string;
   setBesideNoteId: Setter<string>;
+  /** the drawing open beside the note or book shown, or "", see draw/ */
+  besideDrawing: string;
+  setBesideDrawing: Setter<string>;
   /** the note last used: the one shown, or the one beside */
   notePane: "main" | "side";
   setNotePane: Setter<"main" | "side">;
@@ -341,6 +344,8 @@ export const store = createStore<Store>()(
         }),
       besideNoteId: "",
       setBesideNoteId: setter(set, "besideNoteId"),
+      besideDrawing: "",
+      setBesideDrawing: setter(set, "besideDrawing"),
       notePane: "main",
       setNotePane: setter(set, "notePane"),
       // The tree of notes visible in the sidebar

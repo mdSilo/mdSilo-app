@@ -44,18 +44,41 @@ function pdfjsFiles(): Map<string, string> {
   return files;
 }
 
+/** the fonts of Excalidraw, see src/draw/assetPath.ts */
+const excalidrawFonts = path.join(
+  // dist/prod/index.js: its package.json is not exported
+  path.dirname(createRequire(import.meta.url).resolve('@excalidraw/excalidraw')),
+  'fonts',
+);
+
+/**
+ * The fonts Excalidraw loads at run time, by their path under
+ * `vendor/excalidraw/fonts/`: served from here, not its CDN, to draw offline.
+ */
+function excalidrawFiles(): Map<string, string> {
+  const files = new Map<string, string>();
+  for (const family of fs.readdirSync(excalidrawFonts)) {
+    for (const name of fs.readdirSync(path.join(excalidrawFonts, family))) {
+      files.set(`fonts/${family}/${name}`, path.join(excalidrawFonts, family, name));
+    }
+  }
+  return files;
+}
+
 const MIME: Record<string, string> = {
   '.mjs': 'text/javascript', '.js': 'text/javascript', '.css': 'text/css', '.wasm': 'application/wasm',
+  '.woff2': 'font/woff2',
 };
 
-/** Serve the pdf.js files in dev, emit them in builds. */
-function pdfjsVendor(): Plugin {
-  // the app sets where pdf.js loads them from: src/reader/document.ts
-  const prefix = 'vendor/pdfjs/';
+/**
+ * Serve the files of a library loaded at run time in dev, emit them in builds.
+ * @param prefix where the app loads them from
+ */
+function vendor(name: string, prefix: string, filesOf: () => Map<string, string>): Plugin {
   return {
-    name: 'mdsilo-pdfjs-vendor',
+    name: `mdsilo-${name}-vendor`,
     configureServer(server) {
-      const files = pdfjsFiles();
+      const files = filesOf();
       server.middlewares.use((req, res, next) => {
         const url = decodeURIComponent((req.url ?? '').split('?')[0]);
         const at = url.indexOf(`/${prefix}`);
@@ -66,12 +89,17 @@ function pdfjsVendor(): Plugin {
       });
     },
     generateBundle() {
-      for (const [name, file] of pdfjsFiles()) {
+      for (const [name, file] of filesOf()) {
         this.emitFile({ type: 'asset', fileName: `${prefix}${name}`, source: fs.readFileSync(file) });
       }
     },
   };
 }
+
+// the app sets where pdf.js loads them from: src/reader/document.ts
+const pdfjsVendor = () => vendor('pdfjs', 'vendor/pdfjs/', pdfjsFiles);
+// ... and Excalidraw: src/draw/assetPath.ts
+const excalidrawVendor = () => vendor('excalidraw', 'vendor/excalidraw/', excalidrawFiles);
 
 /**
  * Fingerprint of the mdsmirror build (packages/mdsmirror/dist).
@@ -104,7 +132,7 @@ function mdsmirrorBuildId(): string {
 
 export default defineConfig({
   // no CSS needed in tests (jsdom): skip compiling Tailwind CSS and daisyUI
-  plugins: [react(), ...(process.env.VITEST ? [] : [tailwindcss(), pdfjsVendor()])],
+  plugins: [react(), ...(process.env.VITEST ? [] : [tailwindcss(), pdfjsVendor(), excalidrawVendor()])],
   // Linked workspace packages are served as raw source in dev, not pre-bundled:
   // pre-bundle mdsmirror with its dependencies (hundreds of modules otherwise).
   optimizeDeps: {

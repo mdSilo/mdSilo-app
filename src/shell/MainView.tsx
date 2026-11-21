@@ -12,6 +12,7 @@ import useFollowRenames from "@/state/useFollowRenames";
 import { useViewsOfBookWindows } from "@/shell/windows";
 import NotePage from "@/writer/MdView";
 import { followBesideRenames } from "@/writer/beside";
+import { useDrawingRefresh } from "@/draw/noteDrawings";
 import { useT } from "@/i18n";
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
@@ -30,6 +31,7 @@ const Reader = lazy(() => import("@/reader/components/ReaderView"));
 const Vocabulary = lazy(() => import("@/reader/vocabulary/VocabularyView"));
 const PluginFileView = lazy(() => import("@/plugins/PluginFileView"));
 const PluginView = lazy(() => import("@/plugins/PluginView"));
+const DrawView = lazy(() => import("@/draw/DrawView"));
 
 /** the view of each view type; any other type is a note */
 const VIEWS: Record<string, ComponentType> = {
@@ -47,6 +49,7 @@ const VIEWS: Record<string, ComponentType> = {
   vocabulary: Vocabulary,
   "plugin-file": PluginFileView,
   plugin: PluginView,
+  drawing: DrawView,
 };
 
 export default function MainView() {
@@ -60,6 +63,8 @@ export default function MainView() {
   useFollowRenames(state, dispatch);
   // ... and the note beside, if any
   useEffect(() => followBesideRenames(), []);
+  // the pictures of drawings shown again once saved
+  useDrawingRefresh();
   // a phone: the sidebar covers the page, close it once a page is opened
   useEffect(() => {
     if (isMobileWidth()) store.getState().setIsSidebarOpen(false);

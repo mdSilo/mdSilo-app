@@ -249,6 +249,12 @@ export type Props = {
   onClickAttachment?: (href: string) => void;
   /** Callback on save diagram svg */
   onSaveDiagram?: (svg: string, ty: string) => void;
+  /** Make a new drawing (slash menu "Drawing"): the picture of it to insert */
+  onCreateDrawing?: () => Promise<{ src: string; alt?: string } | undefined>;
+  /** Whether an image (its src) can be edited, e.g. the picture of a drawing */
+  isEditableImage?: (src: string) => boolean;
+  /** Edit an image (its src): its toolbar button, or a double click */
+  onEditImage?: (src: string) => void;
   /** Buttons on the text selected, e.g. of the plugins of the app */
   selectionActions?: SelectionAction[];
   /** the actions of an AI on the text selected, under a button of their own */
@@ -1052,6 +1058,8 @@ class MsEditor extends React.PureComponent<Props, State> {
                   parseMarkdown={this.parseMarkdown}
                   onOpenLink={this.props.onOpenLink}
                   onShowToast={this.props.onShowToast}
+                  isEditableImage={this.props.isEditableImage}
+                  onEditImage={this.props.onEditImage}
                 />
                 <LinkToolbar
                   view={this.view}
@@ -1101,6 +1109,7 @@ class MsEditor extends React.PureComponent<Props, State> {
                   uploadFile={this.props.uploadFile}
                   onFileUploadStart={this.props.onFileUploadStart}
                   onFileUploadStop={this.props.onFileUploadStop}
+                  onCreateDrawing={this.props.onCreateDrawing}
                   embeds={this.props.embeds || []}
                 />
               </React.Fragment>

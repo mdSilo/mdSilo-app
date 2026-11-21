@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
-import { bookWindowParams } from "@/state/windowKind";
+import { isBookWindow } from "@/state/windowKind";
 import { isBookFile } from "@/reader/document";
 import { fromWorkspacePath, movedPath, normalizeSlash } from "./util";
 
@@ -13,6 +13,8 @@ import { fromWorkspacePath, movedPath, normalizeSlash } from "./util";
  * - a book: its notes (`Foo.epub.md`) moved with it, its library entry, the
  *   book open, the last book read;
  * - a dir: the same for the notes and books in it (their titles stay);
+ * - a drawing or its picture: the other file with it, the pictures in the
+ *   notes, the drawing open (see draw/rename);
  * - the note or book shown (see onRenamed).
  *
  * The reading progress, the `book:` links, the vocabulary are by the hash of
@@ -58,6 +60,16 @@ export function followRename(from: string, to: string): Promise<void> {
 async function follow(from: string, to: string) {
   const { initDir, layout } = store.getState();
   if (!initDir || from === to) return;
+  const drawings = await import("@/draw/rename");
+  if (drawings.isDrawingRename(from, to)) {
+    const drawing = await drawings.followDrawingRename(from, to);
+    for (const listener of listeners) {
+      listener({ from, to });
+      // the drawing shown, renamed by its picture
+      if (drawing && drawing.from !== from) listener(drawing);
+    }
+    return;
+  }
   const kind =
     NOTE.test(from) && NOTE.test(to)
       ? "note"
@@ -121,7 +133,7 @@ async function followBooks(ws: string, from: string, to: string) {
  * in the main window only.
  */
 export async function followMovedMeanwhile(ws: string) {
-  if (bookWindowParams()) return;
+  if (isBookWindow) return;
   const renames = await invoke<[string, string][]>("index_renames").catch(
     () => [],
   );

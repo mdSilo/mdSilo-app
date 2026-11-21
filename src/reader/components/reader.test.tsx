@@ -64,6 +64,13 @@ const view = vi.hoisted(() => ({
   goToFraction: vi.fn(async () => undefined),
   deselect: vi.fn(),
 }));
+// Excalidraw does not run in jsdom: the canvas, by its path
+vi.mock("@/draw/DrawCanvas", () => ({
+  default: ({ path }: { path: string }) => (
+    <div data-testid="canvas">{path}</div>
+  ),
+}));
+
 vi.mock("./FoliateViewer", () => ({
   default: ({ pane = "main" }: { pane?: string }) => (
     <div data-testid={pane === "side" ? "side-viewer" : "foliate-viewer"} />
@@ -806,6 +813,41 @@ describe("parallel reading", () => {
       expect(screen.getByTestId("parallel-pane")).toBeInTheDocument(),
     );
     expect(store.getState().besideNoteId).toBe("");
+  });
+
+  test("a drawing beside the book: a new one, or one of drawing/", async () => {
+    await writeFile(`${WS}/drawing/Plan.excalidraw`, "{}");
+    await writeBook(OTHER, makeEpub("Other Book"));
+    renderMain();
+    await go({ view: "book", path: BOOK });
+    await waitFor(() =>
+      expect(screen.getByTestId("foliate-viewer")).toBeInTheDocument(),
+    );
+    await act(() => useSideStore.getState().open(OTHER));
+
+    fireEvent.click(screen.getByTitle("Parallel reading"));
+    const menu = await screen.findByTestId("parallel-books");
+    fireEvent.click(within(menu).getByRole("tab", { name: "Draw beside" }));
+    fireEvent.click(await within(menu).findByText("Plan"));
+    expect(await screen.findByTestId("canvas")).toHaveTextContent(
+      `${WS}/drawing/Plan.excalidraw`,
+    );
+    // in place of the book beside
+    await waitFor(() => expect(useSideStore.getState().status).toBe("idle"));
+
+    // a new one: the menu on its drawings, the one beside marked
+    fireEvent.click(screen.getByTitle("Parallel reading"));
+    const menu2 = await screen.findByTestId("parallel-books");
+    expect(
+      await within(menu2).findByRole("button", { name: "Plan" }),
+    ).toHaveClass("menu-active");
+    fireEvent.click(within(menu2).getByText("New Drawing"));
+    await waitFor(() =>
+      expect(store.getState().besideDrawing).toMatch(
+        /\/drawing\/Drawing .*\.excalidraw$/,
+      ),
+    );
+    act(() => store.getState().setBesideDrawing(""));
   });
 
   test("the book closed, the note beside it shown alone", async () => {

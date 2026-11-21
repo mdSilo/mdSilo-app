@@ -32,7 +32,7 @@ So mdSilo is built around the whole loop, and gives each step its own tool:
 |---|------|------|-----------|
 | 📖 | **Reading** (input) | Reader, Feeds, Podcasts | Books (EPUB, PDF, MOBI, FB2, CBZ...), RSS/Atom/JSON Feed, podcasts and clipped web pages; highlight and annotate anything |
 | 🧩 | **Issue** (process) | Issues, Projects | A GitHub-like tracker for the questions, ideas and tasks that reading raises: labels, milestones, boards |
-| ✍️ | **Writing** (output) | WYSIWYG Markdown editor | Notes, a personal wiki, mind maps, diagrams, math |
+| ✍️ | **Writing** (output) | WYSIWYG Markdown editor | Notes, a personal wiki, mind maps, diagrams, math, drawings (Excalidraw) |
 
 And **links** close the loop: a note links to a book (`{{Alice's Adventures in Wonderland}}`), to a sentence in it, to an issue (`[@3](issue:3)`) and to other notes (`[[Philosophy]]`). Every link is two-way, and the Graph draws the whole network.
 
@@ -199,15 +199,14 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 - [X] Read and annotate EPUB, PDF, MOBI, FB2, CBZ; library, parallel reading, vertical writing, comics and manga, dictionaries (web and MDict), vocabulary, word lens, read aloud, whole-book translation
 - [X] Feeds into books
 - [X] OPDS catalogs
-- [ ] AI helpers
+- [X] AI helpers
 
 ### Process
 
 - [X] Issues, labels, milestones, subtasks, due dates
 - [X] Projects: boards and tables
 - [X] Tasks in notes, issues from highlights and selections
-- [X] Vocabulary: record and revise the new things  
-- [ ] Flashcards
+- [X] Vocabulary: record and revise the new things via Flashcards
 
 ### Output
 
@@ -215,7 +214,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 - [X] Extensions: mark, underline, sup and sub, highlighted code, math and chemistry, notices, wikilink `[[]]`, hashtag `#tag#`, diagrams (mermaid, echarts, abc), chemical structures (SMILES), embeds, attached PDF
 - [X] WYSIWYG, Markdown and Mind Map; slash commands, hovering toolbar, hotkeys
 - [X] Export as PDF and PNG
-- [ ] Drawing
+- [X] Drawing
 - [ ] Block reference
 - [X] Publish a static site (GitHub Pages)
 

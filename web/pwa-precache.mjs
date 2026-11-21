@@ -4,8 +4,10 @@
  */
 import crypto from 'crypto';
 
-/** not kept, or only once used: the worker itself, the demo, source maps, pdf.js cmaps and fonts */
-export const NOT_PRECACHED = [/^fs-sw\.js$/, /^demo\//, /\.map$/, /^vendor\/pdfjs\/(cmaps|standard_fonts)\//];
+/** not kept, or only once used: the worker itself, the demo, source maps, pdf.js cmaps and fonts, Excalidraw fonts */
+export const NOT_PRECACHED = [
+  /^fs-sw\.js$/, /^demo\//, /\.map$/, /^vendor\/pdfjs\/(cmaps|standard_fonts)\//, /^vendor\/excalidraw\//,
+];
 
 /** what fs-sw.js has in place of the list */
 export const PRECACHE_MARKER = 'const BUILD = null; // __MDSILO_PRECACHE__';

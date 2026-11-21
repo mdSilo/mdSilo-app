@@ -21,6 +21,7 @@ import {
   TbClock,
   TbAlarm,
   TbMessageCircle,
+  TbBrush,
 } from "react-icons/tb";
 import { MenuItem } from "../types";
 import { baseDictionary } from "../../dictionary";
@@ -46,6 +47,12 @@ export function slashMenuItems(
           title: dictionary.file,
           icon: TbPaperclip,
           keywords: "file upload attach",
+        },
+        {
+          name: "drawing",
+          title: dictionary.drawing,
+          icon: TbBrush,
+          keywords: "draw sketch canvas excalidraw whiteboard",
         },
         {
           name: "separator",

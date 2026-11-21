@@ -4,7 +4,7 @@ import { movedPath, normalizeSlash } from "@/workspace/util";
 import type { DispatchType } from "./useCurrentView";
 import type { ViewState } from "./viewReducer";
 
-/** The view of a note or book follows its file renamed or moved. */
+/** The view of a note, book or drawing follows its file renamed or moved. */
 export default function useFollowRenames(
   state: ViewState,
   dispatch: DispatchType,
@@ -35,6 +35,9 @@ export default function useFollowRenames(
           // the book open is at the new path already: not opened again
           const path = moved(view.bookPath);
           if (path) dispatch({ view: "book", path });
+        } else if (view.view === "drawing") {
+          const path = moved(view.drawingPath);
+          if (path) dispatch({ view: "drawing", path });
         }
       }),
     [dispatch],

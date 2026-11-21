@@ -11,6 +11,7 @@
 | Shortcut | Action |
 |----------|--------|
 | `Mod + N` | Find or create a note |
+| `Alt + N` | New drawing, beside the note or book shown |
 | `Alt + X` | Show or hide the sidebar |
 | `Mod + Shift + D` | Sidebar: Silo (file tree) |
 | `Mod + Shift + F` | Sidebar: Search |

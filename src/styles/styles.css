@@ -84,6 +84,11 @@
 /* dark mode follows the `dark` class, set by the app */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* the pictures of drawings (light, see draw/) in the dark: as Excalidraw shows them */
+.dark .ProseMirror [data-editable="true"] img {
+  filter: invert(93%) hue-rotate(180deg);
+}
+
 @theme {
   --color-primary-50: var(--color-emerald-50);
   --color-primary-100: var(--color-emerald-100);

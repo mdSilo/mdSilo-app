@@ -30,7 +30,7 @@ import LinkEditor, { SearchResult } from "./LinkEditor";
 import ToolbarMenu from "./ToolbarMenu";
 
 // the items the toolbar does itself, not commands of the editor
-const TOOLBAR_ACTIONS = ["search", "copy", "issue", "lookup"];
+const TOOLBAR_ACTIONS = ["search", "copy", "issue", "lookup", "editImage"];
 
 /** What an action on the text selected does to it: put text in its place, or after it */
 export type SelectionActionResult = {
@@ -97,6 +97,9 @@ type Props = {
   canLookUpText?: (text: string) => boolean;
   onOpenLink?: (href: string) => void;
   onShowToast?: (msg: string, code: string) => void;
+  /** whether an image (its src) can be edited, e.g. a drawing */
+  isEditableImage?: (src: string) => boolean;
+  onEditImage?: (src: string) => void;
   selectionActions?: SelectionAction[];
   /** the actions of an AI on the text selected: under a button of their own */
   aiActions?: SelectionAction[];
@@ -395,7 +398,12 @@ export default class SelectionToolbar extends React.Component<
     } else if (isCellSelection) {
       items = getTableCellMenuItems(state, dictionary);
     } else if (isImageSelection) {
-      items = getImageMenuItems(state, dictionary);
+      const src = (selection as NodeSelection).node.attrs.src as string;
+      items = getImageMenuItems(
+        state,
+        dictionary,
+        !!src && !!this.props.onEditImage && !!this.props.isEditableImage?.(src)
+      );
     } else if (isDividerSelection) {
       items = getDividerMenuItems(state, dictionary);
     } else {
@@ -465,6 +473,10 @@ export default class SelectionToolbar extends React.Component<
         rest.onShowToast?.(dictionary.copied, ToastType.Info);
       },
       issue: () => void this.handleCreateIssue(selectionText),
+      editImage: () => {
+        if (selection instanceof NodeSelection)
+          this.props.onEditImage?.(selection.node.attrs.src);
+      },
       lookup: () =>
         onLookUpText?.(
           selectionText,

@@ -16,6 +16,8 @@ import {
   TbSparkles,
   TbCalendar,
   TbFeather,
+  TbBrush,
+  TbAppWindow,
   TbFolderPlus,
   TbFileText,
   TbDeviceFloppy,
@@ -70,6 +72,8 @@ import { installApp, isIos, isStandalone, usePwa } from "@/host/web/pwa";
 import { showMessage } from "@/host/web/browser";
 import { chooseAndRestoreBackup } from "@/host/web/backup";
 import { t, useT } from "@/i18n";
+import { newDrawing } from "@/draw/open";
+import { canOpenDrawingWindow } from "@/draw/window";
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>("auto");
 
@@ -138,8 +142,15 @@ export default function SideMenu() {
             dispatchView({ view: "book", path: lastBook });
         },
       },
+      // New Drawing, as Ctrl/⌘+N is New Writing
+      {
+        hotkey: "alt+n",
+        callback: () => {
+          if (currentDir) void newDrawing(dispatch, "auto");
+        },
+      },
     ],
-    [dispatchView, hasReading, lastBook],
+    [dispatchView, dispatch, currentDir, hasReading, lastBook],
   );
   useHotkeys(hotkeys);
   const orientation = useStore((state) => state.sideMenuOrientation);
@@ -376,9 +387,15 @@ const OpenButton = () => {
   );
 };
 
+/**
+ * New: a writing or a drawing. The drawing opens beside the note or book
+ * shown, else alone; or in a window of its own (desktop).
+ */
 const NewButton = () => {
   const t = useT();
+  const isHorizontal = useIsHorizontalMenu();
   const tooltipPlacement = useTooltipPlacement();
+  const { dispatch } = useCurrentViewContext();
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
   const setIsFindOrCreateModalOpen = useStore(
     (state) => state.setIsFindOrCreateModalOpen,
@@ -386,8 +403,13 @@ const NewButton = () => {
   const isFindOrCreateModalOpen = useStore(
     (state) => state.isFindOrCreateModalOpen,
   );
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>(null);
+  const { styles, attributes } = usePopper(btnRef.current, popperElement, {
+    placement: isHorizontal ? "bottom-start" : "right-start",
+  });
 
-  const onCreateNoteClick = useCallback(() => {
+  const onNewWriting = useCallback(() => {
     if (isMobileWidth()) {
       setIsSidebarOpen(false);
     }
@@ -396,11 +418,63 @@ const NewButton = () => {
 
   return (
     <MenuItem isHighlighted={isFindOrCreateModalOpen}>
-      <Tooltip content={t("New Writing")} placement={tooltipPlacement}>
-        <button className={btnClass} onClick={onCreateNoteClick}>
-          <TbFeather size={22} className="shrink-0 mx-px text-primary" />
-        </button>
-      </Tooltip>
+      <Menu>
+        {({ open }) => (
+          <>
+            <MenuButton
+              ref={btnRef}
+              aria-label={t("New")}
+              className="hover:bg-base-content/10"
+            >
+              <Tooltip
+                content={t("New Writing or Drawing")}
+                placement={tooltipPlacement}
+                // not over the menu it opens
+                disabled={open}
+              >
+                <span className={btnClass}>
+                  <TbFeather
+                    size={22}
+                    className="shrink-0 mx-px text-primary"
+                  />
+                </span>
+              </Tooltip>
+            </MenuButton>
+            {open && (
+              <Portal>
+                <MenuItems
+                  ref={setPopperElement}
+                  className="z-20 w-56 overflow-hidden bg-base-200 rounded-sm shadow-popover focus:outline-hidden"
+                  static
+                  style={styles.popper}
+                  {...attributes.popper}
+                >
+                  <DropdownItem onClick={onNewWriting}>
+                    <TbFeather size={18} className="mr-1 text-primary" />
+                    <span className="flex-1">{t("New Writing")}</span>
+                    <kbd className="text-xs text-base-content/50">Ctrl/⌘+N</kbd>
+                  </DropdownItem>
+                  <DropdownItem
+                    onClick={() => void newDrawing(dispatch, "auto")}
+                  >
+                    <TbBrush size={18} className="mr-1 text-teal-600" />
+                    <span className="flex-1">{t("New Drawing")}</span>
+                    <kbd className="text-xs text-base-content/50">Alt+N</kbd>
+                  </DropdownItem>
+                  {canOpenDrawingWindow ? (
+                    <DropdownItem
+                      onClick={() => void newDrawing(dispatch, "window")}
+                    >
+                      <TbAppWindow size={18} className="mr-1 text-teal-600" />
+                      <span>{t("New Drawing in a Window")}</span>
+                    </DropdownItem>
+                  ) : null}
+                </MenuItems>
+              </Portal>
+            )}
+          </>
+        )}
+      </Menu>
     </MenuItem>
   );
 };
