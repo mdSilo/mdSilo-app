@@ -16,11 +16,11 @@ const api: SaveApi = {
   serializeAsJSON: vi.fn((elements) =>
     JSON.stringify({ type: "excalidraw", elements }),
   ) as unknown as SaveApi["serializeAsJSON"],
-  exportToSvg: vi.fn(async () => {
+  exportScene: vi.fn(async () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("id", "drawn");
     return svg;
-  }) as unknown as SaveApi["exportToSvg"],
+  }) as unknown as SaveApi["exportScene"],
   getSceneVersion: ((elements: readonly { version: number }[]) =>
     elements.reduce((n, e) => n + e.version, 0)) as SaveApi["getSceneVersion"],
 };

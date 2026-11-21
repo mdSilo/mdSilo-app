@@ -125,7 +125,7 @@ The *Open beside* button (two columns, top right of a note) opens another note b
 
 ## Drawing
 
-Draw with [Excalidraw](https://excalidraw.com): shapes, arrows, free hand, text, images. A drawing is a file in `drawing/` (see [[2 Workspace|Workspace]]), saved as you draw, with its picture, an SVG, beside it.
+Draw with [Excalidraw](https://excalidraw.com): shapes, arrows, free hand, text, images, sticky notes. *Draw to shape* (`Shift + X`, under the dots of the toolbar) turns what you draw by hand into a rectangle, circle, diamond, line or arrow. A drawing is a file in `drawing/` (see [[2 Workspace|Workspace]]), saved as you draw, with its picture, an SVG, beside it.
 
 - **Make one**: *New Drawing* under the pen of the side menu (`Alt + N`), *Drawing* in the slash menu of a note (its picture goes in the note, at the cursor), or click a `.excalidraw` file in the sidebar to open it.
 - **Beside a note or book**: the *Draw beside* tab of *Open beside* (a note) or of *Parallel reading* (a book) offers a new drawing or one of `drawing/`, last changed first.

@@ -5,7 +5,7 @@ import {
   convertToExcalidrawElements,
   Excalidraw,
   MainMenu,
-  exportToSvg,
+  exportScene,
   getSceneVersion,
   serializeAsJSON,
   viewportCoordsToSceneCoords,
@@ -29,7 +29,7 @@ import DrawingName from "./DrawingName";
 import { DrawingSaver, type SaveApi } from "./save";
 import { shareDrawingSaved } from "./window";
 
-const SAVE_API: SaveApi = { serializeAsJSON, exportToSvg, getSceneVersion };
+const SAVE_API: SaveApi = { serializeAsJSON, exportScene, getSceneVersion };
 
 /** the languages of the app, as Excalidraw names them */
 const LANG_CODES: Record<string, string> = {
@@ -158,7 +158,7 @@ export default function DrawCanvas({ path, lead, actions }: Props) {
             name={drawingName(path)}
             theme={darkMode ? "dark" : "light"}
             langCode={LANG_CODES[getLocale()] ?? "en"}
-            excalidrawAPI={(ready) => {
+            onExcalidrawAPI={(ready) => {
               api.current = ready;
             }}
             onLinkOpen={(element, event) => {

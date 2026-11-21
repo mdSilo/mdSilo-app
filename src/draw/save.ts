@@ -1,4 +1,7 @@
-import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
+import type {
+  ExcalidrawElement,
+  NonDeletedExcalidrawElement,
+} from "@excalidraw/excalidraw/element/types";
 import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
 import { flushSave, scheduleSave } from "@/workspace/pendingSaves";
 import { EMPTY_SVG, svgOfDrawing } from "./drawing";
@@ -13,7 +16,7 @@ export type Scene = {
 /** The functions of Excalidraw used to save, loaded with it (big) */
 export type SaveApi = {
   serializeAsJSON: typeof import("@excalidraw/excalidraw").serializeAsJSON;
-  exportToSvg: typeof import("@excalidraw/excalidraw").exportToSvg;
+  exportScene: typeof import("@excalidraw/excalidraw").exportScene;
   getSceneVersion: typeof import("@excalidraw/excalidraw").getSceneVersion;
 };
 
@@ -26,17 +29,15 @@ export const sceneKey = (api: SaveApi, { elements, appState, files }: Scene) =>
 
 /** The picture of the scene: SVG, light, with its background and fonts */
 export async function svgOfScene(api: SaveApi, scene: Scene): Promise<string> {
-  const elements = scene.elements.filter((e) => !e.isDeleted);
+  const elements = scene.elements.filter(
+    (e): e is NonDeletedExcalidrawElement => !e.isDeleted,
+  );
   if (elements.length === 0) return EMPTY_SVG;
-  const svg = await api.exportToSvg({
-    elements,
-    appState: {
-      ...scene.appState,
-      exportBackground: true,
-      exportWithDarkMode: false,
-    },
-    files: scene.files,
-    exportPadding: 10,
+  const svg = await api.exportScene({
+    type: "svg",
+    // the background is the scene's (viewBackgroundColor)
+    data: { elements, appState: scene.appState, files: scene.files },
+    config: { theme: "light", padding: 10 },
   });
   return `${svg.outerHTML}\n`;
 }
