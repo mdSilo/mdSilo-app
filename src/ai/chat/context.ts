@@ -8,6 +8,8 @@ import { getView } from "@/reader/view";
 import { blocksOf, sectionBlocks, textOf } from "@/reader/blocks";
 import { bookHref } from "@/reader/annotations/annotations";
 import { titleOfFile } from "@/reader/library/library";
+import { isExcludedNote, isExcludedPath } from "./privacy";
+import type { ToolScope } from "./tools";
 
 /**
  * What the chat may read (docs/ai.md, "Scopes"): the note, the chapter of the
@@ -31,8 +33,12 @@ export type Context = {
   partial: boolean;
 };
 
-/** what the chat may read: what the view shows, or nothing */
-export type Scope = "auto" | "none";
+/**
+ * What the chat may read: what the view shows (auto); the whole book open;
+ * the notes of a folder; all the notes; or nothing. The whole book, a folder
+ * and all the notes are looked up by tools (see tools.ts).
+ */
+export type Scope = "auto" | "book" | "folder" | "all" | "none";
 
 /** The kind of what is shown in the view, which the chat may read. */
 export type ViewKind = "note" | "book" | "feed" | "none";
@@ -104,11 +110,17 @@ export function markdownParagraphs(markdown: string): string[] {
   return out;
 }
 
+/** what is said of a note or book the AI may not read */
+export const EXCLUDED = "excluded from AI";
+
 async function noteContext(noteId: string, budget: number): Promise<Context> {
   const note = store.getState().notes.get(noteId);
   const title = note?.title ?? titleOfFile(noteId);
   const href = encodeHref(title);
-  const chunks = markdownParagraphs(await noteContent(noteId)).map((text) => ({
+  const content = await noteContent(noteId);
+  if (isExcludedNote(noteId, content))
+    return { label: `${title} (${EXCLUDED})`, chunks: [], partial: false };
+  const chunks = markdownParagraphs(content).map((text) => ({
     text,
     href,
   }));
@@ -133,6 +145,12 @@ async function bookContext(budget: number): Promise<Context | null> {
   const view = getView();
   const { path, hash, entry, location } = activeStore().getState();
   if (!view || !path || !location?.cfi) return null;
+  if (isExcludedPath(path))
+    return {
+      label: `${entry?.title || titleOfFile(path)} (${EXCLUDED})`,
+      chunks: [],
+      partial: false,
+    };
   const at = view.resolveNavigation(location.cfi);
   if (!at) return null;
   const blocks = await sectionBlocks(view, at.index);
@@ -168,7 +186,9 @@ export async function contextOf(
   view: ViewState | undefined,
   budget = CONTEXT_CHARS,
 ): Promise<Context | null> {
-  if (scope === "none") return null;
+  if (scope === "none" || scope === "folder" || scope === "all") return null;
+  // the whole book: the chapter shown at first, the rest by the tools
+  if (scope === "book") return bookContext(budget);
   switch (viewKindOf(view)) {
     case "note":
       return noteContext(String(view?.params?.noteId), budget);
@@ -179,4 +199,35 @@ export async function contextOf(
     default:
       return null;
   }
+}
+
+/** The folder of a note, by its id (an absolute path). */
+export const folderOf = (noteId: string) => noteId.replace(/[\\/][^\\/]*$/, "");
+
+/** The scopes the view allows, the first the default. */
+export function scopesFor(view: ViewState | undefined): Scope[] {
+  const kind = viewKindOf(view);
+  return [
+    "auto",
+    ...(kind === "book" ? (["book"] as const) : []),
+    ...(kind === "note" ? (["folder"] as const) : []),
+    ...(store.getState().initDir ? (["all"] as const) : []),
+    "none",
+  ];
+}
+
+/** What the tools look through for a scope; none for a scope without tools. */
+export function toolScopeOf(
+  scope: Scope,
+  folder?: string,
+): ToolScope | undefined {
+  if (scope === "book") return { kind: "book" };
+  if (scope === "folder" && folder)
+    return {
+      kind: "notes",
+      dir: folder,
+      label: `the notes of the folder "${folder.split(/[\\/]/).pop()}"`,
+    };
+  if (scope === "all") return { kind: "notes", label: "all the user's notes" };
+  return undefined;
 }

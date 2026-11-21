@@ -191,7 +191,7 @@ test("messagesOf: the passages numbered in the system prompt, the selection quot
   });
   expect(messages[0].role).toBe("system");
   expect(messages[0].content).toContain(
-    "The user has open: Book · Ch 1 (only a part",
+    "numbered passages of what the user has open: Book · Ch 1 (only a part",
   );
   expect(messages[0].content).toContain(
     "[1] First passage.\n\n[2] Second passage.",
@@ -205,7 +205,7 @@ test("messagesOf: the passages numbered in the system prompt, the selection quot
     { role: "assistant", content: "A1" },
     { role: "user", content: "Q2" },
   ]);
-  expect(messagesOf([], null)[0].content).not.toContain("numbered passages");
+  expect(messagesOf([], null)[0].content).not.toContain("numbered passage");
 });
 
 test("answerHtml: citations as links, not in code, unknown numbers as text", () => {

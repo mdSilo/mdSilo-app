@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from "react";
-import { useStore } from "@/state/store";
+import { store, useStore } from "@/state/store";
 import { BaseModal } from "@/ui/BaseModal";
 import { Select } from "@/ui/ui";
 import { isWeb } from "@/workspace/util";
@@ -250,6 +250,15 @@ function ProviderForm({
           }
         />
       </Row>
+      <label className="flex items-center gap-2 my-1">
+        <input
+          type="checkbox"
+          className="checkbox checkbox-xs"
+          checked={draft.settings.tools !== false}
+          onChange={(e) => setSetting({ tools: e.target.checked })}
+        />
+        <span>{t("The model can use tools (search, read)")}</span>
+      </label>
       <datalist id={listId}>
         {models.map((m) => (
           <option key={m} value={m} />
@@ -407,6 +416,7 @@ export default function AiSettingsModal() {
             ))}
           </select>
         )}
+        <ExcludedFolders />
         <p className="text-xs text-base-content/70" data-testid="ai-usage">
           {t(
             "This month ({month}): {requests} requests, {input} tokens sent, {output} received.",
@@ -420,5 +430,39 @@ export default function AiSettingsModal() {
         </p>
       </div>
     </BaseModal>
+  );
+}
+
+/** The folders the AI never reads, one a line, saved as typed. */
+function ExcludedFolders() {
+  const t = useT();
+  const aiSettings = useStore((state) => state.aiSettings);
+  const setAiSettings = useStore((state) => state.setAiSettings);
+  const [text, setText] = useState((aiSettings.excluded ?? []).join("\n"));
+  return (
+    <label className="flex flex-col gap-1">
+      <span>{t("Folders the AI never reads")}</span>
+      <textarea
+        className="textarea textarea-xs"
+        rows={3}
+        value={text}
+        placeholder={"journal\nprivate/health"}
+        onChange={(e) => {
+          setText(e.target.value);
+          setAiSettings({
+            ...store.getState().aiSettings,
+            excluded: e.target.value
+              .split(/\r?\n/)
+              .map((l) => l.trim())
+              .filter(Boolean),
+          });
+        }}
+      />
+      <span className="text-xs text-base-content/70">
+        {t(
+          "One folder of the workspace a line. A note is never read either if its front matter says ai: false.",
+        )}
+      </span>
+    </label>
   );
 }

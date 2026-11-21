@@ -14,12 +14,37 @@ export type ProviderKind = "openai" | "anthropic";
 
 export type ChatRole = "system" | "user" | "assistant";
 
-export type ChatMessage = { role: ChatRole; content: string };
+/** A tool the model may call: its input as a JSON schema. */
+export type ToolSpec = {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+};
+
+/** A call of a tool asked by the model; `input` none if not valid JSON. */
+export type ToolCall = {
+  id: string;
+  name: string;
+  input?: Record<string, unknown>;
+};
+
+export type ChatMessage =
+  | { role: "system" | "user"; content: string }
+  | {
+      role: "assistant";
+      content: string;
+      /** the tools it called */
+      toolCalls?: ToolCall[];
+      /** the answer as the provider gave it, sent back as it is (Anthropic: its thinking too) */
+      raw?: unknown;
+    }
+  | { role: "tool"; toolCallId: string; content: string };
 
 export type ChatOptions = {
   model: string;
   /** the most tokens of the answer; as the provider says if not given (OpenAI-compatible) */
   maxTokens?: number;
+  tools?: ToolSpec[];
 };
 
 /** A part of an answer, as it comes. */
@@ -27,18 +52,77 @@ export type Delta =
   | { type: "text"; text: string }
   | { type: "usage"; input?: number; output?: number }
   | { type: "stop"; reason: string }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  /** the end of the answer: the tools it calls, and the answer to send back with their results */
+  | { type: "turn"; toolCalls: ToolCall[]; raw?: unknown };
 
 export type Request = { path: string; body: Record<string, unknown> };
 
 /** the most tokens of an answer of Anthropic, which needs one */
 export const ANTHROPIC_MAX_TOKENS = 16000;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/** An answer that called tools, as Anthropic wants it back: its blocks. */
+function anthropicAssistant(m: Extract<ChatMessage, { role: "assistant" }>) {
+  if (Array.isArray(m.raw)) return m.raw;
+  if (!m.toolCalls?.length) return m.content;
+  return [
+    ...(m.content ? [{ type: "text", text: m.content }] : []),
+    ...m.toolCalls.map((c) => ({
+      type: "tool_use",
+      id: c.id,
+      name: c.name,
+      input: c.input ?? {},
+    })),
+  ];
+}
+
+function anthropicMessages(messages: ChatMessage[]) {
+  const out: any[] = [];
+  for (const m of messages) {
+    if (m.role === "system") continue;
+    if (m.role === "tool") {
+      const result = {
+        type: "tool_result",
+        tool_use_id: m.toolCallId,
+        content: m.content,
+      };
+      // the results of the calls of an answer: one message
+      const last = out[out.length - 1];
+      if (last?.role === "user" && Array.isArray(last.content))
+        last.content.push(result);
+      else out.push({ role: "user", content: [result] });
+    } else if (m.role === "assistant")
+      out.push({ role: "assistant", content: anthropicAssistant(m) });
+    else out.push({ role: "user", content: m.content });
+  }
+  return out;
+}
+
+function openaiMessages(messages: ChatMessage[]) {
+  return messages.map((m) => {
+    if (m.role === "tool")
+      return { role: "tool", tool_call_id: m.toolCallId, content: m.content };
+    if (m.role === "assistant" && m.toolCalls?.length)
+      return {
+        role: "assistant",
+        content: m.content || null,
+        tool_calls: m.toolCalls.map((c) => ({
+          id: c.id,
+          type: "function",
+          function: { name: c.name, arguments: JSON.stringify(c.input ?? {}) },
+        })),
+      };
+    return { role: m.role, content: m.content };
+  });
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 /** The request of a chat, streamed. */
 export function chatRequest(
   kind: ProviderKind,
   messages: ChatMessage[],
-  { model, maxTokens }: ChatOptions,
+  { model, maxTokens, tools }: ChatOptions,
 ): Request {
   if (kind === "anthropic") {
     // the system prompt is apart; consecutive messages of a role are one turn
@@ -49,21 +133,34 @@ export function chatRequest(
     const body: Record<string, unknown> = {
       model,
       max_tokens: maxTokens || ANTHROPIC_MAX_TOKENS,
-      messages: messages
-        .filter((m) => m.role !== "system")
-        .map(({ role, content }) => ({ role, content })),
+      messages: anthropicMessages(messages),
       stream: true,
     };
     if (system) body.system = system;
+    if (tools?.length)
+      body.tools = tools.map((t) => ({
+        name: t.name,
+        description: t.description,
+        input_schema: t.parameters,
+      }));
     return { path: "/messages", body };
   }
   const body: Record<string, unknown> = {
     model,
-    messages: messages.map(({ role, content }) => ({ role, content })),
+    messages: openaiMessages(messages),
     stream: true,
     stream_options: { include_usage: true },
   };
   if (maxTokens) body.max_tokens = maxTokens;
+  if (tools?.length)
+    body.tools = tools.map((t) => ({
+      type: "function",
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: t.parameters,
+      },
+    }));
   return { path: "/chat/completions", body };
 }
 
@@ -194,6 +291,107 @@ function openaiDeltas(json: any): Delta[] {
     });
   }
   return deltas;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const parse = (data: string): any => {
+  try {
+    return JSON.parse(data);
+  } catch {
+    return undefined;
+  }
+};
+
+const parseInput = (json: string): Record<string, unknown> | undefined => {
+  if (!json.trim()) return {};
+  const value = parse(json);
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value
+    : undefined;
+};
+
+/**
+ * What an answer streamed adds up to, besides its text: the tools it calls,
+ * and (Anthropic) its blocks, to send back as they were: thinking included,
+ * which the API wants back unchanged with the results of the tools.
+ */
+export class TurnReader {
+  private blocks: any[] = [];
+  private inputs: string[] = [];
+  private calls: { id: string; name: string; args: string }[] = [];
+
+  constructor(private kind: ProviderKind) {}
+
+  /** The parts of the answer in an event, read for the turn too. */
+  push(event: SseEvent): Delta[] {
+    const json = parse(event.data);
+    if (json && typeof json === "object" && !json.error) {
+      if (this.kind === "anthropic") this.anthropic(json);
+      else this.openai(json);
+    }
+    return deltasOf(this.kind, event);
+  }
+
+  private anthropic(json: any) {
+    const i = json.index;
+    if (json.type === "content_block_start" && typeof i === "number") {
+      this.blocks[i] = { ...json.content_block };
+      this.inputs[i] = "";
+    } else if (json.type === "content_block_delta" && this.blocks[i]) {
+      const block = this.blocks[i];
+      const d = json.delta ?? {};
+      if (d.type === "text_delta") block.text = (block.text ?? "") + d.text;
+      else if (d.type === "thinking_delta")
+        block.thinking = (block.thinking ?? "") + d.thinking;
+      else if (d.type === "signature_delta") block.signature = d.signature;
+      else if (d.type === "input_json_delta")
+        this.inputs[i] += d.partial_json ?? "";
+    } else if (json.type === "content_block_stop" && this.blocks[i]) {
+      const block = this.blocks[i];
+      if (block.type === "tool_use") block.input = parseInput(this.inputs[i]);
+    }
+  }
+
+  private openai(json: any) {
+    const calls = json.choices?.[0]?.delta?.tool_calls;
+    if (!Array.isArray(calls)) return;
+    for (const c of calls) {
+      const i = typeof c.index === "number" ? c.index : this.calls.length;
+      const call = (this.calls[i] ??= { id: "", name: "", args: "" });
+      if (c.id) call.id = c.id;
+      if (c.function?.name) call.name += c.function.name;
+      if (c.function?.arguments) call.args += c.function.arguments;
+    }
+  }
+
+  /** The tools called, and the answer to send back with their results. */
+  finish(): Extract<Delta, { type: "turn" }> {
+    if (this.kind === "anthropic") {
+      const blocks = this.blocks.filter(Boolean);
+      const toolCalls = blocks
+        .filter((b) => b.type === "tool_use")
+        .map((b) => ({ id: b.id, name: b.name, input: b.input ?? undefined }));
+      return {
+        type: "turn",
+        toolCalls,
+        // a tool_use of input not valid: sent back as an empty one
+        raw: blocks.map((b) =>
+          b.type === "tool_use" && !b.input ? { ...b, input: {} } : b,
+        ),
+      };
+    }
+    return {
+      type: "turn",
+      toolCalls: this.calls
+        .filter((c) => c.name)
+        .map((c, i) => ({
+          id: c.id || `call_${i}`,
+          name: c.name,
+          input: parseInput(c.args),
+        })),
+    };
+  }
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

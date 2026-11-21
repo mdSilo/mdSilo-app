@@ -26,7 +26,8 @@ import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
 import { useT } from "@/i18n";
 import { useAiProviders } from "../providers";
 import { languageName } from "../translate";
-import { viewKindOf } from "./context";
+import { folderOf, scopesFor, viewKindOf, type Scope } from "./context";
+import SentPreview from "./SentPreview";
 import { CHATS_DIR, linkCitations } from "./chatFile";
 import { QUICK_PROMPTS, type ChatMsg } from "./prompt";
 import { answerHtml, CITE_CLASS } from "./render";
@@ -86,18 +87,26 @@ export default function ChatPane() {
     if (list) list.scrollTop = list.scrollHeight;
   }, [messages]);
 
-  const kind = viewKindOf(view);
-  const reads =
-    scope === "none"
-      ? t("Reads nothing")
-      : {
-          note: t("Reads the note"),
-          book: t("Reads the chapter"),
-          feed: t("Reads the article"),
-          none: t("Nothing open to read"),
-        }[kind];
-  // a chat note open in the view: to go on with
   const viewNote = view.view === "md" ? view.params?.noteId : undefined;
+  const kind = viewKindOf(view);
+  const scopes = scopesFor(view);
+  // a scope the view no longer allows (the book closed…): what the view shows
+  useEffect(() => {
+    if (!scopes.includes(scope)) useChat.setState({ scope: "auto" });
+  }, [scopes, scope]);
+  const scopeLabels: Record<Scope, string> = {
+    auto: {
+      note: t("This note"),
+      book: t("This chapter"),
+      feed: t("This article"),
+      none: t("Nothing open to read"),
+    }[kind],
+    book: t("The whole book"),
+    folder: t("This folder"),
+    all: t("All my notes"),
+    none: t("Nothing"),
+  };
+  // a chat note open in the view: to go on with
   const chatNoteOpen =
     ws &&
     viewNote &&
@@ -149,17 +158,27 @@ export default function ChatPane() {
       )}
       <div className="flex items-center gap-1 px-2 py-1 border-b border-base-300 bg-base-200">
         <span className="font-semibold">{t("AI")}</span>
-        <button
-          type="button"
-          className="btn btn-ghost btn-xs"
-          title={t("What the chat may read: click to change")}
-          disabled={kind === "none"}
-          onClick={() =>
-            useChat.setState({ scope: scope === "none" ? "auto" : "none" })
-          }
+        <select
+          className="select select-ghost select-xs max-w-44"
+          aria-label={t("What the chat may read")}
+          title={t("What the chat may read")}
+          value={scopes.includes(scope) ? scope : "auto"}
+          onChange={(e) => {
+            const next = e.target.value as Scope;
+            useChat.setState({
+              scope: next,
+              ...(next === "folder" && viewNote
+                ? { folder: folderOf(viewNote) }
+                : {}),
+            });
+          }}
         >
-          {reads}
-        </button>
+          {scopes.map((s) => (
+            <option key={s} value={s}>
+              {scopeLabels[s]}
+            </option>
+          ))}
+        </select>
         <span className="flex-1" />
         {noteId && ws ? (
           <button
@@ -290,6 +309,7 @@ export default function ChatPane() {
             />
           </div>
         ) : null}
+        <SentPreview view={view} />
         <div className="flex items-end gap-1">
           <textarea
             className="flex-1 textarea textarea-sm min-h-10 max-h-40"
@@ -406,6 +426,13 @@ function Answer({
         <span className="text-xs text-base-content/60">
           {t("Read: {label}", { label: msg.scopeLabel })}
         </span>
+      ) : null}
+      {msg.steps?.length ? (
+        <ul className="text-xs text-base-content/60" data-testid="chat-steps">
+          {msg.steps.map((step, i) => (
+            <li key={i}>↳ {step}</li>
+          ))}
+        </ul>
       ) : null}
       {html ? (
         <div

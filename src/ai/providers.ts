@@ -15,6 +15,8 @@ export type ProviderSettings = {
   fastModel?: string;
   /** the most tokens of an answer */
   maxTokens?: number;
+  /** the model can call tools (search, read): on unless turned off */
+  tools?: boolean;
 };
 
 export type AiProvider = {
@@ -150,6 +152,10 @@ export function providerFor(
 ): AiProvider | undefined {
   return providers.find((p) => p.id === chosen) ?? providers[0];
 }
+
+/** The provider's model can call tools: unless turned off in its settings. */
+export const canUseTools = (provider: AiProvider) =>
+  provider.settings?.tools !== false;
 
 /** The model of a role: the fast one falls back on the chat one. */
 export function modelFor(provider: AiProvider, role: ModelRole): string {

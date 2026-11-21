@@ -1,5 +1,6 @@
 import type { ChatMessage } from "../protocol";
-import type { Chunk, Context } from "./context";
+import { EXCLUDED, type Chunk, type Context } from "./context";
+import type { ToolScope } from "./tools";
 
 /** Text selected in a book or a note, asked about. */
 export type Attached = {
@@ -25,12 +26,23 @@ export type ChatMsg = {
   error?: string;
   /** assistant: still coming */
   streaming?: boolean;
+  /** assistant: what its tools did, e.g. `search: words` */
+  steps?: string[];
 };
 
 const SYSTEM = `You are the reading and writing companion in mdSilo, a local app where the user reads books and feeds and writes Markdown notes.
 Answer in the language of the user's last message unless asked otherwise. Write Markdown. Be direct and concise; no preamble.`;
 
-const CITE = `Below are numbered passages of what the user has open. When a sentence of your answer uses a passage, cite it right after the sentence by its number in square brackets, like [3] or [3][7]. Cite only numbers given below; never make one up. If the passages do not hold the answer, say so, then answer from what you know, without citations.`;
+const CITE = `When a sentence of your answer uses a numbered passage, cite it right after the sentence by its number in square brackets, like [3] or [3][7]. Cite only numbers you were given; never make one up. If the passages do not hold the answer, say so, then answer from what you know, without citations.`;
+
+/** How to use the tools of a scope. */
+function toolsHelp(scope: ToolScope): string {
+  const what =
+    scope.kind === "book"
+      ? "the whole book open in the reader: `search` finds passages with words, `read` reads a chapter, `list` lists the chapters"
+      : `${scope.label}: \`search\` finds passages with words, \`read\` reads a note by its title, \`list\` lists the notes`;
+  return `You can look up ${what}. Use them when what you were given does not hold the answer; a few calls are usually enough. They give back numbered passages, numbered on from those given: cite them the same way.`;
+}
 
 /** The text of the passages, numbered from 1. */
 export function numbered(chunks: Chunk[]): string {
@@ -49,17 +61,23 @@ export function userContent(msg: ChatMsg): string {
   return `About this passage I selected${from}:\n\n${quote}\n\n${msg.text}`;
 }
 
-/** The messages to send: the system prompt with the passages, then the chat so far. */
+/** The messages to send: the system prompt with the passages (and the tools), then the chat so far. */
 export function messagesOf(
   history: ChatMsg[],
   context: Context | null,
+  tools?: ToolScope,
 ): ChatMessage[] {
   let system = SYSTEM;
-  if (context && context.chunks.length > 0) {
+  const passages = context && context.chunks.length > 0;
+  if (passages || tools) system += `\n\n${CITE}`;
+  if (tools) system += `\n\n${toolsHelp(tools)}`;
+  if (passages) {
     const partial = context.partial
       ? " (only a part of it: the rest is too long)"
       : "";
-    system += `\n\n${CITE}\n\nThe user has open: ${context.label}${partial}\n\n${numbered(context.chunks)}`;
+    system += `\n\nBelow are numbered passages of what the user has open: ${context.label}${partial}\n\n${numbered(context.chunks)}`;
+  } else if (context?.label.includes(EXCLUDED)) {
+    system += `\n\nThe user has open: ${context.label}; you may not read it.`;
   }
   const messages: ChatMessage[] = [{ role: "system", content: system }];
   for (const msg of history) {

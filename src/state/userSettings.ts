@@ -81,12 +81,15 @@ export type AiSettings = {
   fastProvider: string;
   /** by month (YYYY-MM), then provider id */
   usage: Record<string, Record<string, AiUsage>>;
+  /** folders of the workspace (relative paths) the AI never reads, see ai/chat/privacy */
+  excluded?: string[];
 };
 
 export const DEFAULT_AI_SETTINGS: AiSettings = {
   chatProvider: "",
   fastProvider: "",
   usage: {},
+  excluded: [],
 };
 
 export const ReadableNameBySort = {

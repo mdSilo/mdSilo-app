@@ -1,13 +1,14 @@
 import { store } from "@/state/store";
 import {
   chatRequest,
-  deltasOf,
   MODELS_PATH,
   modelsOf,
   SseParser,
   stopMessage,
+  TurnReader,
   type ChatMessage,
   type Delta,
+  type ToolSpec,
 } from "./protocol";
 import {
   aiProviders,
@@ -41,6 +42,8 @@ export type ChatParams = {
   /** a model in place of the one of the role */
   model?: string;
   maxTokens?: number;
+  /** tools the model may call: its calls in the `turn` at the end */
+  tools?: ToolSpec[];
   signal?: AbortSignal;
 };
 
@@ -67,15 +70,20 @@ export async function resolve(
   return { provider, model };
 }
 
-/** The parts of an answer, as they come; the tokens used are counted at the end. */
+/**
+ * The parts of an answer, as they come, then its `turn` (the tools it calls);
+ * the tokens used are counted at the end.
+ */
 export async function* chat(params: ChatParams): AsyncGenerator<Delta> {
   const { provider, model } = await resolve(params);
   const maxTokens = params.maxTokens ?? provider.settings?.maxTokens;
   const { path, body } = chatRequest(provider.kind, params.messages, {
     model,
     maxTokens,
+    tools: params.tools,
   });
   const parser = new SseParser();
+  const turn = new TurnReader(provider.kind);
   let input = 0;
   let output = 0;
   const read = function* (deltas: Delta[]) {
@@ -94,11 +102,10 @@ export async function* chat(params: ChatParams): AsyncGenerator<Delta> {
       body,
       params.signal,
     )) {
-      for (const event of parser.push(text))
-        yield* read(deltasOf(provider.kind, event));
+      for (const event of parser.push(text)) yield* read(turn.push(event));
     }
-    for (const event of parser.end())
-      yield* read(deltasOf(provider.kind, event));
+    for (const event of parser.end()) yield* read(turn.push(event));
+    if (!params.signal?.aborted) yield turn.finish();
   } finally {
     if (input || output) recordUsage(provider.id, input, output);
   }

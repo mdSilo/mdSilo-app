@@ -6,8 +6,16 @@ import { noteContent } from "@/lib/contentCache";
 import { oneLine } from "@/issue/issueOfText";
 import { writeNote } from "@/plugins/workspaceApi";
 import { chat, resolve } from "../client";
-import { stopMessage } from "../protocol";
-import { contextOf, type Scope } from "./context";
+import { stopMessage, type ChatMessage, type ToolCall } from "../protocol";
+import { canUseTools } from "../providers";
+import {
+  contextOf,
+  toolScopeOf,
+  type Chunk,
+  type Context,
+  type Scope,
+} from "./context";
+import { runTool, searchFor, toolsFor } from "./tools";
 import { chatFileName, chatMarkdown, CHATS_DIR, parseChat } from "./chatFile";
 import {
   messagesOf,
@@ -27,6 +35,8 @@ type ChatState = {
   messages: ChatMsg[];
   /** what the chat may read */
   scope: Scope;
+  /** the folder of the scope `folder`, by its path */
+  folder?: string;
   /** the text selected, sent with the next message */
   attached?: Attached;
   busy: boolean;
@@ -154,7 +164,17 @@ async function save() {
   }
 }
 
-/** Send a message: the answer streamed in, the chat kept once answered. */
+/** rounds of calls of tools at most, for an answer */
+export const MAX_ROUNDS = 6;
+
+const NO_MORE_TOOLS =
+  "\n\n(That was the last look-up: answer now with what you have.)";
+
+/** A provider refusing tools: an error of the request that says so. */
+const refusesTools = (e: unknown) =>
+  /\b400\b/.test(String(e)) && /tool|function/i.test(String(e));
+
+/** Send a message: the answer streamed in, the tools it calls run, the chat kept once answered. */
 export async function sendMessage(
   text: string,
   view: ViewState | undefined,
@@ -189,32 +209,105 @@ export async function sendMessage(
   });
   let written = "";
   try {
-    // polishing reads the text selected only
-    const context = options.polish
-      ? null
-      : await contextOf(state.scope, view).catch(() => null);
     const { provider, model } = await resolve({});
+    // polishing reads the text selected only
+    const scope = options.polish ? "none" : state.scope;
+    let context: Context | null = await contextOf(scope, view).catch(
+      () => null,
+    );
+    const toolScope = toolScopeOf(scope, state.folder);
+    let withTools = Boolean(toolScope) && canUseTools(provider);
+    // no tools: the passages of a search with the question, given at first
+    const searchAtFirst = async () => {
+      if (!toolScope) return;
+      const found = await searchFor(user.text, toolScope);
+      context = {
+        label:
+          context?.label ??
+          (toolScope.kind === "book" ? "the book" : toolScope.label),
+        chunks: [...(context?.chunks ?? []), ...found],
+        partial: true,
+      };
+    };
+    if (toolScope && !withTools) await searchAtFirst();
+    const sources: Chunk[] = [...(context?.chunks ?? [])];
+    const steps: string[] = [];
     update(answer.id, {
       model,
-      ...(context?.chunks.length
-        ? { sources: context.chunks, scopeLabel: context.label }
-        : {}),
+      ...(context?.label ? { scopeLabel: context.label } : {}),
+      ...(sources.length ? { sources: [...sources] } : {}),
     });
-    for await (const delta of chat({
-      provider,
-      model,
-      messages: messagesOf(history, context),
-      signal: controller.signal,
-    })) {
-      if (delta.type === "text") {
-        written += delta.text;
-        update(answer.id, { text: written });
-      } else if (delta.type === "error")
-        update(answer.id, { error: delta.message });
-      else if (delta.type === "stop") {
-        const said = stopMessage(delta.reason);
-        if (said) update(answer.id, { error: said });
+    let messages: ChatMessage[] = messagesOf(
+      history,
+      context,
+      withTools ? toolScope : undefined,
+    );
+    // MAX_ROUNDS rounds of calls, then the answer
+    for (let round = 0; round <= MAX_ROUNDS; round++) {
+      let turnText = "";
+      let calls: ToolCall[] = [];
+      let raw: unknown;
+      try {
+        for await (const delta of chat({
+          provider,
+          model,
+          messages,
+          tools: withTools && toolScope ? toolsFor(toolScope) : undefined,
+          signal: controller.signal,
+        })) {
+          if (delta.type === "text") {
+            // the text of each round apart
+            if (!turnText && written.trim()) written += "\n\n";
+            turnText += delta.text;
+            written += delta.text;
+            update(answer.id, { text: written });
+          } else if (delta.type === "error")
+            update(answer.id, { error: delta.message });
+          else if (delta.type === "stop") {
+            const said = stopMessage(delta.reason);
+            if (said) update(answer.id, { error: said });
+          } else if (delta.type === "turn") {
+            calls = delta.toolCalls;
+            raw = delta.raw;
+          }
+        }
+      } catch (e) {
+        // the provider does not take tools: again, without
+        if (round === 0 && withTools && !written && refusesTools(e)) {
+          withTools = false;
+          await searchAtFirst();
+          sources.splice(0, sources.length, ...(context?.chunks ?? []));
+          update(answer.id, { sources: [...sources], error: undefined });
+          messages = messagesOf(history, context);
+          round--;
+          continue;
+        }
+        throw e;
       }
+      if (
+        !withTools ||
+        !toolScope ||
+        calls.length === 0 ||
+        round === MAX_ROUNDS
+      )
+        break;
+      messages = [
+        ...messages,
+        { role: "assistant", content: turnText, toolCalls: calls, raw },
+      ];
+      const last = round === MAX_ROUNDS - 1;
+      for (const call of calls) {
+        const result = await runTool(call, toolScope, sources.length + 1);
+        sources.push(...result.chunks);
+        steps.push(result.step);
+        messages.push({
+          role: "tool",
+          toolCallId: call.id,
+          content: last ? result.text + NO_MORE_TOOLS : result.text,
+        });
+      }
+      update(answer.id, { sources: [...sources], steps: [...steps] });
+      if (controller.signal.aborted) break;
     }
   } catch (e) {
     if (!controller.signal.aborted)
