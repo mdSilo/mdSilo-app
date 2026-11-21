@@ -251,6 +251,8 @@ export type Props = {
   onSaveDiagram?: (svg: string, ty: string) => void;
   /** Buttons on the text selected, e.g. of the plugins of the app */
   selectionActions?: SelectionAction[];
+  /** the actions of an AI on the text selected, under a button of their own */
+  aiActions?: SelectionAction[];
   /**
    * Draw the code blocks of other languages, ```plantuml, as SVG or HTML,
    * sanitized: read on creation, so give the editor a new key to change them
@@ -1045,6 +1047,7 @@ class MsEditor extends React.PureComponent<Props, State> {
                   onLookUpText={this.props.onLookUpText}
                   canLookUpText={this.props.canLookUpText}
                   selectionActions={this.props.selectionActions}
+                  aiActions={this.props.aiActions}
                   serializer={this.serializer}
                   parseMarkdown={this.parseMarkdown}
                   onOpenLink={this.props.onOpenLink}

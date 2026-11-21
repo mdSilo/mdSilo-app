@@ -26,10 +26,10 @@ const setup = async (
 const button = (title: string) =>
   document.querySelector(`[title="${title}"] button`) as HTMLElement | null;
 
-/** an action of the list under the Plugins button */
-const pickAction = async (title: string) => {
+/** an action of the list under the Plugins (or the AI) button */
+const pickAction = async (title: string, menu = "Plugins") => {
   await act(async () => {
-    fireEvent.click(button("Plugins")!);
+    fireEvent.click(button(menu)!);
   });
   const item = [...document.querySelectorAll('[role="menuitem"]')].find(
     (el) => el.querySelector(".title")?.textContent === title
@@ -218,5 +218,63 @@ describe("selection toolbar", () => {
     await pickAction("Fail");
     expect(view.state.doc.textContent).toBe("hello selected world");
     expect(onShowToast).toHaveBeenCalledWith("Fail: offline", "error");
+  });
+
+  test("the actions of the AI: under their own button, apart from the plugins", async () => {
+    const ask = vi.fn(async () => undefined);
+    const plugin = vi.fn(async () => undefined);
+    await setup({
+      aiActions: [{ id: "ask", title: "Ask", run: ask }],
+      selectionActions: [{ id: "p", title: "Plug", run: plugin }],
+    });
+    expect(button("AI")).not.toBeNull();
+    await act(async () => {
+      fireEvent.click(button("AI")!);
+    });
+    const titles = () =>
+      [...document.querySelectorAll('[role="menuitem"] .title')].map(
+        (el) => el.textContent
+      );
+    expect(titles()).toEqual(["Ask"]);
+    // the other button: its list in place of this one
+    await act(async () => {
+      fireEvent.click(button("Plugins")!);
+    });
+    expect(titles()).toEqual(["Plug"]);
+    await act(async () => {
+      fireEvent.click(button("Plugins")!);
+    });
+    expect(titles()).toEqual([]);
+    await pickAction("Ask", "AI");
+    expect(ask).toHaveBeenCalledWith("selected", { markdown: "selected" });
+  });
+
+  test("no AI button without actions of the AI", async () => {
+    await setup({});
+    expect(button("AI")).toBeNull();
+  });
+
+  test("an action replaces the text selected with Markdown", async () => {
+    const run = vi.fn(async () => ({ replaceMarkdown: "**chosen**" }));
+    const view = await setup({
+      aiActions: [{ id: "polish", title: "Polish", run }],
+    });
+    await pickAction("Polish", "AI");
+    const { doc, schema } = view.state;
+    expect(doc.childCount).toBe(1);
+    expect(doc.textContent).toBe("hello chosen world");
+    expect(doc.rangeHasMark(7, 13, schema.marks.strong)).toBe(true);
+    expect(doc.rangeHasMark(1, 6, schema.marks.strong)).toBe(false);
+  });
+
+  test("Markdown of more than a paragraph replaces the text selected as blocks", async () => {
+    const run = vi.fn(async () => ({ replaceMarkdown: "One\n\nTwo" }));
+    const view = await setup({
+      aiActions: [{ id: "polish", title: "Polish", run }],
+    });
+    await pickAction("Polish", "AI");
+    expect(view.state.doc.textContent).toContain("One");
+    expect(view.state.doc.textContent).toContain("Two");
+    expect(view.state.doc.textContent).not.toContain("selected");
   });
 });

@@ -40,6 +40,8 @@ type Props = {
   label: string;
   onResize: (width: number) => void;
   onResizeEnd: (width: number) => void;
+  /** the edge of the panel it is on: right (the default), or left for a panel on the right */
+  edge?: "right" | "left";
   className?: string;
 };
 
@@ -49,7 +51,17 @@ type Props = {
  */
 function ResizeHandle(props: Props) {
   const t = useT();
-  const { width, bounds, label, onResize, onResizeEnd, className = "" } = props;
+  const {
+    width,
+    bounds,
+    label,
+    onResize,
+    onResizeEnd,
+    edge = "right",
+    className = "",
+  } = props;
+  // on the left edge, dragging to the left widens
+  const sign = edge === "left" ? -1 : 1;
   const dragRef = useRef<{
     startX: number;
     startWidth: number;
@@ -73,12 +85,12 @@ function ResizeHandle(props: Props) {
       const drag = dragRef.current;
       if (!drag) return;
       drag.width = clampWidth(
-        drag.startWidth + e.clientX - drag.startX,
+        drag.startWidth + sign * (e.clientX - drag.startX),
         bounds,
       );
       onResize(drag.width);
     },
-    [onResize, bounds],
+    [onResize, bounds, sign],
   );
 
   const onPointerUp = useCallback(
@@ -99,13 +111,13 @@ function ResizeHandle(props: Props) {
       const step = e.shiftKey ? 64 : 16;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        onResizeEnd(width - step);
+        onResizeEnd(width - sign * step);
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        onResizeEnd(width + step);
+        onResizeEnd(width + sign * step);
       }
     },
-    [onResizeEnd, width],
+    [onResizeEnd, width, sign],
   );
 
   return (
@@ -118,7 +130,7 @@ function ResizeHandle(props: Props) {
       aria-valuemax={bounds.max}
       tabIndex={0}
       title={t("Drag to resize, double click to reset")}
-      className={`absolute top-0 bottom-0 z-10 w-1.5 -right-0.5 cursor-col-resize select-none hover:bg-secondary/50 active:bg-secondary/70 focus:outline-hidden focus-visible:bg-secondary/50 ${className}`}
+      className={`absolute top-0 bottom-0 z-10 w-1.5 ${edge === "left" ? "-left-0.5" : "-right-0.5"} cursor-col-resize select-none hover:bg-secondary/50 active:bg-secondary/70 focus:outline-hidden focus-visible:bg-secondary/50 ${className}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

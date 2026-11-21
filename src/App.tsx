@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useMemo, useEffect } from "react";
+import { lazy, Suspense, useMemo, useEffect } from "react";
 import "@/styles/styles.css";
 import "tippy.js/dist/tippy.css";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -19,6 +19,9 @@ import { PluginDev } from "@/plugins/dev";
 import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
 import AiSettingsModal from "@/ai/AiSettingsModal";
+
+// loaded when first opened
+const ChatPane = lazy(() => import("@/ai/chat/ChatPane"));
 import DictionariesModal from "@/reader/dictionary/DictionariesModal";
 import EditorLookupPopup from "@/writer/LookupPopup";
 import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
@@ -60,6 +63,8 @@ const App = () => {
 
   const setSidebarTab = useStore((state) => state.setSidebarTab);
   const setIsSidebarOpen = useStore((state) => state.setIsSidebarOpen);
+  const isChatOpen = useStore((state) => state.isChatOpen);
+  const setIsChatOpen = useStore((state) => state.setIsChatOpen);
   const setIsSettingsOpen = useStore((state) => state.setIsSettingsOpen);
   const isSettingsOpen = useStore((state) => state.isSettingsOpen);
   const setIsAboutOpen = useStore((state) => state.setIsAboutOpen);
@@ -74,6 +79,10 @@ const App = () => {
       {
         hotkey: "alt+x",
         callback: () => setIsSidebarOpen((isOpen) => !isOpen),
+      },
+      {
+        hotkey: "mod+j",
+        callback: () => setIsChatOpen((isOpen) => !isOpen),
       },
       {
         hotkey: "mod+s",
@@ -98,7 +107,12 @@ const App = () => {
         callback: () => setSidebarTab(SidebarTab.Playlist),
       },
     ],
-    [setIsFindOrCreateModalOpen, setIsSidebarOpen, setSidebarTab],
+    [
+      setIsFindOrCreateModalOpen,
+      setIsSidebarOpen,
+      setIsChatOpen,
+      setSidebarTab,
+    ],
   );
   useHotkeys(hotkeys);
 
@@ -165,6 +179,11 @@ const App = () => {
             <div className="relative flex flex-1 flex-col min-w-0 overflow-y-auto">
               <MainView />
             </div>
+            {isChatOpen ? (
+              <Suspense fallback={null}>
+                <ChatPane />
+              </Suspense>
+            ) : null}
             <Player />
           </div>
           {isFindOrCreateModalOpen ? (

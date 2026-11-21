@@ -70,6 +70,7 @@ export const baseDictionary = {
   copy: "Copy",
   copied: "Copied",
   plugins: "Plugins",
+  ai: "AI",
   createIssue: "New issue of it",
   lookUp: "Dictionary",
   strikethrough: "Strikethrough",

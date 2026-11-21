@@ -89,7 +89,7 @@ interface ContextProvider {
 ### Chats are notes
 
 - Saved to `chats/` at the workspace root (folder configurable; can be set to `.mdsilo/local/chats/` to keep them unsynced). File: `chats/2026-11-20 <title>.md`, title generated after the first answer, editable.
-- Front matter: `ai: chat`, `scope`, `sources` (list of paths), `model`, `created`. Body: `### Me` / `### AI (<model>)` sections, citations as links. Re-opening the note in the Chat pane resumes it. In the editor it is just a note.
+- Front matter: `title`, `ai: chat`, `created`, `model`. Body: `### Me` / `### AI · <model>` sections; a selection asked about is quoted with a link to it; citations are links (`[n](book:<hash>#<cfi>)`, `[n](<note title>)`, `[n](<url>)`), so the backlinks of a book or note list the chats about it without a `sources` list. Reopening the note in the Chat pane turns the links back into citations and resumes it. In the editor it is just a note.
 - Because they link to their sources, a book's backlinks list the chats about it; Chronicle shows them on their day.
 - **Ephemeral mode** per chat (not saved), and a setting "Save chats by default" (on).
 
@@ -212,12 +212,12 @@ The app works fully with local models and the user's own key, always free. The h
 
 ## Phases
 
-Each phase is its own branch, reviewed before commit; `docs/roadmap.md` updated at each one.
+All phases go on one branch, `ai` (a commit per phase, reviewed before commit); `docs/roadmap.md` updated at each one.
 
 | Phase | Content |
 |---|---|
-| **M1 Providers** ✅ (branch `ai-providers`) | `src-tauri/src/ai/` (OpenAI-compatible + Anthropic, streaming, cancel), web `fetch` client, `src/ai/client.ts`; provider settings UI (Settings > AI) with presets, test, list models; provider per role (chat, quick tasks); usage counter per month. AI translator in `TRANSLATORS`. |
-| **M2 Chat pane** | Chat pane in every view, None + Selection + Note + Book (current chapter) + Feed scopes by stuffing; streaming, markdown rendering, citations for stuffed chunks; message actions (insert, save, issue); chats saved as notes in `chats/`, resume from note; selection toolbar entries (Ask, Explain, Translate, Polish as diff). |
+| **M1 Providers** ✅ (branch `ai`) | `src-tauri/src/ai/` (OpenAI-compatible + Anthropic, streaming, cancel), web `fetch` client, `src/ai/client.ts`; provider settings UI (Settings > AI) with presets, test, list models; provider per role (chat, quick tasks); usage counter per month. AI translator in `TRANSLATORS`. |
+| **M2 Chat pane** ✅ (branch `ai`) | Chat pane beside every view (`Mod+J`, side-menu button, resizable; full screen on a phone); reads what the view shows by stuffing (the note, the book's current chapter from the page shown, the open feed article) or nothing; a selection attached on top; streaming, Markdown rendering, `[n]` citations as links to their passages (book CFI, note, article URL); message actions (copy, put in the note shown or beside, new issue, ask again); chats saved as notes in `chats/`, reopened from the note ("Go on with this chat"); "Ask AI about it" in the reader's selection toolbar; an AI button (✨) of its own in the editor's selection toolbar (mdsmirror `aiActions`) with Ask / Explain / Polish; Polish replaces the selection with the polished Markdown (mdsmirror `replaceMarkdown`) once taken. |
 | **M3 Tools and whole scopes** | Chunked search with anchors in tantivy; `search_scope` / `read_source` tools; whole book, Explorer and Myself scopes; fallback for models without tools; "What's sent" preview; `ai: false` and excluded folders. |
 | **M4 Web and references** | Web search / fetch tools (provider built-in or configured API), "Other views" with sources, save cited pages as clips. Prompt presets (user-defined, synced). |
 | **M5 Audio** | STT engine (Whisper-compatible), podcast transcripts that follow playback and can be annotated; dictation in the editor; scheduled feed digest. |

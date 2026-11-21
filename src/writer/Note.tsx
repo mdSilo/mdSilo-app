@@ -71,6 +71,7 @@ import { useWritingRoot } from "@/workspace/useWorkspace";
 import { fontFamilyWithCjk, useFonts } from "@/custom/fonts";
 import { isLookupText } from "@/reader/dictionary/dictionary";
 import { useT } from "@/i18n";
+import { useAiSelectionActions } from "@/ai/chat/editorActions";
 import { setEditor } from "./editors";
 import { QUOTE_MIME } from "./beside";
 import { noteContentId } from "./hooks/useExport";
@@ -110,6 +111,7 @@ function Note(props: Props) {
   const { codeRenderers, key: codeRenderersKey } = useCodeRenderers();
   // buttons of plugins on the text selected
   const selectionActions = useEditorSelectionActions(noteId);
+  const aiActions = useAiSelectionActions(noteId);
   // read when the editor is made: a new one when trusted plugins change them
   useTrustedVersion();
   const extensionsKey = trustedExtensionsKey();
@@ -578,6 +580,7 @@ function Note(props: Props) {
                       onSaveDiagram={onSaveDiagram}
                       codeRenderers={codeRenderers}
                       selectionActions={selectionActions}
+                      aiActions={aiActions}
                       onLookUpText={useEditorLookup.getState().show}
                       canLookUpText={isLookupText}
                       onCopyHash={onCopyHash}

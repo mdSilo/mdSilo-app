@@ -208,6 +208,11 @@ export type UserSettings = {
   setSyncSettings: Setter<SyncSettings>;
   aiSettings: AiSettings;
   setAiSettings: Setter<AiSettings>;
+  /** the chat with the AI shown beside the view, see ai/chat */
+  isChatOpen: boolean;
+  setIsChatOpen: Setter<boolean>;
+  chatWidth: number;
+  setChatWidth: Setter<number>;
   /** the dialog of the AI providers, opened from the settings; not persisted */
   isAiSettingsOpen: boolean;
   setIsAiSettingsOpen: Setter<boolean>;
@@ -217,6 +222,7 @@ export type UserSettings = {
 export const SIDEBAR_WIDTH = { min: 160, max: 640, default: 256 } as const;
 export const FEED_CHANNEL_WIDTH = { min: 120, max: 480, default: 192 } as const;
 export const FEED_ARTICLE_WIDTH = { min: 200, max: 720, default: 288 } as const;
+export const CHAT_WIDTH = { min: 280, max: 800, default: 380 } as const;
 export const READER_SIDEBAR_WIDTH = {
   min: 180,
   max: 560,
@@ -349,6 +355,10 @@ const userSettingsSlice = (
   setSyncSettings: setter(set, "syncSettings"),
   aiSettings: DEFAULT_AI_SETTINGS,
   setAiSettings: setter(set, "aiSettings"),
+  isChatOpen: false,
+  setIsChatOpen: setter(set, "isChatOpen"),
+  chatWidth: CHAT_WIDTH.default as number,
+  setChatWidth: setter(set, "chatWidth"),
   isAiSettingsOpen: false,
   setIsAiSettingsOpen: setter(set, "isAiSettingsOpen"),
 });
