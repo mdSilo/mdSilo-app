@@ -7,6 +7,9 @@
 //! sent, with the key of the provider, to the address of the provider: the key
 //! never goes to the frontend, and cannot be sent anywhere else.
 //!
+//! A service of web search for the chat (kind `search`: SearXNG, Brave,
+//! Tavily, by `settings.service`) is kept and sent to the same way.
+//!
 //! The providers, with their keys, are kept in the app's data dir, never in
 //! the workspace, as the settings of the speech engines.
 
@@ -76,7 +79,7 @@ pub struct ProviderInput {
   pub settings: serde_json::Value,
 }
 
-const KINDS: [&str; 2] = ["openai", "anthropic"];
+const KINDS: [&str; 3] = ["openai", "anthropic", "search"];
 const ANTHROPIC_VERSION: &str = "2023-06-01";
 
 // the providers, in a file of the data dir
@@ -197,6 +200,15 @@ fn headers_of(provider: &Provider) -> Vec<(&'static str, String)> {
         headers.push(("x-api-key", key));
       }
       headers
+    }
+    // Brave wants its key in a header of its own; Tavily and SearXNG a bearer
+    "search"
+      if provider.settings.get("service").and_then(|s| s.as_str())
+        == Some("brave") =>
+    {
+      key
+        .map(|key| vec![("x-subscription-token", key)])
+        .unwrap_or_default()
     }
     _ => key
       .map(|key| vec![("authorization", format!("Bearer {key}"))])
@@ -466,6 +478,17 @@ mod tests {
         ("anthropic-version", ANTHROPIC_VERSION.to_string()),
         ("x-api-key", "k".to_string())
       ]
+    );
+    p.kind = "search".into();
+    p.settings = serde_json::json!({ "service": "brave" });
+    assert_eq!(
+      headers_of(&p),
+      vec![("x-subscription-token", "k".to_string())]
+    );
+    p.settings = serde_json::json!({ "service": "tavily" });
+    assert_eq!(
+      headers_of(&p),
+      vec![("authorization", "Bearer k".to_string())]
     );
     p.kind = "openai".into();
     p.key = None;

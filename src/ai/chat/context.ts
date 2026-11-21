@@ -22,6 +22,8 @@ export type Chunk = {
   text: string;
   /** `book:<hash>#<cfi>`, the title of a note, or a URL */
   href: string;
+  /** a page of the web: its title */
+  title?: string;
 };
 
 /** The passages of a scope, and what they are. */

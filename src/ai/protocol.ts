@@ -21,6 +21,9 @@ export type ToolSpec = {
   parameters: Record<string, unknown>;
 };
 
+/** A tool run by the provider itself (Anthropic's web search): its definition as the API wants it. */
+export type ServerTool = { server: Record<string, unknown> };
+
 /** A call of a tool asked by the model; `input` none if not valid JSON. */
 export type ToolCall = {
   id: string;
@@ -44,7 +47,8 @@ export type ChatOptions = {
   model: string;
   /** the most tokens of the answer; as the provider says if not given (OpenAI-compatible) */
   maxTokens?: number;
-  tools?: ToolSpec[];
+  /** the server tools are sent to Anthropic only */
+  tools?: (ToolSpec | ServerTool)[];
 };
 
 /** A part of an answer, as it comes. */
@@ -53,8 +57,14 @@ export type Delta =
   | { type: "usage"; input?: number; output?: number }
   | { type: "stop"; reason: string }
   | { type: "error"; message: string }
+  /** the passages of the web a part of the text just given cites (Anthropic's web search) */
+  | { type: "cite"; sources: WebCitation[] }
+  /** a tool run by the provider, e.g. a web search: what it was asked */
+  | { type: "server_tool"; name: string; input?: Record<string, unknown> }
   /** the end of the answer: the tools it calls, and the answer to send back with their results */
-  | { type: "turn"; toolCalls: ToolCall[]; raw?: unknown };
+  | { type: "turn"; toolCalls: ToolCall[]; raw?: unknown; stopReason?: string };
+
+export type WebCitation = { url: string; title?: string; text?: string };
 
 export type Request = { path: string; body: Record<string, unknown> };
 
@@ -138,11 +148,15 @@ export function chatRequest(
     };
     if (system) body.system = system;
     if (tools?.length)
-      body.tools = tools.map((t) => ({
-        name: t.name,
-        description: t.description,
-        input_schema: t.parameters,
-      }));
+      body.tools = tools.map((t) =>
+        "server" in t
+          ? t.server
+          : {
+              name: t.name,
+              description: t.description,
+              input_schema: t.parameters,
+            },
+      );
     return { path: "/messages", body };
   }
   const body: Record<string, unknown> = {
@@ -152,8 +166,11 @@ export function chatRequest(
     stream_options: { include_usage: true },
   };
   if (maxTokens) body.max_tokens = maxTokens;
-  if (tools?.length)
-    body.tools = tools.map((t) => ({
+  const functions = (tools ?? []).filter(
+    (t): t is ToolSpec => !("server" in t),
+  );
+  if (functions.length)
+    body.tools = functions.map((t) => ({
       type: "function",
       function: {
         name: t.name,
@@ -320,20 +337,24 @@ export class TurnReader {
   private blocks: any[] = [];
   private inputs: string[] = [];
   private calls: { id: string; name: string; args: string }[] = [];
+  private stopReason?: string;
 
   constructor(private kind: ProviderKind) {}
 
   /** The parts of the answer in an event, read for the turn too. */
   push(event: SseEvent): Delta[] {
     const json = parse(event.data);
+    const more: Delta[] = [];
     if (json && typeof json === "object" && !json.error) {
-      if (this.kind === "anthropic") this.anthropic(json);
+      if (this.kind === "anthropic") more.push(...this.anthropic(json));
       else this.openai(json);
     }
-    return deltasOf(this.kind, event);
+    return [...deltasOf(this.kind, event), ...more];
   }
 
-  private anthropic(json: any) {
+  private anthropic(json: any): Delta[] {
+    if (json.type === "message_delta" && json.delta?.stop_reason)
+      this.stopReason = json.delta.stop_reason;
     const i = json.index;
     if (json.type === "content_block_start" && typeof i === "number") {
       this.blocks[i] = { ...json.content_block };
@@ -347,13 +368,43 @@ export class TurnReader {
       else if (d.type === "signature_delta") block.signature = d.signature;
       else if (d.type === "input_json_delta")
         this.inputs[i] += d.partial_json ?? "";
+      else if (d.type === "citations_delta" && d.citation)
+        block.citations = [...(block.citations ?? []), d.citation];
     } else if (json.type === "content_block_stop" && this.blocks[i]) {
       const block = this.blocks[i];
-      if (block.type === "tool_use") block.input = parseInput(this.inputs[i]);
+      if (block.type === "tool_use" || block.type === "server_tool_use") {
+        // streamed: none at the start; else as it came
+        if (this.inputs[i]) block.input = parseInput(this.inputs[i]);
+        else block.input ??= {};
+        if (block.type === "server_tool_use")
+          return [
+            {
+              type: "server_tool",
+              name: block.name,
+              input: block.input ?? undefined,
+            },
+          ];
+      }
+      if (block.type === "text" && block.citations?.length)
+        return [
+          {
+            type: "cite",
+            sources: block.citations
+              .filter((c: any) => typeof c?.url === "string")
+              .map((c: any) => ({
+                url: c.url,
+                title: c.title ?? undefined,
+                text: c.cited_text ?? undefined,
+              })),
+          },
+        ];
     }
+    return [];
   }
 
   private openai(json: any) {
+    const finish = json.choices?.[0]?.finish_reason;
+    if (finish) this.stopReason = finish;
     const calls = json.choices?.[0]?.delta?.tool_calls;
     if (!Array.isArray(calls)) return;
     for (const c of calls) {
@@ -379,10 +430,12 @@ export class TurnReader {
         raw: blocks.map((b) =>
           b.type === "tool_use" && !b.input ? { ...b, input: {} } : b,
         ),
+        ...(this.stopReason ? { stopReason: this.stopReason } : {}),
       };
     }
     return {
       type: "turn",
+      ...(this.stopReason ? { stopReason: this.stopReason } : {}),
       toolCalls: this.calls
         .filter((c) => c.name)
         .map((c, i) => ({

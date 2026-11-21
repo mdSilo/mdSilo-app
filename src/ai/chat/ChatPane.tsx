@@ -9,6 +9,7 @@ import {
   TbPlus,
   TbRowInsertBottom,
   TbSend,
+  TbWorld,
   TbX,
 } from "react-icons/tb";
 import { store, useStore } from "@/state/store";
@@ -22,6 +23,8 @@ import { oneLine } from "@/issue/issueOfText";
 import { openInApp } from "@/plugins/workspaceApi";
 import { targetLanguage } from "@/reader/lookup/lookup";
 import { toWorkspacePath } from "@/workspace/util";
+import { encodeHref } from "@/lib/mdlink";
+import { openUrl } from "@/workspace/open";
 import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
 import { useT } from "@/i18n";
 import { useAiProviders } from "../providers";
@@ -29,9 +32,12 @@ import { languageName } from "../translate";
 import { folderOf, scopesFor, viewKindOf, type Scope } from "./context";
 import SentPreview from "./SentPreview";
 import { CHATS_DIR, linkCitations } from "./chatFile";
-import { QUICK_PROMPTS, type ChatMsg } from "./prompt";
+import { NO_WEB_VIEWS, QUICK_PROMPTS, type ChatMsg } from "./prompt";
+import { fillPrompt, usePrompts } from "./prompts";
+import { clipPage } from "./web";
 import { answerHtml, CITE_CLASS } from "./render";
 import {
+  saveChat,
   newChat,
   openChatNote,
   resolvePolish,
@@ -64,6 +70,15 @@ export default function ChatPane() {
   const saveError = useChat((s) => s.saveError);
   const polish = useChat((s) => s.polish);
   const providers = useAiProviders((s) => s.providers);
+  const searchServices = useAiProviders((s) => s.searchServices);
+  const web = useChat((s) => s.web);
+  const presets = usePrompts((s) => s.presets);
+  const chatProvider = useStore((s) => s.aiSettings.chatProvider);
+  // the web: Anthropic's own search, else a search service set up
+  const provider = providers.find((p) => p.id === chatProvider) ?? providers[0];
+  const canWeb =
+    provider?.kind === "anthropic" ||
+    (searchServices.length > 0 && provider?.settings.tools !== false);
   const loaded = useAiProviders((s) => s.loaded);
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
@@ -119,7 +134,27 @@ export default function ChatPane() {
     setDraft("");
     void sendMessage(text, view);
   };
+  useEffect(() => {
+    if (ws) void usePrompts.getState().load();
+  }, [ws]);
   const ask = (prompt: string) => void sendMessage(prompt, view);
+  // other views want the web, for where they come from; else said to be the model's own
+  const askViews = () =>
+    void sendMessage(
+      canWeb ? QUICK_PROMPTS.views : `${QUICK_PROMPTS.views} ${NO_WEB_VIEWS}`,
+      view,
+      canWeb ? { web: true } : {},
+    );
+  const lang = () =>
+    targetLanguage(store.getState().readerSettings.translateTo);
+  const askPreset = (template: string) => {
+    const { prompt, inPrompt } = fillPrompt(template, {
+      attached: useChat.getState().attached,
+      lang: lang(),
+    });
+    if (inPrompt) useChat.setState({ attached: undefined });
+    ask(prompt);
+  };
   const translatePrompt = () =>
     `Translate this passage into ${languageName(
       targetLanguage(store.getState().readerSettings.translateTo),
@@ -180,6 +215,24 @@ export default function ChatPane() {
           ))}
         </select>
         <span className="flex-1" />
+        <button
+          type="button"
+          className={`btn btn-xs btn-square ${web && canWeb ? "btn-primary" : "btn-ghost"}`}
+          title={
+            canWeb
+              ? web
+                ? t("The chat may search the web: click to stop")
+                : t("Let the chat search the web")
+              : t(
+                  "To search the web: Anthropic, or a search service in Settings > AI",
+                )
+          }
+          aria-pressed={web && canWeb}
+          disabled={!canWeb}
+          onClick={() => useChat.setState({ web: !web })}
+        >
+          <TbWorld size={16} />
+        </button>
         {noteId && ws ? (
           <button
             type="button"
@@ -303,10 +356,18 @@ export default function ChatPane() {
               label={t("Translate")}
               onClick={() => ask(translatePrompt())}
             />
-            <QuickButton
-              label={t("Other views")}
-              onClick={() => ask(QUICK_PROMPTS.views)}
-            />
+            <QuickButton label={t("Other views")} onClick={askViews} />
+          </div>
+        ) : null}
+        {presets.length > 0 && !busy ? (
+          <div className="flex flex-wrap gap-1 mb-1" data-testid="chat-presets">
+            {presets.map((p) => (
+              <QuickButton
+                key={p.id}
+                label={p.name}
+                onClick={() => askPreset(p.prompt)}
+              />
+            ))}
           </div>
         ) : null}
         <SentPreview view={view} />
@@ -445,6 +506,7 @@ function Answer({
         <span className="loading loading-dots loading-sm" />
       ) : null}
       {msg.error ? <p className="text-xs text-error">{msg.error}</p> : null}
+      {!msg.streaming ? <WebSources msg={msg} /> : null}
       {!msg.streaming && msg.text ? (
         <div className="flex flex-wrap items-center gap-1 text-base-content/70">
           {polishing ? (
@@ -516,5 +578,68 @@ function IconAction({
     >
       {children}
     </button>
+  );
+}
+
+/** The pages of the web an answer cites, each to keep as a clip. */
+function WebSources({ msg }: { msg: ChatMsg }) {
+  const t = useT();
+  const [saving, setSaving] = useState("");
+  const pages = (msg.sources ?? [])
+    .map((s, i) => ({ ...s, n: i + 1 }))
+    .filter((s) => /^https?:\/\//i.test(s.href))
+    .filter((s, i, all) => all.findIndex((o) => o.href === s.href) === i);
+  if (pages.length === 0) return null;
+  const save = async (url: string, title?: string, excerpt?: string) => {
+    setSaving(url);
+    try {
+      const clip = await clipPage(url, title, excerpt);
+      if (!clip) return;
+      // the citations of the page link to the clip from now on
+      useChat.setState((s) => ({
+        messages: s.messages.map((m) =>
+          m.id === msg.id
+            ? {
+                ...m,
+                sources: m.sources?.map((c) =>
+                  c.href === url ? { ...c, href: encodeHref(clip) } : c,
+                ),
+              }
+            : m,
+        ),
+      }));
+      await saveChat();
+    } finally {
+      setSaving("");
+    }
+  };
+  return (
+    <ul className="text-xs text-base-content/70" data-testid="web-sources">
+      {pages.map((p) => (
+        <li key={p.href} className="flex items-center gap-1">
+          <span className="shrink-0">[{p.n}]</span>
+          <a
+            href={p.href}
+            className="truncate link link-hover"
+            onClick={(e) => {
+              e.preventDefault();
+              void openUrl(p.href);
+            }}
+          >
+            {p.title || p.href}
+          </a>
+          {store.getState().initDir ? (
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs shrink-0"
+              disabled={Boolean(saving)}
+              onClick={() => void save(p.href, p.title, p.text)}
+            >
+              {saving === p.href ? t("Saving…") : t("Save as clip")}
+            </button>
+          ) : null}
+        </li>
+      ))}
+    </ul>
   );
 }

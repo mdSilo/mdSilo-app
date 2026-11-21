@@ -44,6 +44,8 @@ function toolsHelp(scope: ToolScope): string {
   return `You can look up ${what}. Use them when what you were given does not hold the answer; a few calls are usually enough. They give back numbered passages, numbered on from those given: cite them the same way.`;
 }
 
+const WEB_HELP = `You can search the web and read its pages. Use them for facts you are not sure of, recent events, and other views; say where a view comes from. Cite what you use.`;
+
 /** The text of the passages, numbered from 1. */
 export function numbered(chunks: Chunk[]): string {
   return chunks.map((c, i) => `[${i + 1}] ${c.text}`).join("\n\n");
@@ -66,11 +68,13 @@ export function messagesOf(
   history: ChatMsg[],
   context: Context | null,
   tools?: ToolScope,
+  web = false,
 ): ChatMessage[] {
   let system = SYSTEM;
   const passages = context && context.chunks.length > 0;
-  if (passages || tools) system += `\n\n${CITE}`;
+  if (passages || tools || web) system += `\n\n${CITE}`;
   if (tools) system += `\n\n${toolsHelp(tools)}`;
+  if (web) system += `\n\n${WEB_HELP}`;
   if (passages) {
     const partial = context.partial
       ? " (only a part of it: the rest is too long)"
@@ -93,6 +97,10 @@ export function messagesOf(
 /** Polish the text selected in a note: the answer is its new text only. */
 export const POLISH_PROMPT =
   "Polish the passage I selected: clearer and smoother, fixing grammar and spelling, keeping my meaning, my voice, its language and its Markdown. Reply with the polished passage only, nothing before or after it.";
+
+/** Asked for other views with no web: said plainly to be the model's own knowledge. */
+export const NO_WEB_VIEWS =
+  "You cannot search the web now: say plainly that this comes from your own knowledge, without sources.";
 
 /** The prompts offered for a text selected. */
 export const QUICK_PROMPTS = {

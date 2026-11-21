@@ -32,6 +32,49 @@ export type AiProvider = {
 /** A provider to save: `key` undefined keeps the key saved, '' forgets it. */
 export type ProviderInput = Omit<AiProvider, "hasKey"> & { key?: string };
 
+/** A service of web search for the chat, for a provider without one of its own (see chat/web.ts). */
+export type SearchServiceName = "searxng" | "brave" | "tavily";
+
+export type SearchService = {
+  id: string;
+  kind: "search";
+  label: string;
+  baseUrl: string;
+  hasKey: boolean;
+  settings: { service: SearchServiceName };
+};
+
+export type SearchServiceInput = Omit<SearchService, "hasKey"> & {
+  key?: string;
+};
+
+/** The services of web search offered: their addresses filled in. */
+export const SEARCH_SERVICES: {
+  service: SearchServiceName;
+  name: string;
+  baseUrl: string;
+  needsKey: boolean;
+}[] = [
+  {
+    service: "searxng",
+    name: "SearXNG",
+    baseUrl: "http://localhost:8888",
+    needsKey: false,
+  },
+  {
+    service: "brave",
+    name: "Brave Search",
+    baseUrl: "https://api.search.brave.com/res/v1",
+    needsKey: true,
+  },
+  {
+    service: "tavily",
+    name: "Tavily",
+    baseUrl: "https://api.tavily.com",
+    needsKey: true,
+  },
+];
+
 export type Preset = {
   name: string;
   kind: ProviderKind;
@@ -111,22 +154,35 @@ export function newProviderId(name: string, taken: string[]): string {
 }
 
 type ProvidersState = {
+  /** the providers of models */
   providers: AiProvider[];
+  /** the services of web search, kept with them */
+  searchServices: SearchService[];
   loaded: boolean;
   load: () => Promise<void>;
-  save: (provider: ProviderInput) => Promise<AiProvider>;
+  save: <T extends ProviderInput | SearchServiceInput>(
+    provider: T,
+  ) => Promise<T extends SearchServiceInput ? SearchService : AiProvider>;
   remove: (id: string) => Promise<void>;
 };
 
 export const useAiProviders = create<ProvidersState>((set, get) => ({
   providers: [],
+  searchServices: [],
   loaded: false,
   load: async () => {
-    const providers = (await invoke<AiProvider[]>("ai_providers")) ?? [];
-    set({ providers, loaded: true });
+    const all =
+      (await invoke<(AiProvider | SearchService)[]>("ai_providers")) ?? [];
+    set({
+      providers: all.filter((p): p is AiProvider => p.kind !== "search"),
+      searchServices: all.filter(
+        (p): p is SearchService => p.kind === "search",
+      ),
+      loaded: true,
+    });
   },
   save: async (provider) => {
-    const saved = await invoke<AiProvider>("ai_save_provider", { provider });
+    const saved = await invoke<never>("ai_save_provider", { provider });
     await get().load();
     return saved;
   },
@@ -151,6 +207,13 @@ export function providerFor(
   chosen: string | undefined,
 ): AiProvider | undefined {
   return providers.find((p) => p.id === chosen) ?? providers[0];
+}
+
+/** The service of web search set up, if any: the first. */
+export async function searchService(): Promise<SearchService | undefined> {
+  const state = useAiProviders.getState();
+  if (!state.loaded) await state.load();
+  return useAiProviders.getState().searchServices[0];
 }
 
 /** The provider's model can call tools: unless turned off in its settings. */

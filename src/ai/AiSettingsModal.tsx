@@ -4,10 +4,14 @@ import { BaseModal } from "@/ui/BaseModal";
 import { Select } from "@/ui/ui";
 import { isWeb } from "@/workspace/util";
 import { useT } from "@/i18n";
+import { dataRoot } from "@/workspace/layout";
 import { complete, listModels } from "./client";
 import {
   newProviderId,
   PRESETS,
+  SEARCH_SERVICES,
+  type SearchService,
+  type SearchServiceName,
   useAiProviders,
   type AiProvider,
   type Preset,
@@ -15,6 +19,7 @@ import {
 } from "./providers";
 import type { ProviderKind } from "./protocol";
 import { monthOf, usageOf } from "./usage";
+import { usePrompts, type PromptPreset } from "./chat/prompts";
 
 /** The address is on this computer: nothing is sent out. */
 export function isLocalUrl(url: string): boolean {
@@ -416,6 +421,8 @@ export default function AiSettingsModal() {
             ))}
           </select>
         )}
+        <SearchServiceSettings />
+        <PromptPresets />
         <ExcludedFolders />
         <p className="text-xs text-base-content/70" data-testid="ai-usage">
           {t(
@@ -464,5 +471,223 @@ function ExcludedFolders() {
         )}
       </span>
     </label>
+  );
+}
+
+/** The service of web search, for providers without one of their own. */
+function SearchServiceSettings() {
+  const t = useT();
+  const services = useAiProviders((s) => s.searchServices);
+  const save = useAiProviders((s) => s.save);
+  const remove = useAiProviders((s) => s.remove);
+  const current: SearchService | undefined = services[0];
+  const [service, setService] = useState<SearchServiceName>(
+    current?.settings.service ?? "searxng",
+  );
+  const [baseUrl, setBaseUrl] = useState(current?.baseUrl ?? "");
+  const [key, setKey] = useState("");
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    setService(current?.settings.service ?? "searxng");
+    setBaseUrl(current?.baseUrl ?? "");
+  }, [current]);
+  const preset = SEARCH_SERVICES.find((s) => s.service === service)!;
+
+  const onSave = async () => {
+    setMessage("");
+    try {
+      await save({
+        id: current?.id ?? "web-search",
+        kind: "search",
+        label: preset.name,
+        baseUrl: baseUrl || preset.baseUrl,
+        settings: { service },
+        key: key ? key : undefined,
+      });
+      setKey("");
+      setMessage(t("Saved"));
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  return (
+    <fieldset
+      className="p-2 border rounded border-base-300"
+      data-testid="ai-search-service"
+    >
+      <legend className="px-1 font-semibold">{t("Web search")}</legend>
+      <p className="mb-1 text-xs text-base-content/70">
+        {t(
+          "Anthropic searches the web itself. For other providers, a search service lets the chat search the web and read pages.",
+        )}
+      </p>
+      <Row label={t("Service")}>
+        <select
+          className="flex-1 select select-xs"
+          value={service}
+          onChange={(e) => {
+            const next = e.target.value as SearchServiceName;
+            setService(next);
+            setBaseUrl(
+              SEARCH_SERVICES.find((s) => s.service === next)?.baseUrl ?? "",
+            );
+          }}
+        >
+          {SEARCH_SERVICES.map((s) => (
+            <option key={s.service} value={s.service}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <Row label={t("Address")}>
+        <input
+          className="flex-1 input input-xs"
+          value={baseUrl}
+          placeholder={preset.baseUrl}
+          onChange={(e) => setBaseUrl(e.target.value)}
+        />
+      </Row>
+      <Row label={t("API key")}>
+        <input
+          className="flex-1 input input-xs"
+          type="password"
+          autoComplete="off"
+          value={key}
+          placeholder={
+            current?.hasKey
+              ? t("saved, type to change")
+              : preset.needsKey
+                ? ""
+                : t("none")
+          }
+          onChange={(e) => setKey(e.target.value)}
+        />
+      </Row>
+      <div className="flex items-center gap-2 mt-1">
+        <button
+          type="button"
+          className="btn btn-primary btn-xs"
+          onClick={() => void onSave()}
+        >
+          {t("Save")}
+        </button>
+        {current ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-xs text-error"
+            onClick={() => void remove(current.id).then(() => setMessage(""))}
+          >
+            {t("Delete")}
+          </button>
+        ) : null}
+        {message ? (
+          <span className="text-xs text-base-content/70">{message}</span>
+        ) : null}
+      </div>
+    </fieldset>
+  );
+}
+
+/** The prompts of the user, kept in the workspace. */
+function PromptPresets() {
+  const t = useT();
+  // kept in the data folder of a workspace (not of a plain folder)
+  const ws = useStore((state) => dataRoot(state));
+  const presets = usePrompts((s) => s.presets);
+  const [drafts, setDrafts] = useState<PromptPreset[]>(presets);
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    if (ws) void usePrompts.getState().load();
+  }, [ws]);
+  useEffect(() => setDrafts(presets), [presets]);
+  if (!ws) return null;
+
+  const change = (id: string, changes: Partial<PromptPreset>) =>
+    setDrafts((d) => d.map((p) => (p.id === id ? { ...p, ...changes } : p)));
+  const onSave = async () => {
+    setMessage("");
+    try {
+      await usePrompts
+        .getState()
+        .save(drafts.filter((p) => p.name.trim() && p.prompt.trim()));
+      setMessage(t("Saved"));
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  return (
+    <fieldset
+      className="p-2 border rounded border-base-300"
+      data-testid="ai-prompts"
+    >
+      <legend className="px-1 font-semibold">{t("Prompts")}</legend>
+      <p className="mb-1 text-xs text-base-content/70">
+        {t(
+          "Your own prompts, in the chat and the AI menu of the editor; kept in the workspace. {{selection}}: the text selected; {{title}}: what it is from; {{lang}}: the language to translate to.",
+        )}
+      </p>
+      {drafts.map((p) => (
+        <div key={p.id} className="flex flex-col gap-1 mb-2">
+          <div className="flex gap-1">
+            <input
+              className="flex-1 input input-xs"
+              value={p.name}
+              placeholder={t("Name")}
+              aria-label={t("Name")}
+              onChange={(e) => change(p.id, { name: e.target.value })}
+            />
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs text-error"
+              onClick={() =>
+                setDrafts((d) => d.filter((other) => other.id !== p.id))
+              }
+            >
+              {t("Delete")}
+            </button>
+          </div>
+          <textarea
+            className="textarea textarea-xs"
+            rows={2}
+            value={p.prompt}
+            placeholder={t("Prompt")}
+            aria-label={t("Prompt")}
+            onChange={(e) => change(p.id, { prompt: e.target.value })}
+          />
+        </div>
+      ))}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="btn btn-xs"
+          onClick={() =>
+            setDrafts((d) => [
+              ...d,
+              {
+                id: `p${Date.now().toString(36)}`,
+                name: "",
+                prompt: "",
+                where: "workspace",
+              },
+            ])
+          }
+        >
+          {t("Add a prompt")}
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary btn-xs"
+          onClick={() => void onSave()}
+        >
+          {t("Save")}
+        </button>
+        {message ? (
+          <span className="text-xs text-base-content/70">{message}</span>
+        ) : null}
+      </div>
+    </fieldset>
   );
 }

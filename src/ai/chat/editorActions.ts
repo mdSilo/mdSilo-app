@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import type { SelectionAction } from "mdsmirror";
-import { useStore } from "@/state/store";
+import { store, useStore } from "@/state/store";
 import { encodeHref } from "@/lib/mdlink";
 import { useT } from "@/i18n";
-import { askAi, polishInChat } from "./chatStore";
+import { targetLanguage } from "@/reader/lookup/lookup";
+import { askAi, polishInChat, useChat } from "./chatStore";
+import { fillPrompt, usePrompts } from "./prompts";
 import { QUICK_PROMPTS, type Attached } from "./prompt";
 
 /** a sparkle, the icon of the actions of the AI */
@@ -19,6 +21,7 @@ const ICON = `data:image/svg+xml,${encodeURIComponent(
 export function useAiSelectionActions(noteId?: string): SelectionAction[] {
   const t = useT();
   const title = useStore((s) => (noteId ? s.notes.get(noteId)?.title : ""));
+  const presets = usePrompts((s) => s.presets);
   return useMemo(() => {
     const attachedOf = (text: string, markdown?: string): Attached => ({
       text: markdown?.trim() || text,
@@ -51,6 +54,22 @@ export function useAiSelectionActions(noteId?: string): SelectionAction[] {
           return polished ? { replaceMarkdown: polished } : undefined;
         },
       },
+      // the prompts of the user
+      ...presets.map((p) => ({
+        id: `ai:preset:${p.id}`,
+        title: p.name,
+        icon: ICON,
+        run: async (text: string, { markdown }: { markdown?: string }) => {
+          const attached = attachedOf(text, markdown);
+          const { prompt, inPrompt } = fillPrompt(p.prompt, {
+            attached,
+            lang: targetLanguage(store.getState().readerSettings.translateTo),
+          });
+          // the text in the prompt: not sent again beside it
+          if (inPrompt) useChat.setState({ attached: undefined });
+          askAi(prompt, inPrompt ? undefined : attached);
+        },
+      })),
     ];
-  }, [title, t]);
+  }, [title, t, presets]);
 }

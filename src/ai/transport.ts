@@ -109,7 +109,13 @@ async function webFetch(
     headers["anthropic-dangerous-direct-browser-access"] = "true";
     if (provider.key) headers["x-api-key"] = provider.key;
   } else if (provider.key) {
-    headers.authorization = `Bearer ${provider.key}`;
+    // Brave wants its key in a header of its own
+    if (
+      provider.kind === "search" &&
+      (provider.settings as { service?: string }).service === "brave"
+    )
+      headers["x-subscription-token"] = provider.key;
+    else headers.authorization = `Bearer ${provider.key}`;
   }
   let response: Response;
   try {

@@ -8,6 +8,7 @@ import {
   TurnReader,
   type ChatMessage,
   type Delta,
+  type ServerTool,
   type ToolSpec,
 } from "./protocol";
 import {
@@ -43,7 +44,7 @@ export type ChatParams = {
   model?: string;
   maxTokens?: number;
   /** tools the model may call: its calls in the `turn` at the end */
-  tools?: ToolSpec[];
+  tools?: (ToolSpec | ServerTool)[];
   signal?: AbortSignal;
 };
 

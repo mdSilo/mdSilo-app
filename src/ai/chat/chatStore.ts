@@ -7,7 +7,7 @@ import { oneLine } from "@/issue/issueOfText";
 import { writeNote } from "@/plugins/workspaceApi";
 import { chat, resolve } from "../client";
 import { stopMessage, type ChatMessage, type ToolCall } from "../protocol";
-import { canUseTools } from "../providers";
+import { canUseTools, searchService } from "../providers";
 import {
   contextOf,
   toolScopeOf,
@@ -16,6 +16,13 @@ import {
   type Scope,
 } from "./context";
 import { runTool, searchFor, toolsFor } from "./tools";
+import {
+  anthropicWebTools,
+  isWebTool,
+  runWebTool,
+  webOf,
+  WEB_TOOLS,
+} from "./web";
 import { chatFileName, chatMarkdown, CHATS_DIR, parseChat } from "./chatFile";
 import {
   messagesOf,
@@ -37,6 +44,8 @@ type ChatState = {
   scope: Scope;
   /** the folder of the scope `folder`, by its path */
   folder?: string;
+  /** the chat may search the web */
+  web: boolean;
   /** the text selected, sent with the next message */
   attached?: Attached;
   busy: boolean;
@@ -68,6 +77,7 @@ const fresh = () => ({
 export const useChat = create<ChatState>(() => ({
   ...fresh(),
   scope: "auto",
+  web: false,
 }));
 
 let lastId = 0;
@@ -134,6 +144,8 @@ export async function openChatNote(noteId: string) {
 }
 
 /** Keep the chat in its note, made at the first answer. */
+export const saveChat = () => save();
+
 async function save() {
   const { messages, title, created, noteId } = useChat.getState();
   const ws = store.getState().initDir;
@@ -174,11 +186,15 @@ const NO_MORE_TOOLS =
 const refusesTools = (e: unknown) =>
   /\b400\b/.test(String(e)) && /tool|function/i.test(String(e));
 
+/** A model refusing the newer tools of the web of Anthropic: the error says which. */
+const refusesWebTools = (e: unknown) =>
+  /\b400\b/.test(String(e)) && /web_(search|fetch)/i.test(String(e));
+
 /** Send a message: the answer streamed in, the tools it calls run, the chat kept once answered. */
 export async function sendMessage(
   text: string,
   view: ViewState | undefined,
-  options: { polish?: boolean } = {},
+  options: { polish?: boolean; web?: boolean } = {},
 ) {
   const state = useChat.getState();
   if (state.busy || !text.trim()) return;
@@ -217,6 +233,21 @@ export async function sendMessage(
     );
     const toolScope = toolScopeOf(scope, state.folder);
     let withTools = Boolean(toolScope) && canUseTools(provider);
+    // the web: Anthropic's own tools, else a search service, with tools
+    const service = await searchService();
+    const wantWeb = !options.polish && (options.web ?? state.web);
+    const web = wantWeb ? webOf(provider, service) : undefined;
+    let withWeb =
+      web === "anthropic" || (web === "service" && canUseTools(provider));
+    let basicWeb = false;
+    const toolsNow = () => [
+      ...(withTools && toolScope ? toolsFor(toolScope) : []),
+      ...(withWeb
+        ? web === "anthropic"
+          ? anthropicWebTools(basicWeb)
+          : WEB_TOOLS
+        : []),
+    ];
     // no tools: the passages of a search with the question, given at first
     const searchAtFirst = async () => {
       if (!toolScope) return;
@@ -241,18 +272,39 @@ export async function sendMessage(
       history,
       context,
       withTools ? toolScope : undefined,
+      withWeb,
     );
+    /** the passages of the web an answer cites as it comes: cited by number */
+    const cite = (cited: { url: string; title?: string; text?: string }[]) => {
+      const numbers = new Set<number>();
+      for (const c of cited) {
+        let i = sources.findIndex((s) => s.href === c.url);
+        if (i < 0) {
+          sources.push({
+            text: c.text ?? c.title ?? c.url,
+            href: c.url,
+            title: c.title,
+          });
+          i = sources.length - 1;
+        }
+        numbers.add(i + 1);
+      }
+      written += [...numbers].map((n) => `[${n}]`).join("");
+      update(answer.id, { text: written, sources: [...sources] });
+    };
     // MAX_ROUNDS rounds of calls, then the answer
     for (let round = 0; round <= MAX_ROUNDS; round++) {
       let turnText = "";
       let calls: ToolCall[] = [];
       let raw: unknown;
+      let stopReason: string | undefined;
       try {
+        const tools = toolsNow();
         for await (const delta of chat({
           provider,
           model,
           messages,
-          tools: withTools && toolScope ? toolsFor(toolScope) : undefined,
+          tools: tools.length ? tools : undefined,
           signal: controller.signal,
         })) {
           if (delta.type === "text") {
@@ -266,38 +318,71 @@ export async function sendMessage(
           else if (delta.type === "stop") {
             const said = stopMessage(delta.reason);
             if (said) update(answer.id, { error: said });
+          } else if (delta.type === "cite") cite(delta.sources);
+          else if (delta.type === "server_tool") {
+            const what = delta.input?.query ?? delta.input?.url ?? "";
+            steps.push(
+              `${delta.name === "web_fetch" ? "read page" : "web search"}: ${String(what)}`,
+            );
+            update(answer.id, { steps: [...steps] });
           } else if (delta.type === "turn") {
             calls = delta.toolCalls;
             raw = delta.raw;
+            stopReason = delta.stopReason;
           }
         }
       } catch (e) {
+        // a model without the newer tools of the web: again, with the older
+        if (
+          round === 0 &&
+          web === "anthropic" &&
+          !basicWeb &&
+          !written &&
+          refusesWebTools(e)
+        ) {
+          basicWeb = true;
+          round--;
+          continue;
+        }
         // the provider does not take tools: again, without
         if (round === 0 && withTools && !written && refusesTools(e)) {
           withTools = false;
           await searchAtFirst();
           sources.splice(0, sources.length, ...(context?.chunks ?? []));
           update(answer.id, { sources: [...sources], error: undefined });
-          messages = messagesOf(history, context);
+          withWeb = withWeb && web === "anthropic";
+          messages = messagesOf(history, context, undefined, withWeb);
           round--;
           continue;
         }
         throw e;
       }
+      // the provider paused its own tools (web search): on, as it was
       if (
-        !withTools ||
-        !toolScope ||
-        calls.length === 0 ||
-        round === MAX_ROUNDS
-      )
-        break;
+        stopReason === "pause_turn" &&
+        calls.length === 0 &&
+        round < MAX_ROUNDS
+      ) {
+        messages = [...messages, { role: "assistant", content: turnText, raw }];
+        continue;
+      }
+      if (calls.length === 0 || round === MAX_ROUNDS) break;
       messages = [
         ...messages,
         { role: "assistant", content: turnText, toolCalls: calls, raw },
       ];
       const last = round === MAX_ROUNDS - 1;
       for (const call of calls) {
-        const result = await runTool(call, toolScope, sources.length + 1);
+        const first = sources.length + 1;
+        const result = isWebTool(call.name)
+          ? await runWebTool(call, service, first)
+          : toolScope
+            ? await runTool(call, toolScope, first)
+            : {
+                text: `Error: No tool ${call.name}.`,
+                chunks: [],
+                step: `${call.name}: failed`,
+              };
         sources.push(...result.chunks);
         steps.push(result.step);
         messages.push({

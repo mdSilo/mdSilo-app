@@ -7,20 +7,24 @@ import {
   checkedBaseUrl,
   type AiProvider,
   type ProviderInput,
+  type SearchService,
+  type SearchServiceInput,
 } from "../../ai/providers";
 import { KV, get, put } from "./idb";
 
 const STORE_KEY = "ai_providers";
 
 /** A provider as kept, with its key. */
-export type StoredProvider = Omit<AiProvider, "hasKey"> & { key?: string };
+export type StoredProvider = Omit<AiProvider | SearchService, "hasKey"> & {
+  key?: string;
+};
 
 async function stored(): Promise<StoredProvider[]> {
   return (await get<StoredProvider[]>(KV, STORE_KEY)) ?? [];
 }
 
 const shown = ({ key, ...p }: StoredProvider): AiProvider => ({
-  ...p,
+  ...(p as Omit<AiProvider, "hasKey">),
   hasKey: Boolean(key),
 });
 
@@ -28,23 +32,25 @@ export async function aiProviders(): Promise<AiProvider[]> {
   return (await stored()).map(shown);
 }
 
-export async function saveProvider(input: ProviderInput): Promise<AiProvider> {
+export async function saveProvider(
+  input: ProviderInput | SearchServiceInput,
+): Promise<AiProvider> {
   const id = input.id?.trim();
   if (!id || id.length > 64) throw new Error("A provider needs an id");
-  if (input.kind !== "openai" && input.kind !== "anthropic")
+  if (!["openai", "anthropic", "search"].includes(input.kind))
     throw new Error(`No provider kind ${String(input.kind)}`);
   const providers = await stored();
   const old = providers.find((p) => p.id === id);
   const key =
     input.key === undefined ? old?.key : input.key.trim() || undefined;
-  const provider: StoredProvider = {
+  const provider = {
     id,
     kind: input.kind,
     label: input.label.trim(),
     baseUrl: checkedBaseUrl(input.baseUrl),
     settings: input.settings ?? {},
     ...(key ? { key } : {}),
-  };
+  } as StoredProvider;
   const next = old
     ? providers.map((p) => (p.id === id ? provider : p))
     : [...providers, provider];

@@ -73,7 +73,8 @@ export function decodeHtml(data: Uint8Array): string {
   return decodeText(data);
 }
 
-const readBytes = async (url: string) => {
+/** The bytes of a page of the web, fetched by the app (Rust on desktop, a proxy on web). */
+export const readBytes = async (url: string) => {
   const data = await invoke<ArrayBuffer | Uint8Array | number[]>("fetch_url", {
     url,
   });
