@@ -53,6 +53,9 @@ vi.mock("mdsmirror", async (importOriginal) => {
   });
   return { ...actual, default: MockEditor };
 });
+// Excalidraw does not run in jsdom
+vi.mock("@/draw/DrawCanvas", () => ({ default: () => <div /> }));
+
 vi.mock("@/workspace/write", () => ({
   writeFile: vi.fn(async () => undefined),
   deleteFile: vi.fn(async () => undefined),
@@ -182,7 +185,9 @@ describe("the note beside", () => {
     expect(screen.getAllByTestId("ms-editor")).toHaveLength(2);
     // on the right, the line between them
     expect(pane.parentElement!.className).not.toContain("flex-row-reverse");
-    expect(pane.previousElementSibling).toBe(screen.getByTestId("split-handle"));
+    expect(pane.previousElementSibling).toBe(
+      screen.getByTestId("split-handle"),
+    );
     await userEvent.click(within(pane).getByLabelText("Swap sides"));
     expect(store.getState().besideOnLeft).toBe(true);
     expect(
@@ -322,5 +327,34 @@ describe("the note beside", () => {
       expect(store.getState().besideNoteId).toBe(third.id),
     );
     expect(screen.queryByTestId("beside-menu")).not.toBeInTheDocument();
+  });
+
+  test("the menu opens a drawing beside, in place of the note beside", async () => {
+    await renderApp();
+    vi.mocked(invoke).mockImplementation(async (cmd, args) => {
+      if (cmd === "list_directory")
+        return [
+          makeFileMeta({
+            file_path: "/ws/drawing/Plan.excalidraw",
+            is_file: true,
+          }),
+          makeFileMeta({ file_path: "/ws/drawing/Plan.svg", is_file: true }),
+        ];
+      if (cmd === "read_file") return "{}";
+      return cmd === "file_exist" ? true : undefined;
+    });
+    act(() => store.getState().setBesideNoteId(side.id));
+    await userEvent.click(screen.getByLabelText("Open beside"));
+    const menu = await screen.findByTestId("beside-menu");
+    await userEvent.click(
+      within(menu).getByRole("tab", { name: "Draw beside" }),
+    );
+    // the drawings only, not their pictures
+    expect(within(menu).queryByText("Plan.svg")).not.toBeInTheDocument();
+    await userEvent.click(await within(menu).findByText("Plan"));
+    expect(store.getState().besideDrawing).toBe("/ws/drawing/Plan.excalidraw");
+    expect(store.getState().besideNoteId).toBe("");
+    expect(await screen.findByTestId("beside-drawing")).toBeInTheDocument();
+    act(() => store.getState().setBesideDrawing(""));
   });
 });

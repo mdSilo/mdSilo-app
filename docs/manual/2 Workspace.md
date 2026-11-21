@@ -37,8 +37,7 @@ The narrow bar at the edge of the window switches between views.
 | ☰ | Toggle the explorer (sidebar) | `Alt + X` |
 | RSS | Feeds and podcasts, see [[6 Feeds\|Feeds]] | `Ctrl/Cmd + Shift + R` |
 | Books | Library, see [[5 Reader\|Reader]] | `Ctrl/Cmd + Shift + L` |
-| Pen | New writing | `Ctrl/Cmd + N` |
-| Brush | New drawing: beside the note or book shown, else alone; Ctrl/⌘-click: in a window of its own (desktop) | |
+| Pen | New: a writing, a drawing (beside the note or book shown, else alone), or a drawing in a window of its own (desktop) | `Ctrl/Cmd + N` (writing), `Alt + N` (drawing) |
 | Circle dot | Issues, see [[7 Issues\|Issues]] | `Ctrl/Cmd + Shift + I` |
 | Board | Projects | `Ctrl/Cmd + Shift + K` |
 | Calendar | Chronicle | `Ctrl/Cmd + Shift + C` |

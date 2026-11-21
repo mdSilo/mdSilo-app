@@ -137,3 +137,31 @@ export const dirOfPath = (path: string) => {
   const file = normalizeSlash(path);
   return file.slice(0, Math.max(0, file.lastIndexOf("/"))) || "/";
 };
+
+/** A drawing of `drawing/`, to pick one */
+export type DrawingEntry = { path: string; name: string; modified: number };
+
+type ListedFile = {
+  file_path: string;
+  is_file: boolean;
+  is_hidden: boolean;
+  last_modified?: { secs_since_epoch: number };
+};
+
+/** The drawings of `drawing/` (not its subfolders), last changed first. */
+export async function listDrawings(): Promise<DrawingEntry[]> {
+  const root = drawingRoot();
+  if (!root) return [];
+  // no drawing/ yet: none
+  const files = await invoke<ListedFile[]>("list_directory", {
+    dir: root,
+  }).catch(() => []);
+  return (files ?? [])
+    .filter((f) => f.is_file && !f.is_hidden && isDrawingFile(f.file_path))
+    .map((f) => ({
+      path: normalizeSlash(f.file_path),
+      name: drawingName(f.file_path),
+      modified: f.last_modified?.secs_since_epoch ?? 0,
+    }))
+    .sort((a, b) => b.modified - a.modified || a.name.localeCompare(b.name));
+}

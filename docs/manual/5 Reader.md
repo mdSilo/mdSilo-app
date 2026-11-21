@@ -107,6 +107,8 @@ Try it on {{Alice's Adventures in Wonderland}}: it is in your Library, with one 
 - or click *Quote in the note beside* on the selection toolbar (or on a highlight): the quote goes below the paragraph of the note's cursor, ready for your comment;
 - an annotation in the *Notes* list can be dragged into the note too.
 
+**Draw beside the book.** The *Draw beside* tab opens a drawing in that pane: a new one, or one of `drawing/`, last changed first. Drag selected text or an annotation onto it: it becomes a text linked back to its place in the book. See [[3 Editor|Editor]].
+
 The book's own notes file (`Foo.epub.md`) is not offered: the reader writes it again on each highlight. The arrows in the pane's header (*Swap sides*) put the note or the second book on the left. From a note, the *Open beside* button (two columns, top right) has a *Read beside* tab: it opens a book with the note beside it. *Close the book, keep writing* (in the note's header, or the reader's top bar) closes the book and shows the note alone. Not on a phone.
 
 ## Dictionary, vocabulary and translation

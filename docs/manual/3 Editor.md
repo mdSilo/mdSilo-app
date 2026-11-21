@@ -127,8 +127,9 @@ The *Open beside* button (two columns, top right of a note) opens another note b
 
 Draw with [Excalidraw](https://excalidraw.com): shapes, arrows, free hand, text, images. A drawing is a file in `drawing/` (see [[2 Workspace|Workspace]]), saved as you draw, with its picture, an SVG, beside it.
 
-- **Make one**: the brush in the side menu, *Drawing* in the slash menu of a note (its picture goes in the note, at the cursor), or click a `.excalidraw` file in the sidebar to open it.
-- **Where it opens**: beside the note or book shown, as a note beside does (drag the line between them for the width); over the page on a phone; alone otherwise. Its bar has *Insert into the note* (the picture, at the cursor), *Open alone*, *Open in a window* (desktop) and close. Ctrl/⌘-click the brush for a new drawing in a window of its own (desktop); Ctrl/⌘/Alt-click a drawing in the sidebar to open it beside.
+- **Make one**: *New Drawing* under the pen of the side menu (`Alt + N`), *Drawing* in the slash menu of a note (its picture goes in the note, at the cursor), or click a `.excalidraw` file in the sidebar to open it.
+- **Beside a note or book**: the *Draw beside* tab of *Open beside* (a note) or of *Parallel reading* (a book) offers a new drawing or one of `drawing/`, last changed first.
+- **Where it opens**: beside the note or book shown, as a note beside does (drag the line between them for the width); over the page on a phone; alone otherwise. Its bar has *Insert into the note* (the picture, at the cursor), *Open alone*, *Open in a window* (desktop) and close. *New Drawing in a Window* under the same pen opens a new one in a window of its own (desktop); Ctrl/⌘/Alt-click a drawing in the sidebar to open it beside.
 - **In a note** it is a plain picture, `![Plan](../drawing/Plan.svg)`, so it shows anywhere Markdown does, on GitHub too, and is published with the note. Double-click it, or select it and press the pencil of its toolbar, to change the drawing beside the note; the picture follows once you stop drawing. In the dark theme the picture is shown inverted, as Excalidraw does.
 - **From a book**: drag a highlight or text of a book onto a drawing beside it: it becomes a text, linked back to the place in the book.
 - **Links**: the link of a shape (Ctrl/⌘ + K in Excalidraw) can be a note title, `book:`, `issue:N` or a URL, opened as from a note.

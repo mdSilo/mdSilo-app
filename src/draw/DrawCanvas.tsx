@@ -4,6 +4,7 @@ import {
   CaptureUpdateAction,
   convertToExcalidrawElements,
   Excalidraw,
+  MainMenu,
   exportToSvg,
   getSceneVersion,
   serializeAsJSON,
@@ -188,7 +189,18 @@ export default function DrawCanvas({ path, lead, actions }: Props) {
                 toggleTheme: false,
               },
             }}
-          />
+          >
+            {/* the default menu, without the links to Excalidraw's sites */}
+            <MainMenu>
+              <MainMenu.DefaultItems.Export />
+              <MainMenu.DefaultItems.SaveAsImage />
+              <MainMenu.DefaultItems.SearchMenu />
+              <MainMenu.DefaultItems.Help />
+              <MainMenu.DefaultItems.ClearCanvas />
+              <MainMenu.Separator />
+              <MainMenu.DefaultItems.ChangeCanvasBackground />
+            </MainMenu>
+          </Excalidraw>
         ) : (
           <div className="flex items-center justify-center w-full h-full">
             <Spinner />
