@@ -12,6 +12,7 @@ import useFollowRenames from "@/state/useFollowRenames";
 import { useViewsOfBookWindows } from "@/shell/windows";
 import NotePage from "@/writer/MdView";
 import { followBesideRenames } from "@/writer/beside";
+import { useDrawingRefresh } from "@/draw/noteDrawings";
 import { useT } from "@/i18n";
 
 // loaded on first use: their code (d3, dnd-kit...) is not needed on start
@@ -62,6 +63,8 @@ export default function MainView() {
   useFollowRenames(state, dispatch);
   // ... and the note beside, if any
   useEffect(() => followBesideRenames(), []);
+  // the pictures of drawings shown again once saved
+  useDrawingRefresh();
   // a phone: the sidebar covers the page, close it once a page is opened
   useEffect(() => {
     if (isMobileWidth()) store.getState().setIsSidebarOpen(false);

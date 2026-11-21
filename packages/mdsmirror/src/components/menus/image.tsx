@@ -5,6 +5,7 @@ import {
   TbLayoutAlignLeft,
   TbLayoutAlignRight,
   TbLayoutAlignCenter,
+  TbPencil,
 } from "react-icons/tb";
 import { EditorState } from "prosemirror-state";
 import isNodeActive from "../../core/queries/isNodeActive";
@@ -13,7 +14,9 @@ import { baseDictionary } from "../../dictionary";
 
 export default function imageMenuItems(
   state: EditorState,
-  dictionary: typeof baseDictionary
+  dictionary: typeof baseDictionary,
+  /** the image can be edited: a drawing */
+  editable = false
 ): MenuItem[] {
   const { schema } = state;
   const isLeftAligned = isNodeActive(schema.nodes.image, {
@@ -24,6 +27,17 @@ export default function imageMenuItems(
   });
 
   return [
+    {
+      name: "editImage",
+      tooltip: dictionary.editImage,
+      icon: TbPencil,
+      visible: editable,
+      active: () => false,
+    },
+    {
+      name: "separator",
+      visible: editable,
+    },
     {
       name: "alignLeft",
       tooltip: dictionary.alignLeft,

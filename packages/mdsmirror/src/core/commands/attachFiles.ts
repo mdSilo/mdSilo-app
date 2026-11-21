@@ -85,7 +85,7 @@ function preload(src: string) {
  * an inline node in its own paragraph. An empty paragraph is added after
  * the node at the end of the document, so the user can go on typing below.
  */
-function insertNode(
+export function insertNode(
   view: EditorView,
   typeName: string,
   attrs: Attrs,
