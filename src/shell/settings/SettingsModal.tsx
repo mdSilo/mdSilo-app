@@ -54,6 +54,7 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
     (state) => state.setIsDictionariesOpen,
   );
   const setIsAiSettingsOpen = useStore((state) => state.setIsAiSettingsOpen);
+  const setIsCorsProxyOpen = useStore((state) => state.setIsCorsProxyOpen);
   const sideMenuOrientation = useStore((state) => state.sideMenuOrientation);
   const setSideMenuOrientation = useStore(
     (state) => state.setSideMenuOrientation,
@@ -175,6 +176,16 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
             onClick={() => {
               handleClose();
               setIsPluginsOpen(true);
+            }}
+          />
+        ) : null}
+        {isWeb ? (
+          <SettingsLink
+            label={t("CORS Proxy")}
+            action={t("Set Proxy")}
+            onClick={() => {
+              handleClose();
+              setIsCorsProxyOpen(true);
             }}
           />
         ) : null}

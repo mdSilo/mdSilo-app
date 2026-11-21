@@ -117,20 +117,92 @@ async function webFetch(
       headers["x-subscription-token"] = provider.key;
     else headers.authorization = `Bearer ${provider.key}`;
   }
-  let response: Response;
-  try {
-    response = await fetch(`${provider.baseUrl}${path}`, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal,
-    });
-  } catch (e) {
-    if ((e as Error)?.name === "AbortError") throw e;
-    throw new Error(
-      `${provider.label} cannot be reached from the browser: ${String(e)}. A server on this computer must allow this site (e.g. OLLAMA_ORIGINS for Ollama); some services do not answer browsers.`,
-      { cause: e },
-    );
+  return sendFromBrowser(provider, `${provider.baseUrl}${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal,
+  });
+}
+
+/** the headers the relay of the CORS proxy sends on (web/cors-proxy-core.mjs) */
+const RELAY_HEADERS = new Set([
+  "authorization",
+  "x-api-key",
+  "anthropic-version",
+  "anthropic-beta",
+  "x-subscription-token",
+  "content-type",
+  "accept",
+]);
+
+// the providers the browser could not reach: by the relay from then on
+const relayed = new Set<string>();
+
+/** For tests: try the providers directly again */
+export const forgetRelayed = () => relayed.clear();
+
+/**
+ * The CORS proxy set up to relay the AI, if any: the user's (Feed settings),
+ * or of the site; never the public one of the last resort, a third party the
+ * keys are not given to.
+ */
+async function relayProxy(): Promise<string | undefined> {
+  const { getCorsProxy, PUBLIC_CORS_PROXY } = await import("@/host/web/feed");
+  const proxy = await getCorsProxy().catch(() => "");
+  return proxy && proxy !== PUBLIC_CORS_PROXY ? proxy : undefined;
+}
+
+/**
+ * A request of the browser to a provider: directly, else (a provider that
+ * does not answer browsers) by the relay of the CORS proxy set up.
+ */
+export async function sendFromBrowser(
+  provider: { id: string; label: string },
+  url: string,
+  init: {
+    method: "GET" | "POST";
+    headers: Record<string, string>;
+    body?: BodyInit;
+    signal?: AbortSignal;
+  },
+): Promise<Response> {
+  let response: Response | undefined;
+  let blocked: unknown;
+  if (!relayed.has(provider.id)) {
+    try {
+      response = await fetch(url, init);
+    } catch (e) {
+      if ((e as Error)?.name === "AbortError") throw e;
+      blocked = e;
+    }
+  }
+  if (!response) {
+    const proxy = await relayProxy();
+    if (!proxy)
+      throw new Error(
+        `${provider.label} cannot be reached from the browser${blocked ? `: ${String(blocked)}` : ""}. A server on this computer must allow this site (e.g. OLLAMA_ORIGINS for Ollama); for a service that does not answer browsers, set your own CORS proxy in Settings > CORS Proxy (see web/cors-proxy-worker.mjs).`,
+        { cause: blocked },
+      );
+    const { proxiedUrl } = await import("@/host/web/feed");
+    const headers: Record<string, string> = { "x-mdsilo-method": init.method };
+    for (const [name, value] of Object.entries(init.headers))
+      if (RELAY_HEADERS.has(name.toLowerCase())) headers[name] = value;
+    try {
+      response = await fetch(proxiedUrl(proxy, url), {
+        method: "POST",
+        headers,
+        body: init.method === "GET" ? undefined : init.body,
+        signal: init.signal,
+      });
+    } catch (e) {
+      if ((e as Error)?.name === "AbortError") throw e;
+      throw new Error(
+        `${provider.label} cannot be reached, even by the CORS proxy: ${String(e)}`,
+        { cause: e },
+      );
+    }
+    relayed.add(provider.id);
   }
   if (!response.ok) {
     const text = await response.text().catch(() => "");

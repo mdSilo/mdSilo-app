@@ -229,6 +229,9 @@ export type UserSettings = {
   /** the dialog of the AI providers, opened from the settings; not persisted */
   isAiSettingsOpen: boolean;
   setIsAiSettingsOpen: Setter<boolean>;
+  /** the dialog of the CORS proxy (web), opened from the settings; not persisted */
+  isCorsProxyOpen: boolean;
+  setIsCorsProxyOpen: Setter<boolean>;
 };
 
 // resizable panel widths in px
@@ -374,6 +377,8 @@ const userSettingsSlice = (
   setChatWidth: setter(set, "chatWidth"),
   isAiSettingsOpen: false,
   setIsAiSettingsOpen: setter(set, "isAiSettingsOpen"),
+  isCorsProxyOpen: false,
+  setIsCorsProxyOpen: setter(set, "isCorsProxyOpen"),
 });
 
 export default userSettingsSlice;

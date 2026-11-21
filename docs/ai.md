@@ -175,7 +175,7 @@ type AiProvider = {
 - **The protocol is in TypeScript only** (`src/ai/protocol.ts`): request bodies and reading the SSE answers of both kinds. Desktop and web share it.
 - **Files (audio):** `ai_upload` takes the file as the raw body of the IPC request, the rest in its headers, and sends it as `multipart/form-data` with the key.
 - **Desktop:** `src-tauri/src/ai/` is a small proxy. It keeps the providers with their keys in `<data dir>/ai-config.json` (0600, like `tts-config.json`), adds the key and API headers, and sends a request only under the provider's saved base URL (paths are checked: no `..`, `//`, `#`). The frontend sees `hasKey`, never the key. Commands: `ai_providers`, `ai_save_provider`, `ai_delete_provider`, `ai_fetch` (JSON, e.g. `/models`), `ai_stream` (streams the raw text over a Tauri `Channel`, then an explicit `end` event, because channel messages can arrive after the command's own answer) and `ai_cancel` (stops at the next chunk).
-- **Web:** providers and keys are kept in IndexedDB (`src/host/web/ai.ts`) and the browser calls the provider with `fetch` (`src/ai/transport.ts`). Notes in the UI: Ollama needs `OLLAMA_ORIGINS`; Anthropic is sent its direct-browser-access header; some services block browsers (then: hosted service or a proxy, later).
+- **Web:** providers and keys are kept in IndexedDB (`src/host/web/ai.ts`) and the browser calls the provider with `fetch` (`src/ai/transport.ts`). Ollama needs `OLLAMA_ORIGINS`; Anthropic is sent its direct-browser-access header. A provider that does not answer browsers is reached by the **relay of the CORS proxy** (Settings > CORS Proxy, web only, for feeds and AI; its dialog says which proxy is in use and whether the site has one of its own; `web/cors-proxy-core.mjs`, the same Node server and Cloudflare Worker): `POST <proxy>?url=<target>`, only the API headers (key, version, content type) sent on, the method in `x-mdsilo-method`, the answer streamed back; only to the AI and search hosts it knows plus `RELAY_HOSTS`, so it is not an open relay of keys. The app tries directly first, then the relay (remembered for that provider); never the public proxy of the last resort, a third party not to be given keys. The provider form says so on web.
 - Frontend API (`src/ai/client.ts`): `chat({ messages, role, provider?, model?, signal }) → AsyncGenerator<Delta>`, `complete()` for the whole text, `listModels()`. Embeddings and speech-to-text come with M3/M5.
 
 ### Cost and limits
@@ -199,7 +199,7 @@ type AiProvider = {
 
 ---
 
-## Hosted service (later, separate from the app work)
+## Hosted service (M7: later, separate from the app work)
 
 The app works fully with local models and the user's own key, always free. The hosted service sells convenience:
 
@@ -223,7 +223,7 @@ All phases go on one branch, `ai` (a commit per phase, reviewed before commit); 
 | **M4 Web and references** ✅ (branch `ai`) | A 🌐 toggle in the chat. Anthropic: its own `web_search` / `web_fetch` (the older `web_search_20250305` for models without the newer), `citations_delta` turned into `[n]` sources, `pause_turn` resumed. Other providers: a search service in Settings > AI (SearXNG, Brave, Tavily; kept with the providers, kind `search`, its key in Rust) and the tools `web_search` / `fetch_page` run by the app (pages read by Readability). "Other views" asks with the web when it can, else says it is the model's own knowledge. The pages cited listed under the answer, each "Save as clip" (`clips/`), the citations then linking to the clip. Prompt presets in `.mdsilo/ai-prompts.json` (synced; `{{selection}}`, `{{title}}`, `{{lang}}`), in the chat and the editor's AI menu, edited in Settings > AI. |
 | **M5 Audio** ✅ (branch `ai`) | Speech to text by an OpenAI-compatible `/audio/transcriptions` (a "Speech to text" model per provider, e.g. `whisper-1` or a local Whisper server): audio sent raw to Rust (`ai_upload`, multipart written by hand, no new crate) or by `FormData` on web; verbose JSON for the times, plain JSON for models without; MP3 over 24 MB cut between its frames. Podcasts: "Transcribe" under the player, the transcript a note in `reading/transcripts/` whose paragraphs start with `podcast:<audio>#t=<s>` links (they play the episode from there, from any note); the transcript beside the player follows playback, a click on a time plays from it, a paragraph quoted in the note with a link to its time. Dictation: a 🎤 in the note header (where the webview can record), the text put at the cursor. A digest of the feeds: the new unread articles summarized by the quick-tasks model into `chats/<day> Digest.md`, each cited with a link; once a day a minute after start if set, or "Make today's digest now"; both among the settings of the feed reader (under the list of feeds), which offers to set up AI if no provider is. |
 | **M6 Myself** ✅ (branch `ai`, embeddings left for later) | Profile `.mdsilo/ai/profile.md` (one file, synced, editable in "My profile"): "Propose an update" reads the user's own notes (not chats, transcripts, clips, hidden or excluded ones; the latest first, 40k characters) and the profile now, the change shown line by line, taken or discarded, never written on its own. The chat with all the notes (and with a folder) gets the note open at first; with all the notes, the profile and a thinking-partner prompt. "Weekly review" (in an empty chat): the notes changed in seven days into `chats/<day> Weekly review.md`. With a note open: "Related notes" (through all the notes by the tools, `[[links]]` to add) and "Suggest tags" (of the tags used). Plugins: the permission `ai` and `ai.complete` (`prompt`/`system` or `messages`, `role`, `maxTokens`; one request at a time, 20 a minute, 100k characters). Then, opt-in: search by meaning and link suggestions (see Retrieval, v2). |
-| **M7 Hosted** | `mdsilo` provider kind, login, credits; the Cloudflare service (separate repo). |
+| **M7 Hosted** (later) | `mdsilo` provider kind, login, credits; the Cloudflare service (separate repo). Moved later (2026-11-20): AI works fully without it (local models, the user's own keys, the relay of the CORS proxy on web); it is a business decision of its own, after the `ai` branch is tested by hand (`docs/ai-testing.md`) and merged. |
 
 ---
 
@@ -237,4 +237,4 @@ All phases go on one branch, `ai` (a commit per phase, reviewed before commit); 
 
 ## Open questions
 
-1. Hosted service: in scope for this year, or after mobile (B7)?
+1. Hosted service (M7): when, and with which pricing? Moved later; not needed for AI to work.

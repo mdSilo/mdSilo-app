@@ -145,3 +145,122 @@ describe("cors proxy worker", () => {
     }
   });
 });
+
+describe("cors proxy: the relay of the AI", () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it("relays to the hosts allowed, the headers allowed only, streamed back", async () => {
+    const { default: worker } =
+      await import("../../../web/cors-proxy-worker.mjs");
+    const seen: { url: string; init: RequestInit }[] = [];
+    globalThis.fetch = vi.fn(async (url: string | URL, init?: RequestInit) => {
+      seen.push({ url: String(url), init: init ?? {} });
+      return new Response("data: {}\n\n", {
+        headers: { "content-type": "text/event-stream" },
+      });
+    }) as unknown as typeof fetch;
+    const target = encodeURIComponent(
+      "https://api.openai.com/v1/chat/completions",
+    );
+    const resp = await worker.fetch(
+      new Request(`https://w.dev/?url=${target}`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer k",
+          "content-type": "application/json",
+          cookie: "secret=1",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: '{"model":"m"}',
+      }),
+      {},
+    );
+    expect(resp.status).toBe(200);
+    expect(resp.headers.get("content-type")).toBe("text/event-stream");
+    expect(resp.headers.get("access-control-allow-origin")).toBe("*");
+    expect(await resp.text()).toBe("data: {}\n\n");
+    expect(seen[0].url).toBe("https://api.openai.com/v1/chat/completions");
+    expect(seen[0].init.method).toBe("POST");
+    expect(seen[0].init.headers).toEqual({
+      authorization: "Bearer k",
+      "content-type": "application/json",
+    });
+
+    // GET, by the header of the method
+    await worker.fetch(
+      new Request(
+        `https://w.dev/?url=${encodeURIComponent("https://api.openai.com/v1/models")}`,
+        {
+          method: "POST",
+          headers: { "x-mdsilo-method": "GET", authorization: "Bearer k" },
+        },
+      ),
+      {},
+    );
+    expect(seen[1].init).toMatchObject({ method: "GET", body: undefined });
+  });
+
+  it("not to other hosts, unless added; preflight allows the headers", async () => {
+    const { default: worker } =
+      await import("../../../web/cors-proxy-worker.mjs");
+    globalThis.fetch = vi.fn(
+      async () => new Response("{}"),
+    ) as unknown as typeof fetch;
+    const post = (url: string, env = {}) =>
+      worker.fetch(
+        new Request(`https://w.dev/?url=${encodeURIComponent(url)}`, {
+          method: "POST",
+          body: "{}",
+        }),
+        env,
+      );
+    expect((await post("https://evil.example/steal")).status).toBe(403);
+    expect((await post("http://10.0.0.1/v1")).status).toBe(403);
+    expect(
+      (await post("https://llm.my.host/v1/chat", { RELAY_HOSTS: "my.host" }))
+        .status,
+    ).toBe(200);
+    const pre = await worker.fetch(
+      new Request("https://w.dev/", { method: "OPTIONS" }),
+      {},
+    );
+    expect(pre.headers.get("access-control-allow-methods")).toContain("POST");
+    expect(pre.headers.get("access-control-allow-headers")).toContain(
+      "x-api-key",
+    );
+  });
+
+  it("the node proxy relays too", async () => {
+    globalThis.fetch = vi.fn(
+      async (_url: string | URL, init?: RequestInit) =>
+        new Response(`got ${String(init?.body)}`),
+    ) as unknown as typeof fetch;
+    const target = encodeURIComponent("https://api.anthropic.com/v1/messages");
+    // a public address for the host, as DNS would give
+    const server = http.createServer(
+      createCorsProxyHandler({ resolve: async () => ["93.184.216.34"] }),
+    );
+    await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
+    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const res = await new Promise<{ status: number; body: string }>(
+      (resolve, reject) => {
+        const req = http.request(
+          `${base}/?url=${target}`,
+          { method: "POST", headers: { "x-api-key": "k" } },
+          (r) => {
+            let body = "";
+            r.on("data", (c) => (body += c));
+            r.on("end", () => resolve({ status: r.statusCode ?? 0, body }));
+          },
+        );
+        req.on("error", reject);
+        req.end("hello");
+      },
+    );
+    await new Promise<void>((r) => server.close(() => r()));
+    expect(res).toEqual({ status: 200, body: "got hello" });
+  });
+});

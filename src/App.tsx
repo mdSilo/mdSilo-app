@@ -20,6 +20,7 @@ import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
 import AiSettingsModal from "@/ai/AiSettingsModal";
 import ProfileModal from "@/ai/ProfileModal";
+import CorsProxyModal from "@/shell/settings/CorsProxySetting";
 
 // loaded when first opened
 const ChatPane = lazy(() => import("@/ai/chat/ChatPane"));
@@ -228,6 +229,7 @@ const App = () => {
           <FontsModal />
           <AiSettingsModal />
           <ProfileModal />
+          {isWeb ? <CorsProxyModal /> : null}
           <DictionariesModal />
           <EditorLookupPopup />
           <PluginAnswerModal />

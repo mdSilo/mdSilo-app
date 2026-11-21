@@ -165,15 +165,13 @@ async function upload(
     new Blob([file.bytes as BlobPart], { type: file.type }),
     file.name,
   );
-  const response = await fetch(`${stored.baseUrl}${path}`, {
+  // directly, else by the relay of the CORS proxy set up
+  const { sendFromBrowser } = await import("./transport");
+  const response = await sendFromBrowser(stored, `${stored.baseUrl}${path}`, {
     method: "POST",
     headers: stored.key ? { authorization: `Bearer ${stored.key}` } : {},
     body: form,
   });
-  if (!response.ok)
-    throw new Error(
-      `${response.status}: ${(await response.text()).slice(0, 500)}`,
-    );
   return response.json();
 }
 

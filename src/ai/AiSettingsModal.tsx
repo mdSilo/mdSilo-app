@@ -165,6 +165,9 @@ function ProviderForm({
         {isWeb && local
           ? ` ${t("The server must allow this site, e.g. OLLAMA_ORIGINS for Ollama.")}`
           : null}
+        {isWeb && !local
+          ? ` ${t("If the browser cannot reach it, it goes through the CORS proxy (Settings > CORS Proxy; never the public one): your key passes through that proxy.")}`
+          : null}
       </p>
       <Row label={t("Name")}>
         <input
