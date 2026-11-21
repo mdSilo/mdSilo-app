@@ -28,6 +28,7 @@ import { useCurrentViewContext } from "@/state/useCurrentView";
 import useOnNoteLinkClick from "@/writer/hooks/useOnNoteLinkClick";
 import { listDir } from "@/workspace/open";
 import { normalizeSlash } from "@/workspace/util";
+import { moveDrawing, pairOf } from "@/draw/rename";
 import SidebarNoteLink, {
   INDENT_PER_LEVEL,
   TreeDndData,
@@ -112,7 +113,10 @@ const dropToMove = async (
 ) => {
   const srcPath = normalizeSlash(node.id);
   const currentNoteId = normalizeSlash(store.getState().currentNoteId || "");
-  const tarPath = await moveIntoDir(srcPath, tarDir);
+  // a drawing, or its picture: the other file with it
+  const tarPath = pairOf(srcPath)
+    ? await moveDrawing(srcPath, tarDir)
+    : await moveIntoDir(srcPath, tarDir);
   if (!tarPath) return;
   const { currentDir, noteTree, toggleExpandedDir } = store.getState();
   if (tarDir !== normalizeSlash(currentDir || "/")) {

@@ -23,7 +23,7 @@ import { checkFileIsMd, getFileExt } from "@/workspace/process";
 import { listDir, openUrl } from "@/workspace/open";
 import { joinPath, normalizeSlash } from "@/workspace/util";
 import { DRAWING_DIR, READING_DIR, WRITING_DIR } from "@/workspace/layout";
-import { isDrawingFile } from "@/draw/drawing";
+import { drawingOfSvg, isDrawingFile } from "@/draw/drawing";
 import { openDrawing } from "@/draw/open";
 import { isBookFile } from "@/reader/document";
 import BookIcon, { bookIconOf } from "@/reader/components/BookIcon";
@@ -35,6 +35,7 @@ import SidebarItem from "./SidebarItem";
 import {
   SidebarBookDropdown,
   SidebarDirDropdown,
+  SidebarDrawingDropdown,
   SidebarNoteDropdown,
 } from "./SidebarDropdown";
 import { parentOf } from "./treeMove";
@@ -83,6 +84,15 @@ const SidebarNoteLink = (
   const isNonMd = !isDir && !checkFileIsMd(node.id);
   const isImage = imageExtensions.includes(getFileExt(node.id).toLowerCase());
   const isDrawing = !isDir && isDrawingFile(node.id);
+  // the picture of a drawing: moved and renamed with it
+  const isDrawingPicture = useStore(
+    (state) =>
+      !isDir &&
+      Boolean(
+        state.initDir &&
+        drawingOfSvg(node.id, joinPath(state.initDir, DRAWING_DIR)),
+      ),
+  );
   // reading/ and writing/ of a workspace: the two roots of the tree
   const rootLabel = useStore((state) => {
     if (!isDir || depth !== 0 || state.layout !== "workspace" || !state.initDir)
@@ -260,6 +270,11 @@ const SidebarNoteLink = (
         ) : isBook ? (
           <SidebarBookDropdown
             bookPath={node.id}
+            className="opacity-[0.001] group-hover:opacity-100"
+          />
+        ) : isDrawing || isDrawingPicture ? (
+          <SidebarDrawingDropdown
+            path={node.id}
             className="opacity-[0.001] group-hover:opacity-100"
           />
         ) : !isNonMd ? (
