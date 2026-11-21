@@ -83,6 +83,8 @@ export type AiSettings = {
   usage: Record<string, Record<string, AiUsage>>;
   /** folders of the workspace (relative paths) the AI never reads, see ai/chat/privacy */
   excluded?: string[];
+  /** the chat with all the notes searches the books too (their text, by the index), see ai/chat/tools */
+  myselfBooks?: boolean;
   /** a digest of the feeds made once a day, see ai/digest */
   digest?: boolean;
   /** the day (YYYY-MM-DD) of the last digest */

@@ -69,8 +69,11 @@ export function messagesOf(
   context: Context | null,
   tools?: ToolScope,
   web = false,
+  /** more of the system prompt, e.g. the profile of the user */
+  extra?: string,
 ): ChatMessage[] {
   let system = SYSTEM;
+  if (extra?.trim()) system += `\n\n${extra.trim()}`;
   const passages = context && context.chunks.length > 0;
   if (passages || tools || web) system += `\n\n${CITE}`;
   if (tools) system += `\n\n${toolsHelp(tools)}`;
@@ -101,6 +104,18 @@ export const POLISH_PROMPT =
 /** Asked for other views with no web: said plainly to be the model's own knowledge. */
 export const NO_WEB_VIEWS =
   "You cannot search the web now: say plainly that this comes from your own knowledge, without sources.";
+
+/** Notes like the one open, found through all the notes. */
+export const relatedPrompt = (title: string) =>
+  `Find my notes related to the note I have open${title ? ` ("${title}")` : ""}: search for its main ideas, then list the related notes as [[note title]] links, each with a sentence on how it relates. Say which links would be worth adding to this note.`;
+
+/** Tags for the note open, of those already used where they fit. */
+export const tagsPrompt = (used: string[]) =>
+  `Suggest three to five tags for the note I have open, written #like this#.${
+    used.length
+      ? ` Prefer the tags I already use where they fit: ${used.map((t) => `#${t}#`).join(" ")}.`
+      : ""
+  } One line on why for each.`;
 
 /** The prompts offered for a text selected. */
 export const QUICK_PROMPTS = {

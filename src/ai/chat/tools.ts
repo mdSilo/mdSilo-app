@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
 import { noteContent } from "@/lib/contentCache";
 import { encodeHref } from "@/lib/mdlink";
+import { indexOf } from "@/lib/linkIndex";
 import { checkFileIsMd } from "@/workspace/process";
 import { activeStore } from "@/reader/readerStore";
 import { getView } from "@/reader/view";
@@ -24,7 +25,9 @@ import { isExcludedNote, isExcludedPath } from "./privacy";
  */
 
 export type ToolScope =
-  { kind: "book" } | { kind: "notes"; dir?: string; label: string };
+  | { kind: "book" }
+  /** `books`: the books searched too (all the notes only) */
+  | { kind: "notes"; dir?: string; label: string; books?: boolean };
 
 /** what a tool gives back at most, in characters */
 export const TOOL_CHARS = 12_000;
@@ -147,7 +150,14 @@ export function bestOf(
   return out;
 }
 
-type IndexHit = { id: string; path: string; kind: string };
+type IndexHit = {
+  id: string;
+  path: string;
+  kind: string;
+  title?: string;
+  label?: string;
+  snippet?: string;
+};
 
 async function indexSearch(
   query: string,
@@ -261,6 +271,55 @@ function listChapters(): string {
     .join("\n");
 }
 
+// # all the books, by the index
+
+/** book passages a search gives back at most, besides the notes */
+const BOOK_HITS = 6;
+
+/** The text of a snippet of the index: its HTML (`<b>`, entities) as plain text. */
+export const plainSnippet = (html: string) =>
+  (new DOMParser().parseFromString(html, "text/html").body.textContent ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** Passages of the books with the words: the snippets of the index, by section. */
+async function searchBooks(query: string): Promise<Chunk[]> {
+  const ws = store.getState().initDir;
+  const hits = (await indexSearch(query, "book")) ?? [];
+  const paths = new Map<string, string | undefined>();
+  const out: Chunk[] = [];
+  for (const hit of hits) {
+    if (out.length >= BOOK_HITS) break;
+    const m = /^book:([0-9a-f]{32})#(.+)$/i.exec(hit.id);
+    if (!m || !hit.snippet) continue;
+    const [, hash, cfi] = m;
+    // a book in a folder excluded: never read
+    if (ws && !paths.has(hash)) {
+      const { findBookPath } = await import("@/reader/library/library");
+      paths.set(hash, await findBookPath(ws, hash).catch(() => undefined));
+    }
+    const path = paths.get(hash);
+    if (path && isExcludedPath(path)) continue;
+    const where = [hit.title, hit.label].filter(Boolean).join(" · ");
+    out.push({
+      text: `${where ? `${where}: ` : ""}${plainSnippet(hit.snippet)}`,
+      href: bookHref(hash, cfi),
+    });
+  }
+  return out;
+}
+
+/** The notes found, and (with `books`) the books, some room left for them. */
+async function searchNotesAndBooks(
+  query: string,
+  scope: Extract<ToolScope, { kind: "notes" }>,
+): Promise<Chunk[]> {
+  const notes = await searchNotes(query, scope.dir);
+  return scope.books
+    ? [...notes.slice(0, HITS - BOOK_HITS), ...(await searchBooks(query))]
+    : notes;
+}
+
 // # the notes
 
 /** The notes (Markdown files) of the scope, not excluded by their folder. */
@@ -345,6 +404,20 @@ function listNotes(dir?: string): string {
   return shown.join("\n");
 }
 
+/** The tags used in the notes, the most used first. */
+export function usedTags(max = 50): string[] {
+  const { notes } = store.getState();
+  const index = indexOf(notes);
+  const count = new Map<string, number>();
+  for (const note of notesIn())
+    for (const tag of index.tags(note.id))
+      count.set(tag, (count.get(tag) ?? 0) + 1);
+  return [...count.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, max)
+    .map(([tag]) => tag);
+}
+
 // # running a call
 
 export type ToolResult = {
@@ -383,7 +456,7 @@ export async function runTool(
       const chunks =
         scope.kind === "book"
           ? await searchBook(query)
-          : await searchNotes(query, dir);
+          : await searchNotesAndBooks(query, scope);
       return {
         text: chunks.length
           ? numberedFrom(chunks, first)
@@ -433,7 +506,7 @@ export async function searchFor(
   try {
     return scope.kind === "book"
       ? await searchBook(question)
-      : await searchNotes(question, scope.dir);
+      : await searchNotesAndBooks(question, scope);
   } catch {
     return [];
   }

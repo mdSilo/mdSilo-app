@@ -13,6 +13,7 @@ export const PERMISSIONS = [
   "issues:read",
   "reader:read",
   "net",
+  "ai",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

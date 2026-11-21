@@ -159,6 +159,22 @@ export type Methods = {
    * from the hidden main page only while it answers an action or a command
    */
   "app.openUrl": Method<{ url: string }, true>;
+  /**
+   * the answer of the AI the user set up (counted in their usage): to
+   * `prompt` (with `system`), or to `messages`; `role` "fast" for the model
+   * of quick tasks. One request at a time, 20 a minute at most.
+   */
+  "ai.complete": Method<
+    {
+      prompt?: string;
+      system?: string;
+      messages?: { role: "system" | "user" | "assistant"; content: string }[];
+      role?: "chat" | "fast";
+      maxTokens?: number;
+    },
+    { text: string },
+    "ai"
+  >;
   // file viewers: the file opened only
   /** `path` relative to the workspace, if the file is in it */
   "file.info": Method<void, { name: string; ext: string; path?: string }>;

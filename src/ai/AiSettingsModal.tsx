@@ -5,6 +5,7 @@ import { Select } from "@/ui/ui";
 import { isWeb } from "@/workspace/util";
 import { useT } from "@/i18n";
 import { dataRoot } from "@/workspace/layout";
+import { useProfileModal } from "./ProfileModal";
 import { complete, listModels } from "./client";
 import {
   newProviderId,
@@ -334,6 +335,20 @@ function Row({
   );
 }
 
+/** AI is new, its parts may change: said beside its name. */
+export function AlphaBadge() {
+  const t = useT();
+  return (
+    <span
+      className="badge badge-xs badge-warning"
+      title={t("Alpha: new, and may change")}
+      data-testid="ai-alpha"
+    >
+      α
+    </span>
+  );
+}
+
 /** The AI providers and which one does what, a dialog from the settings. */
 export default function AiSettingsModal() {
   const t = useT();
@@ -341,6 +356,7 @@ export default function AiSettingsModal() {
   const setIsOpen = useStore((state) => state.setIsAiSettingsOpen);
   const aiSettings = useStore((state) => state.aiSettings);
   const setAiSettings = useStore((state) => state.setAiSettings);
+  const initDir = useStore((state) => state.initDir);
   const providers = useAiProviders((s) => s.providers);
   const load = useAiProviders((s) => s.load);
   const [adding, setAdding] = useState<Draft | null>(null);
@@ -364,7 +380,12 @@ export default function AiSettingsModal() {
 
   return (
     <BaseModal
-      title={t("AI")}
+      title={
+        <span className="flex items-center justify-center gap-1">
+          {t("AI")}
+          <AlphaBadge />
+        </span>
+      }
       scrollBody
       isOpen={isOpen}
       handleClose={() => {
@@ -434,6 +455,38 @@ export default function AiSettingsModal() {
         )}
         <SearchServiceSettings />
         <PromptPresets />
+        {initDir ? (
+          <div className="flex items-center justify-between">
+            <span>{t("My profile")}</span>
+            <button
+              type="button"
+              className="btn btn-xs"
+              onClick={() => {
+                setIsOpen(false);
+                useProfileModal.setState({ open: true });
+              }}
+            >
+              {t("Open")}
+            </button>
+          </div>
+        ) : null}
+        {initDir ? (
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              className="checkbox checkbox-xs"
+              checked={Boolean(aiSettings.myselfBooks)}
+              onChange={(e) =>
+                setAiSettings({ ...aiSettings, myselfBooks: e.target.checked })
+              }
+            />
+            <span>
+              {t(
+                "In the chat with all my notes, search my books too (not only my own words)",
+              )}
+            </span>
+          </label>
+        ) : null}
         <DigestSettings />
         <ExcludedFolders />
         <p className="text-xs text-base-content/70" data-testid="ai-usage">

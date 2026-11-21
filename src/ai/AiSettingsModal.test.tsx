@@ -46,6 +46,8 @@ async function open() {
 
 test("shows the providers, a saved key only as saved, and the usage", async () => {
   const form = await open();
+  // new: said so beside its name
+  expect(screen.getByTestId("ai-alpha")).toHaveTextContent("α");
   expect(within(form).getByText("online")).toBeInTheDocument();
   expect(
     within(form).getByPlaceholderText("saved, type to change"),

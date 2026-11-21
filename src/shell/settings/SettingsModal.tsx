@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import { useStore } from "@/state/store";
+import { AlphaBadge } from "@/ai/AiSettingsModal";
 import {
   STARTUP_VIEWS,
   type OpenOnStartup,
@@ -154,7 +156,12 @@ export default function SettingsModal({ isOpen, handleClose }: Props) {
           }}
         />
         <SettingsLink
-          label={t("AI")}
+          label={
+            <span className="flex items-center gap-1">
+              {t("AI")}
+              <AlphaBadge />
+            </span>
+          }
           action={t("Manage AI Providers")}
           onClick={() => {
             handleClose();
@@ -188,7 +195,7 @@ function SettingsLink({
   action,
   onClick,
 }: {
-  label: string;
+  label: ReactNode;
   action: string;
   onClick: () => void;
 }) {

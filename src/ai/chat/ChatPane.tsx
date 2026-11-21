@@ -29,10 +29,19 @@ import ResizeHandle, { useResizableWidth } from "@/ui/ResizeHandle";
 import { useT } from "@/i18n";
 import { useAiProviders } from "../providers";
 import { languageName } from "../translate";
+import { makeWeeklyReview } from "../review";
+import { useProfileModal } from "../ProfileModal";
 import { folderOf, scopesFor, viewKindOf, type Scope } from "./context";
 import SentPreview from "./SentPreview";
 import { CHATS_DIR, linkCitations } from "./chatFile";
-import { NO_WEB_VIEWS, QUICK_PROMPTS, type ChatMsg } from "./prompt";
+import {
+  NO_WEB_VIEWS,
+  QUICK_PROMPTS,
+  relatedPrompt,
+  tagsPrompt,
+  type ChatMsg,
+} from "./prompt";
+import { usedTags } from "./tools";
 import { fillPrompt, usePrompts } from "./prompts";
 import { clipPage } from "./web";
 import { answerHtml, CITE_CLASS } from "./render";
@@ -139,6 +148,27 @@ export default function ChatPane() {
   }, [ws]);
   const ask = (prompt: string) => void sendMessage(prompt, view);
   // other views want the web, for where they come from; else said to be the model's own
+  // the notes like the one open, by the tools through all the notes
+  const askRelated = () => {
+    const title = viewNote ? store.getState().notes.get(viewNote)?.title : "";
+    void sendMessage(relatedPrompt(title ?? ""), view, { scope: "all" });
+  };
+  const askTags = () => void sendMessage(tagsPrompt(usedTags()), view);
+  const [made, setMade] = useState("");
+  const review = async () => {
+    setMade(t("Reading your week…"));
+    try {
+      const id = await makeWeeklyReview();
+      if (!id || !ws) {
+        setMade(t("No notes changed this week"));
+        return;
+      }
+      setMade("");
+      await openInApp({ note: toWorkspacePath(ws, id) }, dispatch);
+    } catch (e) {
+      setMade(e instanceof Error ? e.message : String(e));
+    }
+  };
   const askViews = () =>
     void sendMessage(
       canWeb ? QUICK_PROMPTS.views : `${QUICK_PROMPTS.views} ${NO_WEB_VIEWS}`,
@@ -285,6 +315,21 @@ export default function ChatPane() {
             )}
           </p>
         ) : null}
+        {messages.length === 0 && providers.length > 0 && ws ? (
+          <div className="flex flex-wrap items-center justify-center gap-1">
+            <QuickButton
+              label={t("Weekly review")}
+              onClick={() => void review()}
+            />
+            <QuickButton
+              label={t("My profile")}
+              onClick={() => useProfileModal.setState({ open: true })}
+            />
+            {made ? (
+              <span className="text-xs text-base-content/60">{made}</span>
+            ) : null}
+          </div>
+        ) : null}
         {chatNoteOpen ? (
           <button
             type="button"
@@ -340,6 +385,14 @@ export default function ChatPane() {
             >
               <TbX size={12} />
             </button>
+          </div>
+        ) : null}
+        {kind === "note" && !attached && !busy && providers.length > 0 ? (
+          <div className="flex flex-wrap gap-1 mb-1">
+            {ws ? (
+              <QuickButton label={t("Related notes")} onClick={askRelated} />
+            ) : null}
+            <QuickButton label={t("Suggest tags")} onClick={askTags} />
           </div>
         ) : null}
         {attached && !busy ? (

@@ -8,6 +8,7 @@ import { writeNote } from "@/plugins/workspaceApi";
 import { chat, resolve } from "../client";
 import { stopMessage, type ChatMessage, type ToolCall } from "../protocol";
 import { canUseTools, searchService } from "../providers";
+import { myselfPrompt, readProfile } from "../myself";
 import {
   contextOf,
   toolScopeOf,
@@ -194,7 +195,7 @@ const refusesWebTools = (e: unknown) =>
 export async function sendMessage(
   text: string,
   view: ViewState | undefined,
-  options: { polish?: boolean; web?: boolean } = {},
+  options: { polish?: boolean; web?: boolean; scope?: Scope } = {},
 ) {
   const state = useChat.getState();
   if (state.busy || !text.trim()) return;
@@ -227,7 +228,7 @@ export async function sendMessage(
   try {
     const { provider, model } = await resolve({});
     // polishing reads the text selected only
-    const scope = options.polish ? "none" : state.scope;
+    const scope = options.polish ? "none" : (options.scope ?? state.scope);
     let context: Context | null = await contextOf(scope, view).catch(
       () => null,
     );
@@ -268,11 +269,15 @@ export async function sendMessage(
       ...(context?.label ? { scopeLabel: context.label } : {}),
       ...(sources.length ? { sources: [...sources] } : {}),
     });
+    // all the notes: the profile of the user, the model a thinking partner
+    const extra =
+      scope === "all" ? myselfPrompt(await readProfile()) : undefined;
     let messages: ChatMessage[] = messagesOf(
       history,
       context,
       withTools ? toolScope : undefined,
       withWeb,
+      extra,
     );
     /** the passages of the web an answer cites as it comes: cited by number */
     const cite = (cited: { url: string; title?: string; text?: string }[]) => {
@@ -351,7 +356,7 @@ export async function sendMessage(
           sources.splice(0, sources.length, ...(context?.chunks ?? []));
           update(answer.id, { sources: [...sources], error: undefined });
           withWeb = withWeb && web === "anthropic";
-          messages = messagesOf(history, context, undefined, withWeb);
+          messages = messagesOf(history, context, undefined, withWeb, extra);
           round--;
           continue;
         }

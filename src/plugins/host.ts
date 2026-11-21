@@ -84,6 +84,12 @@ async function openUrlFor(plugin: InstalledPlugin, params: unknown) {
 /** Methods every plugin has, whatever it is granted. */
 export const baseMethods = (plugin: InstalledPlugin): PluginMethods => ({
   "app.openUrl": { handler: (params) => openUrlFor(plugin, params) },
+  // the AI the user set up, see ai/pluginApi; loaded when used
+  "ai.complete": {
+    permission: "ai",
+    handler: async (params) =>
+      (await import("@/ai/pluginApi")).pluginComplete(plugin.id, params),
+  },
   // Markdown as the app reads it, to show: no scripts, styles or forms
   "markdown.render": {
     handler: (params) => {

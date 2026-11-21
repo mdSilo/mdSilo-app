@@ -10,6 +10,13 @@ import { messagesOf } from "./prompt";
 import { bestOf, runTool, scoreOf, termsOf, toolsFor } from "./tools";
 import { newChat, sendMessage, useChat, MAX_ROUNDS } from "./chatStore";
 
+// the files of the books, by their hash
+vi.mock("@/reader/library/library", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/reader/library/library")>()),
+  findBookPath: async (_ws: string, hash: string) =>
+    hash.startsWith("b") ? "/ws/private/b.epub" : "/ws/reading/a.epub",
+}));
+
 const note = (
   id: string,
   title: string,
@@ -524,5 +531,79 @@ describe("the tool loop", () => {
     expect(bodies[0].tools).toBeUndefined();
     expect(bodies[0].messages[0].content).toContain("[1] Foxes are red.");
     provider.settings.tools = undefined;
+  });
+});
+
+describe("all my notes and books (an option)", () => {
+  const A = "a".repeat(32);
+  const B = "b".repeat(32);
+
+  test("the books searched too, by the snippets of the index; excluded ones never", async () => {
+    note("/ws/n.md", "N", "Foxes in my notes.");
+    vi.mocked(invoke).mockImplementation(async (cmd, args) => {
+      if (cmd !== "index_search") return undefined;
+      return (args as { kind: string }).kind === "book"
+        ? [
+            {
+              id: `book:${A}#epubcfi(/6/4)`,
+              path: "",
+              kind: "book",
+              title: "Fox Book",
+              label: "Ch 1",
+              snippet: "the <b>fox</b> &amp; the hound",
+            },
+            {
+              id: `book:${B}#epubcfi(/6/2)`,
+              path: "",
+              kind: "book",
+              title: "Private",
+              label: "",
+              snippet: "a <b>fox</b>",
+            },
+          ]
+        : [{ id: "/ws/n.md", path: "/ws/n.md", kind: "note" }];
+    });
+    store
+      .getState()
+      .setAiSettings({ ...DEFAULT_AI_SETTINGS, excluded: ["private"] });
+    expect(toolScopeOf("all")).toEqual({
+      kind: "notes",
+      label: "all the user's notes",
+      books: false,
+    });
+    const off = await runTool(
+      { id: "1", name: "search", input: { query: "fox" } },
+      toolScopeOf("all")!,
+      1,
+    );
+    expect(off.chunks.map((c) => c.text)).toEqual(["Foxes in my notes."]);
+
+    store
+      .getState()
+      .setAiSettings({
+        ...DEFAULT_AI_SETTINGS,
+        excluded: ["private"],
+        myselfBooks: true,
+      });
+    const scope = toolScopeOf("all")!;
+    expect(scope).toEqual({
+      kind: "notes",
+      label: "all the user's notes and books",
+      books: true,
+    });
+    const on = await runTool(
+      { id: "2", name: "search", input: { query: "fox" } },
+      scope,
+      1,
+    );
+    expect(on.chunks).toEqual([
+      { text: "Foxes in my notes.", href: "N" },
+      {
+        text: "Fox Book · Ch 1: the fox & the hound",
+        href: `book:${A}#epubcfi(%2F6%2F4)`,
+      },
+    ]);
+    // a folder: its notes only, whatever the option
+    expect(toolScopeOf("folder", "/ws/a")).not.toHaveProperty("books");
   });
 });

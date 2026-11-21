@@ -47,6 +47,8 @@ export type ViewKind = "note" | "book" | "feed" | "none";
 
 /** about 12k tokens: room for the question, the history and the answer */
 export const CONTEXT_CHARS = 48_000;
+/** of the note open, with the tools looking through more */
+const NOTE_WITH_TOOLS = 16_000;
 
 export function viewKindOf(view: ViewState | undefined): ViewKind {
   if (view?.view === "md" && view.params?.noteId) return "note";
@@ -188,7 +190,15 @@ export async function contextOf(
   view: ViewState | undefined,
   budget = CONTEXT_CHARS,
 ): Promise<Context | null> {
-  if (scope === "none" || scope === "folder" || scope === "all") return null;
+  if (scope === "none") return null;
+  // a folder or all the notes, by the tools: the note open given at first
+  if (scope === "folder" || scope === "all")
+    return viewKindOf(view) === "note"
+      ? noteContext(
+          String(view?.params?.noteId),
+          Math.min(budget, NOTE_WITH_TOOLS),
+        )
+      : null;
   // the whole book: the chapter shown at first, the rest by the tools
   if (scope === "book") return bookContext(budget);
   switch (viewKindOf(view)) {
@@ -230,6 +240,14 @@ export function toolScopeOf(
       dir: folder,
       label: `the notes of the folder "${folder.split(/[\\/]/).pop()}"`,
     };
-  if (scope === "all") return { kind: "notes", label: "all the user's notes" };
+  if (scope === "all") {
+    // the books too, if the user wants
+    const books = Boolean(store.getState().aiSettings.myselfBooks);
+    return {
+      kind: "notes",
+      label: books ? "all the user's notes and books" : "all the user's notes",
+      books,
+    };
+  }
   return undefined;
 }

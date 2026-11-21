@@ -61,7 +61,9 @@ export default function SentPreview({ view }: { view: ViewState }) {
             ? t("in the folder {name}", {
                 name: toolScope.dir.split(/[\\/]/).pop() ?? "",
               })
-            : t("in all my notes")
+            : toolScope.books
+              ? t("in all my notes and books")
+              : t("in all my notes")
         : undefined,
       searchOnly: Boolean(toolScope && !tools),
       provider: provider?.label,

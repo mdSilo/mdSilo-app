@@ -19,6 +19,7 @@ import { PluginDev } from "@/plugins/dev";
 import ThemeEditorModal from "@/shell/settings/ThemeEditorModal";
 import FontsModal from "@/shell/settings/FontsModal";
 import AiSettingsModal from "@/ai/AiSettingsModal";
+import ProfileModal from "@/ai/ProfileModal";
 
 // loaded when first opened
 const ChatPane = lazy(() => import("@/ai/chat/ChatPane"));
@@ -214,6 +215,7 @@ const App = () => {
           <ThemeEditorModal />
           <FontsModal />
           <AiSettingsModal />
+          <ProfileModal />
           <DictionariesModal />
           <EditorLookupPopup />
           <PluginAnswerModal />
