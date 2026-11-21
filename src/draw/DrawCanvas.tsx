@@ -25,6 +25,7 @@ import { QUOTE_MIME } from "@/writer/beside";
 import useLinkHandlers from "@/writer/hooks/useLinkHandlers";
 import { drawingName, readDrawing } from "./drawing";
 import { quoteOfMarkdown } from "./quote";
+import DrawingName from "./DrawingName";
 import { DrawingSaver, type SaveApi } from "./save";
 import { shareDrawingSaved } from "./window";
 
@@ -126,12 +127,7 @@ export default function DrawCanvas({ path, lead, actions }: Props) {
     >
       <div className="flex items-center gap-1 px-2 py-1 border-b border-base-300">
         {lead}
-        <span
-          className="flex-1 min-w-0 overflow-hidden text-sm text-ellipsis whitespace-nowrap"
-          title={path}
-        >
-          {drawingName(path)}
-        </span>
+        <DrawingName path={path} />
         {actions}
       </div>
       <div

@@ -199,15 +199,14 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 - [X] Read and annotate EPUB, PDF, MOBI, FB2, CBZ; library, parallel reading, vertical writing, comics and manga, dictionaries (web and MDict), vocabulary, word lens, read aloud, whole-book translation
 - [X] Feeds into books
 - [X] OPDS catalogs
-- [ ] AI helpers
+- [X] AI helpers
 
 ### Process
 
 - [X] Issues, labels, milestones, subtasks, due dates
 - [X] Projects: boards and tables
 - [X] Tasks in notes, issues from highlights and selections
-- [X] Vocabulary: record and revise the new things  
-- [ ] Flashcards
+- [X] Vocabulary: record and revise the new things via Flashcards
 
 ### Output
 
@@ -215,7 +214,7 @@ Deploy to GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys on
 - [X] Extensions: mark, underline, sup and sub, highlighted code, math and chemistry, notices, wikilink `[[]]`, hashtag `#tag#`, diagrams (mermaid, echarts, abc), chemical structures (SMILES), embeds, attached PDF
 - [X] WYSIWYG, Markdown and Mind Map; slash commands, hovering toolbar, hotkeys
 - [X] Export as PDF and PNG
-- [ ] Drawing
+- [X] Drawing
 - [ ] Block reference
 - [X] Publish a static site (GitHub Pages)
 

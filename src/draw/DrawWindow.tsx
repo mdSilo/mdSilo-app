@@ -16,7 +16,10 @@ import { resolveLayout } from "@/workspace/layout";
 import { flushSave } from "@/workspace/pendingSaves";
 import { Spinner } from "@/ui/ui";
 import ErrorBoundary from "@/ui/ErrorBoundary";
+import { onRenamed } from "@/workspace/renames";
+import { movedPath, normalizeSlash, setWindowTitle } from "@/workspace/util";
 import { flushDrawings } from "./save";
+import { drawingName } from "./drawing";
 
 const DrawCanvas = lazy(() => import("./DrawCanvas"));
 
@@ -24,7 +27,20 @@ const DrawCanvas = lazy(() => import("./DrawCanvas"));
  * A window of one drawing (see window.ts): the canvas only. The views its
  * links ask for show in the main window.
  */
-export default function DrawWindow({ path, ws }: DrawingWindowParams) {
+export default function DrawWindow(props: DrawingWindowParams) {
+  const { ws } = props;
+  // renamed (here, from its bar, or elsewhere): followed
+  const [path, setPath] = useState(props.path);
+  useEffect(
+    () =>
+      onRenamed(({ from, to }) =>
+        setPath((now) => movedPath(normalizeSlash(now), from, to) ?? now),
+      ),
+    [],
+  );
+  useEffect(() => {
+    setWindowTitle(`${drawingName(path)} - mdSilo`);
+  }, [path]);
   useTheme();
   useLanguage();
   useCustomFonts();
