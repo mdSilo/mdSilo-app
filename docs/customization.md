@@ -172,6 +172,7 @@ Here is everything done in second stage, from the plan in `docs/customization.md
 - `notes.search { query, limit? }`: the full-text search of the app (index, then the blocks), `[{ path, title, snippets }]`.
 - `notes.write { path, text, create: true }` makes a new Markdown note (folders as needed; not over a file the app doesn't know, not in a hidden folder).
 - `notes.graph`: `{ nodes, links, unresolved }`, links between notes resolved by title as the Graph does.
+- Drawings (branch `draw`): permissions `drawings:read` and `drawings:write`; `drawings.list`, `drawings.read { path }` (`{ scene, svg }`), `drawings.write { path, scene, create? }` (full elements restored as Excalidraw restores a file, skeletons made whole by `convertToExcalidrawElements`, the picture drawn again by the app, the canvases open reloaded); `app.open { drawing }`. Only `.excalidraw` files in `drawing/`.
 - Views are told `notes.changed { paths }` (edited in the app too, made, renamed, deleted; once the changes pause) and `files.changed { paths, event }` (the watcher).
 
 **C5 Enhancers**

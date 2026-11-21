@@ -10,6 +10,8 @@ export const PERMISSIONS = [
   "notes:read",
   "notes:write",
   "books:read",
+  "drawings:read",
+  "drawings:write",
   "issues:read",
   "reader:read",
   "net",

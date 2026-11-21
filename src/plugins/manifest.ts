@@ -36,6 +36,8 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "notes:read": tk("Read your notes"),
   "notes:write": tk("Change your notes"),
   "books:read": tk("Read your library"),
+  "drawings:read": tk("Read your drawings"),
+  "drawings:write": tk("Change your drawings, and make new ones"),
   "issues:read": tk("Read your issues"),
   "reader:read": tk("Read the book open, where you are in it, and move in it"),
   net: tk("Reach the internet"),

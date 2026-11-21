@@ -1,3 +1,4 @@
+import { create } from "zustand";
 import type {
   ExcalidrawElement,
   NonDeletedExcalidrawElement,
@@ -133,3 +134,12 @@ export class DrawingSaver {
     await Promise.all([flushSave(this.path), this.picture]);
   }
 }
+
+/**
+ * Drawings written under the canvas, e.g. by a plugin: bumped, the canvases
+ * open load their drawing again.
+ */
+export const useDrawingReloads = create<{ seq: number }>(() => ({ seq: 0 }));
+
+export const reloadDrawings = () =>
+  useDrawingReloads.setState((s) => ({ seq: s.seq + 1 }));

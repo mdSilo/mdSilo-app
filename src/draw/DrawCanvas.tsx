@@ -29,7 +29,7 @@ import { drawingName, readDrawing } from "./drawing";
 import { quoteOfMarkdown } from "./quote";
 import { libraryAdapter } from "./library";
 import DrawingName from "./DrawingName";
-import { DrawingSaver, type SaveApi } from "./save";
+import { DrawingSaver, useDrawingReloads, type SaveApi } from "./save";
 import { shareDrawingSaved } from "./window";
 
 const SAVE_API: SaveApi = { serializeAsJSON, exportScene, getSceneVersion };
@@ -77,6 +77,8 @@ async function dropQuote(
  */
 export default function DrawCanvas({ path, lead, actions }: Props) {
   const t = useT();
+  // written under the canvas (e.g. by a plugin): loaded again
+  const reloads = useDrawingReloads((s) => s.seq);
   const darkMode = useStore((s) => s.darkMode);
   const [initial, setInitial] = useState<
     ExcalidrawInitialDataState | undefined
@@ -128,7 +130,7 @@ export default function DrawCanvas({ path, lead, actions }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [path, t]);
+  }, [path, t, reloads]);
 
   // closed, or another drawing opened: the change waiting is saved
   useEffect(() => () => void saver.close(), [saver]);
@@ -166,7 +168,7 @@ export default function DrawCanvas({ path, lead, actions }: Props) {
           </p>
         ) : initial ? (
           <Excalidraw
-            key={path}
+            key={`${path}#${reloads}`}
             initialData={initial}
             name={drawingName(path)}
             theme={darkMode ? "dark" : "light"}
