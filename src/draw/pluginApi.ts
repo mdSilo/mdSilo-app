@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { DrawingInfo } from "@mdsilo/plugin-api";
 import { store } from "@/state/store";
-import { openFilePaths } from "@/workspace/open";
 import {
   createDirRecursive,
   fromWorkspacePath,
@@ -14,6 +13,7 @@ import {
   drawingName,
   drawingRoot,
   isDrawingFile,
+  showInTree,
   svgOfDrawing,
 } from "./drawing";
 import { drawingSaved, flushDrawings, reloadDrawings } from "./save";
@@ -146,7 +146,7 @@ export async function writeDrawingFiles(params: unknown): Promise<true> {
         `Could not write ${toWorkspacePath(workspace(), filePath)}`,
       );
   }
-  if (isNew) void openFilePaths([path, svgPath]);
+  if (isNew) await showInTree([path, svgPath]);
   // the canvases open load it again; the notes show the new picture
   reloadDrawings();
   drawingSaved(svgPath, shareDrawingSaved);

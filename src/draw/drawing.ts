@@ -93,9 +93,19 @@ export async function createDrawing(name = newDrawingName()): Promise<string> {
       text: `${JSON.stringify(EMPTY_SCENE, null, 2)}\n`,
     });
     await invoke("write_file", { filePath: svg, text: EMPTY_SVG });
-    // in the tree now, not once the watcher tells
-    void openFilePaths([path, svg]);
+    // in the tree now, not once the watcher tells (if it fails, then);
+    // waited for: nothing left reading the files once the drawing opens
+    await showInTree([path, svg]);
     return path;
+  }
+}
+
+/** The files in the tree now, not once the watcher tells (if it fails, then) */
+export async function showInTree(paths: string[]) {
+  try {
+    await openFilePaths(paths);
+  } catch (e) {
+    console.error(`Failed to show ${paths.join(", ")} in the tree`, e);
   }
 }
 
