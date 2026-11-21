@@ -36,6 +36,7 @@ import { useT } from "@/i18n";
 
 // what to open beside: its list of books is of the reader, loaded on use
 const BesideMenu = lazy(() => import("@/writer/BesideMenu"));
+const DictateButton = lazy(() => import("@/ai/DictateButton"));
 
 /** the modes of plugins shown as buttons, each its own; more are in a list */
 const MAX_MODE_BUTTONS = 2;
@@ -58,6 +59,7 @@ export default function NoteHeader({
   );
 
   const rawMode = useStore((state) => state.rawMode);
+  const readMode = useStore((state) => state.readMode);
   const besideOpen = useStore((state) => Boolean(state.besideNoteId));
   const darkMode = useStore((state) => state.darkMode);
   const setRawMode = useStore((state) => state.setRawMode);
@@ -169,6 +171,15 @@ export default function NoteHeader({
         )}
       </div>
       <div className="flex items-center">
+        {readMode ? null : (
+          <Suspense fallback={null}>
+            <DictateButton
+              noteId={currentNote.id}
+              className={buttonClassName}
+              iconClass={iconClass}
+            />
+          </Suspense>
+        )}
         {beside ? (
           <>
             {currentNote.closeBook ? (

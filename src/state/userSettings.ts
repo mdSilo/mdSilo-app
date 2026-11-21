@@ -83,6 +83,10 @@ export type AiSettings = {
   usage: Record<string, Record<string, AiUsage>>;
   /** folders of the workspace (relative paths) the AI never reads, see ai/chat/privacy */
   excluded?: string[];
+  /** a digest of the feeds made once a day, see ai/digest */
+  digest?: boolean;
+  /** the day (YYYY-MM-DD) of the last digest */
+  lastDigest?: string;
 };
 
 export const DEFAULT_AI_SETTINGS: AiSettings = {

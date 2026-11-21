@@ -9,7 +9,7 @@ import { TbPlaylist as IconPlaylist } from "react-icons/tb";
 import { SidebarTab, store } from "@/state/store";
 import { PodType } from "@/types/model";
 import { computePlaylist } from "@/feed/Playlist";
-import { onPauseRequest, playing } from "@/player/playerStore";
+import { onPauseRequest, playing, usePlayer } from "@/player/playerStore";
 import MediaControls, { formatTime } from "@/player/MediaControls";
 import { t, useT } from "@/i18n";
 
@@ -37,6 +37,21 @@ export default function AudioPlayer(props: Props) {
     () => onPauseRequest("podcast", () => audioRef.current?.pause()),
     [],
   );
+  // a time of it gone to from elsewhere, e.g. a link of its transcript
+  useEffect(() => {
+    const seekPod = (seconds: number) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.currentTime = seconds;
+      setTime(seconds);
+      void audio.play().catch(() => undefined);
+    };
+    usePlayer.setState({ seekPod });
+    return () => {
+      if (usePlayer.getState().seekPod === seekPod)
+        usePlayer.setState({ seekPod: undefined });
+    };
+  }, []);
 
   useEffect(() => {
     const fetchPlaylist = async () => {
@@ -82,10 +97,18 @@ export default function AudioPlayer(props: Props) {
           playing("podcast");
         }}
         onPause={() => setPaused(true)}
-        onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+        onTimeUpdate={(e) => {
+          setTime(e.currentTarget.currentTime);
+          usePlayer.setState({ podTime: e.currentTarget.currentTime });
+        }}
         onLoadedMetadata={(e) => {
           setDuration(e.currentTarget.duration);
           e.currentTarget.playbackRate = rate;
+          const pending = usePlayer.getState().pendingSeek;
+          if (pending?.url === currentTrack.url) {
+            e.currentTarget.currentTime = pending.seconds;
+            usePlayer.setState({ pendingSeek: undefined });
+          }
         }}
         onDurationChange={(e) => setDuration(e.currentTarget.duration)}
         onEnded={playNextTrack}

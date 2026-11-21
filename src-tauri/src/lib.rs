@@ -164,6 +164,7 @@ pub fn run() {
       ai::ai_save_provider,
       ai::ai_delete_provider,
       ai::ai_fetch,
+      ai::ai_upload,
       ai::ai_stream,
       ai::ai_cancel,
     ])

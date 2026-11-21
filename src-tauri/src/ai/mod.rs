@@ -277,6 +277,43 @@ fn take_text(buffer: &mut Vec<u8>) -> String {
   text
 }
 
+/// A body of `multipart/form-data`: the text fields, then the file.
+fn multipart(
+  boundary: &str,
+  fields: &serde_json::Map<String, serde_json::Value>,
+  file_name: &str,
+  file_type: &str,
+  bytes: &[u8],
+) -> Vec<u8> {
+  // no quote or line break in a name: they would end the header
+  let clean = |s: &str| s.replace(['"', '\r', '\n'], "_");
+  let mut body = Vec::with_capacity(bytes.len() + 512);
+  for (name, value) in fields {
+    let value = match value {
+      serde_json::Value::String(s) => s.clone(),
+      other => other.to_string(),
+    };
+    body.extend_from_slice(
+      format!(
+        "--{boundary}\r\nContent-Disposition: form-data; name=\"{}\"\r\n\r\n{value}\r\n",
+        clean(name)
+      )
+      .as_bytes(),
+    );
+  }
+  body.extend_from_slice(
+    format!(
+      "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{}\"\r\nContent-Type: {}\r\n\r\n",
+      clean(file_name),
+      clean(file_type)
+    )
+    .as_bytes(),
+  );
+  body.extend_from_slice(bytes);
+  body.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
+  body
+}
+
 /// What `ai_stream` sends as the answer comes: its text, then its end (sent
 /// on the channel, not by the end of the command: the messages of a channel can
 /// come after the answer of the command).
@@ -366,6 +403,88 @@ pub async fn ai_stream(
     send_text(String::from_utf8_lossy(&buffer).into_owned())?;
   }
   on_event.send(StreamEvent::End).map_err(|e| e.to_string())
+}
+
+/// A file sent to the provider as `multipart/form-data` (e.g. audio to
+/// `/audio/transcriptions`), answered in JSON. The file is the raw body of
+/// the request; the rest in its headers: `x-provider`, `x-path`, `x-fields`
+/// (a JSON object), `x-file-name`, `x-file-type`.
+#[tauri::command]
+pub async fn ai_upload(
+  request: tauri::ipc::Request<'_>,
+) -> Result<serde_json::Value> {
+  let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
+    return Err("The file is wanted as the raw body".into());
+  };
+  let header = |name: &str| {
+    request
+      .headers()
+      .get(name)
+      .and_then(|v| v.to_str().ok())
+      .map(|v| {
+        percent_encoding::percent_decode_str(v)
+          .decode_utf8_lossy()
+          .into_owned()
+      })
+      .unwrap_or_default()
+  };
+  let provider = provider_of(&header("x-provider"))?;
+  let path = header("x-path");
+  let fields: serde_json::Map<String, serde_json::Value> =
+    serde_json::from_str(&header("x-fields")).unwrap_or_default();
+  let file_name = header("x-file-name");
+  let file_type = header("x-file-type");
+  let boundary = format!("mdsilo{:x}", rand_boundary());
+  let body = multipart(
+    &boundary,
+    &fields,
+    if file_name.is_empty() {
+      "audio"
+    } else {
+      &file_name
+    },
+    if file_type.is_empty() {
+      "application/octet-stream"
+    } else {
+      &file_type
+    },
+    bytes,
+  );
+  let url = url_of(&provider, &path)?;
+  let mut req = client()?
+    .post(&url)
+    .header(
+      "content-type",
+      format!("multipart/form-data; boundary={boundary}"),
+    )
+    .body(body);
+  for (name, value) in headers_of(&provider) {
+    req = req.header(name, value);
+  }
+  let response = req
+    .send()
+    .await
+    .map_err(|e| format!("{}: {e}", provider.label))?;
+  let status = response.status();
+  let text = response.text().await.map_err(|e| e.to_string())?;
+  if !status.is_success() {
+    return Err(format!(
+      "{status}: {}",
+      text.chars().take(500).collect::<String>()
+    ));
+  }
+  serde_json::from_str(&text).map_err(|e| format!("Not JSON: {e}"))
+}
+
+/// A boundary not in the file, most likely: of the time and a counter.
+fn rand_boundary() -> u128 {
+  use std::sync::atomic::{AtomicU64, Ordering};
+  static COUNT: AtomicU64 = AtomicU64::new(0);
+  let nanos = std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .map(|d| d.as_nanos())
+    .unwrap_or_default();
+  nanos ^ ((COUNT.fetch_add(1, Ordering::Relaxed) as u128) << 64)
 }
 
 /// Stop a stream of `ai_stream` at its next chunk.
@@ -516,6 +635,21 @@ mod tests {
     assert_eq!(
       serde_json::to_string(&StreamEvent::End).unwrap(),
       r#"{"type":"end"}"#
+    );
+  }
+
+  #[test]
+  fn multipart_body() {
+    let mut fields = serde_json::Map::new();
+    fields.insert("model".into(), serde_json::json!("whisper-1"));
+    fields.insert("n\"x".into(), serde_json::json!(2));
+    let body = multipart("B", &fields, "a\".mp3", "audio/mpeg", b"DATA");
+    let text = String::from_utf8(body).unwrap();
+    assert_eq!(
+      text,
+      "--B\r\nContent-Disposition: form-data; name=\"model\"\r\n\r\nwhisper-1\r\n\
+       --B\r\nContent-Disposition: form-data; name=\"n_x\"\r\n\r\n2\r\n\
+       --B\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a_.mp3\"\r\nContent-Type: audio/mpeg\r\n\r\nDATA\r\n--B--\r\n"
     );
   }
 

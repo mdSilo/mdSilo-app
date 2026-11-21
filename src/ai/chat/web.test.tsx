@@ -476,16 +476,14 @@ describe("prompts", () => {
       if (cmd === "ai_providers") return [local];
       return true;
     });
-    await usePrompts
-      .getState()
-      .save([
-        {
-          id: "p1",
-          name: "Critique",
-          prompt: "Critique {{selection}}",
-          where: "workspace",
-        },
-      ]);
+    await usePrompts.getState().save([
+      {
+        id: "p1",
+        name: "Critique",
+        prompt: "Critique {{selection}}",
+        where: "workspace",
+      },
+    ]);
     const [path] = Object.keys(files);
     expect(path).toMatch(/\.mdsilo[\\/]ai-prompts\.json$/);
     expect(JSON.parse(files[path])).toEqual([

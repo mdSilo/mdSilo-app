@@ -17,6 +17,8 @@ export type ProviderSettings = {
   maxTokens?: number;
   /** the model can call tools (search, read): on unless turned off */
   tools?: boolean;
+  /** the model of speech to text (`/audio/transcriptions`), e.g. whisper-1; none if the provider has none */
+  sttModel?: string;
 };
 
 export type AiProvider = {

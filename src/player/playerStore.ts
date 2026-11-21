@@ -11,6 +11,12 @@ type PlayerStore = {
   /** the settings of the speech engines, open over the player */
   settingsOpen: boolean;
   setSettingsOpen: (open: boolean) => void;
+  /** where the podcast playing is, in seconds; e.g. for its transcript */
+  podTime: number;
+  /** go to a time of the podcast playing; set by its audio */
+  seekPod?: (seconds: number) => void;
+  /** a time to go to once the podcast asked for is loaded */
+  pendingSeek?: { url: string; seconds: number };
 };
 
 export const usePlayer = create<PlayerStore>((set) => ({
@@ -18,6 +24,7 @@ export const usePlayer = create<PlayerStore>((set) => ({
   setShown: (shown) => set({ shown }),
   settingsOpen: false,
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  podTime: 0,
 }));
 
 export type PlayerSource = "podcast" | "tts";

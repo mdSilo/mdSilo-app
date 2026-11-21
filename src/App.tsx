@@ -138,6 +138,18 @@ const App = () => {
   // sync every few minutes and on exit, if set
   useAutoSync();
 
+  // the digest of the feeds, once a day if set: a while after the start,
+  // the feeds fetched by then
+  const initDir = useStore((state) => state.initDir);
+  useEffect(() => {
+    if (!initDir) return;
+    const timer = setTimeout(
+      () => void import("@/ai/digest").then((m) => m.digestIfDue()),
+      60_000,
+    );
+    return () => clearTimeout(timer);
+  }, [initDir]);
+
   // closing the window (or quitting from the tray) leaves no time for the
   // timers of the saves: written first, as in a book window
   useEffect(() => {
