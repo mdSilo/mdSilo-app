@@ -337,6 +337,26 @@ function notesIn(dir?: string) {
 }
 
 async function searchNotes(query: string, dir?: string): Promise<Chunk[]> {
+  const byWords = await searchNotesByWords(query, dir);
+  // by meaning too, if on and made: the two ranked lists merged
+  if (!store.getState().aiSettings.embeddings) return byWords;
+  const { semanticSearch, fuseRanks } = await import("../embeddings");
+  const byMeaning = await semanticSearch(query, { dir }).catch(() => []);
+  if (byMeaning.length === 0) return byWords;
+  return bestOf(
+    fuseRanks([byWords, byMeaning.map((m) => m.chunk)]).map(
+      (chunk, i, all) => ({
+        chunk,
+        score: all.length - i,
+      }),
+    ),
+  );
+}
+
+async function searchNotesByWords(
+  query: string,
+  dir?: string,
+): Promise<Chunk[]> {
   const terms = termsOf(query);
   if (terms.length === 0) return [];
   const inScope = notesIn(dir);

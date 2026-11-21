@@ -578,13 +578,11 @@ describe("all my notes and books (an option)", () => {
     );
     expect(off.chunks.map((c) => c.text)).toEqual(["Foxes in my notes."]);
 
-    store
-      .getState()
-      .setAiSettings({
-        ...DEFAULT_AI_SETTINGS,
-        excluded: ["private"],
-        myselfBooks: true,
-      });
+    store.getState().setAiSettings({
+      ...DEFAULT_AI_SETTINGS,
+      excluded: ["private"],
+      myselfBooks: true,
+    });
     const scope = toolScopeOf("all")!;
     expect(scope).toEqual({
       kind: "notes",

@@ -85,6 +85,10 @@ export type AiSettings = {
   excluded?: string[];
   /** the chat with all the notes searches the books too (their text, by the index), see ai/chat/tools */
   myselfBooks?: boolean;
+  /** search by meaning too: the notes embedded, see ai/embeddings (opt-in) */
+  embeddings?: boolean;
+  /** links suggested to notes on the same ideas, by the embeddings (opt-in) */
+  linkSuggestions?: boolean;
   /** a digest of the feeds made once a day, see ai/digest */
   digest?: boolean;
   /** the day (YYYY-MM-DD) of the last digest */

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { store, useStore } from "@/state/store";
 import { BaseModal } from "@/ui/BaseModal";
 import { Select } from "@/ui/ui";
@@ -253,6 +253,19 @@ function ProviderForm({
           />
         </Row>
       ) : null}
+      {draft.kind === "openai" ? (
+        <Row label={t("Embeddings")}>
+          <input
+            className="flex-1 input input-xs"
+            list={listId}
+            value={draft.settings.embedModel ?? ""}
+            placeholder={t(
+              "a model, e.g. text-embedding-3-small; none if none",
+            )}
+            onChange={(e) => setSetting({ embedModel: e.target.value })}
+          />
+        </Row>
+      ) : null}
       <Row label={t("Max tokens")}>
         <input
           className="flex-1 input input-xs"
@@ -487,6 +500,7 @@ export default function AiSettingsModal() {
             </span>
           </label>
         ) : null}
+        <MeaningSearch />
         <DigestSettings />
         <ExcludedFolders />
         <p className="text-xs text-base-content/70" data-testid="ai-usage">
@@ -817,6 +831,169 @@ function DigestSettings() {
           <span className="text-xs text-base-content/70">{message}</span>
         ) : null}
       </div>
+    </fieldset>
+  );
+}
+
+/** Search by meaning (embeddings), opt-in: the index of this device, made or updated here. */
+function MeaningSearch() {
+  const t = useT();
+  const aiSettings = useStore((state) => state.aiSettings);
+  const setAiSettings = useStore((state) => state.setAiSettings);
+  const ws = useStore((state) => dataRoot(state));
+  const canEmbed = useAiProviders((s) =>
+    s.providers.some(
+      (p) => p.kind === "openai" && p.settings?.embedModel?.trim(),
+    ),
+  );
+  const [status, setStatus] = useState("");
+  const [progress, setProgress] = useState("");
+  const [message, setMessage] = useState("");
+  const controller = useRef<AbortController | null>(null);
+
+  const refresh = async () => {
+    const { loadIndex, pendingOf } = await import("./embeddings");
+    const index = await loadIndex();
+    const pending = await pendingOf(index);
+    const paragraphs = [...(index?.notes.values() ?? [])].reduce(
+      (n, v) => n + v.paras.length,
+      0,
+    );
+    setStatus(
+      t(
+        "{notes} notes indexed ({paragraphs} paragraphs); {todo} to do, about {tokens} tokens",
+        {
+          notes: index?.notes.size ?? 0,
+          paragraphs,
+          todo: pending.notes,
+          tokens: Math.ceil(pending.chars / 4).toLocaleString(),
+        },
+      ),
+    );
+  };
+  useEffect(() => {
+    if (ws && aiSettings.embeddings) void refresh().catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ws, aiSettings.embeddings]);
+  if (!ws) return null;
+
+  const build = async () => {
+    setMessage("");
+    controller.current = new AbortController();
+    try {
+      const { updateIndex } = await import("./embeddings");
+      const { embedded, removed } = await updateIndex({
+        signal: controller.current.signal,
+        onProgress: (done, of) =>
+          setProgress(t("Indexing {done} of {of} notes…", { done, of })),
+      });
+      setMessage(
+        t("{embedded} notes indexed, {removed} taken out", {
+          embedded,
+          removed,
+        }),
+      );
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setProgress("");
+      controller.current = null;
+      void refresh().catch(() => undefined);
+    }
+  };
+
+  return (
+    <fieldset
+      className="p-2 border rounded border-base-300"
+      data-testid="ai-meaning"
+    >
+      <legend className="px-1 font-semibold">{t("Search by meaning")}</legend>
+      <p className="mb-1 text-xs text-base-content/70">
+        {t(
+          "Finds your notes by what they mean, not only their words, by the vectors of their paragraphs (an embeddings model of a provider). The index is kept on this device only; making it sends your notes to that provider, once, then the changed ones.",
+        )}
+      </p>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          className="checkbox checkbox-xs"
+          disabled={!canEmbed}
+          checked={Boolean(aiSettings.embeddings)}
+          onChange={(e) =>
+            setAiSettings({ ...aiSettings, embeddings: e.target.checked })
+          }
+        />
+        <span>
+          {canEmbed
+            ? t("Search by meaning too")
+            : t("Set an embeddings model for a provider first")}
+        </span>
+      </label>
+      {aiSettings.embeddings ? (
+        <>
+          <p
+            className="my-1 text-xs text-base-content/70"
+            data-testid="ai-meaning-status"
+          >
+            {status}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {progress ? (
+              <>
+                <span className="text-xs">{progress}</span>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-xs"
+                  onClick={() => controller.current?.abort()}
+                >
+                  {t("Stop")}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary btn-xs"
+                onClick={() => void build()}
+              >
+                {t("Build or update the index")}
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs text-error"
+              disabled={Boolean(progress)}
+              onClick={() =>
+                void import("./embeddings")
+                  .then((m) => m.deleteIndex())
+                  .then(refresh)
+              }
+            >
+              {t("Delete the index")}
+            </button>
+            {message ? (
+              <span className="text-xs text-base-content/70">{message}</span>
+            ) : null}
+          </div>
+          <label className="flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              className="checkbox checkbox-xs"
+              checked={Boolean(aiSettings.linkSuggestions)}
+              onChange={(e) =>
+                setAiSettings({
+                  ...aiSettings,
+                  linkSuggestions: e.target.checked,
+                })
+              }
+            />
+            <span>
+              {t(
+                "Under a note, suggest links to notes on the same ideas (no request to the provider)",
+              )}
+            </span>
+          </label>
+        </>
+      ) : null}
     </fieldset>
   );
 }

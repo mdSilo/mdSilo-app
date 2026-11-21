@@ -25,7 +25,7 @@ import ProfileModal from "@/ai/ProfileModal";
 const ChatPane = lazy(() => import("@/ai/chat/ChatPane"));
 import DictionariesModal from "@/reader/dictionary/DictionariesModal";
 import EditorLookupPopup from "@/writer/LookupPopup";
-import { useStore, onStoreHydrated, SidebarTab } from "@/state/store";
+import { store, useStore, onStoreHydrated, SidebarTab } from "@/state/store";
 import { hasWindows, shareSettings } from "@/state/windowSync";
 import { flushAll } from "@/shell/flushAll";
 import { isTauri, isWeb } from "@/workspace/util";
@@ -148,7 +148,19 @@ const App = () => {
       () => void import("@/ai/digest").then((m) => m.digestIfDue()),
       60_000,
     );
-    return () => clearTimeout(timer);
+    // the index of search by meaning (opt-in), brought up to date quietly
+    const embedTimer = setTimeout(() => {
+      if (!store.getState().aiSettings.embeddings) return;
+      void import("@/ai/embeddings")
+        .then((m) => m.updateIndex())
+        .catch((e: unknown) =>
+          console.warn("The index by meaning was not updated", e),
+        );
+    }, 120_000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(embedTimer);
+    };
   }, [initDir]);
 
   // closing the window (or quitting from the tray) leaves no time for the

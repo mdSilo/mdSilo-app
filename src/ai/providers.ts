@@ -19,6 +19,8 @@ export type ProviderSettings = {
   tools?: boolean;
   /** the model of speech to text (`/audio/transcriptions`), e.g. whisper-1; none if the provider has none */
   sttModel?: string;
+  /** the model of embeddings (`/embeddings`), e.g. text-embedding-3-small, nomic-embed-text; see ai/embeddings */
+  embedModel?: string;
 };
 
 export type AiProvider = {
