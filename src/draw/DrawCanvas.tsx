@@ -8,6 +8,8 @@ import {
   exportScene,
   getSceneVersion,
   serializeAsJSON,
+  serializeLibraryAsJSON,
+  useHandleLibrary,
   viewportCoordsToSceneCoords,
 } from "@excalidraw/excalidraw";
 import type {
@@ -25,6 +27,7 @@ import { QUOTE_MIME } from "@/writer/beside";
 import useLinkHandlers from "@/writer/hooks/useLinkHandlers";
 import { drawingName, readDrawing } from "./drawing";
 import { quoteOfMarkdown } from "./quote";
+import { libraryAdapter } from "./library";
 import DrawingName from "./DrawingName";
 import { DrawingSaver, type SaveApi } from "./save";
 import { shareDrawingSaved } from "./window";
@@ -84,6 +87,16 @@ export default function DrawCanvas({ path, lead, actions }: Props) {
     [path],
   );
   const api = useRef<ExcalidrawImperativeAPI | null>(null);
+  // the shape library of the workspace: loaded once ready, saved on change
+  const [readyApi, setReadyApi] = useState<ExcalidrawImperativeAPI | null>(
+    null,
+  );
+  const ws = useStore((s) => s.initDir);
+  const adapter = useMemo(
+    () => libraryAdapter(serializeLibraryAsJSON, ws),
+    [ws],
+  );
+  useHandleLibrary({ excalidrawAPI: readyApi, adapter });
   // the links of the elements: notes, books, issues as in a note
   const { onOpenLink } = useLinkHandlers();
   // the scene loaded, before Excalidraw gives its first change
@@ -160,6 +173,7 @@ export default function DrawCanvas({ path, lead, actions }: Props) {
             langCode={LANG_CODES[getLocale()] ?? "en"}
             onExcalidrawAPI={(ready) => {
               api.current = ready;
+              setReadyApi(ready);
             }}
             onLinkOpen={(element, event) => {
               if (!element.link) return;
