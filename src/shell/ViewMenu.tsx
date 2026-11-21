@@ -6,6 +6,7 @@ import {
   TbDna,
   TbCalendar,
   TbFeather,
+  TbBrush,
   TbRss,
   TbSettings,
   TbLayoutKanban,
@@ -29,6 +30,7 @@ import { useSyncState } from "@/sync/syncWorkspace";
 import SyncModal from "@/sync/SyncModal";
 import { AppMenuItems, FileDrop, PluginMenuItems } from "@/shell/SideMenu";
 import { useT } from "@/i18n";
+import { newDrawing } from "@/draw/open";
 
 /**
  * A phone, the side menu left to "auto": no side menu, its buttons are in a
@@ -139,6 +141,17 @@ function ViewMenuDropdown({ className = "" }: { className?: string }) {
                 }}
               >
                 <TbFeather size={22} className="shrink-0 text-primary" />
+              </Tile>
+            ) : null}
+            {currentDir ? (
+              <Tile
+                label={t("Draw")}
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  void newDrawing(dispatch);
+                }}
+              >
+                <TbBrush size={22} className="shrink-0 text-teal-600" />
               </Tile>
             ) : null}
             <Tile

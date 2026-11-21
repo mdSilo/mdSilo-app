@@ -30,6 +30,7 @@ const Reader = lazy(() => import("@/reader/components/ReaderView"));
 const Vocabulary = lazy(() => import("@/reader/vocabulary/VocabularyView"));
 const PluginFileView = lazy(() => import("@/plugins/PluginFileView"));
 const PluginView = lazy(() => import("@/plugins/PluginView"));
+const DrawView = lazy(() => import("@/draw/DrawView"));
 
 /** the view of each view type; any other type is a note */
 const VIEWS: Record<string, ComponentType> = {
@@ -47,6 +48,7 @@ const VIEWS: Record<string, ComponentType> = {
   vocabulary: Vocabulary,
   "plugin-file": PluginFileView,
   plugin: PluginView,
+  drawing: DrawView,
 };
 
 export default function MainView() {

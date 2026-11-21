@@ -18,8 +18,23 @@ export function bookWindowParams(
   return cfi ? { path, ws, cfi } : { path, ws };
 }
 
+/** The drawing of a drawing window (see draw/window), as in its URL. */
+export type DrawingWindowParams = { path: string; ws: string };
+
+export function drawingWindowParams(
+  search = typeof location === "undefined" ? "" : location.search,
+): DrawingWindowParams | undefined {
+  const params = new URLSearchParams(search);
+  const path = params.get("drawing");
+  const ws = params.get("ws");
+  return path && ws ? { path, ws } : undefined;
+}
+
 /**
- * A window of one book. It reads the settings but does not write them: the
- * main window does, with what the book window changed (see windowSync).
+ * A window of one book, or of one drawing. It reads the settings but does
+ * not write them: the main window does, with what the book window changed
+ * (see windowSync).
  */
-export const isBookWindow = Boolean(bookWindowParams());
+export const isBookWindow = Boolean(
+  bookWindowParams() ?? drawingWindowParams(),
+);

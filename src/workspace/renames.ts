@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { store } from "@/state/store";
-import { bookWindowParams } from "@/state/windowKind";
+import { isBookWindow } from "@/state/windowKind";
 import { isBookFile } from "@/reader/document";
 import { fromWorkspacePath, movedPath, normalizeSlash } from "./util";
 
@@ -121,7 +121,7 @@ async function followBooks(ws: string, from: string, to: string) {
  * in the main window only.
  */
 export async function followMovedMeanwhile(ws: string) {
-  if (bookWindowParams()) return;
+  if (isBookWindow) return;
   const renames = await invoke<[string, string][]>("index_renames").catch(
     () => [],
   );

@@ -7,6 +7,7 @@ import { closeBeside, setNotePane } from "@/writer/beside";
 import { useNoteReloads } from "@/workspace/noteReloads";
 import useIsMobile from "@/lib/hooks/useIsMobile";
 import SplitHandle from "@/ui/SplitHandle";
+import BesideDrawing from "@/draw/BesideDrawing";
 import { useT } from "@/i18n";
 
 export default function NotePage() {
@@ -27,7 +28,10 @@ export default function NotePage() {
   useEffect(() => {
     if (beside && beside === noteId) closeBeside();
   }, [beside, noteId]);
-  const showBeside = Boolean(beside) && beside !== noteId && !mobile;
+  // ... or a drawing, over the note on a phone (see draw/)
+  const drawing = useStore((s) => s.besideDrawing);
+  const showBeside =
+    !drawing && Boolean(beside) && beside !== noteId && !mobile;
 
   if (!noteId || typeof noteId !== "string") {
     return (
@@ -42,7 +46,7 @@ export default function NotePage() {
   return (
     <div
       ref={panesRef}
-      className={`flex flex-1 min-w-0 overflow-x-auto ${showBeside && onLeft ? "flex-row-reverse" : ""}`}
+      className={`flex flex-1 min-w-0 overflow-x-auto ${(showBeside || drawing) && onLeft ? "flex-row-reverse" : ""}`}
     >
       <div
         className="flex flex-1 min-w-0"
@@ -55,6 +59,11 @@ export default function NotePage() {
         <>
           <SplitHandle containerRef={panesRef} />
           <BesideNote />
+        </>
+      ) : drawing ? (
+        <>
+          {mobile ? null : <SplitHandle containerRef={panesRef} />}
+          <BesideDrawing />
         </>
       ) : null}
     </div>

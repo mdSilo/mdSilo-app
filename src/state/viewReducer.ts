@@ -24,6 +24,8 @@ export interface ViewState {
   pluginId?: string;
   filePath?: string;
   pluginViewId?: string;
+  /** the drawing open, see draw/ */
+  drawingPath?: string;
 }
 
 export type ViewAction =
@@ -40,6 +42,7 @@ export type ViewAction =
   | { view: "book"; path: string; cfi?: string }
   | { view: "plugin-file"; plugin: string; path: string }
   | { view: "plugin"; plugin: string; viewId: string }
+  | { view: "drawing"; path: string }
   | {
       view: "md";
       params: ViewParams;
@@ -61,8 +64,14 @@ const pluginViewTitle = (plugin: string, viewId: string) =>
     .installedPlugins.find((p) => p.id === plugin)
     ?.manifest?.contributes.views.find((v) => v.id === viewId)?.title ?? viewId;
 
+// the type of the view last dispatched in this window
+let shownView = initialState.view;
+/** The type of the view shown, e.g. to open a drawing beside a note */
+export const shownViewType = () => shownView;
+
 export function viewEffects(action: ViewAction) {
   const { view } = action;
+  shownView = view;
   if (view === "md") {
     store.getState().setCurrentNoteId(action.params.noteId);
     return;
@@ -73,7 +82,7 @@ export function viewEffects(action: ViewAction) {
     setWindowTitle(`${action.path.split("/").pop()} - mdSilo`);
   else if (view === "plugin")
     setWindowTitle(`${pluginViewTitle(action.plugin, action.viewId)} - mdSilo`);
-  else if (view === "book")
+  else if (view === "book" || view === "drawing")
     setWindowTitle(`${action.path.split("/").pop()} - mdSilo`);
   else setWindowTitle(`${view} - mdSilo`);
   // to go back to it from the side menu, or on startup
@@ -126,6 +135,8 @@ export function viewReducer(state: ViewState, action: ViewAction): ViewState {
         pluginId: action.plugin,
         filePath: action.path,
       };
+    case "drawing":
+      return { view: "drawing", drawingPath: action.path };
     case "md":
       return { view: "md", params: action.params };
     case "tag":

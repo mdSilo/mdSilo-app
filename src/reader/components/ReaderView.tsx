@@ -43,6 +43,7 @@ import { PluginIcon } from "@/plugins/PluginIcon";
 import { ReaderPanelHost, ReaderPanelsButton } from "@/plugins/ReaderPanels";
 import { t, tk, useT } from "@/i18n";
 import BesideNote from "@/writer/BesideNote";
+import BesideDrawing from "@/draw/BesideDrawing";
 import SplitHandle from "@/ui/SplitHandle";
 import { closeBookKeepNote } from "@/writer/beside";
 import { annotationsPathOf } from "../annotations/annotations";
@@ -129,7 +130,10 @@ export function Reader({
   // a note beside the book (parallel writing), in place of a book
   const besideNote = useStore((s) => s.besideNoteId);
   const besideOnLeft = useStore((s) => s.besideOnLeft);
-  const parallelOpen = sideBookOpen || Boolean(besideNote);
+  // ... or a drawing (see draw/)
+  const besideDrawing = useStore((s) => s.besideDrawing);
+  const parallelOpen =
+    sideBookOpen || Boolean(besideNote) || Boolean(besideDrawing);
   // the sidebar: of the book last used, of the two read side by side
   const activePane = usePane((s) => s.active);
   const panelBook = useActiveStore((s) => s.book);
@@ -162,8 +166,8 @@ export function Reader({
 
   // a note beside: no book beside then
   useEffect(() => {
-    if (besideNote) void useSideStore.getState().close();
-  }, [besideNote]);
+    if (besideNote || besideDrawing) void useSideStore.getState().close();
+  }, [besideNote, besideDrawing]);
 
   // the book is closed when another view shows
   useEffect(
@@ -555,7 +559,13 @@ export function Reader({
           {parallelOpen && !mobile ? (
             <SplitHandle containerRef={booksRef} />
           ) : null}
-          {besideNote && !mobile ? <BesideNote /> : <ParallelPane />}
+          {besideDrawing ? (
+            <BesideDrawing />
+          ) : besideNote && !mobile ? (
+            <BesideNote />
+          ) : (
+            <ParallelPane />
+          )}
           <BookPopups rootRef={booksRef} tools={tools} />
           {overlay?.(booksRef)}
           {translatedBook ? <TranslatedBookDialog /> : null}

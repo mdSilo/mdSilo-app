@@ -6,7 +6,13 @@ import {
   useCallback,
 } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { TbCaretRight, TbMarkdown, TbNote, TbPhoto } from "react-icons/tb";
+import {
+  TbBrush,
+  TbCaretRight,
+  TbMarkdown,
+  TbNote,
+  TbPhoto,
+} from "react-icons/tb";
 import { NoteTreeItem, store, useStore } from "@/state/store";
 import { isMobileWidth } from "@/lib/hooks/useIsMobile";
 import { imageExtensions } from "@/lib/file-extensions";
@@ -16,7 +22,9 @@ import { Tooltip } from "@/ui/ui";
 import { checkFileIsMd, getFileExt } from "@/workspace/process";
 import { listDir, openUrl } from "@/workspace/open";
 import { joinPath, normalizeSlash } from "@/workspace/util";
-import { READING_DIR, WRITING_DIR } from "@/workspace/layout";
+import { DRAWING_DIR, READING_DIR, WRITING_DIR } from "@/workspace/layout";
+import { isDrawingFile } from "@/draw/drawing";
+import { openDrawing } from "@/draw/open";
 import { isBookFile } from "@/reader/document";
 import BookIcon, { bookIconOf } from "@/reader/components/BookIcon";
 import { bookPathOfAnnotations } from "@/reader/annotations/annotations";
@@ -74,6 +82,7 @@ const SidebarNoteLink = (
   const isDir = node.is_dir;
   const isNonMd = !isDir && !checkFileIsMd(node.id);
   const isImage = imageExtensions.includes(getFileExt(node.id).toLowerCase());
+  const isDrawing = !isDir && isDrawingFile(node.id);
   // reading/ and writing/ of a workspace: the two roots of the tree
   const rootLabel = useStore((state) => {
     if (!isDir || depth !== 0 || state.layout !== "workspace" || !state.initDir)
@@ -81,6 +90,7 @@ const SidebarNoteLink = (
     const id = normalizeSlash(node.id);
     if (id === joinPath(state.initDir, READING_DIR)) return t("Reading");
     if (id === joinPath(state.initDir, WRITING_DIR)) return t("Writing");
+    if (id === joinPath(state.initDir, DRAWING_DIR)) return t("Drawing");
     return "";
   });
   // drag to move it, drop on a dir or a file of the dir to move into the dir
@@ -132,7 +142,9 @@ const SidebarNoteLink = (
         return;
       }
       if (beside && !isNonMd && (await openBeside(node.id))) return;
-      if (isBook) {
+      if (isDrawing) {
+        await openDrawing(node.id, dispatch, beside ? "beside" : "view");
+      } else if (isBook) {
         dispatch({ view: "book", path: node.id });
       } else if (isNonMd) {
         // a plugin opens it, or the app of the system
@@ -155,6 +167,7 @@ const SidebarNoteLink = (
       dispatch,
       isBook,
       isDir,
+      isDrawing,
       isExpanded,
       isNonMd,
       node.id,
@@ -193,6 +206,12 @@ const SidebarNoteLink = (
             />
           ) : bookIconOf(node.id) ? (
             <BookIcon path={node.id} />
+          ) : isDrawing ? (
+            <TbBrush
+              className="shrink-0 text-base-content/60"
+              size={16}
+              color="teal"
+            />
           ) : isImage ? (
             <TbPhoto
               className="shrink-0 text-base-content/60"

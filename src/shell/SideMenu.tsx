@@ -16,6 +16,7 @@ import {
   TbSparkles,
   TbCalendar,
   TbFeather,
+  TbBrush,
   TbFolderPlus,
   TbFileText,
   TbDeviceFloppy,
@@ -70,6 +71,7 @@ import { installApp, isIos, isStandalone, usePwa } from "@/host/web/pwa";
 import { showMessage } from "@/host/web/browser";
 import { chooseAndRestoreBackup } from "@/host/web/backup";
 import { t, useT } from "@/i18n";
+import { newDrawing } from "@/draw/open";
 
 const SideMenuOrientationContext = createContext<SideMenuOrientation>("auto");
 
@@ -186,6 +188,7 @@ export default function SideMenu() {
           {currentDir ? (
             <>
               <NewButton />
+              <NewDrawingButton />
               <IssuesButton
                 viewTy={viewTy}
                 onDispatch={() => dispatchView({ view: "issues" })}
@@ -399,6 +402,35 @@ const NewButton = () => {
       <Tooltip content={t("New Writing")} placement={tooltipPlacement}>
         <button className={btnClass} onClick={onCreateNoteClick}>
           <TbFeather size={22} className="shrink-0 mx-px text-primary" />
+        </button>
+      </Tooltip>
+    </MenuItem>
+  );
+};
+
+/** A new drawing, beside the note or book shown; Ctrl/⌘: in a window. */
+const NewDrawingButton = () => {
+  const t = useT();
+  const tooltipPlacement = useTooltipPlacement();
+  const { dispatch } = useCurrentViewContext();
+
+  return (
+    <MenuItem>
+      <Tooltip
+        content={t("New Drawing (Ctrl/⌘+click: in a window)")}
+        placement={tooltipPlacement}
+      >
+        <button
+          className={btnClass}
+          aria-label={t("New Drawing")}
+          onClick={(e) =>
+            void newDrawing(
+              dispatch,
+              e.ctrlKey || e.metaKey ? "window" : "auto",
+            )
+          }
+        >
+          <TbBrush size={22} className="shrink-0 mx-px text-teal-600" />
         </button>
       </Tooltip>
     </MenuItem>

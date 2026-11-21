@@ -1109,9 +1109,11 @@ describe("SideMenu", () => {
     const btns = Array.from(
       document.querySelectorAll("#side-menu-btns button"),
     ) as HTMLElement[];
-    // logo, toggle, feed, new, issues, projects, chronicle, graph, AI chat, file
-    expect(btns).toHaveLength(10);
-    await userEvent.click(btns[8]);
+    // logo, toggle, feed, new, new drawing, issues, projects, chronicle,
+    // graph, AI chat, file
+    expect(btns).toHaveLength(11);
+    expect(btns[4]).toHaveAccessibleName("New Drawing");
+    await userEvent.click(btns[9]);
     expect(store.getState().isChatOpen).toBe(true);
     await userEvent.click(screen.getByRole("button", { name: "Explorer" }));
     expect(store.getState().isSidebarOpen).toBe(false);
@@ -1120,10 +1122,10 @@ describe("SideMenu", () => {
     await userEvent.click(btns[3]);
     expect(store.getState().isFindOrCreateModalOpen).toBe(true);
     for (const [i, view] of [
-      [4, "issues"],
-      [5, "project"],
-      [6, "chronicle"],
-      [7, "graph"],
+      [5, "issues"],
+      [6, "project"],
+      [7, "chronicle"],
+      [8, "graph"],
     ] as const) {
       await userEvent.click(btns[i]);
       expect(viewState().view).toBe(view);
