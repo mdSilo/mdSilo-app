@@ -1,6 +1,6 @@
 {
   "productName": "mdsilo",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "identifier": "mdsilo",
   "build": {
     "frontendDist": "../dist",

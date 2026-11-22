@@ -1,8 +1,12 @@
 # Changelog 
 
-## app-v0.8.2
+## app-v0.8.3
 
 2026-XX-XX
+
+## app-v0.8.2
+
+2026-11-21
 
 - Feat: Drawing with Excalidraw, insert into note  
 - Feat: Parallel reading, writing and drawing  
