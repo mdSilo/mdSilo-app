@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { store } from "@/state/store";
 import { viewEffects } from "@/state/viewReducer";
 import { ProvideCurrentView } from "@/state/useCurrentView";
+import { openBeside } from "@/writer/beside";
 import BesideDrawing from "./BesideDrawing";
 import { closeBesideDrawing, expandBesideDrawing, openDrawing } from "./open";
 
@@ -13,6 +14,12 @@ vi.mock("./DrawCanvas", () => ({
       {actions}
     </div>
   ),
+}));
+
+// the note beside, opened again: by its id
+vi.mock("@/writer/beside", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/writer/beside")>()),
+  openBeside: vi.fn(async () => true),
 }));
 
 const note = { view: "md", params: { noteId: "/ws/writing/a.md" } } as const;
@@ -30,6 +37,30 @@ describe("openDrawing", () => {
     expect(store.getState().besideDrawing).toBe("/ws/drawing/A.excalidraw");
     expect(store.getState().besideNoteId).toBe("");
     expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("drawn from the note beside: the note back once the drawing closes", async () => {
+    vi.mocked(openBeside).mockClear();
+    viewEffects({ view: "book", path: "/ws/books/A.epub" });
+    store.setState({ besideNoteId: "/ws/writing/b.md" });
+    await openDrawing("/ws/drawing/A.excalidraw", vi.fn(), "beside", true);
+    expect(store.getState().besideNoteId).toBe("");
+    closeBesideDrawing(true);
+    expect(store.getState().besideDrawing).toBe("");
+    await vi.waitFor(() =>
+      expect(openBeside).toHaveBeenCalledWith("/ws/writing/b.md"),
+    );
+  });
+
+  it("not drawn from the note beside: the note not back", async () => {
+    vi.mocked(openBeside).mockClear();
+    viewEffects(note);
+    store.setState({ besideNoteId: "/ws/writing/b.md" });
+    await openDrawing("/ws/drawing/A.excalidraw", vi.fn(), "beside");
+    closeBesideDrawing(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(openBeside).not.toHaveBeenCalled();
   });
 
   it("as the view elsewhere, or when asked", async () => {

@@ -204,6 +204,7 @@ function Note(props: Props) {
     noteDir,
     notesRoot,
     currentView.dispatch,
+    beside,
   );
   const dispatch = currentView.dispatch;
   const currentNoteValue = useMemo(

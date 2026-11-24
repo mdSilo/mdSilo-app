@@ -47,7 +47,7 @@ export default function BesideDrawing() {
           title={t("Open in a window")}
           aria-label={t("Open in a window")}
           onClick={() => {
-            closeBesideDrawing();
+            closeBesideDrawing(true);
             openDrawingWindow(path);
           }}
         >
@@ -58,7 +58,7 @@ export default function BesideDrawing() {
         className={btn}
         title={t("Close")}
         aria-label={t("Close")}
-        onClick={closeBesideDrawing}
+        onClick={() => closeBesideDrawing(true)}
       >
         <TbX size={16} />
       </button>

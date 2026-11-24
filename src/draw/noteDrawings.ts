@@ -92,11 +92,15 @@ export function useDrawingRefresh() {
   }, []);
 }
 
-/** The props of the editor of a note for the pictures of drawings. */
+/**
+ * The props of the editor of a note for the pictures of drawings.
+ * @param beside the note is the one beside: back there once the drawing closes
+ */
 export function useNoteDrawings(
   noteDir: string | undefined,
   notesRoot: string | undefined,
   dispatch: DispatchType,
+  beside = false,
 ) {
   const drawingOf = useCallback(
     (src: string) => {
@@ -112,19 +116,19 @@ export function useNoteDrawings(
   const onEditImage = useCallback(
     (src: string) => {
       const drawing = drawingOf(src);
-      if (drawing) void openDrawing(drawing, dispatch, "beside");
+      if (drawing) void openDrawing(drawing, dispatch, "beside", beside);
     },
-    [drawingOf, dispatch],
+    [drawingOf, dispatch, beside],
   );
   const onCreateDrawing = useCallback(async () => {
     if (!noteDir) return undefined;
     const drawing = await createDrawing();
-    void openDrawing(drawing, dispatch, "beside");
+    void openDrawing(drawing, dispatch, "beside", beside);
     return {
       src: encodeURI(relativePath(noteDir, svgOfDrawing(drawing))),
       alt: drawingName(drawing),
     };
-  }, [noteDir, dispatch]);
+  }, [noteDir, dispatch, beside]);
   return useMemo(
     () => ({ isEditableImage, onEditImage, onCreateDrawing }),
     [isEditableImage, onEditImage, onCreateDrawing],
